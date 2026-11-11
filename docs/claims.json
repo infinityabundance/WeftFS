@@ -9109,11 +9109,11 @@
   {
     "id": "checkpoint_latency_receipt",
     "claim": "docs/STATUS.md (R12b) cites the checkpoint completion latency receipt.",
-    "value": "checkpoint-latency-20261111T022638Z.json",
+    "value": "checkpoint-latency-20261111T024824Z.json",
     "locations": [
       "docs/STATUS.md"
     ],
-    "receipt": "bench/receipts/checkpoint-latency-20261111T022638Z.json",
+    "receipt": "bench/receipts/checkpoint-latency-20261111T024824Z.json",
     "kind": "present"
   },
   {
@@ -9129,7 +9129,7 @@
   {
     "id": "checkpoint_latency_semantic_share",
     "claim": "docs/PYTORCH-DCP.md states the measured completion after the session and planner changes (42.2 ms p50 from 444.1 ms).",
-    "value": "42.2 ms p50",
+    "value": "37.7 ms",
     "locations": [
       "docs/PYTORCH-DCP.md"
     ],
@@ -9194,6 +9194,36 @@
       "bench/RESULTS-checkpoint-latency.md"
     ],
     "receipt": "bench/receipts/checkpoint-latency-20261111T022638Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "checkpoint_atomic_publication",
+    "claim": "docs/PYTORCH-DCP.md documents the single atomic publication and cites the crash test.",
+    "value": "tests/checkpoint_atomic.rs` (6/6)",
+    "locations": [
+      "docs/PYTORCH-DCP.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T024824Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "checkpoint_atomic_window_gone",
+    "claim": "docs/STATUS.md states that a prepare which is never finished publishes nothing.",
+    "value": "publishes **nothing** (the old window no longer",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T024824Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "checkpoint_atomic_cost",
+    "claim": "bench/RESULTS-checkpoint-latency.md states the measured saving of the atomic publication.",
+    "value": "one less generation per checkpoint",
+    "locations": [
+      "bench/RESULTS-checkpoint-latency.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T024824Z.json",
     "kind": "present"
   }
 ]

@@ -1,0 +1,5431 @@
+{
+  "config": {
+    "fresh": 2,
+    "reps": 8,
+    "wait_for_previous": false,
+    "writer_per_save": true
+  },
+  "decomposition": {
+    "fresh_store": {
+      "client": {
+        "adapter.allocate_name": {
+          "max_ms": 0.038713,
+          "median_count": 1.0,
+          "median_ms": 0.03743
+        },
+        "adapter.hash": {
+          "max_ms": 0.868177,
+          "median_count": 169.0,
+          "median_ms": 0.856845
+        },
+        "adapter.manifest_verify": {
+          "max_ms": 0.098203,
+          "median_count": 1.0,
+          "median_ms": 0.095082
+        },
+        "adapter.metadata_commit": {
+          "max_ms": 6.675494,
+          "median_count": 1.0,
+          "median_ms": 6.5341255
+        },
+        "adapter.metadata_serialize": {
+          "max_ms": 54.064904,
+          "median_count": 1.0,
+          "median_ms": 29.18094
+        },
+        "adapter.resolve": {
+          "max_ms": 0.526015,
+          "median_count": 169.0,
+          "median_ms": 0.524923
+        },
+        "adapter.service_obtain": {
+          "max_ms": 1.419828,
+          "median_count": 1.0,
+          "median_ms": 1.3303165
+        },
+        "adapter.stage_total": {
+          "max_ms": 3.125801,
+          "median_count": 1.0,
+          "median_ms": 2.8251355
+        },
+        "client.container_memfd": {
+          "max_ms": 0.748026,
+          "median_count": 1.0,
+          "median_ms": 0.584621
+        },
+        "client.metadata_request": {
+          "max_ms": 6.627064,
+          "median_count": 1.0,
+          "median_ms": 6.49385
+        },
+        "client.service_start": {
+          "max_ms": 1.406214,
+          "median_count": 1.0,
+          "median_ms": 1.3190165
+        },
+        "client.write_request": {
+          "max_ms": 23.534917,
+          "median_count": 1.0,
+          "median_ms": 23.470767000000002
+        }
+      },
+      "client_accounted_share": 0.9113395708562864,
+      "client_top_level_ms": 64.0584175,
+      "rust": {
+        "blob_publish": {
+          "max_ms": 3.523522,
+          "median_count": 344.0,
+          "median_ms": 3.4438075
+        },
+        "digest": {
+          "max_ms": 3.108408,
+          "median_count": 682.0,
+          "median_ms": 3.086024
+        },
+        "encode": {
+          "max_ms": 5.980366,
+          "median_count": 169.0,
+          "median_ms": 5.9133515
+        },
+        "encode_zstd": {
+          "max_ms": 5.935398,
+          "median_count": 169.0,
+          "median_ms": 5.8652845
+        },
+        "index_attest": {
+          "max_ms": 0.097242,
+          "median_count": 1.0,
+          "median_ms": 0.0966805
+        },
+        "index_build": {
+          "max_ms": 0.280022,
+          "median_count": 1.0,
+          "median_ms": 0.2364255
+        },
+        "index_load": {
+          "max_ms": 0.04261,
+          "median_count": 1.0,
+          "median_ms": 0.0355115
+        },
+        "index_segment": {
+          "max_ms": 0.910528,
+          "median_count": 2.0,
+          "median_ms": 0.8661205000000001
+        },
+        "manifest_commit": {
+          "max_ms": 0.453005,
+          "median_count": 1.0,
+          "median_ms": 0.432552
+        },
+        "metadata_commit": {
+          "max_ms": 1.520697,
+          "median_count": 1.0,
+          "median_ms": 1.4598835000000001
+        },
+        "plane_probe": {
+          "max_ms": 0.060933,
+          "median_count": 1.0,
+          "median_ms": 0.059761
+        },
+        "source_read": {
+          "max_ms": 0.497556,
+          "median_count": 338.0,
+          "median_ms": 0.457711
+        },
+        "state_replay": {
+          "max_ms": 3.887251,
+          "median_count": 2.0,
+          "median_ms": 3.7974835000000002
+        },
+        "store_open": {
+          "max_ms": 5.156339,
+          "median_count": 2.0,
+          "median_ms": 5.096698
+        }
+      },
+      "rust_top_level_ms": 20.756148,
+      "wall_ms": 70.29039399640169
+    },
+    "sequential_first": {
+      "client": {
+        "adapter.allocate_name": {
+          "max_ms": 0.040145,
+          "median_count": 1,
+          "median_ms": 0.040145
+        },
+        "adapter.hash": {
+          "max_ms": 0.853634,
+          "median_count": 169,
+          "median_ms": 0.853634
+        },
+        "adapter.manifest_verify": {
+          "max_ms": 0.094777,
+          "median_count": 1,
+          "median_ms": 0.094777
+        },
+        "adapter.metadata_commit": {
+          "max_ms": 6.23398,
+          "median_count": 1,
+          "median_ms": 6.23398
+        },
+        "adapter.metadata_serialize": {
+          "max_ms": 4.166433,
+          "median_count": 1,
+          "median_ms": 4.166433
+        },
+        "adapter.resolve": {
+          "max_ms": 0.519695,
+          "median_count": 169,
+          "median_ms": 0.519695
+        },
+        "adapter.service_obtain": {
+          "max_ms": 1.385755,
+          "median_count": 1,
+          "median_ms": 1.385755
+        },
+        "adapter.stage_total": {
+          "max_ms": 2.364801,
+          "median_count": 1,
+          "median_ms": 2.364801
+        },
+        "client.container_memfd": {
+          "max_ms": 0.665882,
+          "median_count": 1,
+          "median_ms": 0.665882
+        },
+        "client.metadata_request": {
+          "max_ms": 6.209044,
+          "median_count": 1,
+          "median_ms": 6.209044
+        },
+        "client.service_start": {
+          "max_ms": 1.378291,
+          "median_count": 1,
+          "median_ms": 1.378291
+        },
+        "client.write_request": {
+          "max_ms": 23.5258,
+          "median_count": 1,
+          "median_ms": 23.5258
+        }
+      },
+      "client_accounted_share": 0.8654533105640303,
+      "client_top_level_ms": 38.477573,
+      "rust": {
+        "blob_publish": {
+          "max_ms": 3.376831,
+          "median_count": 344,
+          "median_ms": 3.376831
+        },
+        "digest": {
+          "max_ms": 3.140964,
+          "median_count": 682,
+          "median_ms": 3.140964
+        },
+        "encode": {
+          "max_ms": 5.78852,
+          "median_count": 169,
+          "median_ms": 5.78852
+        },
+        "encode_zstd": {
+          "max_ms": 5.739573,
+          "median_count": 169,
+          "median_ms": 5.739573
+        },
+        "index_attest": {
+          "max_ms": 0.094536,
+          "median_count": 1,
+          "median_ms": 0.094536
+        },
+        "index_build": {
+          "max_ms": 0.192869,
+          "median_count": 1,
+          "median_ms": 0.192869
+        },
+        "index_load": {
+          "max_ms": 0.02667,
+          "median_count": 1,
+          "median_ms": 0.02667
+        },
+        "index_segment": {
+          "max_ms": 0.736814,
+          "median_count": 2,
+          "median_ms": 0.736814
+        },
+        "manifest_commit": {
+          "max_ms": 0.398233,
+          "median_count": 1,
+          "median_ms": 0.398233
+        },
+        "metadata_commit": {
+          "max_ms": 1.265771,
+          "median_count": 1,
+          "median_ms": 1.265771
+        },
+        "plane_probe": {
+          "max_ms": 0.052007,
+          "median_count": 1,
+          "median_ms": 0.052007
+        },
+        "source_read": {
+          "max_ms": 0.474804,
+          "median_count": 338,
+          "median_ms": 0.474804
+        },
+        "state_replay": {
+          "max_ms": 3.726642,
+          "median_count": 2,
+          "median_ms": 3.726642
+        },
+        "store_open": {
+          "max_ms": 5.009766,
+          "median_count": 2,
+          "median_ms": 5.009766
+        }
+      },
+      "rust_top_level_ms": 20.191703,
+      "wall_ms": 44.459444005042315
+    },
+    "sequential_later": {
+      "client": {
+        "adapter.allocate_name": {
+          "max_ms": 0.047458,
+          "median_count": 1,
+          "median_ms": 0.039113
+        },
+        "adapter.hash": {
+          "max_ms": 0.855578,
+          "median_count": 169,
+          "median_ms": 0.84413
+        },
+        "adapter.manifest_verify": {
+          "max_ms": 0.099095,
+          "median_count": 1,
+          "median_ms": 0.092302
+        },
+        "adapter.metadata_commit": {
+          "max_ms": 29.336651,
+          "median_count": 1,
+          "median_ms": 18.931258
+        },
+        "adapter.metadata_serialize": {
+          "max_ms": 4.215294,
+          "median_count": 1,
+          "median_ms": 4.117672
+        },
+        "adapter.resolve": {
+          "max_ms": 0.534637,
+          "median_count": 169,
+          "median_ms": 0.528093
+        },
+        "adapter.service_obtain": {
+          "max_ms": 21.170355,
+          "median_count": 1,
+          "median_ms": 13.207891
+        },
+        "adapter.stage_total": {
+          "max_ms": 2.29955,
+          "median_count": 1,
+          "median_ms": 2.190226
+        },
+        "client.container_memfd": {
+          "max_ms": 0.565635,
+          "median_count": 1,
+          "median_ms": 0.407901
+        },
+        "client.metadata_request": {
+          "max_ms": 29.307356,
+          "median_count": 1,
+          "median_ms": 18.900752
+        },
+        "client.service_start": {
+          "max_ms": 21.162571,
+          "median_count": 1,
+          "median_ms": 13.200267
+        },
+        "client.write_request": {
+          "max_ms": 41.902704,
+          "median_count": 1,
+          "median_ms": 34.221223
+        }
+      },
+      "client_accounted_share": 0.9248091240317299,
+      "client_top_level_ms": 73.207586,
+      "rust": {
+        "blob_publish": {
+          "max_ms": 1.686843,
+          "median_count": 344,
+          "median_ms": 1.664601
+        },
+        "digest": {
+          "max_ms": 3.164077,
+          "median_count": 682,
+          "median_ms": 3.011124
+        },
+        "encode": {
+          "max_ms": 6.183486,
+          "median_count": 169,
+          "median_ms": 5.789696
+        },
+        "encode_zstd": {
+          "max_ms": 6.134296,
+          "median_count": 169,
+          "median_ms": 5.744392
+        },
+        "index_attest": {
+          "max_ms": 0.456071,
+          "median_count": 1,
+          "median_ms": 0.34889
+        },
+        "index_build": {
+          "max_ms": 1.542668,
+          "median_count": 1,
+          "median_ms": 0.938491
+        },
+        "index_load": {
+          "max_ms": 2.565106,
+          "median_count": 1,
+          "median_ms": 1.786373
+        },
+        "index_segment": {
+          "max_ms": 5.06554,
+          "median_count": 2,
+          "median_ms": 3.535826
+        },
+        "manifest_commit": {
+          "max_ms": 0.4553,
+          "median_count": 1,
+          "median_ms": 0.413561
+        },
+        "metadata_commit": {
+          "max_ms": 5.632237,
+          "median_count": 1,
+          "median_ms": 4.064172
+        },
+        "plane_probe": {
+          "max_ms": 0.051997,
+          "median_count": 1,
+          "median_ms": 0.04842
+        },
+        "source_read": {
+          "max_ms": 0.490635,
+          "median_count": 338,
+          "median_ms": 0.426633
+        },
+        "state_replay": {
+          "max_ms": 40.932825,
+          "median_count": 2,
+          "median_ms": 24.262043
+        },
+        "store_open": {
+          "max_ms": 43.554215,
+          "median_count": 2,
+          "median_ms": 26.757508
+        }
+      },
+      "rust_top_level_ms": 45.663121000000004,
+      "wall_ms": 79.1596710041631
+    },
+    "session": {
+      "client": {
+        "adapter.allocate_name": {
+          "max_ms": 0.048611,
+          "median_count": 1.0,
+          "median_ms": 0.040440500000000004
+        },
+        "adapter.hash": {
+          "max_ms": 0.848402,
+          "median_count": 169.0,
+          "median_ms": 0.8458429999999999
+        },
+        "adapter.manifest_verify": {
+          "max_ms": 0.098454,
+          "median_count": 1.0,
+          "median_ms": 0.093289
+        },
+        "adapter.metadata_commit": {
+          "max_ms": 5.796694,
+          "median_count": 1.0,
+          "median_ms": 4.1047325
+        },
+        "adapter.metadata_serialize": {
+          "max_ms": 4.252423,
+          "median_count": 1.0,
+          "median_ms": 4.187988
+        },
+        "adapter.resolve": {
+          "max_ms": 0.520049,
+          "median_count": 169.0,
+          "median_ms": 0.5136375
+        },
+        "adapter.stage_total": {
+          "max_ms": 2.232425,
+          "median_count": 1.0,
+          "median_ms": 2.1863539999999997
+        },
+        "client.container_memfd": {
+          "max_ms": 0.360964,
+          "median_count": 1.0,
+          "median_ms": 0.3240145
+        },
+        "client.metadata_request": {
+          "max_ms": 5.770906,
+          "median_count": 1.0,
+          "median_ms": 4.07916
+        },
+        "client.write_request": {
+          "max_ms": 22.958512,
+          "median_count": 1.0,
+          "median_ms": 20.810233500000002
+        }
+      },
+      "client_accounted_share": 0.8428829200229888,
+      "client_top_level_ms": 31.747052000000004,
+      "rust": {
+        "blob_publish": {
+          "max_ms": 3.560291,
+          "median_count": 344.0,
+          "median_ms": 1.5330645
+        },
+        "digest": {
+          "max_ms": 2.988055,
+          "median_count": 682.0,
+          "median_ms": 2.9828859999999997
+        },
+        "encode": {
+          "max_ms": 5.789597,
+          "median_count": 169.0,
+          "median_ms": 5.692087000000001
+        },
+        "encode_zstd": {
+          "max_ms": 5.747957,
+          "median_count": 169.0,
+          "median_ms": 5.6515125
+        },
+        "index_attest": {
+          "max_ms": 0.459888,
+          "median_count": 1.0,
+          "median_ms": 0.3371135
+        },
+        "index_build": {
+          "max_ms": 1.569358,
+          "median_count": 1.0,
+          "median_ms": 0.8496794999999999
+        },
+        "index_load": {
+          "max_ms": 2.637831,
+          "median_count": 1.0,
+          "median_ms": 1.7890030000000001
+        },
+        "index_segment": {
+          "max_ms": 5.157592,
+          "median_count": 2.0,
+          "median_ms": 3.4510285
+        },
+        "manifest_commit": {
+          "max_ms": 0.484394,
+          "median_count": 1.0,
+          "median_ms": 0.4210755
+        },
+        "metadata_commit": {
+          "max_ms": 5.727466,
+          "median_count": 1.0,
+          "median_ms": 4.037157
+        },
+        "plane_probe": {
+          "max_ms": 0.051857,
+          "median_count": 0.0,
+          "median_ms": 0.0
+        },
+        "source_read": {
+          "max_ms": 0.412384,
+          "median_count": 338.0,
+          "median_ms": 0.400045
+        },
+        "state_replay": {
+          "max_ms": 0.038041,
+          "median_count": 0.0,
+          "median_ms": 0.0
+        },
+        "store_open": {
+          "max_ms": 0.144189,
+          "median_count": 0.0,
+          "median_ms": 0.0
+        }
+      },
+      "rust_top_level_ms": 18.5173435,
+      "wall_ms": 37.6648419915
+    },
+    "session_later": {
+      "client": {
+        "adapter.allocate_name": {
+          "max_ms": 0.048611,
+          "median_count": 1,
+          "median_ms": 0.040826
+        },
+        "adapter.hash": {
+          "max_ms": 0.848402,
+          "median_count": 169,
+          "median_ms": 0.846104
+        },
+        "adapter.manifest_verify": {
+          "max_ms": 0.098454,
+          "median_count": 1,
+          "median_ms": 0.093304
+        },
+        "adapter.metadata_commit": {
+          "max_ms": 5.796694,
+          "median_count": 1,
+          "median_ms": 4.360675
+        },
+        "adapter.metadata_serialize": {
+          "max_ms": 4.252423,
+          "median_count": 1,
+          "median_ms": 4.185218
+        },
+        "adapter.resolve": {
+          "max_ms": 0.520049,
+          "median_count": 169,
+          "median_ms": 0.513913
+        },
+        "adapter.stage_total": {
+          "max_ms": 2.232425,
+          "median_count": 1,
+          "median_ms": 2.184395
+        },
+        "client.container_memfd": {
+          "max_ms": 0.341738,
+          "median_count": 1,
+          "median_ms": 0.320958
+        },
+        "client.metadata_request": {
+          "max_ms": 5.770906,
+          "median_count": 1,
+          "median_ms": 4.334927
+        },
+        "client.write_request": {
+          "max_ms": 21.125202,
+          "median_count": 1,
+          "median_ms": 20.805084
+        }
+      },
+      "client_accounted_share": 0.8436088058815046,
+      "client_top_level_ms": 31.99046,
+      "rust": {
+        "blob_publish": {
+          "max_ms": 1.703948,
+          "median_count": 344,
+          "median_ms": 1.528285
+        },
+        "digest": {
+          "max_ms": 2.987372,
+          "median_count": 682,
+          "median_ms": 2.98225
+        },
+        "encode": {
+          "max_ms": 5.789597,
+          "median_count": 169,
+          "median_ms": 5.691435
+        },
+        "encode_zstd": {
+          "max_ms": 5.747957,
+          "median_count": 169,
+          "median_ms": 5.650856
+        },
+        "index_attest": {
+          "max_ms": 0.459888,
+          "median_count": 1,
+          "median_ms": 0.358208
+        },
+        "index_build": {
+          "max_ms": 1.569358,
+          "median_count": 1,
+          "median_ms": 0.9439
+        },
+        "index_load": {
+          "max_ms": 2.637831,
+          "median_count": 1,
+          "median_ms": 1.895607
+        },
+        "index_segment": {
+          "max_ms": 5.157592,
+          "median_count": 2,
+          "median_ms": 3.676339
+        },
+        "manifest_commit": {
+          "max_ms": 0.484394,
+          "median_count": 1,
+          "median_ms": 0.421216
+        },
+        "metadata_commit": {
+          "max_ms": 5.727466,
+          "median_count": 1,
+          "median_ms": 4.292859
+        },
+        "source_read": {
+          "max_ms": 0.406579,
+          "median_count": 338,
+          "median_ms": 0.399431
+        }
+      },
+      "rust_top_level_ms": 18.991815,
+      "wall_ms": 37.920964998193085
+    },
+    "session_two_commit": {
+      "client": {
+        "adapter.allocate_name": {
+          "max_ms": 0.057478,
+          "median_count": 1.0,
+          "median_ms": 0.043266
+        },
+        "adapter.hash": {
+          "max_ms": 0.852765,
+          "median_count": 169.0,
+          "median_ms": 0.8469955
+        },
+        "adapter.manifest_verify": {
+          "max_ms": 0.115035,
+          "median_count": 1.0,
+          "median_ms": 0.0937395
+        },
+        "adapter.metadata_commit": {
+          "max_ms": 6.236114,
+          "median_count": 1.0,
+          "median_ms": 4.101181
+        },
+        "adapter.metadata_serialize": {
+          "max_ms": 53.746169,
+          "median_count": 1.0,
+          "median_ms": 4.2335080000000005
+        },
+        "adapter.resolve": {
+          "max_ms": 0.5301,
+          "median_count": 169.0,
+          "median_ms": 0.5090095
+        },
+        "adapter.stage_total": {
+          "max_ms": 2.310591,
+          "median_count": 1.0,
+          "median_ms": 2.2576869999999998
+        },
+        "client.container_memfd": {
+          "max_ms": 0.636688,
+          "median_count": 1.0,
+          "median_ms": 0.49708700000000006
+        },
+        "client.metadata_request": {
+          "max_ms": 6.209735,
+          "median_count": 1.0,
+          "median_ms": 4.072272
+        },
+        "client.write_request": {
+          "max_ms": 25.887395,
+          "median_count": 1.0,
+          "median_ms": 24.319866500000003
+        }
+      },
+      "client_accounted_share": 0.8524851804450401,
+      "client_top_level_ms": 35.546335000000006,
+      "rust": {
+        "blob_publish": {
+          "max_ms": 3.343867,
+          "median_count": 344.0,
+          "median_ms": 1.7145905
+        },
+        "digest": {
+          "max_ms": 3.006797,
+          "median_count": 682.0,
+          "median_ms": 2.9793545
+        },
+        "encode": {
+          "max_ms": 5.871293,
+          "median_count": 169.0,
+          "median_ms": 5.763455
+        },
+        "encode_zstd": {
+          "max_ms": 5.826026,
+          "median_count": 169.0,
+          "median_ms": 5.721011
+        },
+        "index_attest": {
+          "max_ms": 0.696088,
+          "median_count": 2.0,
+          "median_ms": 0.5143895
+        },
+        "index_build": {
+          "max_ms": 3.061311,
+          "median_count": 2.0,
+          "median_ms": 1.7206994999999998
+        },
+        "index_load": {
+          "max_ms": 4.814972,
+          "median_count": 2.0,
+          "median_ms": 2.8384460000000002
+        },
+        "index_segment": {
+          "max_ms": 9.335176,
+          "median_count": 4.0,
+          "median_ms": 5.6617525
+        },
+        "manifest_commit": {
+          "max_ms": 0.4931,
+          "median_count": 2.0,
+          "median_ms": 0.4455665
+        },
+        "metadata_commit": {
+          "max_ms": 6.159331,
+          "median_count": 1.0,
+          "median_ms": 4.019063
+        },
+        "plane_probe": {
+          "max_ms": 0.050454,
+          "median_count": 0.0,
+          "median_ms": 0.0
+        },
+        "source_read": {
+          "max_ms": 0.436978,
+          "median_count": 338.0,
+          "median_ms": 0.4157545
+        },
+        "state_replay": {
+          "max_ms": 0.038932,
+          "median_count": 0.0,
+          "median_ms": 0.0
+        },
+        "store_open": {
+          "max_ms": 0.144991,
+          "median_count": 0.0,
+          "median_ms": 0.0
+        }
+      },
+      "rust_top_level_ms": 20.9995365,
+      "wall_ms": 41.69730549619999
+    }
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/python-court:1",
+    "court_image_id": "sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu_count": 16,
+    "kernel": "7.3.3-1-cachyos",
+    "platform": "Linux-7.3.3-1-cachyos-x86_64-with-glibc2.36",
+    "python": "3.12.16",
+    "repo_weftcodec": "301ea653a6d25e9feafa2fb074bfc3545aaf2042",
+    "repo_weftfs": "62783fb5447e7c9720fd33b26908c5697896ec79",
+    "torch": "2.15.0+cpu",
+    "weftfs_cli": "/work/.docker-cache/target-rust/release/weftfs"
+  },
+  "fixture": {
+    "entries": 169,
+    "flat_sha256": "b2a0019398e67b6302386141c1668de62c52f1bf3b4fb9465ddf5f4ea621cee4",
+    "note": "the R11 training-goodput checkpoint state, saved once per writer",
+    "shard_strategy": "zstd",
+    "source": "python/courts/training_goodput.py build_model/capture_state",
+    "staging_bytes": 67108864,
+    "tensor_bytes": 4973360,
+    "topology": 1
+  },
+  "measured_at": "2026-11-11T02:48:28Z",
+  "peak_rss_kib": 303244,
+  "runs": [
+    {
+      "checkpoint_write_ms": 25.204591976944357,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.038713,
+          "total_ms": 0.038713
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.025197,
+          "total_ms": 0.868177
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.098203,
+          "total_ms": 0.098203
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 6.392757,
+          "total_ms": 6.392757
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.296976,
+          "total_ms": 4.296976
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.012714,
+          "total_ms": 0.523831
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 1.419828,
+          "total_ms": 1.419828
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 3.125801,
+          "total_ms": 3.125801
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.748026,
+          "total_ms": 0.748026
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 6.360636,
+          "total_ms": 6.360636
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 1.406214,
+          "total_ms": 1.406214
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 23.534917,
+          "total_ms": 23.534917
+        }
+      },
+      "close_ms": 1.103328017052263,
+      "construct_ms": 0.034124008379876614,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "name": "ckpt",
+      "profile_available": true,
+      "profile_begin_ms": 1.4480709796771407,
+      "profile_take_ms": 0.07748499047011137,
+      "result": {
+        "storage_name": "ckpt",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 127207,
+          "total_ns": 3523522
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 91170,
+          "total_ns": 3108408
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 207788,
+          "total_ns": 5980366
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 207497,
+          "total_ns": 5935398
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 96119,
+          "total_ns": 96119
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 192829,
+          "total_ns": 192829
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 28413,
+          "total_ns": 28413
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 805172,
+          "total_ns": 821713
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 453005,
+          "total_ns": 453005
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 1399070,
+          "total_ns": 1399070
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 58589,
+          "total_ns": 58589
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 5901,
+          "total_ns": 417866
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 3647224,
+          "total_ns": 3707716
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 4853875,
+          "total_ns": 5037057
+        }
+      },
+      "save_ms": 44.72167300991714,
+      "scenario": "fresh-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 56,
+          "files": 1
+        },
+        "commits": {
+          "bytes": 121828,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 61995,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 4548635,
+          "files": 258
+        },
+        "objects": {
+          "bytes": 157913,
+          "files": 4
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 4890427,
+      "store_delta_files": 265,
+      "store_total_bytes": 4899486,
+      "store_total_files": 270,
+      "tensor_bytes": 4973360,
+      "wall_ms": 46.20386799797416
+    },
+    {
+      "checkpoint_write_ms": 24.688849021913484,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.036147,
+          "total_ms": 0.036147
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019958,
+          "total_ms": 0.845513
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.091961,
+          "total_ms": 0.091961
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 6.675494,
+          "total_ms": 6.675494
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 54.064904,
+          "total_ms": 54.064904
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.017061,
+          "total_ms": 0.526015
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 1.240805,
+          "total_ms": 1.240805
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.52447,
+          "total_ms": 2.52447
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.421216,
+          "total_ms": 0.421216
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 6.627064,
+          "total_ms": 6.627064
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 1.231819,
+          "total_ms": 1.231819
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 23.406617,
+          "total_ms": 23.406617
+        }
+      },
+      "close_ms": 1.1086479935329407,
+      "construct_ms": 0.025367015041410923,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "name": "ckpt",
+      "profile_available": true,
+      "profile_begin_ms": 1.2564139906316996,
+      "profile_take_ms": 0.07989900768734515,
+      "result": {
+        "storage_name": "ckpt",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 76432,
+          "total_ns": 3364093
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 84577,
+          "total_ns": 3063640
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 229969,
+          "total_ns": 5846337
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 229588,
+          "total_ns": 5795171
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 97242,
+          "total_ns": 97242
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 280022,
+          "total_ns": 280022
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 42610,
+          "total_ns": 42610
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 893166,
+          "total_ns": 910528
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 412099,
+          "total_ns": 412099
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 1520697,
+          "total_ns": 1520697
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 60933,
+          "total_ns": 60933
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 8286,
+          "total_ns": 497556
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 3829704,
+          "total_ns": 3887251
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 4969491,
+          "total_ns": 5156339
+        }
+      },
+      "save_ms": 93.09513898915611,
+      "scenario": "fresh-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 56,
+          "files": 1
+        },
+        "commits": {
+          "bytes": 121828,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 61995,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 4548635,
+          "files": 258
+        },
+        "objects": {
+          "bytes": 157913,
+          "files": 4
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 4890427,
+      "store_delta_files": 265,
+      "store_total_bytes": 4899486,
+      "store_total_files": 270,
+      "tensor_bytes": 4973360,
+      "wall_ms": 94.37691999482922
+    },
+    {
+      "checkpoint_write_ms": 25.064560992177576,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.040145,
+          "total_ms": 0.040145
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.024185,
+          "total_ms": 0.853634
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.094777,
+          "total_ms": 0.094777
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 6.23398,
+          "total_ms": 6.23398
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.166433,
+          "total_ms": 4.166433
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.01602,
+          "total_ms": 0.519695
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 1.385755,
+          "total_ms": 1.385755
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.364801,
+          "total_ms": 2.364801
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.665882,
+          "total_ms": 0.665882
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 6.209044,
+          "total_ms": 6.209044
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 1.378291,
+          "total_ms": 1.378291
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 23.5258,
+          "total_ms": 23.5258
+        }
+      },
+      "close_ms": 1.093019003747031,
+      "construct_ms": 0.024084991309791803,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 0,
+      "name": "ckpt-0",
+      "profile_available": true,
+      "profile_begin_ms": 1.40127501799725,
+      "profile_take_ms": 0.07357698632404208,
+      "result": {
+        "storage_name": "ckpt-0",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 42048,
+          "total_ns": 3376831
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 160459,
+          "total_ns": 3140964
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 161110,
+          "total_ns": 5788520
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 160820,
+          "total_ns": 5739573
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 94536,
+          "total_ns": 94536
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 192869,
+          "total_ns": 192869
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 26670,
+          "total_ns": 26670
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 721596,
+          "total_ns": 736814
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 398233,
+          "total_ns": 398233
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 1265771,
+          "total_ns": 1265771
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 52007,
+          "total_ns": 52007
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 7594,
+          "total_ns": 474804
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 3672311,
+          "total_ns": 3726642
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 4841062,
+          "total_ns": 5009766
+        }
+      },
+      "save_ms": 43.03408399573527,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 56,
+          "files": 1
+        },
+        "commits": {
+          "bytes": 121830,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 61995,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 4548635,
+          "files": 258
+        },
+        "objects": {
+          "bytes": 157919,
+          "files": 4
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 4890435,
+      "store_delta_files": 265,
+      "store_total_bytes": 4899494,
+      "store_total_files": 270,
+      "tensor_bytes": 4973360,
+      "wall_ms": 44.459444005042315
+    },
+    {
+      "checkpoint_write_ms": 27.50856999773532,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.033362,
+          "total_ms": 0.033362
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019977,
+          "total_ms": 0.843362
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.090599,
+          "total_ms": 0.090599
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 10.213725,
+          "total_ms": 10.213725
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.108605,
+          "total_ms": 4.108605
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.017743,
+          "total_ms": 0.511751
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 6.224041,
+          "total_ms": 6.224041
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.188442,
+          "total_ms": 2.188442
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.44472,
+          "total_ms": 0.44472
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 10.187636,
+          "total_ms": 10.187636
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 6.216147,
+          "total_ms": 6.216147
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 26.207823,
+          "total_ms": 26.207823
+        }
+      },
+      "close_ms": 1.0941209911834449,
+      "construct_ms": 0.026739988243207335,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 1,
+      "name": "ckpt-1",
+      "profile_available": true,
+      "profile_begin_ms": 6.239280017325655,
+      "profile_take_ms": 0.08048000745475292,
+      "result": {
+        "storage_name": "ckpt-1",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 29595,
+          "total_ns": 1579745
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35556,
+          "total_ns": 2980643
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 207627,
+          "total_ns": 5786156
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 207307,
+          "total_ns": 5743337
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 222996,
+          "total_ns": 222996
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 377364,
+          "total_ns": 377364
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1273075,
+          "total_ns": 1273075
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 2287047,
+          "total_ns": 2301104
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 412780,
+          "total_ns": 412780
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 2848033,
+          "total_ns": 2848033
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 48190,
+          "total_ns": 48190
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 5800,
+          "total_ns": 458032
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 5965048,
+          "total_ns": 9591293
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 7177781,
+          "total_ns": 12069837
+        }
+      },
+      "save_ms": 49.16676599532366,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 5176328,
+      "store_total_files": 277,
+      "tensor_bytes": 4973360,
+      "wall_ms": 55.43278600089252
+    },
+    {
+      "checkpoint_write_ms": 29.694849014049396,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.038211,
+          "total_ms": 0.038211
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.021891,
+          "total_ms": 0.848044
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.091751,
+          "total_ms": 0.091751
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 13.210976,
+          "total_ms": 13.210976
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.117672,
+          "total_ms": 4.117672
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.018945,
+          "total_ms": 0.530523
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 8.185471,
+          "total_ms": 8.185471
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.203461,
+          "total_ms": 2.203461
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.351817,
+          "total_ms": 0.351817
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 13.18629,
+          "total_ms": 13.18629
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 8.176895,
+          "total_ms": 8.176895
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 28.499258,
+          "total_ms": 28.499258
+        }
+      },
+      "close_ms": 1.0922880028374493,
+      "construct_ms": 0.03123798524029553,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 2,
+      "name": "ckpt-2",
+      "profile_available": true,
+      "profile_begin_ms": 8.201140008168295,
+      "profile_take_ms": 0.07459899643436074,
+      "result": {
+        "storage_name": "ckpt-2",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 37650,
+          "total_ns": 1601454
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 40125,
+          "total_ns": 3012377
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 178322,
+          "total_ns": 5789696
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 177822,
+          "total_ns": 5744392
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 261999,
+          "total_ns": 261999
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 596322,
+          "total_ns": 596322
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1407326,
+          "total_ns": 1407326
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 2687184,
+          "total_ns": 2705057
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 410495,
+          "total_ns": 410495
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 3240606,
+          "total_ns": 3240606
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 49081,
+          "total_ns": 49081
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 5210,
+          "total_ns": 416333
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 8488226,
+          "total_ns": 14397420
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 9769106,
+          "total_ns": 16961023
+        }
+      },
+      "save_ms": 54.343122988939285,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 5453162,
+      "store_total_files": 284,
+      "tensor_bytes": 4973360,
+      "wall_ms": 62.575500982347876
+    },
+    {
+      "checkpoint_write_ms": 32.85153800970875,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.038271,
+          "total_ms": 0.038271
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019907,
+          "total_ms": 0.840607
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.091801,
+          "total_ms": 0.091801
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 16.273509,
+          "total_ms": 16.273509
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.157486,
+          "total_ms": 4.157486
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.018795,
+          "total_ms": 0.526566
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 11.134453,
+          "total_ms": 11.134453
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.180678,
+          "total_ms": 2.180678
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.35395,
+          "total_ms": 0.35395
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 16.250567,
+          "total_ms": 16.250567
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 11.126648,
+          "total_ms": 11.126648
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 31.656588,
+          "total_ms": 31.656588
+        }
+      },
+      "close_ms": 1.0893919970840216,
+      "construct_ms": 0.025778019335120916,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 3,
+      "name": "ckpt-3",
+      "profile_available": true,
+      "profile_begin_ms": 11.150482983794063,
+      "profile_take_ms": 0.07063199882395566,
+      "result": {
+        "storage_name": "ckpt-3",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 121887,
+          "total_ns": 1664601
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 101389,
+          "total_ns": 3164077
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 183773,
+          "total_ns": 5739801
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 183412,
+          "total_ns": 5697970
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 310319,
+          "total_ns": 310319
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 749468,
+          "total_ns": 749468
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1663614,
+          "total_ns": 1663614
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 3158763,
+          "total_ns": 3174783
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 413561,
+          "total_ns": 413561
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 3711885,
+          "total_ns": 3711885
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 46787,
+          "total_ns": 46787
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 6021,
+          "total_ns": 402884
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 11102183,
+          "total_ns": 19749215
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 12323180,
+          "total_ns": 22279204
+        }
+      },
+      "save_ms": 60.60610600979999,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 5729996,
+      "store_total_files": 291,
+      "tensor_bytes": 4973360,
+      "wall_ms": 71.78236701292917
+    },
+    {
+      "checkpoint_write_ms": 35.50012898631394,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.041257,
+          "total_ms": 0.041257
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020088,
+          "total_ms": 0.84413
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.092413,
+          "total_ms": 0.092413
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 18.931258,
+          "total_ms": 18.931258
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.112693,
+          "total_ms": 4.112693
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.019627,
+          "total_ms": 0.531483
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 13.207891,
+          "total_ms": 13.207891
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.185577,
+          "total_ms": 2.185577
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.335937,
+          "total_ms": 0.335937
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 18.900752,
+          "total_ms": 18.900752
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 13.200267,
+          "total_ms": 13.200267
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 34.221223,
+          "total_ms": 34.221223
+        }
+      },
+      "close_ms": 1.0975080076605082,
+      "construct_ms": 0.025607994757592678,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 4,
+      "name": "ckpt-4",
+      "profile_available": true,
+      "profile_begin_ms": 13.222939014667645,
+      "profile_take_ms": 0.08619000436738133,
+      "result": {
+        "storage_name": "ckpt-4",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 35646,
+          "total_ns": 1602359
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 41317,
+          "total_ns": 3030076
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 351055,
+          "total_ns": 6183486
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 348961,
+          "total_ns": 6134296
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 348890,
+          "total_ns": 348890
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 938491,
+          "total_ns": 938491
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1786373,
+          "total_ns": 1786373
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 3514226,
+          "total_ns": 3535826
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 409103,
+          "total_ns": 409103
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 4064172,
+          "total_ns": 4064172
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 48170,
+          "total_ns": 48170
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 57287,
+          "total_ns": 490635
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 13348974,
+          "total_ns": 24262043
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 14578377,
+          "total_ns": 26757508
+        }
+      },
+      "save_ms": 65.91112399473786,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 6006830,
+      "store_total_files": 298,
+      "tensor_bytes": 4973360,
+      "wall_ms": 79.1596710041631
+    },
+    {
+      "checkpoint_write_ms": 38.024298002710566,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.039113,
+          "total_ms": 0.039113
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020558,
+          "total_ms": 0.84407
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.099095,
+          "total_ms": 0.099095
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 22.709086,
+          "total_ms": 22.709086
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.158959,
+          "total_ms": 4.158959
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.019487,
+          "total_ms": 0.528093
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 16.082624,
+          "total_ms": 16.082624
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.190226,
+          "total_ms": 2.190226
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.565635,
+          "total_ms": 0.565635
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 22.682867,
+          "total_ms": 22.682867
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 16.0748,
+          "total_ms": 16.0748
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 36.591465,
+          "total_ms": 36.591465
+        }
+      },
+      "close_ms": 1.1054319911636412,
+      "construct_ms": 0.026989990146830678,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 5,
+      "name": "ckpt-5",
+      "profile_available": true,
+      "profile_begin_ms": 16.099314991151914,
+      "profile_take_ms": 0.0811520148999989,
+      "result": {
+        "storage_name": "ckpt-5",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 34283,
+          "total_ns": 1672208
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35506,
+          "total_ns": 3011124
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 173774,
+          "total_ns": 5787984
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 173373,
+          "total_ns": 5739045
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 390508,
+          "total_ns": 390508
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 1162238,
+          "total_ns": 1162238
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 2076133,
+          "total_ns": 2076133
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 4097174,
+          "total_ns": 4115729
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 433950,
+          "total_ns": 433950
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 4678428,
+          "total_ns": 4678428
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 48812,
+          "total_ns": 48812
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 5931,
+          "total_ns": 445598
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 16417639,
+          "total_ns": 29902937
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 17690052,
+          "total_ns": 32520039
+        }
+      },
+      "save_ms": 72.24878700799309,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 6283664,
+      "store_total_files": 305,
+      "tensor_bytes": 4973360,
+      "wall_ms": 88.37509198929183
+    },
+    {
+      "checkpoint_write_ms": 40.57367399218492,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.043862,
+          "total_ms": 0.043862
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.023544,
+          "total_ms": 0.855578
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.09676,
+          "total_ms": 0.09676
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 25.616741,
+          "total_ms": 25.616741
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.215294,
+          "total_ms": 4.215294
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.019437,
+          "total_ms": 0.534637
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 18.558022,
+          "total_ms": 18.558022
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.29955,
+          "total_ms": 2.29955
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.478884,
+          "total_ms": 0.478884
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 25.588688,
+          "total_ms": 25.588688
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 18.548755,
+          "total_ms": 18.548755
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 39.226781,
+          "total_ms": 39.226781
+        }
+      },
+      "close_ms": 1.1000819795299321,
+      "construct_ms": 0.029104005079716444,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 6,
+      "name": "ckpt-6",
+      "profile_available": true,
+      "profile_begin_ms": 18.579221999971196,
+      "profile_take_ms": 0.08024999988265336,
+      "result": {
+        "storage_name": "ckpt-6",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 34144,
+          "total_ns": 1686843
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 50475,
+          "total_ns": 3004220
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 167443,
+          "total_ns": 5802350
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 167032,
+          "total_ns": 5756045
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 432086,
+          "total_ns": 432086
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 1320974,
+          "total_ns": 1320974
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 2283961,
+          "total_ns": 2283961
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 4510214,
+          "total_ns": 4527717
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 455300,
+          "total_ns": 455300
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 5134449,
+          "total_ns": 5134449
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 48420,
+          "total_ns": 48420
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 9177,
+          "total_ns": 426633
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 18928093,
+          "total_ns": 35276893
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 20138982,
+          "total_ns": 37796814
+        }
+      },
+      "save_ms": 77.97179400222376,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 6560498,
+      "store_total_files": 312,
+      "tensor_bytes": 4973360,
+      "wall_ms": 96.58012000727467
+    },
+    {
+      "checkpoint_write_ms": 43.220211984589696,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.047458,
+          "total_ms": 0.047458
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.02152,
+          "total_ms": 0.844993
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.092302,
+          "total_ms": 0.092302
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 29.336651,
+          "total_ms": 29.336651
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.094038,
+          "total_ms": 4.094038
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.019707,
+          "total_ms": 0.525829
+        },
+        "adapter.service_obtain": {
+          "count": 1,
+          "max_ms": 21.170355,
+          "total_ms": 21.170355
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.247142,
+          "total_ms": 2.247142
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.407901,
+          "total_ms": 0.407901
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 29.307356,
+          "total_ms": 29.307356
+        },
+        "client.service_start": {
+          "count": 1,
+          "max_ms": 21.162571,
+          "total_ms": 21.162571
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 41.902704,
+          "total_ms": 41.902704
+        }
+      },
+      "close_ms": 1.0990709997713566,
+      "construct_ms": 0.028643000405281782,
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 7,
+      "name": "ckpt-7",
+      "profile_available": true,
+      "profile_begin_ms": 21.18608498130925,
+      "profile_take_ms": 0.08361600339412689,
+      "result": {
+        "storage_name": "ckpt-7",
+        "written": 1
+      },
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 34184,
+          "total_ns": 1672479
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 34955,
+          "total_ns": 2988362
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 192789,
+          "total_ns": 5828522
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 192278,
+          "total_ns": 5784447
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 456071,
+          "total_ns": 456071
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 1542668,
+          "total_ns": 1542668
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 2565106,
+          "total_ns": 2565106
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 5047066,
+          "total_ns": 5065540
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 425925,
+          "total_ns": 425925
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 5632237,
+          "total_ns": 5632237
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 51997,
+          "total_ns": 51997
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 5791,
+          "total_ns": 412068
+        },
+        "state_replay": {
+          "count": 2,
+          "max_ns": 21998821,
+          "total_ns": 40932825
+        },
+        "store_open": {
+          "count": 2,
+          "max_ns": 23290892,
+          "total_ns": 43554215
+        }
+      },
+      "save_ms": 84.1181910072919,
+      "scenario": "same-store",
+      "store_delta_by_dir": {
+        "access": {
+          "bytes": 40,
+          "files": 0
+        },
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276834,
+      "store_delta_files": 7,
+      "store_total_bytes": 6837332,
+      "store_total_files": 319,
+      "tensor_bytes": 4973360,
+      "wall_ms": 105.33291898900643
+    },
+    {
+      "checkpoint_write_ms": 25.671153009170666,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.03193,
+          "total_ms": 0.03193
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.022432,
+          "total_ms": 0.846091
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093975,
+          "total_ms": 0.093975
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 1.938958,
+          "total_ms": 1.938958
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.179176,
+          "total_ms": 4.179176
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.019797,
+          "total_ms": 0.526859
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.252022,
+          "total_ms": 2.252022
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.636688,
+          "total_ms": 0.636688
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 1.911416,
+          "total_ms": 1.911416
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 24.182155,
+          "total_ms": 24.182155
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 0,
+      "name": "ckpt-0",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 58619,
+          "total_ns": 3343867
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35356,
+          "total_ns": 3006797
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 161822,
+          "total_ns": 5779704
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 161201,
+          "total_ns": 5732127
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 117739,
+          "total_ns": 215361
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 192259,
+          "total_ns": 382934
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 1238321,
+          "total_ns": 1265301
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 1583855,
+          "total_ns": 2320881
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 394195,
+          "total_ns": 422568
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 1844060,
+          "total_ns": 1844060
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 50454,
+          "total_ns": 50454
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 14006,
+          "total_ns": 436978
+        },
+        "state_replay": {
+          "count": 1,
+          "max_ns": 38932,
+          "total_ns": 38932
+        },
+        "store_open": {
+          "count": 1,
+          "max_ns": 144991,
+          "total_ns": 144991
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 122277,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62156,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 4548635,
+          "files": 258
+        },
+        "objects": {
+          "bytes": 157919,
+          "files": 4
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 4890987,
+      "store_delta_files": 266,
+      "store_total_bytes": 4900046,
+      "store_total_files": 271,
+      "tensor_bytes": 4973360,
+      "wall_ms": 39.42372900201008
+    },
+    {
+      "checkpoint_write_ms": 23.843002010835335,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.036578,
+          "total_ms": 0.036578
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020579,
+          "total_ms": 0.845773
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.094416,
+          "total_ms": 0.094416
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 2.520753,
+          "total_ms": 2.520753
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.251602,
+          "total_ms": 4.251602
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009317,
+          "total_ms": 0.503494
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.187371,
+          "total_ms": 2.187371
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.32192,
+          "total_ms": 0.32192
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 2.493181,
+          "total_ms": 2.493181
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 22.67362,
+          "total_ms": 22.67362
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 1,
+      "name": "ckpt-1",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 34805,
+          "total_ns": 1567493
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35076,
+          "total_ns": 2975979
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 189103,
+          "total_ns": 5759957
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 188472,
+          "total_ns": 5717254
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 216845,
+          "total_ns": 345695
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 370130,
+          "total_ns": 740251
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 1500891,
+          "total_ns": 1631254
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 2046738,
+          "total_ns": 3195941
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 407009,
+          "total_ns": 438928
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 2411208,
+          "total_ns": 2411208
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 10079,
+          "total_ns": 406755
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 5177448,
+      "store_total_files": 280,
+      "tensor_bytes": 4973360,
+      "wall_ms": 38.107743981527165
+    },
+    {
+      "checkpoint_write_ms": 24.216858990257606,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.039524,
+          "total_ms": 0.039524
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020368,
+          "total_ms": 0.843941
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.091801,
+          "total_ms": 0.091801
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 3.199108,
+          "total_ms": 3.199108
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.12743,
+          "total_ms": 4.12743
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009528,
+          "total_ms": 0.502125
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.184806,
+          "total_ms": 2.184806
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.35909,
+          "total_ms": 0.35909
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 3.174402,
+          "total_ms": 3.174402
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 23.021018,
+          "total_ms": 23.021018
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 2,
+      "name": "ckpt-2",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 32982,
+          "total_ns": 1600081
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 36468,
+          "total_ns": 2976197
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 156853,
+          "total_ns": 5709195
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 156502,
+          "total_ns": 5665295
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 249676,
+          "total_ns": 409354
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 562870,
+          "total_ns": 1124738
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 1794889,
+          "total_ns": 2130615
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 2572529,
+          "total_ns": 4153920
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 411137,
+          "total_ns": 493100
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 3125742,
+          "total_ns": 3125742
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4178,
+          "total_ns": 411326
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 5454850,
+      "store_total_files": 289,
+      "tensor_bytes": 4973360,
+      "wall_ms": 38.98700399440713
+    },
+    {
+      "checkpoint_write_ms": 25.469496002187952,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.04273,
+          "total_ms": 0.04273
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.021821,
+          "total_ms": 0.8479
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.115035,
+          "total_ms": 0.115035
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 3.873116,
+          "total_ms": 3.873116
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.339145,
+          "total_ms": 4.339145
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.01057,
+          "total_ms": 0.507821
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.263352,
+          "total_ms": 2.263352
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.488451,
+          "total_ms": 0.488451
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 3.842178,
+          "total_ms": 3.842178
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 24.023648,
+          "total_ms": 24.023648
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 3,
+      "name": "ckpt-3",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 53921,
+          "total_ns": 1841010
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35225,
+          "total_ns": 2977374
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 159958,
+          "total_ns": 5766953
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 159397,
+          "total_ns": 5724768
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 302354,
+          "total_ns": 489663
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 797357,
+          "total_ns": 1555391
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 2033003,
+          "total_ns": 2616372
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 3076570,
+          "total_ns": 5226591
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 414954,
+          "total_ns": 449699
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 3789159,
+          "total_ns": 3789159
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 6142,
+          "total_ns": 430683
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 5732252,
+      "store_total_files": 298,
+      "tensor_bytes": 4973360,
+      "wall_ms": 41.37721299775876
+    },
+    {
+      "checkpoint_write_ms": 25.811454019276425,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.045404,
+          "total_ms": 0.045404
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.022301,
+          "total_ms": 0.852765
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.094697,
+          "total_ms": 0.094697
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 4.329246,
+          "total_ms": 4.329246
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.186731,
+          "total_ms": 4.186731
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.01088,
+          "total_ms": 0.516211
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.2997,
+          "total_ms": 2.2997
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.505723,
+          "total_ms": 0.505723
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 4.302366,
+          "total_ms": 4.302366
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 24.457578,
+          "total_ms": 24.457578
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 4,
+      "name": "ckpt-4",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 37189,
+          "total_ns": 1736172
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 38462,
+          "total_ns": 2993206
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 247361,
+          "total_ns": 5871293
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 247060,
+          "total_ns": 5826026
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 336298,
+          "total_ns": 539116
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 945894,
+          "total_ns": 1886008
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 2246201,
+          "total_ns": 3060520
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 3488468,
+          "total_ns": 6096914
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 408251,
+          "total_ns": 437656
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 4248967,
+          "total_ns": 4248967
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 21149,
+          "total_ns": 424933
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 6009654,
+      "store_total_files": 307,
+      "tensor_bytes": 4973360,
+      "wall_ms": 42.017397994641215
+    },
+    {
+      "checkpoint_write_ms": 25.960581988329068,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.043802,
+          "total_ms": 0.043802
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.024325,
+          "total_ms": 0.85199
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.091902,
+          "total_ms": 0.091902
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 5.43473,
+          "total_ms": 5.43473
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 53.746169,
+          "total_ms": 53.746169
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009728,
+          "total_ms": 0.5301
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.293058,
+          "total_ms": 2.293058
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.448957,
+          "total_ms": 0.448957
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 5.394064,
+          "total_ms": 5.394064
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 24.669033,
+          "total_ms": 24.669033
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 5,
+      "name": "ckpt-5",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 39594,
+          "total_ns": 1693009
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 37921,
+          "total_ns": 2979681
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 246460,
+          "total_ns": 5768000
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 246149,
+          "total_ns": 5727578
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 381592,
+          "total_ns": 611380
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 1142882,
+          "total_ns": 2268412
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 2571878,
+          "total_ns": 3662222
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 4057430,
+          "total_ns": 7252951
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 413592,
+          "total_ns": 451062
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 5307251,
+          "total_ns": 5307251
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 5360,
+          "total_ns": 398568
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 6287056,
+      "store_total_files": 316,
+      "tensor_bytes": 4973360,
+      "wall_ms": 92.76675601722673
+    },
+    {
+      "checkpoint_write_ms": 27.301944006467238,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.057478,
+          "total_ms": 0.057478
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.023373,
+          "total_ms": 0.84848
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093294,
+          "total_ms": 0.093294
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 6.008509,
+          "total_ms": 6.008509
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.244699,
+          "total_ms": 4.244699
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.010429,
+          "total_ms": 0.506913
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.310591,
+          "total_ms": 2.310591
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.625607,
+          "total_ms": 0.625607
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 5.981409,
+          "total_ms": 5.981409
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 25.773624,
+          "total_ms": 25.773624
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 6,
+      "name": "ckpt-6",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 34695,
+          "total_ns": 1797666
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35787,
+          "total_ns": 2979028
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 162593,
+          "total_ns": 5739785
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 162142,
+          "total_ns": 5697319
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 406829,
+          "total_ns": 642258
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 1401665,
+          "total_ns": 2731646
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 3106375,
+          "total_ns": 4475098
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 4863123,
+          "total_ns": 8599244
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 407360,
+          "total_ns": 449779
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 5933750,
+          "total_ns": 5933750
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4207,
+          "total_ns": 418726
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 6564458,
+      "store_total_files": 325,
+      "tensor_bytes": 4973360,
+      "wall_ms": 45.25796300731599
+    },
+    {
+      "checkpoint_write_ms": 27.36457099672407,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.045966,
+          "total_ms": 0.045966
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020147,
+          "total_ms": 0.844835
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093504,
+          "total_ms": 0.093504
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 6.236114,
+          "total_ms": 6.236114
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.222317,
+          "total_ms": 4.222317
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009909,
+          "total_ms": 0.510198
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.233757,
+          "total_ms": 2.233757
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.616981,
+          "total_ms": 0.616981
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 6.209735,
+          "total_ms": 6.209735
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 25.887395,
+          "total_ms": 25.887395
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 7,
+      "name": "ckpt-7",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 32080,
+          "total_ns": 1671020
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 36318,
+          "total_ns": 2982255
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 158636,
+          "total_ns": 5708647
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 158215,
+          "total_ns": 5664610
+        },
+        "index_attest": {
+          "count": 2,
+          "max_ns": 439660,
+          "total_ns": 696088
+        },
+        "index_build": {
+          "count": 2,
+          "max_ns": 1538500,
+          "total_ns": 3061311
+        },
+        "index_load": {
+          "count": 2,
+          "max_ns": 3131722,
+          "total_ns": 4814972
+        },
+        "index_segment": {
+          "count": 4,
+          "max_ns": 5045843,
+          "total_ns": 9335176
+        },
+        "manifest_commit": {
+          "count": 2,
+          "max_ns": 409705,
+          "total_ns": 441434
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 6159331,
+          "total_ns": 6159331
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4278,
+          "total_ns": 412783
+        }
+      },
+      "scenario": "session-two-commit",
+      "service_pid": 27,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121840,
+          "files": 2
+        },
+        "indexes": {
+          "bytes": 62752,
+          "files": 2
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 277402,
+      "store_delta_files": 9,
+      "store_total_bytes": 6841860,
+      "store_total_files": 334,
+      "tensor_bytes": 4973360,
+      "wall_ms": 45.36378101329319
+    },
+    {
+      "checkpoint_write_ms": 24.22091699554585,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.032241,
+          "total_ms": 0.032241
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020739,
+          "total_ms": 0.842303
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093093,
+          "total_ms": 0.093093
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 1.334429,
+          "total_ms": 1.334429
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.190758,
+          "total_ms": 4.190758
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009948,
+          "total_ms": 0.511896
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.206797,
+          "total_ms": 2.206797
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.360964,
+          "total_ms": 0.360964
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 1.30815,
+          "total_ms": 1.30815
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 22.958512,
+          "total_ms": 22.958512
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 0,
+      "name": "ckpt-0",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 92312,
+          "total_ns": 3560291
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35246,
+          "total_ns": 2988055
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 159828,
+          "total_ns": 5737219
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 158465,
+          "total_ns": 5692005
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 96019,
+          "total_ns": 96019
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 188943,
+          "total_ns": 188943
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 26430,
+          "total_ns": 26430
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 711557,
+          "total_ns": 727797
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 398744,
+          "total_ns": 398744
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 1265521,
+          "total_ns": 1265521
+        },
+        "plane_probe": {
+          "count": 1,
+          "max_ns": 51857,
+          "total_ns": 51857
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4809,
+          "total_ns": 412384
+        },
+        "state_replay": {
+          "count": 1,
+          "max_ns": 38041,
+          "total_ns": 38041
+        },
+        "store_open": {
+          "count": 1,
+          "max_ns": 144189,
+          "total_ns": 144189
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121830,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 61995,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 4548635,
+          "files": 258
+        },
+        "objects": {
+          "bytes": 157919,
+          "files": 4
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 4890379,
+      "store_delta_files": 264,
+      "store_total_bytes": 4899438,
+      "store_total_files": 269,
+      "tensor_bytes": 4973360,
+      "wall_ms": 37.210159993264824
+    },
+    {
+      "checkpoint_write_ms": 22.287319996394217,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.035266,
+          "total_ms": 0.035266
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019957,
+          "total_ms": 0.845045
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093084,
+          "total_ms": 0.093084
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 2.904709,
+          "total_ms": 2.904709
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.237916,
+          "total_ms": 4.237916
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009608,
+          "total_ms": 0.510304
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.189775,
+          "total_ms": 2.189775
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.315569,
+          "total_ms": 0.315569
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 2.877989,
+          "total_ms": 2.877989
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 21.125202,
+          "total_ms": 21.125202
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 1,
+      "name": "ckpt-1",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 51867,
+          "total_ns": 1703948
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 36077,
+          "total_ns": 2978172
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 156722,
+          "total_ns": 5691435
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 156332,
+          "total_ns": 5650856
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 215442,
+          "total_ns": 215442
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 368457,
+          "total_ns": 368457
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1259681,
+          "total_ns": 1259681
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 2261950,
+          "total_ns": 2281987
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 419874,
+          "total_ns": 419874
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 2836231,
+          "total_ns": 2836231
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 7394,
+          "total_ns": 402820
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 5176232,
+      "store_total_files": 276,
+      "tensor_bytes": 4973360,
+      "wall_ms": 36.845738999545574
+    },
+    {
+      "checkpoint_write_ms": 21.939070022199303,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.040055,
+          "total_ms": 0.040055
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.020519,
+          "total_ms": 0.843804
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.098454,
+          "total_ms": 0.098454
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 3.373283,
+          "total_ms": 3.373283
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.18091,
+          "total_ms": 4.18091
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009568,
+          "total_ms": 0.513913
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.184395,
+          "total_ms": 2.184395
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.319806,
+          "total_ms": 0.319806
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 3.347685,
+          "total_ms": 3.347685
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 20.782702,
+          "total_ms": 20.782702
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 2,
+      "name": "ckpt-2",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 33352,
+          "total_ns": 1568082
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35056,
+          "total_ns": 2983522
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 157624,
+          "total_ns": 5687673
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 157223,
+          "total_ns": 5647687
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 258782,
+          "total_ns": 258782
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 561618,
+          "total_ns": 561618
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1446098,
+          "total_ns": 1446098
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 2731937,
+          "total_ns": 2749619
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 421216,
+          "total_ns": 421216
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 3304285,
+          "total_ns": 3304285
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4268,
+          "total_ns": 397525
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 5453026,
+      "store_total_files": 283,
+      "tensor_bytes": 4973360,
+      "wall_ms": 36.99727202183567
+    },
+    {
+      "checkpoint_write_ms": 21.980056015308946,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.038712,
+          "total_ms": 0.038712
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.023273,
+          "total_ms": 0.847421
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.092973,
+          "total_ms": 0.092973
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 3.84879,
+          "total_ms": 3.84879
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.178164,
+          "total_ms": 4.178164
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009488,
+          "total_ms": 0.504791
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.162324,
+          "total_ms": 2.162324
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.317853,
+          "total_ms": 0.317853
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 3.823393,
+          "total_ms": 3.823393
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 20.815383,
+          "total_ms": 20.815383
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 3,
+      "name": "ckpt-3",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 33522,
+          "total_ns": 1528285
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 36208,
+          "total_ns": 2987372
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 156442,
+          "total_ns": 5688668
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 156011,
+          "total_ns": 5646090
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 316019,
+          "total_ns": 316019
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 755459,
+          "total_ns": 755459
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1682399,
+          "total_ns": 1682399
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 3205630,
+          "total_ns": 3225718
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 420935,
+          "total_ns": 420935
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 3781455,
+          "total_ns": 3781455
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4238,
+          "total_ns": 398122
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 5729820,
+      "store_total_files": 290,
+      "tensor_bytes": 4973360,
+      "wall_ms": 37.40871898480691
+    },
+    {
+      "checkpoint_write_ms": 21.889005991397426,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.040826,
+          "total_ms": 0.040826
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019787,
+          "total_ms": 0.846611
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.097311,
+          "total_ms": 0.097311
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 4.360675,
+          "total_ms": 4.360675
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.155383,
+          "total_ms": 4.155383
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.01084,
+          "total_ms": 0.520049
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.188313,
+          "total_ms": 2.188313
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.331549,
+          "total_ms": 0.331549
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 4.334927,
+          "total_ms": 4.334927
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 20.718222,
+          "total_ms": 20.718222
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 4,
+      "name": "ckpt-4",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 35396,
+          "total_ns": 1493470
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35186,
+          "total_ns": 2977881
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 159388,
+          "total_ns": 5692739
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 158967,
+          "total_ns": 5652169
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 358208,
+          "total_ns": 358208
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 943900,
+          "total_ns": 943900
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 1895607,
+          "total_ns": 1895607
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 3657534,
+          "total_ns": 3676339
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 484394,
+          "total_ns": 484394
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 4292859,
+          "total_ns": 4292859
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4198,
+          "total_ns": 397622
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 6006614,
+      "store_total_files": 297,
+      "tensor_bytes": 4973360,
+      "wall_ms": 37.920964998193085
+    },
+    {
+      "checkpoint_write_ms": 21.92513397312723,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.041677,
+          "total_ms": 0.041677
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019908,
+          "total_ms": 0.845582
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093304,
+          "total_ms": 0.093304
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 4.743219,
+          "total_ms": 4.743219
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.236444,
+          "total_ms": 4.236444
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009107,
+          "total_ms": 0.514967
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.171281,
+          "total_ms": 2.171281
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.327071,
+          "total_ms": 0.327071
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 4.717721,
+          "total_ms": 4.717721
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 20.752486,
+          "total_ms": 20.752486
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 5,
+      "name": "ckpt-5",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 31438,
+          "total_ns": 1498854
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35737,
+          "total_ns": 2980083
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 163695,
+          "total_ns": 5701697
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 163274,
+          "total_ns": 5660357
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 386882,
+          "total_ns": 386882
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 1141449,
+          "total_ns": 1141449
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 2104616,
+          "total_ns": 2104616
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 4101341,
+          "total_ns": 4119475
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 420204,
+          "total_ns": 420204
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 4674150,
+          "total_ns": 4674150
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4669,
+          "total_ns": 399431
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 6283408,
+      "store_total_files": 304,
+      "tensor_bytes": 4973360,
+      "wall_ms": 38.31971899489872
+    },
+    {
+      "checkpoint_write_ms": 21.98322201729752,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.046437,
+          "total_ms": 0.046437
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.019867,
+          "total_ms": 0.846104
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093364,
+          "total_ms": 0.093364
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 5.357515,
+          "total_ms": 5.357515
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.185218,
+          "total_ms": 4.185218
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009558,
+          "total_ms": 0.514234
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.232425,
+          "total_ms": 2.232425
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.320958,
+          "total_ms": 0.320958
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 5.332378,
+          "total_ms": 5.332378
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 20.805084,
+          "total_ms": 20.805084
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 6,
+      "name": "ckpt-6",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 31358,
+          "total_ns": 1480561
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35897,
+          "total_ns": 2982250
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 157765,
+          "total_ns": 5675477
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 157304,
+          "total_ns": 5634344
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 419382,
+          "total_ns": 419382
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 1400693,
+          "total_ns": 1400693
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 2393265,
+          "total_ns": 2393265
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 4686192,
+          "total_ns": 4707682
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 441012,
+          "total_ns": 441012
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 5287824,
+          "total_ns": 5287824
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 4177,
+          "total_ns": 400659
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 6560202,
+      "store_total_files": 311,
+      "tensor_bytes": 4973360,
+      "wall_ms": 39.008824998745695
+    },
+    {
+      "checkpoint_write_ms": 22.12717098882422,
+      "client": {
+        "adapter.allocate_name": {
+          "count": 1,
+          "max_ms": 0.048611,
+          "total_ms": 0.048611
+        },
+        "adapter.hash": {
+          "count": 169,
+          "max_ms": 0.023003,
+          "total_ms": 0.848402
+        },
+        "adapter.manifest_verify": {
+          "count": 1,
+          "max_ms": 0.093274,
+          "total_ms": 0.093274
+        },
+        "adapter.metadata_commit": {
+          "count": 1,
+          "max_ms": 5.796694,
+          "total_ms": 5.796694
+        },
+        "adapter.metadata_serialize": {
+          "count": 1,
+          "max_ms": 4.252423,
+          "total_ms": 4.252423
+        },
+        "adapter.resolve": {
+          "count": 169,
+          "max_ms": 0.009818,
+          "total_ms": 0.513362
+        },
+        "adapter.stage_total": {
+          "count": 1,
+          "max_ms": 2.178033,
+          "total_ms": 2.178033
+        },
+        "client.container_memfd": {
+          "count": 1,
+          "max_ms": 0.341738,
+          "total_ms": 0.341738
+        },
+        "client.metadata_request": {
+          "count": 1,
+          "max_ms": 5.770906,
+          "total_ms": 5.770906
+        },
+        "client.write_request": {
+          "count": 1,
+          "max_ms": 20.939054,
+          "total_ms": 20.939054
+        }
+      },
+      "container_bytes": 4989309,
+      "entries": 169,
+      "index": 7,
+      "name": "ckpt-7",
+      "profile_available": true,
+      "rust": {
+        "blob_publish": {
+          "count": 344,
+          "max_ns": 34404,
+          "total_ns": 1537844
+        },
+        "digest": {
+          "count": 682,
+          "max_ns": 35266,
+          "total_ns": 2986340
+        },
+        "encode": {
+          "count": 169,
+          "max_ns": 190806,
+          "total_ns": 5789597
+        },
+        "encode_zstd": {
+          "count": 169,
+          "max_ns": 189854,
+          "total_ns": 5747957
+        },
+        "index_attest": {
+          "count": 1,
+          "max_ns": 459888,
+          "total_ns": 459888
+        },
+        "index_build": {
+          "count": 1,
+          "max_ns": 1569358,
+          "total_ns": 1569358
+        },
+        "index_load": {
+          "count": 1,
+          "max_ns": 2637831,
+          "total_ns": 2637831
+        },
+        "index_segment": {
+          "count": 2,
+          "max_ns": 5140470,
+          "total_ns": 5157592
+        },
+        "manifest_commit": {
+          "count": 1,
+          "max_ns": 430654,
+          "total_ns": 430654
+        },
+        "metadata_commit": {
+          "count": 1,
+          "max_ns": 5727466,
+          "total_ns": 5727466
+        },
+        "source_read": {
+          "count": 338,
+          "max_ns": 6512,
+          "total_ns": 406579
+        }
+      },
+      "scenario": "session",
+      "service_pid": 29,
+      "session_stats": {
+        "idempotent_recoveries": 0,
+        "saves": 8,
+        "services_started": 1,
+        "writable_handle_opens": 0
+      },
+      "store_delta_by_dir": {
+        "commits": {
+          "bytes": 121393,
+          "files": 1
+        },
+        "indexes": {
+          "bytes": 62591,
+          "files": 1
+        },
+        "manifests": {
+          "bytes": 427,
+          "files": 2
+        },
+        "objects": {
+          "bytes": 92383,
+          "files": 3
+        },
+        "refs": {
+          "bytes": 0,
+          "files": 0
+        },
+        "root": {
+          "bytes": 0,
+          "files": 0
+        },
+        "tmp": {
+          "bytes": 0,
+          "files": 0
+        }
+      },
+      "store_delta_bytes": 276794,
+      "store_delta_files": 7,
+      "store_total_bytes": 6836996,
+      "store_total_files": 318,
+      "tensor_bytes": 4973360,
+      "wall_ms": 39.59585100528784
+    }
+  ],
+  "schema": "weft.checkpoint-latency.v1",
+  "session_verify": {
+    "checkpoint": "ckpt-7",
+    "full": {
+      "checked_capabilities": 0,
+      "checked_capability_envelopes": 0,
+      "checked_causal": 0,
+      "checked_chunks": 32,
+      "checked_commits": 9,
+      "checked_context_roots": 0,
+      "checked_manifests": 1368,
+      "checked_objects": 1368,
+      "checked_provenance": 0,
+      "checked_representations": 1352,
+      "commit": "2a0e30a0191995e3e3a7a32223fae7f5c75a302452ad23a846f392bf085b4130",
+      "full": true,
+      "generation": 9,
+      "ok": true,
+      "problems": [],
+      "rejected_generations": []
+    },
+    "tensors_verified": 169
+  },
+  "stamp": "20261111T024824Z",
+  "summary": {
+    "fresh_store_median_ms": 70.29039399640169,
+    "fresh_store_wall_ms": [
+      46.204,
+      94.377
+    ],
+    "sequential_all_median_ms": 75.47101900854614,
+    "sequential_first_ms": 44.459444005042315,
+    "sequential_later_median_ms": 79.1596710041631,
+    "sequential_wall_ms": [
+      44.459,
+      55.433,
+      62.576,
+      71.782,
+      79.16,
+      88.375,
+      96.58,
+      105.333
+    ],
+    "session_first_ms": 37.210159993264824,
+    "session_median_ms": 37.6648419915,
+    "session_services_started": 1,
+    "session_wall_ms": [
+      37.21,
+      36.846,
+      36.997,
+      37.409,
+      37.921,
+      38.32,
+      39.009,
+      39.596
+    ],
+    "two_commit_median_ms": 41.69730549619999,
+    "two_commit_wall_ms": [
+      39.424,
+      38.108,
+      38.987,
+      41.377,
+      42.017,
+      92.767,
+      45.258,
+      45.364
+    ]
+  },
+  "verify": {
+    "checkpoint": "ckpt-7",
+    "full": null,
+    "tensors_verified": 169
+  }
+}

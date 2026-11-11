@@ -78,6 +78,12 @@ pub mod op {
     /// Diagnostic phase-profile control (`u8` mode: 0 begin, 1 take, 2 end).
     /// Additive in protocol 3; it never changes published bytes.
     pub const PROFILE: u8 = 0x0b;
+    /// Publish every tensor blob of a checkpoint and leave the group open.
+    pub const PREPARE_CHECKPOINT: u8 = 0x0c;
+    /// Publish the caller's metadata blob and the prepared state as one commit.
+    pub const FINISH_CHECKPOINT: u8 = 0x0d;
+    /// Discard an open prepared checkpoint without publishing.
+    pub const ABORT_CHECKPOINT: u8 = 0x0e;
     pub const SHUTDOWN: u8 = 0x7f;
 }
 
@@ -201,6 +207,7 @@ pub fn serve(
         manifest_cache: HashMap::new(),
         requests: 0,
         last_write: Instant::now(),
+        deferred: None,
         write_handle_opens: 0,
         write_handle_releases: 0,
     };
@@ -228,6 +235,8 @@ struct Service {
     requests: u64,
     /// When this connection last published through the writable handle.
     last_write: Instant,
+    /// Name of the checkpoint whose group is open and unpublished.
+    deferred: Option<String>,
     /// Number of times the writable handle was upgraded, for diagnostics.
     write_handle_opens: u64,
     /// Number of times an idle window released the writer lock.
@@ -266,6 +275,11 @@ impl Service {
     /// handle (it is still a valid handle) and is retried on the next request.
     fn release_idle_write_handle(&mut self) {
         if self.store.mode() != OpenMode::ReadWrite {
+            return;
+        }
+        // An open deferred group holds buffered ops for this handle; releasing
+        // it would discard an unpublished checkpoint.
+        if self.deferred.is_some() {
             return;
         }
         let window = Duration::from_secs(self.config.session_idle_secs);
@@ -385,15 +399,19 @@ impl Service {
             op::STAT_FILE => self.handle_stat_file(request),
             op::READ_FILE => self.handle_read_file(request),
             op::PROFILE => self.handle_profile(request),
+            op::PREPARE_CHECKPOINT => self.handle_prepare(request, started),
+            op::FINISH_CHECKPOINT => self.handle_finish(request, started),
+            op::ABORT_CHECKPOINT => self.handle_abort(request, started),
             op::SHUTDOWN => {
                 if !request.body.is_empty() || !request.fds.is_empty() {
                     return Dispatch::Failed(Error::malformed(
                         "SHUTDOWN takes an empty body and no descriptors",
                     ));
                 }
-                if self.requests > 1 {
-                    return Dispatch::Shutdown;
-                }
+                // An open deferred checkpoint is discarded, never published by
+                // a shutdown.
+                self.store.abort_deferred_checkpoint();
+                self.deferred = None;
                 return Dispatch::Shutdown;
             }
             other => {
@@ -640,6 +658,138 @@ impl Service {
     }
 
     fn handle_write(&mut self, request: &Request, started: Instant) -> Dispatch {
+        if self.deferred.is_some() {
+            return Dispatch::Failed(Error::invalid_argument(
+                "a deferred checkpoint is open on this connection; finish or abort it first",
+            ));
+        }
+        self.write_checkpoint_request(request, started, false)
+    }
+
+    /// `PREPARE_CHECKPOINT`: publish every blob and leave the group open.
+    fn handle_prepare(&mut self, request: &Request, started: Instant) -> Dispatch {
+        if self.deferred.is_some() {
+            return Dispatch::Failed(Error::invalid_argument(
+                "a deferred checkpoint is already open on this connection",
+            ));
+        }
+        self.write_checkpoint_request(request, started, true)
+    }
+
+    /// `FINISH_CHECKPOINT`: add one metadata file and publish exactly one commit.
+    fn handle_finish(&mut self, request: &Request, started: Instant) -> Dispatch {
+        let mut cursor = Cursor::new(&request.body);
+        let parsed = (|| -> Result<(String, String)> {
+            let name = cursor.string()?;
+            let path = cursor.string()?;
+            cursor.finish()?;
+            Ok((name, path))
+        })();
+        let (name, path) = match parsed {
+            Ok(parsed) => parsed,
+            Err(err) => return Dispatch::Failed(err),
+        };
+        let open = match self.deferred.as_deref() {
+            Some(open) => open.to_owned(),
+            None => {
+                return Dispatch::Failed(Error::invalid_argument(
+                    "FINISH_CHECKPOINT with no prepared checkpoint",
+                ))
+            }
+        };
+        if open != name {
+            return Dispatch::Failed(Error::invalid_argument(format!(
+                "prepared checkpoint is `{open}`, not `{name}`"
+            )));
+        }
+        let prefix = format!("/checkpoints/{name}/");
+        if !path.starts_with(&prefix) {
+            return Dispatch::Failed(Error::invalid_argument(format!(
+                "metadata path `{path}` is not under `{prefix}`"
+            )));
+        }
+        if request.fds.len() != 1 {
+            return Dispatch::Failed(Error::invalid_argument(
+                "FINISH_CHECKPOINT needs exactly one caller-supplied memfd",
+            ));
+        }
+        let fd = &request.fds[0];
+        let size = match fd_size(fd) {
+            Ok(size) => size,
+            Err(err) => return Dispatch::Failed(err),
+        };
+        if size > MAX_FILE_BYTES {
+            return Dispatch::Failed(Error::limit_exceeded(format!(
+                "metadata payload is {size} bytes, above the {MAX_FILE_BYTES}-byte bound"
+            )));
+        }
+        let mut bytes = vec![0u8; size as usize];
+        let mut read = 0usize;
+        while read < bytes.len() {
+            match ancillary::read_at(fd.as_fd(), &mut bytes[read..], read as u64) {
+                Ok(0) => break,
+                Ok(count) => read += count,
+                Err(err) if err.kind() == std::io::ErrorKind::Interrupted => continue,
+                Err(err) => {
+                    return Dispatch::Failed(Error::io(format!(
+                        "checkpoint-service read of caller buffer: {err}"
+                    )))
+                }
+            }
+        }
+        if read != bytes.len() {
+            return Dispatch::Failed(Error::malformed(format!(
+                "caller buffer declared {size} bytes but only {read} were readable"
+            )));
+        }
+        self.deferred = None;
+        let head = {
+            let _commit = crate::phase_profile::scope(crate::phase_profile::Phase::MetadataCommit);
+            match self
+                .store
+                .commit_deferred_checkpoint_metadata(&path, &bytes)
+            {
+                Ok(head) => head,
+                Err(err) => return Dispatch::Failed(err),
+            }
+        };
+        self.manifest_cache.clear();
+        self.after_publication();
+        let mut body = Vec::new();
+        put_hash(&mut body, head);
+        put_u64(&mut body, self.store.generation());
+        put_u64(&mut body, size);
+        put_u64(&mut body, elapsed_us(started));
+        Dispatch::Reply {
+            op: request.op,
+            body,
+            fd: None,
+        }
+    }
+
+    /// `ABORT_CHECKPOINT`: discard an open group; nothing is published.
+    fn handle_abort(&mut self, request: &Request, started: Instant) -> Dispatch {
+        if let Err(err) = require_empty(request) {
+            return Dispatch::Failed(err);
+        }
+        self.store.abort_deferred_checkpoint();
+        self.deferred = None;
+        let mut body = Vec::new();
+        put_u64(&mut body, self.store.generation());
+        put_u64(&mut body, elapsed_us(started));
+        Dispatch::Reply {
+            op: request.op,
+            body,
+            fd: None,
+        }
+    }
+
+    fn write_checkpoint_request(
+        &mut self,
+        request: &Request,
+        started: Instant,
+        defer: bool,
+    ) -> Dispatch {
         let mut cursor = Cursor::new(&request.body);
         let parsed = (|| -> Result<(String, CheckpointWriteOptions)> {
             let name = cursor.string()?;
@@ -701,6 +851,7 @@ impl Service {
                     fast_zstd_level,
                     on_critical_path,
                     deadline_ms,
+                    defer_commit: defer,
                     ..CheckpointWriteOptions::default()
                 },
             ))
@@ -746,11 +897,16 @@ impl Service {
             Ok(outcome) => outcome,
             Err(err) => return Dispatch::Failed(err),
         };
+        if defer {
+            self.deferred = Some(report.name.clone());
+        }
         // The checkpoint this handle just published is visible to every later
         // read through the same handle; only a replaced name needs its cached
         // manifest dropped.
         self.manifest_cache.clear();
-        self.after_publication();
+        if !defer {
+            self.after_publication();
+        }
         let mut body = Vec::new();
         put_hash(&mut body, report.checkpoint_id);
         put_hash(&mut body, report.head);

@@ -49,6 +49,9 @@ OP_WRITE_FILE = 0x08
 OP_STAT_FILE = 0x09
 OP_READ_FILE = 0x0A
 OP_PROFILE = 0x0B
+OP_PREPARE_CHECKPOINT = 0x0C
+OP_FINISH_CHECKPOINT = 0x0D
+OP_ABORT_CHECKPOINT = 0x0E
 OP_SHUTDOWN = 0x7F
 
 STATUS_OK = 0
@@ -504,6 +507,7 @@ class CheckpointService:
             "requests": 0,
             "restores": 0,
             "writes": 0,
+            "prepares": 0,
             "restored_bytes": 0,
             "written_bytes": 0,
             "request_ms": 0.0,
@@ -865,12 +869,19 @@ class CheckpointService:
         fast_zstd_level=None,
         critical_path=False,
         deadline_ms=None,
+        defer_commit=False,
     ):
         """Publish one checkpoint from a caller-supplied safetensors container.
 
         ``write_policy`` is ``planned``, ``fast``, or ``auto``. ``None`` reads
         ``$WEFT_WRITE_POLICY`` (default ``planned``), so a training job can set
         the critical-path policy for every save without changing its code.
+
+        ``defer_commit`` publishes every immutable blob and applies the state
+        ops in memory but writes **no** commit; the caller then calls
+        :meth:`finish_checkpoint` (one atomic publication that can also carry a
+        metadata blob) or :meth:`abort_checkpoint`. Only one deferred checkpoint
+        may be open on a connection.
         """
         if write_policy is None:
             write_policy = os.environ.get("WEFT_WRITE_POLICY", "planned")
@@ -912,17 +923,67 @@ class CheckpointService:
                 body += bytes((1,))
                 body += _u64(int(deadline_ms))
             request_started = time.perf_counter_ns()
-            response = self._call(OP_WRITE_CHECKPOINT, bytes(body), fd=fd)
+            opcode = OP_PREPARE_CHECKPOINT if defer_commit else OP_WRITE_CHECKPOINT
+            response = self._call(opcode, bytes(body), fd=fd)
             _probe("client.write_request", request_started)
             report = WriteReport(response)
             self.stats["writes"] += 1
             self.stats["written_bytes"] += len(view)
+            if defer_commit:
+                self.stats["prepares"] += 1
             return report
         finally:
             try:
                 os.close(fd)
             except OSError:
                 pass
+
+    def finish_checkpoint(self, name, metadata_path, payload):
+        """Publish a prepared checkpoint and one metadata blob as one commit.
+
+        ``name`` must be the checkpoint the open prepare returned and
+        ``metadata_path`` must be under ``/checkpoints/<name>/``. Returns
+        ``{"head", "generation", "bytes"}``. Exactly one commit is written; on
+        any error nothing is published and the previous generation is intact.
+        """
+        if not metadata_path.startswith("/checkpoints/%s/" % name):
+            raise ValueError("metadata path must be under /checkpoints/%s/" % name)
+        view = memoryview(payload)
+        if len(view) > MAX_FILE_BYTES:
+            raise ServiceError(
+                "LimitExceeded",
+                "metadata payload is %d bytes, above the %d bound"
+                % (len(view), MAX_FILE_BYTES),
+            )
+        fd = self._allocate_memfd(len(view), "weft-finish")
+        try:
+            offset = 0
+            while offset < len(view):
+                offset += os.write(fd, view[offset:])
+            body = _string(name) + _string(metadata_path)
+            request_started = time.perf_counter_ns()
+            response = self._call(OP_FINISH_CHECKPOINT, body, fd=fd)
+            _probe("client.metadata_request", request_started)
+            reader = _Reader(response)
+            result = {
+                "head": reader.hash_hex(),
+                "generation": reader.u64(),
+                "bytes": reader.u64(),
+            }
+            self.stats["finishes"] = self.stats.get("finishes", 0) + 1
+            return result
+        finally:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
+    def abort_checkpoint(self):
+        """Discard an open prepared checkpoint; nothing is published."""
+        body = self._call(OP_ABORT_CHECKPOINT, b"")
+        reader = _Reader(body)
+        self.stats["aborts"] = self.stats.get("aborts", 0) + 1
+        return {"generation": reader.u64()}
 
     def write_file(self, store_path, payload):
         """Publish one small file at an existing store path (metadata blobs)."""

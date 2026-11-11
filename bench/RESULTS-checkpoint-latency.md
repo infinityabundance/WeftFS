@@ -4,7 +4,8 @@ Receipts:
 
 | receipt | what it is |
 |---|---|
-| `bench/receipts/checkpoint-latency-20261111T022638Z.json` | **current**: deterministic fixture, 8 saves/series, session + writer-per-save |
+| `bench/receipts/checkpoint-latency-20261111T024824Z.json` | **current**: deterministic fixture, atomic publication, 8 saves/series |
+| `bench/receipts/checkpoint-latency-20261111T022638Z.json` | deterministic fixture before the atomic publication |
 | `bench/receipts/checkpoint-latency-20261111T022557Z.json` | first run after the strategy-hint short-circuit (fixture not yet seeded) |
 | `bench/receipts/checkpoint-latency-20261111T022409Z.json` | first run after bounding the implicit semantic search |
 | `bench/receipts/checkpoint-latency-20261111T021640Z.json` | the profiler baseline (before any optimisation) |
@@ -236,6 +237,7 @@ The only history-dependent term left inside a session is the index chain
 | profiled, no optimisation | 472.6 ms later / 211.1 fresh | `…T021640Z` |
 | 100 ms | 81.5 ms later / 67.9 fresh | `…T022409Z` |
 | 50 ms | 42.2 ms (session) | `…T022638Z` |
+| 50 ms confirmed | 37.7 ms (session, one atomic commit) | `…T024824Z` |
 | 20 ms | not reached yet | — |
 
 ## 8. Non-claims (increments 1-2)
@@ -248,3 +250,67 @@ indefinite lock. `semantic_scan` default-off is a planner candidate-set change,
 disclosed above; the chosen representation on this fixture is unchanged. No
 `torch.save`/DCP comparison, no packing, no index change and no Python copy
 removal is claimed yet.
+
+## 9. Increment 3 — prepare / finish with one atomic publication
+
+`StorageWriter` already had the right seam: `write_data()` then `finish()`.
+The adapter committed the tensors in `write_data` and the DCP metadata in
+`finish`, so a failure between them left a checkpoint directory whose tensors
+existed and whose `dcp.metadata` did not.
+
+The store now supports a deferred group:
+
+* `CheckpointWriteOptions::defer_commit` runs the whole checkpoint body inside
+  an explicitly opened group (`Store::begin_group`) and returns **without**
+  publishing. Every blob is immutable and create-once; the state ops are
+  applied in memory only.
+* `Store::commit_deferred_checkpoint_metadata(path, bytes)` adds one metadata
+  file to that group and publishes exactly **one** commit;
+  `Store::abort_deferred_checkpoint()` discards it.
+* Protocol 3 gains `PREPARE_CHECKPOINT` (0x0c), `FINISH_CHECKPOINT` (0x0d) and
+  `ABORT_CHECKPOINT` (0x0e). One deferred checkpoint per connection; a second
+  `PREPARE` or a plain `WRITE_CHECKPOINT` while one is open is
+  `InvalidArgument`; the metadata path must be under `/checkpoints/<name>/`;
+  `SHUTDOWN` aborts an open group; the idle-release path never drops a handle
+  with an open group.
+* `WeftStorageWriter(atomic_publish=True)` (the new default) prepares in
+  `write_data` and finishes in `finish`. `atomic_publish=False` reproduces the
+  historical two-commit shape for comparison. `close()`/`reset()` abort an
+  unfinished prepare, so a failed save publishes nothing.
+
+Readers see either the previous complete artifact or the new one. `weftfs
+checkpoint verify` and `verify --full` are clean on both sides.
+
+**Crash test** (`tests/checkpoint_atomic.rs`, 6/6) uses the process-fault proxy
+(`WEFT_CRASH_PHASE`) in a child process:
+
+| scenario | result |
+|---|---|
+| prepare, never finish | generation unchanged, no checkpoint, no metadata, verify clean — **the old window no longer exists** |
+| prepare + finish | exactly **+1** generation, checkpoint and `dcp.metadata` both visible there, verify --full clean |
+| crash at `after_objects` (during the final publication) | old *or* new whole state; no name and no metadata, or both; only an unpublished-tail note from `verify` |
+| crash at `after_commit_file` (after the commit fsync, before the superblock slot) | same old-or-new result; the fsynced-but-unpublished commit file is reported as a tail, never as state damage |
+| historical two-commit shape, same bytes | **+2** generations (tensors, then metadata) — the window this change removes |
+
+The metadata blob is byte-identical between the two shapes (content-addressed);
+only the commit history differs.
+
+### Measured effect
+
+Same session, same fixture, same 8 saves:
+
+| | p50 | first | last |
+|---|---:|---:|---:|
+| two commits (historical) | 40.7 ms | 40.1 | 45.1 (one 92.7 outlier) |
+| **one atomic commit** | **37.7 ms** | 37.2 | 39.6 |
+
+The saving is exactly the second commit and its index work: Rust
+`metadata_commit` 4.3 ms → 0 (folded into the single commit),
+`index_segment` 5.6 → 3.7 ms (one segment per save instead of two), and
+`index_build`/`index_load` 1.7/2.8 → 0.9/1.9 ms. That is ~3 ms of completion and
+one less generation per checkpoint.
+
+Honest cost: `finish()` is now the durability point, so a caller that never
+calls `finish` publishes nothing (previously the tensors were already durable).
+That is the intended semantics and it is the repair, but it is a behaviour
+change for any caller that used `write_data` without `finish`.

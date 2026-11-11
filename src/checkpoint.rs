@@ -159,6 +159,15 @@ pub struct CheckpointWriteOptions {
     /// can measure one representation's cost on a controlled chain; a forced
     /// strategy that is not applicable is a typed error, never a fallback.
     pub forced_strategy: Option<TensorStrategy>,
+    /// Leave the group open and publish **no** commit.
+    ///
+    /// Used by the two-phase protocol (`PREPARE_CHECKPOINT` /
+    /// `FINISH_CHECKPOINT`): every tensor and manifest blob is published and
+    /// the state ops are applied in memory, so the caller can add its metadata
+    /// blob and publish one authoritative commit. A caller that never commits
+    /// leaves the previous generation exactly as it was; unreferenced blobs are
+    /// reclaimed by GC.
+    pub defer_commit: bool,
 }
 
 impl Default for CheckpointWriteOptions {
@@ -181,6 +190,7 @@ impl Default for CheckpointWriteOptions {
             allow_experimental_modes: false,
             max_ingest_bytes: 1024 * 1024 * 1024,
             forced_strategy: None,
+            defer_commit: false,
         }
     }
 }
@@ -1320,15 +1330,20 @@ impl Store {
         let seeds = options
             .deterministic_seed
             .map(|base| CheckpointSeeds::new(&base));
-        let (report, head) = self.group(|store| {
+        // The body runs inside an explicitly opened group so the same code can
+        // either publish immediately (`checkpoint write`) or leave the group
+        // open for one atomic publication that also carries the caller's
+        // metadata blob (`PREPARE_CHECKPOINT` + `FINISH_CHECKPOINT`).
+        self.begin_group()?;
+        let outcome = (|| -> Result<CheckpointWriteReport> {
             let checkpoints = ensure_dir_seeded(
-                store,
+                self,
                 State::ROOT_ID,
                 CHECKPOINT_ROOT.as_bytes(),
                 seeds.as_ref().map(|seeds| &seeds.checkpoints),
             )?;
             let dir = match seeds.as_ref() {
-                Some(seeds) => store.mkdir_seeded(
+                Some(seeds) => self.mkdir_seeded(
                     checkpoints,
                     name_owned.as_bytes(),
                     0o755,
@@ -1336,7 +1351,7 @@ impl Store {
                     gid,
                     &seeds.dir,
                 )?,
-                None => store.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?,
+                None => self.mkdir(checkpoints, name_owned.as_bytes(), 0o755, uid, gid)?,
             };
             let mut tensors = Vec::with_capacity(selected.len());
             let mut shard_objects = 0usize;
@@ -1409,7 +1424,7 @@ impl Store {
                         &options,
                     );
                     let id = match seeds.as_ref() {
-                        Some(seeds) => store.write_tensor_file_with_spec_seeded(
+                        Some(seeds) => self.write_tensor_file_with_spec_seeded(
                             dir,
                             object_name.as_bytes(),
                             &store_dtype,
@@ -1419,7 +1434,7 @@ impl Store {
                             &spec,
                             &seeds.shard(&tensor.name, shard_index),
                         ),
-                        None => store.write_tensor_file_with_spec(
+                        None => self.write_tensor_file_with_spec(
                             dir,
                             object_name.as_bytes(),
                             &store_dtype,
@@ -1509,7 +1524,7 @@ impl Store {
                 wu::hash_value(manifest_root),
             );
             let manifest_id = match seeds.as_ref() {
-                Some(seeds) => store.create_file_seeded(
+                Some(seeds) => self.create_file_seeded(
                     dir,
                     CHECKPOINT_MANIFEST_NAME.as_bytes(),
                     &manifest_bytes,
@@ -1519,7 +1534,7 @@ impl Store {
                     attrs,
                     &seeds.manifest,
                 )?,
-                None => store.create_file(
+                None => self.create_file(
                     dir,
                     CHECKPOINT_MANIFEST_NAME.as_bytes(),
                     &manifest_bytes,
@@ -1559,10 +1574,76 @@ impl Store {
                 validate_ms: None,
                 commit_ms: None,
             })
-        })?;
+        })();
+        let report = match outcome {
+            Ok(report) => report,
+            Err(err) => {
+                self.abort_group();
+                return Err(err);
+            }
+        };
+        if options.defer_commit {
+            // The caller owns the open group and must publish exactly one
+            // commit (with its own metadata blob) or abort. Dropping the store
+            // publishes nothing, so a crash here leaves the previous whole
+            // generation.
+            return Ok(report);
+        }
+        let head = self.commit_group()?;
         let mut report = report;
         report.head = head;
         Ok(report)
+    }
+
+    /// Publish the state ops of a deferred checkpoint together with one small
+    /// metadata file, as **one** commit.
+    ///
+    /// `storage_name` must be the name whose `PREPARE` left a deferred
+    /// checkpoint, and `metadata_path` must be a `/checkpoints/<name>/...`
+    /// path under it. Returns the published head. Nothing is published when any
+    /// step fails: the group is aborted and the previous generation is intact.
+    pub fn commit_deferred_checkpoint_metadata(
+        &mut self,
+        metadata_path: &str,
+        bytes: &[u8],
+    ) -> Result<Hash32> {
+        let outcome = (|| -> Result<()> {
+            if !metadata_path.starts_with('/') {
+                return Err(Error::invalid_argument("metadata path must be absolute"));
+            }
+            let (parent_path, name) = match metadata_path.rfind('/') {
+                Some(0) => ("/", &metadata_path[1..]),
+                Some(index) => (&metadata_path[..index], &metadata_path[index + 1..]),
+                None => return Err(Error::invalid_argument("metadata path has no parent")),
+            };
+            if name.is_empty() {
+                return Err(Error::invalid_argument("metadata path has no name"));
+            }
+            let parent = self.resolve_path(parent_path)?;
+            let (uid, gid) = (self.options().owner_uid, self.options().owner_gid);
+            self.create_file(
+                parent,
+                name.as_bytes(),
+                bytes,
+                0o644,
+                uid,
+                gid,
+                BTreeMap::new(),
+            )?;
+            Ok(())
+        })();
+        match outcome {
+            Ok(()) => self.commit_group(),
+            Err(err) => {
+                self.abort_group();
+                Err(err)
+            }
+        }
+    }
+
+    /// Discard an open deferred checkpoint without publishing.
+    pub fn abort_deferred_checkpoint(&mut self) {
+        self.abort_group();
     }
 
     /// Resolve the matching shard versions of an optional causal checkpoint.

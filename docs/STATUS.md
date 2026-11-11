@@ -8220,9 +8220,10 @@ the same fixture, decomposed, then driven down.
 
 Full evidence and every loss:
 [`bench/RESULTS-checkpoint-latency.md`](../bench/RESULTS-checkpoint-latency.md).
-Receipts `bench/receipts/checkpoint-latency-20261111T022638Z.json` (current)
-and `bench/receipts/checkpoint-latency-20261111T021640Z.json` (the profiler
-baseline), measured in
+Receipts `bench/receipts/checkpoint-latency-20261111T024824Z.json` (current),
+`bench/receipts/checkpoint-latency-20261111T022638Z.json` (before the atomic
+publication) and `bench/receipts/checkpoint-latency-20261111T021640Z.json`
+(the profiler baseline), measured in
 `weft/python-court:1` (`sha256:aec5deb0…76152`), Linux `7.3.3-1-cachyos`,
 3 GiB / 4 CPUs / 1024 pids / 1 GiB `/tmp`, `cap-drop=ALL`, torch 2.15.0+cpu.
 No wire, frame, manifest or planner-identity change.
@@ -8325,3 +8326,36 @@ smoothed away. **Milestones reached: 100 ms and 50 ms. 20 ms is not yet
 reached** — the remaining measured shares are `index_segment` 5.2 ms, the
 second commit for DCP metadata 3.8 ms, `encode_zstd` 5.8 ms, `digest` 3.0 ms,
 Python metadata serialisation 4.2 ms and ~6 ms of DCP/writer overhead.
+
+### Increment 3 — prepare/finish, one atomic publication
+
+`StorageWriter` already had the seam; the adapter committed tensors in
+`write_data` and the DCP metadata in `finish`, so a failure between them left a
+checkpoint directory without metadata. Now:
+
+* `CheckpointWriteOptions::defer_commit` runs the checkpoint body inside an
+  explicitly opened group and returns without publishing;
+  `Store::commit_deferred_checkpoint_metadata(path, bytes)` adds the metadata
+  file and publishes **one** commit; `abort_deferred_checkpoint()` discards it.
+* Protocol 3 adds `PREPARE_CHECKPOINT` (0x0c), `FINISH_CHECKPOINT` (0x0d) and
+  `ABORT_CHECKPOINT` (0x0e). One deferred checkpoint per connection, a second
+  prepare is `InvalidArgument`, the metadata path must be under
+  `/checkpoints/<name>/`, `SHUTDOWN` aborts an open group, and the idle release
+  never drops a handle with an open group.
+* `WeftStorageWriter(atomic_publish=True)` is the default;
+  `atomic_publish=False` keeps the historical two-commit shape for comparison.
+
+`tests/checkpoint_atomic.rs` **6/6** with the process-fault proxy: a prepare
+that is never finished publishes **nothing** (the old window no longer
+exists); prepare+finish publishes exactly **+1** generation containing both the
+checkpoint and `dcp.metadata`; crashes at `after_objects` and
+`after_commit_file` are old-or-new whole state with only an unpublished-tail
+note from `verify`; the historical shape costs **+2** generations for the same
+bytes and the metadata blob is identical between the two.
+
+Measured on the same session and fixture: **40.7 → 37.7 ms p50** (first 37.2,
+last 39.6). The second commit and its index work disappear (`metadata_commit`
+4.3 ms → 0 folded in; `index_segment` 5.6 → 3.7 ms). Honest cost: `finish()` is
+now the durability point, so a caller that never calls it publishes nothing —
+which is the repair, and a behaviour change for a caller that used
+`write_data` alone.

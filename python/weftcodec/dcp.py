@@ -1035,6 +1035,7 @@ class WeftStorageWriter(_StorageWriterBase):
         timeout=DEFAULT_TIMEOUT_SECONDS,
         session=None,
         retain_container=False,
+        atomic_publish=True,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
@@ -1084,6 +1085,13 @@ class WeftStorageWriter(_StorageWriterBase):
         # checkpoint a lost response belonged to.
         self.retain_container = bool(retain_container)
         self.last_container = None
+        # One atomic publication: `write_data` publishes every immutable blob
+        # and leaves the commit open, and `finish` adds the DCP metadata blob and
+        # publishes exactly one commit. `False` restores the historical
+        # two-commit behaviour (tensors, then metadata), where a failure between
+        # them left a checkpoint directory without metadata.
+        self.atomic_publish = bool(atomic_publish)
+        self._prepared = False
         self._stats = {
             "entries": 0,
             "tensor_bytes": 0,
@@ -1118,6 +1126,14 @@ class WeftStorageWriter(_StorageWriterBase):
         return self._service
 
     def close(self):
+        if self._prepared and self._service is not None:
+            # Nothing was published for the open prepare; discard it so the
+            # helper's handle carries no pending state.
+            try:
+                self._service.abort_checkpoint()
+            except Exception:  # noqa: BLE001 - the service may be gone
+                pass
+            self._prepared = False
         if self._session is not None:
             # The session owns the helper; a writer never closes it.
             self._service = None
@@ -1152,6 +1168,12 @@ class WeftStorageWriter(_StorageWriterBase):
 
     def reset(self, checkpoint_id=None):
         with self._lock:
+            if self._prepared and self._service is not None:
+                try:
+                    self._service.abort_checkpoint()
+                except Exception:  # noqa: BLE001 - the service may be gone
+                    pass
+                self._prepared = False
             if checkpoint_id is not None:
                 self._path = _validate_checkpoint_id(checkpoint_id)
             self._save_id = uuid.uuid4().hex
@@ -1231,14 +1253,22 @@ class WeftStorageWriter(_StorageWriterBase):
             )
             _probe("adapter.metadata_serialize", serialize_started)
             commit_started = time.perf_counter_ns()
+            metadata_path = "/checkpoints/%s/%s" % (
+                self._storage_name,
+                DCP_METADATA_NAME,
+            )
             try:
-                self._get_service().write_file(
-                    "/checkpoints/%s/%s" % (self._storage_name, DCP_METADATA_NAME),
-                    blob,
-                )
+                if self._prepared:
+                    # One atomic publication: tensor state + DCP metadata + head.
+                    self._get_service().finish_checkpoint(
+                        self._storage_name, metadata_path, blob
+                    )
+                    self._prepared = False
+                else:
+                    self._get_service().write_file(metadata_path, blob)
             except (StoreCommandError, ServiceError) as exc:
                 raise SaveFailed(
-                    "checkpoint %r was published but its DCP metadata was not: %s"
+                    "checkpoint %r: the metadata publication failed; %s"
                     % (self._storage_name, exc)
                 ) from exc
             _probe("adapter.metadata_commit", commit_started)
@@ -1468,20 +1498,30 @@ class WeftStorageWriter(_StorageWriterBase):
             shards=shards,
             axis=axis,
             strategy=self.shard_strategy,
+            defer_commit=self.atomic_publish,
         )
         self._stats["checkpoint_write_ms"] = (time.monotonic() - started) * 1000.0
         self._stats["container_bytes"] = len(container)
+        self._prepared = bool(self.atomic_publish)
         manifest_value = write_report.manifest.to_value()
         verify_started = time.perf_counter_ns()
-        self._verify_report(
-            {
-                "complete": write_report.complete,
-                "tensors": manifest_value["tensors"],
-            },
-            manifest_value["tensors"],
-            infos,
-            storage_name,
-        )
+        try:
+            self._verify_report(
+                {
+                    "complete": write_report.complete,
+                    "tensors": manifest_value["tensors"],
+                },
+                manifest_value["tensors"],
+                infos,
+                storage_name,
+            )
+        except BaseException:
+            if self._prepared:
+                try:
+                    service.abort_checkpoint()
+                finally:
+                    self._prepared = False
+            raise
         _probe("adapter.manifest_verify", verify_started)
         self._storage_name = storage_name
         self._manifest = {

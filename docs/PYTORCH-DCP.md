@@ -454,3 +454,25 @@ release:
 
 Result on the R11 fixture: **42.2 ms p50** (from 444.1 ms), flat across eight
 saves in one store.
+
+### 9.2 One atomic commit (`write_data` + `finish`)
+
+`write_data()` now **prepares** (every tensor and manifest blob is published
+and the state ops are applied in memory) and `finish()` publishes the DCP
+metadata and that state as **one commit**. Before this change the tensors were
+durable at the end of `write_data` and the metadata in `finish`, so a failure
+between them left a checkpoint without `dcp.metadata`.
+
+* Protocol 3: `PREPARE_CHECKPOINT` (0x0c), `FINISH_CHECKPOINT` (0x0d),
+  `ABORT_CHECKPOINT` (0x0e). One deferred checkpoint per connection; the
+  metadata path must be under `/checkpoints/<name>/`; `SHUTDOWN` aborts an open
+  prepare.
+* `WeftStorageWriter(atomic_publish=True)` is the default;
+  `atomic_publish=False` restores the two-commit shape for comparison.
+* A save that never reaches `finish()` publishes nothing; `close()`/`reset()`
+  abort an open prepare.
+* `tests/checkpoint_atomic.rs` (6/6) proves the old window is gone, that the
+  finished checkpoint is one generation with both the state and the metadata,
+  and that a crash at `after_objects`/`after_commit_file` is old-or-new whole
+  state. Effect on the fixture: 40.7 → **37.7 ms p50** (the second commit and
+  its index work disappear).

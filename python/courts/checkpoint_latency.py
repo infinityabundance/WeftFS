@@ -153,7 +153,7 @@ def fixture(torch):
     return state
 
 
-def one_save(torch, *, store_root, name, state, collector, service_cli):
+def one_save(torch, *, store_root, name, state, collector, service_cli, atomic=True):
     """One R11-shaped save: a fresh writer, `dcp.save`, then close."""
     import torch.distributed.checkpoint as dcp
 
@@ -170,6 +170,7 @@ def one_save(torch, *, store_root, name, state, collector, service_cli):
         staging_bytes=tg.STAGING_BYTES,
         init_store=False,
         weftfs_cli=service_cli,
+        atomic_publish=atomic,
     )
     constructed = time.perf_counter()
     service = writer._get_service()
@@ -301,7 +302,9 @@ def decompose(rows):
     }
 
 
-def session_series(torch, *, store_root, state, reps, collector, service_cli, idle_secs):
+def session_series(
+    torch, *, store_root, state, reps, collector, service_cli, idle_secs, atomic=True
+):
     """N saves through one long-lived session (warm service + held handle)."""
     from weftcodec.dcp import CheckpointSession
 
@@ -320,7 +323,9 @@ def session_series(torch, *, store_root, state, reps, collector, service_cli, id
             set_probe_sink(collector)
             service.profile(0)
             started = time.perf_counter()
-            stats = session.save(state, checkpoint_id="ckpt-%d" % index)
+            stats = session.save(
+                state, checkpoint_id="ckpt-%d" % index, atomic_publish=atomic
+            )
             saved = time.perf_counter()
             rust_profile = service.profile(1)
             service.profile(2)
@@ -413,6 +418,24 @@ def run(args):
         row["index"] = index
         sequential_rows.append(row)
 
+    two_commit_rows = []
+    if args.mode in ("both", "session"):
+        two_store = work / "two-commit"
+        two_store.mkdir()
+        init_store(two_store, weftfs_cli=args.weftfs_cli)
+        two_commit_rows = session_series(
+            torch,
+            store_root=two_store,
+            state=state,
+            reps=args.reps,
+            collector=collector,
+            service_cli=args.weftfs_cli,
+            idle_secs=args.session_idle_secs,
+            atomic=False,
+        )
+        for row in two_commit_rows:
+            row["scenario"] = "session-two-commit"
+
     session_rows = []
     if args.mode in ("both", "session"):
         session_store = work / "session"
@@ -497,6 +520,14 @@ def run(args):
                 if session_rows
                 else None
             ),
+            "two_commit_wall_ms": [
+                round(row["wall_ms"], 3) for row in two_commit_rows
+            ],
+            "two_commit_median_ms": (
+                statistics.median(row["wall_ms"] for row in two_commit_rows)
+                if two_commit_rows
+                else None
+            ),
             "session_services_started": (
                 session_rows[0]["session_stats"]["services_started"]
                 if session_rows
@@ -511,8 +542,11 @@ def run(args):
             "session_later": (
                 decompose(session_rows[1:]) if len(session_rows) > 1 else {}
             ),
+            "session_two_commit": (
+                decompose(two_commit_rows) if two_commit_rows else {}
+            ),
         },
-        "runs": all_rows + session_rows,
+        "runs": all_rows + two_commit_rows + session_rows,
         "verify": verify,
         "session_verify": session_verify,
         "peak_rss_kib": int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),

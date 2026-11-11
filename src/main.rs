@@ -4056,6 +4056,7 @@ fn run_checkpoint(
                         Some(array)
                     }
                 },
+                defer_commit: false,
             };
             let parallel = ranks.map(|ranks| {
                 let mut options = weftfs::checkpoint::ParallelCheckpointOptions::default();
