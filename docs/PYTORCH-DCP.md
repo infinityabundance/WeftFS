@@ -413,3 +413,44 @@ implicit mode-14 semantic search** (`tensor_semantic_candidates` scanning every
 object in the store for each tensor), 12.4-44.9 ms is four store opens per
 save, and 9.3-28.0 ms is the second writable open that publishes the DCP
 metadata blob. See `bench/RESULTS-checkpoint-latency.md`.
+
+### 9.1 `CheckpointSession` and the two planner changes
+
+`CheckpointSession(store_root, ...)` owns one checkpoint service across saves:
+
+```python
+with CheckpointSession(store) as session:
+    session.save(state_dict, checkpoint_id="step-1024")
+    session.save(state_dict, checkpoint_id="step-2048")
+```
+
+`session.writer(checkpoint_id, **kw)` gives a `WeftStorageWriter` bound to the
+session for callers that build their own `dcp.save`; `save_checkpoint_async`
+accepts `session=` as well. A writer without a session behaves exactly as
+before.
+
+* One store handle per connection: read-only until the first publication, then
+  writable, and reads go through it. The four opens a save used to pay become
+  one.
+* The writer lock is released after `--session-idle-secs` (default 30) without
+  a publication; `0` restores the old release-after-every-write behaviour.
+  Until it is released no other process can open the store for writing.
+* A stale fence is never replaced; the typed `Busy`/`Unauthorized` is returned.
+* A session refuses `service()` in a forked child, and the client refuses
+  `close()`/calls in a child, so a child cannot shut down the parent's helper.
+* A transport failure is retried at most once, and only when the store proves
+  nothing was published under the allocated name; a lost response that landed
+  is reported as "published but not finished" rather than duplicated.
+
+Two planner changes came out of the R12b profile and are part of the same
+release:
+
+* `TensorPlanOptions::semantic_scan` (default false) gates the *implicit*
+  whole-store mode-14 candidate search. Explicit `candidates` lists are
+  unaffected; `--semantic-scan` opts in. Without it, the search was
+  `O(objects)` per tensor: 130 ms of a 211 ms save.
+* A caller-pinned strategy (`zstd`/`raw` shard strategies) no longer builds the
+  candidates `choose_candidate` cannot return: another 23 ms per save.
+
+Result on the R11 fixture: **42.2 ms p50** (from 444.1 ms), flat across eight
+saves in one store.

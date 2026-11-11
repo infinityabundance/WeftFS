@@ -9109,11 +9109,11 @@
   {
     "id": "checkpoint_latency_receipt",
     "claim": "docs/STATUS.md (R12b) cites the checkpoint completion latency receipt.",
-    "value": "checkpoint-latency-20261111T021640Z.json",
+    "value": "checkpoint-latency-20261111T022638Z.json",
     "locations": [
       "docs/STATUS.md"
     ],
-    "receipt": "bench/receipts/checkpoint-latency-20261111T021640Z.json",
+    "receipt": "bench/receipts/checkpoint-latency-20261111T022638Z.json",
     "kind": "present"
   },
   {
@@ -9128,12 +9128,12 @@
   },
   {
     "id": "checkpoint_latency_semantic_share",
-    "claim": "docs/PYTORCH-DCP.md states the measured encode_semantic cost (130.4 ms fresh, 344.5 ms later).",
-    "value": "130.4 / 344.5 ms",
+    "claim": "docs/PYTORCH-DCP.md states the measured completion after the session and planner changes (42.2 ms p50 from 444.1 ms).",
+    "value": "42.2 ms p50",
     "locations": [
       "docs/PYTORCH-DCP.md"
     ],
-    "receipt": "bench/receipts/checkpoint-latency-20261111T021640Z.json",
+    "receipt": "bench/receipts/checkpoint-latency-20261111T022638Z.json",
     "kind": "present"
   },
   {
@@ -9154,6 +9154,46 @@
       "docs/PYTORCH-DCP.md"
     ],
     "receipt": "bench/receipts/checkpoint-latency-20261111T021640Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "checkpoint_session_property",
+    "claim": "docs/PYTORCH-DCP.md documents the CheckpointSession ownership window and that a stale fence is never replaced.",
+    "value": "released after `--session-idle-secs` (default 30)",
+    "locations": [
+      "docs/PYTORCH-DCP.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T022638Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "semantic_scan_opt_in",
+    "claim": "docs/STATUS.md records that the implicit whole-store mode-14 search is opt-in and what it cost.",
+    "value": "TensorPlanOptions::semantic_scan",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T022557Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "checkpoint_hint_shortcircuit",
+    "claim": "docs/STATUS.md records that a caller-pinned strategy no longer encodes unchoosable candidates.",
+    "value": "Rust `encode` fell 29.7 \u2192 5.8 ms per",
+    "locations": [
+      "docs/STATUS.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T022557Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "checkpoint_flat_commit",
+    "claim": "bench/RESULTS-checkpoint-latency.md states the per-save commit cost and deltas are flat across history.",
+    "value": "`manifest_commit` is 0.43-0.45 ms at",
+    "locations": [
+      "bench/RESULTS-checkpoint-latency.md"
+    ],
+    "receipt": "bench/receipts/checkpoint-latency-20261111T022638Z.json",
     "kind": "present"
   }
 ]

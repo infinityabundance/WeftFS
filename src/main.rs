@@ -731,6 +731,12 @@ enum Command {
         /// Largest single restored tensor or staged container, in bytes.
         #[arg(long = "max-tensor-bytes", default_value_t = 4294967296u64)]
         max_tensor_bytes: u64,
+        /// Seconds a writable handle may stay open without a publication
+        /// before the exclusive writer lock is released. `0` (the default)
+        /// releases it immediately after every write, so two helpers on one
+        /// store never collide; `CheckpointSession` passes a positive window.
+        #[arg(long = "session-idle-secs", default_value_t = 0u64)]
+        session_idle_secs: u64,
     },
     /// Context Root persistence, resolution, and materialization.
     Context {
@@ -1141,6 +1147,10 @@ enum CheckpointCommand {
         /// Do not run the mode-14 semantic-delta candidate search.
         #[arg(long = "no-semantic")]
         no_semantic: bool,
+        /// Search the whole store for implicit mode-14 candidates. Off by
+        /// default because it is O(objects) per tensor on the write path.
+        #[arg(long = "semantic-scan")]
+        semantic_scan: bool,
         /// Allow experimental representations (mode 18) to be auto-selected by
         /// the per-shard planner.
         #[arg(long = "allow-experimental-modes")]
@@ -3215,12 +3225,14 @@ fn run(cli: Cli) -> Result<()> {
             socket,
             max_frame_bytes,
             max_tensor_bytes,
+            session_idle_secs,
         } => {
             let config = weftfs::checkpoint_service::ServiceConfig {
                 fd,
                 socket,
                 max_frame_bytes,
                 max_tensor_bytes,
+                session_idle_secs,
             };
             weftfs::checkpoint_service::serve(&store, policy.options(), policy.kind()?, config)
         }
@@ -3975,6 +3987,7 @@ fn run_checkpoint(
             deadline_ms,
             causal_checkpoint,
             no_semantic,
+            semantic_scan,
             allow_experimental_modes,
             ranks,
             max_inflight_bytes,
@@ -4023,6 +4036,7 @@ fn run_checkpoint(
                 deadline_ms,
                 causal_checkpoint,
                 semantic_search: !no_semantic,
+                semantic_scan,
                 allow_experimental_modes,
                 max_ingest_bytes,
                 forced_strategy: None,

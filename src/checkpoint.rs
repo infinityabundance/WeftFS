@@ -131,9 +131,15 @@ pub struct CheckpointWriteOptions {
     /// name, dtype and shape offer that checkpoint's matching shard version as
     /// a causal parent, so the planner can price a weight-delta against it.
     pub causal_checkpoint: Option<String>,
-    /// Offer the mode-14 semantic-delta candidate (see
-    /// `TensorPlanOptions::semantic_search`).
+    /// Offer the mode-14 semantic-delta candidate. The candidate *source* is
+    /// `TensorPlanOptions::candidates` (an explicit list) plus, only when
+    /// `TensorPlanOptions::semantic_scan` is set, an implicit scan of the
+    /// store. The implicit scan is off by default because it is `O(objects)`
+    /// per tensor on the write path; see `TensorPlanOptions::semantic_scan`.
     pub semantic_search: bool,
+    /// Search the whole store for implicit mode-14 candidates when the caller
+    /// supplied none. Off by default: see `TensorPlanOptions::semantic_scan`.
+    pub semantic_scan: bool,
     /// Deterministic ObjectId seed for the checkpoint directory, the manifest
     /// file, and every shard object. `None` (the default) uses OS randomness,
     /// exactly as before. Setting it makes two writes of the same input publish
@@ -170,6 +176,7 @@ impl Default for CheckpointWriteOptions {
             deadline_ms: None,
             causal_checkpoint: None,
             semantic_search: true,
+            semantic_scan: false,
             deterministic_seed: None,
             allow_experimental_modes: false,
             max_ingest_bytes: 1024 * 1024 * 1024,
@@ -1222,6 +1229,7 @@ fn checkpoint_shard_spec(
             fast_codec: options.fast_codec,
             fast_zstd_level: options.fast_zstd_level,
             semantic_search: options.semantic_search,
+            semantic_scan: options.semantic_scan,
             allow_experimental_modes: options.allow_experimental_modes,
             ..crate::tensor_store::TensorPlanOptions::default()
         },

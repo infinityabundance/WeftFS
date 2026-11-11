@@ -28,6 +28,7 @@ import support
 from weftcodec import wcb
 from weftcodec.dcp import (
     DEFAULT_CLI,
+    CheckpointSession,
     DcpError,
     ExactnessError,
     StagingLimitExceeded,
@@ -480,3 +481,54 @@ def test_metadata_wcb_roundtrip_is_canonical():
     encoded = wcb.encode(value)
     assert wcb.encode(wcb.decode(encoded)) == encoded
     assert wcb.decode(encoded)["schema"] == DCP_METADATA_SCHEMA
+
+
+@requires_torch
+def test_session_reuses_one_service_and_restores_exactly(store):
+    """A `CheckpointSession` saves repeatedly through one helper process."""
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+
+    with CheckpointSession(store, weftfs_cli=WEFTFS_CLI, session_idle_secs=30) as session:
+        first = session.save(model.state_dict(), checkpoint_id="sess-1")
+        second = session.save(model.state_dict(), checkpoint_id="sess-2")
+        assert session.stats["services_started"] == 1
+        assert session.stats["saves"] == 2
+        # The same helper served both saves.
+        pid = session.service_pid
+        assert session.service().pid == pid
+
+    assert first["entries"] == second["entries"] == len(source)
+    for name in ("sess-1", "sess-2"):
+        reader = WeftStorageReader(name, store_root=store, weftfs_cli=WEFTFS_CLI)
+        target = SmallModel()
+        dcp.load(target.state_dict(), storage_reader=reader, no_dist=True)
+        _assert_state_equal(source, target.state_dict())
+        reader.close()
+    result = verify_checkpoint(store, "sess-2", full=True, weftfs_cli=WEFTFS_CLI)
+    assert result["full"]["ok"] is True
+
+
+@requires_torch
+def test_session_is_not_usable_in_a_forked_child(store):
+    """A child inherits the attributes but must not touch the parent's helper."""
+    if not hasattr(os, "fork"):
+        pytest.skip("no fork on this platform")
+    with CheckpointSession(store, weftfs_cli=WEFTFS_CLI) as session:
+        session.service()
+        pid = os.fork()
+        if pid == 0:  # child
+            status = 1
+            try:
+                from weftcodec.service import ServiceUnavailable
+
+                try:
+                    session.service()
+                except ServiceUnavailable:
+                    status = 0
+            finally:
+                os._exit(status)
+        _, status = os.waitpid(pid, 0)
+        assert os.waitstatus_to_exitcode(status) == 0
+        # The parent's helper is still alive and usable.
+        assert session.service().info()["protocol"] == 3

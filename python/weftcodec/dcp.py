@@ -66,6 +66,7 @@ from .service import (
 
 __all__ = [
     "AsyncSaveHandle",
+    "CheckpointSession",
     "DCP_METADATA_NAME",
     "DCP_METADATA_SCHEMA",
     "DcpError",
@@ -1032,6 +1033,8 @@ class WeftStorageWriter(_StorageWriterBase):
         keep_staging=False,
         weftfs_cli=None,
         timeout=DEFAULT_TIMEOUT_SECONDS,
+        session=None,
+        retain_container=False,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
@@ -1056,6 +1059,11 @@ class WeftStorageWriter(_StorageWriterBase):
         if init_store:
             self._store.init()
         self._store.requires_store()
+        if session is not None and Path(session.store_root) != self.store_root:
+            raise ValueError(
+                "a session is bound to %s, not to %s"
+                % (session.store_root, self.store_root)
+            )
         self._service_cli = _default_cli(weftfs_cli)
         self._timeout = float(timeout)
         self._service = None
@@ -1067,6 +1075,15 @@ class WeftStorageWriter(_StorageWriterBase):
         self._pending_metadata = None
         self._finished = False
         self._manifest = None
+        # An optional long-lived session: when given, the service process (and
+        # its writable store handle) outlive this writer, and `close()` leaves
+        # it alone. `None` keeps the historical one-service-per-writer shape.
+        self._session = session
+        # A session that wants an exact idempotent retry keeps the canonical
+        # container bytes (bounded by `staging_bytes`) so it can prove which
+        # checkpoint a lost response belonged to.
+        self.retain_container = bool(retain_container)
+        self.last_container = None
         self._stats = {
             "entries": 0,
             "tensor_bytes": 0,
@@ -1090,6 +1107,8 @@ class WeftStorageWriter(_StorageWriterBase):
 
     def _get_service(self):
         """One helper process for every operation of this writer."""
+        if self._session is not None:
+            return self._session.service()
         if self._service is None:
             started = time.perf_counter_ns()
             self._service = CheckpointService(
@@ -1099,6 +1118,10 @@ class WeftStorageWriter(_StorageWriterBase):
         return self._service
 
     def close(self):
+        if self._session is not None:
+            # The session owns the helper; a writer never closes it.
+            self._service = None
+            return
         if self._service is not None:
             self._service.close()
             self._service = None
@@ -1434,6 +1457,9 @@ class WeftStorageWriter(_StorageWriterBase):
         allocate_started = time.perf_counter_ns()
         storage_name = self._allocate_storage_name()
         _probe("adapter.allocate_name", allocate_started)
+        if self.retain_container:
+            self.last_container = container
+            self.last_container_name = storage_name
         service = self._get_service()
         started = time.monotonic()
         write_report = service.write_checkpoint(
@@ -1514,6 +1540,210 @@ class WeftStorageWriter(_StorageWriterBase):
             raise SaveFailed(
                 "checkpoint %r is not complete" % storage_name
             )
+
+
+class CheckpointSession:
+    """One long-lived checkpoint service shared by many saves.
+
+    A ``CheckpointService`` start, a read-only store open and (with
+    ``session_idle_secs > 0``) a kept writable handle are paid once instead of
+    once per checkpoint. The existing API stays exactly as it was: a
+    ``WeftStorageWriter`` built without a session still creates and closes its
+    own helper.
+
+    Ownership and safety
+    --------------------
+
+    * The writable handle is the only holder of the store writer lock. It is
+      released after ``session_idle_secs`` without a publication (or
+      immediately after every publication with ``0``); until then no other
+      process can open the store for writing. That bounded ownership window is
+      the session's documented trade-off, not an indefinite lock.
+    * A stale fence is never replaced silently. The service returns the typed
+      ``Busy``/``Unauthorized`` error and the caller must reopen; the session
+      does not retry a write that the store refused.
+    * The session is not usable across ``fork()``: ``service()`` refuses in a
+      child process, because a child shares the inherited descriptor but not
+      the parent's request stream.
+    * An identical retry is idempotent. If a write raises a transport failure
+      and the checkpoint then exists with the same container SHA-256, the
+      session reports that checkpoint instead of publishing a second
+      generation. The container is retained (bounded by ``staging_bytes``) for
+      exactly that comparison; a refusal by the store is never masked.
+    """
+
+    def __init__(
+        self,
+        store_root,
+        *,
+        weftfs_cli=None,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        staging_bytes=DEFAULT_STAGING_BYTES,
+        session_idle_secs=30,
+        max_tensor_bytes=None,
+    ):
+        staging_bytes = int(staging_bytes)
+        if staging_bytes <= 0:
+            raise ValueError("staging_bytes must be a positive byte count")
+        session_idle_secs = int(session_idle_secs)
+        if session_idle_secs < 0:
+            raise ValueError("session_idle_secs must be non-negative")
+        self.store_root = Path(store_root)
+        self.staging_bytes = staging_bytes
+        self.session_idle_secs = session_idle_secs
+        self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
+        self._store.requires_store()
+        self._cli = _default_cli(weftfs_cli)
+        self._timeout = float(timeout)
+        self._max_tensor_bytes = max_tensor_bytes
+        self._service = None
+        self._closed = False
+        self._pid = os.getpid()
+        self.stats = {
+            "saves": 0,
+            "services_started": 0,
+            "idempotent_recoveries": 0,
+            "writable_handle_opens": 0,
+        }
+
+    # -- lifecycle ----------------------------------------------------------
+
+    def service(self):
+        """The shared helper, started on first use."""
+        if self._closed:
+            raise StoreUnavailable("checkpoint session is closed")
+        if os.getpid() != self._pid:
+            raise ServiceUnavailable(
+                "checkpoint session was created in pid %d; pid %d must create "
+                "its own" % (self._pid, os.getpid())
+            )
+        if self._service is None:
+            options = {}
+            if self._max_tensor_bytes is not None:
+                options["max_tensor_bytes"] = int(self._max_tensor_bytes)
+            self._service = CheckpointService(
+                self.store_root,
+                cli=self._cli,
+                timeout=self._timeout,
+                session_idle_secs=self.session_idle_secs,
+                **options,
+            )
+            self.stats["services_started"] += 1
+        return self._service
+
+    @property
+    def service_pid(self):
+        return None if self._service is None else self._service.pid
+
+    def close(self):
+        """Drain and stop the helper. Idempotent."""
+        if self._closed:
+            return
+        self._closed = True
+        if self._service is not None:
+            try:
+                self._service.close()
+            finally:
+                self._service = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return False
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:  # noqa: BLE001 - best effort at interpreter exit
+            pass
+
+    # -- saves -------------------------------------------------------------
+
+    def writer(self, checkpoint_id, **kwargs):
+        """A ``WeftStorageWriter`` bound to this session."""
+        kwargs = dict(kwargs)
+        kwargs.pop("session", None)
+        kwargs.setdefault("staging_bytes", self.staging_bytes)
+        kwargs.setdefault("weftfs_cli", self._cli)
+        kwargs.setdefault("timeout", self._timeout)
+        kwargs["session"] = self
+        kwargs["retain_container"] = True
+        return WeftStorageWriter(checkpoint_id, store_root=self.store_root, **kwargs)
+
+    def save(self, state_dict, *, checkpoint_id, **kwargs):
+        """Synchronous save through the shared helper.
+
+        Returns the writer's stats payload. Exactness, staging bounds and the
+        DCP metadata contract are unchanged: this only reuses the transport.
+
+        A transport failure is retried **at most once**, and only when the
+        store proves nothing was published for the name the writer allocated.
+        A lost response for a publication that did land is reported as an
+        explicit "published but not finished" error instead of a second
+        generation, so one ``(checkpoint_id, container)`` pair never produces
+        two checkpoints.
+        """
+        _require_torch("checkpoint session save")
+        import torch.distributed.checkpoint as dcp
+
+        self.stats["saves"] += 1
+        attempt = 0
+        while True:
+            writer = self.writer(checkpoint_id, **kwargs)
+            try:
+                dcp.save(state_dict, storage_writer=writer, no_dist=True)
+            except ServiceUnavailable as exc:
+                if attempt >= 1:
+                    raise
+                outcome = self._classify_lost_write(writer)
+                attempt += 1
+                if outcome == "published":
+                    raise SaveFailed(
+                        "checkpoint %r was published but the save did not finish "
+                        "(its source SHA-256 matches the bytes written, so it is "
+                        "a complete store artifact without DCP metadata); the "
+                        "session did not publish a second generation: %s"
+                        % (getattr(writer, "last_container_name", None), exc)
+                    ) from exc
+                if outcome != "absent":
+                    raise
+                self.stats["idempotent_recoveries"] += 1
+                continue
+            finally:
+                writer.close()
+            return writer.stats
+
+    def _classify_lost_write(self, writer):
+        """Say whether the allocated name was published, or is still absent.
+
+        Returns ``"published"`` when a complete checkpoint exists under the
+        name the writer allocated **and** its ``source_sha256`` equals the
+        retained container, ``"absent"`` when no such checkpoint exists, and
+        ``"unknown"`` when the helper cannot be reached or the name exists with
+        different bytes (never retried blindly).
+        """
+        container = getattr(writer, "last_container", None)
+        name = getattr(writer, "last_container_name", None)
+        if container is None or name is None:
+            return "unknown"
+        if self._service is not None:
+            try:
+                self._service.close()
+            finally:
+                self._service = None
+        expected = hashlib.sha256(bytes(memoryview(container))).hexdigest()
+        try:
+            service = self.service()
+            manifest = service.manifest(name)
+        except ServiceError as exc:
+            return "absent" if exc.class_name == "NotFound" else "unknown"
+        except (ServiceUnavailable, ServiceProtocolError, StoreUnavailable):
+            return "unknown"
+        if manifest.complete and manifest.source_sha256 == expected:
+            return "published"
+        return "unknown"
 
 
 def _write_result(item, info, nbytes):
@@ -2041,6 +2271,7 @@ def save_checkpoint_async(
     weftfs_cli=None,
     timeout=DEFAULT_TIMEOUT_SECONDS,
     max_workers=1,
+    session=None,
 ):
     """Run ``torch.distributed.checkpoint.save`` on a worker thread.
 
@@ -2072,6 +2303,7 @@ def save_checkpoint_async(
         init_store=init_store,
         weftfs_cli=weftfs_cli,
         timeout=timeout,
+        session=session,
     )
     executor = ThreadPoolExecutor(
         max_workers=workers, thread_name_prefix="weft-dcp-save"

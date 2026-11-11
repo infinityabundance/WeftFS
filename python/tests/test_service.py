@@ -257,13 +257,18 @@ def test_phase_profile_reports_a_measured_window(store):
     root, payload = store
     with CheckpointService(root, cli=CLI) as service:
         assert service.profile(0) == {}
-        buffer = service.restore_tensor("svc", TENSOR)
-        buffer.close()
+        # A publication is the operation the profile exists for: it opens the
+        # store and commits, so both phases must appear. (A pure restore may
+        # legitimately record nothing: decoding is not instrumented.)
+        service.write_file("/checkpoints/svc/profile-probe", b"probe")
         profile = service.profile(1)
-        assert "source_read" in profile or "digest" in profile
+        assert "store_open" in profile
+        assert "metadata_commit" in profile
         for name, row in profile.items():
             assert row["count"] >= 1
             assert row["total_ns"] >= 0
         # mode 2 stops measuring and clears the collector.
         service.profile(2)
         assert service.profile(1) == {}
+        with pytest.raises(ValueError):
+            service.profile(7)

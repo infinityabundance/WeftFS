@@ -480,6 +480,7 @@ class CheckpointService:
         max_frame_bytes=MAX_FRAME_BYTES,
         max_tensor_bytes=DEFAULT_MAX_TENSOR_BYTES,
         extra_args=(),
+        session_idle_secs=None,
     ):
         self.store_root = os.fspath(store_root)
         self.cli = os.fspath(cli) if cli is not None else os.fspath(DEFAULT_CLI)
@@ -487,11 +488,18 @@ class CheckpointService:
         self.max_frame_bytes = int(max_frame_bytes)
         self.max_tensor_bytes = int(max_tensor_bytes)
         self.extra_args = tuple(str(arg) for arg in extra_args)
+        if session_idle_secs is not None:
+            if int(session_idle_secs) < 0:
+                raise ValueError("session_idle_secs must be non-negative")
+            self.extra_args += ("--session-idle-secs", str(int(session_idle_secs)))
         self._lock = threading.Lock()
         self._request_id = 0
         self._closed = False
         self._socket = None
         self._process = None
+        # A descriptor table is not shared across `fork()`, so a child must
+        # never send on the parent's socket (and must never SHUTDOWN it).
+        self._owner_pid = os.getpid()
         self.stats = {
             "requests": 0,
             "restores": 0,
@@ -549,6 +557,14 @@ class CheckpointService:
         _probe("client.service_start", probe_started)
 
     def close(self):
+        if os.getpid() != self._owner_pid:
+            # The child inherited the attributes but not the descriptor table
+            # contract; shutting the socket down would kill the parent's
+            # service. Drop the reference only.
+            self._closed = True
+            self._socket = None
+            self._process = None
+            return
         with self._lock:
             if self._closed:
                 return
@@ -603,6 +619,11 @@ class CheckpointService:
         return _FRAME_HEADER.pack(length) + bytes((op,)) + _u32(request_id) + bytes((status,)) + body
 
     def _call(self, op, body=b"", fd=None):
+        if os.getpid() != self._owner_pid:
+            raise ServiceUnavailable(
+                "checkpoint service handle was inherited across fork(); "
+                "open a session in the child instead"
+            )
         with self._lock:
             if self._closed or self._socket is None:
                 raise ServiceUnavailable("checkpoint service is closed")

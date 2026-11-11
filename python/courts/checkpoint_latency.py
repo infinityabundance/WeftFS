@@ -142,6 +142,9 @@ class Collector:
 
 def fixture(torch):
     """The exact R11 state: a real optimizer step, then capture_state."""
+    # `training_goodput.child_loop` seeds before building the model; without the
+    # same seed this court would save different weights on every run.
+    torch.manual_seed(tg.SEED)
     model = tg.build_model(torch)
     optimizer = tg.make_optimizer(torch, model)
     batches = tg.data_batches(torch)
@@ -298,6 +301,69 @@ def decompose(rows):
     }
 
 
+def session_series(torch, *, store_root, state, reps, collector, service_cli, idle_secs):
+    """N saves through one long-lived session (warm service + held handle)."""
+    from weftcodec.dcp import CheckpointSession
+
+    rows = []
+    session = CheckpointSession(
+        store_root,
+        weftfs_cli=service_cli,
+        staging_bytes=tg.STAGING_BYTES,
+        session_idle_secs=idle_secs,
+    )
+    try:
+        service = session.service()
+        for index in range(reps):
+            before = tree_stats(store_root)
+            collector.reset()
+            set_probe_sink(collector)
+            service.profile(0)
+            started = time.perf_counter()
+            stats = session.save(state, checkpoint_id="ckpt-%d" % index)
+            saved = time.perf_counter()
+            rust_profile = service.profile(1)
+            service.profile(2)
+            set_probe_sink(None)
+            after = tree_stats(store_root)
+            deltas = {}
+            for key in sorted(set(before["by_dir"]) | set(after["by_dir"])):
+                b = before["by_dir"].get(key, {"bytes": 0, "files": 0})
+                a = after["by_dir"].get(key, {"bytes": 0, "files": 0})
+                deltas[key] = {
+                    "bytes": a["bytes"] - b["bytes"],
+                    "files": a["files"] - b["files"],
+                }
+            rows.append(
+                {
+                    "name": "ckpt-%d" % index,
+                    "scenario": "session",
+                    "index": index,
+                    "wall_ms": (saved - started) * 1000.0,
+                    "checkpoint_write_ms": stats.get("checkpoint_write_ms"),
+                    "container_bytes": stats.get("container_bytes"),
+                    "entries": stats.get("entries"),
+                    "tensor_bytes": stats.get("tensor_bytes"),
+                    "client": collector.summary(),
+                    "rust": rust_profile,
+                    "profile_available": True,
+                    "store_delta_bytes": after["bytes"] - before["bytes"],
+                    "store_delta_files": after["files"] - before["files"],
+                    "store_delta_by_dir": deltas,
+                    "store_total_bytes": after["bytes"],
+                    "store_total_files": after["files"],
+                }
+            )
+        session_stats = dict(session.stats)
+        service_pid = session.service_pid
+    finally:
+        session.close()
+    for row in rows:
+        row["session_stats"] = session_stats
+        row["service_pid"] = service_pid
+    return rows
+
+
 def run(args):
     torch = tg.load_torch()
     import torch.distributed.checkpoint  # noqa: F401  (fail early, not mid-run)
@@ -307,6 +373,7 @@ def run(args):
     total_bytes = sum(
         int(value.numel() * value.element_size()) for value in state.values()
     )
+    fixture_sha256, _ = tg.flat_sha256(torch, state)
     collector = Collector()
     work = Path(args.work_dir)
     if work.exists():
@@ -346,7 +413,30 @@ def run(args):
         row["index"] = index
         sequential_rows.append(row)
 
+    session_rows = []
+    if args.mode in ("both", "session"):
+        session_store = work / "session"
+        session_store.mkdir()
+        init_store(session_store, weftfs_cli=args.weftfs_cli)
+        session_rows = session_series(
+            torch,
+            store_root=session_store,
+            state=state,
+            reps=args.reps,
+            collector=collector,
+            service_cli=args.weftfs_cli,
+            idle_secs=args.session_idle_secs,
+        )
+
     verify = verify_checkpoint(store, "ckpt-%d" % (args.reps - 1), weftfs_cli=args.weftfs_cli)
+    session_verify = None
+    if session_rows:
+        session_verify = verify_checkpoint(
+            work / "session",
+            "ckpt-%d" % (len(session_rows) - 1),
+            weftfs_cli=args.weftfs_cli,
+            full=True,
+        )
 
     all_rows = fresh_rows + sequential_rows
     later_rows = sequential_rows[1:] if len(sequential_rows) > 1 else sequential_rows
@@ -358,6 +448,7 @@ def run(args):
             "source": "python/courts/training_goodput.py build_model/capture_state",
             "entries": entries,
             "tensor_bytes": total_bytes,
+            "flat_sha256": fixture_sha256,
             "topology": 1,
             "shard_strategy": "zstd",
             "staging_bytes": tg.STAGING_BYTES,
@@ -399,25 +490,45 @@ def run(args):
             "sequential_all_median_ms": statistics.median(
                 row["wall_ms"] for row in sequential_rows
             ),
+            "session_wall_ms": [round(row["wall_ms"], 3) for row in session_rows],
+            "session_first_ms": (session_rows[0]["wall_ms"] if session_rows else None),
+            "session_median_ms": (
+                statistics.median(row["wall_ms"] for row in session_rows)
+                if session_rows
+                else None
+            ),
+            "session_services_started": (
+                session_rows[0]["session_stats"]["services_started"]
+                if session_rows
+                else None
+            ),
         },
         "decomposition": {
             "fresh_store": decompose(fresh_rows),
             "sequential_first": decompose(sequential_rows[:1]),
             "sequential_later": decompose(later_rows),
+            "session": decompose(session_rows) if session_rows else {},
+            "session_later": (
+                decompose(session_rows[1:]) if len(session_rows) > 1 else {}
+            ),
         },
-        "runs": all_rows,
+        "runs": all_rows + session_rows,
         "verify": verify,
+        "session_verify": session_verify,
         "peak_rss_kib": int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss),
     }
     if args.receipt:
         write_json(args.receipt, receipt)
         print("checkpoint-latency receipt: %s" % args.receipt)
     print(
-        "fresh median %.1f ms | sequential first %.1f ms | later median %.1f ms"
+        "fresh median %.1f ms | writer-per-save first %.1f / later %.1f | "
+        "session first %.1f / median %.1f"
         % (
             receipt["summary"]["fresh_store_median_ms"],
             receipt["summary"]["sequential_first_ms"],
             receipt["summary"]["sequential_later_median_ms"],
+            receipt["summary"]["session_first_ms"] or 0.0,
+            receipt["summary"]["session_median_ms"] or 0.0,
         )
     )
     return 0
@@ -432,6 +543,10 @@ def main(argv):
     run_p.add_argument("--work-dir", default="/tmp/weft-checkpoint-latency")
     run_p.add_argument("--reps", type=int, default=DEFAULT_REPS)
     run_p.add_argument("--fresh", type=int, default=DEFAULT_FRESH)
+    run_p.add_argument(
+        "--mode", choices=("both", "writer", "session"), default="both"
+    )
+    run_p.add_argument("--session-idle-secs", type=int, default=30)
     run_p.add_argument(
         "--weftfs-cli",
         default=os.environ.get("WEFTFS_CLI", "/work/.docker-cache/target-rust/release/weftfs"),

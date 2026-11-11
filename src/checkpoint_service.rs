@@ -27,7 +27,7 @@ use std::io::Write;
 use std::os::fd::{AsFd, AsRawFd, OwnedFd, RawFd};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use weftcodec::Region;
 
@@ -48,6 +48,13 @@ pub const PROTOCOL_VERSION: u32 = 3;
 pub const MAX_FRAME_BYTES: usize = 1 << 20;
 /// Default bound on one restored tensor / one staged container.
 pub const DEFAULT_MAX_TENSOR_BYTES: u64 = 4 << 30;
+/// Default idle window for a held writable handle.
+///
+/// `0` (the default) releases the writer lock immediately after every
+/// publication, which is the historical behaviour and means two helpers on one
+/// store never collide on the lock. `CheckpointSession` passes a positive
+/// window explicitly; only then does the service hold the lock between saves.
+pub const DEFAULT_SESSION_IDLE_SECS: u64 = 0;
 /// Bound on one `WRITE_FILE` payload (metadata blobs, never tensors).
 pub const MAX_FILE_BYTES: u64 = 16 << 20;
 
@@ -87,6 +94,16 @@ pub struct ServiceConfig {
     pub socket: Option<PathBuf>,
     pub max_frame_bytes: usize,
     pub max_tensor_bytes: u64,
+    /// How long a writable store handle may stay open **without a
+    /// publication** before the service releases the exclusive writer lock.
+    ///
+    /// `0` releases it immediately after every publication, which is the
+    /// pre-session behaviour: a caller cannot observe a held lock between
+    /// saves. A positive value is a bounded ownership window, not an
+    /// indefinite lock: the handle is dropped (and the lock released) on the
+    /// first request that sees the window elapsed, and any publication that
+    /// finds a stale fence fails closed and forces a reopen.
+    pub session_idle_secs: u64,
 }
 
 impl Default for ServiceConfig {
@@ -96,6 +113,7 @@ impl Default for ServiceConfig {
             socket: None,
             max_frame_bytes: MAX_FRAME_BYTES,
             max_tensor_bytes: DEFAULT_MAX_TENSOR_BYTES,
+            session_idle_secs: DEFAULT_SESSION_IDLE_SECS,
         }
     }
 }
@@ -182,23 +200,103 @@ pub fn serve(
         config,
         manifest_cache: HashMap::new(),
         requests: 0,
+        last_write: Instant::now(),
+        write_handle_opens: 0,
+        write_handle_releases: 0,
     };
     service.run(stream)
 }
 
 struct Service {
+    /// The one handle this connection uses.
+    ///
+    /// It starts read-only. The first publication **upgrades** it to a writable
+    /// handle and keeps it, so a session pays one open instead of four per
+    /// save and every read through it is current (`group` updates the handle's
+    /// state and head in place). [`Service::release_idle_write_handle`] drops
+    /// it back to read-only after the configured idle window, which is the
+    /// only thing that keeps the exclusive writer lock bounded.
     store: Store,
     store_path: PathBuf,
     options: Options,
     kind: BackendKind,
     config: ServiceConfig,
-    /// Manifest cache keyed by checkpoint name; the read handle has a fixed
-    /// state, so an entry is invalidated only by a write through this service.
+    /// Manifest cache keyed by checkpoint name. Entries survive a writable
+    /// handle because manifests are immutable content-addressed blobs; a write
+    /// that replaces a name clears the cache.
     manifest_cache: HashMap<String, CheckpointManifest>,
     requests: u64,
+    /// When this connection last published through the writable handle.
+    last_write: Instant,
+    /// Number of times the writable handle was upgraded, for diagnostics.
+    write_handle_opens: u64,
+    /// Number of times an idle window released the writer lock.
+    write_handle_releases: u64,
 }
 
 impl Service {
+    /// Upgrade to (or reuse) the writable handle.
+    ///
+    /// A writable open re-proves the plane capabilities and takes the writer
+    /// lock, so an upgraded handle is exactly as validated as a per-request
+    /// one. There is no path that reuses a handle across a fence change: the
+    /// writer lock (local/object) or the fenced lease record (S3/GCS/Azure) is
+    /// held by this process for as long as the handle exists, and a
+    /// publication whose lease expired fails closed.
+    fn write_handle(&mut self) -> Result<&mut Store> {
+        if self.store.mode() != OpenMode::ReadWrite {
+            let store = Store::open_with_options_and_backend(
+                &self.store_path,
+                OpenMode::ReadWrite,
+                self.options.clone(),
+                self.kind.clone(),
+            )?;
+            self.store = store;
+            self.manifest_cache.clear();
+            self.write_handle_opens += 1;
+            self.last_write = Instant::now();
+        }
+        Ok(&mut self.store)
+    }
+
+    /// Release the exclusive writer lock once the idle window has elapsed.
+    ///
+    /// With `session_idle_secs == 0` this runs after every publication, which
+    /// is the historical behaviour. A failed downgrade keeps the writable
+    /// handle (it is still a valid handle) and is retried on the next request.
+    fn release_idle_write_handle(&mut self) {
+        if self.store.mode() != OpenMode::ReadWrite {
+            return;
+        }
+        let window = Duration::from_secs(self.config.session_idle_secs);
+        if window > Duration::ZERO && self.last_write.elapsed() < window {
+            return;
+        }
+        match Store::open_with_options_and_backend(
+            &self.store_path,
+            OpenMode::ReadOnly,
+            self.options.clone(),
+            self.kind.clone(),
+        ) {
+            Ok(store) => {
+                self.store = store;
+                self.manifest_cache.clear();
+                self.write_handle_releases += 1;
+            }
+            Err(_) => {
+                // The writable handle is still valid; keep it and retry later.
+            }
+        }
+    }
+
+    /// Release the writable handle immediately after a publication when the
+    /// session window is zero. Called at the end of every mutating handler.
+    fn after_publication(&mut self) {
+        self.last_write = Instant::now();
+        if self.config.session_idle_secs == 0 {
+            self.release_idle_write_handle();
+        }
+    }
     fn run(&mut self, mut stream: UnixStream) -> Result<()> {
         let max_frame = self.config.max_frame_bytes;
         loop {
@@ -220,6 +318,10 @@ impl Service {
                 Err(FrameError::Io(err)) => return Err(err),
             };
             self.requests += 1;
+            // The only automatic release path: an idle window, never a timer
+            // thread, so the decision is made on a client request and a
+            // service with no client makes no further writes.
+            self.release_idle_write_handle();
             let started = Instant::now();
             let response = self.dispatch(&request, started);
             match response {
@@ -630,17 +732,12 @@ impl Service {
             }
         }
         drop(file);
-        // `write_checkpoint` must run against a freshly opened write handle:
-        // the service's read handle is pinned to the state at open. The same
-        // handle reads the manifest back so the report is never stale.
+        // The session's writable handle is reused when it is already open. A
+        // `Busy`/fence refusal is not retried here: the caller sees the typed
+        // error and must reopen (a stale fence is never silently replaced).
         let outcome =
             (|| -> Result<(crate::checkpoint::CheckpointWriteReport, CheckpointManifest)> {
-                let mut write_store = Store::open_with_options_and_backend(
-                    &self.store_path,
-                    OpenMode::ReadWrite,
-                    self.options.clone(),
-                    self.kind.clone(),
-                )?;
+                let write_store = self.write_handle()?;
                 let report = write_store.write_checkpoint(&name, &proc_path, &options)?;
                 let manifest = write_store.checkpoint_manifest(&report.name)?;
                 Ok((report, manifest))
@@ -649,18 +746,11 @@ impl Service {
             Ok(outcome) => outcome,
             Err(err) => return Dispatch::Failed(err),
         };
-        // Refresh the read handle so the checkpoint this service just wrote is
-        // visible to the rest of this connection, and drop any cached manifest.
+        // The checkpoint this handle just published is visible to every later
+        // read through the same handle; only a replaced name needs its cached
+        // manifest dropped.
         self.manifest_cache.clear();
-        match Store::open_with_options_and_backend(
-            &self.store_path,
-            OpenMode::ReadOnly,
-            self.options.clone(),
-            self.kind.clone(),
-        ) {
-            Ok(store) => self.store = store,
-            Err(err) => return Dispatch::Failed(err),
-        }
+        self.after_publication();
         let mut body = Vec::new();
         put_hash(&mut body, report.checkpoint_id);
         put_hash(&mut body, report.head);
@@ -732,12 +822,7 @@ impl Service {
         }
         let outcome = (|| -> Result<()> {
             let (parent, name) = split_store_path(&path)?;
-            let mut write_store = Store::open_with_options_and_backend(
-                &self.store_path,
-                OpenMode::ReadWrite,
-                self.options.clone(),
-                self.kind.clone(),
-            )?;
+            let write_store = self.write_handle()?;
             let parent_id = write_store.resolve_path(&parent)?;
             let (uid, gid) = (
                 write_store.options().owner_uid,
@@ -763,15 +848,7 @@ impl Service {
             Err(err) => return Dispatch::Failed(err),
         }
         self.manifest_cache.clear();
-        match Store::open_with_options_and_backend(
-            &self.store_path,
-            OpenMode::ReadOnly,
-            self.options.clone(),
-            self.kind.clone(),
-        ) {
-            Ok(store) => self.store = store,
-            Err(err) => return Dispatch::Failed(err),
-        }
+        self.after_publication();
         let mut body = Vec::new();
         put_u64(&mut body, size);
         put_u64(&mut body, self.store.generation());
@@ -918,6 +995,20 @@ impl Service {
     fn handle_refresh(&mut self, request: &Request, started: Instant) -> Dispatch {
         if let Err(err) = require_empty(request) {
             return Dispatch::Failed(err);
+        }
+        // A session that holds the writer lock cannot observe another writer's
+        // commit (none can publish while the lock is held), and reopening here
+        // would silently drop that lock. Report the current head instead.
+        if self.store.mode() == OpenMode::ReadWrite {
+            let mut body = Vec::new();
+            put_u64(&mut body, self.store.generation());
+            put_hash(&mut body, self.store.head());
+            put_u64(&mut body, elapsed_us(started));
+            return Dispatch::Reply {
+                op: request.op,
+                body,
+                fd: None,
+            };
         }
         match Store::open_with_options_and_backend(
             &self.store_path,

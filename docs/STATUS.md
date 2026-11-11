@@ -8220,7 +8220,9 @@ the same fixture, decomposed, then driven down.
 
 Full evidence and every loss:
 [`bench/RESULTS-checkpoint-latency.md`](../bench/RESULTS-checkpoint-latency.md).
-Receipt `bench/receipts/checkpoint-latency-20261111T021640Z.json`, measured in
+Receipts `bench/receipts/checkpoint-latency-20261111T022638Z.json` (current)
+and `bench/receipts/checkpoint-latency-20261111T021640Z.json` (the profiler
+baseline), measured in
 `weft/python-court:1` (`sha256:aec5deb0…76152`), Linux `7.3.3-1-cachyos`,
 3 GiB / 4 CPUs / 1024 pids / 1 GiB `/tmp`, `cap-drop=ALL`, torch 2.15.0+cpu.
 No wire, frame, manifest or planner-identity change.
@@ -8264,4 +8266,62 @@ R11 measured and did not localise. Reopening the store four times per save
 (9.3 → 28.0 ms) are the second and third causes. Python staging, hashing and
 the memfd handoff together are under 5 ms.
 
-No optimisation was made before this measurement, and none is claimed here.
+No optimisation was made before this measurement.
+
+### Increment 2 — session, and two planner changes the profile justified
+
+**2a. The implicit mode-14 search is now opt-in.** New
+`TensorPlanOptions::semantic_scan` (default **false**) gates only the implicit
+candidate source: with no explicit `candidates` list, mode 14 is reported
+`skipped` instead of walking the whole store. Explicit candidate lists are
+unchanged, `semantic_scan = true` restores the search (bounded by
+`semantic_scan_max_objects`, default 256, ascending object id),
+`weftfs checkpoint write --semantic-scan` opts in, and `--no-semantic` still
+disables the candidate. This is a planner candidate-set change for callers
+that never set the option, disclosed here: the old default was `O(objects)`
+per tensor with no index behind it. The fixture's chosen representation is
+unchanged (every shard is one ZSTD frame).
+**211.1 / 472.6 → 67.9 / 81.5 ms.**
+
+**2b. A caller-pinned strategy no longer builds candidates it cannot choose.**
+`checkpoint_shard_spec` pins `TensorStrategy::Zstd` or `Raw` for the `zstd` /
+`raw` shard strategies and `choose_candidate` returns only that strategy, yet
+the planner still encoded mode 9, mode 10, the deltas and the patch. The
+planner now returns after building the pinned `Raw`/`Zstd` candidate for a
+non-q8_0 tensor; every other hint keeps the full set and an inapplicable hint
+still fails with the same typed error. Rust `encode` fell 29.7 → 5.8 ms per
+save on the profiled baseline, so a save builds one ZSTD frame per shard and
+nothing else. **67.9 / 81.5 → 42.6 / 60.6 ms.**
+
+**2c. `CheckpointSession` (reusable service + one store handle).**
+`weftcodec.dcp.CheckpointSession` owns one service across saves and
+`WeftStorageWriter(session=...)` binds to it; `save_checkpoint_async` accepts
+the same. The service keeps **one** handle: read-only until the first
+publication, then writable, with reads going through it, so the four opens per
+save become one (`store_open` 12.4-44.9 ms → **0**). Ownership: the writer lock
+is released after `--session-idle-secs` without a publication (default 30 s;
+`0` = release after every publish), decided on a client request, never a timer
+timer thread; a writable open re-proves both plane capabilities; a stale fence
+is returned as a typed `Busy`/`Unauthorized` and never replaced. The session
+refuses `service()` across `fork()`, and `CheckpointService` refuses
+`close()`/`_call()` in a child so a child cannot `SHUTDOWN` the parent's
+helper. `session.save` retries a transport failure at most once and only when
+the store proves nothing was published under the allocated name; a lost
+response that did land raises an explicit "published but not finished" error
+rather than publishing a second generation.
+
+Measured, 8 saves in one store (seeded fixture, `flat_sha256` recorded):
+
+| | first | median | last |
+|---|---:|---:|---:|
+| session | 38.5 ms | **42.2 ms** | 46.1 ms |
+| writer per save | 40.0 ms | 60.2 ms | 85.7 ms |
+
+Every later save writes the same 277,402 store bytes and the commit is
+0.43-0.45 ms at every index, so commit cost no longer grows with store
+history; only the index chain load (2.6 ms) and the WFX3 segment size do. One
+93.0 ms session save is recorded as a host-scheduling outlier and is not
+smoothed away. **Milestones reached: 100 ms and 50 ms. 20 ms is not yet
+reached** — the remaining measured shares are `index_segment` 5.2 ms, the
+second commit for DCP metadata 3.8 ms, `encode_zstd` 5.8 ms, `digest` 3.0 ms,
+Python metadata serialisation 4.2 ms and ~6 ms of DCP/writer overhead.

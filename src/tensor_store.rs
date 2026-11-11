@@ -63,6 +63,8 @@ pub const ATTR_TENSOR_TILE_SHAPE: &str = "weft.tensor.tile_shape";
 
 /// Default byte bound on the semantic-delta candidate search (512 MiB).
 pub const DEFAULT_MAX_SEMANTIC_BYTES: u64 = 512 * 1024 * 1024;
+/// Bound on state objects an opted-in implicit semantic scan examines.
+pub const DEFAULT_SEMANTIC_SCAN_MAX_OBJECTS: usize = 256;
 
 /// Default byte bound on the whole-tensor delta and patch candidates (512 MiB).
 ///
@@ -956,6 +958,23 @@ pub struct TensorPlanOptions {
     /// decode several live tensors; disable it when a caller only cares about
     /// the causal weight/sparse deltas.
     pub semantic_search: bool,
+    /// Search the **whole store** for implicit mode-14 candidates when
+    /// `candidates` is empty.
+    ///
+    /// Off by default, and this matters: the scan walks every file object in
+    /// the state and, for each one whose dtype and shape match, reads and
+    /// decodes the whole tensor before it can price a mode-14 delta. That is
+    /// `O(objects)` per tensor, i.e. quadratic in a store that gains objects
+    /// per checkpoint. Measured on the R12b training fixture it was 130 ms of
+    /// a 211 ms first save and 344 ms of a 472 ms later save. Callers that
+    /// want the candidate should pass an explicit `candidates` list (the R7
+    /// semantic-index shape); enabling this flag restores the historical
+    /// implicit search, bounded by `semantic_scan_max_objects`.
+    pub semantic_scan: bool,
+    /// Upper bound on the state objects the implicit scan examines. The scan
+    /// is deterministic (ascending object id), so a truncated scan is a
+    /// well-defined subset, never a race.
+    pub semantic_scan_max_objects: usize,
     /// Hard bound on `candidate_tensors * tensor_bytes` for the semantic
     /// candidate search. A larger tensor falls back to the other candidates
     /// instead of risking the court's memory limit.
@@ -1016,6 +1035,8 @@ impl Default for TensorPlanOptions {
             fast_codec: FastCodec::Zstd,
             fast_zstd_level: 1,
             semantic_search: true,
+            semantic_scan: false,
+            semantic_scan_max_objects: DEFAULT_SEMANTIC_SCAN_MAX_OBJECTS,
             max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
             max_delta_bytes: DEFAULT_MAX_DELTA_BYTES,
             allow_experimental_modes: false,
@@ -3512,6 +3533,107 @@ impl Store {
         }
 
         // Raw chunks (v2 kind:"raw").
+        //
+        // A caller that pinned the strategy to RAW or ZSTD cannot choose
+        // anything else: `choose_candidate` returns the first applicable
+        // candidate with that strategy or a typed error. Building the rest
+        // would be work thrown away — measured at 22.7 ms of mode-9 encodes
+        // per checkpoint on the R12b training fixture, whose DCP adapter pins
+        // every shard to ZSTD. The two blocks below are the same candidate
+        // objects the full path builds first for those hints.
+        if hint == Some(TensorStrategy::Raw) && !quantized {
+            let raw_candidate = PreparedCandidate {
+                candidate: TensorPlanCandidate {
+                    strategy: TensorStrategy::Raw,
+                    applicable: true,
+                    detail: "canonical row-major chunks".to_owned(),
+                    physical_bytes: Some(size),
+                    estimated_decode_ns: Some(options.estimate_ns_at_pattern(
+                        crate::cost_model::CostClass::Raw,
+                        TensorStrategy::Raw,
+                        size,
+                    )),
+                    estimated_encode_ns: Some(
+                        options.estimate_encode_ns(TensorStrategy::Raw, size),
+                    ),
+                    cost: Some(options.price_candidate(
+                        size,
+                        options.estimate_ns_at_pattern(
+                            crate::cost_model::CostClass::Raw,
+                            TensorStrategy::Raw,
+                            size,
+                        ),
+                        options.estimate_encode_ns(TensorStrategy::Raw, size),
+                    )),
+                    dependency: None,
+                },
+                artifact: Some(PreparedArtifact {
+                    kind: RepresentationKind::Raw,
+                    strategy_name: "raw".to_owned(),
+                    frame: None,
+                    dependencies: Vec::new(),
+                    tensor: None,
+                    tile_shape: None,
+                }),
+            };
+            retain_candidate(&mut out, hint, keep_artifacts, raw_candidate);
+            return Ok(out);
+        }
+        if hint == Some(TensorStrategy::Zstd) && !quantized {
+            let codec_chunk =
+                crate::representation::codec_chunk_size(self.options().chunk_size.max(1)) as usize;
+            match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                weftcodec::modes::encode_zstd(
+                    logical,
+                    crate::representation::CODEC_ZSTD_LEVEL,
+                    Some(codec_chunk),
+                    &limits,
+                )
+            }) {
+                Ok(frame) => {
+                    let physical = frame.len() as u64;
+                    let estimate = options.estimate_ns_at_pattern(
+                        crate::cost_model::CostClass::Zstd,
+                        TensorStrategy::Zstd,
+                        size,
+                    );
+                    retain_candidate(
+                        &mut out,
+                        hint,
+                        keep_artifacts,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::Zstd,
+                                applicable: true,
+                                detail: "one ZSTD frame".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                )),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Codec,
+                                strategy_name: "zstd".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: None,
+                                tile_shape: None,
+                            }),
+                        },
+                    );
+                }
+                Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
+            }
+            return Ok(out);
+        }
+
         let raw_candidate = if quantized {
             skipped(
                 TensorStrategy::Raw,
@@ -4462,6 +4584,11 @@ impl Store {
                 TensorStrategy::SemanticDelta,
                 "semantic search disabled by the write policy".to_owned(),
             ));
+        } else if options.candidates.is_empty() && !options.semantic_scan {
+            out.push(skipped(
+                TensorStrategy::SemanticDelta,
+                "no candidate list and the implicit store scan is off".to_owned(),
+            ));
         } else if size.saturating_mul(options.max_candidates as u64) > options.max_semantic_bytes {
             out.push(skipped(
                 TensorStrategy::SemanticDelta,
@@ -4899,6 +5026,13 @@ impl Store {
         options: &TensorPlanOptions,
     ) -> Result<Vec<(Hash32, Vec<u8>)>> {
         let mut out = Vec::new();
+        if options.candidates.is_empty() {
+            // No explicit candidate list. The implicit whole-store scan is
+            // opt-in: it is O(objects) per tensor and reads whole tensors.
+            if !options.semantic_scan {
+                return Ok(out);
+            }
+        }
         if !options.candidates.is_empty() {
             if options.candidates.len() > options.max_candidates.max(1) {
                 return Err(Error::limit_exceeded(format!(
@@ -4926,6 +5060,9 @@ impl Store {
             .map(|record| record.id)
             .collect();
         ids.sort();
+        // A bounded, deterministic prefix: a truncated scan is a subset, never
+        // a race, and the caller opted into an implicit search.
+        ids.truncate(options.semantic_scan_max_objects.max(1));
         let bound = options.max_candidates.max(1);
         let mut accepted = 0usize;
         for id in ids {

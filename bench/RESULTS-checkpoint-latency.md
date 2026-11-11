@@ -1,12 +1,14 @@
 # Checkpoint completion latency (subphase R12b)
 
-Receipts (this file, increment 1 = profiler only):
+Receipts:
 
 | receipt | what it is |
 |---|---|
-| `bench/receipts/checkpoint-latency-20261111T021640Z.json` | R11 fixture, profiler complete (18 Rust phases, 12 client sections), fresh-store and same-store saves |
-| `bench/receipts/checkpoint-latency-20261111T021406Z.json` | same court before the semantic phase was separated; retained |
-| `bench/receipts/checkpoint-latency-20261111T021227Z.json` | same court before the Rust profile was read correctly; retained |
+| `bench/receipts/checkpoint-latency-20261111T022638Z.json` | **current**: deterministic fixture, 8 saves/series, session + writer-per-save |
+| `bench/receipts/checkpoint-latency-20261111T022557Z.json` | first run after the strategy-hint short-circuit (fixture not yet seeded) |
+| `bench/receipts/checkpoint-latency-20261111T022409Z.json` | first run after bounding the implicit semantic search |
+| `bench/receipts/checkpoint-latency-20261111T021640Z.json` | the profiler baseline (before any optimisation) |
+| `bench/receipts/checkpoint-latency-20261111T021406Z.json`, `…021227Z` | earlier profiler iterations, retained |
 
 Court: `weft/python-court:1` (`sha256:aec5deb0…76152`), Linux
 `7.3.3-1-cachyos`, 3 GiB / 4 CPUs / 1024 pids / 1 GiB `/tmp`, `cap-drop=ALL`.
@@ -19,11 +21,14 @@ torch 2.15.0+cpu. Harness `python/courts/checkpoint_latency.py`, wrapper
 `python/courts/checkpoint_latency.py` imports `build_model`, `make_optimizer`,
 `data_batches` and `capture_state` from `python/courts/training_goodput.py`,
 runs **one real optimizer step**, and captures the same state the R11 loop
-saves: **169 entries, 4,973,352 bytes**, written with `topology=1` and the
-`zstd` shard strategy. Each save constructs a fresh `WeftStorageWriter` and
-runs `torch.distributed.checkpoint.save`, exactly like
-`save_checkpoint_async` does per checkpoint. Nothing about the fixture is
-re-implemented, so the numbers are comparable to R11's 444.1 ms p50.
+saves: **169 entries, 4,973,360 bytes**, written with `topology=1` and the
+`zstd` shard strategy. The model seed is `SEED = 20261110` (the R11 loop's
+seed), so every run saves byte-identical weights: the receipt records the flat
+state SHA-256 (`b2a00193…a621cee4`) and the per-save store deltas agree to the
+byte (277,402 bytes for every later checkpoint). Each writer-per-save run
+constructs a fresh `WeftStorageWriter` and runs
+`torch.distributed.checkpoint.save`, exactly like `save_checkpoint_async` does
+per checkpoint.
 
 ## 2. What was instrumented (and what was not)
 
@@ -124,3 +129,122 @@ One host, warm page cache, CPU only, single writer, local store on tmpfs.
 and must not be added to it. The `later` column is the median of five saves in
 one store, so its growth is a trend, not a per-checkpoint forecast. No
 `torch.save`/DCP comparison is made here; that is increment 8.
+
+## 6. Increment 2 — a reusable session, and the two planner changes the profile justified
+
+### 6.1 Bounding the implicit mode-14 search (planner change)
+
+`TensorPlanOptions::semantic_scan` is new and **off by default**. It gates only
+the *implicit* candidate source: when a caller supplies no `candidates` list and
+does not set `semantic_scan`, the mode-14 candidate is reported as
+`skipped("no candidate list and the implicit store scan is off")` instead of
+walking the whole store. An explicit `candidates` list works exactly as before
+(the R7/A3 semantic-index shape), and `semantic_scan = true` restores the
+historical search, now bounded by `semantic_scan_max_objects` (default 256,
+ascending object id, so a truncation is a deterministic subset rather than a
+race). `weftfs checkpoint write --semantic-scan` opts in; `--no-semantic`
+disables the candidate entirely, as before.
+
+This changes the *planner's candidate set* for callers that never set the
+option. It is disclosed rather than hidden: the old default encoded every
+same-dtype/same-shape tensor in the store for every tensor being written, which
+is `O(objects)` per tensor and has no index behind it. Nothing in the fixture's
+chosen representation changed: every shard is still one ZSTD frame, and the
+per-checkpoint store deltas are byte-identical to the pre-change run apart from
+the fixture seed (Section 1).
+
+Effect (median of the same court, before → after):
+**fresh store 211.1 → 67.9 ms; later saves in one store 472.6 → 81.5 ms.**
+
+### 6.2 A caller-pinned strategy does not pay for the candidates it cannot choose
+
+`checkpoint_shard_spec` pins `TensorStrategy::Zstd` (or `Raw`) for the
+`zstd`/`raw` shard strategies. `choose_candidate` then returns *only* that
+strategy, so encoding mode 9, mode 10, the deltas and the patch was dead work.
+`prepare_candidates` now returns after building the pinned candidate when the
+hint is `Raw` or `Zstd` and the tensor is not q8_0; every other hint keeps the
+full candidate set, and a hint that is not applicable still fails with the same
+typed error.
+
+Effect: **fresh 67.9 → 42.6 ms; later 81.5 → 60.6 ms**; the Rust `encode`
+phase fell from 29.7 ms to 5.8 ms per save (mode 9 was 22.8 ms of it).
+
+### 6.3 `CheckpointSession` — one service, one store handle
+
+`weftcodec.dcp.CheckpointSession` owns one `CheckpointService` across saves and
+`WeftStorageWriter(session=...)` binds a writer to it without closing it. The
+service now keeps **one** store handle for the connection: it starts read-only,
+is upgraded to a writable handle on the first publication, and every later read
+goes through it (`group` updates the handle's state and head in place), so the
+four opens per save become one.
+
+Ownership rules, implemented:
+
+* The writable handle is the only holder of the store writer lock. It is
+  released after `--session-idle-secs` without a publication (default 30 s);
+  `0` releases it immediately after every publication, which is the
+  pre-session behaviour. The release happens on a client request, never on a
+  timer thread.
+* A writable open re-proves both plane capabilities, so a session handle is as
+  validated as a per-request one. A stale fence is never replaced: the service
+  returns the typed `Busy`/`Unauthorized` and the caller must reopen.
+* A session refuses `service()` in a process that did not create it
+  (`fork()` safety), and `CheckpointService.close()`/`_call()` refuse in a
+  child so a child can never `SHUTDOWN` the parent's helper.
+* `session.save(...)` retries a **transport** failure at most once and only
+  when the store proves nothing was published under the name the writer
+  allocated. When a lost response *did* land, it raises an explicit
+  "published but not finished" error instead of publishing a second
+  generation, so one `(checkpoint_id, container)` never yields two checkpoints.
+
+Effect at 8 saves in one store: **first 38.5 ms, median 42.2 ms, last 46.1 ms**
+(one 93.0 ms host-scheduling outlier is in the raw row list and is not
+hidden). The writer-per-save series grows monotonically,
+40.0 → 44.8 → 50.4 → 56.4 → 64.0 → 71.2 → 79.5 → 85.7 ms, because each save
+replays the store from scratch twice.
+
+### 6.4 The session's decomposition (median of 8 saves)
+
+| phase | ms | note |
+|---|---:|---|
+| **completion** | **42.2** | first 38.5, last 46.1 |
+| client `write_request` (whole `WRITE_CHECKPOINT`) | 23.4 | |
+| → `index_segment` (2 segments) | 5.2 | `index_build` 1.6, `index_load` 2.6, `index_attest` 0.5 |
+| → `encode_zstd` (169 frames) | 5.8 | the only real encode left |
+| → `metadata_commit` (the Rust `WRITE_FILE` commit) | 3.8 | a second commit, one atomic publication would remove it |
+| → `digest` (682 sections) | 3.0 | |
+| → `blob_publish` (344 publishes) | 1.6 | |
+| → `manifest_commit` | 0.4 | one commit per save |
+| → descriptor/chunking/state apply | ~3.6 | residual inside the round trip |
+| → `store_open` | **0.0** | the session handle is reused (0 opens) |
+| client `metadata_serialize` (WCB) | 4.2 | pure Python |
+| client staging (`resolve` + `hash` + append) | 2.2 | |
+| client `container_memfd` (alloc + copy) | 0.4 | |
+| client `allocate_name`, `manifest_verify` | 0.1 | |
+| residual (DCP plan, writer construction, drain) | ~6 | |
+
+Commit cost does not grow with history: `manifest_commit` is 0.43-0.45 ms at
+every index, and the whole later-save delta is 277,402 bytes at every index.
+The only history-dependent term left inside a session is the index chain
+(`index_load` 2.4 ms), which is increment 4's target.
+
+## 7. Milestones
+
+| milestone | p50 | receipt |
+|---|---:|---|
+| R11 baseline | 444.1 ms | `training-goodput-20261110T200930Z` |
+| profiled, no optimisation | 472.6 ms later / 211.1 fresh | `…T021640Z` |
+| 100 ms | 81.5 ms later / 67.9 fresh | `…T022409Z` |
+| 50 ms | 42.2 ms (session) | `…T022638Z` |
+| 20 ms | not reached yet | — |
+
+## 8. Non-claims (increments 1-2)
+
+One host, warm page cache, CPU only, single writer, local store on tmpfs; the
+court's work directory is inside the container. The 30 s session idle window
+means another process cannot open the store for writing between checkspoints
+that are closer than 30 s apart — that is the documented trade-off, not an
+indefinite lock. `semantic_scan` default-off is a planner candidate-set change,
+disclosed above; the chosen representation on this fixture is unchanged. No
+`torch.save`/DCP comparison, no packing, no index change and no Python copy
+removal is claimed yet.

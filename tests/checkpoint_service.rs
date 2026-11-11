@@ -370,7 +370,7 @@ fn service_lists_shows_and_restores_into_a_caller_memfd() {
     send_frame(&service.stream, OP_INFO, 1, &[], &[]);
     let info = expect_ok(&recv_frame(&service.stream).unwrap(), 1);
     let mut cursor = Reader::new(&info);
-    assert_eq!(cursor.u32(), 2, "protocol version");
+    assert_eq!(cursor.u32(), 3, "protocol version");
     assert_eq!(cursor.u32(), 1 << 20, "frame bound");
     assert_eq!(cursor.u64(), 4 << 30, "tensor bound");
     assert_eq!(cursor.u64(), 2, "generation");
@@ -792,4 +792,109 @@ fn topology_restore_reports_a_verified_topology_root() {
         );
     }
     assert_eq!(actual, random_bytes(tensor_len(), 0x5eed_1234));
+}
+
+const OP_PROFILE: u8 = 0x0b;
+
+/// A session keeps one writable handle: two publications on one connection do
+/// not reopen the store, and the profile proves it.
+#[test]
+fn session_reuses_one_writable_handle() {
+    let dir = tempdir().unwrap();
+    let store_path = fixture(dir.path());
+    let socket = dir.path().join("svc-session.sock");
+    let service = start_service(
+        &store_path,
+        &socket,
+        &[
+            "--fixed-timestamp-ns",
+            "1700000000000000000",
+            "--session-idle-secs",
+            "30",
+        ],
+    );
+
+    // Start a profiling window and publish two checkpoints through it.
+    send_frame(&service.stream, OP_PROFILE, 40, &[0u8], &[]);
+    expect_ok(&recv_frame(&service.stream).unwrap(), 40);
+
+    let container = container_bytes();
+    for (index, id) in [(0u32, 41u32), (1u32, 42u32)] {
+        let staged = memfd(&container);
+        let mut body = Vec::new();
+        put_str(&mut body, &format!("session-{index}"));
+        body.extend_from_slice(&1u32.to_le_bytes());
+        body.extend_from_slice(&0u32.to_le_bytes());
+        put_str(&mut body, "zstd");
+        body.extend_from_slice(&0u32.to_le_bytes());
+        body.push(0);
+        body.push(1);
+        body.extend_from_slice(&1u32.to_le_bytes());
+        body.push(0);
+        body.push(0);
+        send_frame(&service.stream, OP_WRITE, id, &body, &[staged.as_raw_fd()]);
+        expect_ok(&recv_frame(&service.stream).unwrap(), id);
+    }
+
+    send_frame(&service.stream, OP_PROFILE, 43, &[1u8], &[]);
+    let profile = expect_ok(&recv_frame(&service.stream).unwrap(), 43);
+    let mut cursor = Reader::new(&profile);
+    let mut opens = None;
+    for _ in 0..cursor.u32() {
+        let name = cursor.string();
+        let count = cursor.u64();
+        let _total = cursor.u64();
+        let _max = cursor.u64();
+        if name == "store_open" {
+            opens = Some(count);
+        }
+    }
+    // Exactly one open for two publications: the handle was upgraded once and
+    // then reused. A per-request open would report two.
+    assert_eq!(opens, Some(1), "two publications must reuse one handle");
+}
+
+/// `--session-idle-secs 0` releases the writer lock after every publication, so
+/// a second process can take it; `30` keeps it for the session.
+#[test]
+fn idle_zero_releases_the_writer_lock_between_publications() {
+    let dir = tempdir().unwrap();
+    let store_path = fixture(dir.path());
+    let socket = dir.path().join("svc-idle.sock");
+    let service = start_service(
+        &store_path,
+        &socket,
+        &[
+            "--fixed-timestamp-ns",
+            "1700000000000000000",
+            "--session-idle-secs",
+            "0",
+        ],
+    );
+
+    let container = container_bytes();
+    let staged = memfd(&container);
+    let mut body = Vec::new();
+    put_str(&mut body, "idle-zero");
+    body.extend_from_slice(&1u32.to_le_bytes());
+    body.extend_from_slice(&0u32.to_le_bytes());
+    put_str(&mut body, "zstd");
+    body.extend_from_slice(&0u32.to_le_bytes());
+    body.push(0);
+    body.push(1);
+    body.extend_from_slice(&1u32.to_le_bytes());
+    body.push(0);
+    body.push(0);
+    send_frame(&service.stream, OP_WRITE, 51, &body, &[staged.as_raw_fd()]);
+    expect_ok(&recv_frame(&service.stream).unwrap(), 51);
+
+    // With the lock released, a second writable open succeeds.
+    let opened = Store::open_with_options(&store_path, OpenMode::ReadWrite, opts());
+    assert!(
+        opened.is_ok(),
+        "idle 0 must release the writer lock: {:?}",
+        opened.as_ref().err().map(|err| err.to_string())
+    );
+    drop(opened);
+    drop(service);
 }
