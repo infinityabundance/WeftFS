@@ -34,7 +34,7 @@ use weftcodec::limits::Limits;
 use weftfs::error::Class;
 use weftfs::identity::Hash32;
 use weftfs::kv_capability::{KvPageMode, KV_DENIED};
-use weftfs::store::{Options, Store};
+use weftfs::store::{OpenMode, Options, Store};
 use weftfs::Principal;
 
 const NOW_NS: i64 = 1_700_000_000_000_000_000;
@@ -622,5 +622,134 @@ fn store_scope_is_the_provenance_descriptor_id() {
         plain_record.attrs.len(),
         prov_record.attrs.len(),
         KV_DENIED
+    ));
+}
+
+// ---------------------------------------------------------------------------
+// 8. CLI: `kv prov-write` derives the identity the store API derives
+// ---------------------------------------------------------------------------
+//
+// The cross-language court in WeftFS-Go needs a real Rust writer, not attribute
+// values copied from a Go-written object. This test is the Rust half of that
+// claim: the CLI verb and `Store::write_kv_prov_page` must agree on the
+// descriptor id, the provenance root and the stored frame for identical inputs,
+// and the stored frame must decode back to the exact element bytes.
+
+#[test]
+fn cli_prov_write_matches_the_store_api() {
+    use std::process::Command;
+
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), options()).unwrap();
+    let root_id = store.resolve_path("/").unwrap();
+    let elements = page_bytes();
+    let api = store
+        .write_kv_prov_page(
+            root_id,
+            b"api-page.kv",
+            TENANT,
+            &page_input(),
+            &elements,
+            &provenance(&[0x21], 0xA0),
+            1000,
+            1000,
+        )
+        .unwrap();
+    let api_frame = store.read_object(api.object_id).unwrap();
+    drop(store);
+
+    let payload = dir.path().join("elements.bin");
+    std::fs::write(&payload, &elements).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_weftfs"))
+        .arg("--store")
+        .arg(dir.path())
+        .args([
+            "kv",
+            "prov-write",
+            "--name",
+            "cli-page.kv",
+            "--tenant",
+            TENANT,
+            "--model",
+            "qwen2.5-0.5b@060db649",
+            "--layer",
+            "3",
+            "--session",
+            "session-42",
+            "--page-index",
+            "0",
+            "--page-count",
+            "1",
+            "--seq-start",
+            "0",
+            "--seq-end",
+            "8",
+            "--dtype",
+            "bf16",
+            "--heads",
+            "4",
+            "--head-dim",
+            "64",
+        ])
+        .arg("--payload")
+        .arg(&payload)
+        .args([
+            "--model-root",
+            "1111111111111111111111111111111111111111111111111111111111111111",
+            "--adapter-root",
+            "2121212121212121212121212121212121212121212121212121212121212121",
+            "--tokenizer-scheme",
+            "qwen-bpe",
+            "--vocab-size",
+            "151936",
+            "--sliding-window",
+            "0",
+            "--rope-theta",
+            "10000",
+            "--rope-scale",
+            "1",
+            "--positional",
+            "rope",
+            "--page-rows",
+            "8",
+            "--layer-count",
+            "24",
+            "--salt",
+            "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+            "--uid",
+            "1000",
+            "--gid",
+            "1000",
+            "--json",
+        ])
+        .output()
+        .expect("run weftfs kv prov-write");
+    assert!(
+        output.status.success(),
+        "kv prov-write failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["descriptor_id"], api.descriptor_id.to_hex());
+    assert_eq!(report["provenance_root"], api.provenance_root.to_hex());
+    assert_eq!(report["page_bytes"], elements.len() as u64);
+    assert_eq!(report["mode"], 19);
+
+    let read_only = Store::open(dir.path(), OpenMode::ReadOnly).unwrap();
+    let cli_id = read_only.resolve_path("/cli-page.kv").unwrap();
+    let cli_frame = read_only.read_object(cli_id).unwrap();
+    assert_eq!(
+        cli_frame, api_frame,
+        "the CLI and the store API must publish the same mode-19 frame"
+    );
+    let parsed = Frame::parse(&cli_frame, &limits()).unwrap();
+    let decoded = decode_kv_prov_page(&parsed, &limits()).unwrap();
+    assert_eq!(decoded.bytes, elements);
+    court(&format!(
+        "cli_prov_write descriptor_id={} provenance_root={} frame_bytes={} page_bytes={} exact=true",
+        api.descriptor_id,
+        api.provenance_root,
+        cli_frame.len(),
+        elements.len()
     ));
 }

@@ -1569,6 +1569,73 @@ enum KvCommand {
         #[arg(long)]
         gid: Option<u64>,
     },
+    /// Write one provenance-bound (mode 19) KV page with a real capability
+    /// descriptor.
+    ///
+    /// The element bytes are supplied verbatim so a cross-language court can
+    /// compare the derived descriptor identity exactly instead of copying
+    /// attribute values from another implementation.
+    ProvWrite {
+        /// Leaf name under the store root.
+        #[arg(long)]
+        name: String,
+        #[arg(long, default_value = "default")]
+        tenant: String,
+        /// Model identity string (exact match is required at read time).
+        #[arg(long)]
+        model: String,
+        #[arg(long, default_value_t = 0)]
+        layer: u32,
+        #[arg(long, default_value = "default")]
+        session: String,
+        #[arg(long = "page-index", default_value_t = 0)]
+        page_index: u64,
+        #[arg(long = "page-count", default_value_t = 1)]
+        page_count: u64,
+        #[arg(long = "seq-start", default_value_t = 0)]
+        seq_start: u64,
+        #[arg(long = "seq-end")]
+        seq_end: u64,
+        #[arg(long, default_value = "bf16")]
+        dtype: String,
+        #[arg(long, default_value_t = 1)]
+        heads: u32,
+        #[arg(long = "head-dim", default_value_t = 64)]
+        head_dim: u32,
+        /// Raw element bytes (little-endian words) for the page.
+        #[arg(long = "payload", value_name = "FILE")]
+        payload: PathBuf,
+        /// Provenance model root (64 hex characters).
+        #[arg(long = "model-root", value_name = "HEX64")]
+        model_root: String,
+        /// Provenance adapter root (64 hex characters; repeatable, sorted).
+        #[arg(long = "adapter-root", value_name = "HEX64")]
+        adapter_roots: Vec<String>,
+        #[arg(long = "tokenizer-scheme", default_value = "declared-tokenizer-v1")]
+        tokenizer_scheme: String,
+        #[arg(long = "vocab-size", default_value_t = 32000)]
+        vocab_size: u64,
+        #[arg(long = "sliding-window", default_value_t = 0)]
+        sliding_window: u64,
+        #[arg(long = "rope-theta", default_value_t = 10000.0)]
+        rope_theta: f64,
+        #[arg(long = "rope-scale", default_value_t = 1.0)]
+        rope_scale: f64,
+        /// Positional treatment: `rope`, `alibi`, or `none`.
+        #[arg(long, default_value = "rope")]
+        positional: String,
+        #[arg(long = "page-rows", default_value_t = 8)]
+        page_rows: u64,
+        #[arg(long = "layer-count", default_value_t = 1)]
+        layer_count: u64,
+        /// Provenance sharing salt (64 hex characters).
+        #[arg(long, value_name = "HEX64")]
+        salt: String,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
+    },
     /// Read a prefix under an authenticated capability.
     Get {
         #[arg(long)]
@@ -6556,6 +6623,114 @@ fn run_kv(store_path: &PathBuf, json: bool, policy: OpenPolicy, command: KvComma
                 println!("stored_page_bytes={}", write.record.stored_page_bytes);
                 println!("reused_pages={}", write.record.reused_pages);
                 println!("new_pages={}", write.new_pages);
+                Ok(())
+            }
+        }
+        KvCommand::ProvWrite {
+            name,
+            tenant,
+            model,
+            layer,
+            session,
+            page_index,
+            page_count,
+            seq_start,
+            seq_end,
+            dtype,
+            heads,
+            head_dim,
+            payload,
+            model_root,
+            adapter_roots,
+            tokenizer_scheme,
+            vocab_size,
+            sliding_window,
+            rope_theta,
+            rope_scale,
+            positional,
+            page_rows,
+            layer_count,
+            salt,
+            uid,
+            gid,
+        } => {
+            use weftcodec::kv_cache::{KvCacheInput, KvDtype};
+            use weftcodec::kv_prov::{KvAttention, KvLayout, KvPositional, KvProvenanceInput};
+
+            if name.contains('/') {
+                return Err(Error::invalid_argument(
+                    "--name is a leaf name under the store root, not a path",
+                ));
+            }
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let uid = uid.unwrap_or(0);
+            let gid = gid.unwrap_or(0);
+            let elements = fs::read(&payload)?;
+            let dtype = KvDtype::from_name(&dtype).map_err(Error::from)?;
+            let input = KvCacheInput {
+                model: model.clone(),
+                layer,
+                session: session.clone(),
+                page_index,
+                page_count,
+                seq_start,
+                seq_end,
+                dtype,
+                head_count: heads,
+                head_dim,
+            };
+            let mut provenance = KvProvenanceInput::new(
+                Hash32::from_hex(&model_root)?,
+                tokenizer_scheme,
+                vocab_size,
+                KvAttention {
+                    head_count: heads,
+                    head_dim,
+                    sliding_window,
+                    rope_theta_bits: rope_theta.to_bits(),
+                    rope_scale_bits: rope_scale.to_bits(),
+                },
+                KvPositional::from_name(&positional).map_err(Error::from)?,
+                KvLayout {
+                    dtype,
+                    page_rows,
+                    layer_count,
+                },
+                Hash32::from_hex(&salt)?,
+            );
+            for adapter in &adapter_roots {
+                provenance = provenance.with_adapter(Hash32::from_hex(adapter)?);
+            }
+            let root_id = store.resolve_path("/")?;
+            let written = store.write_kv_prov_page(
+                root_id,
+                name.as_bytes(),
+                &tenant,
+                &input,
+                &elements,
+                &provenance,
+                uid,
+                gid,
+            )?;
+            if json {
+                print_json(&json!({
+                    "name": name,
+                    "object": written.object_id.to_hex(),
+                    "descriptor_id": written.descriptor_id.to_hex(),
+                    "provenance_root": written.provenance_root.to_hex(),
+                    "frame_bytes": written.frame_bytes,
+                    "page_bytes": written.page_bytes,
+                    "tenant": tenant,
+                    "mode": 19,
+                    "generation": store.generation(),
+                }))
+            } else {
+                println!("name={name}");
+                println!("object={}", written.object_id);
+                println!("descriptor_id={}", written.descriptor_id);
+                println!("provenance_root={}", written.provenance_root);
+                println!("frame_bytes={}", written.frame_bytes);
+                println!("page_bytes={}", written.page_bytes);
                 Ok(())
             }
         }
