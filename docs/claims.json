@@ -10038,13 +10038,101 @@
 },
 {
  "id": "r12c_incremental_gc_defect",
- "claim": "Index GC refuses once a store retains a few checkpoints because the hard chain-depth bound is applied to one visited set shared by every retained root.",
+ "claim": "Before item 2.1, index GC refused once a store retained a few checkpoints because the hard chain-depth bound was applied to one visited set shared by every retained root; the refusal text is retained in the failing receipt and quoted in the docs.",
  "value": "index GC skipped",
  "locations": [
   "bench/RESULTS-incremental-index.md",
   "docs/STATUS.md"
  ],
- "receipt": "bench/receipts/incremental-index-20261111T214500Z-baseline-delta.json",
+ "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_bound_per_root",
+ "claim": "Index GC's chain-depth bound is applied per retained root, not to the union of every retained chain: the fixing court's fixture retains 14 roots whose chains union to more than 256 segments.",
+ "value": "404 segments",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_bound_reclaim",
+ "claim": "On the identical fixture the per-root bound reclaims 182,321 B of advisory index segments that the shared-set bound refused to touch.",
+ "value": "182,321 B",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_bound_no_retention_control",
+ "claim": "A store with no retention beyond the head reclaims exactly the same bytes before and after the fix (single-root control).",
+ "value": "87,891 B",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_512_live_100k",
+ "claim": "With the per-root GC bound, 512 live objects at 100,000 generations keep a steady-state index of 0.534x the data bytes; the item-2 baseline could not reach that size.",
+ "value": "0.534x",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/incremental-index-20261111T211000Z-post-gc-live512-sweep.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_200k",
+ "claim": "A 64-live-object history sweep reaches 200,000 generations with GC every 20,000 and a flat post-GC index/data ratio.",
+ "value": "200,000 generations",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/incremental-index-20261111T215000Z-post-gc-live64-200k.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_1m_attempt",
+ "claim": "1,000,000 generations was attempted; it exhausts the bounded /tmp at generation 169,701 and the failure record's allocation breakdown names the measured limiter.",
+ "value": "169,701",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_1m_limiter",
+ "claim": "The 1,000,000-generation limiter is the tmpfs page floor of the commit history (4,096 B of commit pages per generation), not the index GC bound.",
+ "value": "4,096 B of commit pages per generation",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
+ "kind": "present"
+},
+{
+ "id": "r12c_gc_go_same_defect_fixed",
+ "claim": "WeftFS-Go had the identical shared-visited index GC defect and is fixed with the same per-root walk, memoised distance, and fail-closed behaviour.",
+ "value": "WeftFS-Go/store/index.go",
+ "locations": [
+  "bench/RESULTS-incremental-index.md",
+  "docs/STATUS.md"
+ ],
+ "receipt": null,
  "kind": "present"
 }
 ]

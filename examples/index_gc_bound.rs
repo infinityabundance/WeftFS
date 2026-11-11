@@ -189,7 +189,7 @@ fn resolve_against_scan(store: &Store, snapshot: Option<Hash32>) -> (u64, u64) {
     (indexed.matched_count as u64, scan.matched_count as u64)
 }
 
-fn retained_cell(roots: usize) -> serde_json::Value {
+fn retained_cell(roots: usize, tail: usize) -> serde_json::Value {
     let dir = tempfile::tempdir().expect("tempdir");
     let root = dir.path().to_path_buf();
     // No automatic checkpoints: the only retained roots are the ones this cell
@@ -223,7 +223,12 @@ fn retained_cell(roots: usize) -> serde_json::Value {
             checkpoint_commit = Some(store.checkpoint().expect("checkpoint"));
         }
     }
-    // A few commits after the last snapshot so the head chain is separate too.
+    // A few commits after the last snapshot so the head chain is separate too,
+    // plus `tail` commits that no root retains: those are what GC may reclaim.
+    for _ in 0..tail {
+        commit_one(&mut store, steps);
+        steps += 1;
+    }
     for _ in 0..3 {
         commit_one(&mut store, steps);
         steps += 1;
@@ -287,8 +292,14 @@ fn retained_cell(roots: usize) -> serde_json::Value {
     let refused = problems
         .iter()
         .any(|note| note.contains("index GC skipped"));
+    let reclaimed = index_bytes_before.saturating_sub(index_bytes_after_gc);
+    let depths: Vec<u64> = per_root
+        .iter()
+        .filter_map(|entry| entry["depth"].as_u64())
+        .collect();
     json!({
         "retained_roots": all_roots.len(),
+        "unretained_tail_commits": tail,
         "commits": generation,
         "seed_ms": seed_ms,
         "index_bytes_before_gc": index_bytes_before,
@@ -296,6 +307,8 @@ fn retained_cell(roots: usize) -> serde_json::Value {
         "index_ppm_of_data_before_gc": if data == 0 { 0 } else { (index_bytes_before as f64 / data as f64 * 1_000_000.0).round() as u64 },
         "segments_on_disk_before_gc": segments_on_disk,
         "union_chain_segments": union_segments,
+        "per_root_depth_min": depths.iter().copied().min().unwrap_or(0),
+        "per_root_depth_max": depths.iter().copied().max().unwrap_or(0),
         "hard_max_chain_deltas": HARD_MAX_DELTAS,
         "per_root": per_root,
         "gc": {
@@ -304,6 +317,7 @@ fn retained_cell(roots: usize) -> serde_json::Value {
             "problems": problems,
             "deleted_indexes": report.deleted_indexes.len(),
             "deleted_index_bytes": report.deleted_index_bytes,
+            "reclaimed_bytes": reclaimed,
             "index_bytes_after_gc": index_bytes_after_gc,
             "segments_on_disk_after_gc": count_segments(&root),
         },
@@ -405,12 +419,13 @@ fn utc_iso(secs: u64) -> String {
 
 fn main() {
     let roots = env_usize("WEFT_GC_ROOTS", 12);
+    let tail = env_usize("WEFT_GC_TAIL", 400);
     let head_commits: u64 = env_string("WEFT_GC_HEAD_COMMITS", "200")
         .trim()
         .parse()
         .expect("WEFT_GC_HEAD_COMMITS");
 
-    let retained = retained_cell(roots);
+    let retained = retained_cell(roots, tail);
     let head_only = head_only_cell(head_commits);
 
     let generated = SystemTime::now()
@@ -447,6 +462,7 @@ fn main() {
         },
         "control_variables": {
             "WEFT_GC_ROOTS": env("WEFT_GC_ROOTS"),
+            "WEFT_GC_TAIL": env("WEFT_GC_TAIL"),
             "WEFT_GC_HEAD_COMMITS": env("WEFT_GC_HEAD_COMMITS"),
         },
         "retained_cell": retained,

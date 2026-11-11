@@ -9022,3 +9022,75 @@ in that phase.
     generation 80,785 (512 live) and 9,750 (10,000 live), both retained.
     1,000,000 generations was not attempted for that reason (linear
     ~0.4 KB/commit) and is not extrapolated.
+
+- 2026-11-11 (R12c item 2.1, index GC chain bound per retained root):
+  parent `staging` code `686bce5` + receipts `4c4f459`; WeftFS-Go `a7170f5`.
+  Full analysis: [`bench/RESULTS-incremental-index.md`](../bench/RESULTS-incremental-index.md),
+  "GC bound fix".
+  * Defect (found by item 2, fixed here):
+    `Store::expand_retained_index_chains` walked the head, every snapshot and
+    every checkpoint-carrying commit through **one** `visited` set and compared
+    that union against `HARD_MAX_CHAIN_DELTAS` (256). The bound is meant for one
+    chain walk, so a store retaining more than ~8 roots refused index GC
+    outright (`index GC skipped: cannot resolve a retained segment chain:
+    LimitExceeded: index segment chain exceeds the hard depth bound`), reclaimed
+    0 B, and grew the index tree with the commit count.
+  * Reproduction (retained failing receipt
+    `bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json`, revision
+    `e1ab002`, fixed clock and content, 64 objects): 12 snapshots each pinned at
+    the writer's maximum 32-delta depth plus one forced checkpoint commit and
+    400 unretained tail commits — 14 retained roots, 801 commits, union of the
+    retained chains **404 segments**, index tree 369,010 B. GC: refused, 0
+    segments deleted, 0 B reclaimed. Eight snapshots already reproduce it
+    (`…T190100Z-prefix-8roots.json`, union **268 segments**).
+  * Fix: `src/store.rs` walks each retained root on its own path, memoising the
+    distance from a commit to its full ancestor so a shared commit is read once
+    and each root is still charged its own cumulative depth; Go
+    `expandRetainedChains` (`WeftFS-Go/store/index.go`) had the identical defect
+    and is fixed the same way with the same texts.
+  * Invariant, in the code comment and the results doc: for every retained root,
+    the walk reaches a full segment (or a commit with no WFX3 segment) within
+    `HARD_MAX_CHAIN_DELTAS` delta hops **from that root**; the union is never
+    the bound; sharing cannot hide an over-long chain; an over-long chain or a
+    cycle still refuses the whole pass with the same typed class and deletes
+    nothing.
+  * Before/after, identical fixture: 801 segments / 369,010 B → 397 segments /
+    **182,321 B** reclaimed, 404 segments / 186,689 B left, 0 problems,
+    `verify --full` clean, and all 12 snapshots still load their whole chain on
+    a fresh handle (`disk_loads >= 1`, `builds = 0`, answers = scan oracle).
+    Head-only control unchanged in both revisions: 199 segments / **87,891 B**.
+  * Sizes with GC at each checkpoint (bench court, default limits): 64 live at
+    100,000 generations publishes 8,754,798 B instead of 81,816,646 B (0.674x
+    data, 84,057 segments reclaimed); **512 live at 100,000 generations
+    completes with GC** (54,986,166 B / 102,983,199 B = 0.534x); a 64-live sweep
+    reaches **200,000 generations** with the post-GC index/data ratio flat at
+    0.673–0.676.
+  * 1,000,000 generations was attempted and still does not fit, for a reason
+    that is not this defect: ENOSPC at generation **169,701** with the allocated
+    breakdown at exactly 1,073,741,824 B, of which `commits/` is 695,152,640 B
+    for 169,702 files — **4,096 B of commit pages per generation**. One commit
+    file per generation is the history, so 1M needs ~4 GiB of `commits/` alone
+    in a 1 GiB `/tmp`. Reported as the measured limiter; no extrapolation and no
+    limit raised. The 512-live cell with GC only at 1k/10k/100k shows the same
+    effect (ENOSPC at 85,758; `indexes/` 628,711,424 B allocated).
+  * Tests: `tests/index_gc_bound.rs` 3/3 (many roots each with a long chain
+    reclaim and every held chain still loads; a forged 300-delta chain still
+    refuses and deletes nothing; the no-retention control reclaims exactly the
+    unnamed segments). The reproducing test fails on `e1ab002`'s `src/store.rs`
+    and passes on the fix. Go twins
+    `TestGcChainBoundIsPerRetainedRoot` (fails on the previous Go code) and
+    `TestOverLongRetainedChainStillRefusesIndexGc`. Item-2 oracle/adversarial
+    re-run unchanged: `index_incremental` 3/3, `index_chain` 8/8,
+    `index_persistence` 7/7, `index_equivalence` 1/1; commit p50 still 0.110 ms
+    at 1k/10k/100k.
+  * Gates at `4c4f459`: Rust 163 binaries / 787 passed / 0 failed / 0 ignored;
+    FUSE 830 passed / 0 failed / 2 pre-existing ignored; Go `gofmt`/`go vet`/
+    `CGO_ENABLED=0 go build` clean and `go test -race ./store` passing except the
+    pre-existing `TestAzureOptimisticTwoDisjointCommitters` (fails identically
+    on the unmodified tree, from the unverified R14d Azure-MW2 WIP). No
+    `verify-all` run (item 7).
+  * Not claimed: Go incremental index maintenance (still absent); flat index
+    footprint (the retained set is still one root per checkpoint and snapshot,
+    so it grows at 0.674x data); O(1) GC (it lists and reads every commit); any
+    wire-format change (none: WFX2/WFX3, `weftfs.commit.v2` and every attested
+    root are untouched).
