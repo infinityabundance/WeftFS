@@ -2610,6 +2610,13 @@ fn restore(args: &[String]) -> Result<(), String> {
         .map(|tensor| tensor.name.clone())
         .ok_or_else(|| "checkpoint has no tensors".to_owned())?;
     let mut single = Vec::new();
+    let single_pipeline = RestorePipelineOptions {
+        threads: 1,
+        max_inflight_bytes: max_inflight,
+        tile_threads: 1,
+        shard_threads,
+        shard_max_inflight_bytes: shard_max_inflight,
+    };
     if probe_enabled {
         store.reset_lock_probe();
     }
@@ -2624,12 +2631,7 @@ fn restore(args: &[String]) -> Result<(), String> {
         };
         let started = Instant::now();
         store
-            .restore_checkpoint_pipelined(
-                &name,
-                &options,
-                &RestorePipelineOptions::default(),
-                &mut sink,
-            )
+            .restore_checkpoint_pipelined(&name, &options, &single_pipeline, &mut sink)
             .map_err(|err| format!("single tensor restore: {err}"))?;
         single.push(started.elapsed().as_secs_f64() * 1000.0);
     }
