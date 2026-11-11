@@ -2238,6 +2238,7 @@ fn readers(args: &[String]) -> Result<(), String> {
         "per_reader": per_reader,
         "reps": reps,
         "lock_probe_enabled": probe_enabled,
+        "read_pool": store.read_pool_stats(),
         "sink": sink_mode,
         "sink": "SHA-256 hashing sink per reader: decode + backend read + hash, no host writeback",
         "workload_wall": distribution(&workload_samples),
@@ -2656,6 +2657,7 @@ fn restore(args: &[String]) -> Result<(), String> {
             "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count"
         },
         "lock_probe_enabled": probe_enabled,
+        "read_pool": store.read_pool_stats(),
         "shard_threads": shard_threads,
         "shard_max_inflight_bytes": shard_max_inflight,
         "file_hash": file_hash,
