@@ -2142,6 +2142,7 @@ impl StorageBackend for S3Backend {
             link_publications: 0,
             rename_publications: 0,
             rename_fallbacks: 0,
+            fsyncs: 0,
         }
     }
 

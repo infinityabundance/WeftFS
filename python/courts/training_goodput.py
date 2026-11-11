@@ -82,11 +82,16 @@ BETAS = (0.9, 0.95)
 WEIGHT_DECAY = 0.01
 EPS = 1e-8
 
-CONFIGS = ("torchsave", "dcp", "weft")
+CONFIGS = ("torchsave", "torchsave-durable", "dcp", "weft", "weft-fast")
+
+#: Configs whose checkpoint is a local file or directory (no WeftFS store).
+NATIVE_CONFIGS = ("torchsave", "torchsave-durable", "dcp")
 CONFIG_LABEL = {
     "torchsave": "A: torch.save file",
+    "torchsave-durable": "D: torch.save + fsync + atomic rename (equivalent durability)",
     "dcp": "B: PyTorch DCP directory",
     "weft": "C: DCP -> WeftFS adapter",
+    "weft-fast": "E: WeftFS fast policy, raw frames (performance floor)",
 }
 
 DTYPE_NAMES = {
@@ -143,6 +148,28 @@ def dir_bytes(root: Path) -> dict:
             except OSError:
                 pass
     return {"bytes": total, "files": files}
+
+
+def durable_torch_save(torch, state, path):
+    """`torch.save` plus the durability a WeftFS commit provides.
+
+    Writes a sibling temp file, fsyncs it, renames it over the destination and
+    fsyncs the directory. The guarantees matched are: the bytes are on stable
+    storage before the save returns, and the destination is either the previous
+    complete artifact or the new one (atomic rename), never a partial file.
+    """
+    path = Path(path)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp, "wb") as handle:
+        torch.save(state, handle)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp, path)
+    directory = os.open(str(path.parent), os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
 
 
 def write_json(path: Path, value) -> None:
@@ -409,7 +436,7 @@ def train_step(torch, model, optimizer, batches, step):
 
 def checkpoint_paths(config, run_dir, step):
     name = "ckpt-%04d" % step
-    if config == "torchsave":
+    if config in ("torchsave", "torchsave-durable"):
         return {"artifact": run_dir / "ckpts" / (name + ".pt"), "checkpoint": name}
     if config == "dcp":
         return {"artifact": run_dir / "ckpts" / name, "checkpoint": name}
@@ -502,6 +529,15 @@ def child_loop(args):
         if args.config == "torchsave":
             future = executor.submit(torch.save, snapshot, str(paths["artifact"]))
             handle = SaveHandle("torchsave", future=future, submit_perf=submit_perf)
+        elif args.config == "torchsave-durable":
+            # Equivalent durability to a WeftFS commit: write a temp file,
+            # fsync it, rename it over the destination, fsync the directory.
+            future = executor.submit(
+                durable_torch_save, torch, snapshot, paths["artifact"]
+            )
+            handle = SaveHandle(
+                "torchsave-durable", future=future, submit_perf=submit_perf
+            )
         elif args.config == "dcp":
             import torch.distributed.checkpoint as dcp
 
@@ -510,24 +546,27 @@ def child_loop(args):
             )
             handle = SaveHandle("dcp", future=future, submit_perf=submit_perf)
         else:
+            fast = args.config == "weft-fast"
             async_handle = save_checkpoint_async(
                 snapshot,
                 checkpoint_id=paths["checkpoint"],
                 store_root=str(paths["store"]),
                 topology=1,
-                shard_strategy="zstd",
+                shard_strategy="raw" if fast else "zstd",
                 staging_bytes=STAGING_BYTES,
                 init_store=False,
                 weftfs_cli=args.weftfs_cli,
                 max_workers=1,
+                write_policy="fast" if fast else None,
+                fast_codec="raw" if fast else None,
             )
             handle = SaveHandle(
-                "weft", async_handle=async_handle, submit_perf=submit_perf
+                args.config, async_handle=async_handle, submit_perf=submit_perf
             )
         return handle
 
     def physical_bytes():
-        if args.config == "torchsave":
+        if args.config in ("torchsave", "torchsave-durable"):
             total = 0
             for path in sorted((run_dir / "ckpts").glob("*.pt")):
                 total += path.stat().st_size
@@ -543,7 +582,7 @@ def child_loop(args):
         return dir_bytes(run_dir / "store")
 
     executor = None
-    if args.config in ("torchsave", "dcp"):
+    if args.config in ("torchsave", "torchsave-durable", "dcp"):
         from concurrent.futures import ThreadPoolExecutor
 
         executor = ThreadPoolExecutor(
@@ -791,7 +830,7 @@ def child_resume(args):
     rows = spec["tensors"]
     target = build_target(torch, rows)
     load_started = time.perf_counter()
-    if args.config == "torchsave":
+    if args.config in ("torchsave", "torchsave-durable"):
         flat = torch.load(args.path, map_location="cpu", weights_only=True)
     elif args.config == "dcp":
         import torch.distributed.checkpoint as dcp
@@ -811,7 +850,7 @@ def child_resume(args):
             reader.close()
         flat = target
     load_ms = (time.perf_counter() - load_started) * 1000.0
-    if args.config != "weft":
+    if args.config not in ("weft", "weft-fast"):
         metadata_source = "native"
 
     expected = {row["name"]: row["sha256"] for row in rows}
@@ -1067,7 +1106,11 @@ def verify_run_checkpoints(args, config, rep, run_dir, result):
             spec=spec_for(run_dir, step),
             out=out,
             checkpoint=paths["checkpoint"],
-            path=paths.get("artifact") if config != "weft" else None,
+            path=(
+                paths.get("artifact")
+                if config not in ("weft", "weft-fast")
+                else None
+            ),
             store=paths.get("store"),
             cli=args.weftfs_cli,
             log=run_dir / "child.log",
@@ -1703,7 +1746,7 @@ def run(args):
             if run_dir.exists():
                 shutil.rmtree(run_dir)
             run_dir.mkdir(parents=True)
-            if config == "weft":
+            if config in ("weft", "weft-fast"):
                 run_cli(args.weftfs_cli, run_dir / "store", "init")
             print(
                 "run config=%s rep=%d/%d steps=%d every=%d"
@@ -1954,6 +1997,16 @@ def run(args):
                 c["pause_ms_max"],
             )
         )
+    ttsr = [
+        row["summary"]["time_to_safe_resume_ms_p50"]
+        for row in kill_rows.values()
+        if row["summary"].get("time_to_safe_resume_ms_p50") is not None
+    ]
+    disc = [
+        row["summary"]["discovery_ms_p50"]
+        for row in kill_rows.values()
+        if row["summary"].get("discovery_ms_p50") is not None
+    ]
     if c["waited_for_previous_ms_max"]:
         add_loss(
             "At least one WeftFS checkpoint had to wait %.1f ms for the previous "
@@ -2034,11 +2087,11 @@ def run(args):
         "rest is fresh-process startup, whose adapter+torch import alone is "
         "%s ms in this court."
         % (
-            min(row["summary"]["time_to_safe_resume_ms_p50"] for row in kill_rows.values()),
-            max(row["summary"]["time_to_safe_resume_ms_p50"] for row in kill_rows.values()),
+            min(ttsr) if ttsr else 0.0,
+            max(ttsr) if ttsr else 0.0,
             c["resume_load_ms_p50"],
-            min(row["summary"]["discovery_ms_p50"] for row in kill_rows.values()),
-            max(row["summary"]["discovery_ms_p50"] for row in kill_rows.values()),
+            min(disc) if disc else 0.0,
+            max(disc) if disc else 0.0,
             ("%.0f" % startup["python_start_to_dcp_import_ms"])
             if startup.get("python_start_to_dcp_import_ms")
             else "unknown",

@@ -2422,6 +2422,9 @@ def save_checkpoint_async(
     timeout=DEFAULT_TIMEOUT_SECONDS,
     max_workers=1,
     session=None,
+    write_policy=None,
+    fast_codec=None,
+    fast_zstd_level=None,
 ):
     """Run ``torch.distributed.checkpoint.save`` on a worker thread.
 
@@ -2454,6 +2457,9 @@ def save_checkpoint_async(
         weftfs_cli=weftfs_cli,
         timeout=timeout,
         session=session,
+        write_policy=write_policy,
+        fast_codec=fast_codec,
+        fast_zstd_level=fast_zstd_level,
     )
     executor = ThreadPoolExecutor(
         max_workers=workers, thread_name_prefix="weft-dcp-save"

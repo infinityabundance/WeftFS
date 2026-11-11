@@ -1,0 +1,178 @@
+run config=torchsave rep=1/2 steps=128 every=32
+  loop_wall=1407.4ms step_p50=10.34ms pause_p50=0.79ms completion_p50=4.0ms bytes=20100396 resumes=4/4
+run config=torchsave rep=2/2 steps=128 every=32
+  loop_wall=1415.6ms step_p50=10.40ms pause_p50=0.79ms completion_p50=3.7ms bytes=20100396 resumes=4/4
+run config=torchsave-durable rep=1/2 steps=128 every=32
+  loop_wall=1427.9ms step_p50=10.58ms pause_p50=0.77ms completion_p50=4.2ms bytes=20096948 resumes=4/4
+run config=torchsave-durable rep=2/2 steps=128 every=32
+  loop_wall=1401.7ms step_p50=10.38ms pause_p50=0.68ms completion_p50=4.2ms bytes=20096948 resumes=4/4
+run config=dcp rep=1/2 steps=128 every=32
+  loop_wall=1529.3ms step_p50=10.52ms pause_p50=0.88ms completion_p50=20.5ms bytes=21108288 resumes=4/4
+run config=dcp rep=2/2 steps=128 every=32
+  loop_wall=1526.8ms step_p50=10.38ms pause_p50=0.87ms completion_p50=21.7ms bytes=21108288 resumes=4/4
+run config=weft rep=1/2 steps=128 every=32
+  loop_wall=1593.1ms step_p50=10.26ms pause_p50=3.73ms completion_p50=76.1ms bytes=19709813 resumes=4/4
+run config=weft rep=2/2 steps=128 every=32
+  loop_wall=1582.5ms step_p50=10.35ms pause_p50=2.34ms completion_p50=75.0ms bytes=19709813 resumes=4/4
+run config=weft-fast rep=1/2 steps=128 every=32
+  loop_wall=1608.1ms step_p50=10.48ms pause_p50=2.48ms completion_p50=73.2ms bytes=21407108 resumes=4/4
+run config=weft-fast rep=2/2 steps=128 every=32
+  loop_wall=1600.4ms step_p50=10.40ms pause_p50=3.28ms completion_p50=72.8ms bytes=21407108 resumes=4/4
+kill scenario=after_ack rep=1/1 delay_ms=0.0
+  kill=after_ack resumed_from=ckpt-0064 step=64 TTSR=1474.8ms exact=True
+kill scenario=before_ack_immediate rep=1/1 delay_ms=0.0
+  kill=before_ack_immediate resumed_from=ckpt-0064 step=64 TTSR=1465.1ms exact=True
+kill scenario=before_ack_half rep=1/1 delay_ms=37.8
+  kill=before_ack_half resumed_from=ckpt-0064 step=64 TTSR=1464.3ms exact=True
+kill scenario=before_ack_midflight rep=1/1 delay_ms=68.0
+  kill=before_ack_midflight resumed_from=ckpt-0096 step=96 TTSR=1489.7ms exact=True
+kill scenario=before_ack_after_completion rep=1/1 delay_ms=86.9
+  kill=before_ack_after_completion resumed_from=ckpt-0096 step=96 TTSR=1484.0ms exact=True
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+receipt bench/receipts/training-goodput-20261111T044800Z.json
+{
+  "configs": {
+    "torchsave": {
+      "wall_ms": 1411.505,
+      "step_p50_ms": 10.372,
+      "pause_p50_ms": 0.7869999999999999,
+      "completion_p50_ms": 3.843,
+      "bytes_per_ckpt": 5025099.0,
+      "rss_kib": 325476
+    },
+    "torchsave-durable": {
+      "wall_ms": 1414.7775000000001,
+      "step_p50_ms": 10.48125,
+      "pause_p50_ms": 0.7255,
+      "completion_p50_ms": 4.2035,
+      "bytes_per_ckpt": 5024237.0,
+      "rss_kib": 325680
+    },
+    "dcp": {
+      "wall_ms": 1528.0700000000002,
+      "step_p50_ms": 10.450750000000001,
+      "pause_p50_ms": 0.87525,
+      "completion_p50_ms": 21.086750000000002,
+      "bytes_per_ckpt": 5277072.0,
+      "rss_kib": 326052
+    },
+    "weft": {
+      "wall_ms": 1587.805,
+      "step_p50_ms": 10.3045,
+      "pause_p50_ms": 3.036,
+      "completion_p50_ms": 75.56575,
+      "bytes_per_ckpt": 4925011.5,
+      "rss_kib": 331044
+    },
+    "weft-fast": {
+      "wall_ms": 1604.247,
+      "step_p50_ms": 10.4365,
+      "pause_p50_ms": 2.88075,
+      "completion_p50_ms": 72.982,
+      "bytes_per_ckpt": 5349420.0,
+      "rss_kib": 330428
+    }
+  },
+  "resume_exactness": {
+    "total": 40,
+    "exact": 40
+  },
+  "kill": {
+    "after_ack": {
+      "reps": 1,
+      "time_to_safe_resume_ms_p50": 1474.784,
+      "time_to_safe_resume_ms_p95": 1474.784,
+      "time_to_safe_resume_ms_max": 1474.784,
+      "kill_to_spawn_ms_p50": 50.975,
+      "discovery_ms_p50": 50.974,
+      "steps_lost_median": 0,
+      "resumed_from": [
+        "ckpt-0064"
+      ],
+      "old_count": 0,
+      "new_count": 1,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 1,
+      "resume_load_ms_p50": 234.392
+    },
+    "before_ack_immediate": {
+      "reps": 1,
+      "time_to_safe_resume_ms_p50": 1465.106,
+      "time_to_safe_resume_ms_p95": 1465.106,
+      "time_to_safe_resume_ms_max": 1465.106,
+      "kill_to_spawn_ms_p50": 52.337,
+      "discovery_ms_p50": 52.336,
+      "steps_lost_median": 32,
+      "resumed_from": [
+        "ckpt-0064"
+      ],
+      "old_count": 1,
+      "new_count": 0,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 0,
+      "resume_load_ms_p50": 245.17
+    },
+    "before_ack_half": {
+      "reps": 1,
+      "time_to_safe_resume_ms_p50": 1464.267,
+      "time_to_safe_resume_ms_p95": 1464.267,
+      "time_to_safe_resume_ms_max": 1464.267,
+      "kill_to_spawn_ms_p50": 27.613,
+      "discovery_ms_p50": 27.612,
+      "steps_lost_median": 32,
+      "resumed_from": [
+        "ckpt-0064"
+      ],
+      "old_count": 1,
+      "new_count": 0,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 0,
+      "resume_load_ms_p50": 241.063
+    },
+    "before_ack_midflight": {
+      "reps": 1,
+      "time_to_safe_resume_ms_p50": 1489.658,
+      "time_to_safe_resume_ms_p95": 1489.658,
+      "time_to_safe_resume_ms_max": 1489.658,
+      "kill_to_spawn_ms_p50": 70.123,
+      "discovery_ms_p50": 70.122,
+      "steps_lost_median": 0,
+      "resumed_from": [
+        "ckpt-0096"
+      ],
+      "old_count": 0,
+      "new_count": 1,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 1,
+      "resume_load_ms_p50": 244.572
+    },
+    "before_ack_after_completion": {
+      "reps": 1,
+      "time_to_safe_resume_ms_p50": 1483.999,
+      "time_to_safe_resume_ms_p95": 1483.999,
+      "time_to_safe_resume_ms_max": 1483.999,
+      "kill_to_spawn_ms_p50": 43.753,
+      "discovery_ms_p50": 43.752,
+      "steps_lost_median": 0,
+      "resumed_from": [
+        "ckpt-0096"
+      ],
+      "old_count": 0,
+      "new_count": 1,
+      "all_exact": true,
+      "all_loss_match": true,
+      "all_full_verify_ok": true,
+      "candidate_present_reps": 1,
+      "resume_load_ms_p50": 246.972
+    }
+  }
+}

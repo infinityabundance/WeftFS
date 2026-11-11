@@ -311,3 +311,74 @@ decodes every same-dtype/same-shape tensor to price one candidate. It is
 130.4 ms of a 211.1 ms fresh-store save and 344.5 ms of a 472.6 ms later save.
 The rest of the growth is four store opens per save (a fresh writable handle
 and a fresh read-only handle for both the checkpoint and the DCP metadata).
+
+## 10. R12b increment 8 — the goodput court re-run with a fair baseline
+
+Receipts `bench/receipts/training-goodput-20261111T044800Z.json` (5
+configurations, 2 reps, 128 steps, checkpoint every 32, 1 kill rep per
+scenario) and `bench/receipts/training-goodput-20261111T045900Z`/
+`…T050200Z.json` (1 rep, 64 steps, **checkpoint every 4** — an interval shorter
+than a save completion). Both are **reduced runs** (the published R11 court was
+5 reps / 256 steps); the reduction is in the receipt's `reps`/`steps` fields.
+
+Two configurations were added:
+
+* **D, `torchsave-durable`** — the equivalent-durability baseline:
+  `torch.save` to a sibling temp file, `fsync`, `os.replace`, `fsync` of the
+  directory. The guarantees matched to a WeftFS commit are exactly: (i) the
+  bytes are on stable storage before the save returns, and (ii) the destination
+  is either the previous complete artifact or the new one, never a partial
+  file. It does **not** claim WeftFS's content addressing, dedup, manifests,
+  indexes, snapshots or provenance — it is the cheapest local baseline that
+  makes those two durability promises.
+* **E, `weft-fast`** — the WeftFS performance floor with the planner's
+  optional work removed: `write_policy=fast`, `fast_codec=raw`, no semantic
+  selection, no mode-9/10/15 candidates, no deltas.
+
+### Standard interval (every 32 steps), 2 reps
+
+| metric | A torch.save | D durable | B local DCP | C WeftFS | E WeftFS fast |
+|---|---:|---:|---:|---:|---:|
+| loop wall, median (ms) | **1,411.5** | 1,414.8 | 1,528.1 | 1,587.8 | 1,604.2 |
+| process wall (ms) | 1,607.4 | 1,608.9 | 1,719.0 | 1,775.2 | 1,795.2 |
+| step p50, pooled (ms) | **10.38** | 10.46 | 10.40 | **10.27** | 10.40 |
+| pause p50, pooled (ms) | 0.79 | 0.73 | 0.88 | 3.50 | 3.28 |
+| completion p50 (ms) | **3.84** | **4.20** | 21.09 | 75.57 | 72.98 |
+| completion first / later (ms) | 4.49 / 3.74 | 4.85 / 3.98 | 20.80 / 21.37 | 122.57 / 71.84 | 78.81 / 73.24 |
+| physical bytes per checkpoint | 5,025,099 | 5,024,237 | 5,277,072 | **4,925,012** | 5,349,420 |
+| peak RSS (KiB) | **325,476** | 325,680 | 326,052 | 331,044 | 330,428 |
+| resume load p50 (ms) | **7.23** | 7.23 | 22.17 | 256.71 | 256.69 |
+
+* **The durability promise costs almost nothing locally.** D is 0.36 ms slower
+  than plain `torch.save` (4.20 vs 3.84 ms) and writes the same bytes. That is
+  the honest comparison for a checkpoint that must survive a power cut, and it
+  makes WeftFS's **71.8-75.6 ms completion 17-18x D**, not 20x the
+  non-durable A.
+* **The performance floor is not faster.** E (`fast` + raw) completes in 73.0
+  ms against C's 75.6 ms and writes 8.6 % *more* bytes. On this async court the
+  optional planner work was already a few ms; the remaining cost is the service
+  round trip, the chunking/manifest publication and the commit, not the
+  optional semantic services.
+* Training steps are not slower (C's pooled p50 is the lowest of the five).
+  The wall difference is still the final in-flight checkpoint.
+* Exactness: **40/40** checkpoints restored by a fresh process with matching
+  tensor SHA-256, **40/40** next-step loss bits, **30/30** post-step states,
+  and all 2-rep trajectories/states identical across the five configurations.
+
+### Interval shorter than completion (every 4 steps), 1 rep
+
+| metric | A | D | B | C | E |
+|---|---:|---:|---:|---:|---:|
+| loop wall (ms) | **951** | 939 | 1,188 | **2,490** | 2,552 |
+| completion p50 (ms) | 3.62 | 4.30 | 20.57 | 130.23 | 132.40 |
+| **waited for previous save, max (ms)** | 0.0 | 0.0 | 0.0 | **149.9** | **161.8** |
+| step the save lands at (p50, +steps) | 1 | 1 | 1 | **4** | **4** |
+| exactness | 16/16 | 16/16 | 16/16 | 16/16 | 16/16 |
+
+This is the regression the R11 text predicted and did not measure: at a 40 ms
+checkpoint interval the next save has to wait **149.9 ms** for the previous
+one, the loop wall is **2.6x** `torch.save` and **2.1x** the durable baseline,
+and the save lands four steps late. `weft-fast` does not help (161.8 ms): its
+frames are larger, and the wait is dominated by the round trip and commit, not
+by encoding. No variant is acknowledged before its representation is durable,
+and all 80 checkpoints of the short-interval run restored exactly.

@@ -8445,3 +8445,32 @@ digest identical, `container_bytes` identical, and
 zero staging buffer and identical per-tensor hashes from both stores. The
 Python content root is kept deliberately as the independent check against the
 Rust manifest; it now reads from the mapping, so one buffer serves both.
+
+### Increment 8 — the goodput court re-run with an equivalent-durability baseline
+
+Receipts `bench/receipts/training-goodput-20261111T044800Z.json` (5 configs,
+2 reps, 128 steps, every 32, 1 kill rep) and `…T050200Z.json` (1 rep, 64 steps,
+**every 4**, i.e. an interval shorter than a completion). Both are **reduced**
+runs and say so in the receipt.
+
+Two configurations added: **D `torchsave-durable`** (write temp, `fsync`,
+`os.replace`, `fsync` the directory — exactly "bytes durable before return" and
+"old-or-new destination", and nothing else WeftFS offers) and **E `weft-fast`**
+(`write_policy=fast`, `fast_codec=raw`, no semantic/typed candidates or
+deltas).
+
+Standard interval: A 1,411.5 ms loop / 3.84 ms completion; **D 1,414.8 /
+4.20 ms**; B 1,528.1 / 21.09; C WeftFS 1,587.8 / **75.57**; E 1,604.2 / 72.98.
+So the durability promise costs 0.36 ms locally, and WeftFS's completion is
+**17-18x D**, not 20x the non-durable A. The performance floor does **not**
+win (73.0 vs 75.6 ms, +8.6 % bytes): the remaining cost is the round trip,
+publication and commit, not the optional planner services. Step p50 is not
+slower (10.27 ms, the lowest of the five). Exactness 40/40 states, 40/40 losses,
+30/30 post-step states; kill court 5/5 scenarios with every resume exact and
+`verify --full` clean.
+
+Short interval (every 4 steps ≈ 40 ms): WeftFS waits **149.9 ms** for the
+previous save (`weft-fast` 161.8 ms), lands four steps late and costs a
+**2,490 ms** loop against 951/939/1,188 ms for A/D/B — **2.6x** `torch.save`
+and 2.1x the durable baseline. All 80 checkpoints restored exactly. This is the
+regression R11 predicted and did not measure, and it is not fixed.

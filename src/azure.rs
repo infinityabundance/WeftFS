@@ -1716,6 +1716,7 @@ impl AzureBackend {
             link_publications: 0,
             rename_publications: 0,
             rename_fallbacks: 0,
+            fsyncs: 0,
         }
     }
 
