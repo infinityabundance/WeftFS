@@ -2576,32 +2576,78 @@ impl Store {
     /// Add every ancestor segment named by a retained commit's WFX3 chain to
     /// the retained set. A failure is returned so GC can retain everything
     /// rather than guess.
+    ///
+    /// **Invariant (per-root chain bound).** For every retained root, the walk
+    /// from that root reaches a `Full` segment (or a commit with no WFX3
+    /// segment) after at most `HARD_MAX_CHAIN_DELTAS` delta hops. The bound is
+    /// checked against that root's own cumulative depth; it is never the size
+    /// of the union of every retained root's chain. Commits shared by several
+    /// roots are read once, and the distance from a commit to its full
+    /// ancestor is memoised, so a second root reaching that commit is still
+    /// measured against its own depth. Any root that violates the bound (too
+    /// deep, or a cycle) fails the whole pass closed: nothing is deleted.
     fn expand_retained_index_chains(&self, retained: &mut BTreeSet<Hash32>) -> Result<()> {
-        let mut queue: std::collections::VecDeque<Hash32> = retained.iter().copied().collect();
-        let mut visited: BTreeSet<Hash32> = BTreeSet::new();
-        while let Some(commit) = queue.pop_front() {
-            if !visited.insert(commit) {
-                continue;
+        let roots: Vec<Hash32> = retained.iter().copied().collect();
+        // Delta hops still to walk from a commit before its full ancestor: 0
+        // when the commit's segment is full, is not WFX3, or does not exist.
+        let mut distance: BTreeMap<Hash32, u32> = BTreeMap::new();
+        for root in roots {
+            let mut path: Vec<Hash32> = Vec::new();
+            let mut on_path: BTreeSet<Hash32> = BTreeSet::new();
+            let mut current = root;
+            loop {
+                if let Some(&rest) = distance.get(&current) {
+                    // Resolved by an earlier root. This root's own cumulative
+                    // depth still has to fit the same per-chain bound.
+                    if path.len() as u64 + u64::from(rest)
+                        > u64::from(crate::index_chain::HARD_MAX_CHAIN_DELTAS)
+                    {
+                        return Err(Error::limit_exceeded(
+                            "index segment chain exceeds the hard depth bound",
+                        ));
+                    }
+                    break;
+                }
+                if !on_path.insert(current) {
+                    return Err(Error::limit_exceeded(
+                        "index segment chain contains a cycle",
+                    ));
+                }
+                let bytes =
+                    match self.with_backend(|backend| backend.read_all(&Key::index(current))) {
+                        Ok(bytes) => bytes,
+                        Err(err) if err.class() == crate::error::Class::NotFound => {
+                            // No segment (index disabled, or a write that did
+                            // not happen): there is nothing left to retain.
+                            distance.insert(current, 0);
+                            break;
+                        }
+                        Err(err) => return Err(err),
+                    };
+                if bytes.len() < 4 || &bytes[0..4] != crate::index_chain::MAGIC_V3 {
+                    distance.insert(current, 0);
+                    break;
+                }
+                let header = crate::index_chain::decode_segment(&bytes)?.header;
+                if header.kind == SegmentKind::Full {
+                    distance.insert(current, 0);
+                    break;
+                }
+                if path.len() as u64 >= u64::from(crate::index_chain::HARD_MAX_CHAIN_DELTAS) {
+                    return Err(Error::limit_exceeded(
+                        "index segment chain exceeds the hard depth bound",
+                    ));
+                }
+                path.push(current);
+                retained.insert(header.base_commit);
+                current = header.base_commit;
             }
-            let bytes = match self.with_backend(|backend| backend.read_all(&Key::index(commit))) {
-                Ok(bytes) => bytes,
-                Err(err) if err.class() == crate::error::Class::NotFound => continue,
-                Err(err) => return Err(err),
-            };
-            if bytes.len() < 4 || &bytes[0..4] != crate::index_chain::MAGIC_V3 {
-                continue;
+            // Fill in this walk's distances backwards from the terminal commit.
+            let mut rest = distance.get(&current).copied().unwrap_or(0);
+            for commit in path.iter().rev() {
+                rest = rest.saturating_add(1);
+                distance.insert(*commit, rest);
             }
-            let header = crate::index_chain::decode_segment(&bytes)?.header;
-            if header.kind == SegmentKind::Full {
-                continue;
-            }
-            if visited.len() > crate::index_chain::HARD_MAX_CHAIN_DELTAS as usize {
-                return Err(Error::limit_exceeded(
-                    "index segment chain exceeds the hard depth bound",
-                ));
-            }
-            retained.insert(header.base_commit);
-            queue.push_back(header.base_commit);
         }
         Ok(())
     }
