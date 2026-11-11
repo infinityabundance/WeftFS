@@ -16,9 +16,7 @@ We argue a specific, disagreeable thesis:
 > physical representation, and representation choice should be optimised against
 > a measured lifecycle cost surface. When this is done, exactness and selective
 > reconstruction are affordable — but the surface is not globally favourable:
-> on one write-dominated workload a codec-augmented store is 73.9× slower to
-> write for 33.1 % fewer physical bytes, and the same design loses 28 % of
-> bytes to a whole-file `zstd --patch-from` on a 19-byte checkpoint change.**
+> on one write-dominated workload a codec-augmented store is 73.9× slower to write for 33.1 % fewer physical bytes, and the same design loses 28 % of bytes to a whole-file `zstd --patch-from` on a 19-byte checkpoint change.**
 
 The first clause is a design constraint, not a performance result. The second
 clause is a measurement result, and it is the part we expect a storage engineer

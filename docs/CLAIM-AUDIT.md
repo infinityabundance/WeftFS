@@ -12,7 +12,7 @@ historical release claim). A claim that only held at a historical revision is
 marked **historical**, not silently rewritten. A claim that did not match its
 receipt was corrected in place.
 
-The audit found **ten current-state claims that did not match their evidence**
+The audit found **ten current-state README claims that did not match their evidence**
 and two material claims in other documents. All corrections are listed in §3.
 
 ---
@@ -41,8 +41,8 @@ and two material claims in other documents. All corrections are listed in §3.
 | A18 | Model family stores in 1.276 GB vs 1.536 GB independent zstd-19, 17 % smaller, 3.07 % under ZipNN. | Demonstrated results | same as A13 | `ba5a0e6` | ✔ |
 | A19 | Region reads: 749.3 → 2.12 ms, +0.51 % bytes, 3.25× write. | Demonstrated results | same as A14 (`write_ms` 2,286.7 → 7,434.7) | `042955Z` run | ✔ |
 | A20 | "60 codec, 20 WCB, 22 selector, 16 context, 10 causal, 36 adversarial vectors." | Status P2 | Manifest counts: codec 91, WCB 20, selector 22, context 16, causal 10, adversarial 36. | manifest `6287b817…` | **Corrected.** 60 → 91. |
-| A21 | Rust store core: "39 core tests". | Status P4 | 42/42 receipt log: 746 tests across 153 binaries, 0 failed. | `verify-20261110T234609Z` | **Corrected.** 39 → 746. |
-| A22 | Rust FUSE: "232 Rust FUSE-court tests pass". | Status P5 | 42/42 receipt log: 789 passed, 0 failed, 2 ignored. | `verify-20261110T234609Z` | **Corrected.** 232 → 789. |
+| A21 | Rust store core: "39 core tests". | Status P4 | 42/42 receipt log: 746 tests across 153 binaries, 0 failed; `docs/STATUS.md` records 747 at the final R12 commit (one test added after the receipt). | `verify-20261110T234609Z` | **Corrected.** 39 → 746 (747 at the final R12 commit). |
+| A22 | Rust FUSE: "232 Rust FUSE-court tests pass". | Status P5 | 42/42 receipt log: 789 passed, 0 failed, 2 ignored; `docs/STATUS.md` records 790 at the final R12 commit. | `verify-20261110T234609Z` | **Corrected.** 232 → 789 (790 at the final R12 commit). |
 | A23 | Go: "31 Go tests + 13 GC tests". | Status P6 | R12 records 125 top-level Go tests, 7 skipped under `-race`. | `docs/STATUS.md` R12; `verify-20261110T234609Z` | **Corrected.** 31+13 → 125 top-level (7 skipped). |
 | A24 | "Latest full verification at the release tree: 37/37." | Status P7 | 37/37 is the release tree; the latest is 42/42. | `verify-20261109T112958Z` vs `verify-20261110T234609Z` | **Corrected.** Both stated, with which tree each covers. |
 | A25 | 1,000 concurrent context mounts, 4,250 file checks, 1,000 digests, at 52g/8/16384; 692/1000 at 24g/8/4096. | Status F3 | `context-mounts-20261105T122643Z`, `…131116Z`, `…140342Z` | `6e4aea1` | ✔ (explicit overrides recorded; not a default-court fit). |

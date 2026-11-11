@@ -8022,3 +8022,118 @@ and restores failed because the court re-opened the packed store without
   Their receipts are the evidence above.
 * Full aggregate: `bench/receipts/verify-20261110T234609Z.json` — **42/42 courts
   pass, 0 failed, 0 skipped**, at the revision that carries this section.
+
+---
+
+## Subphase R13 — formal artifacts for an outside evaluator (2026-11-11)
+
+**Purpose.** The engineering evidence already existed; the formal artifacts that
+let an outside storage engineer evaluate it without running our courts did not.
+R13 adds them and makes every headline number traceable to a committed receipt.
+No wire format, on-disk format, planner coefficient, or court measurement was
+changed. There is no new performance claim.
+
+### Deliverables
+
+* [`docs/PAPER.md`](PAPER.md) — a three-page falsifiable note with seven numbered
+  claims (C1–C7), each with its experiment, receipt, measured numbers, failure
+  condition, and a "what would falsify this" table. The abstract leads with the
+  loss: **73.9× slower to write for 33.1 % fewer bytes**, and the 28 % loss to a
+  whole-file `zstd --patch-from` on a 19-byte checkpoint change.
+* [`docs/RFC.md`](RFC.md) — stable `WEFT-001` … `WEFT-018` identifiers, title,
+  status (frozen / experimental / policy / non-wire), version, governed modes,
+  and vector directories. It states what "frozen" means, how an additive mode is
+  added, how a reserved value moves, what a compliant implementation must
+  reject, and a third-party checklist extended to modes 17–20
+  (`RFC.md` §4.2).
+* [`spec/README.md`](../spec/README.md) — the spec-directory navigation index,
+  exported byte-for-byte to all three codec/filesystem mirrors.
+* `scripts/package-conformance.sh` and `scripts/verify-conformance-python.sh` —
+  the third-party distribution and its second-opinion phase.
+* [`docs/CLAIM-AUDIT.md`](CLAIM-AUDIT.md) — an adversarial audit of every
+  headline claim in the README and the v1.2.0 release note.
+
+### Conformance distribution
+
+`bench/bundles/conformance-1.2.0.tar.zst`:
+
+* **538 files**, **1,328,551 bytes**, SHA-256
+  `3d945b516a6c3bd38a7ab8f6f90e6a7a53caed5469758f5dec9dc86abd46b8df`.
+* Contents: `conformance/manifest.json` (420 entries, aggregate
+  `6287b817…`), all vectors, the checkpoint/context/overlay/store/engram/fuzz
+  fixtures, `RUN.md`, the runner, the adapter contract, the Rust/Python
+  adapters, `docs/CONFORMANCE.md`, `docs/WRITE-YOUR-OWN-DECODER.md`,
+  `docs/RFC.md`, `docs/PAPER.md`, and the independent Python reader.
+* The bundle is shaped as `weftfs.receipt-bundle/1`, so
+  `scripts/verify-receipts.sh` verifies its checksums and revisions. Result:
+  **pass**.
+* Extracted-copy run only: Rust **288 pass / 0 fail / 132 skip**; Python
+  **229 / 0 / 191**. Python skips per mode: **18 → 17, 19 → 22, 20 → 21**;
+  every other skip is a non-codec surface or a superseded historical reject.
+  The receipt's `documented_skips` check is true.
+* Receipt: `bench/receipts/conformance-bundle-20261111T012244Z.json`.
+  The earlier `…011629Z` receipt is retained because the verification caught a
+  real packaging defect (the checksum list included its own temporary file).
+
+### Claims corrected by the audit
+
+Ten current-state README claims and two document claims did not match their
+evidence and were corrected in place:
+
+1. blanket "byte-identical Rust and Go" → byte identity where both implement
+   the surface, with the Go gaps named;
+2. "linearizable head publication" → one authoritative head sequence,
+   model-checked and finite-history tested, not a machine-checked
+   linearizability proof;
+3. 41/41 verification courts → **42/42**; 355 vectors → **420**;
+4. 60 codec vectors → **91**;
+5. 39 store tests → **746** in the 42/42 log (747 at the final R12 commit);
+6. 232 FUSE tests → **789** in the 42/42 log (790 at the final R12 commit);
+7. 31 Go + 13 GC → **125 top-level Go tests, 7 skipped under `-race`**;
+8. "latest verification 37/37" → latest **42/42**; the release tree's 37/37 is
+   stated separately;
+9. "parallel reconstruction is not implemented" → bounded parallel restore
+   (R2) and pipelined restore (R10) named; materialize remains writeback-bound;
+10. "no headline performance claim" → "no performance-superiority claim".
+11. `docs/CONFORMANCE.md` claimed the Python reader executed every mode 0–18
+    vector and reported 229/0/109. It now reports **229/0/191** and states the
+    mode 18/19/20/transport skips.
+12. `docs/WRITE-YOUR-OWN-DECODER.md` said modes 17–127 were reserved and
+    stopped at mode 16. It now covers modes 17–20, names mode 21 as the
+    reserved reject, and points to the extended checklist.
+
+The release note is a tagged historical document. Its 355-entry claim is true
+at `122d86e` and is marked historical, not rewritten; current documents carry
+the 420-entry manifest.
+
+### Gates
+
+* `scripts/check-claims.sh` — **848/848** entries.
+* `scripts/check-spec-drift.sh` — **60/60** file comparisons across the three
+  mirrors.
+* `scripts/gen-conformance-manifest.sh --check` — **420 entries**, aggregate
+  `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`.
+* `scripts/check-conformance-coverage.sh` — **OK**; modes 0–20 all have valid
+  and reject vectors.
+* `scripts/package-conformance.sh` in the fuse court — bundle built, Rust
+  extracted-copy run clean, `verify-receipts.sh` **pass**.
+* `scripts/verify-conformance-python.sh` in the python court — **229/0/191**,
+  documented skips true, receipt merged.
+* The 42/42 aggregate (`verify-20261110T234609Z.json`) is **not** re-run for
+  R13: no code, format, planner, or court changed. The new packaging courts are
+  standalone and are **not** registered in `verify-all.sh`.
+
+### What R13 does not establish
+
+* No new measurement. Every number in the paper and audit is from a pre-existing
+  receipt; a number without a receipt was deleted.
+* The bundle proves corpus/runner self-sufficiency, not implementation quality.
+  The Rust reference run supplies its own binary; the bundle supplies the
+  corpus, contract, and adapters.
+* The Python reader still omits modes 18, 19, 20 and `weft.transport.v1`; those
+  are explicit skips, not passes.
+* Live PyPI/crates.io/GHCR state was not re-queried; the artifact receipt is the
+  record at the tag.
+* No physical power loss, host-cache loss, GPU, fleet, or live-cloud claim.
+* `Go` still lacks the Azure backend, mode-19 store writer, v2 manifests, and
+  the parent-graph planner; MW3 is not implemented.
