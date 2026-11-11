@@ -45,6 +45,13 @@ maintenance in this session; the format-compatibility gate passes (below).
 Each receipt has a `.log` beside it with the command, the per-checkpoint
 summary and the full JSON.
 
+Item 2.1's earlier runs are retained and **superseded**, not cited as current:
+`index-gc-bound-20261111T190000Z-prefix.json` (12 roots before the unretained
+tail), `…T193000Z-fixed.json` / `…T193100Z-fixed-8roots.json` (the fix before the
+tail and per-root depth fields), and `incremental-index-20261111T200000Z-post-gc-
+live64.json` / `…T201000Z-post-gc-live512.json` (before the allocation
+accounting; the same measurements, without the tmpfs page breakdown).
+
 Baseline command (the post runs are the same with `WEFT_INDEX_MODE=delta-no-maint`
 for the control cell):
 
