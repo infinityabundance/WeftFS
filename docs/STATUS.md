@@ -8707,3 +8707,31 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
     media/power-loss/fleet/cloud claim; multi-page listing and packing over
     Azure unexercised. Details and every loss:
     `bench/RESULTS-azure-go.md`.
+
+- 2026-11-11 (R14, Go parity: read-handle pool): WeftFS-Go `staging` `de9a4b9`;
+  not pushed. `store/read_pool.go` is the counterpart of the Rust
+  `src/read_pool.rs`: at most `Options.ReadPoolIdle` idle handles (default 64,
+  negative disables), oldest closed first, the mutex protects only the idle map
+  and never the I/O, and reads use `ReadAt` so concurrent readers cannot disturb
+  a shared offset. The hash is computed after the handle is released, so
+  verify-then-trust is unchanged; remote planes have no descriptors and are
+  never pooled. `Store.ReadPoolStats` reports opens, reuses, refreshes,
+  evictions, invalidations, reads and bytes.
+  * The first version reused an idle descriptor without re-checking the path,
+    and the full suite found two real regressions: both
+    `TestOverlayRangeReadsOnlyIntersectingChunks` (a range succeeded with its
+    chunk missing) and `TestTensorMissingDependencyFailsClosedAndGC` (a read
+    with a missing dependency returned bytes) delete a blob behind the store's
+    back and were served from the still-open descriptor. An idle handle is now
+    validated with one `stat` before reuse: a vanished path closes the handle
+    and returns `NotFound`; a changed size or mtime reopens instead of reusing.
+    Both tests pass again and `TestReadPoolVanishedBlobFailsClosed` asserts it
+    directly.
+  * Tests `store/read_pool_test.go` 9/9 under `-race`; full Go suite in the
+    fuse court at `de9a4b9`: 5 packages `ok` / 0 failed, `store` 210.618 s.
+  * Measured descriptor cost only (go court, tmpfs, warm cache, 73,728-byte
+    file, `go test -run '^$' -bench 'ReadBlob' -benchtime 300x -count 3`):
+    unpooled 6,939 / 7,240 / 8,420 ns/op, pooled 6,321 / 5,156 / 5,334 ns/op.
+    Spread is wide; no tighter figure is asserted and **no restore-throughput,
+    p50/p99, Rust-comparison or fleet claim** is made. Details:
+    `bench/RESULTS-go-read-pool.md`.

@@ -9613,5 +9613,46 @@
   ],
   "receipt": null,
   "kind": "present"
+ },
+ {
+  "id": "r14_go_read_pool_results",
+  "claim": "docs/STATUS.md cites the Go read-pool results document.",
+  "value": "bench/RESULTS-go-read-pool.md",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r14_go_read_pool_fail_closed",
+  "claim": "bench/RESULTS-go-read-pool.md records that the pool re-checks the path so a vanished blob fails closed.",
+  "value": "validated with one `stat` before reuse",
+  "locations": [
+   "bench/RESULTS-go-read-pool.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r14_go_read_pool_no_throughput_claim",
+  "claim": "bench/RESULTS-go-read-pool.md refuses a restore-throughput claim.",
+  "value": "This is not a restore-throughput claim.",
+  "locations": [
+   "bench/RESULTS-go-read-pool.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r14_go_read_pool_tests",
+  "claim": "bench/RESULTS-go-read-pool.md names the pool test that proves the vanished-blob behaviour.",
+  "value": "TestReadPoolVanishedBlobFailsClosed",
+  "locations": [
+   "bench/RESULTS-go-read-pool.md"
+  ],
+  "receipt": null,
+  "kind": "present"
  }
 ]
