@@ -778,6 +778,12 @@ class CheckpointService:
             }
         return out
 
+    def allocate_buffer(self, size, name="weft-buffer"):
+        """Allocate a caller-owned memfd, for a caller-built container."""
+        if int(size) < 0:
+            raise ValueError("buffer size must be non-negative")
+        return self._allocate_memfd(int(size), name)
+
     def _allocate_memfd(self, size, name="weft-tensor"):
         fd = os.memfd_create(name, os.MFD_CLOEXEC)
         if size:
@@ -858,8 +864,10 @@ class CheckpointService:
     def write_checkpoint(
         self,
         name,
-        container,
+        container=None,
         *,
+        container_fd=None,
+        container_size=None,
         shards=1,
         axis=0,
         strategy="zstd",
@@ -895,14 +903,30 @@ class CheckpointService:
         codec_codes = {"raw": 0, "zstd": 1}
         if fast_codec not in codec_codes:
             raise ValueError("fast_codec must be raw or zstd")
-        view = memoryview(container)
-        started = time.perf_counter_ns()
-        fd = self._allocate_memfd(len(view), "weft-container")
+        owned = container_fd is None
+        if owned:
+            if container is None:
+                raise ValueError("write_checkpoint needs a container or a container_fd")
+            view = memoryview(container)
+            started = time.perf_counter_ns()
+            fd = self._allocate_memfd(len(view), "weft-container")
+            try:
+                offset = 0
+                while offset < len(view):
+                    offset += os.write(fd, view[offset:])
+                _probe("client.container_memfd", started)
+            except BaseException:
+                os.close(fd)
+                raise
+            size = len(view)
+        else:
+            fd = int(container_fd)
+            size = int(
+                container_size
+                if container_size is not None
+                else os.fstat(fd).st_size
+            )
         try:
-            offset = 0
-            while offset < len(view):
-                offset += os.write(fd, view[offset:])
-            _probe("client.container_memfd", started)
             body = bytearray()
             body += _string(name)
             body += _u32(shards)
@@ -928,15 +952,16 @@ class CheckpointService:
             _probe("client.write_request", request_started)
             report = WriteReport(response)
             self.stats["writes"] += 1
-            self.stats["written_bytes"] += len(view)
+            self.stats["written_bytes"] += size
             if defer_commit:
                 self.stats["prepares"] += 1
             return report
         finally:
-            try:
-                os.close(fd)
-            except OSError:
-                pass
+            if owned:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
 
     def finish_checkpoint(self, name, metadata_path, payload):
         """Publish a prepared checkpoint and one metadata blob as one commit.

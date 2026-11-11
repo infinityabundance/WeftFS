@@ -413,3 +413,41 @@ policy in one store, same session, same fixture, no packing). The policy is
 Transient storage growth: raw adds 458,962 bytes over four saves (8.4 %);
 transcode adds 7,123,950 bytes (the retained old versions), which GC reclaims
 once the new versions are no longer pinned by a snapshot.
+
+## 12. Increment 7 — the container is built in the memfd, not in a bytearray
+
+Receipt `bench/receipts/checkpoint-latency-20261111T041200Z.json`
+(`--policy staged-container --policy direct-container`, 8 saves each).
+
+Before: `_execute` assembled a `bytearray` (header + every payload) and then
+`write_checkpoint` copied that bytearray into a memfd — **two full-buffer
+copies** and a ~5 MB staging buffer in the Python process. Now the adapter
+allocates a memfd of the exact final size, maps it writable, writes the header
+and copies each payload **directly into the mapping** (`ctypes.memmove`, no
+intermediate `bytes`), hashes each payload from the mapping, and hands the
+descriptor to the service (`container_fd=`). One copy per payload; no
+container-sized Python buffer.
+
+| | container copies | staging buffer | `stage_total` | completion p50 | restored digest |
+|---|---:|---:|---:|---:|---|
+| staged bytearray (old) | 2 | 4,989,309 B | 2.48 ms | 40.2 ms | `b2a00193…` |
+| direct mapping (new) | **1** | **0 B** | 3.06 ms | 40.1 ms | `b2a00193…` |
+
+**The copy count fell from 2 to 1 and the staging buffer disappeared; the
+completion time did not move.** `stage_total` is 0.6 ms *worse*: a per-tensor
+`ctypes.memmove` into a mapped page costs slightly more than appending to a
+bytearray and then writing the whole thing once. That is the honest result —
+this change buys bounded memory (one fewer container-sized copy, which matters
+for a large checkpoint) rather than latency on a 5 MB fixture.
+
+Exactness: every tensor's restored bytes hash to the same digest from both
+paths, `container_bytes` is identical, and
+`python/tests/test_dcp.py::test_direct_container_matches_the_staged_path`
+asserts `container_copies == 1`, a zero staging buffer, identical container
+size and identical per-tensor restored hashes.
+
+Duplicate hashing: the adapter still computes its own content root per tensor,
+but it now reads the bytes **from the mapping** instead of a second payload
+object, so one buffer serves the copy and the hash. The Python root is
+deliberately kept: it is the independent check against the Rust manifest
+(`_verify_report`), and removing it would remove a proof rather than a copy.

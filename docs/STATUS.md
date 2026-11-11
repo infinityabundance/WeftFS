@@ -8427,3 +8427,21 @@ the store by 7.1 MB because the old version is retained. **Every variant is
 acknowledged only after its frame is published and committed**, so exactly one
 valid representation exists at ack time and the transcode is a separate,
 budgeted later pass.
+
+### Increment 7 — the container is built in the memfd
+
+`_execute` used to assemble a `bytearray` and then copy it into a memfd (two
+full-buffer copies, ~5 MB of Python staging). It now allocates a memfd of the
+exact final size, maps it writable, writes the header and copies each payload
+straight into the mapping, hashes from the mapping, and passes the descriptor
+to `WRITE_CHECKPOINT` (`container_fd=`/`container_size=`).
+
+Receipt `bench/receipts/checkpoint-latency-20261111T041200Z.json`: copies
+**2 → 1**, staging buffer **4,989,309 B → 0 B**, completion 40.2 → 40.1 ms
+(unchanged), `stage_total` 2.48 → 3.06 ms (slightly worse: a per-tensor
+`ctypes.memmove` into a mapped page costs more than one bulk write). Restored
+digest identical, `container_bytes` identical, and
+`test_direct_container_matches_the_staged_path` asserts the copy count, the
+zero staging buffer and identical per-tensor hashes from both stores. The
+Python content root is kept deliberately as the independent check against the
+Rust manifest; it now reads from the mapping, so one buffer serves both.

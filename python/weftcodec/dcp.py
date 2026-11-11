@@ -40,6 +40,7 @@ import importlib
 import io
 import json
 import math
+import mmap
 import os
 import shutil
 import struct
@@ -926,6 +927,25 @@ def _tensor_bytes(tensor):
     return payload
 
 
+def _tensor_into(tensor, view, offset):
+    """Copy a tensor's exact bytes straight into a writable mapping.
+
+    Returns the byte count. One copy (tensor -> mapping), no intermediate
+    ``bytes`` object, so the caller never holds two full copies of a payload.
+    """
+    _require_torch("serialising a tensor")
+    t = tensor.detach()
+    if t.device.type != "cpu":
+        t = t.cpu()
+    t = t.contiguous()
+    expected = t.numel() * t.element_size()
+    if expected == 0:
+        return 0
+    target = ctypes.c_char.from_buffer(view, int(offset))
+    ctypes.memmove(ctypes.addressof(target), t.data_ptr(), expected)
+    return expected
+
+
 def _narrow(tensor, offsets, lengths):
     if not offsets:
         return tensor
@@ -1039,6 +1059,7 @@ class WeftStorageWriter(_StorageWriterBase):
         write_policy=None,
         fast_codec=None,
         fast_zstd_level=None,
+        direct_container=True,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
@@ -1100,6 +1121,11 @@ class WeftStorageWriter(_StorageWriterBase):
         self.write_policy = write_policy
         self.fast_codec = fast_codec
         self.fast_zstd_level = fast_zstd_level
+        # Build the canonical container directly in a memfd-backed mapping
+        # instead of a `bytearray` followed by a copy into a memfd.
+        self.direct_container = bool(direct_container)
+        self._container_map = None
+        self._container_fd = None
         self._stats = {
             "entries": 0,
             "tensor_bytes": 0,
@@ -1133,7 +1159,24 @@ class WeftStorageWriter(_StorageWriterBase):
             _probe("adapter.service_obtain", started)
         return self._service
 
+    def _release_container(self):
+        mapping = self._container_map
+        fd = self._container_fd
+        self._container_map = None
+        self._container_fd = None
+        if mapping is not None:
+            try:
+                mapping.close()
+            except (BufferError, ValueError):
+                pass
+        if fd is not None:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
     def close(self):
+        self._release_container()
         if self._prepared and self._service is not None:
             # Nothing was published for the open prepare; discard it so the
             # helper's handle carries no pending state.
@@ -1191,6 +1234,7 @@ class WeftStorageWriter(_StorageWriterBase):
             self._pending_metadata = None
             self._finished = False
             self._manifest = None
+            self._release_container()
             self._stats = {
                 "entries": 0,
                 "tensor_bytes": 0,
@@ -1432,10 +1476,22 @@ class WeftStorageWriter(_StorageWriterBase):
         # header and SHA-256, but it never reaches the disk, is never a path
         # argument to a CLI process, and is handed to the helper over a memfd.
         stage_started = time.perf_counter_ns()
-        container = bytearray(struct.pack("<Q", len(header_raw)))
-        container += header_raw
+        total = 8 + len(header_raw) + cursor
         infos = []
         peak = 0
+        mapping = None
+        mapping_fd = None
+        service = self._get_service()
+        if self.direct_container and total:
+            mapping_fd = service.allocate_buffer(total, "weft-container")
+            mapping = mmap.mmap(mapping_fd, total, access=mmap.ACCESS_WRITE)
+            mapping[0:8] = struct.pack("<Q", len(header_raw))
+            mapping[8 : 8 + len(header_raw)] = header_raw
+            container = None
+        else:
+            container = bytearray(struct.pack("<Q", len(header_raw)))
+            container += header_raw
+        cursor_in_container = 8 + len(header_raw)
         for row in staged:
             if row["kind"] == "bytes":
                 payload = row["payload"]
@@ -1471,17 +1527,36 @@ class WeftStorageWriter(_StorageWriterBase):
                             self.staging_bytes,
                         )
                     )
-                payload = _tensor_bytes(tensor)
-                peak = max(peak, len(payload))
-            if len(payload) != row["nbytes"]:
+                if mapping is None:
+                    payload = _tensor_bytes(tensor)
+                    peak = max(peak, len(payload))
+                else:
+                    written = _tensor_into(tensor, mapping, cursor_in_container)
+                    if written != row["nbytes"]:
+                        raise SaveFailed(
+                            "entry %r produced %d bytes, header declared %d"
+                            % (row["entry"], written, row["nbytes"])
+                        )
+                    payload = None
+            if payload is not None and len(payload) != row["nbytes"]:
                 raise SaveFailed(
                     "entry %r produced %d bytes, header declared %d"
                     % (row["entry"], len(payload), row["nbytes"])
                 )
-            container += payload
             hash_started = time.perf_counter_ns()
-            roots = content_root(payload)
+            if mapping is None:
+                container += payload
+                roots = content_root(payload)
+            else:
+                if payload is not None:
+                    mapping[cursor_in_container : cursor_in_container + row["nbytes"]] = payload
+                roots = content_root(
+                    memoryview(mapping)[
+                        cursor_in_container : cursor_in_container + row["nbytes"]
+                    ]
+                )
             _probe("adapter.hash", hash_started)
+            cursor_in_container += row["nbytes"]
             infos.append(
                 StorageInfo(
                     entry=row["entry"],
@@ -1498,14 +1573,13 @@ class WeftStorageWriter(_StorageWriterBase):
         allocate_started = time.perf_counter_ns()
         storage_name = self._allocate_storage_name()
         _probe("adapter.allocate_name", allocate_started)
-        if self.retain_container:
-            self.last_container = container
-            self.last_container_name = storage_name
         service = self._get_service()
         started = time.monotonic()
         write_report = service.write_checkpoint(
             storage_name,
             container,
+            container_fd=mapping_fd,
+            container_size=total if mapping_fd is not None else None,
             shards=shards,
             axis=axis,
             strategy=self.shard_strategy,
@@ -1515,7 +1589,26 @@ class WeftStorageWriter(_StorageWriterBase):
             defer_commit=self.atomic_publish,
         )
         self._stats["checkpoint_write_ms"] = (time.monotonic() - started) * 1000.0
-        self._stats["container_bytes"] = len(container)
+        self._stats["container_bytes"] = total
+        # One copy per payload into the mapping, or two with the staged
+        # bytearray (payload -> bytearray, bytearray -> memfd).
+        self._stats["container_copies"] = 1 if mapping is not None else 2
+        self._stats["staging_buffer_bytes"] = 0 if mapping is not None else total
+        # The mapping outlives the request only when the session wants an
+        # idempotent retry; otherwise it is released here.
+        if self.retain_container:
+            self.last_container = mapping if mapping is not None else container
+            self.last_container_name = storage_name
+            self._release_container()
+            self._container_map = mapping
+            self._container_fd = mapping_fd
+            mapping = None
+            mapping_fd = None
+        elif mapping is not None:
+            mapping.close()
+            mapping = None
+            os.close(mapping_fd)
+            mapping_fd = None
         self._prepared = bool(self.atomic_publish)
         manifest_value = write_report.manifest.to_value()
         verify_started = time.perf_counter_ns()

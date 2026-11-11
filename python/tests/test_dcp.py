@@ -12,6 +12,7 @@ run and is labelled as such.
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -532,3 +533,45 @@ def test_session_is_not_usable_in_a_forked_child(store):
         assert os.waitstatus_to_exitcode(status) == 0
         # The parent's helper is still alive and usable.
         assert session.service().info()["protocol"] == 3
+
+
+@requires_torch
+def test_direct_container_matches_the_staged_path(store, tmp_path):
+    """One copy instead of two, and byte-identical restored content."""
+    from weftcodec.service import CheckpointService
+
+    second = tmp_path / "store-direct"
+    init_store(second, weftfs_cli=WEFTFS_CLI)
+    model = SmallModel()
+
+    staged = WeftStorageWriter(
+        "staged", store_root=store, topology=1, direct_container=False
+    )
+    dcp.save(model.state_dict(), storage_writer=staged, no_dist=True)
+    staged_stats = staged.stats
+
+    direct = WeftStorageWriter(
+        "direct", store_root=second, topology=1, direct_container=True
+    )
+    dcp.save(model.state_dict(), storage_writer=direct, no_dist=True)
+    direct_stats = direct.stats
+
+    assert staged_stats["container_copies"] == 2
+    assert direct_stats["container_copies"] == 1
+    assert direct_stats["staging_buffer_bytes"] == 0
+    assert staged_stats["container_bytes"] == direct_stats["container_bytes"]
+
+    roots = {}
+    for label, root in (("staged", store), ("direct", second)):
+        with CheckpointService(root, cli=WEFTFS_CLI) as service:
+            manifest = service.manifest(label)
+            rows = {}
+            for row in manifest.tensors:
+                buffer = service.restore_tensor(
+                    label, row.name, expected_size=row.element_bytes
+                )
+                rows[row.name] = hashlib.sha256(buffer.view).hexdigest()
+                buffer.close()
+            roots[label] = rows
+    assert roots["staged"] == roots["direct"]
+    verify_checkpoint(second, "direct", full=True, weftfs_cli=WEFTFS_CLI)

@@ -412,6 +412,8 @@ def session_series(
                     "wall_ms": (saved - started) * 1000.0,
                     "checkpoint_write_ms": stats.get("checkpoint_write_ms"),
                     "container_bytes": stats.get("container_bytes"),
+                    "container_copies": stats.get("container_copies"),
+                    "staging_buffer_bytes": stats.get("staging_buffer_bytes"),
                     "entries": stats.get("entries"),
                     "tensor_bytes": stats.get("tensor_bytes"),
                     "client": collector.summary(),
@@ -631,6 +633,11 @@ def run(args):
             "walls": [round(r["wall_ms"], 3) for r in rows],
             "median_ms": statistics.median(r["wall_ms"] for r in rows),
             "last_delta_bytes": rows[-1]["store_delta_bytes"],
+            "container_copies": rows[-1].get("container_copies"),
+            "staging_buffer_bytes": rows[-1].get("staging_buffer_bytes"),
+            "stage_total_ms": (
+                rows[-1]["client"].get("adapter.stage_total", {}).get("total_ms")
+            ),
             "store_bytes": rows[-1]["store_total_bytes"],
             "restore": rows[-1].get("restore"),
             "policy": dict(policy),
@@ -915,6 +922,8 @@ def main(argv):
             "fast_codec": "zstd",
             "fast_zstd_level": 1,
         },
+        "staged-container": {"direct_container": False},
+        "direct-container": {"direct_container": True},
     }
     args.policy = [(label, policies[label]) for label in (args.policy or [])]
     if getattr(args, "pack", None) is None:
