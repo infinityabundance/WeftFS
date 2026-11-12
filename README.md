@@ -245,6 +245,12 @@ comparison.
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
 
+Rows F2–F10, P5a and P6 quote **subphase results** and each cites the receipt it
+came from; they are historical statements about the subphase, not live values.
+The current test counts are in the P4/P5 rows above, and every current number
+with its stamp and revision is in
+[`docs/PERF-NUMBERS.md`](docs/PERF-NUMBERS.md).
+
 Earlier aggregates, retained as history and superseded by the current receipt:
 `bench/receipts/verify-20261109T112958Z.json` (v1.2.0 release tree),
 `bench/receipts/verify-20261110T234609Z.json` (R12 tree),
