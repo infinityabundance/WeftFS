@@ -993,19 +993,139 @@ fn is_weft_store_config(key: &str) -> bool {
 /// `-nom9`, `-both`) are defined on that same exhaustive planner, because
 /// "encode this candidate and throw it away" only has a meaning there; the
 /// default rows (`C`, `E`) run the shipped two-stage planner.
-fn ablation_flags(key: &str) -> Result<(bool, bool, bool, PlannerMode), String> {
+fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
     let base = config_base(key);
+    let default = ConfigFlags {
+        ablate_zstd19: false,
+        ablate_float: false,
+        publication: publication_default(),
+        planner: PlannerMode::TwoStage,
+    };
     match config_suffix(key) {
-        "" => Ok((false, false, false, PlannerMode::TwoStage)),
-        "group" if base == "B" => Ok((false, false, true, PlannerMode::TwoStage)),
-        "legacy" if matches!(base, "C" | "E") => Ok((false, false, false, PlannerMode::Exhaustive)),
-        "noz19" if matches!(base, "C" | "E") => Ok((true, false, false, PlannerMode::Exhaustive)),
-        "nom9" if matches!(base, "C" | "E") => Ok((false, true, false, PlannerMode::Exhaustive)),
-        "both" if matches!(base, "C" | "E") => Ok((true, true, false, PlannerMode::Exhaustive)),
+        "" => Ok(default),
+        // R20 rows: the same planner and candidate set, a different
+        // publication strategy.
+        "percommit" => Ok(ConfigFlags {
+            publication: Publication::PerCommit,
+            ..default
+        }),
+        "group" => Ok(ConfigFlags {
+            publication: Publication::Group,
+            ..default
+        }),
+        "atomic" => Ok(ConfigFlags {
+            publication: Publication::Atomic,
+            ..default
+        }),
+        suffix if suffix.starts_with("pack") => Ok(ConfigFlags {
+            publication: Publication::Packed(pack_threshold(suffix)?),
+            ..default
+        }),
+        // The R17/R19 ablation rows keep their historical per-commit
+        // publication so their published numbers stay reproducible.
+        "legacy" if matches!(base, "C" | "E") => Ok(ConfigFlags {
+            publication: Publication::PerCommit,
+            planner: PlannerMode::Exhaustive,
+            ..default
+        }),
+        "noz19" if matches!(base, "C" | "E") => Ok(ConfigFlags {
+            publication: Publication::PerCommit,
+            ablate_zstd19: true,
+            planner: PlannerMode::Exhaustive,
+            ..default
+        }),
+        "nom9" if matches!(base, "C" | "E") => Ok(ConfigFlags {
+            publication: Publication::PerCommit,
+            ablate_float: true,
+            planner: PlannerMode::Exhaustive,
+            ..default
+        }),
+        "both" if matches!(base, "C" | "E") => Ok(ConfigFlags {
+            publication: Publication::PerCommit,
+            ablate_zstd19: true,
+            ablate_float: true,
+            planner: PlannerMode::Exhaustive,
+            ..default
+        }),
         suffix => Err(format!(
             "configuration `{key}` has unknown ablation suffix `{suffix}`"
         )),
     }
+}
+
+/// How a WeftFS row publishes its state ops and its blobs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Publication {
+    /// One commit and one durability barrier per tensor: the R17/R19 form.
+    PerCommit,
+    /// One group commit; every blob keeps its own eager `fsync` pair.
+    Group,
+    /// One group commit plus one deferred durability barrier for its blobs.
+    Atomic,
+    /// [`Publication::Atomic`] with the blob plane packed at this member
+    /// threshold.
+    Packed(u64),
+}
+
+impl Publication {
+    fn group_commit(self) -> bool {
+        !matches!(self, Publication::PerCommit)
+    }
+
+    fn defer_blob_sync(self) -> bool {
+        !matches!(self, Publication::PerCommit | Publication::Group)
+    }
+
+    fn pack_threshold(self) -> Option<u64> {
+        match self {
+            Publication::Packed(threshold) => Some(threshold),
+            _ => None,
+        }
+    }
+
+    fn label(self) -> String {
+        match self {
+            Publication::PerCommit => "per-commit".to_owned(),
+            Publication::Group => "one-group-commit".to_owned(),
+            Publication::Atomic => "one-atomic-publication".to_owned(),
+            Publication::Packed(threshold) => {
+                format!("one-atomic-publication+pack({threshold})")
+            }
+        }
+    }
+}
+
+/// The shipped default a contract row runs: one atomic publication.
+fn publication_default() -> Publication {
+    Publication::Atomic
+}
+
+/// Parse `64k`/`1m`/`8m` after the `pack` prefix into a member threshold.
+fn pack_threshold(suffix: &str) -> Result<u64, String> {
+    let digits = suffix.trim_start_matches("pack");
+    let (value, multiplier) = match digits.strip_suffix('k') {
+        Some(value) => (value, 1024u64),
+        None => match digits.strip_suffix('m') {
+            Some(value) => (value, 1024 * 1024),
+            None => return Err(format!("pack suffix `{suffix}` needs k or m, e.g. pack64k")),
+        },
+    };
+    let value: u64 = value
+        .parse()
+        .map_err(|_| format!("pack suffix `{suffix}` has no numeric threshold"))?;
+    if value == 0 {
+        return Err(format!("pack suffix `{suffix}` must be positive"));
+    }
+    Ok(value * multiplier)
+}
+
+/// The parsed publication and planner flags of one configuration key.
+#[derive(Clone, Copy, Debug)]
+struct ConfigFlags {
+    ablate_zstd19: bool,
+    ablate_float: bool,
+    publication: Publication,
+    planner: PlannerMode,
 }
 
 fn uses_protocol(config: &str) -> bool {
@@ -1156,7 +1276,14 @@ fn write_weftfs(
     subset: &Subset,
     file: &SafetensorsFile,
 ) -> Result<Json, String> {
-    let (ablate_zstd19, ablate_float, group_commit, planner) = ablation_flags(config)?;
+    let flags = ablation_flags(config)?;
+    let ConfigFlags {
+        ablate_zstd19,
+        ablate_float,
+        publication,
+        planner,
+    } = flags;
+    let group_commit = publication.group_commit();
     let work = args.work.clone().unwrap();
     let store_path = config_store_path(&work, config);
     if store_path.exists() {
@@ -1165,13 +1292,29 @@ fn write_weftfs(
             store_path.display()
         ));
     }
-    let kind = backend_kind(args)?;
+    let mut kind = backend_kind(args)?;
+    if let Some(threshold) = publication.pack_threshold() {
+        // One pack target must be at least the member threshold; 16 MiB is the
+        // shipped target, raised only when a swept threshold is larger.
+        let pack_target_bytes = (16 * 1024 * 1024).max(threshold);
+        kind = BackendKind::packed(
+            kind,
+            weftfs::packs::PackOptions {
+                pack_target_bytes,
+                member_threshold_bytes: threshold,
+                ..weftfs::packs::PackOptions::default()
+            },
+        )
+        .map_err(|err| format!("packed blob plane: {err}"))?;
+    }
     let profiling = args.phase_profile;
     if profiling {
         phase_profile::begin();
     }
     let init_started = Instant::now();
-    let mut store = Store::init_with_backend(&store_path, options(args.chunk_size), kind)
+    let mut store_options = options(args.chunk_size);
+    store_options.defer_group_blob_sync = publication.defer_blob_sync();
+    let mut store = Store::init_with_backend(&store_path, store_options, kind)
         .map_err(|err| format!("init store: {err}"))?;
     let init_ms = init_started.elapsed().as_secs_f64() * 1000.0;
     let root = store.resolve_path("/").map_err(|err| err.to_string())?;
@@ -1203,8 +1346,15 @@ fn write_weftfs(
     let mut planner_mode9_unresolved = 0u64;
     let mut planner_violation_tensors = 0u64;
     let mut planner_fallback_tensors = 0u64;
-    // Group mode stages every prepared object and publishes one commit.
+    // Group mode stages every prepared object and publishes one commit. The
+    // group is opened *before* preparation so a deferred durability barrier
+    // covers the blobs those preparations publish.
     let mut staged: Vec<(String, weftfs::tensor_store::PreparedTensorObject, usize)> = Vec::new();
+    if group_commit {
+        store
+            .begin_group()
+            .map_err(|err| format!("begin group: {err}"))?;
+    }
 
     for sel in &subset.tensors {
         let tensor = file
@@ -1352,30 +1502,25 @@ fn write_weftfs(
 
     if group_commit {
         let group_started = Instant::now();
-        let ((group_ids, per_commit), _group_hash) = store
-            .group(|s| {
-                let mut ids: Vec<Hash32> = Vec::with_capacity(staged.len());
-                let mut per_commit: Vec<(Duration, u64, u64)> = Vec::with_capacity(staged.len());
-                for (name, prepared, _) in &staged {
-                    let before = s.backend_stats();
-                    let started = Instant::now();
-                    let id = s.commit_prepared_tensor_object(
-                        tensors_dir,
-                        name.as_bytes(),
-                        prepared,
-                        0o644,
-                    )?;
-                    let elapsed = started.elapsed();
-                    let after = s.backend_stats();
-                    ids.push(id);
-                    per_commit.push((
-                        elapsed,
-                        after.writes.saturating_sub(before.writes),
-                        after.bytes_written.saturating_sub(before.bytes_written),
-                    ));
-                }
-                Ok((ids, per_commit))
-            })
+        let mut group_ids: Vec<Hash32> = Vec::with_capacity(staged.len());
+        let mut per_commit: Vec<(Duration, u64, u64)> = Vec::with_capacity(staged.len());
+        for (name, prepared, _) in &staged {
+            let before = store.backend_stats();
+            let started = Instant::now();
+            let id = store
+                .commit_prepared_tensor_object(tensors_dir, name.as_bytes(), prepared, 0o644)
+                .map_err(|err| format!("commit `{name}`: {err}"))?;
+            let elapsed = started.elapsed();
+            let after = store.backend_stats();
+            group_ids.push(id);
+            per_commit.push((
+                elapsed,
+                after.writes.saturating_sub(before.writes),
+                after.bytes_written.saturating_sub(before.bytes_written),
+            ));
+        }
+        store
+            .commit_group()
             .map_err(|err| format!("group commit: {err}"))?;
         commit_ms = group_started.elapsed().as_secs_f64() * 1000.0;
         ids = group_ids;
@@ -1491,6 +1636,9 @@ fn write_weftfs(
     };
     let footprint_ms = footprint_started.elapsed().as_secs_f64() * 1000.0;
 
+    let ledger = store.publication_ledger();
+    let pack_stats = store.pack_stats();
+
     let whole_phases = if profiling {
         phase_profile::finish().to_json()
     } else {
@@ -1505,7 +1653,11 @@ fn write_weftfs(
             "zstd19_disabled": ablate_zstd19,
             "float_tensor_disabled": ablate_float,
             "group_commit": group_commit,
+            "publication": publication.label(),
+            "deferred_blob_sync": publication.defer_blob_sync(),
+            "pack_member_threshold_bytes": publication.pack_threshold(),
         },
+        "publication_ledger": publication_ledger_json(&ledger, &stats_after_write, pack_stats),
         "backend": args.backend,
         "logical_bytes": subset.logical_bytes,
         "tensor_count": subset.tensors.len(),
@@ -2137,6 +2289,66 @@ fn stats_json(stats: &BackendStats) -> Json {
         "link_publications": stats.link_publications,
         "rename_publications": stats.rename_publications,
         "rename_fallbacks": stats.rename_fallbacks,
+        "fsyncs": stats.fsyncs,
+        "fsync_file": stats.fsync_file,
+        "fsync_dir": stats.fsync_dir,
+    })
+}
+
+/// The durability ledger of one WeftFS write: where every durable operation and
+/// byte went, by category.
+fn publication_ledger_json(
+    ledger: &weftfs::PublicationLedger,
+    stats: &BackendStats,
+    pack: Option<weftfs::packs::PackStats>,
+) -> Json {
+    let mut categories = serde_json::Map::new();
+    categories.insert(
+        "object_blobs".to_owned(),
+        json!({ "count": ledger.object_blobs, "bytes": ledger.object_blob_bytes }),
+    );
+    categories.insert(
+        "manifest_blobs".to_owned(),
+        json!({ "count": ledger.manifest_blobs, "bytes": ledger.manifest_blob_bytes }),
+    );
+    categories.insert(
+        "commit_records".to_owned(),
+        json!({ "count": ledger.commit_records, "bytes": ledger.commit_record_bytes }),
+    );
+    categories.insert(
+        "superblock".to_owned(),
+        json!({ "count": ledger.superblock_writes }),
+    );
+    categories.insert(
+        "index_segments".to_owned(),
+        json!({ "count": ledger.index_segments, "bytes": ledger.index_bytes }),
+    );
+    let accounted_bytes = ledger.object_blob_bytes
+        + ledger.manifest_blob_bytes
+        + ledger.commit_record_bytes
+        + ledger.index_bytes;
+    json!({
+        "categories": Json::Object(categories),
+        "duplicate_blobs": ledger.duplicate_blobs,
+        "backend_writes": stats.writes,
+        "backend_bytes_written": stats.bytes_written,
+        "fsyncs": { "total": stats.fsyncs, "file": stats.fsync_file, "dir": stats.fsync_dir },
+        "accounted_blob_and_control_bytes": accounted_bytes,
+        "unaccounted_bytes": stats.bytes_written.saturating_sub(accounted_bytes),
+        "pack": pack.map(|pack| json!({
+            "sealed_packs": pack.sealed_packs,
+            "packed_members": pack.packed_members,
+            "packed_bytes": pack.packed_bytes,
+            "flat_members": pack.flat_members,
+            "flat_bytes": pack.flat_bytes,
+            "catalog_entries": pack.catalog_entries,
+            "catalog_segment_publishes": pack.catalog_segment_publishes,
+            "catalog_root_publishes": pack.catalog_root_publishes,
+            "open_pack_bytes": pack.open_pack_bytes,
+            "open_pack_members": pack.open_pack_members,
+            "packing_disabled": pack.packing_disabled,
+        })),
+        "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
     })
 }
 
@@ -2695,6 +2907,20 @@ fn crash_write(
         .arg("--backend")
         .arg(&args.backend)
         .env("WEFT_CRASH_PHASE", phase)
+        // A group row crashes inside a group commit, so the crash points there
+        // are the ones exercised. A per-commit row crashes on the single-
+        // mutation path. Both must leave old-or-new-whole.
+        .env(
+            "WEFT_CRASH_GROUP",
+            if ablation_flags(config)
+                .map(|flags| flags.publication.group_commit())
+                .unwrap_or(false)
+            {
+                "1"
+            } else {
+                "0"
+            },
+        )
         .stdout(Stdio::from(out))
         .stderr(Stdio::from(err_out))
         .status()
@@ -2885,7 +3111,9 @@ fn build_ledger(write: &Json) -> Json {
             "mode9_float_tensor": write["prepare_phases"]["encode_float_tensor"]["count"],
         },
         "planner": write["planner"],
-        "next_instrumentation": "fsync is inside BlobPublish/ManifestCommit on the local backend; a separate BackendSync phase would move it out of those two and shrink the residual further. The store footprint walk is now measured separately.",
+        "publication": write["ablation"],
+        "publication_ledger": write["publication_ledger"],
+        "next_instrumentation": "fsync is inside BlobPublish/ManifestCommit on the local backend; the publication ledger now splits those into blob kinds and file/dir barriers, so a change can be judged on measured counts rather than a residual.",
     })
 }
 
@@ -3396,31 +3624,36 @@ fn ablate(args: &Args) -> Result<(), String> {
         match config_base(key) {
             // The Fast pass-through rows run no planned encoder at all.
             "B" | "D" => zstd3 == 0 && zstd19 == 0 && mode9 == 0,
-            _ => match config_suffix(key) {
-                "" => {
-                    // Two-stage: encode counts follow the recorded decisions.
-                    let pass = planner["mode9_gate_pass"].as_u64().unwrap_or(0);
-                    let unresolved = planner["mode9_gate_unresolved"].as_u64().unwrap_or(0);
-                    let encoded19 = planner["encoded_zstd19"].as_u64().unwrap_or(0);
-                    zstd3 <= tensors && zstd19 == encoded19 && mode9 == pass + unresolved
+            _ => {
+                let flags = match ablation_flags(key) {
+                    Ok(flags) => flags,
+                    Err(_) => return false,
+                };
+                match flags.planner {
+                    PlannerMode::TwoStage => {
+                        // Two-stage: encode counts follow the recorded decisions,
+                        // independently of how the row publishes.
+                        let pass = planner["mode9_gate_pass"].as_u64().unwrap_or(0);
+                        let unresolved = planner["mode9_gate_unresolved"].as_u64().unwrap_or(0);
+                        let encoded19 = planner["encoded_zstd19"].as_u64().unwrap_or(0);
+                        zstd3 <= tensors && zstd19 == encoded19 && mode9 == pass + unresolved
+                    }
+                    PlannerMode::Exhaustive => {
+                        // Exhaustive planner: the R17 ablation contract.
+                        let zstd19_ok = if flags.ablate_zstd19 {
+                            zstd19 == 0
+                        } else {
+                            !zstd19_eligible || zstd19 > 0
+                        };
+                        let mode9_ok = if flags.ablate_float {
+                            mode9 == 0
+                        } else {
+                            mode9 == tensors
+                        };
+                        zstd19_ok && mode9_ok
+                    }
                 }
-                suffix => {
-                    // Exhaustive planner: the R17 ablation contract.
-                    let disabled_zstd19 = matches!(suffix, "noz19" | "both");
-                    let disabled_mode9 = matches!(suffix, "nom9" | "both");
-                    let zstd19_ok = if disabled_zstd19 {
-                        zstd19 == 0
-                    } else {
-                        !zstd19_eligible || zstd19 > 0
-                    };
-                    let mode9_ok = if disabled_mode9 {
-                        mode9 == 0
-                    } else {
-                        mode9 == tensors
-                    };
-                    zstd19_ok && mode9_ok
-                }
-            },
+            }
         }
     });
     let crash_ok = configs_receipt.iter().all(|(_, entry)| {
@@ -3912,17 +4145,34 @@ fn main() {
                 .map_err(|err| format!("open {}: {err}", path.display()))?;
             let root = store.resolve_path("/").map_err(|err| err.to_string())?;
             let phase = std::env::var("WEFT_CRASH_PHASE").unwrap_or_default();
-            store
-                .create_file(
-                    root,
-                    format!("crash-{phase}").as_bytes(),
-                    b"crash-probe\n",
-                    0o644,
-                    0,
-                    0,
-                    BTreeMap::new(),
-                )
-                .map_err(|err| format!("crash write: {err}"))?;
+            let group = std::env::var("WEFT_CRASH_GROUP").as_deref() == Ok("1");
+            let probe = |store: &mut Store| -> Result<(), String> {
+                store
+                    .create_file(
+                        root,
+                        format!("crash-{phase}").as_bytes(),
+                        b"crash-probe\n",
+                        0o644,
+                        0,
+                        0,
+                        BTreeMap::new(),
+                    )
+                    .map_err(|err| format!("crash write: {err}"))?;
+                Ok(())
+            };
+            if group {
+                // Exercise the group publication path: the crash points inside
+                // the commit only fire while this group is being published.
+                store
+                    .begin_group()
+                    .map_err(|err| format!("begin group: {err}"))?;
+                probe(&mut store)?;
+                store
+                    .commit_group()
+                    .map_err(|err| format!("group commit: {err}"))?;
+            } else {
+                probe(&mut store)?;
+            }
             // Reaching here means WEFT_CRASH_PHASE did not match a crash point.
             Ok(())
         })(),

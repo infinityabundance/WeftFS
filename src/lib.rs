@@ -151,8 +151,8 @@ pub use singleflight::{
 };
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
-    AuthorizedRead, GcReport, LineageEntry, OpenMode, Options, ReadLayerStats, RepresentationMode,
-    SavedContext, SetAttr, StatFs, Store, VerifyReport,
+    AuthorizedRead, GcReport, LineageEntry, OpenMode, Options, PublicationLedger, ReadLayerStats,
+    RepresentationMode, SavedContext, SetAttr, StatFs, Store, VerifyReport,
 };
 pub use tensor_store::{
     FastCodec, ResolvedWritePolicy, StoredTensorMetadata, TensorIndependentPlan, TensorLayoutSpec,

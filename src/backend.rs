@@ -941,6 +941,15 @@ pub struct BackendStats {
     /// file or a directory). Local and object backends count them; a remote
     /// backend whose durability is a provider acknowledgement reports 0.
     pub fsyncs: u64,
+    /// The subset of [`BackendStats::fsyncs`] that synced file data.
+    ///
+    /// Split out so a publication ledger can say whether a write is bound by
+    /// data barriers or directory barriers. `fsync_file + fsync_dir` equals
+    /// `fsyncs` for every backend that reports both.
+    pub fsync_file: u64,
+    /// The subset of [`BackendStats::fsyncs`] that synced a directory, which
+    /// is what makes a `rename(2)` durable.
+    pub fsync_dir: u64,
 }
 
 impl BackendStats {
@@ -963,6 +972,8 @@ impl BackendStats {
                 .rename_fallbacks
                 .saturating_sub(earlier.rename_fallbacks),
             fsyncs: self.fsyncs.saturating_sub(earlier.fsyncs),
+            fsync_file: self.fsync_file.saturating_sub(earlier.fsync_file),
+            fsync_dir: self.fsync_dir.saturating_sub(earlier.fsync_dir),
         }
     }
 
@@ -982,6 +993,8 @@ impl BackendStats {
                 .saturating_add(other.rename_publications),
             rename_fallbacks: self.rename_fallbacks.saturating_add(other.rename_fallbacks),
             fsyncs: self.fsyncs.saturating_add(other.fsyncs),
+            fsync_file: self.fsync_file.saturating_add(other.fsync_file),
+            fsync_dir: self.fsync_dir.saturating_add(other.fsync_dir),
         }
     }
 }
@@ -997,6 +1010,8 @@ struct AtomicStats {
     rename_publications: AtomicU64,
     rename_fallbacks: AtomicU64,
     fsyncs: AtomicU64,
+    fsync_file: AtomicU64,
+    fsync_dir: AtomicU64,
 }
 
 impl AtomicStats {
@@ -1011,6 +1026,8 @@ impl AtomicStats {
             rename_publications: self.rename_publications.load(Ordering::Relaxed),
             rename_fallbacks: self.rename_fallbacks.load(Ordering::Relaxed),
             fsyncs: self.fsyncs.load(Ordering::Relaxed),
+            fsync_file: self.fsync_file.load(Ordering::Relaxed),
+            fsync_dir: self.fsync_dir.load(Ordering::Relaxed),
         }
     }
 }
@@ -1255,9 +1272,33 @@ pub trait StorageBackend: Send {
     /// A plane that groups small blobs into larger physical objects may hold
     /// the most recent publications in memory. The store calls this before it
     /// publishes a commit record, so the protocol keeps its guarantee: every
-    /// blob named by a published commit is durable and visible. The default
-    /// implementation has nothing buffered.
+    /// blob named by a published commit is durable and visible. It also closes
+    /// an open deferred durability batch, so the barrier and the commit record
+    /// cannot be reordered.
     fn flush_buffered_blobs(&mut self) -> Result<()> {
+        self.end_deferred_sync()
+    }
+
+    /// Open a deferred durability batch.
+    ///
+    /// Returns `true` when the backend engaged: every publication from now
+    /// until [`StorageBackend::end_deferred_sync`] writes and renames its bytes
+    /// but does not issue its own `fsync`, and the single barrier at the end
+    /// syncs every written file and every touched directory. The ordering rule
+    /// is unchanged because the store calls this barrier (through
+    /// [`StorageBackend::flush_buffered_blobs`]) *before* it publishes the
+    /// commit record, and refuses to publish if the barrier fails.
+    ///
+    /// Default: not supported, so every publication stays eager. A backend
+    /// refuses rather than pretending, and the caller falls back to the eager
+    /// path.
+    fn begin_deferred_sync(&mut self) -> Result<bool> {
+        Ok(false)
+    }
+
+    /// Close a deferred durability batch, syncing every file and directory it
+    /// recorded. Idempotent; a no-op when no batch is open.
+    fn end_deferred_sync(&mut self) -> Result<()> {
         Ok(())
     }
 
@@ -1475,6 +1516,41 @@ pub struct LocalBackend {
     usrbio: Option<SharedUsrbio>,
     threefs_mode: Option<ThreeFsMode>,
     threefs_mount: Option<PathBuf>,
+    /// Publications written but not yet made durable, when a deferred
+    /// durability batch is open. Empty (and `active == false`) for the normal
+    /// eager path.
+    pending_sync: PendingSync,
+}
+
+/// Files and directories a deferred durability batch must sync before the
+/// commit record is published.
+///
+/// The ordering rule is unchanged: every byte a published commit names is
+/// durable *before* that commit record exists. The batch only moves the
+/// `fsync` of each blob from immediately after its own write to one barrier
+/// point at the end of the group, which lets the page cache write back once
+/// instead of once per object. Correctness does not depend on the batch: each
+/// file is still synced individually and each touched directory is still
+/// synced, and the commit path refuses to publish until the batch is closed.
+#[derive(Debug, Default)]
+struct PendingSync {
+    active: bool,
+    files: Vec<PathBuf>,
+    dirs: std::collections::BTreeSet<PathBuf>,
+}
+
+impl PendingSync {
+    fn record(&mut self, file: &Path, dir: &Path) {
+        self.files.push(file.to_path_buf());
+        self.dirs.insert(dir.to_path_buf());
+    }
+
+    fn take(&mut self) -> (Vec<PathBuf>, Vec<PathBuf>) {
+        self.active = false;
+        let files = std::mem::take(&mut self.files);
+        let dirs = std::mem::take(&mut self.dirs).into_iter().collect();
+        (files, dirs)
+    }
 }
 
 impl LocalBackend {
@@ -1493,6 +1569,7 @@ impl LocalBackend {
             usrbio: None,
             threefs_mode: None,
             threefs_mount: None,
+            pending_sync: PendingSync::default(),
         }
     }
 
@@ -1515,6 +1592,7 @@ impl LocalBackend {
             usrbio,
             threefs_mode: Some(mode),
             threefs_mount: Some(mount_point),
+            pending_sync: PendingSync::default(),
         }
     }
 
@@ -1674,8 +1752,11 @@ impl LocalBackend {
             }
             _ => {
                 file.write_all(bytes)?;
-                file.sync_all()?;
-                self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+                if !self.pending_sync.active {
+                    file.sync_all()?;
+                    self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+                    self.stats.fsync_file.fetch_add(1, Ordering::Relaxed);
+                }
                 drop(file);
             }
         }
@@ -1706,8 +1787,16 @@ impl LocalBackend {
         self.stats
             .rename_publications
             .fetch_add(1, Ordering::Relaxed);
+        if self.pending_sync.active {
+            // Deferred durability batch: the bytes and the rename are recorded
+            // and made durable by the barrier before the commit record. The
+            // ordering rule (bytes durable -> commit record -> head) is intact.
+            self.pending_sync.record(&final_path, parent);
+            return Ok(());
+        }
         fsync_dir(parent)?;
         self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+        self.stats.fsync_dir.fetch_add(1, Ordering::Relaxed);
         Ok(())
     }
 
@@ -1725,6 +1814,40 @@ static TMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 impl StorageBackend for LocalBackend {
     fn label(&self) -> &'static str {
         self.label
+    }
+
+    fn begin_deferred_sync(&mut self) -> Result<bool> {
+        // A USRBIO (3FS) data plane already syncs inside its own write path and
+        // keeps no page cache of its own, so there is nothing to batch there.
+        if self.usrbio.is_some() {
+            return Ok(false);
+        }
+        self.pending_sync.active = true;
+        Ok(true)
+    }
+
+    fn end_deferred_sync(&mut self) -> Result<()> {
+        if !self.pending_sync.active && self.pending_sync.files.is_empty() {
+            return Ok(());
+        }
+        let (files, dirs) = self.pending_sync.take();
+        // Every file is still synced individually: the batch changes *when*,
+        // not *whether*, a byte is durable. Syncing the files first means the
+        // directory entries below can only become durable after their data.
+        for path in &files {
+            let file = File::open(path)
+                .map_err(|err| Error::io(format!("cannot open {}: {err}", path.display())))?;
+            file.sync_all()
+                .map_err(|err| Error::io(format!("cannot fsync {}: {err}", path.display())))?;
+            self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+            self.stats.fsync_file.fetch_add(1, Ordering::Relaxed);
+        }
+        for dir in &dirs {
+            fsync_dir(dir)?;
+            self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+            self.stats.fsync_dir.fetch_add(1, Ordering::Relaxed);
+        }
+        Ok(())
     }
 
     fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {
@@ -1923,6 +2046,7 @@ impl StorageBackend for LocalBackend {
         file.write_all(bytes)?;
         file.sync_all()?;
         self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+        self.stats.fsync_file.fetch_add(1, Ordering::Relaxed);
         drop(file);
         fs::set_permissions(&tmp, fs::Permissions::from_mode(0o644))?;
         // rename(2) atomically replaces the previous record on POSIX.
@@ -1932,6 +2056,7 @@ impl StorageBackend for LocalBackend {
         })?;
         fsync_dir(&parent)?;
         self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+        self.stats.fsync_dir.fetch_add(1, Ordering::Relaxed);
         self.stats.writes.fetch_add(1, Ordering::Relaxed);
         self.stats
             .bytes_written
@@ -2646,6 +2771,7 @@ impl StorageBackend for ObjectBackend {
         })?;
         fsync_dir(&parent)?;
         self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+        self.stats.fsync_dir.fetch_add(1, Ordering::Relaxed);
         self.stats.writes.fetch_add(1, Ordering::Relaxed);
         self.stats
             .bytes_written

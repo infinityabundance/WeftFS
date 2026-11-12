@@ -210,6 +210,12 @@ pub struct Options {
     /// publishes through a conditional head compare-and-swap and is implemented
     /// for the explicit transaction API only. See `spec/WEFT-MULTIWRITER.md`.
     pub writer_mode: crate::mw2::WriterMode,
+    /// One group commit is one durability barrier: blob publications inside a
+    /// group defer their per-blob `fsync` to the barrier the commit path
+    /// performs before the commit record. Default on. Turning it off restores
+    /// the eager per-blob barrier inside a group, which is the R17/R19 control
+    /// used to price the batching itself.
+    pub defer_group_blob_sync: bool,
 }
 
 impl Default for Options {
@@ -239,6 +245,7 @@ impl Default for Options {
             incremental_index: true,
             incremental_index_maintenance: true,
             writer_mode: crate::mw2::WriterMode::Single,
+            defer_group_blob_sync: true,
         }
     }
 }
@@ -494,6 +501,8 @@ pub struct IndexStats {
     pub rejects: u64,
     /// Advisory index files written after a commit.
     pub writes: u64,
+    /// Total bytes of the advisory index segments written.
+    pub write_bytes: u64,
     /// Index writes that failed (the commit still succeeded).
     pub write_errors: u64,
     /// Index files removed by `gc --apply`.
@@ -733,6 +742,65 @@ enum Undo {
     Tip(Hash32, Option<Hash32>),
 }
 
+/// Publication ledger: exactly which durable artifacts a write produced.
+///
+/// Every field is counted at the point the artifact is handed to the backend,
+/// so the ledger closes against [`crate::backend::BackendStats`] instead of
+/// being reconstructed from a directory walk. It is diagnostic only: nothing
+/// in the store's format, commit protocol, or recovery reads it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PublicationLedger {
+    /// Chunk/frame payload blobs published (`objects/<ab>/<hash>`).
+    pub object_blobs: u64,
+    pub object_blob_bytes: u64,
+    /// Manifest blobs published (`manifests/<ab>/<hash>`), which carry tensor
+    /// frames and checkpoint state records.
+    pub manifest_blobs: u64,
+    pub manifest_blob_bytes: u64,
+    /// Blob publications that found identical bytes already durable, so the
+    /// bytes were re-read for the collision check but not written again.
+    pub duplicate_blobs: u64,
+    /// Commit records published (`commits/<gen>.commit`).
+    pub commit_records: u64,
+    pub commit_record_bytes: u64,
+    /// Superblock slot publications (one per published commit).
+    pub superblock_writes: u64,
+    /// Advisory index segments and their bytes.
+    pub index_segments: u64,
+    pub index_bytes: u64,
+}
+
+/// Atomic counters behind [`PublicationLedger`].
+#[derive(Debug, Default)]
+struct PublicationCounters {
+    object_blobs: std::sync::atomic::AtomicU64,
+    object_blob_bytes: std::sync::atomic::AtomicU64,
+    manifest_blobs: std::sync::atomic::AtomicU64,
+    manifest_blob_bytes: std::sync::atomic::AtomicU64,
+    duplicate_blobs: std::sync::atomic::AtomicU64,
+    commit_records: std::sync::atomic::AtomicU64,
+    commit_record_bytes: std::sync::atomic::AtomicU64,
+    superblock_writes: std::sync::atomic::AtomicU64,
+}
+
+impl PublicationCounters {
+    fn snapshot(&self, index_segments: u64, index_bytes: u64) -> PublicationLedger {
+        use std::sync::atomic::Ordering::Relaxed;
+        PublicationLedger {
+            object_blobs: self.object_blobs.load(Relaxed),
+            object_blob_bytes: self.object_blob_bytes.load(Relaxed),
+            manifest_blobs: self.manifest_blobs.load(Relaxed),
+            manifest_blob_bytes: self.manifest_blob_bytes.load(Relaxed),
+            duplicate_blobs: self.duplicate_blobs.load(Relaxed),
+            commit_records: self.commit_records.load(Relaxed),
+            commit_record_bytes: self.commit_record_bytes.load(Relaxed),
+            superblock_writes: self.superblock_writes.load(Relaxed),
+            index_segments,
+            index_bytes,
+        }
+    }
+}
+
 /// The open store.
 pub struct Store {
     root: PathBuf,
@@ -853,6 +921,8 @@ pub struct Store {
     /// Immutable reads that used this handle because it held unpublished
     /// members. Reported so a receipt can say the pool was bypassed and why.
     buffered_blob_reads: AtomicU64,
+    /// Durable-artifact counters for [`Store::publication_ledger`].
+    publication: PublicationCounters,
 }
 
 /// Per-tensor attribution guard used by the restore pipeline when the
@@ -1092,6 +1162,7 @@ impl Store {
             read_pool,
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
             buffered_blob_reads: AtomicU64::new(0),
+            publication: PublicationCounters::default(),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -1292,6 +1363,7 @@ impl Store {
             read_pool,
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
             buffered_blob_reads: AtomicU64::new(0),
+            publication: PublicationCounters::default(),
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
@@ -2687,7 +2759,10 @@ impl Store {
                 chain,
             });
         }
-        self.bump_index_stat(|stats| stats.writes += 1);
+        self.bump_index_stat(|stats| {
+            stats.writes += 1;
+            stats.write_bytes += bytes.len() as u64;
+        });
         Ok(bytes.len() as u64)
     }
 
@@ -2742,6 +2817,17 @@ impl Store {
             .clone()
     }
 
+    /// Durable artifacts this handle has published: blob counts and bytes by
+    /// kind, commit records, superblock slots, and advisory index segments.
+    ///
+    /// Diagnostic only. It exists so a write-cost ledger can say where the
+    /// bytes and the durability barriers went instead of inferring it from a
+    /// directory walk, and so a batching change is judged on measured counts.
+    pub fn publication_ledger(&self) -> PublicationLedger {
+        let index = self.index_stats();
+        self.publication.snapshot(index.writes, index.write_bytes)
+    }
+
     /// Reset advisory index diagnostics (tests and benchmarks only).
     #[doc(hidden)]
     pub fn reset_index_stats(&self) {
@@ -2772,7 +2858,10 @@ impl Store {
         self.require_writable()?;
         let bytes = self.with_backend(|backend| backend.read_all(&Key::index(self.head)))?;
         self.with_backend_mut(|backend| backend.put_atomic(&Key::index(self.head), &bytes))?;
-        self.bump_index_stat(|stats| stats.writes += 1);
+        self.bump_index_stat(|stats| {
+            stats.writes += 1;
+            stats.write_bytes += bytes.len() as u64;
+        });
         Ok(bytes.len() as u64)
     }
 
@@ -6835,6 +6924,14 @@ impl Store {
         self.group_pre_objects.clear();
         self.group_pre_relations.clear();
         self.group_force_checkpoint = false;
+        if self.options.defer_group_blob_sync {
+            // One group is one publication, so it is also one durability
+            // barrier: blob publications inside the group write and rename their
+            // bytes but leave the `fsync` to the barrier the commit path already
+            // performs before it publishes the commit record. A backend that
+            // cannot defer keeps its eager per-blob barriers.
+            let _ = self.with_backend_mut(|backend| backend.begin_deferred_sync())?;
+        }
         Ok(())
     }
 
@@ -6853,6 +6950,7 @@ impl Store {
         let force_checkpoint = std::mem::replace(&mut self.group_force_checkpoint, false);
         self.group_depth = 0;
         if ops.is_empty() {
+            self.end_deferred_sync_best_effort();
             return Ok(self.head);
         }
         match self.publish_staged(ops, pre_objects, pre_relations, force_checkpoint) {
@@ -6879,6 +6977,17 @@ impl Store {
         self.group_pre_relations.clear();
         self.group_force_checkpoint = false;
         self.group_depth = 0;
+        // Nothing is published, so the blobs written by the aborted group are
+        // unreferenced. Closing the batch everywhere a batch was opened keeps
+        // the next publication from inheriting an unbounded sync list.
+        self.end_deferred_sync_best_effort();
+    }
+
+    /// Close a deferred durability batch if one is open. Used on paths where
+    /// nothing is published, so an error cannot change an outcome: the data is
+    /// unreferenced and a later barrier or open re-syncs it.
+    fn end_deferred_sync_best_effort(&self) {
+        let _ = self.with_backend_mut(|backend| backend.end_deferred_sync());
     }
 
     /// True while a group opened by [`Store::begin_group`] or [`Store::group`]
@@ -9696,6 +9805,13 @@ impl Store {
             }
             backend.put_atomic(&key, &file_bytes)
         })?;
+        self.publication
+            .commit_records
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.publication.commit_record_bytes.fetch_add(
+            file_bytes.len() as u64,
+            std::sync::atomic::Ordering::Relaxed,
+        );
 
         crash_point("after_commit_file");
 
@@ -9755,6 +9871,11 @@ impl Store {
                 )
             });
         }
+        // One head publication: either the fenced head write or the two-slot
+        // superblock record. Counted once per published commit.
+        self.publication
+            .superblock_writes
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 
         crash_point("after_superblock_write");
 
@@ -10895,12 +11016,27 @@ impl Store {
                                 key.display_path()
                             )));
                         }
+                        self.publication
+                            .duplicate_blobs
+                            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                         return Ok(hash);
                     }
                     Err(err) if err.class() == crate::error::Class::NotFound => {}
                     Err(err) => return Err(err),
                 }
                 backend.put_atomic(&key, bytes)?;
+                let (count, byte_count) = match kind {
+                    BlobKind::Object => (
+                        &self.publication.object_blobs,
+                        &self.publication.object_blob_bytes,
+                    ),
+                    BlobKind::Manifest => (
+                        &self.publication.manifest_blobs,
+                        &self.publication.manifest_blob_bytes,
+                    ),
+                };
+                count.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                byte_count.fetch_add(bytes.len() as u64, std::sync::atomic::Ordering::Relaxed);
                 Ok(hash)
             })
         })
