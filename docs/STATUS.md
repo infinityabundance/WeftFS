@@ -30,8 +30,7 @@ default writer level is still **MW1 — many producers, one committer**. The pre
 claim that MW2 and MW3 are absent is now split: a bounded, opt-in **MW2**
 transaction protocol exists for the explicit transaction API on
 `local`/`object`/`3fs`/`s3`/`azure` in Rust and on `local`/`object`/`azure` in
-Go (GCS refused `UnsupportedVersion`); **MW3 is not implemented and not
-claimed.** The
+Go (GCS refused `UnsupportedVersion`); **MW3 is not implemented and not claimed.** The
 normative contract is [`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md);
 the design, backend tradeoffs and every loss are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md) and

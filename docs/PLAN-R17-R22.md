@@ -33,7 +33,7 @@ A change is only a candidate if it reports **both** boards together.
 | R18 | 4,117.8 | two-stage planner |
 | R19 | 2,328.4 | mode-9 encoder |
 | **R20** | **1,236.8** | one atomic publication per checkpoint |
-| G1 | ≤ 3,360 | 10× A's 336 ms (cleared at R18) |
+| G1 | ≤ 3,360 | 10× A's 336 ms (cleared at R19: 2,328.4 ms) |
 | G2 | ≤ 1,344 | 4× A (**met at R20**) |
 | G3 | ≤ 672 | 2× A |
 | final | ≤ 336 | A parity |

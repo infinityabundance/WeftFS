@@ -218,6 +218,58 @@ comparison.
 Labels used throughout: **implemented** (built and tested), **experimental**
 (built, not format-frozen), **conjectured** (design claim without measurement).
 
+## What's new in v1.4.0
+
+Full note with every limit, every loss and every non-claim:
+[`docs/RELEASE-v1.4.0.md`](docs/RELEASE-v1.4.0.md). No frozen wire or on-disk
+byte changed (WFT1, modes 0–20, `weft.manifest.v1`–`v4`, the store layout,
+the transport container, `weftfs.commit.v1`/`v2`, every conformance vector).
+The release is **R12c**, **R14d**, and **R17–R22**.
+
+- **The compressed write, 40.9× faster and still not at native parity.** The
+  durable write of the 101-tensor fixture goes from **24,229.2 ms** (R17, where
+  ZSTD-19 was 84 % of the wall for zero chosen tensors) to **592.6 ms**
+  least-contended / 600.9 ms median (R22) at an unchanged **282,106,049 B** —
+  33.5 % below the native control's 424,439,296 B. G1/G2/G3 are met; the
+  ≤ 336 ms native rung is **not** (1.78× A), and the measured limiter (the
+  461.6 ms durable writeback of 202 files plus a 452.5 ms publication wall) is
+  stated with the one change most likely to close it. Receipts
+  `write-cost-ablation-20261112T050102Z`, `planner-two-stage-20261112T081151Z`,
+  `mode9-encoder-20261112T160000Z`, `r20-publication-20261112T150000Z`,
+  `r21-pipeline-20261112T201500Z`, `r22-pareto-20261112T230000Z`; analysis
+  [`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md) and
+  [`bench/RESULTS-write-cost-ledger.md`](bench/RESULTS-write-cost-ledger.md).
+- **Checkpoint sessions and a bounded queue (R12c).** A reused
+  `CheckpointSession` takes warm completion p50 from **339.0 → 62.9 ms** at a
+  4-step interval; a bounded queue (default 2 outstanding) turns a timing-decided
+  race into a documented admission bound and cuts the 1-step loop wall
+  **7,415.3 → 5,761.7 ms** with 96/96 saves landed and no silent skip. Losses:
+  completion p95 and RSS get worse and the queue cannot make a save finish
+  sooner. Receipts `training-goodput-session-20261111T220500Z.json`,
+  `checkpoint-queue-bound-after-20261112T043000Z.json`.
+- **Incremental index and metadata (R12c).** Publish no longer rebuilds the
+  selector index: commit p50 is **0.198 → 0.110 ms** and flat from 1k to 100k
+  generations at byte-identical index bytes, with a real GC defect (one shared
+  retained-chain bound) found and fixed; DCP metadata encoding falls
+  **3.957 → 0.555 ms** behind an oracle-checked plan. Analysis
+  [`bench/RESULTS-incremental-index.md`](bench/RESULTS-incremental-index.md),
+  [`bench/RESULTS-dcp-metadata.md`](bench/RESULTS-dcp-metadata.md).
+- **Azure MW2 verified in both languages (R14d).** MW2 is now available on the
+  `azure` commit plane in Rust and Go, refused on GCS. The Go half was committed
+  unverified and its suite failed; the reproduced failure was Go recovery
+  consulting a stale writer `LOCK` record instead of the `writers` policy, fixed
+  at one decision point with a regression test for the fail-closed default.
+- **Verification.** AGGREGATE_HEADLINE
+
+**Historical release notes follow.** Every section below was written at its own
+release; none of it is current status. Current state and current receipts are
+in [`docs/STATUS.md`](docs/STATUS.md), the tables above, and the newest receipt
+for the surface you care about. The v1.3.0 note below still says 1.3.0 is the
+current release and “nothing at the current `staging` HEAD has been
+aggregated”; both were true when it was written, and the v1.4.0 section above
+supersedes them. The v1.2.0 note still says “the 1.3.0 upload rebuilds the
+PyPI description”, which did not happen (no token).
+
 ## What's new in v1.3.0
 
 Full note with every limit and every loss:
@@ -267,22 +319,15 @@ here. The release covers R10, R12, R13, R14, and R15.
 - **Artifacts.** The v1.3.0 crates, GHCR images, and GitHub releases are
   published. crates.io serves `weftcodec 1.3.0` (checksum `45cfbd12…`) and
   `weftfs 1.3.0` (checksum `f7e394ac…`); all four GHCR images carry a `v1.3.0`
-  tag whose index digest is recorded. **PyPI 1.3.0 is not published:**
+  tag whose index digest is recorded. **PyPI serves `weftcodec 1.2.0`; the
+  1.3.0 wheel and sdist exist only as GitHub release assets:**
   `scripts/publish-pypi.sh` needs `.docker-cache/.pypi-token`, that file does
-  not exist, and the built, twine-checked wheel and sdist were not uploaded
-  (sha256 `ba1ddf26…` and `d6eb391e…`). Every one of those facts is in
+  not exist, and the built, twine-checked artifacts were therefore never
+  uploaded (sha256 `ba1ddf26…` and `d6eb391e…`). Every one of those facts is in
   `bench/receipts/release-artifacts-20261111T200115Z.json`; the previous
   release's record is `bench/receipts/release-artifacts-20261109T124325Z.json`.
-  The published 1.2.0 PyPI long description stays stale (it still says PyPI is
+  The published 1.2.0 PyPI long description is stale (it says PyPI is
   unpublished); correcting it needs an upload, which is the blocked step.
-
-**Historical release notes follow.** Every section below was written at its own
-release; none of it is current status. Current state and current receipts are
-in [`docs/STATUS.md`](docs/STATUS.md), the tables above, and the newest receipt
-for the surface you care about. The v1.2.0 note below still says "the 1.3.0
-upload rebuilds the description" because that was the plan when it was
-written; the v1.3.0 artifacts bullet above is the recorded outcome (PyPI
-blocked).
 
 ## What's new in v1.2.0
 
@@ -772,8 +817,10 @@ docker pull ghcr.io/infinityabundance/weftfs:v1.3.0
 docker pull ghcr.io/infinityabundance/weftfs-go:v1.3.0
 ```
 
-`latest` is also published. The v1.2.0 images remain pullable, and the v1.3.0
-images are published: `weftfs` `sha256:07c70fd7…`, `weftcodec`
+`latest` is also published. **The v1.4.0 images are not published in this
+release run**; `v1.3.0` is what GHCR serves today and the commands above name
+it deliberately. The v1.2.0 images remain pullable, and the v1.3.0 images are
+published: `weftfs` `sha256:07c70fd7…`, `weftcodec`
 `sha256:0b8cc85f…`, `weftcodec-go` `sha256:ad627083…`, `weftfs-go`
 `sha256:396cb94b…` (image-index digests read live, recorded in
 `bench/receipts/release-artifacts-20261111T200115Z.json`; a rebuild is not
@@ -796,12 +843,16 @@ cargo add weftcodec@1.3.0
 cargo add weftfs@1.3.0
 ```
 
-The v1.2.0 crates remain published. crates.io serves `weftcodec 1.3.0` and
-`weftfs 1.3.0`: checksums `45cfbd12433c5f40…` and `f7e394acdef06aef…`, both
-`yanked=false`, read from the live registry and recorded in
-`bench/receipts/release-artifacts-20261111T200115Z.json`. The tree under test
-is also `1.3.0` (`Cargo.toml`), so the install examples above name the version
-this tree builds.
+**What the registry serves today is 1.3.0.** This tree is **1.4.0**
+(`Cargo.toml`, `WeftCodec/Cargo.toml`, `python/pyproject.toml`,
+`python/weftcodec/__init__.py`, `WeftFS-Go/store/rebase.go`), and its crates are
+built and dry-run-checked but **not published**; the commands above keep naming
+the last released version so they work as written. The coordinator's registry
+step is `scripts/publish-crates.sh` for `weftcodec 1.4.0` then `weftfs 1.4.0`;
+the artifact hashes are in `docs/RELEASE-v1.4.0.md`. crates.io serves
+`weftcodec 1.3.0` and `weftfs 1.3.0`: checksums `45cfbd12433c5f40…` and
+`f7e394acdef06aef…`, both `yanked=false`, read from the live registry and
+recorded in `bench/receipts/release-artifacts-20261111T200115Z.json`.
 
 `weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the
 transactional store plus FUSE frontend (the `fuse` feature enables mounting).

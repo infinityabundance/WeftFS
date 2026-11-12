@@ -1,6 +1,6 @@
 # WeftFS v1.3.0 — throughput profiling, a mutex-free restore path, 7B scale, and Go object-store parity
 
-Release candidate. v1.3.0 is the first release after v1.2.0. It changes **no
+Released 2026-11-11. v1.3.0 is the first release after v1.2.0. It changes **no
 frozen wire or on-disk byte**: the WFT1 frame, payload modes 0–20, canonical
 WCB, `weft.manifest.v1`–`v4`, the selector grammar, the store layout, the
 superblock and recovery protocol, the transport container, and every frozen
