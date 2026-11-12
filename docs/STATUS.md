@@ -9855,6 +9855,12 @@ write is now durability-bound, not encode-bound.
     and the `tag.target` field in the artifacts receipt are written **after** the
     tag because a file cannot contain the hash of the commit that contains it;
     no code, format or generated number changed in this follow-up.
+  * Post-tag docs corrections, disclosed rather than rewritten into the tag: the
+    release badge links to `releases/latest` instead of a hard-coded `v1.3.0`,
+    and the README "Demonstrated results" family/region bullets are generated
+    (the pythia `--patch-from` bullet stays a labelled historical quotation).
+    Both are docs only; every generated region is re-checked by
+    `perf_numbers --check`, and no settled number in the tagged tree changed.
   * Aggregate cited by the release: `bench/receipts/verify-20261112T223540Z.json`
     — **46/46** courts pass, 0 failed, 0 skipped, at the release-candidate tree
     `0461132`, which is the tree of the tag except for docs, claims, receipts and
