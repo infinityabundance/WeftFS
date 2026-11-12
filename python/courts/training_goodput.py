@@ -1786,6 +1786,19 @@ def _durability_stats(events):
     }
 
 
+def _step_ms_stats(values):
+    """p50/p95/p99/max for a step-time sample, or a labelled empty result."""
+    if not values:
+        return {"samples": 0, "p50_ms": None, "p95_ms": None, "p99_ms": None}
+    return {
+        "samples": len(values),
+        "p50_ms": round3(median(values)),
+        "p95_ms": round3(percentile(values, 0.95)),
+        "p99_ms": round3(percentile(values, 0.99)),
+        "max_ms": round3(max(values)),
+    }
+
+
 def _sweep_cell(args, interval, config, work):
     """Run one (interval, config) cell: reps of the loop plus resume checks."""
     local = argparse.Namespace(**vars(args))
@@ -1858,6 +1871,37 @@ def _sweep_cell(args, interval, config, work):
         "loop_wall_ms_median": aggregate["loop_wall_ms_median"],
         "process_wall_ms_median": aggregate["process_wall_ms_median"],
         "step_ms_p50_pooled": aggregate["step_ms_p50_pooled"],
+        "step_ms_all": _step_ms_stats(
+            [
+                float(value)
+                for row in rows
+                for value in row["result"]["step_ms"]
+            ]
+        ),
+        "step_ms_clean": _step_ms_stats(
+            [
+                float(value)
+                for row in rows
+                for index, value in enumerate(row["result"]["step_ms"], start=1)
+                if index
+                not in {
+                    int(event["checkpoint_step"])
+                    for event in checkpoint_events(row["result"])
+                }
+                and index
+                not in {
+                    int(event["step"])
+                    for event in row["result"]["events"]
+                    if event.get("event") == "step"
+                    and event.get("augment_ms") is not None
+                }
+            ]
+        ),
+        "step_ms_scope": (
+            "`step_ms_all` is every training step; `step_ms_clean` excludes "
+            "checkpoint steps and post-checkpoint probe steps and is empty when "
+            "every step takes a checkpoint (interval 1)"
+        ),
         "step_ms_p95_pooled": aggregate["step_ms_p95_pooled"],
         "step_ms_max_pooled": aggregate["step_ms_max_pooled"],
         "pause_ms_p50_pooled": aggregate["pause_ms_p50_pooled"],

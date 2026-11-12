@@ -139,6 +139,48 @@ def admission_waits(result):
     ]
 
 
+def _step_stats(values):
+    if not values:
+        return {"samples": 0, "p50_ms": None, "p95_ms": None, "p99_ms": None}
+    return {
+        "samples": len(values),
+        "p50_ms": tg.round3(tg.median(values)),
+        "p95_ms": tg.round3(tg.percentile(values, 0.95)),
+        "p99_ms": tg.round3(tg.percentile(values, 0.99)),
+        "max_ms": tg.round3(max(values)),
+    }
+
+
+def annotate_cell(cell):
+    """Add the admission-wait distribution for a queue cell.
+
+    Step statistics come from the harness itself (`step_ms_all` and
+    `step_ms_clean`), because at a 1-step interval every step takes a checkpoint
+    and the "clean step" view is empty; both views are labelled in the cell.
+    """
+    events = cell.get("checkpoint_events_rep0") or []
+    waits = [
+        float(event["admission_wait_ms"])
+        for event in events
+        if event.get("admission_wait_ms") is not None
+    ]
+    if waits:
+        cell["admission_wait_ms"] = _step_stats(waits)
+    depths = [
+        int(event["queue_depth"])
+        for event in events
+        if event.get("queue_depth") is not None
+    ]
+    if depths:
+        cell["queue_depth"] = {
+            "samples": len(depths),
+            "p50": int(tg.median(depths)),
+            "max": max(depths),
+        }
+    cell["admission_wait_scope"] = "checkpoint submission events of rep 0"
+    return cell
+
+
 # ---------------------------------------------------------------------------
 # sweep
 # ---------------------------------------------------------------------------
@@ -179,6 +221,7 @@ def run_sweep(args):
                 flush=True,
             )
             cell = tg._sweep_cell(args, interval, config, work)
+            annotate_cell(cell)
             sweep["cells"][str(interval)][config] = cell
             summary = {
                 key: (cell.get("queue") or {}).get(key)
@@ -193,10 +236,11 @@ def run_sweep(args):
                 )
             }
             print(
-                "  wall=%s completion_p50=%s queue=%s"
+                "  wall=%s completion_p50=%s step_p50_all=%s queue=%s"
                 % (
                     cell.get("loop_wall_ms_median"),
                     (cell.get("completion_warm") or {}).get("p50_ms"),
+                    (cell.get("step_ms_all") or {}).get("p50_ms"),
                     json.dumps(summary),
                 ),
                 flush=True,
