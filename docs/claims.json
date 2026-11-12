@@ -11090,5 +11090,57 @@
   ],
   "receipt": null,
   "kind": "present"
+ },
+ {
+  "id": "perf_numbers_manifest",
+  "claim": "The performance-number manifest exists and is the generator's input.",
+  "value": "docs/perf-numbers.json",
+  "locations": [
+   "scripts/perf_numbers.py",
+   "docs/PERF-NUMBERS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_canonical_doc",
+  "claim": "README and STATUS point at the canonical generated number table.",
+  "value": "docs/PERF-NUMBERS.md",
+  "locations": [
+   "README.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_court_registered",
+  "claim": "The drift check is a registered court in the aggregate.",
+  "value": "perf_numbers",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_check_mode",
+  "claim": "The court runs the generator in check mode.",
+  "value": "--check",
+  "locations": [
+   "scripts/perf_numbers_court.sh"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_sentinel",
+  "claim": "Generated regions are delimited by the generator's sentinels.",
+  "value": "BEGIN GENERATED:",
+  "locations": [
+   "docs/PERF-NUMBERS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
  }
 ]

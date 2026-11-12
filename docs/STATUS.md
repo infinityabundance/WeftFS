@@ -1,26 +1,32 @@
-# Implementation status — 2026-11-12 (v1.3.0 released; R12c and R17–R22 landed on staging)
+# Implementation status — 2026-11-12 (v1.4.0 released)
+
+<!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
+**At a glance (generated from receipts).** v1.4.0 is released. The cited
+aggregate is `bench/receipts/verify-20261111T182601Z.json` — **45/45**
+courts pass, 0 failed, 0 skipped — at WeftFS
+`3ab54c75b7205e9897e185aa1fac670b6dff16ff`. The shipped compressed write is **592.6 ms**
+least-contended / 600.9 ms median at **282,106,049 B**
+(33.5 % below the native control). Rust all-targets
+**772** tests pass; FUSE **815** passed /
+0 failed / 2 ignored; the conformance manifest holds
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,046** claims are
+audited. Every number in this block is emitted by `scripts/perf_numbers.py`
+between `BEGIN GENERATED` sentinels and re-validated against its receipt by the
+`perf_numbers` court; the entries below this block are a chronological log of
+subphases and are quoted with the receipt and revision they were written at.
+<!-- END GENERATED:status-head -->
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. **v1.3.0 is released**: tags are
-`WeftFS` `e0d8cb6`, `WeftCodec` `d9234e5`, `WeftCodec-Go` `fe05240`,
-`WeftFS-Go` `80ddb5b`; the note is
-[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md). Its aggregate
-`bench/receipts/verify-20261111T182601Z.json` (**45/45**) was run at parent
-`3ab54c7`, three commits before the final tag commit with no codec, store or
-runtime change between them; crates.io checksums, GHCR index digests and the
-PyPI block are in `bench/receipts/release-artifacts-20261111T200115Z.json`.
-**No aggregate exists at the current `staging` HEAD** (the R12c and R17–R22
-work described below, which started at `d3db8aa`); an aggregate for it is
-item 7 of [`docs/PLAN-R12C.md`](PLAN-R12C.md) and is produced by the v1.4.0
-release run. **R14d Azure MW2 is now verified in both languages** (Go
-`19615ea`; §"R14d" below). **v1.2.0 is released**: tags are
-`WeftFS` `122d86e`, `WeftCodec` `d95fa78`, `WeftCodec-Go` `0db665e`,
-`WeftFS-Go` `6d58137`; the full note with every loss, including the published
-850 ms SLA miss, is [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). The
-release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
-(**37/37** courts `pass`, 0 failed, 0 skipped) at WeftFS `135a382`, WeftCodec
-`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. The v1.1.0-era state below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
-`99cb87a`, `WeftCodec-Go` `a0a1ebf`, `WeftFS-Go` `dc7cfdb`, with note
+implemented, tested, ignored, and not done. Current claims are generated from
+receipts by `scripts/perf_numbers.py` into the block above and into
+[`docs/PERF-NUMBERS.md`](PERF-NUMBERS.md); a `perf_numbers` court fails closed
+when any generated number drifts from its receipt. Everything below the block
+is a chronological log of subphases, retained verbatim: each entry is a
+**historical quotation** written at the receipt and revision it names, not a
+statement about the current tree. The v1.4.0 note with every loss and every
+non-claim is [`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md); the previous notes
+are [`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
+[`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md) and
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). Both codec implementations cover
 every allocated mode 0–20; the independent Python reader covers every allocated
 mode 0–18 (modes 19 and 20 are rejected `UnsupportedMode`).

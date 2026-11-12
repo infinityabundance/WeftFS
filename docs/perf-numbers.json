@@ -1,0 +1,3369 @@
+{
+ "schema": "weft.perf_numbers.v1",
+ "description": "Every current performance number published in this repository. Generated regions are written by scripts/perf_numbers.py; stamp and revision are re-validated against the receipt on every check.",
+ "groups": [
+  {
+   "id": "write",
+   "title": "Compressed write (R17-R22), Qwen2.5-0.5B-Instruct 101-tensor fixture"
+  },
+  {
+   "id": "ladder",
+   "title": "The write ladder, per rung"
+  },
+  {
+   "id": "r12c",
+   "title": "R12c checkpoint sessions, queue, incremental index and DCP metadata"
+  },
+  {
+   "id": "storage",
+   "title": "Storage, region reads, multi-writer and backend baselines"
+  },
+  {
+   "id": "verification",
+   "title": "Verification, conformance and claims counts"
+  },
+  {
+   "id": "history",
+   "title": "Historical quotations (superseded, retained with their receipt)"
+  }
+ ],
+ "numbers": [
+  {
+   "key": "write.r22.min_ms",
+   "label": "R22 durable write wall, least-contended",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.med_ms",
+   "label": "R22 durable write wall, median of 7",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.footprint_b",
+   "label": "R22 reachable physical footprint",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.physical_footprint_bytes.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.written_b",
+   "label": "Bytes handed to the backend",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.samples.0.physical_bytes_written",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.requests",
+   "label": "Backend write requests",
+   "unit": "requests",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.samples.0.write_requests",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.cpu_ms",
+   "label": "R22 CPU (user+sys)",
+   "unit": "ms",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.cpu_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.rss_kib",
+   "label": "R22 peak RSS of the least-contended rep",
+   "unit": "KiB",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.peak_rss_kib.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.restore_ms",
+   "label": "R22 cold restore of the fixture",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.cold_restore_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.encode_wall_ms",
+   "label": "Pipeline encode wall",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.pipeline.stages_ms.encode_wall",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.publish_wall_ms",
+   "label": "Pipeline publication wall",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.pipeline.stages_ms.publish_wall",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.publish_busy_ms",
+   "label": "Pipeline publisher busy",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.pipeline.stages_ms.publish_busy",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.barrier_ms",
+   "label": "Early-barrier thread busy",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.pipeline.early_barrier.busy_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.barrier_files",
+   "label": "Files fsynced by the early-barrier thread",
+   "unit": "files",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.pipeline.early_barrier.files",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.encode_ms",
+   "label": "Encode time summed over threads",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.ledger.prepare_breakdown.encode_total_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.encode_zstd_ms",
+   "label": "Level-3 ZSTD encode",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.ledger.prepare_breakdown.encode_zstd_level3_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.encode_mode9_ms",
+   "label": "Mode-9 encode",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.ledger.prepare_breakdown.encode_mode9_float_tensor_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.digest_ms",
+   "label": "Digest time",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.ledger.prepare_breakdown.digest_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.analyze_ms",
+   "label": "Analyse time",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4.attribution_rep.ledger.prepare_breakdown.encode_analyze_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.a.min_ms",
+   "label": "Native per-tensor control A, least-contended",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.a.med_ms",
+   "label": "Native per-tensor control A, median",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.a.footprint_b",
+   "label": "Native control A footprint",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.physical_footprint_bytes.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.a.cpu_ms",
+   "label": "Native control A CPU",
+   "unit": "ms",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.cpu_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.a.rss_kib",
+   "label": "Native control A peak RSS",
+   "unit": "KiB",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.peak_rss_kib.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.a.restore_ms",
+   "label": "Native control A cold restore",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.cold_restore_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.t19off_min_ms",
+   "label": "C-pipe4 with the level-19 gate disabled",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-t19off.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.zpar4_min_ms",
+   "label": "C-pipe4 with chunk-parallel ZSTD on every tensor",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-zpar4.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.tm9off_min_ms",
+   "label": "C-pipe4 with mode 9 disabled",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-tm9off.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.tm9off_footprint_b",
+   "label": "C-pipe4 with mode 9 disabled, footprint",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-tm9off.physical_footprint_bytes.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.pack_min_ms",
+   "label": "C-pipe4 with 1 MiB packs",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-pack1m.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.pack_footprint_b",
+   "label": "C-pipe4 with 1 MiB packs, footprint",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-pack1m.physical_footprint_bytes.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.pack_publish_busy_ms",
+   "label": "C-pipe4 with 1 MiB packs, publisher busy",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-pack1m.attribution_rep.pipeline.stages_ms.publish_busy",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.znochunk_min_ms",
+   "label": "C-pipe4 with no codec chunking",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-znochunk.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.leeway4_min_ms",
+   "label": "C-pipe4 with a 4 MiB level-19 gate leeway",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-leeway4.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.chunk16k_min_ms",
+   "label": "C-pipe4 with 16 KiB codec chunks",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-zchunk16384.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.pipe2_min_ms",
+   "label": "Pipeline at 2 workers",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe2.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.pipe8_min_ms",
+   "label": "Pipeline at 8 workers",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe8.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.tokens1_min_ms",
+   "label": "Pipeline with 1 CPU token",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-tokens1.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.tokens2_min_ms",
+   "label": "Pipeline with 2 CPU tokens",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-tokens2.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.tokens4_min_ms",
+   "label": "Pipeline with 4 CPU tokens",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-tokens4.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.sync16_min_ms",
+   "label": "Pipeline with a 16 MiB sync granularity",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-sync16.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.sync32_min_ms",
+   "label": "Pipeline with a 32 MiB sync granularity",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-sync32.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.seq_min_ms",
+   "label": "Sequential writer C",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.legacy_min_ms",
+   "label": "Exhaustive planner C-legacy",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-legacy.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.ratio",
+   "label": "R22 wall as a multiple of native A",
+   "unit": "x",
+   "group": "write",
+   "format": "fixed:2",
+   "expr": "{write.r22.min_ms} / {write.a.min_ms}"
+  },
+  {
+   "key": "write.reduction_pct",
+   "label": "Footprint reduction against native A",
+   "unit": "%",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "100 * (1 - {write.r22.footprint_b} / {write.a.footprint_b})"
+  },
+  {
+   "key": "ladder.r17_ms",
+   "label": "R17 write wall (attribution baseline)",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+   "path": "configs.C.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T054124Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "d1893e1abd056e25e0957ddacab232e86cdea888"
+  },
+  {
+   "key": "ladder.r17_footprint_b",
+   "label": "R17 footprint",
+   "unit": "B",
+   "group": "ladder",
+   "format": "int",
+   "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+   "path": "configs.C.physical_footprint_bytes.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T054124Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "d1893e1abd056e25e0957ddacab232e86cdea888"
+  },
+  {
+   "key": "ladder.r17_zstd19_ms",
+   "label": "R17 level-19 ZSTD encode, selected for zero tensors",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+   "path": "configs.C.attribution_rep.ledger.prepare_breakdown.encode_zstd_level19_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T054124Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "d1893e1abd056e25e0957ddacab232e86cdea888"
+  },
+  {
+   "key": "ladder.r18_ms",
+   "label": "R18 write wall, least-contended",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+   "path": "headline.c_two_stage_wall_ms_min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T081151Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4c6a9abc640c765a928fe4db20ac75bd29765c79"
+  },
+  {
+   "key": "ladder.r18_med_ms",
+   "label": "R18 write wall, median",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+   "path": "headline.c_two_stage_wall_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T081151Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4c6a9abc640c765a928fe4db20ac75bd29765c79"
+  },
+  {
+   "key": "ladder.r18_footprint_b",
+   "label": "R18 footprint",
+   "unit": "B",
+   "group": "ladder",
+   "format": "int",
+   "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+   "path": "headline.footprint_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T081151Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4c6a9abc640c765a928fe4db20ac75bd29765c79"
+  },
+  {
+   "key": "ladder.r19_ms",
+   "label": "R19 write wall",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+   "path": "configs.C.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T100622Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "c3f5e1a5d9880d51b020b37705e7611eca72a575"
+  },
+  {
+   "key": "ladder.r20_ms",
+   "label": "R20 write wall",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+   "path": "configs.C.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T125513Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ad0ca3be596c08b607b9be700545713c46c22bbc"
+  },
+  {
+   "key": "ladder.r21_ms",
+   "label": "R21 write wall",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+   "path": "configs.C-pipe4.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T155655Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "209858e04b60d4877f83ca4630163816ff507549"
+  },
+  {
+   "key": "ladder.r19_encode_before_ms",
+   "label": "Mode-9 encode before R19",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+   "path": "totals.before_encode_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T102632Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "c3f5e1a5d9880d51b020b37705e7611eca72a575"
+  },
+  {
+   "key": "ladder.r19_encode_after_ms",
+   "label": "Mode-9 encode after R19, sequential",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+   "path": "totals.after_encode_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T102632Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "c3f5e1a5d9880d51b020b37705e7611eca72a575"
+  },
+  {
+   "key": "ladder.r19_encode_threaded_ms",
+   "label": "Mode-9 encode after R19, four emission threads",
+   "unit": "ms",
+   "group": "ladder",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+   "path": "totals.after_threaded_encode_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T102632Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "c3f5e1a5d9880d51b020b37705e7611eca72a575"
+  },
+  {
+   "key": "ladder.r19_speedup",
+   "label": "R19 mode-9 encoder speed-up, sequential",
+   "unit": "x",
+   "group": "ladder",
+   "format": "fixed:2",
+   "expr": "{ladder.r19_encode_before_ms} / {ladder.r19_encode_after_ms}"
+  },
+  {
+   "key": "ladder.r19_speedup_threaded",
+   "label": "R19 mode-9 encoder speed-up, four threads",
+   "unit": "x",
+   "group": "ladder",
+   "format": "fixed:2",
+   "expr": "{ladder.r19_encode_before_ms} / {ladder.r19_encode_threaded_ms}"
+  },
+  {
+   "key": "write.speedup_r17",
+   "label": "Speed-up from R17 to R22",
+   "unit": "x",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "{ladder.r17_ms} / {write.r22.min_ms}"
+  },
+  {
+   "key": "session.persave_warm_p50_ms",
+   "label": "Warm completion p50, one service per save",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+   "path": "cells.4.weft.completion_warm.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T220500Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "76f098134085d7fee331a61eba569923256b12eb"
+  },
+  {
+   "key": "session.session_warm_p50_ms",
+   "label": "Warm completion p50, reused CheckpointSession",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+   "path": "cells.4.weft-session.completion_warm.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T220500Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "76f098134085d7fee331a61eba569923256b12eb"
+  },
+  {
+   "key": "session.persave_loop_wall_ms",
+   "label": "Loop wall, one service per save",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+   "path": "cells.4.weft.loop_wall_ms_median",
+   "stamp_path": "stamp",
+   "stamp": "20261111T220500Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "76f098134085d7fee331a61eba569923256b12eb"
+  },
+  {
+   "key": "session.session_loop_wall_ms",
+   "label": "Loop wall, reused CheckpointSession",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+   "path": "cells.4.weft-session.loop_wall_ms_median",
+   "stamp_path": "stamp",
+   "stamp": "20261111T220500Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "76f098134085d7fee331a61eba569923256b12eb"
+  },
+  {
+   "key": "session.persave_pause_p50_ms",
+   "label": "Training-thread pause p50, one service per save",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+   "path": "cells.4.weft.pause_ms_p50_pooled",
+   "stamp_path": "stamp",
+   "stamp": "20261111T220500Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "76f098134085d7fee331a61eba569923256b12eb"
+  },
+  {
+   "key": "session.session_pause_p50_ms",
+   "label": "Training-thread pause p50, reused session",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+   "path": "cells.4.weft-session.pause_ms_p50_pooled",
+   "stamp_path": "stamp",
+   "stamp": "20261111T220500Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "76f098134085d7fee331a61eba569923256b12eb"
+  },
+  {
+   "key": "queue.baseline_wall_ms",
+   "label": "1-step loop wall before the admission bound",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/checkpoint-queue-sweep-baseline-20261112T020000Z.json",
+   "path": "sweep.cells.1.weft-session.loop_wall_ms_median",
+   "stamp_path": "stamp",
+   "stamp": "20261112T020000Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "de210a62c6fcf1e00d94e00cc215c3e36d1c386a"
+  },
+  {
+   "key": "queue.baseline_warm_p50_ms",
+   "label": "Warm completion p50 before the admission bound",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/checkpoint-queue-sweep-baseline-20261112T020000Z.json",
+   "path": "sweep.cells.1.weft-session.completion_warm.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261112T020000Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "de210a62c6fcf1e00d94e00cc215c3e36d1c386a"
+  },
+  {
+   "key": "queue.bounded_wall_ms",
+   "label": "1-step loop wall at max_outstanding=2",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/checkpoint-queue-bound-after-20261112T043000Z.json",
+   "list": "bound_sweep.rows",
+   "where": {
+    "interval_steps": 1,
+    "max_outstanding": 2
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261112T043000Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "1d716632d02440e9d0b443dff5207a69d83cfe4f",
+   "select_path": "loop_wall_ms_median"
+  },
+  {
+   "key": "queue.bounded_warm_p50_ms",
+   "label": "Warm completion p50 at max_outstanding=2",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/checkpoint-queue-bound-after-20261112T043000Z.json",
+   "list": "bound_sweep.rows",
+   "where": {
+    "interval_steps": 1,
+    "max_outstanding": 2
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261112T043000Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "1d716632d02440e9d0b443dff5207a69d83cfe4f",
+   "select_path": "completion_warm.p50_ms"
+  },
+  {
+   "key": "queue.bounded_warm_p95_ms",
+   "label": "Warm completion p95 at max_outstanding=2",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/checkpoint-queue-bound-after-20261112T043000Z.json",
+   "list": "bound_sweep.rows",
+   "where": {
+    "interval_steps": 1,
+    "max_outstanding": 2
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261112T043000Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "1d716632d02440e9d0b443dff5207a69d83cfe4f",
+   "select_path": "completion_warm.p95_ms"
+  },
+  {
+   "key": "index.baseline_commit_p50_ms",
+   "label": "Commit p50 at 1k generations, before",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/incremental-index-20261111T220000Z-baseline-delta-live64.json",
+   "path": "run.samples.0.commit_ms.p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261111T220000Z-baseline-delta-live64",
+   "revision_path": "revision",
+   "revision": "b69fa0ef6a410d41560a93d0a7571ce74b73da6d"
+  },
+  {
+   "key": "index.post_commit_p50_ms",
+   "label": "Commit p50 at 1k generations, after",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
+   "path": "run.samples.0.commit_ms.p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261111T230000Z-post-delta-live64",
+   "revision_path": "revision",
+   "revision": "036add1a91db97c93e512a6544fb6756f912fea6"
+  },
+  {
+   "key": "index.post_commit_p50_100k_ms",
+   "label": "Commit p50 at 100k generations, after",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
+   "path": "run.samples.2.commit_ms.p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261111T230000Z-post-delta-live64",
+   "revision_path": "revision",
+   "revision": "036add1a91db97c93e512a6544fb6756f912fea6"
+  },
+  {
+   "key": "index.live10k_baseline_ms",
+   "label": "Commit p50 at 10k live objects, before",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/incremental-index-20261111T222000Z-baseline-delta-live10000.json",
+   "path": "run.samples.0.commit_ms.p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261111T222000Z-baseline-delta-live10000",
+   "revision_path": "revision",
+   "revision": "b69fa0ef6a410d41560a93d0a7571ce74b73da6d"
+  },
+  {
+   "key": "index.live10k_post_ms",
+   "label": "Commit p50 at 10k live objects, after",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/incremental-index-20261111T235000Z-post-delta-live10000.json",
+   "path": "run.samples.0.commit_ms.p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261111T235000Z-post-delta-live10000",
+   "revision_path": "revision",
+   "revision": "036add1a91db97c93e512a6544fb6756f912fea6"
+  },
+  {
+   "key": "dcp.reference_p50_ms",
+   "label": "DCP metadata, reference Python encoder",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-metadata-20261111T230500Z.json",
+   "path": "sizes.3.shipped.total.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T230500Z",
+   "revision_path": "environment.repo_weftfs",
+   "revision": "11230b33fe37817aab2d6c32f728e75dce085181"
+  },
+  {
+   "key": "dcp.path_p50_ms",
+   "label": "DCP metadata, plan path after the first call",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+   "path": "sizes.3.path.later.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T235500Z",
+   "revision_path": "environment.repo_weftfs",
+   "revision": "4947ef232ae4e2def1b75f52f7edf25204e24bcf"
+  },
+  {
+   "key": "dcp.path_first_ms",
+   "label": "DCP metadata, first call (plan build)",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+   "path": "sizes.3.path.first_call_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T235500Z",
+   "revision_path": "environment.repo_weftfs",
+   "revision": "4947ef232ae4e2def1b75f52f7edf25204e24bcf"
+  },
+  {
+   "key": "dcp.plan_assemble_ms",
+   "label": "DCP metadata, plan assembly",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+   "path": "sizes.3.alternatives.plan_assemble.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T235500Z",
+   "revision_path": "environment.repo_weftfs",
+   "revision": "4947ef232ae4e2def1b75f52f7edf25204e24bcf"
+  },
+  {
+   "key": "dcp.plan_match_ms",
+   "label": "DCP metadata, plan/oracle equality signature",
+   "unit": "ms",
+   "group": "r12c",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+   "path": "sizes.3.alternatives.plan_matches.p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261111T235500Z",
+   "revision_path": "environment.repo_weftfs",
+   "revision": "4947ef232ae4e2def1b75f52f7edf25204e24bcf"
+  },
+  {
+   "key": "family.total_b",
+   "label": "Qwen2.5-0.5B base+Instruct store total",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "storage.family.store_total_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.data_b",
+   "label": "Qwen2.5-0.5B base+Instruct tensor data only",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "storage.family.data_only_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.indexes_b",
+   "label": "Qwen2.5-0.5B base+Instruct index bytes",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "storage.family.indexes_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.zipnn_b",
+   "label": "ZipNN 0.5.4 whole-file total",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "storage.comparison.zipnn_0_5_4_total_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.independent_zstd_b",
+   "label": "Independent per-tensor zstd -19 total",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/real-model-20261105T012000Z.json",
+   "path": "comparison.totals_bytes.zstd_19_independent",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-05T01:23:56Z",
+   "revision_path": "environment.revisions.weftfs",
+   "revision": "1362a46ee372aa1c5835308b019a13349accd1c9"
+  },
+  {
+   "key": "family.base_read_ms",
+   "label": "Qwen base full restore, read",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "restore.full.base.read_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.instruct_read_ms",
+   "label": "Qwen Instruct full restore, read",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "restore.full.instruct.read_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.base_materialize_ms",
+   "label": "Qwen base full restore, materialize",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "path": "restore.full.base.materialize_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "2026-11-06T03:53:16Z",
+   "revision_path": "environment.weftfs_revision",
+   "revision": "ba5a0e66ddbafc33dbbe3990bbab02b62e41ec66"
+  },
+  {
+   "key": "family.zipnn_delta_pct",
+   "label": "Store total under ZipNN",
+   "unit": "%",
+   "group": "storage",
+   "format": "fixed:2",
+   "expr": "100 * (1 - {family.total_b} / {family.zipnn_b})"
+  },
+  {
+   "key": "family.zstd_delta_pct",
+   "label": "Store total under independent per-tensor zstd -19",
+   "unit": "%",
+   "group": "storage",
+   "format": "fixed:1",
+   "expr": "100 * (1 - {family.total_b} / {family.independent_zstd_b})"
+  },
+  {
+   "key": "tiles.row1_mode9_ms",
+   "label": "1-row embedding read, one mode-9 frame",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "read",
+    "strategy": "float-tensor",
+    "shape": "region_1_row",
+    "threads": 1
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z",
+   "revision_note": "the receipt records no VCS revision; it is identified by its stamp and content",
+   "select_path": "median_ms"
+  },
+  {
+   "key": "tiles.row1_tiled_ms",
+   "label": "1-row embedding read, tiled",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "read",
+    "strategy": "float-tiled",
+    "shape": "region_1_row",
+    "threads": 1
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z",
+   "revision_note": "the receipt records no VCS revision; it is identified by its stamp and content",
+   "select_path": "median_ms"
+  },
+  {
+   "key": "tiles.row100_mode9_ms",
+   "label": "100-row embedding read, one mode-9 frame",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "read",
+    "strategy": "float-tensor",
+    "shape": "region_100_rows",
+    "threads": 1
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z",
+   "revision_note": "the receipt records no VCS revision; it is identified by its stamp and content",
+   "select_path": "median_ms"
+  },
+  {
+   "key": "tiles.row100_tiled_ms",
+   "label": "100-row embedding read, tiled",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "read",
+    "strategy": "float-tiled",
+    "shape": "region_100_rows",
+    "threads": 1
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z",
+   "revision_note": "the receipt records no VCS revision; it is identified by its stamp and content",
+   "select_path": "median_ms"
+  },
+  {
+   "key": "tiles.write_mode9_b",
+   "label": "Embedding physical bytes, one mode-9 frame",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "write",
+    "strategy": "float-tensor"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z",
+   "revision_note": "the receipt records no VCS revision; it is identified by its stamp and content",
+   "select_path": "physical_bytes"
+  },
+  {
+   "key": "tiles.write_tiled_b",
+   "label": "Embedding physical bytes, tiled",
+   "unit": "B",
+   "group": "storage",
+   "format": "int",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "write",
+    "strategy": "float-tiled"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z",
+   "revision_note": "the receipt records no VCS revision; it is identified by its stamp and content",
+   "select_path": "physical_bytes"
+  },
+  {
+   "key": "tiles.byte_overhead_pct",
+   "label": "Tiled byte overhead on the embedding",
+   "unit": "%",
+   "group": "storage",
+   "format": "fixed:2",
+   "expr": "100 * ({tiles.write_tiled_b} / {tiles.write_mode9_b} - 1)"
+  },
+  {
+   "key": "tiles.speedup_row1",
+   "label": "1-row read speed-up from tiling",
+   "unit": "x",
+   "group": "storage",
+   "format": "fixed:0",
+   "expr": "{tiles.row1_mode9_ms} / {tiles.row1_tiled_ms}"
+  },
+  {
+   "key": "tiles.speedup_row100",
+   "label": "100-row read speed-up from tiling",
+   "unit": "x",
+   "group": "storage",
+   "format": "fixed:0",
+   "expr": "{tiles.row100_mode9_ms} / {tiles.row100_tiled_ms}"
+  },
+  {
+   "key": "mw.n1_tx_s",
+   "label": "MW2 local throughput at N=1, disjoint",
+   "unit": "tx/s",
+   "group": "multiwriter",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/bench-multiwriter-20261109T150423Z.json",
+   "list": "rows",
+   "where": {
+    "backend": "local",
+    "distribution": "disjoint",
+    "n": 1
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261109T150423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4",
+   "select_path": "throughput_tx_s"
+  },
+  {
+   "key": "mw.n32_tx_s",
+   "label": "MW2 local throughput at N=32, disjoint",
+   "unit": "tx/s",
+   "group": "multiwriter",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/bench-multiwriter-20261109T150423Z.json",
+   "list": "rows",
+   "where": {
+    "backend": "local",
+    "distribution": "disjoint",
+    "n": 32
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261109T150423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4",
+   "select_path": "throughput_tx_s"
+  },
+  {
+   "key": "mw.n32_efficiency",
+   "label": "MW2 scaling efficiency at N=32",
+   "unit": "ratio",
+   "group": "multiwriter",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/bench-multiwriter-20261109T150423Z.json",
+   "list": "rows",
+   "where": {
+    "backend": "local",
+    "distribution": "disjoint",
+    "n": 32
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261109T150423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4",
+   "select_path": "scaling_efficiency"
+  },
+  {
+   "key": "mw.minio_n4_tx_s",
+   "label": "MW2 MinIO throughput at N=4",
+   "unit": "tx/s",
+   "group": "multiwriter",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/bench-multiwriter-20261109T150423Z.json",
+   "list": "rows",
+   "where": {
+    "backend": "s3",
+    "distribution": "disjoint",
+    "n": 4
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261109T150423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4",
+   "select_path": "throughput_tx_s"
+  },
+  {
+   "key": "mw.n32_retry_amp",
+   "label": "MW2 retry amplification at N=32",
+   "unit": "ratio",
+   "group": "storage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/bench-multiwriter-20261109T150423Z.json",
+   "path": "rows.5.retry_amplification",
+   "stamp_path": "stamp",
+   "stamp": "20261109T150423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "b0bcbc5e4ded3b909305063656a2fe7c69ae2ee4"
+  },
+  {
+   "key": "verify.courts",
+   "label": "Courts in the cited aggregate",
+   "unit": "courts",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.json",
+   "path": "summary.courts",
+   "stamp_path": "timestamp_utc",
+   "stamp": "20261111T182601Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "3ab54c75b7205e9897e185aa1fac670b6dff16ff"
+  },
+  {
+   "key": "verify.passed",
+   "label": "Courts passed",
+   "unit": "courts",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.json",
+   "path": "summary.passed",
+   "stamp_path": "timestamp_utc",
+   "stamp": "20261111T182601Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "3ab54c75b7205e9897e185aa1fac670b6dff16ff"
+  },
+  {
+   "key": "verify.failed",
+   "label": "Courts failed",
+   "unit": "courts",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.json",
+   "path": "summary.failed",
+   "stamp_path": "timestamp_utc",
+   "stamp": "20261111T182601Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "3ab54c75b7205e9897e185aa1fac670b6dff16ff"
+  },
+  {
+   "key": "verify.skipped",
+   "label": "Courts skipped",
+   "unit": "courts",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.json",
+   "path": "summary.skipped",
+   "stamp_path": "timestamp_utc",
+   "stamp": "20261111T182601Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "3ab54c75b7205e9897e185aa1fac670b6dff16ff"
+  },
+  {
+   "key": "verify.stamp",
+   "label": "Aggregate stamp",
+   "unit": "text",
+   "group": "verification",
+   "format": "text",
+   "receipt": "bench/receipts/verify-20261111T182601Z.json",
+   "path": "timestamp_utc",
+   "stamp_path": "timestamp_utc",
+   "stamp": "20261111T182601Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "3ab54c75b7205e9897e185aa1fac670b6dff16ff"
+  },
+  {
+   "key": "verify.revision",
+   "label": "Aggregate WeftFS revision",
+   "unit": "text",
+   "group": "verification",
+   "format": "text",
+   "receipt": "bench/receipts/verify-20261111T182601Z.json",
+   "path": "revisions.WeftFS",
+   "stamp_path": "timestamp_utc",
+   "stamp": "20261111T182601Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "3ab54c75b7205e9897e185aa1fac670b6dff16ff"
+  },
+  {
+   "key": "conformance.vectors",
+   "label": "Conformance vectors in the manifest",
+   "unit": "vectors",
+   "group": "verification",
+   "format": "int",
+   "receipt": "conformance/manifest.json",
+   "path": "vector_count",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_note": "the file carries no timestamp; its content digest is the freshness anchor",
+   "digest_path": "aggregate_sha256",
+   "digest": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8"
+  },
+  {
+   "key": "conformance.aggregate",
+   "label": "Conformance manifest aggregate SHA-256",
+   "unit": "text",
+   "group": "verification",
+   "format": "text",
+   "receipt": "conformance/manifest.json",
+   "path": "aggregate_sha256",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_note": "the file carries no timestamp; its content digest is the freshness anchor",
+   "digest_path": "aggregate_sha256",
+   "digest": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8"
+  },
+  {
+   "key": "claims.count",
+   "label": "Entries in the claims manifest",
+   "unit": "claims",
+   "group": "verification",
+   "format": "int",
+   "count_of": "docs/claims.json"
+  },
+  {
+   "key": "crash.requested",
+   "label": "Crash-torture iterations requested",
+   "unit": "iterations",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/crash-torture-20261104T104233Z.json",
+   "list": "steps.0.assertions",
+   "where": {
+    "name": "iterations requested"
+   },
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-04T10:42:33Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "380ea475448365823e476c51975b4e596c0b07c5",
+   "select_path": "actual"
+  },
+  {
+   "key": "crash.bad",
+   "label": "Crash-torture bad states",
+   "unit": "states",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/crash-torture-20261104T104233Z.json",
+   "list": "steps.0.assertions",
+   "where": {
+    "name": "verify bad states"
+   },
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-04T10:42:33Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "380ea475448365823e476c51975b4e596c0b07c5",
+   "select_path": "actual"
+  },
+  {
+   "key": "minio.c_storage_reduction_pct",
+   "label": "MinIO planned-writer storage reduction vs A",
+   "unit": "%",
+   "group": "storage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/augmentation-minio-20261112T240000Z.json",
+   "path": "deltas_vs_A.C.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T204955Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "hist.r3.c_wall_ms",
+   "label": "R3 planned write wall (historical)",
+   "unit": "ms",
+   "group": "history",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+   "path": "configurations.C.write.wall_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261109T134244Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "2fb4e4b7fa5e0bc79db15118dc17e129232521ca"
+  },
+  {
+   "key": "hist.r3.a_wall_ms",
+   "label": "R3 native control wall (historical)",
+   "unit": "ms",
+   "group": "history",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+   "path": "configurations.A.write.wall_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261109T134244Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "2fb4e4b7fa5e0bc79db15118dc17e129232521ca"
+  },
+  {
+   "key": "hist.r3.ratio",
+   "label": "R3 write ratio versus native (historical)",
+   "unit": "x",
+   "group": "history",
+   "format": "trunc:1",
+   "expr": "{hist.r3.c_wall_ms} / {hist.r3.a_wall_ms}"
+  },
+  {
+   "key": "hist.r3.reduction_pct",
+   "label": "R3 storage reduction (historical)",
+   "unit": "%",
+   "group": "history",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-local-20261109T134132Z.json",
+   "path": "deltas_vs_A.C.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261109T134244Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "2fb4e4b7fa5e0bc79db15118dc17e129232521ca"
+  },
+  {
+   "key": "tests.rust_store_passed",
+   "label": "Rust all-targets tests passed",
+   "unit": "tests",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.tests.json",
+   "path": "courts.rust_store.passed",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_path": null,
+   "revision": null
+  },
+  {
+   "key": "tests.rust_store_binaries",
+   "label": "Rust all-targets test-result lines (one per binary)",
+   "unit": "tests",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.tests.json",
+   "path": "courts.rust_store.test_result_lines",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_path": null,
+   "revision": null
+  },
+  {
+   "key": "tests.rust_fuse_passed",
+   "label": "FUSE all-targets tests passed",
+   "unit": "tests",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.tests.json",
+   "path": "courts.rust_fuse.passed",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_path": null,
+   "revision": null
+  },
+  {
+   "key": "tests.rust_fuse_failed",
+   "label": "FUSE all-targets tests failed",
+   "unit": "tests",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.tests.json",
+   "path": "courts.rust_fuse.failed",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_path": null,
+   "revision": null
+  },
+  {
+   "key": "tests.rust_fuse_ignored",
+   "label": "FUSE all-targets tests ignored",
+   "unit": "tests",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.tests.json",
+   "path": "courts.rust_fuse.ignored",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_path": null,
+   "revision": null
+  },
+  {
+   "key": "tests.rust_codec_passed",
+   "label": "WeftCodec all-targets tests passed",
+   "unit": "tests",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/verify-20261111T182601Z.tests.json",
+   "path": "courts.rust_codec.passed",
+   "stamp_path": null,
+   "stamp": null,
+   "revision_path": null,
+   "revision": null
+  },
+  {
+   "key": "write.r22.znochunk_footprint_b",
+   "label": "C-pipe4 with no codec chunking, footprint",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-znochunk.physical_footprint_bytes.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r17_zstd19_share_pct",
+   "label": "R17 level-19 encode share of the wall",
+   "unit": "%",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "100 * {ladder.r17_zstd19_ms} / {ladder.r17_ms}"
+  },
+  {
+   "key": "write.r22.znochunk_saved_b",
+   "label": "Bytes saved by dropping codec chunking",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "expr": "{write.r22.footprint_b} - {write.r22.znochunk_footprint_b}"
+  },
+  {
+   "key": "write.r22.leeway_ratio",
+   "label": "Leeway-gate wall as a multiple of the default",
+   "unit": "x",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "{write.r22.leeway4_min_ms} / {write.r22.min_ms}"
+  },
+  {
+   "key": "write.r22.chunk16k_overhead_pct",
+   "label": "16 KiB chunks versus 64 KiB, wall",
+   "unit": "%",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "100 * ({write.r22.chunk16k_min_ms} / {write.r22.min_ms} - 1)"
+  },
+  {
+   "key": "write.r22.cpu_ratio",
+   "label": "CPU as a multiple of native",
+   "unit": "x",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "{write.r22.cpu_ms} / {write.a.cpu_ms}"
+  },
+  {
+   "key": "write.r22.rss_ratio",
+   "label": "Peak RSS as a multiple of native",
+   "unit": "x",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "{write.r22.rss_kib} / {write.a.rss_kib}"
+  },
+  {
+   "key": "write.r22.pack_ratio",
+   "label": "Pack plane wall as a multiple of the default",
+   "unit": "x",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "{write.r22.pack_min_ms} / {write.r22.min_ms}"
+  },
+  {
+   "key": "write.r22.rss_court_pct",
+   "label": "Peak RSS as a share of the 3 GiB court",
+   "unit": "%",
+   "group": "write",
+   "format": "fixed:1",
+   "expr": "100 * {write.r22.rss_kib} / 3145728"
+  },
+  {
+   "key": "write.r22.barrier_mbps",
+   "label": "Early-barrier writeback throughput",
+   "unit": "MB/s",
+   "group": "write",
+   "format": "fixed:0",
+   "expr": "{write.r22.written_b} / {write.r22.barrier_ms} / 1000"
+  },
+  {
+   "key": "write.a.mbps",
+   "label": "Native control write throughput",
+   "unit": "MB/s",
+   "group": "write",
+   "format": "fixed:0",
+   "expr": "{write.a.footprint_b} / {write.a.min_ms} / 1000"
+  },
+  {
+   "key": "pareto.configs",
+   "label": "Configurations in the R22 sweep",
+   "unit": "configs",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "count_path": "configs",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "pareto.checks",
+   "label": "Checks passed by the R22 sweep",
+   "unit": "checks",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "count_path": "checks",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "pareto.reps",
+   "label": "Interleaved repetitions per configuration",
+   "unit": "reps",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.A.reps",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.fixture.logical_b",
+   "label": "Logical bytes of the 101-tensor fixture",
+   "unit": "B",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "subset.logical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.fixture.tensors",
+   "label": "Tensors in the fixture",
+   "unit": "tensors",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "subset.tensor_count",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "analyze.histogram_ms",
+   "label": "Mode-9 exponent histogram, embedding",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/zstd-chunk-parallel-20261112T231500Z.json",
+   "path": "histogram_rows.0.median_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261112T204529Z",
+   "revision_path": "revision.weftfs",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "analyze.histogram_gbps",
+   "label": "Mode-9 exponent histogram throughput",
+   "unit": "GB/s",
+   "group": "write",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/zstd-chunk-parallel-20261112T231500Z.json",
+   "path": "histogram_rows.0.gigabytes_per_second",
+   "stamp_path": "stamp",
+   "stamp": "20261112T204529Z",
+   "revision_path": "revision.weftfs",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.seq_rss_kib",
+   "label": "Sequential writer C peak RSS",
+   "unit": "KiB",
+   "group": "write",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C.peak_rss_kib.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "write.r22.zpar1_min_ms",
+   "label": "C-pipe4 with chunk-parallel ZSTD at one thread",
+   "unit": "ms",
+   "group": "write",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+   "path": "configs.C-pipe4-zpar1.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261112T202816Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  }
+ ],
+ "blocks": [
+  {
+   "id": "readme-current-result",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Current measured result (staging).** The durable write of the frozen"
+    },
+    {
+     "template": "101-tensor Qwen2.5-0.5B-Instruct fixture (424,439,296 logical bytes) takes"
+    },
+    {
+     "template": "**{{write.r22.min_ms}} ms** least-contended and **{{write.r22.med_ms}} ms** median"
+    },
+    {
+     "template": "on 4 CPUs in the 3 GiB court, and publishes **{{write.r22.footprint_b}} B** \u2014"
+    },
+    {
+     "template": "**{{write.reduction_pct}} %** fewer physical bytes than the same backend's native"
+    },
+    {
+     "template": "per-tensor write (**{{write.a.min_ms}} ms**, {{write.a.footprint_b}} B), which is"
+    },
+    {
+     "template": "**{{write.ratio}}\u00d7** the native wall. All 101 restores are byte-exact. Source:"
+    },
+    {
+     "template": "receipt `{{write.r22.min_ms|receipt}}` (stamp {{write.r22.min_ms|stamp}}, revision"
+    },
+    {
+     "template": "{{write.r22.min_ms|revision}}); every rung and every loss is in"
+    },
+    {
+     "template": "[`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md)."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "The paper's abstract still leads with the **pre-R17** measurement \u2014"
+    },
+    {
+     "template": "**{{hist.r3.ratio}}\u00d7 slower to write for {{hist.r3.reduction_pct}} % fewer physical bytes** \u2014 because that is what"
+    },
+    {
+     "template": "the R3 court measured"
+    },
+    {
+     "template": "(`{{hist.r3.ratio|receipt}}`, stamp {{hist.r3.ratio|stamp}}, revision"
+    },
+    {
+     "template": "{{hist.r3.ratio|revision}}). The R17\u2013R22 ladder supersedes it; the historical"
+    },
+    {
+     "template": "number is retained here and in the paper rather than rewritten."
+    }
+   ]
+  },
+  {
+   "id": "readme-what-is-measured",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Question | Result from a receipt | Where |"
+    },
+    {
+     "template": "|---|---|---|"
+    },
+    {
+     "template": "| Does reconstruction reduce stored bytes? | Qwen2.5-0.5B base \u2192 Instruct family: **{{family.total_b}} B** (**{{family.data_b}} B** of tensor data) versus **{{family.independent_zstd_b}} B** for independent per-tensor `zstd -19` (**{{family.zstd_delta_pct}} %** smaller) and **{{family.zipnn_b}} B** for ZipNN 0.5.4 (**{{family.zipnn_delta_pct}} %** under). | `{{family.total_b|receipt}}`, `{{family.independent_zstd_b|receipt}}` (stamp {{family.total_b|stamp}}, revision {{family.total_b|revision}}), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md) |"
+    },
+    {
+     "template": "| Does independent tiling make region reads cheap? | Qwen embedding one-row read: **{{tiles.row1_mode9_ms}} ms** as one mode-9 frame \u2192 **{{tiles.row1_tiled_ms}} ms** with tiles (**{{tiles.speedup_row1}}\u00d7**), at **+{{tiles.byte_overhead_pct}} %** physical bytes; a 100-row read falls from **{{tiles.row100_mode9_ms}} ms** to **{{tiles.row100_tiled_ms}} ms** (**{{tiles.speedup_row100}}\u00d7**). | `{{tiles.row1_mode9_ms|receipt}}` (stamp {{tiles.row1_mode9_ms|stamp}}, revision {{tiles.row1_mode9_ms|revision}}), [`bench/RESULTS-mode17.md`](bench/RESULTS-mode17.md) |"
+    },
+    {
+     "template": "| What exactness and recovery evidence exists? | **{{verify.passed}}/{{verify.courts}}** verification courts pass at parent `{{verify.revision|revision}}` (stamp {{verify.stamp}}); **{{conformance.vectors}}** conformance vectors; **{{crash.requested}}/{{crash.requested}}** crash iterations with **{{crash.bad}}** bad states. | `{{verify.passed|receipt}}`, `conformance/manifest.json`, `{{crash.requested|receipt}}` |"
+    },
+    {
+     "template": "| Does multi-writer publication scale? | **No, and it is published as a loss:** {{mw.n1_tx_s}} tx/s at N=1 \u2192 {{mw.n32_tx_s}} tx/s at N=32 (efficiency **{{mw.n32_efficiency}}**) on the local backend; a hot name yields exactly one winner and typed conflicts. MinIO N=4: {{mw.minio_n4_tx_s}} tx/s. | `{{mw.n1_tx_s|receipt}}` (stamp {{mw.n1_tx_s|stamp}}, revision {{mw.n1_tx_s|revision}}), [`bench/RESULTS-multiwriter.md`](bench/RESULTS-multiwriter.md) |"
+    }
+   ]
+  },
+  {
+   "id": "readme-p4",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Implemented** (store core, no FUSE) \u2014 the Rust all-targets suite passes: **{{tests.rust_store_passed}}** tests in {{tests.rust_store_binaries}} test-result groups, 0 failed, in the {{verify.passed}}/{{verify.courts}} aggregate; see [`docs/store-status.md`](docs/store-status.md)"
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "readme-p5",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Implemented** \u2014 the FUSE all-targets suite passes: **{{tests.rust_fuse_passed}}** passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} `#[ignore]`d in the {{verify.passed}}/{{verify.courts}} aggregate log; ownership needs `CAP_SETUID`, and same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately \u2014 see [`docs/fuse-status.md`](docs/fuse-status.md)"
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "readme-p7",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**v1.4.0 released** \u2014 per-repo GHCR images and crates.io crates, per-repo GitHub releases, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-{{verify.stamp}}.json` (**{{verify.passed}}/{{verify.courts}}**, {{verify.failed}} failed, {{verify.skipped}} skipped) at parent `{{verify.revision|revision}}`. The authoritative inventory is `scripts/verify-all.sh`. Losses and gaps are published in the `bench/RESULTS-*.md` files listed there; no performance-superiority claim is made. See [`docs/RELEASE-v1.4.0.md`](docs/RELEASE-v1.4.0.md); the previous release note is [`docs/RELEASE-v1.3.0.md`](docs/RELEASE-v1.3.0.md)."
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "readme-v140",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "- **The compressed write, {{write.speedup_r17}}\u00d7 faster and still not at native parity.** The"
+    },
+    {
+     "template": "  durable write of the 101-tensor fixture goes from **{{ladder.r17_ms}} ms** (R17, where"
+    },
+    {
+     "template": "  ZSTD-19 was {{ladder.r17_zstd19_ms}} ms \u2014 the largest single term \u2014 for zero chosen tensors) to"
+    },
+    {
+     "template": "  **{{write.r22.min_ms}} ms** least-contended / {{write.r22.med_ms}} ms median (R22) at an"
+    },
+    {
+     "template": "  unchanged **{{write.r22.footprint_b}} B** \u2014 {{write.reduction_pct}} % below the native control's"
+    },
+    {
+     "template": "  {{write.a.footprint_b}} B. G1/G2/G3 are met; the \u2264 336 ms native rung is **not**"
+    },
+    {
+     "template": "  ({{write.ratio}}\u00d7 A), and the measured limiter (the {{write.r22.barrier_ms}} ms durable"
+    },
+    {
+     "template": "  writeback of {{write.r22.barrier_files}} files plus a {{write.r22.publish_wall_ms}} ms publication wall) is"
+    },
+    {
+     "template": "  stated with the one change most likely to close it. Receipts"
+    },
+    {
+     "template": "  `r22-pareto-20261112T230000Z`, `planner-two-stage-20261112T081151Z`,"
+    },
+    {
+     "template": "  `mode9-encoder-20261112T160000Z`, `r20-publication-20261112T150000Z`,"
+    },
+    {
+     "template": "  `r21-pipeline-20261112T201500Z`; analysis"
+    },
+    {
+     "template": "  [`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md) and"
+    },
+    {
+     "template": "  [`bench/RESULTS-write-cost-ledger.md`](bench/RESULTS-write-cost-ledger.md)."
+    },
+    {
+     "template": "- **Checkpoint sessions and a bounded queue (R12c).** A reused"
+    },
+    {
+     "template": "  `CheckpointSession` takes warm completion p50 from **{{session.persave_warm_p50_ms}} \u2192 {{session.session_warm_p50_ms}} ms** at a"
+    },
+    {
+     "template": "  4-step interval; a bounded queue (default 2 outstanding) turns a timing-decided"
+    },
+    {
+     "template": "  race into a documented admission bound and cuts the 1-step loop wall"
+    },
+    {
+     "template": "  **{{queue.baseline_wall_ms}} \u2192 {{queue.bounded_wall_ms}} ms** with 96/96 saves landed and no silent skip. Losses:"
+    },
+    {
+     "template": "  completion p95 and RSS get worse and the queue cannot make a save finish"
+    },
+    {
+     "template": "  sooner. Receipts `training-goodput-session-20261111T220500Z.json`,"
+    },
+    {
+     "template": "  `checkpoint-queue-bound-after-20261112T043000Z.json`."
+    },
+    {
+     "template": "- **Incremental index and metadata (R12c).** Publish no longer rebuilds the"
+    },
+    {
+     "template": "  selector index: commit p50 is **{{index.baseline_commit_p50_ms}} \u2192 {{index.post_commit_p50_ms}} ms** at 1k"
+    },
+    {
+     "template": "  generations and {{index.post_commit_p50_100k_ms}} ms at 100k, at byte-identical index bytes, with a real GC"
+    },
+    {
+     "template": "  defect (one shared retained-chain bound) found and fixed; DCP metadata encoding falls"
+    },
+    {
+     "template": "  **{{dcp.reference_p50_ms}} \u2192 {{dcp.path_p50_ms}} ms** behind an oracle-checked plan. Analysis"
+    },
+    {
+     "template": "  [`bench/RESULTS-incremental-index.md`](bench/RESULTS-incremental-index.md),"
+    },
+    {
+     "template": "  [`bench/RESULTS-dcp-metadata.md`](bench/RESULTS-dcp-metadata.md)."
+    },
+    {
+     "template": "- **Azure MW2 verified in both languages (R14d).** MW2 is now available on the"
+    },
+    {
+     "template": "  `azure` commit plane in Rust and Go, refused on GCS. The Go half was committed"
+    },
+    {
+     "template": "  unverified and its suite failed; the reproduced failure was Go recovery"
+    },
+    {
+     "template": "  consulting a stale writer `LOCK` record instead of the `writers` policy, fixed"
+    },
+    {
+     "template": "  at one decision point with a regression test for the fail-closed default."
+    },
+    {
+     "template": "  Evidence: `bench/receipts/r14d-go-suite-20261112T221649Z.json`."
+    },
+    {
+     "template": "- **Verification.** `bench/receipts/verify-{{verify.stamp}}.json` \u2014 **{{verify.passed}}/{{verify.courts}}**"
+    },
+    {
+     "template": "  courts pass, {{verify.failed}} failed, {{verify.skipped}} skipped, at parent `{{verify.revision|revision}}`"
+    },
+    {
+     "template": "  (WeftCodec `d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`); **{{conformance.vectors}}**"
+    },
+    {
+     "template": "  conformance vectors, aggregate `{{conformance.aggregate}}`; **{{claims.count}}** audited claims."
+    }
+   ]
+  },
+  {
+   "id": "status-head",
+   "file": "docs/STATUS.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**At a glance (generated from receipts).** v1.4.0 is released. The cited"
+    },
+    {
+     "template": "aggregate is `bench/receipts/verify-{{verify.stamp}}.json` \u2014 **{{verify.passed}}/{{verify.courts}}**"
+    },
+    {
+     "template": "courts pass, {{verify.failed}} failed, {{verify.skipped}} skipped \u2014 at WeftFS"
+    },
+    {
+     "template": "`{{verify.revision}}`. The shipped compressed write is **{{write.r22.min_ms}} ms**"
+    },
+    {
+     "template": "least-contended / {{write.r22.med_ms}} ms median at **{{write.r22.footprint_b}} B**"
+    },
+    {
+     "template": "({{write.reduction_pct}} % below the native control). Rust all-targets"
+    },
+    {
+     "template": "**{{tests.rust_store_passed}}** tests pass; FUSE **{{tests.rust_fuse_passed}}** passed /"
+    },
+    {
+     "template": "{{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} ignored; the conformance manifest holds"
+    },
+    {
+     "template": "**{{conformance.vectors}}** vectors (aggregate `{{conformance.aggregate}}`); **{{claims.count}}** claims are"
+    },
+    {
+     "template": "audited. Every number in this block is emitted by `scripts/perf_numbers.py`"
+    },
+    {
+     "template": "between `BEGIN GENERATED` sentinels and re-validated against its receipt by the"
+    },
+    {
+     "template": "`perf_numbers` court; the entries below this block are a chronological log of"
+    },
+    {
+     "template": "subphases and are quoted with the receipt and revision they were written at."
+    }
+   ]
+  },
+  {
+   "id": "paper-current",
+   "file": "docs/PAPER.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Current state (generated).** The write cost quoted in the abstract is the R3"
+    },
+    {
+     "template": "measurement ({{hist.r3.ratio}}\u00d7 native at {{hist.r3.reduction_pct}} % fewer bytes, receipt"
+    },
+    {
+     "template": "`{{hist.r3.ratio|receipt}}`, stamp {{hist.r3.ratio|stamp}}, revision"
+    },
+    {
+     "template": "{{hist.r3.ratio|revision}}). It has since been superseded by the R17\u2013R22 ladder:"
+    },
+    {
+     "template": "the same fixture now writes in **{{write.r22.min_ms}} ms** least-contended /"
+    },
+    {
+     "template": "{{write.r22.med_ms}} ms median at **{{write.r22.footprint_b}} B**,"
+    },
+    {
+     "template": "**{{write.ratio}}\u00d7** the native control ({{write.a.min_ms}} ms,"
+    },
+    {
+     "template": "{{write.a.footprint_b}} B) for {{write.reduction_pct}} % fewer bytes (receipt"
+    },
+    {
+     "template": "`{{write.r22.min_ms|receipt}}`, stamp {{write.r22.min_ms|stamp}}, revision"
+    },
+    {
+     "template": "{{write.r22.min_ms|revision}}). C4 and C7 are the claims that must be re-read against"
+    },
+    {
+     "template": "the current rung; the R3 numbers below are retained as the historical"
+    },
+    {
+     "template": "measurement they were written from."
+    }
+   ]
+  },
+  {
+   "id": "rfc-conformance",
+   "file": "docs/RFC.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Manifest: **{{conformance.vectors}}** vectors, aggregate"
+    },
+    {
+     "template": "`{{conformance.aggregate}}`; the per-mode distribution is the `modes` object in"
+    },
+    {
+     "template": "`conformance/manifest.json`. Regenerate with"
+    },
+    {
+     "template": "`scripts/gen-conformance-manifest.sh` and check with `--check`;"
+    },
+    {
+     "template": "`scripts/check-conformance-coverage.sh` fails when an allocated mode lacks a"
+    },
+    {
+     "template": "valid and a reject vector."
+    }
+   ]
+  },
+  {
+   "id": "release-short",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Question | Answer |"
+    },
+    {
+     "template": "|---|---|"
+    },
+    {
+     "template": "| Did the compressed write get faster? | **Yes, {{write.speedup_r17}}\u00d7**: {{ladder.r17_ms}} ms at R17 to **{{write.r22.min_ms}} ms** least-contended / {{write.r22.med_ms}} ms median at R22, at the same {{write.r22.footprint_b}} B |"
+    },
+    {
+     "template": "| Did it reach native parity? | **No.** The native per-tensor control A is {{write.a.min_ms}}\u2013{{write.a.med_ms}} ms; {{write.r22.min_ms}} ms is **{{write.ratio}}\u00d7 A**. The \u2264 336 ms rung is **not met**, and the limiter is stated in \u00a76 |"
+    },
+    {
+     "template": "| Did the bytes change? | **No.** Every planned row publishes {{write.r22.footprint_b}} B \u2014 **{{write.reduction_pct}} %** below A's {{write.a.footprint_b}} B \u2014 and every restores 101/101 exactly |"
+    }
+   ]
+  },
+  {
+   "id": "release-ladder",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Rung | Durable write wall | Footprint | What bought it | Receipt |"
+    },
+    {
+     "template": "|---|---:|---:|---|---|"
+    },
+    {
+     "template": "| R17 (start) | {{ladder.r17_ms}} ms | {{ladder.r17_footprint_b}} B | nothing \u2014 this is the attribution baseline | `write-cost-ablation-20261112T052203Z` |"
+    },
+    {
+     "template": "| R18 | {{ladder.r18_ms}} ms | {{ladder.r18_footprint_b}} B | exact two-stage planner: analyse \u2192 select \u2192 materialise; level 19 conditional, not deleted | `planner-two-stage-20261112T081151Z` |"
+    },
+    {
+     "template": "| R19 | {{ladder.r19_ms}} ms | {{ladder.r18_footprint_b}} B | byte-identical mode-9 encoder, {{ladder.r19_speedup}}\u00d7 sequential / {{ladder.r19_speedup_threaded}}\u00d7 at four emission threads | `mode9-encoder-20261112T160000Z`, `r19-wall-after-20261112T140000Z` |"
+    },
+    {
+     "template": "| R20 | {{ladder.r20_ms}} ms | **{{write.r22.footprint_b}} B** | one group commit and **one** durability barrier per checkpoint | `r20-publication-20261112T150000Z` |"
+    },
+    {
+     "template": "| R21 | {{ladder.r21_ms}} ms | {{write.r22.footprint_b}} B | bounded reader \u2192 N encoders \u2192 one publisher pipeline plus the early-barrier writeback thread | `r21-pipeline-20261112T201500Z` |"
+    },
+    {
+     "template": "| **R22 (shipped)** | **{{write.r22.min_ms}} ms** (median {{write.r22.med_ms}}) | **{{write.r22.footprint_b}} B** | chunk-parallel ZSTD (byte-identical), exact parallel analyse, measured defaults | `r22-pareto-20261112T230000Z` |"
+    },
+    {
+     "template": "| **target** | **\u2264 336 ms** | \u2265 first-success band | **not met** | \u2014 |"
+    }
+   ]
+  },
+  {
+   "id": "release-scoreboard",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| requirement | target | measured |"
+    },
+    {
+     "template": "|---|---|---|"
+    },
+    {
+     "template": "| durable write wall | G1 \u2264 3,360 / G2 \u2264 1,344 / G3 \u2264 672 / final \u2264 336 ms | **{{write.r22.min_ms}} min / {{write.r22.med_ms}} median \u2192 G3 met; final not met ({{write.ratio}}\u00d7 A)** |"
+    },
+    {
+     "template": "| physical footprint | \u2264 340,000,000 first / \u2264 284,140,000 final | **{{write.r22.footprint_b}} B** (final band, {{write.reduction_pct}} % below A) |"
+    },
+    {
+     "template": "| exact restores | 101/101 | **101/101** in every row, `mismatches: 0` |"
+    },
+    {
+     "template": "| crash consistency | old-or-new whole | `crash_proxy_old_or_new: true` on every Weft row (three phases each), 0 partial |"
+    },
+    {
+     "template": "| court limits | unchanged | 4 CPUs / 3 GiB; peak RSS {{write.r22.rss_kib}} KiB ({{write.r22.rss_kib}} KiB of 3,145,728 KiB available), 0 OOM, 0 pids refusals |"
+    },
+    {
+     "template": "| Rust/Go format compatibility | no regression | Rust {{tests.rust_store_passed}}/0/0, FUSE {{tests.rust_fuse_passed}}/0/{{tests.rust_fuse_ignored}} ignored, Rust\u2194Go cross gate passed, `verify --full` ok on a chunk-parallel-written store |"
+    }
+   ]
+  },
+  {
+   "id": "release-verification",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "`bench/receipts/verify-{{verify.stamp}}.json`: **{{verify.passed}}/{{verify.courts}}** courts pass,"
+    },
+    {
+     "template": "{{verify.failed}} failed, {{verify.skipped}} skipped, result `pass`, at WeftFS"
+    },
+    {
+     "template": "`{{verify.revision}}` (WeftCodec `58db5aa`, WeftCodec-Go `9812d15`,"
+    },
+    {
+     "template": "WeftFS-Go `1fa3d32`). Rust all-targets **{{tests.rust_store_passed}}** passed / 0 failed; FUSE"
+    },
+    {
+     "template": "all-targets **{{tests.rust_fuse_passed}}** passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} ignored (the two"
+    },
+    {
+     "template": "pre-existing kernel/`CAP_SETUID` tests); WeftCodec **{{tests.rust_codec_passed}}** passed; the Go"
+    },
+    {
+     "template": "whole suite passes under `-race` in the fuse court (R14d receipt"
+    },
+    {
+     "template": "`bench/receipts/r14d-go-suite-20261112T221649Z.json`). The conformance manifest"
+    },
+    {
+     "template": "holds **{{conformance.vectors}}** vectors, aggregate `{{conformance.aggregate}}`; the claims manifest"
+    },
+    {
+     "template": "holds **{{claims.count}}** entries and `scripts/check-claims.sh` passes."
+    }
+   ]
+  },
+  {
+   "id": "pareto-headline",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Headline.** Chunk-parallel ZSTD is implemented, proved byte-identical, and"
+    },
+    {
+     "template": "**does not move the frozen fixture's write wall** \u2014 it cuts the 272 MB"
+    },
+    {
+     "template": "embedding's level-3 frame, but publication and the durability barrier are the"
+    },
+    {
+     "template": "binder at this operating point. The shipped write is **{{write.r22.min_ms}} ms**"
+    },
+    {
+     "template": "least-contended / {{write.r22.med_ms}} ms median (G3, {{write.ratio}}\u00d7 A) at"
+    },
+    {
+     "template": "{{write.r22.footprint_b}} B. The final rung (\u2264 336 ms) is **not reached**; \u00a77 states"
+    },
+    {
+     "template": "the measured limiter and the single change most likely to close it."
+    }
+   ]
+  },
+  {
+   "id": "pareto-scoreboard",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| requirement | target | measured |"
+    },
+    {
+     "template": "|---|---|---|"
+    },
+    {
+     "template": "| durable write wall | G1 \u2264 3,360 / G2 \u2264 1,344 / G3 \u2264 672 / final \u2264 336 ms | **{{write.r22.min_ms}} min / {{write.r22.med_ms}} median** \u2192 **G3 met**, final **not met** ({{write.ratio}}\u00d7 A) |"
+    },
+    {
+     "template": "| physical footprint | \u2264 340,000,000 first / \u2264 284,140,000 final | **{{write.r22.footprint_b}} B** (final band, {{write.reduction_pct}} % below A) |"
+    },
+    {
+     "template": "| exact restores | 101/101 | **101/101**, `all_restores_exact: true` in every row, `mismatches: 0` |"
+    },
+    {
+     "template": "| crash consistency | old-or-new whole | `crash_proxy_old_or_new: true` on **every** Weft row (three phases each), 0 partial |"
+    },
+    {
+     "template": "| 4-CPU / 3 GiB court | unchanged | unchanged; peak RSS {{write.r22.rss_kib}} KiB, 0 OOM, 0 pids refusals |"
+    },
+    {
+     "template": "| Rust/Go format compatibility | no regression | Rust {{tests.rust_store_passed}}/0/0, FUSE {{tests.rust_fuse_passed}}/0/{{tests.rust_fuse_ignored}} ignored, Rust\u2194Go cross gate `all checks passed`, `verify --full` ok on a chunk-parallel-written store |"
+    }
+   ]
+  },
+  {
+   "id": "pareto-limiter",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The target is \u2264 336 ms (native parity). The measurement is {{write.r22.min_ms}} ms."
+    },
+    {
+     "template": "Two terms account for it:"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "1. **Encode work that cannot be compressed further at this operating point.**"
+    },
+    {
+     "template": "   The encode term is {{write.r22.encode_ms}} ms summed over threads (level 3"
+    },
+    {
+     "template": "   {{write.r22.encode_zstd_ms}}, mode 9 {{write.r22.encode_mode9_ms}}), digest {{write.r22.digest_ms}},"
+    },
+    {
+     "template": "   analyse {{write.r22.analyze_ms}}."
+    },
+    {
+     "template": "2. **A durability tail that cannot overlap.** The early-barrier thread `fsync`s"
+    },
+    {
+     "template": "   **{{write.r22.barrier_files}} files / 282 MB in {{write.r22.barrier_ms}} ms** while native"
+    },
+    {
+     "template": "   writes A's {{write.a.footprint_b}} B in {{write.a.min_ms}} ms. The publisher's own wall"
+    },
+    {
+     "template": "   is {{write.r22.publish_wall_ms}} ms. The last tensors publish after the last encode, so"
+    },
+    {
+     "template": "   the tail is charged in full."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**The one change most likely to close it**, from the measurements: make the"
+    },
+    {
+     "template": "durable state **fewer and larger objects, without a sealing cost on the critical"
+    },
+    {
+     "template": "path**. The pack plane is the right shape and is already measured to cut"
+    },
+    {
+     "template": "publisher busy time from {{write.r22.publish_busy_ms}} ms to {{write.r22.pack_publish_busy_ms}} ms and to"
+    },
+    {
+     "template": "eliminate every writeback file \u2014 it loses only because sealing and the catalog"
+    },
+    {
+     "template": "publish are charged to the publisher (total {{write.r22.pack_min_ms}} ms). Moving pack"
+    },
+    {
+     "template": "sealing and the catalog publication onto the early-barrier thread is the"
+    },
+    {
+     "template": "concrete next step."
+    }
+   ]
+  },
+  {
+   "id": "pareto-gates",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| `cargo test --all-targets` (rust court) | **{{tests.rust_store_passed}} passed / 0 failed** \u2014 log `bench/receipts/r22-rust-tests.log` |"
+    },
+    {
+     "template": "| `cargo test --features fuse --all-targets` (fuse court) | **{{tests.rust_fuse_passed}} passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} ignored** \u2014 log `bench/receipts/r22-fuse-tests.log` |"
+    },
+    {
+     "template": "| `WeftCodec` `cargo test --all-targets` (rust court) | **{{tests.rust_codec_passed}} passed / 0 failed** \u2014 log `bench/receipts/r22-weftcodec-tests.log` |"
+    }
+   ]
+  },
+  {
+   "id": "perf-catalog-write",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "write"
+  },
+  {
+   "id": "perf-catalog-ladder",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "ladder"
+  },
+  {
+   "id": "perf-catalog-r12c",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "r12c"
+  },
+  {
+   "id": "perf-catalog-storage",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "storage"
+  },
+  {
+   "id": "perf-catalog-verification",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "verification"
+  },
+  {
+   "id": "perf-catalog-history",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "history"
+  },
+  {
+   "id": "pareto-table",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+    "array": "configs",
+    "order": [
+     "A",
+     "C-pipe4",
+     "C-pipe4-zpar4",
+     "C-pipe4-t19off",
+     "C-pipe4-gate4",
+     "C-pipe4-an1",
+     "C-pipe4-sync16",
+     "C-pipe4-zpar3",
+     "C-pipe4-zpar1",
+     "C-pipe4-zpar2",
+     "C-pipe4-tokens4",
+     "C-pipe4-tm9off",
+     "C-pipe4-sync32",
+     "C-pipe8",
+     "C-pipe4-zchunk16384",
+     "E-pipe4",
+     "C-pipe4-tokens1",
+     "C-pipe4-tokens2",
+     "C-pipe2",
+     "C-pipe4-pack1m",
+     "C-pipe4-pack8m",
+     "C-pipe4-leeway4",
+     "C-pipe4-znochunk",
+     "C",
+     "C-legacy"
+    ],
+    "columns": [
+     {
+      "header": "config",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "min ms",
+      "path": "wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "median ms",
+      "path": "wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "p95 ms",
+      "path": "wall_ms.p95",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "physical_footprint_bytes.min",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "CPU ms",
+      "path": "cpu_ms.min",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "RSS KiB",
+      "path": "peak_rss_kib.min",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "restore ms",
+      "path": "cold_restore_wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "verdict",
+      "text": "{verdict}",
+      "align": "---"
+     }
+    ],
+    "verdicts": {
+     "A": "native anchor: fastest, largest",
+     "C-pipe4": "shipped default: inside the measurement band, dominated on the point estimates",
+     "C-pipe4-zpar4": "inside the band; not adopted (pool policy)",
+     "C-pipe4-t19off": "numerical frontier; not policy-eligible (disables the level-19 gate)",
+     "C-pipe4-gate4": "inside the band",
+     "C-pipe4-an1": "inside the band",
+     "C-pipe4-sync16": "inside the band; lowest minimum, not separable",
+     "C-pipe4-zpar3": "inside the band",
+     "C-pipe4-zpar1": "inside the band",
+     "C-pipe4-zpar2": "inside the band",
+     "C-pipe4-tokens4": "inside the band (budget oversubscription)",
+     "C-pipe4-tm9off": "dominated on (wall, footprint); its restore is faster, a third axis this frontier does not price",
+     "C-pipe4-sync32": "inside the band",
+     "C-pipe8": "loss: no better than 4 workers",
+     "C-pipe4-zchunk16384": "loss: 16 KiB chunks",
+     "E-pipe4": "loss: protocol-layer cost",
+     "C-pipe4-tokens1": "loss: serial encode",
+     "C-pipe4-tokens2": "loss: publisher-bound",
+     "C-pipe2": "loss: publisher-bound",
+     "C-pipe4-pack1m": "numerical frontier by footprint only; loss on wall",
+     "C-pipe4-pack8m": "loss: pack plane",
+     "C-pipe4-leeway4": "loss: forced level 19 for zero bytes",
+     "C-pipe4-znochunk": "loss: breaks the two-stage predictor",
+     "C": "loss: sequential writer",
+     "C-legacy": "loss: exhaustive planner"
+    },
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T202816Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+   }
+  },
+  {
+   "id": "pareto-fixture-frontier",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "frontier",
+   "frontier": {
+    "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+    "array": "configs",
+    "wall_path": "wall_ms.min",
+    "bytes_path": "physical_footprint_bytes.min",
+    "prefix": "",
+    "suffix": ".",
+    "format_wall": "fixed:1",
+    "format_bytes": "int",
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T202816Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+   }
+  },
+  {
+   "id": "pareto-eligible-frontier",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "frontier",
+   "frontier": {
+    "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+    "array": "configs",
+    "wall_path": "wall_ms.min",
+    "bytes_path": "physical_footprint_bytes.min",
+    "exclude": [
+     "C-pipe4-t19off"
+    ],
+    "prefix": "",
+    "suffix": ".",
+    "format_wall": "fixed:1",
+    "format_bytes": "int",
+    "excluded_note": "`C-pipe4-t19off` is excluded by policy: disabling the level-19 gate wins on this fixture and loses pythia-70m (\u00a76.1).",
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T202816Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+   }
+  },
+  {
+   "id": "pareto-minio",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/augmentation-minio-20261112T240000Z.json",
+    "array": "configurations",
+    "order": [
+     "A",
+     "C",
+     "E"
+    ],
+    "columns": [
+     {
+      "header": "config",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "durable wall ms",
+      "path": "write.wall_ms",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "bytes written",
+      "path": "write.physical_bytes_written",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "cold restore ms",
+      "path": "summary.cold_restore_wall_ms",
+      "format": "fixed:1",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T204955Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+   }
+  },
+  {
+   "id": "release-pareto",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+    "array": "configs",
+    "order": [
+     "A",
+     "C-pipe4",
+     "C-pipe4-zpar4",
+     "C-pipe4-t19off",
+     "C-pipe4-tm9off"
+    ],
+    "columns": [
+     {
+      "header": "config",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "min ms",
+      "path": "wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "median ms",
+      "path": "wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "physical_footprint_bytes.min",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "verdict",
+      "text": "{verdict}",
+      "align": "---"
+     }
+    ],
+    "verdicts": {
+     "A": "native anchor: fastest, largest",
+     "C-pipe4": "shipped default: inside the measurement band, dominated on the point estimates",
+     "C-pipe4-zpar4": "inside the band; not adopted (pool policy)",
+     "C-pipe4-t19off": "numerical frontier; not policy-eligible (disables the level-19 gate)",
+     "C-pipe4-gate4": "inside the band",
+     "C-pipe4-an1": "inside the band",
+     "C-pipe4-sync16": "inside the band; lowest minimum, not separable",
+     "C-pipe4-zpar3": "inside the band",
+     "C-pipe4-zpar1": "inside the band",
+     "C-pipe4-zpar2": "inside the band",
+     "C-pipe4-tokens4": "inside the band (budget oversubscription)",
+     "C-pipe4-tm9off": "dominated on (wall, footprint); its restore is faster, a third axis this frontier does not price",
+     "C-pipe4-sync32": "inside the band",
+     "C-pipe8": "loss: no better than 4 workers",
+     "C-pipe4-zchunk16384": "loss: 16 KiB chunks",
+     "E-pipe4": "loss: protocol-layer cost",
+     "C-pipe4-tokens1": "loss: serial encode",
+     "C-pipe4-tokens2": "loss: publisher-bound",
+     "C-pipe2": "loss: publisher-bound",
+     "C-pipe4-pack1m": "numerical frontier by footprint only; loss on wall",
+     "C-pipe4-pack8m": "loss: pack plane",
+     "C-pipe4-leeway4": "loss: forced level 19 for zero bytes",
+     "C-pipe4-znochunk": "loss: breaks the two-stage predictor",
+     "C": "loss: sequential writer",
+     "C-legacy": "loss: exhaustive planner"
+    },
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T202816Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+   }
+  },
+  {
+   "id": "release-artifacts",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "ARTIFACTS_PENDING"
+    }
+   ]
+  },
+  {
+   "id": "rfc-manifest-row",
+   "file": "docs/RFC.md",
+   "kind": "lines",
+   "inline": true,
+   "rows": [
+    {
+     "template": "**{{conformance.vectors}}** vectors, aggregate `{{conformance.aggregate}}`"
+    }
+   ]
+  },
+  {
+   "id": "release-r12c",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Persistent sessions (item 1).** One `CheckpointSession` per (store, run)"
+    },
+    {
+     "template": "  instead of a helper process per checkpoint. Warm completion p50 falls"
+    },
+    {
+     "template": "  **{{session.persave_warm_p50_ms}} \u2192 {{session.session_warm_p50_ms}} ms** at a 4-step interval; loop wall"
+    },
+    {
+     "template": "  {{session.persave_loop_wall_ms}} \u2192 **{{session.session_loop_wall_ms}} ms**; training-thread pause p50"
+    },
+    {
+     "template": "  {{session.persave_pause_p50_ms}} \u2192 **{{session.session_pause_p50_ms}} ms**. Every resumed state and next-step loss bit in"
+    },
+    {
+     "template": "  the receipt matched. Receipt `training-goodput-session-20261111T220500Z.json`."
+    },
+    {
+     "template": "* **Operation-derived incremental index (item 2).** Publish no longer calls"
+    },
+    {
+     "template": "  `StateIndex::build`. Commit p50 is **{{index.baseline_commit_p50_ms}} \u2192 {{index.post_commit_p50_ms}} ms** at 1k"
+    },
+    {
+     "template": "  generations and {{index.post_commit_p50_100k_ms}} ms at 100k \u2014 flat while history grows 100\u00d7 \u2014 with"
+    },
+    {
+     "template": "  byte-identical index segments; 10k live objects fall"
+    },
+    {
+     "template": "  {{index.live10k_baseline_ms}} \u2192 **{{index.live10k_post_ms}} ms**. A same-revision control with maintenance disabled"
+    },
+    {
+     "template": "  reproduces the baseline. Receipts"
+    },
+    {
+     "template": "  `incremental-index-20261111T220000Z-baseline-delta-live64`,"
+    },
+    {
+     "template": "  `\u2026T230000Z-post-delta-live64`, `\u2026T235000Z-post-delta-live10000`; analysis"
+    },
+    {
+     "template": "  [`bench/RESULTS-incremental-index.md`](../bench/RESULTS-incremental-index.md)."
+    },
+    {
+     "template": "* **Index GC bound per retained root (item 2.1).** Item 2 exposed a real defect:"
+    },
+    {
+     "template": "  the retained-chain depth bound was applied to one `visited` set shared by every"
+    },
+    {
+     "template": "  root, so index GC refused once several snapshots were retained and the index"
+    },
+    {
+     "template": "  tree grew with commits. Fixed per root in both languages; all retained"
+    },
+    {
+     "template": "  snapshots still load their full chain. Retained failures:"
+    },
+    {
+     "template": "  `index-gc-bound-20261111T190100Z-prefix-8roots.json`, `\u2026T194000Z-prefix-tail.json`."
+    },
+    {
+     "template": "* **DCP metadata encoding (item 3).** The pure-Python canonical encoder cost"
+    },
+    {
+     "template": "  **{{dcp.reference_p50_ms}} ms p50**; a reusable plan plus a fast generic encoder take it to"
+    },
+    {
+     "template": "  **{{dcp.path_p50_ms}} ms** warm ({{dcp.plan_match_ms}} ms signature + {{dcp.plan_assemble_ms}} ms assembly), with the"
+    },
+    {
+     "template": "  reference encoder kept as the oracle and every plan proved equal to it before"
+    },
+    {
+     "template": "  use; the first call pays a {{dcp.path_first_ms}} ms plan build. Receipts"
+    },
+    {
+     "template": "  `dcp-metadata-20261111T230500Z.json`, `\u2026T235500Z.json`."
+    },
+    {
+     "template": "* **Bounded checkpoint queue (item 4).** `CheckpointSession` admits saves under"
+    },
+    {
+     "template": "  `max_outstanding` (**default 2**), a staged-byte budget and a blocking wait with"
+    },
+    {
+     "template": "  a 30 s ceiling; a refusal is `QueueFull` naming every bound and publishes"
+    },
+    {
+     "template": "  nothing. At a 1-step interval the loop wall falls **{{queue.baseline_wall_ms}} \u2192 {{queue.bounded_wall_ms}} ms**"
+    },
+    {
+     "template": "  ({{queue.baseline_warm_p50_ms}} \u2192 {{queue.bounded_warm_p50_ms}} ms warm p50, {{queue.bounded_warm_p95_ms}} ms p95), every save lands,"
+    },
+    {
+     "template": "  `no_silent_skips` is true and every cell drains to `outstanding 0`. Receipt"
+    },
+    {
+     "template": "  `checkpoint-queue-bound-after-20261112T043000Z.json`, baseline"
+    },
+    {
+     "template": "  `checkpoint-queue-sweep-baseline-20261112T020000Z.json`."
+    }
+   ]
+  },
+  {
+   "id": "release-ladder-intro",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The R17 wall was dominated by one term: level-19 ZSTD accounted for"
+    },
+    {
+     "template": "{{write.r17_zstd19_share_pct}} % of it ({{ladder.r17_zstd19_ms}} ms) and was selected for **zero** tensors."
+    },
+    {
+     "template": "Every later rung attacks one attribution line and re-reports both boards."
+    }
+   ]
+  },
+  {
+   "id": "release-frontier",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "frontier",
+   "frontier": {
+    "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+    "array": "configs",
+    "wall_path": "wall_ms.min",
+    "bytes_path": "physical_footprint_bytes.min",
+    "format_wall": "fixed:1",
+    "format_bytes": "int",
+    "prefix": "",
+    "suffix": ".",
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T202816Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+   }
+  },
+  {
+   "id": "release-eligible-frontier",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "frontier",
+   "frontier": {
+    "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+    "array": "configs",
+    "wall_path": "wall_ms.min",
+    "bytes_path": "physical_footprint_bytes.min",
+    "format_wall": "fixed:1",
+    "format_bytes": "int",
+    "prefix": "",
+    "suffix": ".",
+    "stamp_path": "generated_utc",
+    "stamp": "20261112T202816Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4",
+    "exclude": [
+     "C-pipe4-t19off"
+    ],
+    "excluded_note": "`C-pipe4-t19off` is excluded by policy: disabling the level-19 gate wins on this fixture and loses pythia-70m (see `RESULTS-pareto.md` \u00a76.1)."
+   }
+  },
+  {
+   "id": "release-limiter",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* The early-barrier thread `fsync`s **{{write.r22.barrier_files}} files / {{write.r22.written_b}} B in"
+    },
+    {
+     "template": "  {{write.r22.barrier_ms}} ms** ({{write.r22.barrier_mbps}} MB/s) while native writes A's {{write.a.footprint_b}} B"
+    },
+    {
+     "template": "  in {{write.a.min_ms}} ms ({{write.a.mbps}} MB/s). The publisher's own wall is"
+    },
+    {
+     "template": "  {{write.r22.publish_wall_ms}} ms. The last tensors publish after the last encode, so the tail"
+    },
+    {
+     "template": "  is charged in full."
+    },
+    {
+     "template": "* The encode term is {{write.r22.encode_ms}} ms summed over threads (level 3"
+    },
+    {
+     "template": "  {{write.r22.encode_zstd_ms}}, mode 9 {{write.r22.encode_mode9_ms}}), digest {{write.r22.digest_ms}}, analyse"
+    },
+    {
+     "template": "  {{write.r22.analyze_ms}}. The wall is not encode-bound at this operating point; it is"
+    },
+    {
+     "template": "  publication- and writeback-bound."
+    }
+   ]
+  },
+  {
+   "id": "release-losses",
+   "file": "docs/RELEASE-v1.4.0.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Native parity is not reached** ({{write.ratio}}\u00d7 A) and the \u2264 336 ms rung is not met."
+    },
+    {
+     "template": "* **R18 missed its wall gate** while meeting storage: analysis cost was real and"
+    },
+    {
+     "template": "  the skipped mode-9 encodes were worth little (receipt"
+    },
+    {
+     "template": "  `planner-two-stage-20261112T081151Z`)."
+    },
+    {
+     "template": "* **A deeper pipeline buys nothing.** 8 workers are no better than 4"
+    },
+    {
+     "template": "  ({{write.r22.pipe8_min_ms}} vs {{write.r22.min_ms}} ms); 2 workers are publisher-bound"
+    },
+    {
+     "template": "  ({{write.r22.pipe2_min_ms}} ms)."
+    },
+    {
+     "template": "* **RSS and CPU rise.** Peak RSS {{write.a.rss_kib}} \u2192 {{write.r22.rss_kib}} KiB"
+    },
+    {
+     "template": "  ({{write.r22.rss_court_pct}} % of the 3 GiB court, {{write.r22.rss_ratio}}\u00d7 native) and CPU"
+    },
+    {
+     "template": "  {{write.a.cpu_ms}} \u2192 {{write.r22.cpu_ms}} ms."
+    },
+    {
+     "template": "* **The pack plane loses for the third time** ({{write.r22.pack_min_ms}} ms against"
+    },
+    {
+     "template": "  {{write.r22.min_ms}} ms, {{write.r22.pack_ratio}}\u00d7). It halves publisher busy time"
+    },
+    {
+     "template": "  ({{write.r22.publish_busy_ms}} \u2192 {{write.r22.pack_publish_busy_ms}} ms) and removes every writeback file, but"
+    },
+    {
+     "template": "  sealing and catalog publication cost more at this operating point."
+    },
+    {
+     "template": "* **No chunking is slower** ({{write.r22.znochunk_min_ms}} ms) and saves only"
+    },
+    {
+     "template": "  {{write.r22.znochunk_saved_b}} B."
+    },
+    {
+     "template": "* **A level-19 gate with 4 MiB of leeway is {{write.r22.leeway_ratio}}\u00d7 slower for zero"
+    },
+    {
+     "template": "  bytes.**"
+    },
+    {
+     "template": "* **16 KiB codec chunks are {{write.r22.chunk16k_overhead_pct}} % worse than 64 KiB** and identical"
+    },
+    {
+     "template": "  in bytes."
+    },
+    {
+     "template": "* **The rows inside the host's measured spread are a band, not an ordering.**"
+    },
+    {
+     "template": "  The same row's median moved 13 % between sessions while its least-contended"
+    },
+    {
+     "template": "  value moved 2.5 %; only differences larger than ~10 % are treated as real."
+    },
+    {
+     "template": "  Superseded sweeps (`r22-pareto-20261112T220000Z`, `\u2026T193000Z`, `\u2026T190000Z`,"
+    },
+    {
+     "template": "  `\u2026T165731Z`) are retained and not cited."
+    },
+    {
+     "template": "* **Host degradation is disclosed.** Between clean runs the host's durability"
+    },
+    {
+     "template": "  path fell from 1.28 GB/s to 125\u2013180 MB/s and the native control wrote the"
+    },
+    {
+     "template": "  fixture in 11,482.6 ms; those attempts produced no cited row"
+    },
+    {
+     "template": "  (`r22-probe-20261112T163717Z` and the superseded pareto receipts are"
+    },
+    {
+     "template": "  retained)."
+    },
+    {
+     "template": "* **R12c items 1\u20134 each publish losses**: a 4-step clean-step p50 rise and a"
+    },
+    {
+     "template": "  32-step loop wall that is worse (sessions); index bytes still grow in the"
+    },
+    {
+     "template": "  number of commits and 1M generations does not fit the court; the first DCP"
+    },
+    {
+     "template": "  save of a shape pays a plan build; a bounded queue worsens completion p95 and"
+    },
+    {
+     "template": "  raises RSS. Each is quantified in its own receipt."
+    },
+    {
+     "template": "* **The multi-writer throughput table was not re-measured.** It remains the R4"
+    },
+    {
+     "template": "  numbers at `b0bcbc5e`/`f46b351f`, which predate this release's write work."
+    }
+   ]
+  },
+  {
+   "id": "pareto-method",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Fixture: Qwen2.5-0.5B-Instruct, {{write.fixture.tensors}} tensors, {{write.fixture.logical_b}} logical bytes, 4 CPUs,"
+    },
+    {
+     "template": "3 GiB, local POSIX backend, {{pareto.reps}} interleaved repetitions with a rotated order."
+    },
+    {
+     "template": "`min` is the least-contended repetition (the statistic R21 cites), `med` is the"
+    },
+    {
+     "template": "median (= p50), `p95` is the 95th percentile of the seven. Device control: clean;"
+    },
+    {
+     "template": "native control A = {{write.a.min_ms}} ms, whose own `sync_all` calls are inside its wall."
+    }
+   ]
+  },
+  {
+   "id": "pareto-losses",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* `znochunk` (no chunking) is **{{write.r22.znochunk_min_ms}} ms** and saves"
+    },
+    {
+     "template": "  {{write.r22.znochunk_saved_b}} B. The two-stage sampler's unit *is* the chunk: without"
+    },
+    {
+     "template": "  chunking tensors record a prediction violation, fall back to exhaustive"
+    },
+    {
+     "template": "  encoding, and level 19 actually runs. Chunking is not an optimisation of the"
+    },
+    {
+     "template": "  frame; it is what makes the frame parallelisable and predictable."
+    },
+    {
+     "template": "* The pack plane **loses for the third time** ({{write.r22.pack_min_ms}} ms against"
+    },
+    {
+     "template": "  {{write.r22.min_ms}} ms). It does halve publisher busy time"
+    },
+    {
+     "template": "  ({{write.r22.publish_busy_ms}} \u2192 {{write.r22.pack_publish_busy_ms}} ms) and removes every writeback file,"
+    },
+    {
+     "template": "  but sealing packs and publishing catalog segments costs more than the"
+    },
+    {
+     "template": "  writeback it replaces at this operating point."
+    },
+    {
+     "template": "* `leeway4` (a level-19 gate that tolerates a 4 MiB predicted loss) is"
+    },
+    {
+     "template": "  **{{write.r22.leeway_ratio}}\u00d7 slower** for **zero** bytes saved: the R18 gate is doing real"
+    },
+    {
+     "template": "  work."
+    },
+    {
+     "template": "* 16 KiB codec chunks are **{{write.r22.chunk16k_overhead_pct}} % worse** than 64 KiB"
+    },
+    {
+     "template": "  ({{write.r22.chunk16k_min_ms}} vs {{write.r22.min_ms}} ms) and identical in bytes; the per-chunk"
+    },
+    {
+     "template": "  frame overhead is real."
+    },
+    {
+     "template": "* `sync16`/`sync32` ({{write.r22.sync16_min_ms}} and {{write.r22.sync32_min_ms}} ms) are inside the spread;"
+    },
+    {
+     "template": "  R21's clean-host ordering is not reproduced here, so the default stays at"
+    },
+    {
+     "template": "  8 MiB on R21's evidence."
+    },
+    {
+     "template": "* **No statistic in this table separates the middle band.** The same row's"
+    },
+    {
+     "template": "  median moved 13 % between sessions while its least-contended value moved"
+    },
+    {
+     "template": "  2.5 %. The frontier is therefore stated as a **band**, and only differences"
+    },
+    {
+     "template": "  larger than ~10 % are treated as real."
+    }
+   ]
+  },
+  {
+   "id": "pareto-counts",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "This sweep is **{{pareto.configs}} configurations \u00d7 {{pareto.reps}} interleaved repetitions**, **{{pareto.checks}}/{{pareto.checks}} checks pass**, on the {{write.fixture.tensors}}-tensor fixture ({{write.fixture.logical_b}} logical bytes) in the 4-CPU / 3 GiB court."
+    }
+   ]
+  },
+  {
+   "id": "pareto-minio-note",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "inline": true,
+   "rows": [
+    {
+     "template": "**{{minio.c_storage_reduction_pct}} %**"
+    }
+   ]
+  },
+  {
+   "id": "pareto-hist-row",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "inline": true,
+   "rows": [
+    {
+     "template": "**{{analyze.histogram_ms}} ms** for the embedding at {{analyze.histogram_gbps}} GB/s"
+    }
+   ]
+  },
+  {
+   "id": "pareto-zstd-note",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The rule is the measurement. On the frozen fixture the embedding runs both"
+    },
+    {
+     "template": "candidates, so the pool is inert there (default {{write.r22.min_ms}} ms against the"
+    },
+    {
+     "template": "sequential-ZSTD control's {{write.r22.zpar1_min_ms}} ms); the ZSTD-only tensors still get it,"
+    },
+    {
+     "template": "which is why `C-pipe4-zpar4` (all CPUs everywhere) is {{write.r22.zpar4_min_ms}} ms and the"
+    },
+    {
+     "template": "*median* rows in between are indistinguishable."
+    }
+   ]
+  },
+  {
+   "id": "pareto-rss-note",
+   "file": "bench/RESULTS-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "*Worse under the new default:* RSS {{write.r22.rss_kib}} KiB against {{write.r22.seq_rss_kib}} KiB for the"
+    },
+    {
+     "template": "sequential writer, and slightly more CPU; `C-pipe4-tokens4`-style"
+    },
+    {
+     "template": "oversubscription is still available through the budget and is slower."
+    }
+   ]
+  }
+ ]
+}

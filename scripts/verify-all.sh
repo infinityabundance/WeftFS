@@ -215,6 +215,13 @@ run_orchestrated_court() {
   status=1
 }
 
+# Performance numbers: every generated region in the documentation must match
+# its receipt, the declared stamp and revision must still be the ones the
+# receipt carries, every manifest number must have a consumer, and every
+# `BEGIN GENERATED` marker must have a manifest block. Host-only and fast; an
+# environment without Python >= 3.8 skips with a printed reason (exit 78).
+run_orchestrated_court perf_numbers perf_numbers bash scripts/perf_numbers_court.sh
+
 # R16 independent S3 implementation: a Ceph RGW sidecar, the existing S3 backend
 # suite against it, the eight-behaviour compatibility matrix against RGW and
 # MinIO, and a side-by-side comparison.

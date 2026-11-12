@@ -2,9 +2,26 @@
 
 ### A falsifiable evaluation of a codec-augmented store for AI state
 
-**Status:** research note, 2026-11-11 (R13). Every number below is traceable to a
-committed receipt in `bench/receipts/`; a number without a receipt was deleted,
-not softened. This paper claims no superiority and no production readiness.
+**Status:** research note. Every number below is traceable to a committed
+receipt in `bench/receipts/`; a number without a receipt was deleted, not
+softened. This paper claims no superiority and no production readiness. The
+paper was first drafted at R13 (2026-11-11); the current rung of the write
+ladder is generated below.
+
+<!-- BEGIN GENERATED:paper-current (scripts/perf_numbers.py) -->
+**Current state (generated).** The write cost quoted in the abstract is the R3
+measurement (73.9× native at 33.1 % fewer bytes, receipt
+`bench/receipts/augmentation-local-20261109T134132Z.json`, stamp 20261109T134244Z, revision
+2fb4e4b7fa5e). It has since been superseded by the R17–R22 ladder:
+the same fixture now writes in **592.6 ms** least-contended /
+600.9 ms median at **282,106,049 B**,
+**1.78×** the native control (332.0 ms,
+424,439,296 B) for 33.5 % fewer bytes (receipt
+`bench/receipts/r22-pareto-20261112T230000Z.json`, stamp 20261112T202816Z, revision
+ccc6d695b114). C4 and C7 are the claims that must be re-read against
+the current rung; the R3 numbers below are retained as the historical
+measurement they were written from.
+<!-- END GENERATED:paper-current -->
 
 ---
 
