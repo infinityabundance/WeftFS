@@ -201,6 +201,20 @@ impl PackOptions {
     }
 }
 
+/// Entries a detached pack contributes to **one** catalog publication when the
+/// off-path seal mode is armed.
+///
+/// A catalog publication republishes every segment it touches, so the number of
+/// publications is what costs, not the number of entries. Batching entries is
+/// therefore the only lever that keeps the catalog work proportional to the
+/// catalog size instead of to the number of seals: 204 members published as ten
+/// packs is ten catalog publications without it.
+///
+/// Below this many entries the batch is published at `flush`, which is before
+/// the commit record; above it, each full batch is published from whichever
+/// thread is driving the seal queue (the pipeline's writeback thread).
+pub const DEFAULT_CATALOG_BATCH_ENTRIES: usize = 16 * 1024;
+
 /// Result of reclaiming packs after a deletion pass.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct PackReclaim {
@@ -225,6 +239,12 @@ pub struct PackStats {
     pub open_pack_bytes: u64,
     pub open_pack_members: u64,
     pub packing_disabled: bool,
+    /// Packs whose object is published but whose members the catalog does not
+    /// name yet. They are readable by this handle only.
+    pub pending_catalog_members: u64,
+    /// Catalog publications the off-path seal path performed (a batch of
+    /// detached packs merged into one segment set and one root compare-and-swap).
+    pub catalog_batches: u64,
 }
 
 /// One catalogued member, encoded canonically in a catalog segment.
@@ -381,6 +401,16 @@ struct CatalogState {
     /// here instead of touching the catalog. One owner adopts them later.
     defer: bool,
     pending: Vec<Entry>,
+    /// Off-path seal mode (R23): the open pack is published by
+    /// [`PackedBlobPlane::detach_pack_seal`] and its members wait here for a
+    /// catalog publication that another thread performs. Members stay readable
+    /// through this handle (a ranged read of the published pack) exactly like a
+    /// catalogued member, so the R13 contract is unchanged.
+    off_path: bool,
+    pending_catalog: Vec<Entry>,
+    pending_catalog_index: BTreeMap<(u8, Hash32), Entry>,
+    /// Bound on `pending_catalog` before the plane publishes the batch itself.
+    catalog_batch_entries: usize,
     /// Digest per deferred key, so a second publication of the same key inside
     /// one handle is idempotent and a different payload is still refused.
     pending_digests: BTreeMap<(u8, Hash32), Hash32>,
@@ -484,9 +514,12 @@ impl PackedBlobPlane {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let mut stats = state.counters.clone();
-        stats.catalog_entries = state.total_entries + state.open_entries.len() as u64;
+        stats.catalog_entries = state.total_entries
+            + state.open_entries.len() as u64
+            + state.pending_catalog.len() as u64;
         stats.open_pack_bytes = state.open_bytes.len() as u64;
         stats.open_pack_members = state.open_entries.len() as u64;
+        stats.pending_catalog_members = state.pending_catalog.len() as u64;
         stats.packing_disabled = state
             .notes
             .iter()
@@ -528,7 +561,158 @@ impl PackedBlobPlane {
         stats.catalog_entries = entries;
         stats.open_pack_bytes = state.open_bytes.len() as u64;
         stats.open_pack_members = state.open_entries.len() as u64;
+        stats.pending_catalog_members = state.pending_catalog.len() as u64;
         Ok(stats)
+    }
+
+    // ---- off-path seal mode (R23) ----------------------------------------
+
+    /// Arm the off-path seal mode and the catalog batch bound.
+    ///
+    /// The contract this mode adds:
+    ///
+    /// * The open pack is sealed by [`Self::detach_pack_seal`] (which publishes
+    ///   the pack object eagerly, exactly as `append`'s inline seal does) and its
+    ///   members wait in a **pending catalog** list instead of being named by
+    ///   the catalog immediately.
+    /// * A member in that list is readable through this handle by a ranged read
+    ///   of its published pack, so a writer never loses sight of a member it
+    ///   just published (the R13 rule). A different handle cannot resolve it
+    ///   until the catalog names it, which is why `buffered_blob_kinds` keeps
+    ///   reporting those kinds.
+    /// * [`Self::flush_catalog`] publishes the pending entries (segments, then
+    ///   one root compare-and-swap) and only then stops reporting the kinds as
+    ///   buffered. [`BlobPlane::flush`] does this before the commit record, so
+    ///   the ordering is unchanged: member bytes durable -> pack sealed ->
+    ///   catalog published -> commit record -> head.
+    ///
+    /// The mode changes *which thread* runs the catalog publication and *when*,
+    /// never what is durable before what.
+    pub fn configure_off_path_seal(&mut self, enabled: bool, batch_entries: usize) -> Result<bool> {
+        let mut state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if enabled && state.defer {
+            return Err(Error::invalid_argument(
+                "off-path pack sealing cannot be combined with deferred catalog ownership",
+            ));
+        }
+        if batch_entries == 0 {
+            return Err(Error::invalid_argument(
+                "catalog_batch_entries must be positive",
+            ));
+        }
+        state.off_path = enabled;
+        state.catalog_batch_entries = batch_entries;
+        Ok(enabled)
+    }
+
+    /// True when off-path sealing is armed.
+    pub fn off_path_seal(&self) -> bool {
+        let state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        state.off_path
+    }
+
+    /// True when the open pack has reached its seal trigger.
+    ///
+    /// In off-path mode a caller polls this after each publication and hands
+    /// the seal to [`Self::detach_pack_seal`]. The trigger is the normal pack
+    /// geometry (`pack_target_bytes`, `max_members_per_pack`), so the pack a
+    /// reader eventually resolves is the same size it would be on the inline
+    /// path.
+    pub fn pack_seal_ready(&self) -> bool {
+        let state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if !state.off_path || state.open_entries.is_empty() {
+            return false;
+        }
+        state.open_bytes.len() as u64 >= self.options.pack_target_bytes
+            || state.open_entries.len() >= self.options.max_members_per_pack as usize
+    }
+
+    /// Seal the open pack: publish its object and park its members in the
+    /// pending catalog. Returns `true` when a pack was detached.
+    ///
+    /// The pack object is published **eagerly** (the inner plane's create-once
+    /// publication is durable when this returns), so the only thing left before
+    /// the commit is the catalog publication, which
+    /// [`Self::flush_catalog`] performs and which a caller may run on another
+    /// thread. Nothing here can leave a catalog entry naming a missing pack.
+    pub fn detach_pack_seal(&mut self) -> Result<bool> {
+        let Self { inner, state, .. } = self;
+        let mut state = state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if !state.off_path || state.open_entries.is_empty() {
+            return Ok(false);
+        }
+        let pack_bytes = std::mem::take(&mut state.open_bytes);
+        let mut entries = std::mem::take(&mut state.open_entries);
+        state.open_index.clear();
+        let pack_id = identity::h(PACK_DOMAIN, &pack_bytes);
+        for entry in entries.iter_mut() {
+            entry.pack = pack_id;
+        }
+        inner.put_if_absent(&Key::pack(pack_id), &pack_bytes)?;
+        crash_point("pack_after_pack_object");
+        for entry in entries {
+            state.pending_catalog_index.insert(entry.sort_key(), entry);
+            state.pending_catalog.push(entry);
+        }
+        state.counters.sealed_packs += 1;
+        state.buffered_kinds = recompute_buffered(&state);
+        Ok(true)
+    }
+
+    /// Publish the pending catalog batch: every touched segment, then one root
+    /// compare-and-swap. A no-op when nothing is pending.
+    ///
+    /// This is the step the pipeline hands to its writeback thread. A failure
+    /// leaves the entries pending and unreadable by other handles and fails the
+    /// write, because `BlobPlane::flush` retries before the commit record.
+    pub fn flush_catalog(&mut self) -> Result<()> {
+        let Self {
+            inner,
+            catalog,
+            options,
+            state,
+        } = self;
+        let mut state = state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        ensure_loaded(&**catalog, options, &mut state)?;
+        flush_pending_catalog(inner, catalog, options, &mut state)
+    }
+
+    /// True when the pending catalog batch has reached its bound and should be
+    /// published now rather than at `flush`.
+    pub fn catalog_batch_ready(&self) -> bool {
+        let state = self
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if !state.off_path {
+            return false;
+        }
+        let bound = state
+            .catalog_batch_entries
+            .min(self.options.max_catalog_entries() as usize);
+        state.pending_catalog.len() >= bound.max(1)
+    }
+
+    /// Pending catalog members this handle published but has not catalogued.
+    pub fn pending_catalog_members(&self) -> usize {
+        self.state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .pending_catalog
+            .len()
     }
 }
 
@@ -710,7 +894,9 @@ impl BlobPlane for PackedBlobPlane {
         }
         let length = bytes.len() as u64;
         let max_entries = options.max_catalog_entries();
-        let pending = state.total_entries + state.open_entries.len() as u64;
+        let pending = state.total_entries
+            + state.open_entries.len() as u64
+            + state.pending_catalog.len() as u64;
         if length == 0 || length > options.member_threshold_bytes || pending >= max_entries {
             if pending >= max_entries && length > 0 && length <= options.member_threshold_bytes {
                 note(
@@ -980,6 +1166,13 @@ impl BlobPlane for PackedBlobPlane {
         }
         let mut referenced: BTreeSet<Hash32> = BTreeSet::new();
         let mut live_members = 0u64;
+        // A pack this handle published but has not catalogued is referenced by
+        // the pending batch: reclaiming it would make the next catalog
+        // publication name missing bytes. It stops being "pending" the moment
+        // it is catalogued or its members are all deleted.
+        for entry in &state.pending_catalog {
+            referenced.insert(entry.pack);
+        }
         for segment in state.segments.iter().filter_map(|segment| segment.as_ref()) {
             for entry in &segment.entries {
                 referenced.insert(entry.pack);
@@ -1111,15 +1304,24 @@ impl BlobPlane for PackedBlobPlane {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
         let mut removed_open: BTreeSet<(u8, Hash32)> = BTreeSet::new();
+        let mut removed_pending: BTreeSet<(u8, Hash32)> = BTreeSet::new();
         let mut touched: BTreeMap<usize, BTreeSet<(u8, Hash32)>> = BTreeMap::new();
         let mut flat: Vec<&Key> = Vec::new();
         for key in keys {
             match find(&**inner, options, &mut state, key)? {
-                Some((entry, None)) => {
+                Some((entry, Lookup::Open)) => {
                     removed_open.insert(entry.sort_key());
                 }
-                Some((entry, Some(_))) => {
-                    let index = segment_index(entry.id, options.catalog_segments);
+                Some((entry, Lookup::Pending)) => {
+                    // Published but not catalogued: drop the entry from the
+                    // batch. The catalog will never name it, and the pack's
+                    // bytes become garbage for `reclaim_unreferenced_packs`
+                    // once every member is gone (exactly as for a catalogued
+                    // member of a shared pack).
+                    removed_pending.insert(entry.sort_key());
+                }
+                Some((entry, Lookup::Catalogued(_))) => {
+                    let index = segment_index(entry.id, state.segment_ids.len() as u32);
                     touched.entry(index).or_default().insert(entry.sort_key());
                 }
                 None => flat.push(key),
@@ -1130,6 +1332,15 @@ impl BlobPlane for PackedBlobPlane {
         }
         if !removed_open.is_empty() {
             rebuild_open(&mut state, &removed_open);
+        }
+        if !removed_pending.is_empty() {
+            state
+                .pending_catalog
+                .retain(|entry| !removed_pending.contains(&entry.sort_key()));
+            for key in &removed_pending {
+                state.pending_catalog_index.remove(key);
+            }
+            state.buffered_kinds = recompute_buffered(&state);
         }
         if touched.is_empty() {
             return Ok(());
@@ -1197,7 +1408,7 @@ fn ensure_loaded(
             state.root_token = None;
         }
         Some(record) => {
-            let (ids, total) = decode_root(&record.bytes, options.catalog_segments)?;
+            let (ids, total) = decode_root(&record.bytes, 4096)?;
             state.segment_ids = ids;
             state.segments = vec![None; options.catalog_segments as usize];
             state.total_entries = total;
@@ -1242,12 +1453,23 @@ fn load_segment(
     Ok(segment)
 }
 
+/// Where a member's bytes live, from this handle's point of view.
+enum Lookup {
+    /// Still in the open pack: this handle's own memory.
+    Open,
+    /// In a pack object this handle published but has not catalogued yet.
+    /// Readable by this handle (a ranged read of the pack), not by another.
+    Pending,
+    /// In a catalogued pack object.
+    Catalogued(Arc<Segment>),
+}
+
 fn find(
     inner: &dyn BlobPlane,
     options: &PackOptions,
     state: &mut CatalogState,
     key: &Key,
-) -> Result<Option<(Entry, Option<Arc<Segment>>)>> {
+) -> Result<Option<(Entry, Lookup)>> {
     let Some((kind, id)) = member_identity(key) else {
         return Ok(None);
     };
@@ -1256,16 +1478,23 @@ fn find(
             .open_entries
             .get(*index)
             .ok_or_else(|| Error::corrupt("open pack index is inconsistent"))?;
-        return Ok(Some((entry, None)));
+        return Ok(Some((entry, Lookup::Open)));
     }
-    let index = segment_index(id, options.catalog_segments);
+    if let Some(entry) = state.pending_catalog_index.get(&(kind, id)) {
+        return Ok(Some((*entry, Lookup::Pending)));
+    }
+    let segments = state.segment_ids.len() as u32;
+    let index = segment_index(id, segments);
     let segment = load_segment(inner, options, state, index)?;
     let wanted = (kind, id);
     match segment
         .entries
         .binary_search_by(|entry| entry.sort_key().cmp(&wanted))
     {
-        Ok(position) => Ok(Some((segment.entries[position], Some(segment)))),
+        Ok(position) => Ok(Some((
+            segment.entries[position],
+            Lookup::Catalogued(segment),
+        ))),
         Err(_) => Ok(None),
     }
 }
@@ -1276,33 +1505,36 @@ fn read_packed(
     state: &mut CatalogState,
     key: &Key,
 ) -> Result<Option<Vec<u8>>> {
-    let Some((entry, segment)) = find(inner, options, state, key)? else {
+    let Some((entry, lookup)) = find(inner, options, state, key)? else {
         return Ok(None);
     };
-    let bytes = if segment.is_none() {
-        let start = usize::try_from(entry.offset)
-            .map_err(|_| Error::limit_exceeded("open pack offset does not fit memory"))?;
-        let end = start
-            .checked_add(entry.length as usize)
-            .ok_or_else(|| Error::limit_exceeded("open pack range overflows memory"))?;
-        state
-            .open_bytes
-            .get(start..end)
-            .ok_or_else(|| Error::corrupt("open pack range is out of bounds"))?
-            .to_vec()
-    } else {
-        let fetched = inner.get_range(&Key::pack(entry.pack), entry.offset, entry.length)?;
-        if fetched.len() as u64 != entry.length {
-            return Err(Error::corrupt(format!(
-                "pack {} returned {} bytes for member {} at offset {} (expected {})",
-                entry.pack.to_hex(),
-                fetched.len(),
-                key.display_path(),
-                entry.offset,
-                entry.length
-            )));
+    let bytes = match lookup {
+        Lookup::Open => {
+            let start = usize::try_from(entry.offset)
+                .map_err(|_| Error::limit_exceeded("open pack offset does not fit memory"))?;
+            let end = start
+                .checked_add(entry.length as usize)
+                .ok_or_else(|| Error::limit_exceeded("open pack range overflows memory"))?;
+            state
+                .open_bytes
+                .get(start..end)
+                .ok_or_else(|| Error::corrupt("open pack range is out of bounds"))?
+                .to_vec()
         }
-        fetched
+        Lookup::Pending | Lookup::Catalogued(_) => {
+            let fetched = inner.get_range(&Key::pack(entry.pack), entry.offset, entry.length)?;
+            if fetched.len() as u64 != entry.length {
+                return Err(Error::corrupt(format!(
+                    "pack {} returned {} bytes for member {} at offset {} (expected {})",
+                    entry.pack.to_hex(),
+                    fetched.len(),
+                    key.display_path(),
+                    entry.offset,
+                    entry.length
+                )));
+            }
+            fetched
+        }
     };
     verify_member_digest(&entry, &bytes)?;
     Ok(Some(bytes))
@@ -1323,16 +1555,30 @@ fn append(
         state.open_bytes.len() as u64 + length > options.pack_target_bytes
             || state.open_entries.len() >= options.max_members_per_pack as usize
     };
-    if !state.open_entries.is_empty() && would_overflow(state) {
+    if state.off_path {
+        // The caller seals with `detach_pack_seal`, so the open pack is allowed
+        // to pass its target between drains. It may never pass the hard bound:
+        // a caller that forgets to drain fails closed here instead of silently
+        // reverting to an inline seal on the critical path.
+        let hard = options.pack_target_bytes.saturating_mul(2);
+        if state.open_bytes.len() as u64 + length > hard {
+            return Err(Error::limit_exceeded(format!(
+                "the open pack would hold {} bytes, above the {hard}-byte off-path seal bound; \
+                 the caller must drain pack seals with `detach_pack_seal`",
+                state.open_bytes.len() as u64 + length
+            )));
+        }
+    } else if !state.open_entries.is_empty() && would_overflow(state) {
         seal(inner, catalog, options, state)?;
-    }
-    if !state.open_entries.is_empty() && would_overflow(state) {
-        // The threshold is at most the pack target, so a single member always
-        // fits an empty pack. Fail closed rather than publish an oversized pack.
-        return Err(Error::limit_exceeded(format!(
-            "member of {length} bytes does not fit the open pack target {}",
-            options.pack_target_bytes
-        )));
+        if !state.open_entries.is_empty() && would_overflow(state) {
+            // The threshold is at most the pack target, so a single member
+            // always fits an empty pack. Fail closed rather than publish an
+            // oversized pack.
+            return Err(Error::limit_exceeded(format!(
+                "member of {length} bytes does not fit the open pack target {}",
+                options.pack_target_bytes
+            )));
+        }
     }
     let offset = state.open_bytes.len() as u64;
     state.open_bytes.extend_from_slice(bytes);
@@ -1353,6 +1599,88 @@ fn append(
     Ok(())
 }
 
+/// Publish the open pack object and park its members in the pending catalog.
+///
+/// Returns whether a pack was published. This is the shared body of the public
+/// [`PackedBlobPlane::detach_pack_seal`] and of `flush`, so the two cannot
+/// drift: the pack object is durable before any catalog record can name it, and
+/// no catalog write happens here at all.
+fn seal_open_locked(
+    inner: &mut Box<dyn BlobPlane + Send>,
+    options: &PackOptions,
+    state: &mut CatalogState,
+) -> Result<bool> {
+    if state.open_entries.is_empty() {
+        return Ok(false);
+    }
+    let pack_bytes = std::mem::take(&mut state.open_bytes);
+    let mut entries = std::mem::take(&mut state.open_entries);
+    state.open_index.clear();
+    let pack_id = identity::h(PACK_DOMAIN, &pack_bytes);
+    for entry in entries.iter_mut() {
+        entry.pack = pack_id;
+    }
+    // Ordering: the immutable pack object is published (durably, create-once)
+    // before any catalog entry can name it.
+    inner.put_if_absent(&Key::pack(pack_id), &pack_bytes)?;
+    crash_point("pack_after_pack_object");
+    for entry in entries {
+        state.pending_catalog_index.insert(entry.sort_key(), entry);
+        state.pending_catalog.push(entry);
+    }
+    state.counters.sealed_packs += 1;
+    state.buffered_kinds = recompute_buffered(state);
+    let _ = options;
+    Ok(true)
+}
+
+/// Publish every pending catalog entry: the touched segments, then one root
+/// compare-and-swap. A no-op when nothing is pending.
+///
+/// On failure the entries stay pending (so they remain readable through this
+/// handle) and the error propagates: `BlobPlane::flush` is retried before the
+/// commit record, and a failure there fails the write with nothing committed.
+fn flush_pending_catalog(
+    inner: &mut Box<dyn BlobPlane + Send>,
+    catalog: &mut Box<dyn CommitPlane + Send>,
+    options: &PackOptions,
+    state: &mut CatalogState,
+) -> Result<()> {
+    if state.pending_catalog.is_empty() {
+        return Ok(());
+    }
+    let entries = std::mem::take(&mut state.pending_catalog);
+    let index = std::mem::take(&mut state.pending_catalog_index);
+    let retry = entries.clone();
+    match commit_entries(inner, catalog, options, state, entries) {
+        Ok(()) => {
+            state.counters.catalog_batches += 1;
+            state.buffered_kinds = recompute_buffered(state);
+            Ok(())
+        }
+        Err(err) => {
+            state.pending_catalog = retry;
+            state.pending_catalog_index = index;
+            state.buffered_kinds = recompute_buffered(state);
+            Err(err)
+        }
+    }
+}
+
+/// Which blob kinds this handle holds that no other handle can resolve yet:
+/// open-pack members plus published-but-uncatalogued members.
+fn recompute_buffered(state: &CatalogState) -> u8 {
+    let mut bits = 0u8;
+    for entry in state
+        .open_entries
+        .iter()
+        .chain(state.pending_catalog.iter())
+    {
+        bits |= buffered_bit(entry.kind);
+    }
+    bits
+}
+
 /// Publish the open pack, the touched segments, and the root.
 fn seal(
     inner: &mut Box<dyn BlobPlane + Send>,
@@ -1360,6 +1688,16 @@ fn seal(
     options: &PackOptions,
     state: &mut CatalogState,
 ) -> Result<()> {
+    if state.off_path {
+        // Off-path mode: publish the last pack object, then publish every
+        // pending entry as one catalog batch. Both steps are durable before the
+        // commit record because the store calls this from
+        // `flush_buffered_blobs` *before* it writes that record.
+        if seal_open_locked(inner, options, state)? {
+            // nothing else: the pending batch is published below
+        }
+        return flush_pending_catalog(inner, catalog, options, state);
+    }
     if state.open_entries.is_empty() {
         return Ok(());
     }
@@ -1464,9 +1802,10 @@ fn commit_entries(
     loop {
         // 2. Publish each touched catalog segment as an immutable object.
         let mut per_segment: BTreeMap<usize, Vec<Entry>> = BTreeMap::new();
+        let segments = state.segment_ids.len() as u32;
         for entry in entries.iter() {
             per_segment
-                .entry(segment_index(entry.id, options.catalog_segments))
+                .entry(segment_index(entry.id, segments))
                 .or_default()
                 .push(*entry);
         }
@@ -1649,7 +1988,7 @@ fn encode_root(ids: &[Hash32], total: u64) -> Result<Vec<u8>> {
     Ok(out)
 }
 
-fn decode_root(bytes: &[u8], expected_segments: u32) -> Result<(Vec<Hash32>, u64)> {
+fn decode_root(bytes: &[u8], max_segments: u32) -> Result<(Vec<Hash32>, u64)> {
     let minimum = (ROOT_HEADER_BYTES + DIGEST_BYTES) as usize;
     if bytes.len() < minimum {
         return Err(Error::corrupt("pack catalog root is too short"));
@@ -1663,11 +2002,15 @@ fn decode_root(bytes: &[u8], expected_segments: u32) -> Result<(Vec<Hash32>, u64
             "pack catalog root version {version} is not supported"
         )));
     }
+    // The root records the geometry the writer chose. A reader honours it, so a
+    // catalog written with a handful of segments for a few hundred members is
+    // still readable by a plane configured for thousands. Only a physically
+    // impossible count (not a power of two, or above the hard bound) is refused.
     let segments = u32::from_le_bytes(le4(bytes, 8)?);
-    if segments != expected_segments {
-        return Err(Error::unsupported_version(format!(
-            "pack catalog root names {segments} segments but this plane is configured for \
-             {expected_segments}"
+    if segments == 0 || segments > max_segments || !segments.is_power_of_two() {
+        return Err(Error::corrupt(format!(
+            "pack catalog root names {segments} segments, which is not a power of two in \
+             1..={max_segments}"
         )));
     }
     let total = u64::from_le_bytes(le8(bytes, 12)?);
