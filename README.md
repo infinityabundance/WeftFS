@@ -1,6 +1,6 @@
 # WeftFS
 
-[![Release](https://img.shields.io/github/v/release/infinityabundance/WeftFS?label=release)](https://github.com/infinityabundance/WeftFS/releases/tag/v1.3.0)
+[![Release](https://img.shields.io/github/v/release/infinityabundance/WeftFS?label=release)](https://github.com/infinityabundance/WeftFS/releases/latest)
 
 **Context and lossless reconstruction for AI storage infrastructure.**
 
