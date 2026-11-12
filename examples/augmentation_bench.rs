@@ -1105,6 +1105,7 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
         planner: PlannerMode::TwoStage,
         pipeline_workers: 0,
         pipeline_sync_bytes: None,
+        pipeline_cpu_tokens_flag: None,
     };
     // Suffixes compose with `-`: `noz19-percommit` is the R17 attribution row
     // with the historical per-commit publication, `pack1m-group` is a packed
@@ -1140,7 +1141,25 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
             }
             // R21: keep one durability batch for the whole group, so the
             // barrier is not overlapped with encoding (the ablation control).
-            "nosync" => flags.pipeline_sync_bytes = Some(0),
+            "nosync" | "sync0" => flags.pipeline_sync_bytes = Some(0),
+            // R21: early-barrier granularity in MiB (`sync8`, `sync16`, ...).
+            part if part.starts_with("sync") => {
+                let mib: u64 = part[4..]
+                    .trim_end_matches('m')
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric sync size"))?;
+                flags.pipeline_sync_bytes = Some(mib.saturating_mul(1024 * 1024));
+            }
+            // R21: CPU tokens (`tokens2`, `tokens3`, ...): busy encoder threads.
+            part if part.starts_with("tokens") => {
+                let tokens: usize = part[6..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric token count"))?;
+                if tokens == 0 {
+                    return Err(format!("configuration `{key}` asks for zero CPU tokens"));
+                }
+                flags.pipeline_cpu_tokens_flag = Some(tokens);
+            }
             // R21 pipelined group writer: `pipe1` / `pipe2` / `pipe4` / `pipe8`.
             part if part.starts_with("pipe") => {
                 let workers: usize = part[4..]
@@ -1240,8 +1259,11 @@ struct ConfigFlags {
     /// sequential (pre-R21) writer.
     pipeline_workers: usize,
     /// R21: `Some(0)` keeps one deferred durability batch for the whole group
-    /// (the R20 behaviour) instead of syncing every `publish_sync_bytes`.
+    /// (the R20 behaviour) instead of an early barrier every
+    /// `publish_sync_bytes`.
     pipeline_sync_bytes: Option<u64>,
+    /// R21: CPU tokens (busy encoder threads) for the pipeline.
+    pipeline_cpu_tokens_flag: Option<usize>,
 }
 
 fn uses_protocol(config: &str) -> bool {
@@ -1476,9 +1498,11 @@ fn pipeline_stats_json(stats: &weftfs::tensor_pipeline::TensorPipelineStats) -> 
             "publish_idle": stats.publish_idle_ms,
             "cpu_tokens": stats.cpu_token_wait_ms,
         },
-        "durability": {
-            "batched_barriers": stats.batched_barriers,
-            "batched_barrier_ms": stats.batched_barrier_ms,
+        "early_barrier": {
+            "passes": stats.writeback_passes,
+            "files": stats.writeback_files,
+            "busy_ms": stats.writeback_ms,
+            "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record",
         },
         "source": "Store::prepare_tensor_group_pipelined (R21); every field is measured, never estimated",
     })
@@ -1498,6 +1522,7 @@ fn write_weftfs(
         planner,
         pipeline_workers,
         pipeline_sync_bytes,
+        pipeline_cpu_tokens_flag,
     } = flags;
     let group_commit = publication.group_commit();
     let work = args.work.clone().unwrap();
@@ -1557,7 +1582,10 @@ fn write_weftfs(
         // encoding overlapped by publication.
         let mut popts = weftfs::tensor_pipeline::TensorPipelineOptions::default();
         popts.encode_threads = pipeline_workers;
-        popts.cpu_tokens = args.pipeline_cpu_tokens.unwrap_or(pipeline_workers);
+        popts.cpu_tokens = args
+            .pipeline_cpu_tokens
+            .or(pipeline_cpu_tokens_flag)
+            .unwrap_or(pipeline_workers);
         if let Some(value) = args.pipeline_staging_bytes {
             popts.staging_bytes = value;
         }
@@ -1588,6 +1616,7 @@ fn write_weftfs(
                 byte_len: sel.bytes,
             })
             .collect();
+        let pipeline_snap_before = profiling.then(phase_profile::snapshot);
         let read = |index: usize, buf: &mut [u8]| -> weftfs::Result<()> {
             let sel = &subset.tensors[index];
             let tensor = file
@@ -1604,6 +1633,14 @@ fn write_weftfs(
             .map_err(|err| format!("pipeline: {err}"))?;
         source_read_ms = outcome.stats.reader_ms;
         prepare_ms = outcome.stats.pipeline_wall_ms;
+        // The phase profile is process-wide and thread-summed, so the
+        // pipeline's whole-stage delta is the same accounting the sequential
+        // loop accumulates per tensor.
+        if profiling {
+            if let Some(before) = &pipeline_snap_before {
+                add_phase_totals(&mut prepare_phases, &phase_profile::snapshot().since(before));
+            }
+        }
         pipeline_stats = pipeline_stats_json(&outcome.stats);
         for (index, result) in outcome.results.into_iter().enumerate() {
             let sel = &subset.tensors[index];
@@ -3671,6 +3708,7 @@ fn ablate(args: &Args) -> Result<(), String> {
                 "store_head": write["store_head"],
                 "generation": write["generation"],
                 "ablation": write["ablation"],
+                "pipeline": write["pipeline"],
                 "encode_counts": if is_weft {
                     build_ledger(&write)["encode_counts"].clone()
                 } else {
@@ -3777,6 +3815,7 @@ fn ablate(args: &Args) -> Result<(), String> {
                 "median_wall_ms": writes.get(median_rep).and_then(|write| write["wall_ms"].as_f64()),
                 "least_contended_wall_ms": writes.get(least_contended).and_then(|write| write["wall_ms"].as_f64()),
                 "phases": write["phases"],
+                "pipeline": write["pipeline"],
                 "prepare_phases": write["prepare_phases"],
                 "commit_phases": write["commit_phases"],
                 "ledger": build_ledger(&write),

@@ -79,8 +79,11 @@ pub const DEFAULT_PUBLISH_BYTES: u64 = 128 * 1024 * 1024;
 /// Default bound on the bytes all encode workers hold at once.
 pub const DEFAULT_WORKER_BYTES: u64 = 1024 * 1024 * 1024;
 
-/// Publish this many bytes, then make them durable and start a new batch.
-pub const DEFAULT_PUBLISH_SYNC_BYTES: u64 = 64 * 1024 * 1024;
+/// Publish this many bytes, then hand the batch's files to the early-barrier
+/// thread. Measured on the 4-CPU court (0.5B fixture, 282 MB): 8 MiB 651 ms,
+/// 16 MiB 648 ms, 64 MiB 713 ms, none 899 ms — the last number is the whole
+/// group's writeback landing on the commit's barrier.
+pub const DEFAULT_PUBLISH_SYNC_BYTES: u64 = 8 * 1024 * 1024;
 
 /// Bytes a worker may hold while it encodes one tensor of `n` bytes, divided by
 /// `n` — the proof behind the worker reservation.
@@ -131,8 +134,15 @@ pub struct TensorPipelineOptions {
     /// Tensor length at which a worker runs the level-3 and mode-9 candidates
     /// concurrently. `0` disables candidate parallelism.
     pub candidate_parallel_min_bytes: u64,
-    /// Publish this many bytes, then make them durable and open a new batch.
-    /// `0` keeps one deferred batch for the whole group (the R20 behaviour).
+    /// Publish this many bytes, then start background writeback for the blobs
+    /// published so far and keep going. `0` never kicks (the R20 behaviour: a
+    /// quiet disk writes the batch back on its own).
+    ///
+    /// A kick is **not** a barrier: it waits for nothing, claims nothing and
+    /// leaves every file in the open deferred batch, so the commit's own
+    /// barrier still `fsync`s every file and directory before the commit
+    /// record. It only stops the whole group's writeback from landing on the
+    /// critical path of the last barrier.
     pub publish_sync_bytes: u64,
 }
 
@@ -262,9 +272,14 @@ pub struct TensorPipelineStats {
     pub encode_queue_wait_ms: f64,
     pub publish_idle_ms: f64,
     pub cpu_token_wait_ms: f64,
-    // ---- durability ----
-    pub batched_barriers: u64,
-    pub batched_barrier_ms: f64,
+    // ---- early writeback (durability) ----
+    /// Early-barrier passes the writeback thread completed.
+    pub writeback_passes: u64,
+    /// Files the early barrier `fsync`ed out of band.
+    pub writeback_files: u64,
+    /// Total writeback-thread busy time across passes (overlapped with encode
+    /// and publication, so it is not a wall).
+    pub writeback_ms: f64,
     /// Encode and publication intervals, for a reader that wants to plot them.
     pub encode_intervals: Vec<StageInterval>,
     pub publish_intervals: Vec<StageInterval>,
@@ -353,8 +368,6 @@ impl Store {
         let encode_intervals = Mutex::new(vec![StageInterval::default(); tensors.len()]);
         let publish_intervals = Mutex::new(vec![StageInterval::default(); tensors.len()]);
         let reader_ns = AtomicUsize::new(0);
-        let barrier_count = AtomicUsize::new(0);
-        let barrier_ns = AtomicUsize::new(0);
         let wait_staging_ns = AtomicUsize::new(0);
         let wait_worker_bytes_ns = AtomicUsize::new(0);
         let wait_encode_queue_ns = AtomicUsize::new(0);
@@ -364,6 +377,7 @@ impl Store {
         let oversize_staging = AtomicUsize::new(0);
         let oversize_publish = AtomicUsize::new(0);
 
+        let writeback = Writeback::new();
         std::thread::scope(|scope| {
             // ---- reader -------------------------------------------------
             {
@@ -515,17 +529,94 @@ impl Store {
                 });
             }
 
+            // ---- early writeback ----------------------------------------
+            // A separate thread `fsync`s the blobs the publisher has drained
+            // from the open deferred batch, so the group's writeback runs while
+            // the encoders are still working instead of landing whole on the
+            // commit's barrier. It never holds the backend lock for the
+            // `fsync`s; it only takes the path list and reports the barriers
+            // back for the counters. The scope joins it before this function
+            // returns, and a failure fails the pipeline before anything is
+            // committed (the ordering rule is never weakened).
+            {
+                let writeback = &writeback;
+                let options = options;
+                scope.spawn(move || {
+                    loop {
+                        let batch = {
+                            let mut state = lock_wb(writeback);
+                            loop {
+                                if state.closed && state.queue.is_empty() {
+                                    return;
+                                }
+                                if let Some(batch) = state.queue.pop_front() {
+                                    break Some(batch);
+                                }
+                                state = writeback
+                                    .cv
+                                    .wait(state)
+                                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                            }
+                        };
+                        let Some(batch) = batch else { return };
+                        let started = Instant::now();
+                        let mut synced = 0u64;
+                        for path in &batch {
+                            match std::fs::File::open(path) {
+                                Ok(file) => {
+                                    if let Err(err) = file.sync_data() {
+                                        let error = Error::io(format!(
+                                            "early barrier cannot fsync {}: {err}",
+                                            path.display()
+                                        ));
+                                        let mut state = lock_wb(writeback);
+                                        if state.error.is_none() {
+                                            state.error = Some(error);
+                                        }
+                                        return;
+                                    }
+                                    synced += 1;
+                                }
+                                Err(err) => {
+                                    let error = Error::io(format!(
+                                        "early barrier cannot open {}: {err}",
+                                        path.display()
+                                    ));
+                                    let mut state = lock_wb(writeback);
+                                    if state.error.is_none() {
+                                        state.error = Some(error);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                        let elapsed = started.elapsed().as_nanos() as usize;
+                        let mut state = lock_wb(writeback);
+                        state.files = state.files.saturating_add(synced);
+                        state.passes += 1;
+                        state.ns = state.ns.saturating_add(elapsed);
+                        drop(state);
+                        if let Err(err) = self.note_external_file_barriers(synced) {
+                            let mut state = lock_wb(writeback);
+                            if state.error.is_none() {
+                                state.error = Some(err);
+                            }
+                            return;
+                        }
+                        let _ = options;
+                    }
+                });
+            }
+
             // ---- publisher ----------------------------------------------
             {
                 let shared = &shared;
                 let cv = &cv;
                 let options = options;
                 let publish_intervals = &publish_intervals;
-                let barrier_count = &barrier_count;
-                let barrier_ns = &barrier_ns;
                 let wait_publish_idle_ns = &wait_publish_idle_ns;
                 let oversize_publish = &oversize_publish;
-                let encode_intervals = &encode_intervals;
+                let writeback = &writeback;
                 scope.spawn(move || {
                     let mut since_sync: u64 = 0;
                     loop {
@@ -604,23 +695,44 @@ impl Store {
                             since_sync = since_sync.saturating_add(resident as u64);
                             if since_sync >= options.publish_sync_bytes {
                                 since_sync = 0;
-                                let sync_start = Instant::now();
-                                if let Err(err) = self.barrier_published_blobs() {
-                                    fail(shared, cv, index, err);
-                                    return;
+                                // Drain the batch's file list under the backend
+                                // lock (cheap) and hand the `fsync`s to the
+                                // writeback thread.
+                                match self.take_published_blob_writeback_files() {
+                                    Ok(files) if files.is_empty() => {}
+                                    Ok(files) => {
+                                        let mut state = lock_wb(writeback);
+                                        state.queue.push_back(files);
+                                        writeback.cv.notify_all();
+                                    }
+                                    Err(err) => {
+                                        fail(shared, cv, index, err);
+                                        return;
+                                    }
                                 }
-                                barrier_ns.fetch_add(
-                                    sync_start.elapsed().as_nanos() as usize,
-                                    Ordering::Relaxed,
-                                );
-                                barrier_count.fetch_add(1, Ordering::Relaxed);
                             }
                         }
                     }
-                    let _ = encode_intervals;
+                    // Every published blob is either drained to the writeback
+                    // thread or still in the open batch; closing the queue lets
+                    // the writer finish the drained ones before we return.
+                    {
+                        let mut state = lock_wb(writeback);
+                        state.closed = true;
+                        writeback.cv.notify_all();
+                    }
                 });
             }
         });
+
+        // Every thread in the scope has joined: the early-barrier thread has
+        // finished every pass it accepted, so a drained file is durable or the
+        // pipeline reports an error and nothing is committed.
+        let mut writeback = writeback;
+        writeback.harvest();
+        if let Some(err) = writeback.error() {
+            return Err(err);
+        }
 
         let mut guard = lock(&shared);
         if let Some((index, err)) = guard.error.take() {
@@ -727,8 +839,9 @@ impl Store {
             encode_queue_wait_ms: wait_encode_queue_ns.load(Ordering::Relaxed) as f64 / 1.0e6,
             publish_idle_ms: wait_publish_idle_ns.load(Ordering::Relaxed) as f64 / 1.0e6,
             cpu_token_wait_ms: wait_token_ns.load(Ordering::Relaxed) as f64 / 1.0e6,
-            batched_barriers: barrier_count.load(Ordering::Relaxed) as u64,
-            batched_barrier_ms: barrier_ns.load(Ordering::Relaxed) as f64 / 1.0e6,
+            writeback_passes: writeback.passes,
+            writeback_files: writeback.files,
+            writeback_ms: writeback.ns as f64 / 1.0e6,
             encode_intervals,
             publish_intervals,
         };
@@ -738,21 +851,90 @@ impl Store {
         })
     }
 
-    /// Make every blob this handle has published durable, then open a fresh
-    /// deferred batch.
+    /// Drain the file list of the store's open deferred durability batch so
+    /// the caller can `fsync` those files on its own thread (R21).
     ///
-    /// The ordering rule is unchanged: blobs are durable before the commit
-    /// record that references them. Calling this earlier only moves *when* the
-    /// barrier happens (during encoding instead of after it); every published
-    /// file still receives its own data barrier, and the commit path still ends
-    /// whatever batch is open before it publishes.
-    pub fn barrier_published_blobs(&self) -> Result<()> {
+    /// The ordering rule is untouched: the caller owes the `fsync`s before the
+    /// commit record, and the commit path still closes the batch and `fsync`s
+    /// every remaining file and every touched directory before it publishes.
+    /// Nothing here claims durability.
+    pub fn take_published_blob_writeback_files(&self) -> Result<Vec<std::path::PathBuf>> {
+        self.with_backend_mut(|backend| Ok(backend.take_pending_writeback_files()))
+    }
+
+    /// Record `files` file barriers performed outside the backend, so the
+    /// durability counters stay exact.
+    pub fn note_external_file_barriers(&self, files: u64) -> Result<()> {
         self.with_backend_mut(|backend| {
-            backend.end_deferred_sync()?;
-            let _ = backend.begin_deferred_sync()?;
+            backend.note_external_file_barriers(files);
             Ok(())
         })
     }
+}
+
+// ---------------------------------------------------------------------------
+// Early writeback
+// ---------------------------------------------------------------------------
+
+/// State shared with the early-barrier thread.
+struct Writeback {
+    queue: Mutex<WritebackQueue>,
+    cv: Condvar,
+    /// Read once every thread in the scope has joined; the mutex makes those
+    /// reads safe without a second lock discipline.
+    passes: u64,
+    files: u64,
+    ns: usize,
+}
+
+struct WritebackQueue {
+    queue: VecDeque<Vec<std::path::PathBuf>>,
+    closed: bool,
+    error: Option<Error>,
+    passes: u64,
+    files: u64,
+    ns: usize,
+}
+
+impl Writeback {
+    fn new() -> Self {
+        Writeback {
+            queue: Mutex::new(WritebackQueue {
+                queue: VecDeque::new(),
+                closed: false,
+                error: None,
+                passes: 0,
+                files: 0,
+                ns: 0,
+            }),
+            cv: Condvar::new(),
+            passes: 0,
+            files: 0,
+            ns: 0,
+        }
+    }
+
+    /// Copy the counters out of the shared state (after the scope joined).
+    fn harvest(&mut self) {
+        let (passes, files, ns) = {
+            let state = lock_wb(self);
+            (state.passes, state.files, state.ns)
+        };
+        self.passes = passes;
+        self.files = files;
+        self.ns = ns;
+    }
+
+    fn error(&self) -> Option<Error> {
+        lock_wb(self).error.clone()
+    }
+}
+
+fn lock_wb(writeback: &Writeback) -> MutexGuard<'_, WritebackQueue> {
+    writeback
+        .queue
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
 }
 
 // ---------------------------------------------------------------------------

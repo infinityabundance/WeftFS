@@ -1299,6 +1299,36 @@ pub trait StorageBackend: Send {
         Ok(())
     }
 
+    /// Start an **early barrier** for everything the open deferred batch has
+    /// recorded, without closing it and without holding the batch's lock for
+    /// the duration of the `fsync`s.
+    ///
+    /// This is the R21 overlap hook. The blobs a group commit will publish are
+    /// dirty in the page cache for as long as the group is encoding; on a quiet
+    /// disk the kernel writes them back on its own, but under a saturated CPU it
+    /// does not, so the single barrier before the commit record pays the whole
+    /// 282 MB (measured: 341-391 ms when the encode phase is short). Draining
+    /// the file list here lets the caller `fsync` those files on its own thread
+    /// while publication continues.
+    ///
+    /// Durability is unchanged and the caller owns the obligation: the drained
+    /// files **must** be `fsync`ed before the commit record, which the caller
+    /// guarantees by joining its writeback pass before it returns; only the
+    /// directory list stays in the batch, and the closing barrier still `fsync`s
+    /// it. A crash after the drain but before those `fsync`s is exactly as safe
+    /// as a crash before the drain: no commit names any of it yet.
+    ///
+    /// Default: no batch to drain.
+    fn take_pending_writeback_files(&mut self) -> Vec<std::path::PathBuf> {
+        Vec::new()
+    }
+
+    /// Record file barriers performed outside this backend (an early writeback
+    /// pass), so [`StorageBackend::durability_barriers`] stays exact.
+    fn note_external_file_barriers(&mut self, files: u64) {
+        let _ = files;
+    }
+
     /// Reclaim physical pack objects whose every member has been deleted.
     ///
     /// Default: the plane has no packs. A packed blob plane returns the exact
@@ -1854,6 +1884,20 @@ impl StorageBackend for LocalBackend {
         crate::phase_profile::timed(crate::phase_profile::Phase::BackendSync, || {
             self.sync_pending()
         })
+    }
+
+    fn take_pending_writeback_files(&mut self) -> Vec<PathBuf> {
+        // A USRBIO (3FS) data plane syncs inside its own write path, so there
+        // is nothing to drain.
+        if self.usrbio.is_some() {
+            return Vec::new();
+        }
+        std::mem::take(&mut self.pending_sync.files)
+    }
+
+    fn note_external_file_barriers(&mut self, files: u64) {
+        self.stats.fsyncs.fetch_add(files, Ordering::Relaxed);
+        self.stats.fsync_file.fetch_add(files, Ordering::Relaxed);
     }
 
     fn durability_barriers(&self) -> Option<(u64, u64)> {
