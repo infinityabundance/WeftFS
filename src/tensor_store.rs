@@ -1044,6 +1044,63 @@ pub struct TensorPlanOptions {
     /// Tensor length at which [`Self::parallel_candidates`] applies. Ignored
     /// when `parallel_candidates` is false.
     pub candidate_parallel_min_bytes: u64,
+    /// Threads a **chunked** level-3/level-19 ZSTD frame may use inside one
+    /// tensor (R22).
+    ///
+    /// A CHUNKED ZSTD frame is a concatenation of independent per-chunk frames,
+    /// so encoding them on several threads and concatenating in index order is
+    /// byte-identical by construction; this cannot change a frame byte, a chunk
+    /// entry, a hash or a chosen representation. `1` keeps the historical
+    /// sequential encoder. Unlike [`Self::tensor_encode_threads`] (mode 9) this
+    /// is **not** counted by the pipeline's CPU tokens: a token bounds an encode
+    /// *worker*, and the level-3 channel inside that worker is bounded here.
+    pub zstd_encode_threads: usize,
+    /// Decoded bytes handed to the chunk-parallel ZSTD pool per ordered batch.
+    /// This, not the thread count, is the bound on the pool's transient memory.
+    pub zstd_encode_batch_bytes: u64,
+    /// Codec frame chunking for the level-3 / level-19 candidates (R22 sweep
+    /// dimension). [`ZstdFrameChunk::Derived`] is the shipped rule.
+    pub zstd_frame_chunk: ZstdFrameChunk,
+    /// Slack, in bytes, added to the level-19 gate's lower bound before it is
+    /// compared with the measured incumbent (R22 sweep dimension).
+    ///
+    /// Positive values skip level 19 **earlier** (faster, potentially larger);
+    /// negative values encode it when it is within `-margin` bytes of the
+    /// incumbent (slower, potentially smaller). `0` is the R18 rule, which
+    /// skips iff `lower > incumbent`.
+    pub zstd19_gate_margin_bytes: i64,
+}
+
+/// How a ZSTD candidate frame is chunked (R22).
+///
+/// The codec chunk size decides the frame's chunk table. It never changes the
+/// decoded bytes or which logical tensor is stored; a different chunking is a
+/// different frame and therefore a different content root, which is why it is a
+/// sweep dimension and not a default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ZstdFrameChunk {
+    /// Derive from the store chunk size: `codec_chunk_size(store_chunk_size)`,
+    /// clamped to 4..64 KiB. The shipped rule.
+    Derived,
+    /// One frame for the whole tensor: no chunk table.
+    Unchunked,
+    /// An explicit codec chunk size, clamped to the codec's 4..64 KiB bounds.
+    Bytes(u64),
+}
+
+impl ZstdFrameChunk {
+    /// The codec chunk size to pass to `encode_zstd`, `None` for one frame.
+    pub fn resolve(self, store_chunk_size: u64) -> Option<usize> {
+        match self {
+            ZstdFrameChunk::Derived => {
+                Some(crate::representation::codec_chunk_size(store_chunk_size.max(1)) as usize)
+            }
+            ZstdFrameChunk::Unchunked => None,
+            ZstdFrameChunk::Bytes(size) => {
+                Some(crate::representation::codec_chunk_size(size) as usize)
+            }
+        }
+    }
 }
 
 impl Default for TensorPlanOptions {
@@ -1087,6 +1144,10 @@ impl Default for TensorPlanOptions {
             parallel_candidates: false,
             candidate_parallel_min_bytes:
                 crate::tensor_pipeline::DEFAULT_CANDIDATE_PARALLEL_MIN_BYTES,
+            zstd_encode_threads: 1,
+            zstd_encode_batch_bytes: DEFAULT_ZSTD_ENCODE_BATCH_BYTES,
+            zstd_frame_chunk: ZstdFrameChunk::Derived,
+            zstd19_gate_margin_bytes: 0,
         }
     }
 }
@@ -1101,6 +1162,27 @@ pub fn default_tensor_encode_threads() -> usize {
         .map(|count| count.get())
         .unwrap_or(1)
         .clamp(1, 4)
+}
+
+/// Default ordered-batch bound for chunk-parallel ZSTD encoding (R22): the
+/// pool holds at most this many decoded chunk bytes plus their compressed
+/// frames at any instant.
+pub const DEFAULT_ZSTD_ENCODE_BATCH_BYTES: u64 = 32 * 1024 * 1024;
+
+impl TensorPlanOptions {
+    /// The codec-level chunk-parallel ZSTD bounds this plan asks for.
+    ///
+    /// `threads == 1` is the historical sequential encoder, so the option is
+    /// inert unless a caller raises it.
+    pub fn zstd_encode_options(&self) -> weftcodec::modes::ZstdEncodeOptions {
+        weftcodec::modes::ZstdEncodeOptions {
+            threads: self.zstd_encode_threads.max(1),
+            parallel_min_bytes: weftcodec::modes::ZstdEncodeOptions::default().parallel_min_bytes,
+            batch_decoded_bytes: usize::try_from(self.zstd_encode_batch_bytes)
+                .unwrap_or(usize::MAX)
+                .max(1),
+        }
+    }
 }
 
 impl TensorPlanOptions {
@@ -3666,6 +3748,11 @@ impl Store {
         let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Encode);
         let limits = Limits::default();
         let size = logical.len() as u64;
+        // R22: the chunk-parallel ZSTD bounds for this plan. `threads == 1` is
+        // the historical sequential encoder, and the codec falls back to it
+        // whenever the input is below its own parallel threshold, so this is
+        // inert until a caller raises `zstd_encode_threads`.
+        let zstd_options = options.zstd_encode_options();
         let mut out = Vec::new();
         // The additive quantized LogicalTensorRoot binds the mode-10 scale
         // plane, so a q8_0 tensor is only stored through mode 10. q4_0 store
@@ -3699,8 +3786,14 @@ impl Store {
             // size; the two-stage rule governs what a *write* encodes.
             && keep_artifacts;
         let mut trace: Option<PlannerTrace> = if two_stage_active {
-            let chunk_bytes =
-                crate::representation::codec_chunk_size(self.options().chunk_size.max(1));
+            // R22: sample whole chunks of the same size the frame will use, so a
+            // non-default frame chunking cannot make the sampled estimate
+            // describe a different unit than the encode.
+            let chunk_bytes = options
+                .zstd_frame_chunk
+                .resolve(self.options().chunk_size.max(1))
+                .map(|size| size as u64)
+                .unwrap_or_else(|| self.options().chunk_size.max(1));
             let zstd19_offered = options.zstd19
                 && size >= options.zstd19_min_bytes
                 && crate::cost_model::estimate_encode_ns(
@@ -3816,11 +3909,19 @@ impl Store {
             );
             if options.fast_codec == FastCodec::Zstd {
                 let level = options.fast_zstd_level.clamp(1, 3);
-                let codec_chunk =
-                    crate::representation::codec_chunk_size(self.options().chunk_size.max(1))
-                        as usize;
+                // R22: the frame chunking follows the same plan option as the
+                // planned candidates, so a fast row and a planned row agree.
+                let codec_chunk = options
+                    .zstd_frame_chunk
+                    .resolve(self.options().chunk_size.max(1));
                 match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                    weftcodec::modes::encode_zstd(logical, level, Some(codec_chunk), &limits)
+                    weftcodec::modes::encode_zstd_with(
+                        logical,
+                        level,
+                        codec_chunk,
+                        &limits,
+                        &zstd_options,
+                    )
                 }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
@@ -3915,14 +4016,16 @@ impl Store {
             return Ok((out, None));
         }
         if hint == Some(TensorStrategy::Zstd) && !quantized {
-            let codec_chunk =
-                crate::representation::codec_chunk_size(self.options().chunk_size.max(1)) as usize;
+            let codec_chunk = options
+                .zstd_frame_chunk
+                .resolve(self.options().chunk_size.max(1));
             match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                weftcodec::modes::encode_zstd(
+                weftcodec::modes::encode_zstd_with(
                     logical,
                     crate::representation::CODEC_ZSTD_LEVEL,
-                    Some(codec_chunk),
+                    codec_chunk,
                     &limits,
+                    &zstd_options,
                 )
             }) {
                 Ok(frame) => {
@@ -4013,8 +4116,9 @@ impl Store {
         retain_candidate(&mut out, hint, keep_artifacts, raw_candidate);
 
         // Zstandard frame.
-        let codec_chunk =
-            crate::representation::codec_chunk_size(self.options().chunk_size.max(1)) as usize;
+        let codec_chunk = options
+            .zstd_frame_chunk
+            .resolve(self.options().chunk_size.max(1));
         // R18: level 3 is the measured incumbent, so it is encoded whenever its
         // trusted lower bound could still beat the best exact candidate (or the
         // prediction cannot decide the mode-9 1/64 gate). Otherwise the skip is
@@ -4073,11 +4177,12 @@ impl Store {
             let panicked = std::thread::scope(|scope| {
                 let zstd = scope.spawn(|| {
                     crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                        weftcodec::modes::encode_zstd(
+                        weftcodec::modes::encode_zstd_with(
                             logical,
                             crate::representation::CODEC_ZSTD_LEVEL,
-                            Some(codec_chunk),
+                            codec_chunk,
                             &limits,
+                            &zstd_options,
                         )
                     })
                 });
@@ -4140,11 +4245,12 @@ impl Store {
                 Some(zstd) => zstd,
                 None => {
                     crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                        weftcodec::modes::encode_zstd(
+                        weftcodec::modes::encode_zstd_with(
                             logical,
                             crate::representation::CODEC_ZSTD_LEVEL,
-                            Some(codec_chunk),
+                            codec_chunk,
                             &limits,
+                            &zstd_options,
                         )
                     })
                 }
@@ -4277,10 +4383,11 @@ impl Store {
                         incumbent = candidate;
                     }
                 }
-                let decision = crate::two_stage::select_level19(
+                let decision = crate::two_stage::select_level19_with_margin(
                     estimate.as_ref(),
                     trace.fixed.zstd19,
                     incumbent,
+                    options.zstd19_gate_margin_bytes,
                 );
                 trace.analysis.zstd19 = decision.estimate.clone();
                 trace.level19 = Some(decision.clone());
@@ -4310,7 +4417,13 @@ impl Store {
                 ));
             } else {
                 match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd19, || {
-                    weftcodec::modes::encode_zstd(logical, 19, Some(codec_chunk), &limits)
+                    weftcodec::modes::encode_zstd_with(
+                        logical,
+                        19,
+                        codec_chunk,
+                        &limits,
+                        &zstd_options,
+                    )
                 }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;

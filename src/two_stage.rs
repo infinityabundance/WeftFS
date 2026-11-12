@@ -729,6 +729,23 @@ pub fn select_level19(
     fixed_zstd19: u128,
     incumbent: Incumbent,
 ) -> Level19Decision {
+    select_level19_with_margin(estimate, fixed_zstd19, incumbent, 0)
+}
+
+/// [`select_level19`] with a byte margin on the *lower* bound (R22).
+///
+/// A positive margin makes the skip easier (level 19 must be predicted to win
+/// by at least `margin` bytes), a negative one makes it harder (it is encoded
+/// when it is within `-margin` bytes of the incumbent). `0` is the R18 rule.
+/// The margin is a **planner-policy** knob: it cannot change what a frame looks
+/// like, only whether an encoder runs, and every decision records the bound it
+/// used.
+pub fn select_level19_with_margin(
+    estimate: Option<&SampleEstimate>,
+    fixed_zstd19: u128,
+    incumbent: Incumbent,
+    margin_bytes: i64,
+) -> Level19Decision {
     let Some(estimate) = estimate else {
         return Level19Decision {
             encode: false,
@@ -736,13 +753,18 @@ pub fn select_level19(
             estimate: None,
         };
     };
-    let lower = u128::from(estimate.lower) + fixed_zstd19;
+    let lower = if margin_bytes >= 0 {
+        u128::from(estimate.lower) + fixed_zstd19 + margin_bytes as u128
+    } else {
+        (u128::from(estimate.lower) + fixed_zstd19)
+            .saturating_sub(margin_bytes.unsigned_abs() as u128)
+    };
     if lower > incumbent.cost {
         Level19Decision {
             encode: false,
             skip_bound: Some(format!(
                 "level-19 not encoded: lower bound {} B ({} interval, {} of {} sampled chunks) \
-                 cannot beat the measured {} at {} B; the skip is safe by {} B",
+                 cannot beat the measured {} at {} B; the skip is safe by {} B{}",
                 estimate.lower,
                 estimate.interval(),
                 estimate.sampled_chunks,
@@ -750,6 +772,11 @@ pub fn select_level19(
                 incumbent.name,
                 incumbent.physical,
                 lower - incumbent.cost,
+                if margin_bytes == 0 {
+                    String::new()
+                } else {
+                    format!(" with a {margin_bytes} B gate margin")
+                },
             )),
             estimate: Some(estimate.clone()),
         }

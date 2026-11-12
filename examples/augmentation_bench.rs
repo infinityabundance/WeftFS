@@ -1016,12 +1016,19 @@ fn write_native_app_s3(
 // WeftFS write (B/C/D/E)
 // ---------------------------------------------------------------------------
 
-fn representation_spec(
-    config: &str,
-    ablate_zstd19: bool,
-    ablate_float: bool,
-    planner: PlannerMode,
-) -> TensorWriteSpec {
+fn representation_spec(config: &str, flags_state: &ConfigFlags) -> TensorWriteSpec {
+    let ConfigFlags {
+        ablate_zstd19,
+        ablate_float,
+        planner,
+        zstd_encode_threads,
+        zstd_encode_batch_bytes,
+        zstd_frame_chunk,
+        zstd19_gate_margin_bytes,
+        two_stage_off_zstd19,
+        two_stage_off_mode9,
+        ..
+    } = *flags_state;
     let base = config_base(config);
     let planned = matches!(base, "C" | "E");
     // R19: the intra-tensor mode-9 emission thread bound. The shipped default
@@ -1034,18 +1041,34 @@ fn representation_spec(
         .filter(|value| *value >= 1)
         .unwrap_or_else(weftfs::tensor_store::default_tensor_encode_threads);
     if planned {
+        let mut plan = TensorPlanOptions {
+            write_policy: WritePolicy::Planned,
+            semantic_search: false,
+            // An explicit two-stage ablation removes one candidate from the
+            // shipped two-stage candidate set; the R17 `-nom9`/`-noz19` rows
+            // above instead pin the exhaustive planner.
+            zstd19: !ablate_zstd19 && !two_stage_off_zstd19,
+            float_tensor: !ablate_float && !two_stage_off_mode9,
+            planner,
+            tensor_encode_threads: encode_threads,
+            ..TensorPlanOptions::default()
+        };
+        if let Some(threads) = zstd_encode_threads {
+            plan.zstd_encode_threads = threads;
+        }
+        if let Some(bytes) = zstd_encode_batch_bytes {
+            plan.zstd_encode_batch_bytes = bytes;
+        }
+        if let Some(chunk) = zstd_frame_chunk {
+            plan.zstd_frame_chunk = chunk;
+        }
+        if let Some(margin) = zstd19_gate_margin_bytes {
+            plan.zstd19_gate_margin_bytes = margin;
+        }
         TensorWriteSpec {
             strategy_hint: None,
             causal: Vec::new(),
-            plan: TensorPlanOptions {
-                write_policy: WritePolicy::Planned,
-                semantic_search: false,
-                zstd19: !ablate_zstd19,
-                float_tensor: !ablate_float,
-                planner,
-                tensor_encode_threads: encode_threads,
-                ..TensorPlanOptions::default()
-            },
+            plan,
             tile_shape: None,
         }
     } else {
@@ -1106,6 +1129,12 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
         pipeline_workers: 0,
         pipeline_sync_bytes: None,
         pipeline_cpu_tokens_flag: None,
+        zstd_encode_threads: None,
+        zstd_encode_batch_bytes: None,
+        zstd_frame_chunk: None,
+        zstd19_gate_margin_bytes: None,
+        two_stage_off_zstd19: false,
+        two_stage_off_mode9: false,
     };
     // Suffixes compose with `-`: `noz19-percommit` is the R17 attribution row
     // with the historical per-commit publication, `pack1m-group` is a packed
@@ -1172,6 +1201,59 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
                 }
                 flags.pipeline_workers = workers;
             }
+            // ---- R22 sweep dimensions -------------------------------------
+            // Chunk-parallel ZSTD threads inside one tensor: `zpar1`..`zpar8`.
+            part if part.starts_with("zpar") => {
+                let threads: usize = part[4..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric zpar count"))?;
+                if threads == 0 || threads > 64 {
+                    return Err(format!(
+                        "configuration `{key}` asks for {threads} zstd encode threads (bound 1..=64)"
+                    ));
+                }
+                flags.zstd_encode_threads = Some(threads);
+            }
+            // Ordered-batch byte bound, in KiB: `zcb512`, `zcb32768`.
+            part if part.starts_with("zcb") => {
+                let kib: u64 = part[3..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric zcb size"))?;
+                if kib == 0 {
+                    return Err(format!("configuration `{key}` asks for a zero batch bound"));
+                }
+                flags.zstd_encode_batch_bytes = Some(kib.saturating_mul(1024));
+            }
+            // Explicit codec frame chunk size in bytes: `zchunk16384`.
+            "znochunk" => {
+                flags.zstd_frame_chunk = Some(weftfs::tensor_store::ZstdFrameChunk::Unchunked)
+            }
+            part if part.starts_with("zchunk") => {
+                let bytes: u64 = part[6..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric zchunk size"))?;
+                if bytes == 0 {
+                    return Err(format!("configuration `{key}` asks for a zero chunk size"));
+                }
+                flags.zstd_frame_chunk = Some(weftfs::tensor_store::ZstdFrameChunk::Bytes(bytes));
+            }
+            // Level-19 gate margin: `gate<N>` requires a predicted win of N
+            // MiB, `leeway<N>` permits a predicted loss of N MiB.
+            part if part.starts_with("gate") => {
+                let mib: i64 = part[4..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric gate margin"))?;
+                flags.zstd19_gate_margin_bytes = Some(mib.saturating_mul(1024 * 1024));
+            }
+            part if part.starts_with("leeway") => {
+                let mib: i64 = part[6..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric leeway"))?;
+                flags.zstd19_gate_margin_bytes = Some(-mib.saturating_mul(1024 * 1024));
+            }
+            // Two-stage candidate ablations: `t19off` / `tm9off`.
+            "t19off" if matches!(base, "C" | "E") => flags.two_stage_off_zstd19 = true,
+            "tm9off" if matches!(base, "C" | "E") => flags.two_stage_off_mode9 = true,
             part => {
                 return Err(format!(
                     "configuration `{key}` has unknown ablation suffix `{part}`"
@@ -1264,6 +1346,19 @@ struct ConfigFlags {
     pipeline_sync_bytes: Option<u64>,
     /// R21: CPU tokens (busy encoder threads) for the pipeline.
     pipeline_cpu_tokens_flag: Option<usize>,
+    /// R22: threads inside one chunked ZSTD frame (`zpar<N>`).
+    zstd_encode_threads: Option<usize>,
+    /// R22: ordered-batch byte bound for chunk-parallel ZSTD (`zcb<KiB>`).
+    zstd_encode_batch_bytes: Option<u64>,
+    /// R22: ZSTD frame chunking (`zchunk<bytes>`, `znochunk`).
+    zstd_frame_chunk: Option<weftfs::tensor_store::ZstdFrameChunk>,
+    /// R22: level-19 gate margin in bytes (`gate<MiB>` / `leeway<MiB>`).
+    zstd19_gate_margin_bytes: Option<i64>,
+    /// R22: disable a candidate under the **two-stage** planner (the R17
+    /// `-nom9` / `-noz19` controls pin the exhaustive planner instead, so they
+    /// change two things at once).
+    two_stage_off_zstd19: bool,
+    two_stage_off_mode9: bool,
 }
 
 fn uses_protocol(config: &str) -> bool {
@@ -1523,6 +1618,7 @@ fn write_weftfs(
         pipeline_workers,
         pipeline_sync_bytes,
         pipeline_cpu_tokens_flag,
+        ..
     } = flags;
     let group_commit = publication.group_commit();
     let work = args.work.clone().unwrap();
@@ -1604,7 +1700,7 @@ fn write_weftfs(
         if let Some(value) = args.pipeline_candidate_min_bytes {
             popts.candidate_parallel_min_bytes = value;
         }
-        let spec = representation_spec(config, ablate_zstd19, ablate_float, planner);
+        let spec = representation_spec(config, &flags);
         let pipeline_tensors: Vec<weftfs::tensor_pipeline::TensorPipelineTensor<'_>> = subset
             .tensors
             .iter()
@@ -1638,7 +1734,10 @@ fn write_weftfs(
         // loop accumulates per tensor.
         if profiling {
             if let Some(before) = &pipeline_snap_before {
-                add_phase_totals(&mut prepare_phases, &phase_profile::snapshot().since(before));
+                add_phase_totals(
+                    &mut prepare_phases,
+                    &phase_profile::snapshot().since(before),
+                );
             }
         }
         pipeline_stats = pipeline_stats_json(&outcome.stats);
@@ -1684,7 +1783,7 @@ fn write_weftfs(
             let stats_before = store.backend_stats();
             let snap_before = profiling.then(phase_profile::snapshot);
             let started = Instant::now();
-            let spec = representation_spec(config, ablate_zstd19, ablate_float, planner);
+            let spec = representation_spec(config, &flags);
             let seed = object_seed(&seed_base, config, &sel.name);
             let (mut prepared, plan) = store
                 .prepare_tensor_object_with_spec_seeded_planned(
