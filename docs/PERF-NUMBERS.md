@@ -193,6 +193,9 @@ shipped planned write. Receipt
 | `tiles.speedup_row100` | 339 | x | 100-row read speed-up from tiling | `bench/receipts/float-tiled-20261107T042955Z.json` | 20261107T042955Z | — |
 | `mw.n32_retry_amp` | 2.45 | ratio | MW2 retry amplification at N=32 | `bench/receipts/bench-multiwriter-20261109T150423Z.json` | 20261109T150423Z | b0bcbc5e4ded |
 | `minio.c_storage_reduction_pct` | 33.53 | % | MinIO planned-writer storage reduction vs A | `bench/receipts/augmentation-minio-20261112T240000Z.json` | 20261112T204955Z | ccc6d695b114 |
+| `tiles.write_mode9_ms` | 2,286.7 | ms | Embedding write, one mode-9 frame | `bench/receipts/float-tiled-20261107T042955Z.json` | 20261107T042955Z | — |
+| `tiles.write_tiled_ms` | 7,434.7 | ms | Embedding write, tiled | `bench/receipts/float-tiled-20261107T042955Z.json` | 20261107T042955Z | — |
+| `tiles.write_ratio` | 3.25 | x | Tiled write cost as a multiple of the one-frame write | `bench/receipts/float-tiled-20261107T042955Z.json` | 20261107T042955Z | — |
 <!-- END GENERATED:perf-catalog-storage -->
 
 ## Verification, conformance and claims counts

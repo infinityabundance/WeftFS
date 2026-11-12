@@ -179,23 +179,30 @@ This repository is the program home: it owns the normative specification
 The honest headline is a loss, so it goes first.
 
 * **A whole-file `zstd --patch-from -12` still beats the shipped checkpoint
-delta on the Pythia fixture.** For pythia-70m step0 → step1 (a 19-byte change
-  in 281.7 MB, 76 tensors) the family-lifecycle court measures **42,211 B** of
-  per-tensor payload, while one whole-file `zstd --patch-from -12` is
-  **30,265 B** — the baseline is **28 % smaller**. The planner now offers an
+  delta on the Pythia fixture.** For pythia-70m step0 → step1 (a 19-byte change
+  in 281.7 MB, 76 tensors) the family-lifecycle court measured **42,211 B** of
+  per-tensor payload, while one whole-file `zstd --patch-from -12` was
+  **30,265 B** — the baseline is **28 % smaller**. This is a **historical
+  quotation** of `family-lifecycle-20261107T132359Z` (stamp 20261107T132359Z,
+  revision `0c84c34`), retained because the loss still holds; it is not a
+  generated current claim, and the generated table above supersedes its
+  framing. The planner now offers an
   in-process `zstd-patch` candidate (mode-4 dictionary frame with a
   base-covering window); a plan-only court measures its payload at **17,923 B**,
   but that total excludes store manifests, commit records, and index segments,
   so it is **not** a like-for-like win over the 30,265 B whole-file baseline.
-* **Model family:** Qwen2.5-0.5B base → Instruct stores in **1.276 GB**
-  (1.200 GB of tensor data) versus **1.536 GB** for independent per-tensor
-  `zstd -19` — **17 % smaller**, and 3.07 % under ZipNN's 1.317 GB.
-* **Region reads:** a one-row read of the Qwen embedding takes **749.3 ms** as
+<!-- BEGIN GENERATED:readme-demonstrated (scripts/perf_numbers.py) -->
+* **Model family:** Qwen2.5-0.5B base → Instruct stores in **1,276,128,956 B**
+  (1,199,958,505 B of tensor data) versus **1,528,909,007 B** for independent
+  per-tensor `zstd -19` — **16.5 % smaller**, and 3.07 % under ZipNN's
+  1,316,518,229 B.
+* **Region reads:** a one-row read of the Qwen embedding takes **749.26 ms** as
   one mode-9 frame but **2.12 ms** as independently decodable tiles — **353×**
   faster, because only the intersecting tiles are decoded; a 100-row read falls
-  from **777.1 ms** to **2.30 ms** (**337×**). The cost is **+0.51 % bytes and a
-  3.25× write**, which is why the planner only chooses tiles when the access
-  pattern pays the write back.
+  from **777.08 ms** to **2.30 ms** (**339×**). The cost is
+  **+0.51 % bytes and a 3.25× write**, which is why the planner only chooses
+  tiles when the access pattern pays the write back.
+<!-- END GENERATED:readme-demonstrated -->
 
 Every number above is emitted from its receipt by `scripts/perf_numbers.py` and
 re-checked by the `perf_numbers` court; the canonical table of every published

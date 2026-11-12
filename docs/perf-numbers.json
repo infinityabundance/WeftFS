@@ -1961,6 +1961,46 @@
    "stamp": "20261112T233126Z",
    "digest_path": "verification.receipt",
    "digest": "bench/receipts/verify-20261112T223540Z.json"
+  },
+  {
+   "key": "tiles.write_mode9_ms",
+   "label": "Embedding write, one mode-9 frame",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "write",
+    "strategy": "float-tensor"
+   },
+   "select_path": "write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z"
+  },
+  {
+   "key": "tiles.write_tiled_ms",
+   "label": "Embedding write, tiled",
+   "unit": "ms",
+   "group": "storage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/float-tiled-20261107T042955Z.json",
+   "list": "rows",
+   "where": {
+    "event": "write",
+    "strategy": "float-tiled"
+   },
+   "select_path": "write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261107T042955Z"
+  },
+  {
+   "key": "tiles.write_ratio",
+   "label": "Tiled write cost as a multiple of the one-frame write",
+   "unit": "x",
+   "group": "storage",
+   "format": "fixed:2",
+   "expr": "{tiles.write_tiled_ms} / {tiles.write_mode9_ms}"
   }
  ],
  "blocks": [
@@ -3486,6 +3526,43 @@
     },
     {
      "template": "oversubscription is still available through the budget and is slower."
+    }
+   ]
+  },
+  {
+   "id": "readme-demonstrated",
+   "file": "README.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Model family:** Qwen2.5-0.5B base \u2192 Instruct stores in **{{family.total_b}} B**"
+    },
+    {
+     "template": "  ({{family.data_b}} B of tensor data) versus **{{family.independent_zstd_b}} B** for independent"
+    },
+    {
+     "template": "  per-tensor `zstd -19` \u2014 **{{family.zstd_delta_pct}} % smaller**, and {{family.zipnn_delta_pct}} % under ZipNN's"
+    },
+    {
+     "template": "  {{family.zipnn_b}} B."
+    },
+    {
+     "template": "* **Region reads:** a one-row read of the Qwen embedding takes **{{tiles.row1_mode9_ms}} ms** as"
+    },
+    {
+     "template": "  one mode-9 frame but **{{tiles.row1_tiled_ms}} ms** as independently decodable tiles \u2014 **{{tiles.speedup_row1}}\u00d7**"
+    },
+    {
+     "template": "  faster, because only the intersecting tiles are decoded; a 100-row read falls"
+    },
+    {
+     "template": "  from **{{tiles.row100_mode9_ms}} ms** to **{{tiles.row100_tiled_ms}} ms** (**{{tiles.speedup_row100}}\u00d7**). The cost is"
+    },
+    {
+     "template": "  **+{{tiles.byte_overhead_pct}} % bytes and a {{tiles.write_ratio}}\u00d7 write**, which is why the planner only chooses"
+    },
+    {
+     "template": "  tiles when the access pattern pays the write back."
     }
    ]
   }
