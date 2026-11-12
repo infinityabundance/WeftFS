@@ -10638,5 +10638,217 @@
   ],
   "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
   "kind": "present"
+ },
+ {
+  "id": "r20_headline_wall",
+  "claim": "At WeftFS 804fd38 the shipped two-stage planned write (C) measured 1,225.4 ms, the least contended of 7 interleaved repetitions on the frozen 101-tensor fixture.",
+  "value": "1,225.4",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_before_wall",
+  "claim": "The same command with the historical per-tensor publication (C-percommit) measured 2,341.6 ms in the same session, reproducing the R19 row within 0.6 %.",
+  "value": "2,341.6",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_footprint_after",
+  "claim": "One atomic publication per checkpoint shrinks the C physical footprint to 282,106,049 B.",
+  "value": "282,106,049",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_footprint_before",
+  "claim": "The R19/R20-before C footprint was 282,283,011 B; R20 does not trade footprint for wall time.",
+  "value": "282,283,011",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_footprint_delta",
+  "claim": "The footprint saving is 176,962 B and equals 44,397 B of fewer commit records plus 132,565 B of fewer advisory index segments.",
+  "value": "176,962",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_wall_reduction",
+  "claim": "R20 reduces the C durable write wall by 47.7 % (2,341.6 to 1,225.4 ms) at a smaller footprint and with byte-identical restored tensors.",
+  "value": "47.7 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_group_commit_delta",
+  "claim": "Publishing the 101 namespace changes as one group commit with one index segment saves 709.1 ms and 176,962 B.",
+  "value": "709.1",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_barrier_delta",
+  "claim": "Replacing one durability barrier per blob with one barrier per group saves a further 407.1 ms at identical bytes.",
+  "value": "407.1",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_barrier_cost",
+  "claim": "The single deferred durability barrier costs 75.2 ms for 213 file syncs and 161 directory syncs over 282 MB.",
+  "value": "75.2",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_blob_publish_after",
+  "claim": "Blob publication was fsync-bound: the same 202 blobs and 282 MB take 286.0 ms under the deferred barrier instead of 786.0 ms with a barrier per blob.",
+  "value": "286.0",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_g2_met",
+  "claim": "R20 clears the G2 ladder rung (1,344 ms) with 1,225.4 ms least contended and 1,246.2 ms median.",
+  "value": "1,344",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_pack_loss",
+  "claim": "The packed blob plane is rejected for this object set: at a 1 MiB member bound it costs 253.4 ms more and writes more bytes for a 3,576 B footprint win.",
+  "value": "253.4",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_cold_restore_unchanged",
+  "claim": "R20 is a write-path change: the C cold restore median is 1,420.1 ms, unchanged from 1,434.2 ms before.",
+  "value": "1,420.1",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_receipt_cited",
+  "claim": "docs/STATUS.md and RESULTS cite the R20 publication court receipt with 7 repetitions and 11 passing checks.",
+  "value": "r20-publication-20261112T133000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_revision",
+  "claim": "The R20 court ran at WeftFS 804fd38 with an unchanged WeftCodec 1412227.",
+  "value": "804fd38",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_contract_court_same_stamp",
+  "claim": "The unmodified R3 contract court ran at the same stamp as the R20 matrix and its C row is the identity proof (default_c_matches_official_court true).",
+  "value": "augmentation-local-20261112T133000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/augmentation-local-20261112T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_retained_harness_bug",
+  "claim": "The retained first R20 matrix is published because it found a real harness bug: the crash proxy reopened packed rows without the pack plane.",
+  "value": "r20-publication-20261112T120000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T120000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_no_go_parity",
+  "claim": "R20 changes the Rust store's group publication only; no Go change and no Go parity claim is made for the deferred barrier.",
+  "value": "Go parity",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r20_conformance_unchanged",
+  "claim": "R20 publishes the same conformance surface: manifest and coverage report 420 entries OK and spec drift is 60/60.",
+  "value": "420 entries",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T133000Z.json",
+  "kind": "present"
  }
 ]

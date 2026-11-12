@@ -1,10 +1,14 @@
-# Augmentation benchmark contract (R3)
+# Augmentation benchmark contract (R3, version 2 at R20)
 
-**Status:** frozen before the first executed augmentation measurement. This file
-exists so that the A/B/C/D/E result cannot be retrofitted to a preferred
-conclusion. Every number in `bench/RESULTS-augmentation.md` must be traceable to
-a receipt produced under these rules. If a later run changes a rule, the rule
-change is a new contract version and both receipts stay published.
+**Status:** frozen before the first executed augmentation measurement, and
+revised once (R20, §1 "Publication row variants") when the shipped publication
+path changed from one commit per tensor to one group commit with one
+durability barrier. This file exists so that the A/B/C/D/E result cannot be
+retrofitted to a preferred conclusion. Every number in
+`bench/RESULTS-augmentation.md` must be traceable to a receipt produced under
+these rules. If a later run changes a rule, the rule change is a new contract
+version and both receipts stay published (R17/R19 receipts remain valid at
+the revisions they name, and the `-percommit` rows reproduce their form).
 
 Scope label: single host, OOM-protected Docker court, one real S3-compatible
 server (MinIO) or the local POSIX filesystem. This is not a cloud, multi-node,
@@ -138,6 +142,30 @@ The controls are additive and default-off in the product; the default C row is
 byte-identical to the contract row (same chosen strategies, same physical
 bytes, same per-tensor manifests), which the receipt verifies against the
 unmodified contract court.
+
+### Publication row variants (R20, contract version 2)
+
+R20 changes **how** the WeftFS rows publish, not what they write. The rule
+change is recorded here because it changes the measured C row:
+
+- The default rows (`A`–`E`) now publish all tensor files in **one group
+  commit** with **one deferred durability barrier**, which is what the shipped
+  checkpoint writer already did (`Store::group` + `begin_group`). The logical
+  state, the chosen representations, every blob byte and every restored tensor
+  are unchanged; the number of commit records and advisory index segments
+  falls from 101 to 1 (plus the genesis and `/tensors` commits), and the
+  footprint is 176,962 B smaller.
+- The historical per-commit form remains runnable as `-percommit`
+  (`B-percommit`, `C-percommit`), which is what R17/R19 measured. `-group` is a
+  group commit with eager per-blob barriers, and `-pack<k|m>` adds the packed
+  blob plane at that member threshold.
+- Suffixes compose with `-`: `noz19-percommit` is the R17 row with the
+  historical publication. Publication never changes the chosen candidate set,
+  so `C` and `C-legacy` still differ only in the planner
+  (`two_stage_storage_unchanged`).
+- Nothing is excluded from the accounting: commit records, superblock slots,
+  index segments, blob publications by kind, backend writes and both barrier
+  kinds are reported per row in `attribution_rep.ledger.publication_ledger`.
 
 ## 2. Fixture and subset
 

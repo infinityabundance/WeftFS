@@ -44,6 +44,24 @@ single-writer protocol are untouched.
   then publishes **one** group commit. `Store::commit_prepared_tensor_object`
   only stages state ops: no blob is written during the commit phase.
 
+### One group commit is also one durability barrier (R20)
+
+The committer's single group commit now closes **one deferred durability
+barrier** instead of syncing each blob where it is written
+(`Options::defer_group_blob_sync`, default on). Workers that publish blobs
+through their own handles still sync eagerly — they are not inside the
+group — so the split path keeps its per-worker durability and only the
+committer's own publications are batched. The ordering rule is unchanged:
+the barrier runs inside `flush_buffered_blobs`, before the commit record, and
+every recorded file is still synced individually. The 407.1 ms / 0-byte figure
+is measured on the augmentation C row (101 tensor files, 202 blobs), see
+[`bench/RESULTS-publication-tax.md`](../bench/RESULTS-publication-tax.md); the
+checkpoint path is covered by its own test suites
+(`tests/parallel_checkpoint.rs`, `tests/checkpoint_*`) and is **not**
+separately timed for this change, so no checkpoint wall-time claim is made.
+Sequential `Store::write_checkpoint` inherits the mechanism because it already
+publishes through `begin_group` / `commit_group`.
+
 ### The single-writer proof is untouched
 
 There is no second writer of control state. Workers never touch the superblock,
