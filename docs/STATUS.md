@@ -9846,3 +9846,32 @@ write is now durability-bound, not encode-bound.
     `staging`; no `r14d/azure-mw2` branch is needed.
   * Not claimed: no new measurement, no wire change, no aggregate at this
     commit yet — the v1.4.0 release run produces one.
+
+- 2026-11-12 (v1.4.0 release, R24): merged and tagged.
+  * `main` merge commit `50c8b21c543332f8a038c4035a40981421cd6cec`
+    ("Merge staging: v1.4.0"); annotated tag **`v1.4.0`** at that commit,
+    pushed to `origin/main` and `origin` (`e067e72..50c8b21`). Submodule pins:
+    WeftCodec `58db5aa`, WeftCodec-Go `9812d15`, WeftFS-Go `1fa3d32`. This entry
+    and the `tag.target` field in the artifacts receipt are written **after** the
+    tag because a file cannot contain the hash of the commit that contains it;
+    no code, format or generated number changed in this follow-up.
+  * Aggregate cited by the release: `bench/receipts/verify-20261112T223540Z.json`
+    — **46/46** courts pass, 0 failed, 0 skipped, at the release-candidate tree
+    `0461132`, which is the tree of the tag except for docs, claims, receipts and
+    the generated-number re-pin. `scripts/check-claims.sh`,
+    `scripts/perf_numbers.py --check`, spec drift and the conformance
+    manifest/coverage gates were re-run on the final tree and pass.
+  * Artifacts (`bench/receipts/release-artifacts-20261112T233126Z.json`):
+    `weftcodec-1.4.0-py3-none-any.whl` 115,851 B sha256 `9b6ff9bb…64928`,
+    `weftcodec-1.4.0.tar.gz` 156,977 B sha256 `cc86abd9…388295`, both twine
+    checked in the python court. `cargo publish --dry-run` passes for
+    `weftcodec 1.4.0`; the `weftfs 1.4.0` dry run fails to resolve
+    `weftcodec = "^1.4.0"` because 1.4.0 is not on crates.io yet — recorded,
+    not hidden, with the publish-order fix.
+  * **Nothing was published to a registry.** `.docker-cache/.pypi-token` does
+    not exist (so no PyPI upload and the 1.4.0 Python description was not
+    rebuilt); `~/.cargo/credentials.toml` holds a crates.io `[registry]` token
+    (57 bytes). Registry steps are the operator's:
+    `scripts/publish-crates.sh` (weftcodec first), then
+    `scripts/publish-pypi.sh` once a token is present. GHCR images come from the
+    per-repo tag workflows.
