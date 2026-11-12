@@ -1,6 +1,6 @@
 # Plan R17–R22 — compressed-write parity
 
-**Status:** R17, R18, R19 and R20 executed; R21–R22 planned. This plan is driven
+**Status:** R17, R18, R19, R20 and R21 executed; R22 planned. This plan is driven
 by the measured ledger in
 [`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md),
 its R18 correction and the R20 publication ledger
@@ -148,17 +148,35 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
    B). Evidence [`bench/RESULTS-publication-tax.md`](../bench/RESULTS-publication-tax.md),
    receipt `r20-publication-20261112T133000Z`.
 
-### R21 — bounded parallel pipeline
+### R21 — bounded parallel pipeline (done, 2026-11-12)
 
-1. Bounded parallel tensor encode (mode 9 and ZSTD-3) with the existing
-   `parallel::run_bounded` discipline; fixed worker and in-flight byte bounds.
-2. Bounded parallel blob publication through the existing read/write handle
-   pool and single-flight rules.
-3. **Gate:** byte-identical output at every worker count; RSS inside 3 GiB;
-   exact restore; report the Amdahl cap and the achieved fraction.
-4. Expected: C from 1,237 ms toward the G3 rung. The measured shares to beat
-   are encode 704.6 ms (57.0 %), blob publication 272.2 ms (22.0 %) and the
-   durability barrier 97.0 ms (7.8 %).
+1. **Done.** `Store::encode_tensor_object` + `Store::publish_encoded_tensor`
+   split prepare into a pure CPU stage and a pure I/O stage;
+   `Store::prepare_tensor_group_pipelined` (`src/tensor_pipeline.rs`) runs
+   reader → N encoder workers → one publisher behind bounded **byte** queues
+   (staging 256 MiB, worker-resident 1 GiB, encode 256 MiB, publish 128 MiB)
+   plus a CPU-token budget, FIFO admission and oversize admission. Not
+   `run_bounded`: a group needs a separate reader, a separate publisher and a
+   writeback thread, which `run_bounded`'s single consumer cannot express.
+2. **Done, differently from the plan.** Publication was *not* parallelised:
+   the backend mutex serialises it and one publisher keeps up (409.6 ms of
+   busy time against a 448.8 ms encode wall). What publication needed was the
+   **early barrier**: the publisher drains the open deferred batch's file list
+   every 8 MiB and a writeback thread `fsync`s those files outside the backend
+   lock, which moves the group's 282 MB of writeback under the encoders and
+   takes the commit barrier from 329.6 ms to 1.3 ms.
+3. **Gate:** byte-identical output at every worker count (same head, manifest
+   ids, content roots and manifest bytes at 1/2/4/8, `verify --full` clean);
+   RSS inside 3 GiB (measured peak 921 MiB, stated bound 1,664 MiB); 101/101
+   exact restores; the Amdahl cap reported — **met**.
+4. **Result:** C **1,206.2 → 623.3 ms** (−48.3 %) at a **byte-identical**
+   282,106,049 B. **G3 (≤ 672 ms) met** on the least-contended repetition and
+   on the median (653.9 ms); best measured configuration 593.9 ms
+   (`--pipeline-cpu-tokens 3`); E 1,259.5 → 663.0 ms. The Amdahl cap is the
+   largest tensor: at 2, 4 and 8 workers the encode wall equals the 272 MB
+   embedding's own 448.8 ms, so 1→4 is 1.71× of an ideal 4×. Evidence
+   [`bench/RESULTS-parallel-pipeline.md`](../bench/RESULTS-parallel-pipeline.md),
+   receipt `r21-pipeline-20261112T201500Z`.
 
 ### R22 — Pareto sweep
 
@@ -171,10 +189,22 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
 
 ## 5. Current position
 
+R21 row values are the least-contended of 7 interleaved repetitions in the
+same session (`r21-pipeline-20261112T201500Z`); the R18–R20 rows are their own
+sessions' cited numbers and are kept for the ladder history.
+
 | Configuration | Wall (min) | Footprint (B) | Ladder | Footprint |
 |---|---:|---:|---|---|
-| A (same session) | 339.0 | 424,439,296 | anchor | — |
-| **C (R20 default)** | **1,236.8** | **282,106,049** | **G2 met (3.65× A)** | final band |
+| A (same session as R21) | 333.5 | 424,439,296 | anchor | — |
+| **C (R21 default pipeline, 4 workers)** | **623.3** | **282,106,049** | **G3 met (1.87× A)** | final band |
+| C-pipe4-tokens3 | 593.9 | 282,106,049 | G3 met (1.78× A) | final band |
+| C-pipe8 | 612.1 | 282,106,049 | G3 met | final band |
+| E-pipe4 | 663.0 | 282,157,248 | G3 met | final band |
+| C (R20 sequential default) | 1,206.2 | 282,106,049 | G2 met (3.62× A) | final band |
+| C-pipe2 | 986.8 | 282,106,049 | 3.0× A | final band |
+| C-pipe1 | 1,114.1 | 282,106,049 | 3.3× A | final band |
+| C-pipe4-nosync | 892.2 | 282,106,049 | 2.7× A | final band |
+| **C (R20 cited)** | **1,236.8** | **282,106,049** | **G2 met (3.65× A)** | final band |
 | C-percommit (R19 two-stage) | 2,343.2 | 282,283,011 | 1.74× G1 | final band |
 | C-group (group, eager barriers) | 1,625.1 | 282,106,049 | 1.21× G1 | final band |
 | C-pack1m | 1,483.7 | 282,102,473 | loss | loss |
@@ -191,12 +221,13 @@ raw-representation rows: their minima beat C's because they encode nothing.)
 
 The target is the **knee**: C's footprint at the lowest sustainable wall, then
 down the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
-R18 moved the default from 24.2 s to 4.12 s, R19 to 2.33 s, and R20 to
-**1.24 s at a footprint 177 KB smaller than R19's**. The remaining 0.56 s to the
-G3 rung (672 ms) is encoder and pipeline work (R21): the commit section is now
-**105.4 ms of a 1,237 ms write (8.5 %), of which 97.0 ms is the durability
-barrier itself**, and the control plane (commit record, head and index) is
-8.4 ms (0.7 %).
+R18 moved the default from 24.2 s to 4.12 s, R19 to 2.33 s, R20 to **1.24 s at
+a footprint 177 KB smaller than R19's**, and R21 to **623.3 ms at the same
+282,106,049 B** — the G3 rung, cleared without buying it with bytes. What is
+left to the final rung (≤ 336 ms) is one tensor: 448.8 ms of the 623.3 ms write
+is the 272 MB embedding's own encode, of which ~295 ms is a level-3 ZSTD frame
+built from 4,155 independent chunks. Parallelising those chunk encodes is
+byte-identical by construction and is R22's first item.
 
 ## 6. Non-negotiables
 

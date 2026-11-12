@@ -9514,3 +9514,112 @@ candidate and discards the losers. Deliverable:
   not affected; no media, power-loss, fleet, cloud or multi-writer claim; one
   host, warm page cache; the `C-legacy`/`C-nom9` rows remain ~21.5 s controls
   because the exhaustive planner encodes level-19 even when it selects nothing.
+
+## Subphase R21 (write-cost) — bounded parallel encode-and-publish pipeline (2026-11-12)
+
+**Status:** implemented, measured, tested. Rust store, harness and court on
+`staging`; WeftCodec and WeftFS-Go are unchanged and **no frame, manifest,
+commit, index or identity byte changed** — every row of the matrix publishes
+the same 282,106,049 B fixture, and the committed state is identical for
+1/2/4/8 workers (`tests/tensor_pipeline.rs`).
+
+* **What moved.** The planned writer went from **1,206.2 ms to 623.3 ms**
+  (−582.9 ms, −48.3 %) at a byte-identical footprint, 101/101 exact restores
+  and the same chosen representations. **G3 (≤ 672 ms) is met** on the
+  least-contended repetition *and* on the median (653.9 ms); the best measured
+  configuration (`--pipeline-cpu-tokens 3`) is 593.9 ms and the protocol row E
+  goes 1,259.5 → 663.0 ms. Restore is unchanged (1,406.0 vs 1,413.1 ms, host
+  noise); R21 is a write-path change with no read claim.
+* **The design.** `Store::encode_tensor_object` (planner + candidates + logical
+  root + content hash, publishing nothing) and
+  `Store::publish_encoded_tensor` (the chosen frame or raw chunk table plus the
+  descriptor manifest) split the prepare half into a pure CPU stage and a pure
+  I/O stage. `Store::prepare_tensor_group_pipelined` (`src/tensor_pipeline.rs`)
+  runs reader → N encoder workers → one publisher behind bounded queues with
+  **byte** reservations (`staging_bytes` 256 MiB, `worker_bytes` 1 GiB,
+  `encode_bytes` 256 MiB, `publish_bytes` 128 MiB), a CPU-token budget that
+  caps busy encoder threads, FIFO admission and oversize admission. A worker's
+  reservation is `3·n + 1 MiB` (decoded bytes + the frame being built + the
+  single frame `retain_candidate` keeps), so the state bound is
+  **1,744,830,464 B** and the measured peak is 921,388 KiB (54 % of the bound,
+  30 % of the court). Nothing is committed by the pipeline: the caller installs
+  the fragments inside its own group, so the control plane stays on the single
+  writer (one group commit, one head publication, one index segment).
+* **Concurrent candidates.** `TensorPlanOptions::parallel_candidates` encodes
+  level 3 and mode 9 on two threads for one tensor *only* when the R18 decision
+  stream already guarantees both run, and consumes them in the historical
+  order, so no representation decision or frame byte changes. The 272 MB
+  embedding's encode falls 529.4 → 448.8 ms at four workers (→ 412.8 ms with
+  three CPU tokens): `max(295.0, 121.6)` instead of `295.0 + 121.6`.
+* **Overlap is measured, not asserted.** Per-tensor stage intervals are
+  recorded by the owning thread; at four workers **90.1 % of encoder-thread
+  time overlapped publication** and **89.9 % of publication time was hidden
+  under encoding**. Even one worker overlaps (32.7 % / 57.7 %, wall 1,114.1 ms
+  vs 1,206.2 sequential) because the reader, the encoder and the publisher are
+  separate stages.
+* **Early barrier.** The publisher drains the open deferred batch's *file* list
+  every 8 MiB and a writeback thread `fsync`s those files outside the backend
+  lock (`take_pending_writeback_files` / `note_external_file_barriers`; no
+  `unsafe`, counters stay exact). 202 files, 9 passes, 502.3 ms of thread time:
+  the commit barrier falls **329.6 ms → 1.3 ms**. The batch stays open, the
+  commit path still `fsync`s every remaining file and every directory before
+  the commit record, and the pipeline joins the writeback thread before it
+  returns, so a drained file is durable or the write fails with nothing
+  committed. The ablation `sync0`/`nosync` (no early barrier) costs 892.2 ms:
+  the same writeback on the critical path.
+* **Scaling** (7 interleaved reps, min/median): 1 worker 1,114.1/1,124.1,
+  2 workers 986.8/1,016.0, 4 workers **623.3/653.9**, 8 workers 612.1/664.8.
+  Speedup 1→4 is 1.71× of an ideal 4×: at 2, 4 and 8 workers the encode wall
+  *equals the embedding's own encode* (448.8 ms), so inter-tensor parallelism is
+  exhausted and the largest tensor is the Amdahl cap exactly as R20 predicted.
+  Two workers is publisher-bound (a single publisher cannot publish 282 MB
+  faster than ~430 ms); eight buys nothing inside host noise.
+* **Determinism.** `tests/tensor_pipeline.rs` (6/6) requires an identical store
+  head, per-object manifest ids and content roots, and manifest blob bytes
+  across 1/2/4/8 workers, with `verify --full` on each store; candidate
+  parallelism off vs on for every tensor is also byte-identical. Court identity:
+  `default_c_matches_official_court`, `strategies_stable_across_reps` and
+  `two_stage_storage_unchanged` all true. Crash proxy `true` on every row
+  (three fault points, grouped rows). The court also writes a store through the
+  pipeline and runs the shipped CLI `verify --full`: ok, 0 problems.
+* **Losses, published.** Peak RSS 687 → 921 MiB (+34 %); CPU 1,180 → 1,320 ms
+  (+11.9 %); `nosync` 892.2 ms; two workers publisher-bound 986.8 ms; eight
+  workers no better than four; 8 MiB is the measured sync granularity (16 MiB
+  638.4, 32 MiB 676.9, 64 MiB 712.6, none 892.2); the default `cpu_tokens` is
+  `encode_threads`, not the measured optimum (`--pipeline-cpu-tokens 3` is
+  593.9 ms); `prepare_phases` for a pipeline row is the whole-pipeline delta
+  (the phase collector is thread-additive, so a phase total can exceed the
+  wall); `E-pipe4`'s footprint is 6 B above `E`'s (directory accounting for the
+  protocol's snapshot/context objects; every tensor object id, manifest id and
+  content blob is identical); `C-legacy` remains 21,652.9 ms as the
+  decision-diff control; single host, warm cache, local POSIX backend, no Go
+  parity and no power-loss, fleet, cloud or multi-writer claim.
+* **Receipts.** `bench/receipts/r21-pipeline-20261112T201500Z.json` (13 rows ×
+  7 reps, 11/11 checks, `result: pass`) and the same-session contract court
+  `augmentation-local-20261112T201500Z.json` (`result: pass`). Retained:
+  `r21-pipeline-20261112T193000Z.pre-encode-counts-fix.json` (all timing checks
+  passed; `ablation_encode_counts_exact` failed because the pipeline branch did
+  not fill `prepare_phases`), `r21-pipeline-20261112T190000Z.json` (the earlier
+  13-row matrix at `209858e`, C-pipe4 621.2 ms), and the two single-repetition
+  tuning probes `r21-pipeline-smoke3/4.json`. Analysis in
+  [`bench/RESULTS-parallel-pipeline.md`](../bench/RESULTS-parallel-pipeline.md).
+  Court: `bench/scripts/r21_pipeline_court.sh` inside the bench court plus
+  `WEFT_R21_*` forwarding in `scripts/docker-court.sh`.
+* **Gates.** Rust `cargo test --all-targets`: **807 passed / 0 failed / 0
+  ignored, 169 suites**. FUSE `cargo test --features fuse --all-targets`:
+  **850 passed / 0 failed** (the two pre-existing ignored tests).
+  `check-claims.sh` 1,030 entries OK, spec drift 60/60, conformance manifest and
+  coverage 420 entries OK. No `verify-all` run for this subphase; its 45/45
+  receipt remains the cited aggregate and predates R21. The R21 court is
+  standalone, like the R19/R20 courts: `verify-all` keeps the reduced
+  `augmentation_local` contract court and does not carry the 13-row
+  7-repetition matrix.
+* **Next bottleneck.** Of the 623.3 ms, **448.8 ms (72 %) is one tensor's
+  encode**, of which level 3 is ~295–337 ms and mode 9 ~122–227 ms (already
+  overlapped). `weftcodec::modes::encode_zstd` with a codec chunk size emits one
+  independent ZSTD frame per chunk under the CHUNKED flag (4,155 frames for the
+  embedding), so R22 should parallelise the *chunk* encodes of one tensor — a
+  byte-identical change with ~3× headroom on level 3, which projects a ~430 ms
+  write (1.29× A) without touching a single representation decision. After
+  that: fuse `analyse` with the encodes that re-read the same bytes (keeping
+  the exact mode-9 prediction), and ship a measured CPU-token default.
