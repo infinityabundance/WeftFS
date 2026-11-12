@@ -9,7 +9,13 @@ analysis that makes level 19 *conditional* rather than *deleted* costs 348.8 ms
 and the mode-9 encodes it avoids were almost free. That miss is reported, not
 rounded away (§7).
 
-Receipts (all in [`receipts/`](receipts/)):
+Receipts (all in [`receipts/`](receipts/)). One provenance detail: the assembled
+receipt was produced from the cited matrix and family receipts by
+`bench/scripts/assemble_planner_two_stage.py`; the court script performs that
+same sequence, and its first assembly attempt failed on the native `A`/`N` rows
+(no phase ledger), so the assembled file was **regenerated from the same inputs**
+rather than re-measured. The matrix and family receipts are single court
+invocations.
 
 | Receipt | What it is |
 |---|---|
