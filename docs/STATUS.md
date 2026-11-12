@@ -9217,8 +9217,9 @@ and the six-phase plan [`docs/PLAN-R17-R22.md`](PLAN-R17-R22.md).
 - **Host contention, disclosed:** the host ran an external CPU/I/O-heavy
   process during the matrix, producing bimodal walls (2.8 s clean vs 26–43 s
   stalled). Raw samples, median and p95 are published; the ledger uses the
-  least-contended repetition and records both walls. Minima agree with the
-  one-run contract court within 0–2 %.
+  least-contended repetition and records both walls. The store configurations'
+  minima agree with the one-run contract court within 0–2 %; A's raw copy is
+  more host-sensitive (326.4 vs 364.5 ms).
 - **Losses:** the medians and p95 are not intrinsic costs; level-19 is pure cost
   on this fixture; mode 9 raises RSS by ~496 MB and slows restore; C-both is
   faster than B only because it publishes fewer bytes; `fsync` is not a

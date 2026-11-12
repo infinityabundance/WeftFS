@@ -76,11 +76,14 @@ inside publication. Examples (ms, raw):
 | C-both | 2,133 / 2,143 / 2,145 / 2,151 / 2,154 / 2,157 | 28,269 |
 | B-group | 2,139 / 2,142 / 2,159 / 2,161 / 2,163 / 2,168 | 36,154 |
 
-The least-contended minima agree with the independent one-run official court
-within 0–2 % (C 24,229 vs 24,459; B 2,840 vs 2,892; D 2,886 vs 2,910; E 24,171
-vs 24,175), which is why the minima — not the contaminated medians — are used
-for attribution. The medians and p95 in the tables are the observed
-distribution, not an estimate of the intrinsic cost. This is a single-host,
+The least-contended minima of the store configurations agree with the
+independent one-run official court within 0–2 % (C 24,229 vs 24,459; B 2,840
+vs 2,892; D 2,886 vs 2,910; E 24,171 vs 24,175), which is why those minima —
+not the contaminated medians — are used for attribution. A's raw-copy write is
+more sensitive to host state (326.4 vs 364.5 ms, −10.5 %), and N's official row
+was itself contended, so neither is used to anchor a conclusion. The medians and
+p95 in the tables are the observed distribution, not an estimate of the
+intrinsic cost. This is a single-host,
 shared-host disclosure; no fleet or cloud claim is made.
 
 ## 4. Baseline at this revision (official court, unprofiled)
