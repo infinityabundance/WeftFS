@@ -193,9 +193,10 @@ The target is the **knee**: C's footprint at the lowest sustainable wall, then
 down the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
 R18 moved the default from 24.2 s to 4.12 s, R19 to 2.33 s, and R20 to
 **1.24 s at a footprint 177 KB smaller than R19's**. The remaining 0.56 s to the
-G3 rung (672 ms) is encoder and pipeline work (R21): the publication tax is now
-**114.4 ms of a 1,237 ms write (9.2 %), of which 97.0 ms is the barrier
-itself**, and the control plane (commit + index) is 9.0 ms (0.7 %).
+G3 rung (672 ms) is encoder and pipeline work (R21): the commit section is now
+**105.4 ms of a 1,237 ms write (8.5 %), of which 97.0 ms is the durability
+barrier itself**, and the control plane (commit record, head and index) is
+8.4 ms (0.7 %).
 
 ## 6. Non-negotiables
 

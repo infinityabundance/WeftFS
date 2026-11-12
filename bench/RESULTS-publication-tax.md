@@ -39,7 +39,8 @@ repetition, and both boards are reported here.
 |---|---|
 | [`r20-publication-20261112T150000Z.json`](receipts/r20-publication-20261112T150000Z.json) | **cited.** 7 interleaved repetitions × 14 rows, phase profile on every timed repetition, per-tensor detail on repetition 1, crash proxy on every Weft row, all 11 checks pass. WeftFS `ad0ca3b`, WeftCodec `1412227`. |
 | [`augmentation-local-20261112T150000Z.json`](receipts/augmentation-local-20261112T150000Z.json) | **cited.** Unmodified R3 contract court at the same revision and stamp; its C row is the same-revision identity proof for the ablation runner's C (`default_c_matches_official_court: true`). |
-| `r20-publication-20261112T133000Z.json.zst` | Retained repeat of the same matrix at an *earlier* revision (`804fd38`), all 11 checks passed, minima 1,225.4 / 2,341.6 ms. **Not cited**: that commit's tree is incomplete — the barrier split was carried by two new `BackendStats` fields whose zero-initialisers in `src/azure.rs`, `src/gcs.rs` and `src/s3.rs` were never committed, so the revision does not build from a clean checkout. The final design reports the split through `StorageBackend::durability_barriers()` instead (no stats fields, no out-of-scope file touched), and the cited receipt reproduces the numbers. Its worked example of the method is the retained evidence for that decision. |
+| `r20-publication-20261112T133000Z.json.zst` | Retained repeat of the same matrix at an *earlier* revision (`804fd38`), all 11 checks passed, minima 1,225.4 / 2,341.6 ms. **Not cited**: that commit's tree is incomplete — the barrier split was carried by two new `BackendStats` fields whose zero-initialisers in `src/azure.rs`, `src/gcs.rs` and `src/s3.rs` were never committed, so the revision does not build from a clean checkout. The final design reports the split through `StorageBackend::durability_barriers()` instead (no stats fields, no out-of-scope file touched), and the cited receipt reproduces the numbers. It is kept as the evidence that the method and the numbers are stable across
+  sessions. |
 | `augmentation-local-20261112T133000Z.json` | Retained contract court for that earlier revision. |
 | `r20-publication-20261112T120000Z.json.zst` | Retained repeat (same revision family). All 11 checks passed, but the crash proxy reopened the packed rows as a flat local store, so their three crash verdicts were about the harness, not the store (they reported `tensor_missing: 101`). Fixed and retained. |
 | `r20-publication-20261112T112000Z.json.zst`, `…T113000Z.json.zst` | Retained single-repetition probes used to diagnose the packed-read failure and to bound the pack sweep. Their `at_least_seven_reps` check fails by construction; the timings in them are *not* cited (one `pack64k` sample is 11.9 s and is a host stall, see §7). |
@@ -325,7 +326,8 @@ The next bottleneck by measured share of C's 1,236.8 ms is **encode (704.6 ms,
 57.0 %)**, then **blob publication (272.2 ms, 22.0 %)**, then **analyse
 (184.4 ms, 14.9 % — nested in encode)**, then **the durability barrier
 (97.0 ms, 7.8 %)**, then digest (67.0 ms, 5.4 %), source read + init (52.2 ms,
-4.2 %), commit + index (9.0 ms, 0.7 %) and the residual (13.4 ms, 1.1 %).
+4.2 %), the control plane (commit record, head and index, *excluding* the
+barrier: 8.4 ms, 0.7 %) and the residual (13.4 ms, 1.1 %).
 
 Within encode, ZSTD-3 is 286.6 ms and mode-9 is 192.8 ms. R21 should target the
 bounded parallel pipeline: encode is embarrassingly parallel across tensors and
