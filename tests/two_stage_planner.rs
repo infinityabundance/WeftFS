@@ -428,6 +428,7 @@ fn level19_rule_skips_only_when_the_bound_is_safe() {
             exact_bytes: mode9,
             dtype: weftcodec::modes::FloatDtype::Bf16,
             exponent_symbols: 12,
+            exponent_histogram: std::sync::Arc::new([0u64; 256]),
         }),
         // Two sampled windows: level 19 compresses to 60,000 B where level 3
         // makes 60,000 B too, so the measured ratio is 1.0.

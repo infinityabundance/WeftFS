@@ -56,6 +56,7 @@
 //! looks like.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use weftcodec::modes::{
     encode_zstd, float_tensor_encoded_len_from_histogram, float_tensor_exponent_histogram,
@@ -145,6 +146,15 @@ pub struct Mode9Prediction {
     pub dtype: FloatDtype,
     /// Symbols present in the exponent histogram.
     pub exponent_symbols: usize,
+    /// The exact exponent histogram this prediction was computed from.
+    ///
+    /// The analyser already paid for the full traversal, so the encoder is
+    /// handed the same counts instead of re-counting the same bytes. The
+    /// histogram is the only input to the canonical table, so a wrong
+    /// histogram would change the emitted bitstream; the store passes the one
+    /// computed over the identical slice in the same call, and the plan's
+    /// `exact_bytes` is cross-checked against the frame the encoder returns.
+    pub exponent_histogram: Arc<[u64; 256]>,
 }
 
 /// Everything the select stage needs, produced by the analyse stage.
@@ -512,6 +522,7 @@ pub fn predict_mode9(
         exact_bytes,
         dtype,
         exponent_symbols: histogram.iter().filter(|&&count| count > 0).count(),
+        exponent_histogram: Arc::new(histogram),
     })
 }
 

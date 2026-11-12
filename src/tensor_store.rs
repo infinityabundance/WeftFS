@@ -1022,6 +1022,13 @@ pub struct TensorPlanOptions {
     /// `TwoStage`; `Exhaustive` reproduces the pre-R18 planner and is the
     /// control the decision-diff court compares against.
     pub planner: PlannerMode,
+    /// Threads the mode-9 encoder may use **inside one tensor** (R19). Bounded
+    /// by the codec's `parallel_max_bitstream_bytes` and never allowed to change
+    /// an emitted byte: it only splits the exponent-bitstream emission into
+    /// disjoint byte ranges. `1` keeps the encoder sequential. The default is
+    /// `min(available_parallelism, 4)`; the measured effect is in
+    /// `bench/RESULTS-mode9-encoder.md`.
+    pub tensor_encode_threads: usize,
 }
 
 impl Default for TensorPlanOptions {
@@ -1061,8 +1068,21 @@ impl Default for TensorPlanOptions {
             zstd_patch_min_bytes: 1024 * 1024,
             zstd_patch_cpu_budget_ns: 20_000_000_000,
             planner: PlannerMode::TwoStage,
+            tensor_encode_threads: default_tensor_encode_threads(),
         }
     }
+}
+
+/// Bounded default for intra-tensor mode-9 emission threads.
+///
+/// Four is the court's CPU count and the point where the measured curve
+/// flattens; the encoder additionally refuses to parallelise a bitstream larger
+/// than its in-flight bound, so this cannot introduce an unbounded allocation.
+pub fn default_tensor_encode_threads() -> usize {
+    std::thread::available_parallelism()
+        .map(|count| count.get())
+        .unwrap_or(1)
+        .clamp(1, 4)
 }
 
 impl TensorPlanOptions {
@@ -4136,15 +4156,38 @@ impl Store {
                 if let Some(detail) = mode9_skip_detail {
                     out.push(skipped(TensorStrategy::FloatTensor, detail));
                 } else {
+                    // R19: the analyse stage already computed the exact
+                    // exponent histogram over this same slice, and the encoder
+                    // uses it instead of re-counting the tensor. The thread
+                    // bound only decides how the bitstream is emitted, never
+                    // which bytes are emitted.
+                    let histogram = trace
+                        .as_ref()
+                        .and_then(|trace| trace.analysis.mode9.as_ref())
+                        .map(|prediction| std::sync::Arc::clone(&prediction.exponent_histogram));
+                    let encode_options = weftcodec::modes::FloatTensorEncodeOptions::with_threads(
+                        options.tensor_encode_threads,
+                    );
                     match crate::phase_profile::timed(
                         crate::phase_profile::Phase::EncodeFloatTensor,
-                        || {
-                            weftcodec::modes::encode_float_tensor(
+                        || match &histogram {
+                            Some(histogram) => {
+                                weftcodec::modes::encode_float_tensor_with_histogram(
+                                    logical,
+                                    float_dtype,
+                                    shape,
+                                    &limits,
+                                    histogram,
+                                    encode_options,
+                                )
+                            }
+                            None => weftcodec::modes::encode_float_tensor_with(
                                 logical,
                                 float_dtype,
                                 shape,
                                 &limits,
-                            )
+                                encode_options,
+                            ),
                         },
                     ) {
                         Ok(frame) => {

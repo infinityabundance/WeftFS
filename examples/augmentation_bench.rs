@@ -582,6 +582,10 @@ fn limit_label() -> Json {
             "WeftFS-Go": std::env::var("WEFT_REPO_WEFTFS_GO").ok(),
         },
         "uname": uname(),
+        "mode9_encode_threads": std::env::var("WEFT_AUG_ENCODE_THREADS")
+            .ok()
+            .and_then(|value| value.parse::<usize>().ok())
+            .unwrap_or_else(weftfs::tensor_store::default_tensor_encode_threads),
     })
 }
 
@@ -917,6 +921,15 @@ fn representation_spec(
 ) -> TensorWriteSpec {
     let base = config_base(config);
     let planned = matches!(base, "C" | "E");
+    // R19: the intra-tensor mode-9 emission thread bound. The shipped default
+    // is `min(available_parallelism, 4)`; `WEFT_AUG_ENCODE_THREADS=1` forces the
+    // sequential encoder so the two can be compared in the same session. It
+    // never changes an emitted byte or a chosen representation.
+    let encode_threads = std::env::var("WEFT_AUG_ENCODE_THREADS")
+        .ok()
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|value| *value >= 1)
+        .unwrap_or_else(weftfs::tensor_store::default_tensor_encode_threads);
     if planned {
         TensorWriteSpec {
             strategy_hint: None,
@@ -927,6 +940,7 @@ fn representation_spec(
                 zstd19: !ablate_zstd19,
                 float_tensor: !ablate_float,
                 planner,
+                tensor_encode_threads: encode_threads,
                 ..TensorPlanOptions::default()
             },
             tile_shape: None,
