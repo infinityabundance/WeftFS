@@ -9699,9 +9699,9 @@ write is now durability-bound, not encode-bound.
   `zstd_chunk_parallel` 5/5 and `histogram_parallel` 3/3); Rust-Go cross gate
   `all checks passed` (41 frames
   each way, every mode fixture byte-identical); `verify --full` ok on a
-  chunk-parallel-written store; crash proxy old-or-new on every row. No
-  `verify-all` aggregate was run for this subphase, so
-  `verify_receipt_current` still cites `verify-20261111T182601Z` (45/45).
+  chunk-parallel-written store; crash proxy old-or-new on every row. There is
+  no verify-all aggregate for this subphase: `verify_receipt_current` still
+  cites `verify-20261111T182601Z` (45/45).
 * **Environment, disclosed.** Between the clean runs the host's durability path
   degraded from 1.28 GB/s to 125-180 MB/s and the native control A wrote the
   424 MB fixture in **11,482.6 ms**; those attempts produced no cited row
