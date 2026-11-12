@@ -367,6 +367,11 @@ fn civil_from_unix(secs: i64) -> (i64, u32, u32, u32, u32, u32) {
     (year, month, day, hour, minute, second)
 }
 
+/// The codec's own exact histogram, used to validate the fused-pass replica.
+fn histogram_ref(payload: &[u8]) -> [u64; 256] {
+    modes::float_tensor_exponent_histogram(payload, FloatDtype::Bf16).expect("histogram")
+}
+
 fn uname() -> String {
     std::process::Command::new("uname")
         .arg("-sr")
@@ -473,9 +478,12 @@ fn reference_staged(
     let element_count: u64 = shape.iter().product();
     let before = page_faults();
     let started = Instant::now();
-    let (exponent_plane, mantissa_plane) =
-        modes::split_float_tensor_payload(payload, dtype, element_count)
+    // The pre-R19 `split_float_tensor_payload`: the generic word loop plus the
+    // byte-at-a-time Huffman emitter (`huffman_staged` below).
+    let (raw_exponent_plane, mantissa_plane) =
+        modes::split_float_tensor_planes_reference(payload, dtype, element_count)
             .map_err(|err| format!("staged split: {err}"))?;
+    let exponent_plane = huffman_staged(&raw_exponent_plane).output;
     let split = started.elapsed().as_secs_f64() * 1000.0;
     STAGED_SPLIT_FAULTS.with(|cell| cell.set(fault_delta(before, page_faults())));
 
@@ -719,6 +727,8 @@ fn run(args: &Args) -> Result<(), String> {
         let mut crc_ms = Vec::new();
         let mut payload_hash_ms = Vec::new();
         let mut content_hash_ms = Vec::new();
+        let mut after_fused_ms = Vec::new();
+        let mut after_split_payload_ms = Vec::new();
         let mut shipped_ms = Vec::new();
         let mut threaded_ms = Vec::new();
         let mut threaded_faults = Vec::new();
@@ -828,6 +838,42 @@ fn run(args: &Args) -> Result<(), String> {
             let _ = hash_domain(DOMAIN_CHUNK, &bytes);
             content_hash_ms.push(started.elapsed().as_secs_f64() * 1000.0);
 
+            // Replica of the shipped encoder's first pass: one windowed
+            // traversal that produces the exponent histogram and the plaintext
+            // content hash. Both outputs are checked against the codec's own
+            // functions below, so the stage time comes from the same algorithm.
+            let started = Instant::now();
+            let mut fused_histogram = [0u64; 256];
+            let mut fused_hasher = weftcodec::hash::DomainHasher::new(DOMAIN_CHUNK);
+            for window in bytes.chunks(1 << 16) {
+                modes::accumulate_float_tensor_histogram(
+                    &mut fused_histogram,
+                    window,
+                    FloatDtype::Bf16,
+                )
+                .map_err(|err| format!("fused histogram: {err}"))?;
+                fused_hasher.update(window);
+            }
+            let fused_hash = fused_hasher.finalize();
+            after_fused_ms.push(started.elapsed().as_secs_f64() * 1000.0);
+            if &fused_histogram != histogram_ref(&bytes).as_ref()
+                || fused_hash != content_hash
+            {
+                return Err(format!(
+                    "fused histogram/hash replica differs from the codec on `{}`",
+                    tensor.name
+                ));
+            }
+
+            // The shipped split+histogram+emit as a standalone call. It also
+            // materialises both planes, so it is an upper bound on the encoder's
+            // fused second pass.
+            let started = Instant::now();
+            let planes = modes::split_float_tensor_payload(&bytes, FloatDtype::Bf16, count)
+                .map_err(|err| format!("split payload: {err}"))?;
+            after_split_payload_ms.push(started.elapsed().as_secs_f64() * 1000.0);
+            drop(planes);
+
             let before = page_faults();
             let started = Instant::now();
             let frame =
@@ -900,6 +946,8 @@ fn run(args: &Args) -> Result<(), String> {
         let crc = median(&mut crc_ms);
         let payload_hash = median(&mut payload_hash_ms);
         let content_hash = median(&mut content_hash_ms);
+        let after_fused = median(&mut after_fused_ms);
+        let after_split_payload = median(&mut after_split_payload_ms);
         let shipped = median(&mut shipped_ms);
         let threaded = median(&mut threaded_ms);
         let reference = median(&mut reference_ms);
@@ -921,46 +969,58 @@ fn run(args: &Args) -> Result<(), String> {
             "logical_bytes": bytes.len(),
             "reps": args.reps,
             "frame_bytes": shipped_frame_bytes,
-            "shipped_encode_ms": shipped,
-            "reference_encode_ms": reference,
-            "replica": {
-                "split_ms": split,
-                "huffman_total_ms": huffman,
-                "huffman_histogram_ms": hist,
-                "huffman_lengths_ms": lengths,
-                "huffman_codes_ms": codes,
-                "huffman_emit_ms": emit,
-                "stored_build_ms": stored_build,
-                "body_build_ms": body_build,
-                "frame_encode_ms": frame_encode,
-                "crc32c_ms": crc,
-                "payload_hash_ms": payload_hash,
-                "content_hash_ms": content_hash,
-                "assembly_residual_ms": assembly,
+            "before": {
+                "encode_ms": reference,
+                "mb_per_s": bytes.len() as f64 / 1e6 / (reference / 1000.0),
+                "faults_minor": median(&mut reference_faults.clone()),
+                "replica_validated": true,
+                "failed_stages": {
+                    "split_planes_replica_ms": split,
+                    "huffman_emit_ms": emit,
+                    "huffman_histogram_ms": hist,
+                    "stored_build_ms": stored_build,
+                    "body_build_ms": body_build,
+                    "frame_encode_ms": frame_encode,
+                    "payload_hash_ms": payload_hash,
+                    "content_hash_ms": content_hash,
+                    "crc32c_ms": crc,
+                    "assembly_residual_ms": assembly,
+                },
+                "faithful_replica": {
+                    "split_payload_ms": per_stage[0],
+                    "stored_build_ms": per_stage[1],
+                    "payload_hash_ms": per_stage[2],
+                    "body_build_ms": per_stage[3],
+                    "frame_encode_ms": per_stage[4],
+                    "content_hash_ms": per_stage[5],
+                    "sum_ms": staged_sum,
+                    "wall_ms": staged_wall,
+                    "gap_vs_encoder_ms": (reference - staged_sum).max(0.0),
+                },
             },
-            "split_payload_first_ms": median(&mut split_payload_first_ms.clone()),
-            "split_payload_last_ms": per_stage[0],
+            "after": {
+                "encode_ms": shipped,
+                "mb_per_s": bytes.len() as f64 / 1e6 / (shipped / 1000.0),
+                "faults_minor": median(&mut shipped_faults.clone()),
+                "fused_histogram_and_hash_ms": after_fused,
+                "split_payload_ms": after_split_payload,
+                "residual_ms": (shipped - after_fused - after_split_payload).max(0.0),
+                "threaded_encode_ms": threaded,
+                "threaded_threads": args.threads,
+                "threaded_mb_per_s": bytes.len() as f64 / 1e6 / (threaded / 1000.0),
+            },
+            "fast_huffman_replica": {
+                "total_ms": huffman,
+                "histogram_ms": hist,
+                "lengths_ms": lengths,
+                "codes_ms": codes,
+            },
+            "split_payload_shipped_first_ms": median(&mut split_payload_first_ms.clone()),
+            "split_payload_shipped_last_ms": per_stage[0],
             "replica_split_faults_minor": median(&mut split_faults.clone()),
             "replica_huffman_faults_minor": median(&mut huffman_faults.clone()),
             "staged_split_payload_faults_minor": median(&mut staged_split_faults_vec.clone()),
-            "reference_staged_sum_ms": staged_sum,
-            "reference_staged_wall_ms": staged_wall,
-            "reference_staged_gap_ms": (reference - staged_sum).max(0.0),
-            "reference_staged_stages_ms": {
-                "split_payload": per_stage[0],
-                "stored_build": per_stage[1],
-                "payload_hash": per_stage[2],
-                "body_build": per_stage[3],
-                "frame_encode": per_stage[4],
-                "content_hash": per_stage[5],
-            },
-            "shipped_faults_minor": median(&mut shipped_faults.clone()),
-            "threaded_encode_ms": threaded,
-            "threaded_threads": args.threads,
-            "threaded_faults_minor": median(&mut threaded_faults.clone()),
-            "reference_faults_minor": median(&mut reference_faults.clone()),
-            "shipped_mb_per_s": bytes.len() as f64 / 1e6 / (shipped / 1000.0),
-            "reference_mb_per_s": bytes.len() as f64 / 1e6 / (reference / 1000.0),
+            "byte_identical_to_reference": true,
             "replica_validated": true,
             "byte_identical_to_reference": true,
         }));
@@ -973,6 +1033,30 @@ fn run(args: &Args) -> Result<(), String> {
     let reference_total = total(&|row| row["reference_encode_ms"].as_f64().unwrap_or(0.0));
     let replica_total =
         |key: &str| -> f64 { total(&|row: &Json| row["replica"][key].as_f64().unwrap_or(0.0)) };
+
+    let before_total = |key: &str| -> f64 {
+        rows.iter()
+            .map(|row| row["before"][key].as_f64().unwrap_or(0.0))
+            .sum()
+    };
+    let after_total = |key: &str| -> f64 {
+        rows.iter()
+            .map(|row| row["after"][key].as_f64().unwrap_or(0.0))
+            .sum()
+    };
+    let stage_total = |key: &str| -> f64 {
+        rows.iter()
+            .map(|row| row["before"]["failed_stages"][key].as_f64().unwrap_or(0.0))
+            .sum()
+    };
+    let faithful_total = |key: &str| -> f64 {
+        rows.iter()
+            .map(|row| row["before"]["faithful_replica"][key].as_f64().unwrap_or(0.0))
+            .sum()
+    };
+    let reference_total = before_total("encode_ms");
+    let shipped_total = after_total("encode_ms");
+    let threaded_total = after_total("threaded_encode_ms");
 
     let receipt = json!({
         "schema": "weft.mode9_encoder_bench.v1",
@@ -996,38 +1080,45 @@ fn run(args: &Args) -> Result<(), String> {
             "tensors_measured": rows.len(),
         },
         "method": {
-            "replica": "stage timings are harness-local replicas; every measured tensor is checked byte-for-byte against the shipped codec (split planes, huffman stream, hand-assembled frame) before any number is recorded",
+            "before": "the pre-R19 encoder (weftcodec::modes::encode_float_tensor_reference: generic splitter, byte-at-a-time Huffman emitter, stored-plane concatenation, body build, encode_frame copy and self-parse) timed end to end, plus a faithful line-by-line replica of that pipeline whose outputs are byte-checked against it",
+            "after": "the shipped encoder timed end to end, plus the fused histogram+content-hash pass (a validated replica of its first pass), the shipped split_float_tensor_payload as an upper bound on its second pass (it also allocates both planes), and the residual",
             "statistic": "median of repetitions per tensor; totals are sums of the per-tensor medians",
-            "assembly_residual": "reference_encode - split - huffman - payload_hash - content_hash; it contains allocator first-touch, the body copy, the trailer CRC and the self-parse CRC inside encode_frame",
-            "byte_identity": "the shipped mode-9 frame is compared with the pre-R19 reference encoder on every tensor and repetition",
+            "byte_identity": "the shipped mode-9 frame is compared with the pre-R19 reference encoder on every tensor and repetition; a mismatch aborts the run, so a produced receipt has zero mismatches",
+            "faults": "minor+major page faults from /proc/self/stat around each encode, which is what separates allocator first-touch from algorithm cost",
         },
         "memory_probe": memory,
         "tensors": rows,
         "totals": {
             "logical_bytes": logical,
-            "shipped_encode_ms": shipped_total,
-            "reference_encode_ms": reference_total,
-            "threaded_encode_ms": threaded_total,
-            "threaded_threads": args.threads,
-            "threaded_mb_per_s": logical / 1e6 / (threaded_total / 1000.0),
-            "shipped_mb_per_s": logical / 1e6 / (shipped_total / 1000.0),
-            "reference_mb_per_s": logical / 1e6 / (reference_total / 1000.0),
-            "split_ms": replica_total("split_ms"),
-            "huffman_total_ms": replica_total("huffman_total_ms"),
-            "huffman_histogram_ms": replica_total("huffman_histogram_ms"),
-            "huffman_emit_ms": replica_total("huffman_emit_ms"),
-            "stored_build_ms": replica_total("stored_build_ms"),
-            "body_build_ms": replica_total("body_build_ms"),
-            "frame_encode_ms": replica_total("frame_encode_ms"),
-            "crc32c_ms": replica_total("crc32c_ms"),
-            "payload_hash_ms": replica_total("payload_hash_ms"),
-            "content_hash_ms": replica_total("content_hash_ms"),
-            "assembly_residual_ms": replica_total("assembly_residual_ms"),
+            "before_encode_ms": reference_total,
+            "after_encode_ms": shipped_total,
+            "after_threaded_encode_ms": threaded_total,
+            "after_threads": args.threads,
+            "before_mb_per_s": logical / 1e6 / (reference_total / 1000.0),
+            "after_mb_per_s": logical / 1e6 / (shipped_total / 1000.0),
+            "after_threaded_mb_per_s": logical / 1e6 / (threaded_total / 1000.0),
+            "speedup_sequential": reference_total / shipped_total,
+            "speedup_threaded": reference_total / threaded_total,
+            "before_faithful_replica_sum_ms": faithful_total("sum_ms"),
+            "before_faithful_replica_gap_ms": faithful_total("gap_vs_encoder_ms"),
+            "before_stage_split_payload_ms": faithful_total("split_payload_ms"),
+            "before_stage_stored_build_ms": stage_total("stored_build_ms"),
+            "before_stage_payload_hash_ms": stage_total("payload_hash_ms"),
+            "before_stage_body_build_ms": stage_total("body_build_ms"),
+            "before_stage_frame_encode_ms": stage_total("frame_encode_ms"),
+            "before_stage_content_hash_ms": stage_total("content_hash_ms"),
+            "before_stage_huffman_histogram_ms": stage_total("huffman_histogram_ms"),
+            "before_stage_huffman_emit_ms": stage_total("huffman_emit_ms"),
+            "before_stage_split_planes_replica_ms": stage_total("split_planes_replica_ms"),
+            "after_fused_histogram_hash_ms": after_total("fused_histogram_and_hash_ms"),
+            "after_split_payload_ms": after_total("split_payload_ms"),
+            "after_residual_ms": after_total("residual_ms"),
         },
         "checks": {
             "byte_identity_cases": byte_identity_checks,
             "byte_identity_mismatches": 0,
-            "mean_shipped_ms": mean(&rows.iter().map(|row| row["shipped_encode_ms"].as_f64().unwrap_or(0.0)).collect::<Vec<_>>()),
+            "tensors": rows.len() as u64,
+            "reps": args.reps as u64,
         },
         "not_claimed": [
             "single host, warm page cache",
