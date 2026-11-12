@@ -1,0 +1,1636 @@
+{
+ "checks": {
+  "ablation_encode_counts_exact": true,
+  "all_configs_present": true,
+  "all_restores_exact": true,
+  "at_least_seven_reps": true,
+  "crash_proxy_old_or_new": true,
+  "cross_family_decisions_match": true,
+  "cross_family_prediction_exact": true,
+  "default_c_matches_official_court": true,
+  "default_c_row_matches_r3_strategies": true,
+  "footprint_unchanged_bytes": true,
+  "matrix_wall_below_exhaustive": true,
+  "strategies_stable_across_reps": true,
+  "two_stage_decision_diff_present": true,
+  "two_stage_matches_exhaustive": true,
+  "two_stage_storage_unchanged": true
+ },
+ "configs": {
+  "A": {
+   "cold_restore_median": 349.028782,
+   "cold_restore_ms_min": 346.415697,
+   "cpu_ms_min": 90.0,
+   "crash": null,
+   "encode_counts": null,
+   "footprint_bytes": 424439296.0,
+   "footprint_samples": [
+    424439296.0,
+    424439296.0,
+    424439296.0,
+    424439296.0,
+    424439296.0,
+    424439296.0,
+    424439296.0
+   ],
+   "peak_rss_kib_min": 270864.0,
+   "planner": null,
+   "prepare_breakdown_ms": null,
+   "representations": null,
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 336.71371700000003,
+   "wall_ms_min": 327.837073,
+   "wall_ms_p95": 6759.351946,
+   "wall_samples_ms": [
+    339.688742,
+    6648.421389,
+    327.837073,
+    336.71371700000003,
+    334.15042900000003,
+    330.72799200000003,
+    6759.351946
+   ],
+   "write_requests": null,
+   "writer_bytes": 424439296
+  },
+  "B": {
+   "cold_restore_median": 544.5662540000001,
+   "cold_restore_ms_min": 542.601247,
+   "cpu_ms_min": 270.0,
+   "crash": {
+    "baseline_generation": 103,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 104 exists above the highest published superblock generation 103"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 105,
+      "generation_before": 103,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": null,
+    "zstd_level19": null,
+    "zstd_level3": null
+   },
+   "footprint_bytes": 424784917.0,
+   "footprint_samples": [
+    424784917.0,
+    424784917.0,
+    424784917.0,
+    424784917.0,
+    424784917.0,
+    424784917.0,
+    424784917.0
+   ],
+   "peak_rss_kib_min": 272236.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 1955.958148,
+    "digest_ms": 83.670675,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 0.0,
+    "encode_other_planning_and_raw_ms": 0.118336,
+    "encode_total_ms": 0.118336,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 0.0,
+    "prepare_unattributed_ms": 42.025114999999914
+   },
+   "representations": {
+    "raw": 101
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 2859.078516,
+   "wall_ms_min": 2847.990965,
+   "wall_ms_p95": 20697.841512,
+   "wall_samples_ms": [
+    2859.078516,
+    2887.5494430000003,
+    2847.990965,
+    2858.135698,
+    2856.429769,
+    2907.591768,
+    20697.841512
+   ],
+   "write_requests": 911,
+   "writer_bytes": 425207023
+  },
+  "B-group": {
+   "cold_restore_median": 539.750294,
+   "cold_restore_ms_min": 535.857837,
+   "cpu_ms_min": 230.0,
+   "crash": {
+    "baseline_generation": 3,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 3,
+      "generation_before": 3,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 3,
+      "generation_before": 3,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 4 exists above the highest published superblock generation 3"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 5,
+      "generation_before": 3,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": null,
+    "zstd_level19": null,
+    "zstd_level3": null
+   },
+   "footprint_bytes": 424608542.0,
+   "footprint_samples": [
+    424608542.0,
+    424608542.0,
+    424608542.0,
+    424608542.0,
+    424608542.0,
+    424608542.0,
+    424608542.0
+   ],
+   "peak_rss_kib_min": 272464.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 1948.376401,
+    "digest_ms": 83.240761,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 0.0,
+    "encode_other_planning_and_raw_ms": 0.082581,
+    "encode_total_ms": 0.082581,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 0.0,
+    "prepare_unattributed_ms": 41.241799999999785
+   },
+   "representations": {
+    "raw": 101
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 2174.4152849999996,
+   "wall_ms_min": 2144.313248,
+   "wall_ms_p95": 31924.060523,
+   "wall_samples_ms": [
+    25770.66916,
+    2144.313248,
+    2155.928911,
+    31924.060523,
+    2148.659454,
+    2174.4152849999996,
+    15825.420448
+   ],
+   "write_requests": 611,
+   "writer_bytes": 424621048
+  },
+  "C": {
+   "cold_restore_median": 1433.203733,
+   "cold_restore_ms_min": 1425.276731,
+   "cpu_ms_min": 2660.0,
+   "crash": {
+    "baseline_generation": 103,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 104 exists above the highest published superblock generation 103"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 105,
+      "generation_before": 103,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": 35,
+    "zstd_level19": null,
+    "zstd_level3": 51
+   },
+   "footprint_bytes": 282283011.0,
+   "footprint_samples": [
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0
+   ],
+   "peak_rss_kib_min": 1187868.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 66,
+    "mode9_gate_pass": 34,
+    "mode9_gate_unresolved": 1,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 101,
+    "skipped_zstd3": 50,
+    "tensors_with_trace": 101
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 776.229282,
+    "digest_ms": 65.812306,
+    "encode_analyze_ms": 348.763269,
+    "encode_mode9_float_tensor_ms": 1790.023111,
+    "encode_other_planning_and_raw_ms": 41.33858600000036,
+    "encode_total_ms": 2458.530236,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 278.40527,
+    "prepare_unattributed_ms": 26.657764999999472
+   },
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 4197.951351000001,
+   "wall_ms_min": 4117.75352,
+   "wall_ms_p95": 31490.575465,
+   "wall_samples_ms": [
+    4197.951351000001,
+    4144.391095999999,
+    31490.575465,
+    4221.107763,
+    22802.921909999997,
+    4117.75352,
+    4137.046432
+   ],
+   "write_requests": 516,
+   "writer_bytes": 282705117
+  },
+  "C-both": {
+   "cold_restore_median": 838.929733,
+   "cold_restore_ms_min": 832.829361,
+   "cpu_ms_min": 680.0,
+   "crash": {
+    "baseline_generation": 103,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 104 exists above the highest published superblock generation 103"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 105,
+      "generation_before": 103,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": null,
+    "zstd_level19": null,
+    "zstd_level3": 101
+   },
+   "footprint_bytes": 330532422.0,
+   "footprint_samples": [
+    330532422.0,
+    330532422.0,
+    330532422.0,
+    330532422.0,
+    330532422.0,
+    330532422.0,
+    330532422.0
+   ],
+   "peak_rss_kib_min": 686400.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "exhaustive",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 788.145486,
+    "digest_ms": 71.101371,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 0.0,
+    "encode_other_planning_and_raw_ms": 0.44973499999997557,
+    "encode_total_ms": 437.57781,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 437.128075,
+    "prepare_unattributed_ms": 60.86682600000097
+   },
+   "representations": {
+    "raw": 16,
+    "zstd": 85
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 2159.269445,
+   "wall_ms_min": 2136.55816,
+   "wall_ms_p95": 26691.583645,
+   "wall_samples_ms": [
+    2141.906691,
+    2175.725113,
+    2159.973174,
+    26691.583645,
+    2159.269445,
+    2150.787874,
+    2136.55816
+   ],
+   "write_requests": 516,
+   "writer_bytes": 330954528
+  },
+  "C-legacy": {
+   "cold_restore_median": 1424.983797,
+   "cold_restore_ms_min": 1414.4241419999998,
+   "cpu_ms_min": 22550.0,
+   "crash": {
+    "baseline_generation": 103,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 104 exists above the highest published superblock generation 103"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 105,
+      "generation_before": 103,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": 101,
+    "zstd_level19": 18,
+    "zstd_level3": 101
+   },
+   "footprint_bytes": 282283011.0,
+   "footprint_samples": [
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0
+   ],
+   "peak_rss_kib_min": 1186732.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "exhaustive",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 783.155566,
+    "digest_ms": 66.990774,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 1799.235458,
+    "encode_other_planning_and_raw_ms": 42.83622400000149,
+    "encode_total_ms": 22507.709731,
+    "encode_zstd_level19_ms": 20223.693793,
+    "encode_zstd_level3_ms": 441.944256,
+    "prepare_unattributed_ms": 32.634390999988
+   },
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 24224.899046,
+   "wall_ms_min": 24175.812877999997,
+   "wall_ms_p95": 40327.259844,
+   "wall_samples_ms": [
+    24224.899046,
+    24217.318455,
+    25246.384647,
+    24175.812877999997,
+    40327.259844,
+    24188.0044,
+    24419.549405
+   ],
+   "write_requests": 516,
+   "writer_bytes": 282705117
+  },
+  "C-nom9": {
+   "cold_restore_median": 892.4886270000001,
+   "cold_restore_ms_min": 878.3970869999999,
+   "cpu_ms_min": 20870.0,
+   "crash": {
+    "baseline_generation": 103,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 104 exists above the highest published superblock generation 103"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 105,
+      "generation_before": 103,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": null,
+    "zstd_level19": 18,
+    "zstd_level3": 101
+   },
+   "footprint_bytes": 330336572.0,
+   "footprint_samples": [
+    330336572.0,
+    330336572.0,
+    330336572.0,
+    330336572.0,
+    330336572.0,
+    330336572.0,
+    330336572.0
+   ],
+   "peak_rss_kib_min": 891488.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "exhaustive",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 794.729077,
+    "digest_ms": 71.6555,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 0.0,
+    "encode_other_planning_and_raw_ms": 0.934464999998454,
+    "encode_total_ms": 20716.488553,
+    "encode_zstd_level19_ms": 20274.314899,
+    "encode_zstd_level3_ms": 441.239189,
+    "prepare_unattributed_ms": 67.43779900002562
+   },
+   "representations": {
+    "raw": 16,
+    "zstd": 85
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 22567.712806,
+   "wall_ms_min": 22421.636701,
+   "wall_ms_p95": 47555.560235,
+   "wall_samples_ms": [
+    22697.061507,
+    22560.458421,
+    22421.636701,
+    47555.560235,
+    22567.712806,
+    22500.343109,
+    22608.27217
+   ],
+   "write_requests": 516,
+   "writer_bytes": 330758678
+  },
+  "C-noz19": {
+   "cold_restore_median": 1424.785456,
+   "cold_restore_ms_min": 1406.8985690000002,
+   "cpu_ms_min": 2480.0,
+   "crash": {
+    "baseline_generation": 103,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 103,
+      "generation_before": 103,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 104 exists above the highest published superblock generation 103"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 105,
+      "generation_before": 103,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": 101,
+    "zstd_level19": null,
+    "zstd_level3": 101
+   },
+   "footprint_bytes": 282283011.0,
+   "footprint_samples": [
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0,
+    282283011.0
+   ],
+   "peak_rss_kib_min": 1185096.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "exhaustive",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 772.079648,
+    "digest_ms": 66.205765,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 1808.186548,
+    "encode_other_planning_and_raw_ms": 40.784660999999915,
+    "encode_total_ms": 2288.795991,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 439.824782,
+    "prepare_unattributed_ms": 30.944336999999905
+   },
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 3947.869281,
+   "wall_ms_min": 3935.969171,
+   "wall_ms_p95": 3986.943754,
+   "wall_samples_ms": [
+    3937.480315,
+    3972.01743,
+    3935.969171,
+    3947.869281,
+    3986.943754,
+    3961.156554,
+    3943.966286
+   ],
+   "write_requests": 516,
+   "writer_bytes": 282705117
+  },
+  "D": {
+   "cold_restore_median": 554.6977820000001,
+   "cold_restore_ms_min": 549.3628120000001,
+   "cpu_ms_min": 270.0,
+   "crash": {
+    "baseline_generation": 106,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 106,
+      "generation_before": 106,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 106,
+      "generation_before": 106,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 107 exists above the highest published superblock generation 106"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 108,
+      "generation_before": 106,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": null,
+    "zstd_level19": null,
+    "zstd_level3": null
+   },
+   "footprint_bytes": 424856058.0,
+   "footprint_samples": [
+    424856058.0,
+    424856058.0,
+    424856058.0,
+    424856058.0,
+    424856058.0,
+    424856058.0,
+    424856058.0
+   ],
+   "peak_rss_kib_min": 272280.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 0,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 0,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 0
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 1958.017678,
+    "digest_ms": 83.765966,
+    "encode_analyze_ms": 0.0,
+    "encode_mode9_float_tensor_ms": 0.0,
+    "encode_other_planning_and_raw_ms": 0.096616,
+    "encode_total_ms": 0.096616,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 0.0,
+    "prepare_unattributed_ms": 41.95038200000067
+   },
+   "representations": {
+    "raw": 101
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 2919.289488,
+   "wall_ms_min": 2891.9620200000004,
+   "wall_ms_p95": 48194.93713300001,
+   "wall_samples_ms": [
+    36161.926313,
+    2891.9620200000004,
+    2896.648833,
+    33347.500851,
+    2905.014235,
+    2919.289488,
+    48194.93713300001
+   ],
+   "write_requests": 911,
+   "writer_bytes": 425235823
+  },
+  "E": {
+   "cold_restore_median": 1439.21819,
+   "cold_restore_ms_min": 1428.135011,
+   "cpu_ms_min": 2670.0,
+   "crash": {
+    "baseline_generation": 106,
+    "new": 1,
+    "ok": true,
+    "old": 2,
+    "partial": 0,
+    "phases": [
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 106,
+      "generation_before": 106,
+      "phase": "after_objects",
+      "problems": [],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "old",
+      "expected_ok": true,
+      "generation_after": 106,
+      "generation_before": 106,
+      "phase": "after_commit_file",
+      "problems": [
+       "commit file for generation 107 exists above the highest published superblock generation 106"
+      ],
+      "state": "old",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": false,
+      "verify_problems": 1
+     },
+     {
+      "exact": true,
+      "exit_code": -1,
+      "expected": "new",
+      "expected_ok": true,
+      "generation_after": 108,
+      "generation_before": 106,
+      "phase": "after_superblock_write",
+      "problems": [],
+      "state": "new",
+      "tensor_mismatches": 0,
+      "tensor_missing": 0,
+      "verify_consistent": true,
+      "verify_ok": true,
+      "verify_problems": 0
+     }
+    ],
+    "status": "measured"
+   },
+   "encode_counts": {
+    "mode9_float_tensor": 35,
+    "zstd_level19": null,
+    "zstd_level3": 51
+   },
+   "footprint_bytes": 282354152.0,
+   "footprint_samples": [
+    282354152.0,
+    282354152.0,
+    282354152.0,
+    282354152.0,
+    282354152.0,
+    282354152.0,
+    282354152.0
+   ],
+   "peak_rss_kib_min": 1187348.0,
+   "planner": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 66,
+    "mode9_gate_pass": 34,
+    "mode9_gate_unresolved": 1,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 101,
+    "skipped_zstd3": 50,
+    "tensors_with_trace": 101
+   },
+   "prepare_breakdown_ms": {
+    "blob_publish_ms": 779.94767,
+    "digest_ms": 66.163321,
+    "encode_analyze_ms": 363.252957,
+    "encode_mode9_float_tensor_ms": 1770.368466,
+    "encode_other_planning_and_raw_ms": 41.80793999999986,
+    "encode_total_ms": 2457.147674,
+    "encode_zstd_level19_ms": 0.0,
+    "encode_zstd_level3_ms": 281.718311,
+    "prepare_unattributed_ms": 26.128008000001046
+   },
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 4168.355804,
+   "wall_ms_min": 4145.463067,
+   "wall_ms_p95": 27288.395086,
+   "wall_samples_ms": [
+    4145.463067,
+    4168.355804,
+    4229.6227850000005,
+    4201.524437,
+    4150.941028,
+    4155.373985,
+    27288.395086
+   ],
+   "write_requests": 516,
+   "writer_bytes": 282733917
+  },
+  "N": {
+   "cold_restore_median": 349.867405,
+   "cold_restore_ms_min": 347.125941,
+   "cpu_ms_min": 90.0,
+   "crash": null,
+   "encode_counts": null,
+   "footprint_bytes": 424477171.0,
+   "footprint_samples": [
+    424477171.0,
+    424477171.0,
+    424477171.0,
+    424477171.0,
+    424477171.0,
+    424477171.0,
+    424477171.0
+   ],
+   "peak_rss_kib_min": 271120.0,
+   "planner": null,
+   "prepare_breakdown_ms": null,
+   "representations": null,
+   "representations_stable": true,
+   "reps": 7,
+   "restores_exact": true,
+   "wall_ms_median": 346.516704,
+   "wall_ms_min": 338.999863,
+   "wall_ms_p95": 6801.566719,
+   "wall_samples_ms": [
+    346.516704,
+    1421.142434,
+    367.150957,
+    341.224617,
+    338.999863,
+    340.549868,
+    6801.566719
+   ],
+   "write_requests": null,
+   "writer_bytes": 424477171
+  }
+ },
+ "cross_family": [
+  {
+   "changed": [],
+   "checks": {
+    "ablation_encode_counts_exact": true,
+    "all_restores_exact": true,
+    "strategies_stable_across_reps": true,
+    "two_stage_decision_diff_present": true,
+    "two_stage_matches_exhaustive": true,
+    "two_stage_storage_unchanged": true
+   },
+   "chosen_bytes_after": 282029249,
+   "chosen_bytes_before": 282029249,
+   "chosen_bytes_delta": 0,
+   "decisions_match": true,
+   "family": "qwen0.5b-base",
+   "fixture": {
+    "bytes": 988097824,
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342"
+   },
+   "interval_violation_tensors": 0,
+   "mode9_prediction_mismatches": 0,
+   "mode9_predictions_checked_against_actual": 35,
+   "planner_after": {
+    "encoded_zstd19": 0,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 66,
+    "mode9_gate_pass": 34,
+    "mode9_gate_unresolved": 1,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 101,
+    "skipped_zstd3": 50,
+    "tensors_with_trace": 101
+   },
+   "result": "pass",
+   "skipped_zstd19_with_bound": 18,
+   "skipped_zstd3_with_bound": 50,
+   "strategy_or_size_changes": 0,
+   "subset": {
+    "logical_bytes": 424439296,
+    "tensor_count": 101
+   },
+   "tensors_compared": 101
+  },
+  {
+   "changed": [],
+   "checks": {
+    "ablation_encode_counts_exact": true,
+    "all_restores_exact": true,
+    "strategies_stable_across_reps": true,
+    "two_stage_decision_diff_present": true,
+    "two_stage_matches_exhaustive": true,
+    "two_stage_storage_unchanged": true
+   },
+   "chosen_bytes_after": 163872074,
+   "chosen_bytes_before": 163872074,
+   "chosen_bytes_delta": 0,
+   "decisions_match": true,
+   "family": "pythia70m-step0",
+   "fixture": {
+    "bytes": 281715176,
+    "path": "/work/.docker-cache/real-corpus/pythia-70m-step0.safetensors",
+    "sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e"
+   },
+   "interval_violation_tensors": 0,
+   "mode9_prediction_mismatches": 0,
+   "mode9_predictions_checked_against_actual": 0,
+   "planner_after": {
+    "encoded_zstd19": 26,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 76,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 50,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 76
+   },
+   "result": "pass",
+   "skipped_zstd19_with_bound": 0,
+   "skipped_zstd3_with_bound": 0,
+   "strategy_or_size_changes": 0,
+   "subset": {
+    "logical_bytes": 281706496,
+    "tensor_count": 76
+   },
+   "tensors_compared": 76
+  },
+  {
+   "changed": [],
+   "checks": {
+    "ablation_encode_counts_exact": true,
+    "all_restores_exact": true,
+    "strategies_stable_across_reps": true,
+    "two_stage_decision_diff_present": true,
+    "two_stage_matches_exhaustive": true,
+    "two_stage_storage_unchanged": true
+   },
+   "chosen_bytes_after": 163728332,
+   "chosen_bytes_before": 163728332,
+   "chosen_bytes_delta": 0,
+   "decisions_match": true,
+   "family": "pythia70m-step8",
+   "fixture": {
+    "bytes": 281715176,
+    "path": "/work/.docker-cache/real-corpus/pythia-70m-step8.safetensors",
+    "sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48"
+   },
+   "interval_violation_tensors": 0,
+   "mode9_prediction_mismatches": 0,
+   "mode9_predictions_checked_against_actual": 0,
+   "planner_after": {
+    "encoded_zstd19": 26,
+    "exhaustive_fallback_tensors": 0,
+    "mode": "two-stage",
+    "mode9_gate_fail": 76,
+    "mode9_gate_pass": 0,
+    "mode9_gate_unresolved": 0,
+    "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+    "prediction_violation_tensors": 0,
+    "skipped_zstd19": 50,
+    "skipped_zstd3": 0,
+    "tensors_with_trace": 76
+   },
+   "result": "pass",
+   "skipped_zstd19_with_bound": 0,
+   "skipped_zstd3_with_bound": 0,
+   "strategy_or_size_changes": 0,
+   "subset": {
+    "logical_bytes": 281706496,
+    "tensor_count": 76
+   },
+   "tensors_compared": 76
+  }
+ ],
+ "decision_diff": {
+  "after": "C",
+  "before": "C-legacy",
+  "changed": [],
+  "chosen_bytes_after": 281951111,
+  "chosen_bytes_before": 281951111,
+  "chosen_bytes_delta": 0,
+  "decisions_match": true,
+  "interval_violation_tensors": 0,
+  "mode9_prediction_mismatches": 0,
+  "mode9_predictions_checked_against_actual": 35,
+  "planner_after": {
+   "encoded_zstd19": 0,
+   "exhaustive_fallback_tensors": 0,
+   "mode": "two-stage",
+   "mode9_gate_fail": 66,
+   "mode9_gate_pass": 34,
+   "mode9_gate_unresolved": 1,
+   "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+   "prediction_violation_tensors": 0,
+   "skipped_zstd19": 101,
+   "skipped_zstd3": 50,
+   "tensors_with_trace": 101
+  },
+  "planner_before": {
+   "encoded_zstd19": 0,
+   "exhaustive_fallback_tensors": 0,
+   "mode": "exhaustive",
+   "mode9_gate_fail": 0,
+   "mode9_gate_pass": 0,
+   "mode9_gate_unresolved": 0,
+   "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+   "prediction_violation_tensors": 0,
+   "skipped_zstd19": 0,
+   "skipped_zstd3": 0,
+   "tensors_with_trace": 0
+  },
+  "skipped_zstd19_with_bound": 18,
+  "skipped_zstd3_with_bound": 50,
+  "strategy_or_size_changes": 0,
+  "tensors_compared": 101
+ },
+ "design": {
+  "estimator": {
+   "mode9": "exact (weftcodec::modes::float_tensor_encoded_len_from_histogram)",
+   "zstd19_ratio_error_bps": 500,
+   "zstd19_sample_chunks": 2,
+   "zstd_rel_error_bps": 500,
+   "zstd_sample_chunks": 4
+  },
+  "scope": "raw (exact), ZSTD level 3 (sampled interval), ZSTD level 19 (sampled ratio on the measured level-3 frame) and mode 9 (bit-exact). Every other candidate is prepared exactly as before.",
+  "stages": [
+   "analyse: bounded deterministic whole-codec-chunk ZSTD samples at levels 3 and 19, plus the codec's bit-exact mode-9 frame-length prediction from a full exponent histogram",
+   "select: encode a candidate only when its physical-size interval could change the winner or the mode-9 1/64 gate; level 19 is decided after level 3 is measured, against a measured incumbent",
+   "materialise: encode the selected candidate, check the actual size against its interval, and re-plan exhaustively on a violation before publication"
+  ]
+ },
+ "environment": {
+  "court_image": "weft/bench-court:1",
+  "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+  "cpus": "4",
+  "kernel": "7.3.3-1-cachyos",
+  "memory": "3g",
+  "nproc": "2048",
+  "pids": "1024",
+  "revisions": {
+   "WeftCodec": "0aa38814c81c7796bdf23f54dd7dcac6af09f405",
+   "WeftCodec-Go": "fe05240558a94abe530e3020c25b64ab2ad23a32",
+   "WeftFS": "4c6a9abc640c765a928fe4db20ac75bd29765c79",
+   "WeftFS-Go": "a7170f556c918b71b5085e7e3d178ac1dfdc6faa"
+  },
+  "s3_server": {
+   "binary_sha256": null,
+   "container_image": null,
+   "label": null,
+   "release": null
+  },
+  "uname": "Linux 7.3.3-1-cachyos x86_64"
+ },
+ "fixture": {
+  "bytes": 988097824,
+  "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+  "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe"
+ },
+ "generated_utc": "20261112T081151Z",
+ "headline": {
+  "c_exhaustive_wall_ms_min": 24175.812877999997,
+  "c_two_stage_over_a": 12.560365678960293,
+  "c_two_stage_wall_ms_median": 4197.951351000001,
+  "c_two_stage_wall_ms_min": 4117.75352,
+  "encode_counts_exhaustive": {
+   "mode9_float_tensor": 101,
+   "zstd_level19": 18,
+   "zstd_level3": 101
+  },
+  "encode_counts_two_stage": {
+   "mode9_float_tensor": 35,
+   "zstd_level19": null,
+   "zstd_level3": 51
+  },
+  "footprint_bytes": 282283011.0,
+  "footprint_delta_vs_exhaustive_bytes": 0.0,
+  "planner_exhaustive": {
+   "encoded_zstd19": 0,
+   "exhaustive_fallback_tensors": 0,
+   "mode": "exhaustive",
+   "mode9_gate_fail": 0,
+   "mode9_gate_pass": 0,
+   "mode9_gate_unresolved": 0,
+   "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+   "prediction_violation_tensors": 0,
+   "skipped_zstd19": 0,
+   "skipped_zstd3": 0,
+   "tensors_with_trace": 0
+  },
+  "planner_two_stage": {
+   "encoded_zstd19": 0,
+   "exhaustive_fallback_tensors": 0,
+   "mode": "two-stage",
+   "mode9_gate_fail": 66,
+   "mode9_gate_pass": 34,
+   "mode9_gate_unresolved": 1,
+   "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+   "prediction_violation_tensors": 0,
+   "skipped_zstd19": 101,
+   "skipped_zstd3": 50,
+   "tensors_with_trace": 101
+  },
+  "wall_delta_ms": -20058.059358,
+  "wall_ratio_exhaustive_over_two_stage": 5.871117044907534
+ },
+ "inputs": {
+  "families": [
+   "qwen0.5b-base:bench/receipts/planner-two-stage-qwen0.5b-base-20261112T081151Z.json",
+   "pythia70m-step0:bench/receipts/planner-two-stage-pythia70m-step0-20261112T081151Z.json",
+   "pythia70m-step8:bench/receipts/planner-two-stage-pythia70m-step8-20261112T081151Z.json"
+  ],
+  "matrix": "bench/receipts/planner-two-stage-matrix-20261112T081151Z.json"
+ },
+ "orders": [
+  {
+   "order": [
+    "A",
+    "B",
+    "C",
+    "C-legacy",
+    "C-noz19",
+    "C-nom9",
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N"
+   ],
+   "rep": 1
+  },
+  {
+   "order": [
+    "B",
+    "C",
+    "C-legacy",
+    "C-noz19",
+    "C-nom9",
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N",
+    "A"
+   ],
+   "rep": 2
+  },
+  {
+   "order": [
+    "C",
+    "C-legacy",
+    "C-noz19",
+    "C-nom9",
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N",
+    "A",
+    "B"
+   ],
+   "rep": 3
+  },
+  {
+   "order": [
+    "C-legacy",
+    "C-noz19",
+    "C-nom9",
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N",
+    "A",
+    "B",
+    "C"
+   ],
+   "rep": 4
+  },
+  {
+   "order": [
+    "C-noz19",
+    "C-nom9",
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N",
+    "A",
+    "B",
+    "C",
+    "C-legacy"
+   ],
+   "rep": 5
+  },
+  {
+   "order": [
+    "C-nom9",
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N",
+    "A",
+    "B",
+    "C",
+    "C-legacy",
+    "C-noz19"
+   ],
+   "rep": 6
+  },
+  {
+   "order": [
+    "C-both",
+    "B-group",
+    "D",
+    "E",
+    "N",
+    "A",
+    "B",
+    "C",
+    "C-legacy",
+    "C-noz19",
+    "C-nom9"
+   ],
+   "rep": 7
+  }
+ ],
+ "result": "pass",
+ "schema": "weft.planner_two_stage.v1",
+ "subphase": "R18",
+ "subset": {
+  "include_embedding": true,
+  "logical_bytes": 424439296,
+  "other_tensors": 100,
+  "selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
+  "subset_digest": "af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452",
+  "tensor_count": 101
+ }
+}

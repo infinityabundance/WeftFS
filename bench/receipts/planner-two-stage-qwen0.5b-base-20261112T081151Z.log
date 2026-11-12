@@ -1,0 +1,38 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors bytes=988097824 sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342 subset=101 tensors/424439296 bytes digest=808b6d98fb9d28c934e2a0b8b67afd8f835460cbac1fe3139a59a2ae27062dff
+ablate: configs=["C", "C-legacy"] reps=1 backend=local
+ablate: === rep 1/1 order=["C", "C-legacy"] ===
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_objects: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_commit_file: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_superblock_write: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+ablate: result=pass receipt=/work/bench/receipts/planner-two-stage-qwen0.5b-base-20261112T081151Z.json

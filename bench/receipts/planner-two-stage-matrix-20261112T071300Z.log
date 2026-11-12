@@ -1,0 +1,585 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["A", "B", "C", "C-legacy", "C-noz19", "C-nom9", "C-both", "B-group", "D", "E", "N"] reps=7 backend=local
+ablate: === rep 1/7 order=["A", "B", "C", "C-legacy", "C-noz19", "C-nom9", "C-both", "B-group", "D", "E", "N"] ===
+ablate: rep 1 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 1 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 1 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 1 config B restore
+--- restore B (exit Some(0)) ---
+
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_objects: exit -1
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_commit_file: exit -1
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_superblock_write: exit -1
+--- crash-check B (exit Some(0)) ---
+
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_objects: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_commit_file: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_superblock_write: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 1 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+--- crash-check C-noz19 (exit Some(0)) ---
+
+crash-write C-noz19 after_objects: exit -1
+--- crash-check C-noz19 (exit Some(0)) ---
+
+crash-write C-noz19 after_commit_file: exit -1
+--- crash-check C-noz19 (exit Some(0)) ---
+
+crash-write C-noz19 after_superblock_write: exit -1
+--- crash-check C-noz19 (exit Some(0)) ---
+
+ablate: rep 1 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 1 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+--- crash-check C-nom9 (exit Some(0)) ---
+
+crash-write C-nom9 after_objects: exit -1
+--- crash-check C-nom9 (exit Some(0)) ---
+
+crash-write C-nom9 after_commit_file: exit -1
+--- crash-check C-nom9 (exit Some(0)) ---
+
+crash-write C-nom9 after_superblock_write: exit -1
+--- crash-check C-nom9 (exit Some(0)) ---
+
+ablate: rep 1 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 1 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+--- crash-check C-both (exit Some(0)) ---
+
+crash-write C-both after_objects: exit -1
+--- crash-check C-both (exit Some(0)) ---
+
+crash-write C-both after_commit_file: exit -1
+--- crash-check C-both (exit Some(0)) ---
+
+crash-write C-both after_superblock_write: exit -1
+--- crash-check C-both (exit Some(0)) ---
+
+ablate: rep 1 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 1 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+--- crash-check B-group (exit Some(0)) ---
+
+crash-write B-group after_objects: exit -1
+--- crash-check B-group (exit Some(0)) ---
+
+crash-write B-group after_commit_file: exit -1
+--- crash-check B-group (exit Some(0)) ---
+
+crash-write B-group after_superblock_write: exit -1
+--- crash-check B-group (exit Some(0)) ---
+
+ablate: rep 1 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 1 config D restore
+--- restore D (exit Some(0)) ---
+
+--- crash-check D (exit Some(0)) ---
+
+crash-write D after_objects: exit -1
+--- crash-check D (exit Some(0)) ---
+
+crash-write D after_commit_file: exit -1
+--- crash-check D (exit Some(0)) ---
+
+crash-write D after_superblock_write: exit -1
+--- crash-check D (exit Some(0)) ---
+
+ablate: rep 1 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 1 config E restore
+--- restore E (exit Some(0)) ---
+
+--- crash-check E (exit Some(0)) ---
+
+crash-write E after_objects: exit -1
+--- crash-check E (exit Some(0)) ---
+
+crash-write E after_commit_file: exit -1
+--- crash-check E (exit Some(0)) ---
+
+crash-write E after_superblock_write: exit -1
+--- crash-check E (exit Some(0)) ---
+
+ablate: rep 1 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 1 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: === rep 2/7 order=["B", "C", "C-legacy", "C-noz19", "C-nom9", "C-both", "B-group", "D", "E", "N", "A"] ===
+ablate: rep 2 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 2 config B restore
+--- restore B (exit Some(0)) ---
+
+ablate: rep 2 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 2 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 2 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 2 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 2 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 2 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+ablate: rep 2 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 2 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+ablate: rep 2 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 2 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+ablate: rep 2 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 2 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+ablate: rep 2 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 2 config D restore
+--- restore D (exit Some(0)) ---
+
+ablate: rep 2 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 2 config E restore
+--- restore E (exit Some(0)) ---
+
+ablate: rep 2 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 2 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: rep 2 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 2 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: === rep 3/7 order=["C", "C-legacy", "C-noz19", "C-nom9", "C-both", "B-group", "D", "E", "N", "A", "B"] ===
+ablate: rep 3 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 3 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 3 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 3 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 3 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 3 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+ablate: rep 3 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 3 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+ablate: rep 3 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 3 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+ablate: rep 3 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 3 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+ablate: rep 3 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 3 config D restore
+--- restore D (exit Some(0)) ---
+
+ablate: rep 3 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 3 config E restore
+--- restore E (exit Some(0)) ---
+
+ablate: rep 3 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 3 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: rep 3 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 3 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 3 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 3 config B restore
+--- restore B (exit Some(0)) ---
+
+ablate: === rep 4/7 order=["C-legacy", "C-noz19", "C-nom9", "C-both", "B-group", "D", "E", "N", "A", "B", "C"] ===
+ablate: rep 4 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 4 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 4 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 4 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+ablate: rep 4 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 4 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+ablate: rep 4 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 4 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+ablate: rep 4 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 4 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+ablate: rep 4 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 4 config D restore
+--- restore D (exit Some(0)) ---
+
+ablate: rep 4 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 4 config E restore
+--- restore E (exit Some(0)) ---
+
+ablate: rep 4 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 4 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: rep 4 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 4 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 4 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 4 config B restore
+--- restore B (exit Some(0)) ---
+
+ablate: rep 4 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 4 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: === rep 5/7 order=["C-noz19", "C-nom9", "C-both", "B-group", "D", "E", "N", "A", "B", "C", "C-legacy"] ===
+ablate: rep 5 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 5 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+ablate: rep 5 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 5 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+ablate: rep 5 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 5 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+ablate: rep 5 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 5 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+ablate: rep 5 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 5 config D restore
+--- restore D (exit Some(0)) ---
+
+ablate: rep 5 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 5 config E restore
+--- restore E (exit Some(0)) ---
+
+ablate: rep 5 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 5 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: rep 5 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 5 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 5 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 5 config B restore
+--- restore B (exit Some(0)) ---
+
+ablate: rep 5 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 5 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 5 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 5 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: === rep 6/7 order=["C-nom9", "C-both", "B-group", "D", "E", "N", "A", "B", "C", "C-legacy", "C-noz19"] ===
+ablate: rep 6 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 6 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+ablate: rep 6 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 6 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+ablate: rep 6 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 6 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+ablate: rep 6 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 6 config D restore
+--- restore D (exit Some(0)) ---
+
+ablate: rep 6 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 6 config E restore
+--- restore E (exit Some(0)) ---
+
+ablate: rep 6 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 6 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: rep 6 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 6 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 6 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 6 config B restore
+--- restore B (exit Some(0)) ---
+
+ablate: rep 6 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 6 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 6 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 6 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 6 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 6 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+ablate: === rep 7/7 order=["C-both", "B-group", "D", "E", "N", "A", "B", "C", "C-legacy", "C-noz19", "C-nom9"] ===
+ablate: rep 7 config C-both write
+--- write C-both (exit Some(0)) ---
+
+ablate: rep 7 config C-both restore
+--- restore C-both (exit Some(0)) ---
+
+ablate: rep 7 config B-group write
+--- write B-group (exit Some(0)) ---
+
+ablate: rep 7 config B-group restore
+--- restore B-group (exit Some(0)) ---
+
+ablate: rep 7 config D write
+--- write D (exit Some(0)) ---
+
+ablate: rep 7 config D restore
+--- restore D (exit Some(0)) ---
+
+ablate: rep 7 config E write
+--- write E (exit Some(0)) ---
+
+ablate: rep 7 config E restore
+--- restore E (exit Some(0)) ---
+
+ablate: rep 7 config N write
+--- write N (exit Some(0)) ---
+
+ablate: rep 7 config N restore
+--- restore N (exit Some(0)) ---
+
+ablate: cleanup N: No such file or directory (os error 2)
+ablate: rep 7 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 7 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 7 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 7 config B restore
+--- restore B (exit Some(0)) ---
+
+ablate: rep 7 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 7 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 7 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 7 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 7 config C-noz19 write
+--- write C-noz19 (exit Some(0)) ---
+
+ablate: rep 7 config C-noz19 restore
+--- restore C-noz19 (exit Some(0)) ---
+
+ablate: rep 7 config C-nom9 write
+--- write C-nom9 (exit Some(0)) ---
+
+ablate: rep 7 config C-nom9 restore
+--- restore C-nom9 (exit Some(0)) ---
+
+ablate: result=pass receipt=/work/bench/receipts/planner-two-stage-matrix-20261112T071300Z.json
