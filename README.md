@@ -93,8 +93,11 @@ reachability first and only orders the already-unreachable set by class.
 producers, one committer. **MW2** — independent committers publishing against
 one shared authoritative head with typed conflicts, bounded retries, and one
 authoritative head sequence — is implemented and opt-in
-(`--writer-mode optimistic`) for the explicit transaction API on `local`/`object`/`3fs`/`s3`
-in Rust and on `local`/`object` in Go. The head sequence is checked by a TLA+
+(`--writer-mode optimistic`) for the explicit transaction API on
+`local`/`object`/`3fs`/`s3`/`azure` in Rust and on `local`/`object`/`azure` in
+Go; GCS is refused `UnsupportedVersion` rather than downgraded (R14d added
+Azure in both languages, and the Go half is now verified — see
+[`docs/STATUS.md`](docs/STATUS.md)). The head sequence is checked by a TLA+
 model and finite-history tests; it is not backed by a machine-checked
 linearizability proof. FUSE file mutations and generic
 checkpoint publication remain MW1. **MW3** — distributed scalable publication
@@ -751,10 +754,11 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
    **fenced lease whose conditional write is both the fence and head
    publication** on S3, GCS, and Azure. **MW2** (independent committers against
    one shared head, typed conflicts, bounded retries) is implemented and opt-in
-   via `--writer-mode optimistic` on the explicit transaction API, not on FUSE
-   mutations or generic checkpoint publication. **MW3** (conflict domains,
-   sharded heads) is not implemented and not claimed. See
-   [`docs/FENCING.md`](docs/FENCING.md) and
+   via `--writer-mode optimistic` on the explicit transaction API —
+   `local`/`object`/`3fs`/`s3`/`azure` in Rust, `local`/`object`/`azure` in Go;
+   GCS is refused — and not on FUSE mutations or generic checkpoint
+   publication. **MW3** (conflict domains, sharded heads) is not implemented
+   and not claimed. See [`docs/FENCING.md`](docs/FENCING.md) and
    [`spec/WEFT-MULTIWRITER.md`](spec/WEFT-MULTIWRITER.md).
 
 ## Container images
@@ -1017,10 +1021,13 @@ scripts/docker-court.sh vm "WEFT_FS_COLD_TARGETS=ext4,xfs,zfs WEFT_FS_COLD_REPS=
 ```
 
 Each harness writes a receipt with raw samples and a raw log to
-`bench/receipts/`. The current results, every loss, and the remaining gaps are
-in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md); tables can be regenerated with
-`bench/scripts/summarize_bench.py` and two receipts compared with
-`bench/scripts/compare_bench.py`. The tmpfs filesystem reference is
+`bench/receipts/`. **Start at [`bench/RESULTS-index.md`](bench/RESULTS-index.md)**
+— it is the map of every `bench/RESULTS-*.md` document, names the write-cost
+ledger and the Pareto frontier as the two current documents, and lists every
+retained loss by surface. The original P7 results, every loss, and the
+remaining gaps are in [`bench/RESULTS-v1.md`](bench/RESULTS-v1.md); tables can
+be regenerated with `bench/scripts/summarize_bench.py` and two receipts compared
+with `bench/scripts/compare_bench.py`. The tmpfs filesystem reference is
 reference-only and explicitly non-equivalent to WeftFS.
 
 ## Repository layout

@@ -1,4 +1,4 @@
-# Implementation status — 2026-11-11 (v1.3.0 released; R12c in progress)
+# Implementation status — 2026-11-12 (v1.3.0 released; R12c and R17–R22 landed on staging)
 
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. **v1.3.0 is released**: tags are
@@ -9,10 +9,11 @@ implemented, tested, ignored, and not done. **v1.3.0 is released**: tags are
 `3ab54c7`, three commits before the final tag commit with no codec, store or
 runtime change between them; crates.io checksums, GHCR index digests and the
 PyPI block are in `bench/receipts/release-artifacts-20261111T200115Z.json`.
-**No aggregate exists at the current `staging` HEAD** (the R12c work described
-below, which started at `d3db8aa`), which also carries
-unverified R14d Azure-MW2 work in progress; the plan for the R12c follow-up is
-[`docs/PLAN-R12C.md`](PLAN-R12C.md). **v1.2.0 is released**: tags are
+**No aggregate exists at the current `staging` HEAD** (the R12c and R17–R22
+work described below, which started at `d3db8aa`); an aggregate for it is
+item 7 of [`docs/PLAN-R12C.md`](PLAN-R12C.md) and is produced by the v1.4.0
+release run. **R14d Azure MW2 is now verified in both languages** (Go
+`19615ea`; §"R14d" below). **v1.2.0 is released**: tags are
 `WeftFS` `122d86e`, `WeftCodec` `d95fa78`, `WeftCodec-Go` `0db665e`,
 `WeftFS-Go` `6d58137`; the full note with every loss, including the published
 850 ms SLA miss, is [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). The
@@ -24,11 +25,13 @@ release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
 every allocated mode 0–20; the independent Python reader covers every allocated
 mode 0–18 (modes 19 and 20 are rejected `UnsupportedMode`).
 
-**Subphase R4 (multi-writer) status, 2026-11-09:** the default writer level is
-still **MW1 — many producers, one committer**. The pre-R4 claim that MW2 and MW3
-are absent is now split: a bounded, opt-in **MW2** transaction protocol exists
-for the explicit transaction API on `local`/`object` (Rust and Go) and on
-`s3` (Rust, MinIO court); **MW3 is not implemented and not claimed.** The
+**Subphase R4 (multi-writer) status, 2026-11-09 (amended by R14d):** the
+default writer level is still **MW1 — many producers, one committer**. The pre-R4
+claim that MW2 and MW3 are absent is now split: a bounded, opt-in **MW2**
+transaction protocol exists for the explicit transaction API on
+`local`/`object`/`3fs`/`s3`/`azure` in Rust and on `local`/`object`/`azure` in
+Go (GCS refused `UnsupportedVersion`); **MW3 is not implemented and not
+claimed.** The
 normative contract is [`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md);
 the design, backend tradeoffs and every loss are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md) and
@@ -37,7 +40,9 @@ mutations and generic checkpoint publication remain MW1. The full R4 entry
 with measured tables is at the end of this document. The R4 aggregate is
 `bench/receipts/verify-20261109T165707Z.json` (**41/41** courts `pass`, 0
 failed, 0 skipped) at WeftFS `a3256af`; it now includes `tla`,
-`multiwriter`, and `multiwriter_failure`.
+`multiwriter`, and `multiwriter_failure`. Note that the MW2 throughput table
+was measured at `b0bcbc5e` / `f46b351f`, before R14d and the R17–R22 write
+work; it is not re-measured here.
 
 **Subphase R13 (restore scaling), 2026-11-11:** the R10 bottleneck is proven
 and fixed. One backend mutex held **0.41–0.65 of the restore wall** at four
@@ -9713,3 +9718,84 @@ write is now durability-bound, not encode-bound.
   Courts: `bench/scripts/r22_pareto_court.sh`, `r22_family_court.sh`,
   `r22_probe_court.sh` + `r22_probe.sh`; `WEFT_R22_*` forwarding in
   `scripts/docker-court.sh`. The R22 courts are standalone, like R20/R21.
+
+- 2026-11-12 (R12c item 4, bounded checkpoint queue with admission control):
+  parent `staging` `1d71663`; full analysis
+  [`bench/RESULTS-checkpoint-queue.md`](../bench/RESULTS-checkpoint-queue.md),
+  receipts `checkpoint-queue-bound-after-20261112T043000Z.json`,
+  `checkpoint-queue-overload-baseline-20261112T020000Z.json`,
+  `checkpoint-queue-sweep-baseline-20261112T020000Z.json`.
+  * **The pre-change behaviour was measured, not assumed.** With two callers
+    that do not wait, a save raised
+    `ServiceError: InvalidArgument: a deferred checkpoint is already open on
+    this connection` and **which** save survived was decided by timing: 2 of 4
+    landed, 2 of 8 landed, and `save_checkpoint_async` grew the process from 2
+    to 19 threads because it creates a pool per call. A caller that waits
+    (the training harness) simply blocked: the maximum wait for the previous
+    save was 1,688.2 ms (`weft`) and 82.3 ms (`weft-session`) at a 1-step
+    interval. Nothing was ever silently lost, and `landed == store
+    checkpoints` in every run.
+  * **Shipped:** `CheckpointSession` admits saves under a documented bound —
+    `max_outstanding` (default **2**), a staged-byte budget (1 GiB), and
+    `admission_policy` `block` (default, 30 s ceiling) or `fail`. A refused
+    save publishes nothing and raises `QueueFull` naming every bound;
+    cancellation is only possible before a save starts (`SaveNotStarted`); a
+    closed or draining session raises `QueueClosed`. `CheckpointSession.close`
+    drains and reports `weft.checkpoint.queue.drain.v1`
+    (`no_silent_skips`, admitted/completed/failed/refused, queue high-water,
+    staged-byte high-water).
+  * **Measured bound sweep** (96 steps, 2 reps, 1 and 4-step intervals, same
+    169-entry fixture and court): at a 1-step interval the loop wall falls
+    **7,415.3 → 5,761.7 ms (−22.3 %)** at bound 2; 4 and 8 are within 2 % and
+    worse in the tail. Every cell: 0 refused, 0 failed, 0 cancelled,
+    `completed == submitted`, `outstanding 0`, `pending 0`,
+    `no_silent_skips` true, `resume_exact` equal to the requested
+    resumptions (97/97 and 25/25-style per cell). At a 4-step interval the loop
+    is save-bound and no bound helps.
+  * **Losses, published:** completion p95 gets *worse* than the serialized
+    baseline (47.7 → 71.5 ms at bound 1, 85.9 ms at bound 2) because more
+    saves are in flight; peak RSS rises 12–19 %; a deeper queue buys nothing;
+    the queue cannot make a save finish sooner. Tests:
+    `python/tests/test_checkpoint_queue.py` covers refusal, cancellation
+    before start, drain, and the writer fence; the first two court attempts
+    (bounded `/tmp` full; a `TypeError` on an empty clean-step sample) are
+    retained as `…T000000Z.tmpfs-full.log` and `…T001500Z.log`.
+  * Not claimed: multi-writer training, a queue across processes, GPU, fleet.
+
+- 2026-11-12 (R14d, Azure MW2 in Go — the failing test, its cause, and the fix):
+  WeftFS-Go `staging` `19615ea` (parent pin `46e8b98`); reproduction log
+  `bench/receipts/r14d-repro-20261112T230000Z.log`.
+  * **Reproduced** in the go court at WeftFS-Go `a7170f5`:
+    `--- FAIL: TestAzureOptimisticTwoDisjointCommitters (0.01s)` /
+    `azure_integration_test.go:406: verify: ok=false err=<nil>
+    problems=[{UnsupportedVersion recovery failed: UnsupportedVersion: the
+    superblock cache names generation 3 but the writer lock record attests
+    generation 1; this store was written by a pre-v3 writer after the lock
+    record was upgraded}]`. Only that test failed.
+  * **Cause.** Not the Azure client, not the fake, not the test. Go recovery
+    treated the writer `LOCK` record as the head authority on every path, and
+    only two call sites (`openWithStrategy`'s optimistic branch and
+    `reloadFromPlane`) wrapped the commit source in `headAttestHider`. `Verify`
+    and a read-only open passed the raw commit source, so an optimistic (MW2)
+    store whose `LOCK` still attested the single-writer init's generation 1 was
+    refused against its superblock generation 3. Rust already gates the same
+    check on `WriterMode::policy` inside `recover_inner_via`
+    (`src/recovery.rs:815-853`), which is why the Rust half passed its own
+    Azure suite.
+  * **Fix (`19615ea`).** `commitSource` gained `ReadRecord`;
+    `recoverWithStrategy` reads the `writers` policy record itself, skips the
+    attested-head reconciliation when the mode is `optimistic`, and fails closed
+    on a record that exists but cannot be decoded. `headAttestHider` and its two
+    call sites are gone, so there is exactly one authority decision for open,
+    reload and verify. Tests: the Azure two-committer test now also reopens
+    read-only and verifies (that path failed before the commit), and
+    `TestMalformedWritersPolicyFailsClosed` pins the fail-closed default.
+  * **Evidence.** gofmt/vet/`CGO_ENABLED=0` build clean; `go test -race
+    ./...` all packages pass in the fuse court (`store` 210.4 s, `cmd/weftfs`
+    40.8 s, `fusefs` 7.2 s). Rust's Azure suite was re-run unchanged:
+    `cargo test --test azure_backend` 22 passed / 0 failed, including
+    `two_optimistic_committers_publish_disjoint_files_on_azure`.
+  * **Submodule pointer.** The parent recorded `146b517` while the worktree was
+    two commits ahead; `46e8b98` moves the pin to `19615ea`, whose suite is
+    green. The earlier WIP commit message stays as written — history is not
+    rewritten — and this entry records the verification it did not have.

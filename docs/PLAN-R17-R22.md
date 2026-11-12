@@ -227,13 +227,17 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
 
 ## 5. Current position
 
-R21 row values are the least-contended of 7 interleaved repetitions in the
-same session (`r21-pipeline-20261112T201500Z`); the R18–R20 rows are their own
-sessions' cited numbers and are kept for the ladder history.
+R22 is the current frontier (`r22-pareto-20261112T230000Z`, 25 configurations x
+7 interleaved repetitions, least-contended and median reported). R21 row values
+are the least-contended of 7 interleaved repetitions in the same session
+(`r21-pipeline-20261112T201500Z`); the R18–R20 rows are their own sessions'
+cited numbers and are kept for the ladder history.
 
 | Configuration | Wall (min) | Footprint (B) | Ladder | Footprint |
 |---|---:|---:|---|---|
-| A (same session as R21) | 333.5 | 424,439,296 | anchor | — |
+| A (same session as R22) | 333.5 | 424,439,296 | anchor | — |
+| **C (R22 measured defaults: `cpu_tokens = threads-1`, chunk pool)** | **592.6** | **282,106,049** | **G3 met (1.78× A)** | final band |
+| C (R22 median) | 600.9 | 282,106,049 | G3 met | final band |
 | **C (R21 default pipeline, 4 workers)** | **623.3** | **282,106,049** | **G3 met (1.87× A)** | final band |
 | C-pipe4-tokens3 | 593.9 | 282,106,049 | G3 met (1.78× A) | final band |
 | C-pipe8 | 612.1 | 282,106,049 | G3 met | final band |
@@ -260,12 +264,15 @@ raw-representation rows: their minima beat C's because they encode nothing.)
 The target is the **knee**: C's footprint at the lowest sustainable wall, then
 down the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
 R18 moved the default from 24.2 s to 4.12 s, R19 to 2.33 s, R20 to **1.24 s at
-a footprint 177 KB smaller than R19's**, and R21 to **623.3 ms at the same
-282,106,049 B** — the G3 rung, cleared without buying it with bytes. What is
-left to the final rung (≤ 336 ms) is one tensor: 448.8 ms of the 623.3 ms write
-is the 272 MB embedding's own encode, of which ~295 ms is a level-3 ZSTD frame
-built from 4,155 independent chunks. Parallelising those chunk encodes is
-byte-identical by construction and is R22's first item.
+a footprint 177 KB smaller than R19's**, R21 to **623.3 ms at the same
+282,106,049 B**, and R22 to **592.6 ms (median 600.9) at the same bytes** — the
+G3 rung, cleared without buying it with bytes. **The ≤ 336 ms rung is not
+reached.** R22 refuted its own projection: chunk-parallel ZSTD halves the
+embedding's level-3 frame (280.3 → 135.7 ms at four threads) and is
+byte-identical, but the fixture wall does not move because publication
+(452.5 ms) and the durability writeback (461.6 ms for 202 files) are the
+binder. What remains for a future attempt is in "What remains after R17–R22"
+and in [`bench/RESULTS-pareto.md`](../bench/RESULTS-pareto.md) §7.
 
 ## 6. Non-negotiables
 

@@ -17,6 +17,19 @@ fixes it lists) and **subphase B** (item 1 below, persistent sessions inside
 the training-goodput court). Subphases C–G — items 2–7 here — are later
 sessions and nothing in them has been started.
 
+## Where the items stand (updated 2026-11-12)
+
+| Item | State | Evidence |
+|---|---|---|
+| 1 — persistent sessions | **done** | `training-goodput-session-20261111T220500Z.json`, [`RESULTS-training-goodput-session.md`](../bench/RESULTS-training-goodput-session.md) |
+| 2 — operation-derived incremental index | **done** | [`RESULTS-incremental-index.md`](../bench/RESULTS-incremental-index.md) |
+| 2.1 — index GC bound per retained root | **done** (defect found by item 2) | same document, "GC bound fix" |
+| 3 — DCP metadata serialisation | **done** (0.63 ms from 3.96 ms) | [`RESULTS-dcp-metadata.md`](../bench/RESULTS-dcp-metadata.md) |
+| 4 — bounded checkpoint queue | **done** (default bound 2) | [`RESULTS-checkpoint-queue.md`](../bench/RESULTS-checkpoint-queue.md), `checkpoint-queue-bound-after-20261112T043000Z.json` |
+| 5 — 7B scale of the session/queue work | **remains** | R12's 7B court predates the session and queue; not re-run with them |
+| 6 — idle lock release independent of traffic | **remains** | a warm session still holds the writer lock for `session_idle_secs` |
+| 7 — full aggregate at the final revision | **this session** | Phase 3 of the v1.4.0 release run |
+
 ## Ordered items
 
 The order is the review's order and is dependency-driven: (1) is the only item
@@ -50,7 +63,14 @@ small-fixture courts cannot see. (7) is the aggregate gate.
   not a free win; if it does not help under contention that is published as a
   loss.
 
-### 2. Operation-derived incremental indexes — **planned, not started**
+### 2. Operation-derived incremental indexes — **done 2026-11-11**
+
+Outcome: [`bench/RESULTS-incremental-index.md`](../bench/RESULTS-incremental-index.md).
+Publish-path cost is flat (0.110/0.112/0.112 ms at 1k/10k/100k generations)
+with byte-identical index segments; live-state cost fell 3.2–4.1x. Item 2.1
+fixed a GC defect the item-2 work exposed: the retained-chain depth bound was
+applied to one shared `visited` set, so index GC refused once a few roots were
+retained.
 
 * **Mechanism.** Maintain the per-state `StateIndex` from the operation stream
   (apply each op to the previous index) instead of calling the whole-state
@@ -87,7 +107,17 @@ refuted; every loss published, including the first-save plan build).
 * **Not claimed.** No change to `weft.dcp.metadata.v1`, no new wire value, no
   claim that 20 ms total completion is reachable.
 
-### 4. Checkpoint queueing — **planned, not started**
+### 4. Checkpoint queueing — **done 2026-11-12**
+
+Outcome: [`bench/RESULTS-checkpoint-queue.md`](../bench/RESULTS-checkpoint-queue.md),
+`checkpoint-queue-bound-after-20261112T043000Z.json`. `CheckpointSession` now
+admits saves under a documented bound (`max_outstanding`, default 2, plus a
+staged-byte budget and a blocking wait with a 30 s ceiling); a save is either
+admitted or refused with `QueueFull` naming every bound, never skipped. At a
+1-step interval the loop wall falls 7,415.3 → 5,761.7 ms and every requested
+checkpoint lands (96/96, `no_silent_skips` true). Losses: deeper queues buy no
+wall time and degrade completion latency (p95 85.9 ms at 2 vs 42.6 ms at an
+interval of 4), and the queue cannot make a save finish sooner.
 
 * **Mechanism.** Bounded persistent checkpoint workers with admission control:
   a requested durable checkpoint is never silently skipped; when the queue is

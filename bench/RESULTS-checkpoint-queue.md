@@ -174,3 +174,57 @@ one medium on both sides.
   7,415.3 ms for 96 checkpoints is 77.2 ms per checkpoint against a 42.5 ms warm
   save, i.e. there is 34.7 ms/checkpoint of avoidable stall if the loop could run
   ahead — bounded by the queue, never by dropping saves.
+
+## 6. After the queue — measured bound sweep
+
+Receipt `checkpoint-queue-bound-after-20261112T043000Z.json` at WeftFS
+`1d71663`, WeftCodec `d9234e5`, WeftFS-Go `a7170f5`, WeftCodec-Go `fe05240`
+(the R14d recovery fix moves WeftFS-Go's revision, not this court's outcome).
+Command:
+
+```sh
+scripts/docker-court.sh python "python/courts/checkpoint_queue.py bound \
+  --receipt bench/receipts/checkpoint-queue-bound-after-20261112T043000Z.json \
+  --stamp 20261112T043000Z --phase after --work-dir /tmp/queue-bound \
+  --weftfs-cli /work/.docker-cache/target-rust/release/weftfs \
+  --steps 96 --reps 2 --bounds 1,2,4,8 --intervals 1,4"
+```
+
+Same 169-entry fixture, same court, same 96 steps and 2 repetitions as §3. The
+queue is `CheckpointSession` with `max_outstanding = B`, a 1 GiB staged-byte
+bound, and `admission_policy = block` with a 30 s ceiling.
+
+| bound | interval | loop wall (ms) | warm p50 | warm p95 | pause p50 | peak RSS KiB | admission waits (max ms) | high-water | refused | landed |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| baseline `S` | 1 | 7,415.3 | 42.5 | 47.7 | 0.85 | 332,984 | — (wait-for-previous) | — | 0 | 96/96 |
+| 1 | 1 | 6,122.2 | 44.2 | 71.5 | 0.701 | 383,304 | 96 (23.2) | 1 | 0 | 96/96 |
+| **2** | **1** | **5,761.7** | 48.9 | 85.9 | 0.655 | 388,588 | 96 (8.8) | 2 | 0 | 96/96 |
+| 4 | 1 | 5,883.1 | 64.8 | 155.9 | 0.666 | 396,524 | 96 (0.0) | 4 | 0 | 96/96 |
+| 8 | 1 | 5,993.3 | 62.2 | 140.7 | 0.679 | 389,556 | 96 (0.0) | 4 | 0 | 96/96 |
+| baseline `S` | 4 | 1,723.9 | 39.2 | 42.2 | 0.60 | 333,912 | — | — | 0 | 24/24 |
+| 1 | 4 | 1,727.1 | 39.5 | 42.6 | 0.594 | 345,864 | 24 (0.0) | 1 | 0 | 24/24 |
+| 2 | 4 | 1,734.8 | 39.9 | 42.3 | 0.593 | 346,300 | 24 (0.0) | 1 | 0 | 24/24 |
+| 4 | 4 | 1,796.3 | 41.0 | 45.7 | 0.636 | 345,696 | 24 (0.0) | 1 | 0 | 24/24 |
+| 8 | 4 | 1,782.9 | 41.1 | 43.6 | 0.628 | 345,464 | 24 (0.0) | 1 | 0 | 24/24 |
+
+Every cell: `no_silent_skips: true`, `failed: 0`, `cancelled_before_start: 0`,
+`completed == submitted`, `outstanding: 0` and `pending: 0` after the drain, and
+`resume_exact` equal to the number of resumptions the cell requested (97 at a
+1-step interval, 25 at 4).
+
+**Chosen default: 2.** At a 1-step interval it is the fastest bound measured
+(5,761.7 ms, −22.3 % against the wait-for-previous baseline) and it is within
+noise of 4 and 8 while buying a lower completion tail (p95 85.9 vs 155.9 /
+140.7 ms) and lower peak RSS. At a 4-step interval there is nothing to recover —
+every bound lands 24/24 with no admission wait — so the bound is a safety limit,
+not a throughput knob.
+
+**Losses, stated plainly.** (a) Completion latency gets *worse* than the
+serialized baseline at a 1-step interval (p95 47.7 → 71.5 / 85.9 ms) because
+more saves are in flight; the loop gains wall time by making each save slower.
+(b) A deeper queue buys nothing measurable (4 and 8 are within 2 % of 2 in wall
+time and worse in the tail). (c) Peak RSS rises 12–19 % with any queue. (d) The
+queue cannot make a save finish sooner: at a 4-step interval the loop is
+save-bound in every configuration. (e) `admission_policy = fail` was tested for
+refusal semantics but is not the default; a refused save publishes nothing and
+raises `QueueFull` naming every bound.
