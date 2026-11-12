@@ -16,7 +16,7 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use serde_json::{json, Value as Json};
 
-use weftcodec::modes::{self, ZstdEncodeOptions};
+use weftcodec::modes::{self, FloatDtype, ZstdEncodeOptions};
 use weftcodec::Limits;
 use weftfs::safetensors::SafetensorsFile;
 
@@ -234,6 +234,7 @@ fn run(args: &Args) -> Result<(), String> {
 
     let limits = Limits::default();
     let mut rows: Vec<Json> = Vec::new();
+    let mut histogram_samples: Vec<(String, f64, usize, usize)> = Vec::new();
     let mut identity_checks = 0u64;
 
     for &index in &chosen {
@@ -249,6 +250,28 @@ fn run(args: &Args) -> Result<(), String> {
         let mut bytes = vec![0u8; len];
         file.read_tensor_range(tensor, 0, &mut bytes)
             .map_err(|err| format!("read {}: {err}", tensor.name))?;
+
+        // R22.2: the analyse pass's dominant term is one full-tensor exponent
+        // histogram (it feeds the exact mode-9 size prediction and the mode-9
+        // encoder). Timing it here is what says whether fusing it into another
+        // pass could buy anything.
+        let mut histogram_ms: Vec<f64> = Vec::new();
+        let mut histogram_symbols = 0usize;
+        for _ in 0..args.reps {
+            let started = Instant::now();
+            let histogram =
+                modes::float_tensor_exponent_histogram(&bytes, FloatDtype::Bf16)
+                    .map_err(|err| format!("histogram: {err}"))?;
+            histogram_ms.push(started.elapsed().as_secs_f64() * 1000.0);
+            histogram_symbols = histogram.iter().filter(|count| **count > 0).count();
+        }
+        histogram_ms.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        histogram_samples.push((
+            tensor.name.clone(),
+            percentile(&histogram_ms, 0.5),
+            histogram_symbols,
+            len,
+        ));
 
         for &level in &args.levels {
             // Sequential baseline first: it is the identity oracle.
@@ -333,6 +356,20 @@ fn run(args: &Args) -> Result<(), String> {
         }
     }
 
+    let histogram_rows: Vec<Json> = histogram_samples
+        .into_iter()
+        .map(|(name, median_ms, symbols, logical_bytes)| {
+            json!({
+                "name": name,
+                "median_ms": median_ms,
+                "exponent_symbols": symbols,
+                "logical_bytes": logical_bytes,
+                "gigabytes_per_second": if median_ms > 0.0 {
+                    (logical_bytes as f64 / 1_000_000_000.0) / (median_ms / 1000.0)
+                } else { 0.0 },
+            })
+        })
+        .collect();
     let all_identical = identity_checks > 0
         && rows
             .iter()
@@ -346,6 +383,7 @@ fn run(args: &Args) -> Result<(), String> {
         "fixture_sha256": fixture_sha256,
         "reps": args.reps,
         "rows": rows,
+        "histogram_rows": histogram_rows,
         "identity_checks": identity_checks,
         "all_frames_byte_identical": all_identical,
         "peak_rss_kib": peak_rss_kib(),

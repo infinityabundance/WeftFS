@@ -59,8 +59,7 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use weftcodec::modes::{
-    encode_zstd, float_tensor_encoded_len_from_histogram, float_tensor_exponent_histogram,
-    FloatDtype,
+    encode_zstd, float_tensor_encoded_len_from_histogram, FloatDtype,
 };
 use weftcodec::Limits;
 
@@ -516,7 +515,30 @@ pub fn predict_mode9(
     shape: &[u64],
     limits: &Limits,
 ) -> Result<Mode9Prediction> {
-    let histogram = float_tensor_exponent_histogram(logical, dtype)?;
+    predict_mode9_with(logical, dtype, shape, limits, 1, usize::MAX)
+}
+
+/// [`predict_mode9`] with the histogram accumulated on `threads` workers.
+///
+/// The histogram is the only full-tensor pass in the analyse stage and the
+/// predicted length is a pure function of it, so the window split cannot change
+/// the prediction: `tests/histogram_parallel.rs` in the codec proves the counts
+/// and the predicted length equal the single-pass result, and the R18 decision
+/// court (`tests/two_stage_planner.rs`) is unchanged.
+pub fn predict_mode9_with(
+    logical: &[u8],
+    dtype: FloatDtype,
+    shape: &[u64],
+    limits: &Limits,
+    threads: usize,
+    min_parallel_bytes: usize,
+) -> Result<Mode9Prediction> {
+    let histogram = weftcodec::modes::float_tensor_exponent_histogram_with(
+        logical,
+        dtype,
+        threads,
+        min_parallel_bytes,
+    )?;
     let exact_bytes = float_tensor_encoded_len_from_histogram(dtype, shape, &histogram, limits)?;
     Ok(Mode9Prediction {
         exact_bytes,
@@ -535,11 +557,45 @@ pub fn analyse_tensor(
     shape: &[u64],
     limits: &Limits,
 ) -> Result<Analysis> {
+    analyse_tensor_with(
+        logical,
+        chunk_bytes,
+        price_zstd19,
+        mode9_dtype,
+        shape,
+        limits,
+        1,
+        usize::MAX,
+    )
+}
+
+/// [`analyse_tensor`] with the exponent histogram accumulated on `threads`
+/// workers (R22.2). Semantically identical: the histogram is integer counts and
+/// the mode-9 prediction is a pure function of them.
+pub fn analyse_tensor_with(
+    logical: &[u8],
+    chunk_bytes: u64,
+    price_zstd19: bool,
+    mode9_dtype: Option<FloatDtype>,
+    shape: &[u64],
+    limits: &Limits,
+    mode9_threads: usize,
+    mode9_min_parallel_bytes: usize,
+) -> Result<Analysis> {
     let mut analysis = analyse(logical, chunk_bytes, price_zstd19, limits)?;
     if let Some(dtype) = mode9_dtype {
         analysis.mode9 = Some(crate::phase_profile::timed(
             crate::phase_profile::Phase::AnalyzeMode9,
-            || predict_mode9(logical, dtype, shape, limits),
+            || {
+                predict_mode9_with(
+                    logical,
+                    dtype,
+                    shape,
+                    limits,
+                    mode9_threads,
+                    mode9_min_parallel_bytes,
+                )
+            },
         )?);
     }
     Ok(analysis)

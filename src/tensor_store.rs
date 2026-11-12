@@ -1050,10 +1050,16 @@ pub struct TensorPlanOptions {
     /// A CHUNKED ZSTD frame is a concatenation of independent per-chunk frames,
     /// so encoding them on several threads and concatenating in index order is
     /// byte-identical by construction; this cannot change a frame byte, a chunk
-    /// entry, a hash or a chosen representation. `1` keeps the historical
-    /// sequential encoder. Unlike [`Self::tensor_encode_threads`] (mode 9) this
-    /// is **not** counted by the pipeline's CPU tokens: a token bounds an encode
-    /// *worker*, and the level-3 channel inside that worker is bounded here.
+    /// entry, a hash or a chosen representation. Unlike
+    /// [`Self::tensor_encode_threads`] (mode 9) this is **not** counted by the
+    /// pipeline's CPU tokens: a token bounds an encode *worker*, and the
+    /// level-3 channel inside that worker is bounded here.
+    ///
+    /// The default is [`default_zstd_encode_threads`]. The pool is only used
+    /// when the tensor's encode has the CPUs to itself; measured per family in
+    /// `bench/RESULTS-pareto.md`: neutral on Qwen2.5-0.5B (where the embedding's
+    /// level-3 and mode-9 candidates already run concurrently), 1.18x on
+    /// Qwen2.5-3B and 1.65x on pythia-70m, whose planned encode is ZSTD-only.
     pub zstd_encode_threads: usize,
     /// Decoded bytes handed to the chunk-parallel ZSTD pool per ordered batch.
     /// This, not the thread count, is the bound on the pool's transient memory.
@@ -1061,6 +1067,12 @@ pub struct TensorPlanOptions {
     /// Codec frame chunking for the level-3 / level-19 candidates (R22 sweep
     /// dimension). [`ZstdFrameChunk::Derived`] is the shipped rule.
     pub zstd_frame_chunk: ZstdFrameChunk,
+    /// Threads the analyse stage's exponent histogram may use inside one tensor
+    /// (R22.2). The histogram is integer counts, so the window split is exact:
+    /// the mode-9 size prediction is unchanged. Default
+    /// `min(available_parallelism, 4)`; only tensors at or above
+    /// [`ANALYSE_PARALLEL_MIN_BYTES`] use it.
+    pub analyse_threads: usize,
     /// Slack, in bytes, added to the level-19 gate's lower bound before it is
     /// compared with the measured incumbent (R22 sweep dimension).
     ///
@@ -1144,7 +1156,8 @@ impl Default for TensorPlanOptions {
             parallel_candidates: false,
             candidate_parallel_min_bytes:
                 crate::tensor_pipeline::DEFAULT_CANDIDATE_PARALLEL_MIN_BYTES,
-            zstd_encode_threads: 1,
+            analyse_threads: default_tensor_encode_threads(),
+            zstd_encode_threads: default_zstd_encode_threads(),
             zstd_encode_batch_bytes: DEFAULT_ZSTD_ENCODE_BATCH_BYTES,
             zstd_frame_chunk: ZstdFrameChunk::Derived,
             zstd19_gate_margin_bytes: 0,
@@ -1164,10 +1177,34 @@ pub fn default_tensor_encode_threads() -> usize {
         .clamp(1, 4)
 }
 
+/// Bounded default for intra-tensor chunk-parallel ZSTD threads (R22).
+///
+/// The available parallelism, clamped to `1..=4` — the same bound
+/// [`default_tensor_encode_threads`] uses. What decides whether the pool runs at
+/// all is not this number but the rule in the planned writer: the pool is used
+/// only when the encode has the CPUs to itself (no concurrent mode-9 candidate
+/// for the same tensor). With that rule the pool shortens the level-3 frame from
+/// 282.2 ms to 133.0 ms on the 272 MB Qwen embedding at four threads, is neutral
+/// on the frozen 0.5B fixture (where the embedding's candidates run
+/// concurrently), and is 1.18x/1.65x on Qwen 3B / pythia-70m. The encoder falls
+/// back to the sequential path below its own input threshold and whenever this
+/// is 1.
+pub fn default_zstd_encode_threads() -> usize {
+    std::thread::available_parallelism()
+        .map(|count| count.get())
+        .unwrap_or(1)
+        .clamp(1, 4)
+}
+
 /// Default ordered-batch bound for chunk-parallel ZSTD encoding (R22): the
 /// pool holds at most this many decoded chunk bytes plus their compressed
 /// frames at any instant.
 pub const DEFAULT_ZSTD_ENCODE_BATCH_BYTES: u64 = 32 * 1024 * 1024;
+
+/// Tensors at or above this length accumulate the analyse histogram on
+/// `analyse_threads` workers. Below it the pass is a few hundred microseconds
+/// and thread start-up costs more than it saves.
+pub const ANALYSE_PARALLEL_MIN_BYTES: usize = 8 * 1024 * 1024;
 
 impl TensorPlanOptions {
     /// The codec-level chunk-parallel ZSTD bounds this plan asks for.
@@ -3833,15 +3870,21 @@ impl Store {
                     TensorStrategy::FloatTensor.encode_class(),
                 ),
             };
+            // R22.2: the analyse stage's only full-tensor pass is the mode-9
+            // exponent histogram, and it is a vector of integer counts, so it
+            // splits across `analyse_threads` workers with an exactly equal
+            // result (the codec proves the counts and the predicted length).
             let analysis =
                 crate::phase_profile::timed(crate::phase_profile::Phase::Analyze, || {
-                    crate::two_stage::analyse_tensor(
+                    crate::two_stage::analyse_tensor_with(
                         logical,
                         chunk_bytes,
                         zstd19_offered,
                         float_tensor_dtype(dtype),
                         shape,
                         &limits,
+                        options.analyse_threads,
+                        ANALYSE_PARALLEL_MIN_BYTES,
                     )
                 })?;
             let decision = crate::two_stage::select_before_encodes(&analysis, mode9_offered, fixed);
@@ -4162,6 +4205,23 @@ impl Store {
             && encode_zstd3
             && !quantized
             && mode9_prefetchable;
+        // R22: when this tensor already runs two candidate encoders
+        // concurrently, the chunk pool inside the level-3 encode would be a
+        // third and fourth busy thread on a court that is already saturated —
+        // and it is the publisher that then pays. Measured on the frozen 0.5B
+        // fixture: the chunk pool is neutral-to-negative there (625.1 ms at two
+        // threads against 605.4 sequential, least-contended of 7 interleaved
+        // reps), while the same pool is 1.18x on Qwen 3B and 1.65x on pythia-70m
+        // where no mode-9 candidate competes. The rule is therefore "use the
+        // chunk pool when the encode has the CPUs to itself".
+        let zstd_options = if run_concurrently {
+            weftcodec::modes::ZstdEncodeOptions {
+                threads: 1,
+                ..zstd_options
+            }
+        } else {
+            zstd_options
+        };
         let mut prefetched_zstd: Option<weftcodec::Result<Vec<u8>>> = None;
         let mut prefetched_mode9: Option<weftcodec::Result<Vec<u8>>> = None;
         if run_concurrently {

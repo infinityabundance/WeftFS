@@ -121,7 +121,8 @@ pub struct TensorPipelineOptions {
     pub encode_threads: usize,
     /// CPU tokens: the hard bound on concurrently *busy* encoder threads,
     /// counting the second thread a large tensor may use. Defaults to
-    /// `encode_threads`, i.e. one busy thread per available CPU.
+    /// [`default_cpu_tokens`] of the encode thread count, which leaves one CPU
+    /// for the reader, the publisher and the writeback thread.
     pub cpu_tokens: usize,
     /// Decoded bytes queued ahead of the encoders.
     pub staging_bytes: u64,
@@ -146,6 +147,18 @@ pub struct TensorPipelineOptions {
     pub publish_sync_bytes: u64,
 }
 
+/// The measured default token count for `encode_threads` (R22.3).
+///
+/// One token per encode thread starves the single publisher: on the 4-CPU court
+/// `cpu_tokens = 3` measured 593.2 ms (least-contended) and 597.9 ms (median) of
+/// seven interleaved repetitions against 619.4 / 659.4 at `cpu_tokens = 4`, in
+/// two independent sessions (R21 measured the same 4-5 % gap). Two tokens is
+/// publisher-bound at 967.6 ms. The rule is therefore "one fewer busy encoder
+/// thread than CPUs", with a floor of one so a single-CPU host still encodes.
+pub fn default_cpu_tokens(encode_threads: usize) -> usize {
+    encode_threads.saturating_sub(1).max(1)
+}
+
 impl Default for TensorPipelineOptions {
     fn default() -> Self {
         let threads = std::thread::available_parallelism()
@@ -154,7 +167,7 @@ impl Default for TensorPipelineOptions {
             .clamp(1, 4);
         TensorPipelineOptions {
             encode_threads: threads,
-            cpu_tokens: threads,
+            cpu_tokens: default_cpu_tokens(threads),
             staging_bytes: DEFAULT_STAGING_BYTES,
             encode_bytes: DEFAULT_ENCODE_BYTES,
             publish_bytes: DEFAULT_PUBLISH_BYTES,

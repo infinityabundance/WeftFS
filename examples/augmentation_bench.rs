@@ -1027,6 +1027,7 @@ fn representation_spec(config: &str, flags_state: &ConfigFlags) -> TensorWriteSp
         zstd19_gate_margin_bytes,
         two_stage_off_zstd19,
         two_stage_off_mode9,
+        analyse_threads,
         ..
     } = *flags_state;
     let base = config_base(config);
@@ -1053,6 +1054,9 @@ fn representation_spec(config: &str, flags_state: &ConfigFlags) -> TensorWriteSp
             tensor_encode_threads: encode_threads,
             ..TensorPlanOptions::default()
         };
+        if let Some(threads) = analyse_threads {
+            plan.analyse_threads = threads;
+        }
         if let Some(threads) = zstd_encode_threads {
             plan.zstd_encode_threads = threads;
         }
@@ -1135,6 +1139,8 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
         zstd19_gate_margin_bytes: None,
         two_stage_off_zstd19: false,
         two_stage_off_mode9: false,
+        pipeline_window_mib: None,
+        analyse_threads: None,
     };
     // Suffixes compose with `-`: `noz19-percommit` is the R17 attribution row
     // with the historical per-commit publication, `pack1m-group` is a packed
@@ -1254,6 +1260,28 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
             // Two-stage candidate ablations: `t19off` / `tm9off`.
             "t19off" if matches!(base, "C" | "E") => flags.two_stage_off_zstd19 = true,
             "tm9off" if matches!(base, "C" | "E") => flags.two_stage_off_mode9 = true,
+            // Analyse-histogram threads: `an1`, `an4`.
+            part if part.starts_with("an") => {
+                let threads: usize = part[2..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric an count"))?;
+                if threads == 0 || threads > 64 {
+                    return Err(format!(
+                        "configuration `{key}` asks for {threads} analyse threads (bound 1..=64)"
+                    ));
+                }
+                flags.analyse_threads = Some(threads);
+            }
+            // Every pipeline byte budget, in MiB: `win32`.
+            part if part.starts_with("win") => {
+                let mib: u64 = part[3..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric window"))?;
+                if mib == 0 {
+                    return Err(format!("configuration `{key}` asks for a zero window"));
+                }
+                flags.pipeline_window_mib = Some(mib);
+            }
             part => {
                 return Err(format!(
                     "configuration `{key}` has unknown ablation suffix `{part}`"
@@ -1359,6 +1387,12 @@ struct ConfigFlags {
     /// change two things at once).
     two_stage_off_zstd19: bool,
     two_stage_off_mode9: bool,
+    /// R22: shrink every pipeline byte budget to this many MiB (`win32`), on
+    /// the hypothesis that in-flight frames inflate the cgroup's dirty page
+    /// cache and therefore the durability barrier.
+    pipeline_window_mib: Option<u64>,
+    /// R22.2: analyse-histogram threads (`an1` = sequential).
+    analyse_threads: Option<usize>,
 }
 
 fn uses_protocol(config: &str) -> bool {
@@ -1618,6 +1652,7 @@ fn write_weftfs(
         pipeline_workers,
         pipeline_sync_bytes,
         pipeline_cpu_tokens_flag,
+        pipeline_window_mib,
         ..
     } = flags;
     let group_commit = publication.group_commit();
@@ -1678,10 +1713,12 @@ fn write_weftfs(
         // encoding overlapped by publication.
         let mut popts = weftfs::tensor_pipeline::TensorPipelineOptions::default();
         popts.encode_threads = pipeline_workers;
+        // R22.3: the shipped default token count, not one per worker. The
+        // `tokensN` suffix overrides it.
         popts.cpu_tokens = args
             .pipeline_cpu_tokens
             .or(pipeline_cpu_tokens_flag)
-            .unwrap_or(pipeline_workers);
+            .unwrap_or_else(|| weftfs::tensor_pipeline::default_cpu_tokens(pipeline_workers));
         if let Some(value) = args.pipeline_staging_bytes {
             popts.staging_bytes = value;
         }
@@ -1699,6 +1736,13 @@ fn write_weftfs(
         }
         if let Some(value) = args.pipeline_candidate_min_bytes {
             popts.candidate_parallel_min_bytes = value;
+        }
+        if let Some(mib) = pipeline_window_mib {
+            let bytes = mib.saturating_mul(1024 * 1024);
+            popts.staging_bytes = bytes;
+            popts.encode_bytes = bytes;
+            popts.publish_bytes = bytes;
+            popts.worker_bytes = bytes.saturating_mul(2);
         }
         let spec = representation_spec(config, &flags);
         let pipeline_tensors: Vec<weftfs::tensor_pipeline::TensorPipelineTensor<'_>> = subset
@@ -4050,11 +4094,38 @@ fn ablate(args: &Args) -> Result<(), String> {
                 match flags.planner {
                     PlannerMode::TwoStage => {
                         // Two-stage: encode counts follow the recorded decisions,
-                        // independently of how the row publishes.
+                        // independently of how the row publishes. A row that
+                        // *disables* a candidate under the two-stage planner
+                        // (`tm9off`, `t19off`) must encode it zero times even
+                        // though the gate is still evaluated.
                         let pass = planner["mode9_gate_pass"].as_u64().unwrap_or(0);
                         let unresolved = planner["mode9_gate_unresolved"].as_u64().unwrap_or(0);
                         let encoded19 = planner["encoded_zstd19"].as_u64().unwrap_or(0);
-                        zstd3 <= tensors && zstd19 == encoded19 && mode9 == pass + unresolved
+                        let expected_mode9 = if flags.two_stage_off_mode9 {
+                            0
+                        } else {
+                            pass + unresolved
+                        };
+                        let expected19 = if flags.two_stage_off_zstd19 {
+                            0
+                        } else {
+                            encoded19
+                        };
+                        // A row that *causes* prediction violations (the
+                        // `znochunk` control changes the sample unit, so the
+                        // level-3 interval can stop containing the real frame)
+                        // falls back to exhaustive encoding **for those
+                        // tensors** by design, and therefore encodes more mode-9
+                        // frames than its gate count. That is not allowed to
+                        // silently pass: the receipt records the violation
+                        // count, and this check only tolerates the excess when
+                        // violations are recorded.
+                        let violations = planner["prediction_violation_tensors"]
+                            .as_u64()
+                            .unwrap_or(0);
+                        let mode9_ok = mode9 == expected_mode9
+                            || (violations > 0 && mode9 > expected_mode9);
+                        zstd3 <= tensors && zstd19 == expected19 && mode9_ok
                     }
                     PlannerMode::Exhaustive => {
                         // Exhaustive planner: the R17 ablation contract.
