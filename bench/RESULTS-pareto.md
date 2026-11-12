@@ -196,36 +196,48 @@ still available through the budget and is 3 % slower.
 Fixture: Qwen2.5-0.5B-Instruct, 101 tensors, 424,439,296 logical bytes, 4 CPUs,
 3 GiB, local POSIX backend, 7 interleaved repetitions with a rotated order.
 `min` is the least-contended repetition (the statistic R21 cites), `med` is the
-median, `p95` is the 95th percentile of the seven. `fp` is the physical
-footprint. Device control: 3,200 MB/s (`clean`); native control A = 332.0 ms.
+median (= p50), `p95` is the 95th percentile of the seven. `written` is the
+physical bytes the backend was handed, `req` the backend write requests, and
+`durability` the early-barrier thread's work — the count of files it `fsync`ed
+and its busy milliseconds; the commit's own barrier then closes the batch and
+`fsync`s every remaining file and directory before the commit record (one
+`backend_sync` per write, measured 1.28 ms in every pipeline row because the
+early barrier has already drained it). Device control: 3,200 MB/s (`clean`);
+native control A = 332.0 ms, whose own 101 `sync_all` calls are inside its wall
+and are not reported by the backend counters (`—`).
 
-| config | min | med | p95 | fp (B) | CPU ms | RSS KiB | restore ms | verdict |
-|---|---:|---:|---:|---:|---:|---:|---:|---|
-| A (native) | 332.0 | 339.7 | 6,882.5 | 424,439,296 | 100 | 270,532 | 347.7 | native anchor |
-| **C-pipe4 (shipped default)** | **592.6** | **600.9** | 13,578.4 | **282,106,049** | 1,150 | 939,256 | 1,401.7 | **on the frontier** |
-| C-pipe4-zpar4 | 584.8 | 618.5 | 12,195.4 | 282,106,049 | 1,150 | 926,240 | 1,412.7 | frontier (wall) |
-| C-pipe4-t19off | 575.9 | 593.7 | 11,458.2 | 282,106,049 | 1,060 | 1,019,624 | 1,415.0 | frontier on this fixture only — not portable (§6.3) |
-| C-pipe4-gate4 | 586.3 | 594.9 | 11,146.5 | 282,106,049 | 1,150 | 938,848 | 1,409.2 | equivalent to the default |
-| C-pipe4-an1 | 586.6 | 614.7 | 12,217.1 | 282,106,049 | 1,120 | 924,604 | 1,423.4 | equivalent to the default |
-| C-pipe4-sync16 | 582.0 | 617.1 | 12,378.5 | 282,106,049 | 1,150 | 910,908 | 1,408.4 | equivalent to the default |
-| C-pipe4-zpar3 | 593.1 | 608.4 | 12,892.6 | 282,106,049 | 1,150 | 938,812 | 1,415.3 | equivalent |
-| C-pipe4-zpar1 | 592.2 | 611.8 | 13,510.2 | 282,106,049 | 1,160 | 938,088 | 1,415.4 | equivalent (the pool is inert here) |
-| C-pipe4-zpar2 | 598.0 | 620.1 | 11,654.9 | 282,106,049 | 1,150 | 949,388 | 1,404.8 | equivalent |
-| C-pipe4-tokens4 | 612.1 | 644.0 | 11,605.6 | 282,106,049 | 1,210 | 975,160 | 1,401.2 | dominated by the default |
-| C-pipe4-tm9off | 593.6 | 649.2 | 12,638.8 | **330,355,860** | 940 | 908,960 | 705.0 | frontier (wall) but **+48.2 MB (+17.1 %)** |
-| C-pipe4-sync32 | 627.9 | 665.6 | 11,631.5 | 282,106,049 | 1,150 | 932,496 | 1,412.8 | dominated |
-| C-pipe8 | 648.7 | 686.3 | 13,609.5 | 282,106,049 | 1,320 | 949,596 | 1,411.0 | dominated |
-| C-pipe4-zchunk16384 | 671.7 | 703.2 | 11,575.8 | 282,106,049 | 1,180 | 949,772 | 1,417.2 | dominated (−13 % larger frame than 64 KiB chunks) |
-| E-pipe4 | 603.4 | 621.8 | 12,049.1 | 282,157,248 | 1,150 | 935,960 | 1,408.2 | dominated (protocol cost) |
-| C-pipe4-tokens1 | 912.8 | 924.6 | 12,800.9 | 282,106,049 | 1,140 | 841,252 | 1,412.8 | loss (serial encode) |
-| C-pipe4-tokens2 | 959.8 | 982.3 | 13,991.8 | 282,106,049 | 1,110 | 1,014,468 | 1,413.0 | loss (publisher-bound) |
-| C-pipe2 | 926.5 | 954.3 | 13,287.3 | 282,106,049 | 1,130 | 842,056 | 1,418.9 | loss (publisher-bound) |
-| C-pipe4-pack1m | 962.7 | 1,010.0 | 10,870.1 | 282,102,473 | 1,120 | 899,184 | 1,400.8 | **loss, third measured rejection** |
-| C-pipe4-pack8m | 964.4 | 978.7 | 17,038.4 | 282,115,133 | 1,180 | 1,025,000 | 1,411.9 | loss |
-| C-pipe4-leeway4 | 2,552.1 | 2,617.6 | 12,873.1 | 282,106,049 | 9,930 | 1,030,280 | 1,418.8 | **loss**: forcing level 19 on 17 tensors costs 2.0 s and saves nothing |
-| C-pipe4-znochunk | 3,518.1 | 3,587.0 | 11,865.1 | 282,103,649 | 8,810 | 810,084 | 1,409.8 | **loss**: one frame per tensor breaks the two-stage predictor (50 prediction violations, 50 exhaustive fallbacks) and saves 2.4 KB |
-| C | 1,004.4 | 1,179.4 | 10,587.4 | 282,106,049 | 1,080 | 690,656 | 1,422.2 | dominated (the sequential writer) |
-| C-legacy | 6,583.8 | 6,670.3 | 17,705.6 | 282,106,049 | 21,790 | 907,556 | 1,413.9 | dominated (exhaustive planner; the decision-diff control) |
+Every planned row writes **282,118,555 B** and issues **216** write requests:
+the 202 blob publications plus the commit, index and superblock control writes.
+The pack rows are the exception (163 and 227 requests) because one request
+carries many members.
+
+| config | min ms | med ms | p95 ms | footprint B | written B | req | durability | CPU ms | RSS KiB | restore ms | verdict |
+|---|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|---|
+| `A` | 332.0 | 339.7 | 6882.5 | 424,439,296 | 424,439,296 | — | — | 100 | 270,532 | 347.7 | native anchor |
+| `C-pipe4` | 592.6 | 600.9 | 13578.4 | 282,106,049 | 282,118,555 | 216 | 202 files / 462 ms | 1150 | 939,256 | 1401.7 | **on the frontier (shipped default)** |
+| `C-pipe4-zpar4` | 584.8 | 618.5 | 12195.4 | 282,106,049 | 282,118,555 | 216 | 202 files / 456 ms | 1150 | 926,240 | 1412.7 | frontier (wall), not adopted |
+| `C-pipe4-t19off` | 575.9 | 593.7 | 11458.2 | 282,106,049 | 282,118,555 | 216 | 202 files / 464 ms | 1060 | 1,019,624 | 1415.0 | frontier here only - not portable (6.3) |
+| `C-pipe4-gate4` | 586.3 | 594.9 | 11146.5 | 282,106,049 | 282,118,555 | 216 | 202 files / 461 ms | 1150 | 938,848 | 1409.2 | equivalent to the default |
+| `C-pipe4-an1` | 586.6 | 614.7 | 12217.1 | 282,106,049 | 282,118,555 | 216 | 202 files / 468 ms | 1120 | 924,604 | 1423.4 | equivalent to the default |
+| `C-pipe4-sync16` | 582.0 | 617.1 | 12378.5 | 282,106,049 | 282,118,555 | 216 | 202 files / 451 ms | 1150 | 910,908 | 1408.4 | equivalent to the default |
+| `C-pipe4-zpar3` | 593.1 | 608.4 | 12892.6 | 282,106,049 | 282,118,555 | 216 | 202 files / 462 ms | 1150 | 938,812 | 1415.3 | equivalent |
+| `C-pipe4-zpar1` | 592.2 | 611.8 | 13510.2 | 282,106,049 | 282,118,555 | 216 | 202 files / 461 ms | 1160 | 938,088 | 1415.4 | equivalent (pool inert here) |
+| `C-pipe4-zpar2` | 598.0 | 620.1 | 11654.9 | 282,106,049 | 282,118,555 | 216 | 202 files / 482 ms | 1150 | 949,388 | 1404.8 | equivalent |
+| `C-pipe4-tokens4` | 612.1 | 644.0 | 11605.6 | 282,106,049 | 282,118,555 | 216 | 202 files / 503 ms | 1210 | 975,160 | 1401.2 | dominated by the default |
+| `C-pipe4-tm9off` | 593.6 | 649.2 | 12638.8 | 330,355,860 | 330,368,366 | 216 | 196 files / 461 ms | 940 | 908,960 | 705.0 | frontier (wall) but **+48.2 MB (+17.1 %)** |
+| `C-pipe4-sync32` | 627.9 | 665.6 | 11631.5 | 282,106,049 | 282,118,555 | 216 | 202 files / 426 ms | 1150 | 932,496 | 1412.8 | dominated |
+| `C-pipe8` | 648.7 | 686.3 | 13609.5 | 282,106,049 | 282,118,555 | 216 | 202 files / 458 ms | 1320 | 949,596 | 1411.0 | dominated |
+| `C-pipe4-zchunk16384` | 671.7 | 703.2 | 11575.8 | 282,106,049 | 282,118,555 | 216 | 202 files / 467 ms | 1180 | 949,772 | 1417.2 | dominated (13 % slower, bytes identical) |
+| `E-pipe4` | 603.4 | 621.8 | 12049.1 | 282,157,248 | 282,127,407 | 216 | 202 files / 456 ms | 1150 | 935,960 | 1408.2 | dominated (protocol cost) |
+| `C-pipe4-tokens1` | 912.8 | 924.6 | 12800.9 | 282,106,049 | 282,118,555 | 216 | 186 files / 439 ms | 1140 | 841,252 | 1412.8 | loss (serial encode) |
+| `C-pipe4-tokens2` | 959.8 | 982.3 | 13991.8 | 282,106,049 | 282,118,555 | 216 | 196 files / 440 ms | 1110 | 1,014,468 | 1413.0 | loss (publisher-bound) |
+| `C-pipe2` | 926.5 | 954.3 | 13287.3 | 282,106,049 | 282,118,555 | 216 | 186 files / 438 ms | 1130 | 842,056 | 1418.9 | loss (publisher-bound) |
+| `C-pipe4-pack1m` | 962.7 | 1010.0 | 10870.1 | 282,102,473 | 282,135,559 | 163 | 0 files / 0 ms | 1120 | 899,184 | 1400.8 | **loss, third measured rejection** |
+| `C-pipe4-pack8m` | 964.4 | 978.7 | 17038.4 | 282,115,133 | 282,214,123 | 227 | 0 files / 0 ms | 1180 | 1,025,000 | 1411.9 | loss |
+| `C-pipe4-leeway4` | 2552.1 | 2617.6 | 12873.1 | 282,106,049 | 282,118,555 | 216 | 200 files / 665 ms | 9930 | 1,030,280 | 1418.8 | **loss** (2.0 s of forced level 19, zero bytes) |
+| `C-pipe4-znochunk` | 3518.1 | 3587.0 | 11865.1 | 282,103,649 | 282,116,155 | 216 | 200 files / 416 ms | 8810 | 810,084 | 1409.8 | **loss** (breaks the two-stage predictor) |
+| `C` | 1004.4 | 1179.4 | 10587.4 | 282,106,049 | 282,118,555 | 216 | — | 1080 | 690,656 | 1422.2 | dominated (the sequential writer) |
+| `C-legacy` | 6583.8 | 6670.3 | 17705.6 | 282,106,049 | 282,118,555 | 216 | — | 21790 | 907,556 | 1413.9 | dominated (exhaustive planner) |
 
 **Pareto-optimal set** (wall against footprint, over every row above):
 
