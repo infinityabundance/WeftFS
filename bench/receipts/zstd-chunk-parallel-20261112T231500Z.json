@@ -1,0 +1,275 @@
+{
+  "all_frames_byte_identical": true,
+  "environment": {
+    "court": "weft/bench-court:1",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "note": "one host, warm page cache; timings are wall clock over whole frames"
+  },
+  "fixture": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+  "fixture_bytes": 988097824,
+  "fixture_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+  "histogram_rows": [
+    {
+      "exponent_symbols": 33,
+      "gigabytes_per_second": 7.345389691349329,
+      "logical_bytes": 272269312,
+      "median_ms": 37.066694,
+      "name": "model.embed_tokens.weight"
+    }
+  ],
+  "identity_checks": 40,
+  "peak_rss_kib": 908592,
+  "reps": 5,
+  "result": "pass",
+  "revision": {
+    "weftcodec": "375b87f001af587503a9e953f9c7f47262a58597",
+    "weftfs": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  "role": "R22 22.1: the measured saving of chunk-parallel ZSTD on real tensors, and the byte-identity proof of every timed frame",
+  "rows": [
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 0.278,
+      "dtype": "bf16",
+      "frame_bytes": 210905154,
+      "level": 3,
+      "logical_bytes": 272269312,
+      "median_ms": 285.944321,
+      "megabytes_per_second": 952.1759727482051,
+      "min_ms": 283.158202,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 287.8323726,
+      "samples_ms": [
+        283.158202,
+        285.585512,
+        285.944321,
+        286.232659,
+        288.232301
+      ],
+      "sequential_median_ms": 280.264211,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 0.98013560828858,
+      "threads": 1
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 0.3000000000000001,
+      "dtype": "bf16",
+      "frame_bytes": 210905154,
+      "level": 3,
+      "logical_bytes": 272269312,
+      "median_ms": 188.977711,
+      "megabytes_per_second": 1440.7482795682715,
+      "min_ms": 186.282592,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 194.60766679999998,
+      "samples_ms": [
+        186.282592,
+        187.382996,
+        188.977711,
+        193.336446,
+        194.92547199999998
+      ],
+      "sequential_median_ms": 280.264211,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 1.4830543216813543,
+      "threads": 2
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 0.30999999999999994,
+      "dtype": "bf16",
+      "frame_bytes": 210905154,
+      "level": 3,
+      "logical_bytes": 272269312,
+      "median_ms": 154.028529,
+      "megabytes_per_second": 1767.655081611537,
+      "min_ms": 153.30607099999997,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 160.67496820000002,
+      "samples_ms": [
+        153.30607099999997,
+        153.84441500000003,
+        154.028529,
+        158.276677,
+        161.274541
+      ],
+      "sequential_median_ms": 280.264211,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 1.819560394555219,
+      "threads": 3
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 0.3140000000000002,
+      "dtype": "bf16",
+      "frame_bytes": 210905154,
+      "level": 3,
+      "logical_bytes": 272269312,
+      "median_ms": 135.689625,
+      "megabytes_per_second": 2006.5595435170521,
+      "min_ms": 132.990158,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 136.42866859999998,
+      "samples_ms": [
+        132.990158,
+        134.36854,
+        135.689625,
+        135.789251,
+        136.58852299999998
+      ],
+      "sequential_median_ms": 280.264211,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 2.0654800320953055,
+      "threads": 4
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 13.543999999999993,
+      "dtype": "bf16",
+      "frame_bytes": 210709304,
+      "level": 19,
+      "logical_bytes": 272269312,
+      "median_ms": 13598.241402,
+      "megabytes_per_second": 20.022391421875717,
+      "min_ms": 13514.355321000001,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 13713.2615806,
+      "samples_ms": [
+        13514.355321000001,
+        13563.047945999999,
+        13598.241402,
+        13701.853951000001,
+        13716.113487999999
+      ],
+      "sequential_median_ms": 13597.393538,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 0.9999376489962978,
+      "threads": 1
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 13.689999999999998,
+      "dtype": "bf16",
+      "frame_bytes": 210709304,
+      "level": 19,
+      "logical_bytes": 272269312,
+      "median_ms": 7182.463856,
+      "megabytes_per_second": 37.90750882408617,
+      "min_ms": 7103.6906850000005,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 7199.382685999999,
+      "samples_ms": [
+        7103.6906850000005,
+        7152.993691,
+        7182.463856,
+        7191.591478,
+        7201.330488
+      ],
+      "sequential_median_ms": 13597.393538,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 1.893137760330137,
+      "threads": 2
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 13.657999999999998,
+      "dtype": "bf16",
+      "frame_bytes": 210709304,
+      "level": 19,
+      "logical_bytes": 272269312,
+      "median_ms": 4875.605324,
+      "megabytes_per_second": 55.84318128864197,
+      "min_ms": 4856.337963999999,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 4889.0221106,
+      "samples_ms": [
+        4856.337963999999,
+        4862.0162980000005,
+        4875.605324,
+        4888.097221,
+        4889.253333
+      ],
+      "sequential_median_ms": 13597.393538,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 2.7888626405150756,
+      "threads": 3
+    },
+    {
+      "batch_kib": 32768,
+      "byte_identical": true,
+      "chunks": 4155,
+      "codec_chunk_bytes": 65536,
+      "cpu_seconds_per_rep": 13.670000000000005,
+      "dtype": "bf16",
+      "frame_bytes": 210709304,
+      "level": 19,
+      "logical_bytes": 272269312,
+      "median_ms": 3667.106624,
+      "megabytes_per_second": 74.24635821006332,
+      "min_ms": 3657.17887,
+      "name": "model.embed_tokens.weight",
+      "p95_ms": 3693.126881,
+      "samples_ms": [
+        3657.17887,
+        3659.449607,
+        3667.106624,
+        3672.598925,
+        3698.25887
+      ],
+      "sequential_median_ms": 13597.393538,
+      "shape": [
+        151936,
+        896
+      ],
+      "speedup_vs_sequential": 3.7079351467474537,
+      "threads": 4
+    }
+  ],
+  "schema": "weft.zstd-chunk-parallel-bench.v1",
+  "stamp": "20261112T204529Z"
+}

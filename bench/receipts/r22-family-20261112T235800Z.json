@@ -1,0 +1,443 @@
+{
+ "methodology": "bench/scripts/r22_family_court.sh inside the bench court (3 GiB / 4 cpus / 1024 pids); subset = embedding + up to 100 evenly spaced tensors; exactness checked by the restore row",
+ "result": "measured",
+ "role": "R22.5 cross-family write frontier: one repetition per (family, row), same fixture selection rule as the R21 court, local POSIX backend",
+ "rows": [
+  {
+   "bytes_written": 424439296,
+   "config": "A",
+   "cpu_ms": 120.0,
+   "family": "qwen0.5b-instruct",
+   "fixture_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+   "logical_bytes": null,
+   "peak_rss_kib": 270904,
+   "physical_footprint_bytes": null,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": null,
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 101,
+    "wall_ms": 357.65930299999997
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 346.642613,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 282118555,
+   "config": "C",
+   "cpu_ms": 1140.0,
+   "family": "qwen0.5b-instruct",
+   "fixture_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+   "logical_bytes": null,
+   "peak_rss_kib": 690920,
+   "physical_footprint_bytes": 282106049,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 101,
+    "wall_ms": 1435.195297
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 1217.574558,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 282118555,
+   "config": "C-pipe4",
+   "cpu_ms": 1170.0,
+   "family": "qwen0.5b-instruct",
+   "fixture_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+   "logical_bytes": null,
+   "peak_rss_kib": 939364,
+   "physical_footprint_bytes": 282106049,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 101,
+    "wall_ms": 1430.146154
+   },
+   "stages_ms": {
+    "encode_busy": 685.35306,
+    "encode_wall": 417.750896,
+    "pipeline_wall": 585.609689,
+    "publish_busy": 395.068151,
+    "publish_wall": 461.29552,
+    "reader": 45.850256
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 628.443497,
+   "writeback_busy_ms": 487.071473
+  },
+  {
+   "bytes_written": 282118555,
+   "config": "C-pipe4-zpar3",
+   "cpu_ms": 1310.0,
+   "family": "qwen0.5b-instruct",
+   "fixture_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+   "logical_bytes": null,
+   "peak_rss_kib": 971900,
+   "physical_footprint_bytes": 282106049,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 101,
+    "wall_ms": 1456.943753
+   },
+   "stages_ms": {
+    "encode_busy": 735.461165,
+    "encode_wall": 431.463448,
+    "pipeline_wall": 576.298321,
+    "publish_busy": 412.340153,
+    "publish_wall": 475.819124,
+    "reader": 50.333975
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 625.9565249999999,
+   "writeback_busy_ms": 465.340779
+  },
+  {
+   "bytes_written": 282118555,
+   "config": "C-legacy",
+   "cpu_ms": 21850.0,
+   "family": "qwen0.5b-instruct",
+   "fixture_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+   "logical_bytes": null,
+   "peak_rss_kib": 907620,
+   "physical_footprint_bytes": 282106049,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 101,
+    "wall_ms": 1422.217543
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 6702.9739819999995,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 281706496,
+   "config": "A",
+   "cpu_ms": 70.0,
+   "family": "pythia70m-step0",
+   "fixture_sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+   "logical_bytes": null,
+   "peak_rss_kib": 105228,
+   "physical_footprint_bytes": null,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": null,
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 239.589978
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 240.364513,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 163976682,
+   "config": "C",
+   "cpu_ms": 25560.0,
+   "family": "pythia70m-step0",
+   "fixture_sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+   "logical_bytes": null,
+   "peak_rss_kib": 304884,
+   "physical_footprint_bytes": 163964176,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 709.126936
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 12204.379757,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 163976682,
+   "config": "C-pipe4",
+   "cpu_ms": 29760.0,
+   "family": "pythia70m-step0",
+   "fixture_sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+   "logical_bytes": null,
+   "peak_rss_kib": 612536,
+   "physical_footprint_bytes": 163964176,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 706.939163
+   },
+   "stages_ms": {
+    "encode_busy": 18390.895415,
+    "encode_wall": 8077.216617,
+    "pipeline_wall": 8096.087555,
+    "publish_busy": 121.924382,
+    "publish_wall": 2453.07769,
+    "reader": 56.200452
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 8143.779648000001,
+   "writeback_busy_ms": 126.026091
+  },
+  {
+   "bytes_written": 163976682,
+   "config": "C-pipe4-zpar3",
+   "cpu_ms": 25760.0,
+   "family": "pythia70m-step0",
+   "fixture_sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+   "logical_bytes": null,
+   "peak_rss_kib": 664180,
+   "physical_footprint_bytes": 163964176,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 694.9898810000001
+   },
+   "stages_ms": {
+    "encode_busy": 16399.566448,
+    "encode_wall": 7135.090725,
+    "pipeline_wall": 7143.9497679999995,
+    "publish_busy": 134.740954,
+    "publish_wall": 2441.513516,
+    "reader": 27.162311
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 7189.977115,
+   "writeback_busy_ms": 163.944105
+  },
+  {
+   "bytes_written": 163976682,
+   "config": "C-legacy",
+   "cpu_ms": 25580.0,
+   "family": "pythia70m-step0",
+   "fixture_sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e",
+   "logical_bytes": null,
+   "peak_rss_kib": 304056,
+   "physical_footprint_bytes": 163964176,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 695.9656430000001
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 12228.846837000001,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 281706496,
+   "config": "A",
+   "cpu_ms": 70.0,
+   "family": "pythia70m-step8",
+   "fixture_sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+   "logical_bytes": null,
+   "peak_rss_kib": 104964,
+   "physical_footprint_bytes": null,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": null,
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 242.676527
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 238.750671,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 163842879,
+   "config": "C",
+   "cpu_ms": 25490.0,
+   "family": "pythia70m-step8",
+   "fixture_sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+   "logical_bytes": null,
+   "peak_rss_kib": 303912,
+   "physical_footprint_bytes": 163830373,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 700.455651
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 12176.816065,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 163842879,
+   "config": "C-pipe4",
+   "cpu_ms": 27330.0,
+   "family": "pythia70m-step8",
+   "fixture_sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+   "logical_bytes": null,
+   "peak_rss_kib": 617188,
+   "physical_footprint_bytes": 163830373,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 695.653809
+   },
+   "stages_ms": {
+    "encode_busy": 17178.704142,
+    "encode_wall": 7456.057325,
+    "pipeline_wall": 7463.44891,
+    "publish_busy": 183.848232,
+    "publish_wall": 2470.26979,
+    "reader": 27.476928
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 7512.639399000001,
+   "writeback_busy_ms": 206.593456
+  },
+  {
+   "bytes_written": 163842879,
+   "config": "C-pipe4-zpar3",
+   "cpu_ms": 25790.0,
+   "family": "pythia70m-step8",
+   "fixture_sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+   "logical_bytes": null,
+   "peak_rss_kib": 609392,
+   "physical_footprint_bytes": 163830373,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 701.819533
+   },
+   "stages_ms": {
+    "encode_busy": 16409.784175,
+    "encode_wall": 7081.18181,
+    "pipeline_wall": 7091.15975,
+    "publish_busy": 177.746729,
+    "publish_wall": 2417.69426,
+    "reader": 27.516832
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 7143.035872,
+   "writeback_busy_ms": 205.408074
+  },
+  {
+   "bytes_written": 163842879,
+   "config": "C-legacy",
+   "cpu_ms": 25510.0,
+   "family": "pythia70m-step8",
+   "fixture_sha256": "17254dbf6e86d12b32a5da7b7fa5d51df3e5d3a12907b3b1ea1442ef51870e48",
+   "logical_bytes": null,
+   "peak_rss_kib": 304432,
+   "physical_footprint_bytes": 163830373,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "zstd": 76
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 76,
+    "wall_ms": 711.5482579999999
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 12247.371071,
+   "writeback_busy_ms": null
+  }
+ ],
+ "schema": "weft.r22-family.v1",
+ "stamp": "20261112T235800Z"
+}

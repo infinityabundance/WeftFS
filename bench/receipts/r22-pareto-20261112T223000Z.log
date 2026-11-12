@@ -1,0 +1,1331 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["A", "C", "C-legacy", "C-pipe4", "C-pipe4-tokens1", "C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4"] reps=7 backend=local
+ablate: === rep 1/7 order=["A", "C", "C-legacy", "C-pipe4", "C-pipe4-tokens1", "C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4"] ===
+ablate: rep 1 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 1 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_objects: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_commit_file: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_superblock_write: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_objects: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_commit_file: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_superblock_write: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+--- crash-check C-pipe4-tokens1 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens1 after_objects: exit -1
+--- crash-check C-pipe4-tokens1 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens1 after_commit_file: exit -1
+--- crash-check C-pipe4-tokens1 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens1 after_superblock_write: exit -1
+--- crash-check C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+--- crash-check C-pipe4-tokens2 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens2 after_objects: exit -1
+--- crash-check C-pipe4-tokens2 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens2 after_commit_file: exit -1
+--- crash-check C-pipe4-tokens2 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens2 after_superblock_write: exit -1
+--- crash-check C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+--- crash-check C-pipe4-tokens4 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens4 after_objects: exit -1
+--- crash-check C-pipe4-tokens4 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens4 after_commit_file: exit -1
+--- crash-check C-pipe4-tokens4 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens4 after_superblock_write: exit -1
+--- crash-check C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar1 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar1 after_objects: exit -1
+--- crash-check C-pipe4-zpar1 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar1 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar1 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar1 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+--- crash-check C-pipe2 (exit Some(0)) ---
+
+crash-write C-pipe2 after_objects: exit -1
+--- crash-check C-pipe2 (exit Some(0)) ---
+
+crash-write C-pipe2 after_commit_file: exit -1
+--- crash-check C-pipe2 (exit Some(0)) ---
+
+crash-write C-pipe2 after_superblock_write: exit -1
+--- crash-check C-pipe2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+--- crash-check C-pipe8 (exit Some(0)) ---
+
+crash-write C-pipe8 after_objects: exit -1
+--- crash-check C-pipe8 (exit Some(0)) ---
+
+crash-write C-pipe8 after_commit_file: exit -1
+--- crash-check C-pipe8 (exit Some(0)) ---
+
+crash-write C-pipe8 after_superblock_write: exit -1
+--- crash-check C-pipe8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar2 after_objects: exit -1
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar2 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar2 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3 after_objects: exit -1
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar4 after_objects: exit -1
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar4 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar4 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+crash-write C-pipe4-sync16 after_objects: exit -1
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+crash-write C-pipe4-sync16 after_commit_file: exit -1
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+crash-write C-pipe4-sync16 after_superblock_write: exit -1
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+--- crash-check C-pipe4-sync32 (exit Some(0)) ---
+
+crash-write C-pipe4-sync32 after_objects: exit -1
+--- crash-check C-pipe4-sync32 (exit Some(0)) ---
+
+crash-write C-pipe4-sync32 after_commit_file: exit -1
+--- crash-check C-pipe4-sync32 (exit Some(0)) ---
+
+crash-write C-pipe4-sync32 after_superblock_write: exit -1
+--- crash-check C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+crash-write C-pipe4-pack1m after_objects: exit -1
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+crash-write C-pipe4-pack1m after_commit_file: exit -1
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+crash-write C-pipe4-pack1m after_superblock_write: exit -1
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+--- crash-check C-pipe4-pack8m (exit Some(0)) ---
+
+crash-write C-pipe4-pack8m after_objects: exit -1
+--- crash-check C-pipe4-pack8m (exit Some(0)) ---
+
+crash-write C-pipe4-pack8m after_commit_file: exit -1
+--- crash-check C-pipe4-pack8m (exit Some(0)) ---
+
+crash-write C-pipe4-pack8m after_superblock_write: exit -1
+--- crash-check C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+--- crash-check C-pipe4-znochunk (exit Some(0)) ---
+
+crash-write C-pipe4-znochunk after_objects: exit -1
+--- crash-check C-pipe4-znochunk (exit Some(0)) ---
+
+crash-write C-pipe4-znochunk after_commit_file: exit -1
+--- crash-check C-pipe4-znochunk (exit Some(0)) ---
+
+crash-write C-pipe4-znochunk after_superblock_write: exit -1
+--- crash-check C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zchunk16384 (exit Some(0)) ---
+
+crash-write C-pipe4-zchunk16384 after_objects: exit -1
+--- crash-check C-pipe4-zchunk16384 (exit Some(0)) ---
+
+crash-write C-pipe4-zchunk16384 after_commit_file: exit -1
+--- crash-check C-pipe4-zchunk16384 (exit Some(0)) ---
+
+crash-write C-pipe4-zchunk16384 after_superblock_write: exit -1
+--- crash-check C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+--- crash-check C-pipe4-tm9off (exit Some(0)) ---
+
+crash-write C-pipe4-tm9off after_objects: exit -1
+--- crash-check C-pipe4-tm9off (exit Some(0)) ---
+
+crash-write C-pipe4-tm9off after_commit_file: exit -1
+--- crash-check C-pipe4-tm9off (exit Some(0)) ---
+
+crash-write C-pipe4-tm9off after_superblock_write: exit -1
+--- crash-check C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+--- crash-check C-pipe4-t19off (exit Some(0)) ---
+
+crash-write C-pipe4-t19off after_objects: exit -1
+--- crash-check C-pipe4-t19off (exit Some(0)) ---
+
+crash-write C-pipe4-t19off after_commit_file: exit -1
+--- crash-check C-pipe4-t19off (exit Some(0)) ---
+
+crash-write C-pipe4-t19off after_superblock_write: exit -1
+--- crash-check C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+--- crash-check C-pipe4-gate4 (exit Some(0)) ---
+
+crash-write C-pipe4-gate4 after_objects: exit -1
+--- crash-check C-pipe4-gate4 (exit Some(0)) ---
+
+crash-write C-pipe4-gate4 after_commit_file: exit -1
+--- crash-check C-pipe4-gate4 (exit Some(0)) ---
+
+crash-write C-pipe4-gate4 after_superblock_write: exit -1
+--- crash-check C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+--- crash-check C-pipe4-leeway4 (exit Some(0)) ---
+
+crash-write C-pipe4-leeway4 after_objects: exit -1
+--- crash-check C-pipe4-leeway4 (exit Some(0)) ---
+
+crash-write C-pipe4-leeway4 after_commit_file: exit -1
+--- crash-check C-pipe4-leeway4 (exit Some(0)) ---
+
+crash-write C-pipe4-leeway4 after_superblock_write: exit -1
+--- crash-check C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+--- crash-check C-pipe4-an1 (exit Some(0)) ---
+
+crash-write C-pipe4-an1 after_objects: exit -1
+--- crash-check C-pipe4-an1 (exit Some(0)) ---
+
+crash-write C-pipe4-an1 after_commit_file: exit -1
+--- crash-check C-pipe4-an1 (exit Some(0)) ---
+
+crash-write C-pipe4-an1 after_superblock_write: exit -1
+--- crash-check C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 1 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+--- crash-check E-pipe4 (exit Some(0)) ---
+
+crash-write E-pipe4 after_objects: exit -1
+--- crash-check E-pipe4 (exit Some(0)) ---
+
+crash-write E-pipe4 after_commit_file: exit -1
+--- crash-check E-pipe4 (exit Some(0)) ---
+
+crash-write E-pipe4 after_superblock_write: exit -1
+--- crash-check E-pipe4 (exit Some(0)) ---
+
+ablate: === rep 2/7 order=["C", "C-legacy", "C-pipe4", "C-pipe4-tokens1", "C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4", "A"] ===
+ablate: rep 2 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 2 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 2 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 2 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 2 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 2 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: === rep 3/7 order=["C-legacy", "C-pipe4", "C-pipe4-tokens1", "C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4", "A", "C"] ===
+ablate: rep 3 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 3 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 3 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 3 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 3 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 3 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: === rep 4/7 order=["C-pipe4", "C-pipe4-tokens1", "C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4", "A", "C", "C-legacy"] ===
+ablate: rep 4 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 4 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 4 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 4 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 4 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 4 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 4 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: === rep 5/7 order=["C-pipe4-tokens1", "C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4", "A", "C", "C-legacy", "C-pipe4"] ===
+ablate: rep 5 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 5 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 5 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 5 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 5 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 5 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 5 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: === rep 6/7 order=["C-pipe4-tokens2", "C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4", "A", "C", "C-legacy", "C-pipe4", "C-pipe4-tokens1"] ===
+ablate: rep 6 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 6 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 6 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 6 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 6 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 6 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 6 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: === rep 7/7 order=["C-pipe4-tokens4", "C-pipe4-zpar1", "C-pipe2", "C-pipe8", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-sync16", "C-pipe4-sync32", "C-pipe4-pack1m", "C-pipe4-pack8m", "C-pipe4-znochunk", "C-pipe4-zchunk16384", "C-pipe4-tm9off", "C-pipe4-t19off", "C-pipe4-gate4", "C-pipe4-leeway4", "C-pipe4-an1", "E-pipe4", "A", "C", "C-legacy", "C-pipe4", "C-pipe4-tokens1", "C-pipe4-tokens2"] ===
+ablate: rep 7 config C-pipe4-tokens4 write
+--- write C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tokens4 restore
+--- restore C-pipe4-tokens4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar1 write
+--- write C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar1 restore
+--- restore C-pipe4-zpar1 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe2 write
+--- write C-pipe2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe2 restore
+--- restore C-pipe2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe8 write
+--- write C-pipe8 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe8 restore
+--- restore C-pipe8 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-sync32 write
+--- write C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-sync32 restore
+--- restore C-pipe4-sync32 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-pack8m write
+--- write C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-pack8m restore
+--- restore C-pipe4-pack8m (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-znochunk write
+--- write C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-znochunk restore
+--- restore C-pipe4-znochunk (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zchunk16384 write
+--- write C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zchunk16384 restore
+--- restore C-pipe4-zchunk16384 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tm9off write
+--- write C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tm9off restore
+--- restore C-pipe4-tm9off (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-t19off write
+--- write C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-t19off restore
+--- restore C-pipe4-t19off (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-gate4 write
+--- write C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-gate4 restore
+--- restore C-pipe4-gate4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-leeway4 write
+--- write C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-leeway4 restore
+--- restore C-pipe4-leeway4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-an1 write
+--- write C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-an1 restore
+--- restore C-pipe4-an1 (exit Some(0)) ---
+
+ablate: rep 7 config E-pipe4 write
+--- write E-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config E-pipe4 restore
+--- restore E-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 7 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 7 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 7 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 7 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 7 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tokens1 write
+--- write C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tokens1 restore
+--- restore C-pipe4-tokens1 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tokens2 write
+--- write C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-tokens2 restore
+--- restore C-pipe4-tokens2 (exit Some(0)) ---
+
+ablate: result=pass receipt=/work/bench/receipts/r22-pareto-20261112T223000Z.json

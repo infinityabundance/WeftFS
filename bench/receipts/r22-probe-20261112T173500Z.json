@@ -1,0 +1,60 @@
+{
+ "result": "environment-failed",
+ "role": "retained environment failure: the host durability path degraded and the native control A wrote the 424 MB fixture far outside its 300-420 ms band, so no row was timed",
+ "rows": [
+  {
+   "budgets": {
+    "candidate_parallel_min_bytes": 16777216,
+    "encode_bytes": 268435456,
+    "publish_bytes": 134217728,
+    "publish_sync_bytes": 8388608,
+    "reservation_bound_bytes": 1744830464,
+    "staging_bytes": 268435456,
+    "worker_bytes": 1073741824
+   },
+   "commit_ms": 172.811104,
+   "cpu_ms": 1430.0,
+   "embedding_encode_ms": null,
+   "embedding_publish_ms": null,
+   "environment_notes": null,
+   "overlap": {
+    "encode_overlap_fraction": 0.9994968215990007,
+    "encode_overlapped_ms": 869.567779,
+    "publish_hidden_fraction": 0.05628952441185315,
+    "publish_overlapped_ms": 383.416042
+   },
+   "peak_rss_kib": 1092240,
+   "physical_footprint_bytes": 282106049,
+   "prepare_breakdown": {},
+   "prepare_ms": 10880.842371,
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "row": "A",
+   "stages_ms": {
+    "encode_busy": 870.005547,
+    "encode_wall": 383.642514,
+    "pipeline_wall": 10880.842371,
+    "publish_busy": 6811.499049,
+    "publish_wall": 6812.286492,
+    "reader": 47.744366
+   },
+   "store_head": "4a5958b5e03e51b73d08222f3e883de280816b04778afc4021f2da1e0c9cc659",
+   "waits_ms": {
+    "cpu_tokens": 237.350681,
+    "encode_queue": 817.871456,
+    "publish_idle": 22.356225,
+    "staging": 0.0053,
+    "worker_bytes": 0.0
+   },
+   "wall_ms": 11482.636883,
+   "writeback_busy_ms": 10088.67787,
+   "writeback_files": 202,
+   "writeback_passes": 9
+  }
+ ],
+ "schema": "weft.r22-probe.v1",
+ "stamp": "20261112T173500Z"
+}
