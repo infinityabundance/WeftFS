@@ -10359,5 +10359,118 @@
   ],
   "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
   "kind": "present"
+ },
+ {
+  "id": "r18_two_stage_receipt",
+  "claim": "R18's evidence is one assembled receipt with the 7-repetition matrix, the per-tensor decision diff and three cross-family decision diffs.",
+  "value": "planner-two-stage-20261112T081151Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_wall_and_footprint",
+  "claim": "The two-stage planned write on the frozen 101-tensor fixture is 4,117.8 ms (least contended of 7 interleaved repetitions) at 282,283,011 B.",
+  "value": "4,117.8",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_footprint_unchanged",
+  "claim": "The two-stage planner publishes the same footprint as the exhaustive planner on the frozen fixture: 282,283,011 B.",
+  "value": "282,283,011",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_zero_decision_changes",
+  "claim": "Between the exhaustive and the two-stage planners, 0 of 101 tensors change strategy or chosen size on the frozen fixture.",
+  "value": "0 of 101",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_mode9_exact_predictor",
+  "claim": "The mode-9 frame length is predicted bit-exactly from the exponent histogram by modes::float_tensor_encoded_len_from_histogram.",
+  "value": "float_tensor_encoded_len_from_histogram",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_level19_is_conditional",
+  "claim": "Level-19 ZSTD is gated, not deleted: on pythia-70m step0 it is smaller than level 3 for 26 of 26 eligible tensors and the planner keeps it (163,863,698 vs 173,186,380 B).",
+  "value": "163,863,698",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_mode9_skips_are_small",
+  "claim": "The 66 tensors whose mode-9 encode the planner skips total 93,696 logical bytes (0.022 % of the fixture), which is why skipping them saves almost no wall time.",
+  "value": "93,696",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md",
+   "bench/RESULTS-write-cost-ledger.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_target_missed",
+  "claim": "R18's stated expectation was C at about 3,850 ms; the measured 4,117.8 ms is 7.0 % above it, and that miss is published with its measured cause.",
+  "value": "7.0 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_planner_mode_control",
+  "claim": "The exhaustive planner remains selectable as the decision-diff control via PlannerMode::Exhaustive and --planner exhaustive.",
+  "value": "PlannerMode",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r18_go_divergence",
+  "claim": "Go has no two-stage rule: it reaches the same decisions by exhaustive encoding and no Go parity is claimed for R18.",
+  "value": "two-stage rule",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": null,
+  "kind": "present"
  }
 ]

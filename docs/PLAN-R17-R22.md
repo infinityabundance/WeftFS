@@ -1,9 +1,9 @@
 # Plan R17–R22 — compressed-write parity
 
-**Status:** R17 executed; R18–R22 planned. This plan is driven by the measured
-ledger in [`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md),
-not by intuition. Nothing in R18–R22 may weaken the exactness or durability
-contracts to hit a number.
+**Status:** R17 and R18 executed; R19–R22 planned. This plan is driven by the
+measured ledger in [`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md)
+and its R18 correction, not by intuition. Nothing in R19–R22 may weaken the
+exactness or durability contracts to hit a number.
 
 ## 1. The objective
 
@@ -72,21 +72,34 @@ shows the control-plane tax is 689 ms for 101 commits and collapses to 8.8 ms.
 C without the two expensive candidates (`C-both`) is **2,133 ms / 330.5 MB** —
 already at G2's wall with a 22.2 % footprint win over B.
 
-### R18 — candidate elimination (next)
+### R18 — candidate elimination (done)
 
-1. Remove the level-19 candidate from the default planned path, or make it
-   opt-in outside the critical path. Evidence: zero selected objects and zero
-   bytes saved on the frozen fixture for 20.35 s of encode.
-2. Re-price the remaining candidates with the write lambda so a candidate must
-   earn its encode time, not only its bytes.
-3. Keep the exactness contract: the same object identity, the same chosen
-   bytes, the same restore.
-4. **Gate:** C-noz19-like wall and footprint, 101/101 exact, crash old-or-new.
-5. Expected: C at ~3.85 s / 282.3 MB, which is **1.15× the G1 rung** (3.36 s);
-   G1 needs a further ~0.5 s from R21 or R20, and that is stated rather than
-   rounded away.
+Implemented as **analyse → select → materialise**, not as a deletion: level 19 is
+conditional, because on the pythia-70m trajectory it is smaller than level 3 for
+26 of 26 eligible tensors. Evidence
+[`bench/RESULTS-planner-two-stage.md`](../bench/RESULTS-planner-two-stage.md),
+receipt `planner-two-stage-20261112T081151Z`.
 
-### R19 — BF16 mode-9 encoder
+1. **Done.** `src/two_stage.rs` samples 4 codec chunks at level 3 and 2 at level
+   19, predicts mode 9 **bit-exactly** from a full exponent histogram, and
+   encodes a candidate only when its interval could change the winner or the
+   mode-9 `1/64` gate. Level 19 is decided after level 3 is measured, against a
+   measured incumbent; every skip records its bound.
+2. **Done.** Level 19 is not removed: it is gated by its own predicted lower
+   bound against a measured incumbent, and it still runs where it wins (pythia).
+3. **Done.** Object identity, chosen bytes and restores are unchanged: 0 of 101
+   per-tensor decision changes, footprint 282,283,011 B identical, 101/101 exact,
+   crash old-or-new-whole.
+4. **Gate: met on storage, missed on wall.** C two-stage is **4,117.8 ms /
+   282,283,011 B** (7 reps, least contended) against the 3,850 ms expectation: a
+   **7.0 % miss**, 1.23× G1. Measured cause: analysis costs 348.8 ms and the 66
+   skipped mode-9 encodes were 93,696 bytes in total. Two-stage C is 182 ms
+   slower than the C-noz19 ablation (3,936.0 ms).
+5. **Consequence for the ladder.** G1 (3,360 ms) now needs ~0.76 s, which must
+   come from mode-9 encoder work (R19), batched publication (R20) and the
+   bounded parallel pipeline (R21, which also parallelises the analyse pass).
+
+### R19 — BF16 mode-9 encoder (next)
 
 Targets from the stage profile: emission is 79 % of Huffman, histogram 17 %,
 tree/code construction is free; frame assembly is 447 ms for the embedding.
@@ -130,14 +143,17 @@ tree/code construction is free; frame assembly is 447 ms for the embedding.
 
 | Configuration | Wall (min) | Footprint (B) | Ladder | Footprint |
 |---|---:|---:|---|---|
-| A | 326.4 | 424,439,296 | anchor | — |
-| C (R17) | 24,229.2 | 282,283,011 | above G1 | final band |
-| C-noz19 | 3,849.9 | 282,283,011 | 1.15× G1 | final band |
-| C-both | 2,132.6 | 330,532,422 | between G2 and G1 | first-success band |
-| B-group | 2,139.3 | 424,608,542 | between G2 and G1 | no reduction |
+| A | 327.8 | 424,439,296 | anchor | — |
+| **C (R18 two-stage)** | **4,117.8** | **282,283,011** | 1.23× G1 | final band |
+| C-legacy (exhaustive) | 24,175.8 | 282,283,011 | above G1 | final band |
+| C-noz19 (exhaustive) | 3,936.0 | 282,283,011 | 1.17× G1 | final band |
+| C-both | 2,136.6 | 330,532,422 | between G2 and G1 | first-success band |
+| B-group | 2,144.3 | 424,608,542 | between G2 and G1 | no reduction |
 
-The target is the **knee**: C-noz19's footprint at C-both's wall, then move down
-the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
+The target is the **knee**: C's footprint at the lowest sustainable wall, then
+down the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
+R18 moved the default from 24.2 s to 4.12 s at the same footprint; the next
+0.76 s is R19/R20/R21 work, not planning work.
 
 ## 6. Non-negotiables
 

@@ -9234,3 +9234,75 @@ and the six-phase plan [`docs/PLAN-R17-R22.md`](PLAN-R17-R22.md).
 - **Not claimed:** no write-path optimisation, no format change, no Go parity
   for the R17 harness, no fleet/cloud/cold-media/power-loss claim, no claim that
   these proportions transfer to another corpus or backend.
+
+## Subphase R18 (write-cost) — two-stage planner: analyse, select, materialise (2026-11-12)
+
+**Status: implemented and measured.** The planned write no longer encodes every
+candidate and discards the losers. Deliverable:
+[`bench/RESULTS-planner-two-stage.md`](../bench/RESULTS-planner-two-stage.md).
+
+- **Change.** `src/two_stage.rs` adds the three stages. **Analyse** compresses a
+  bounded deterministic sample of whole codec chunks (4 at level 3, the first 2
+  of those at level 19) and predicts the mode-9 frame length **exactly** from a
+  full exponent histogram via the new WeftCodec function
+  `modes::float_tensor_encoded_len_from_histogram` (WeftCodec `0aa3881`;
+  `huffman::encoded_len[_from_weights]`, `modes::float_tensor_exponent_histogram`,
+  `modes::float_tensor_encoded_len`). **Select** encodes a candidate only when
+  its physical-size interval could change the winner or the mode-9 `1/64` gate;
+  level 19 is decided *after* level 3 is measured, against an incumbent built
+  only from measured or exact sizes, using the sampled 19/3 ratio applied to the
+  measured level-3 frame. **Materialise** checks every measured size against its
+  interval and re-plans exhaustively on a violation. `PlannerMode::{TwoStage
+  (default), Exhaustive}` + `--planner` on `write`/`plan`; the write path is
+  two-stage, `plan_tensor`/rebase stay exhaustive so every candidate's measured
+  size stays visible; a strategy hint keeps its historical path.
+- **Receipts.** `planner-two-stage-20261112T081151Z` (assembled, 15/15 checks),
+  `…-matrix-20261112T081151Z` (7 interleaved reps × 11 configurations, per-tensor
+  decision stream), three cross-family receipts (Qwen2.5-0.5B base, pythia-70m
+  step0/step8), `augmentation-local-20261112T070000Z` (contract court, identity
+  proof). Three aborted court invocations (`…T071300Z`, `…T073226Z`,
+  `…T075100Z`) are retained: the runner rejected its own family fixtures
+  (`pythia` has no `model.embed_tokens.weight`; a cross-family row asserted the
+  Qwen-only R3 strategy counts).
+- **Headline.** 7 interleaved repetitions, least-contended values: C two-stage
+  **4,117.8 ms / 282,283,011 B**; C-legacy exhaustive 24,175.8 / 282,283,011;
+  C-noz19 (exhaustive) 3,936.0 / 282,283,011; C-both 2,136.6 / 330,532,422;
+  B 2,848.0 / 424,784,917; B-group 2,144.3 / 424,608,542; D 2,892.0;
+  E 4,145.5 / 282,354,152; A 327.8; N 339.0. C is **5.87× faster** than the
+  exhaustive planner with an **identical footprint** and **0 of 101** strategy or
+  chosen-size changes; 101/101 exact restores and the three-phase crash proxy
+  old-or-new-whole in every Weft configuration.
+- **Decision diff.** Exhaustive → two-stage: level-3 encodes 101 → 51, level-19
+  18 → **0**, mode-9 101 → 35, chosen bytes 281,951,111 → identical, footprint
+  identical, 35/35 mode-9 predictions equal to their measured frames, 50
+  level-3 skip bounds and 18 level-19 skip bounds recorded, 0 interval
+  violations, 0 exhaustive fallbacks.
+- **Cross-family.** Qwen2.5-0.5B base: 0 changes, 0 bytes. pythia-70m step0 and
+  step8: 0 changes, 0 bytes, and **level 19 is encoded for 26 of 76 tensors
+  where it is genuinely smaller** (163,863,698 vs 173,186,380 B at step0). Level
+  19 was made **conditional**, not deleted: deleting it would have cost 5.4 % of
+  that family's footprint.
+- **The target was missed.** R18's stated expectation was `C ≤ ~3,850 ms`; the
+  measured 4,117.8 ms is **7.0 % above** it and 1.23× the G1 rung. Measured
+  cause: analysis costs **348.8 ms** (224.0 exact mode-9 histogram + 124.8 ZSTD
+  sampling), while the 66 skipped mode-9 encodes were **93,696 bytes** in total
+  (0.022 % of the fixture), so they were almost free. Two-stage C is therefore
+  182 ms *slower* than the C-noz19 ablation. The remaining wall is 1,790 ms of
+  mode-9 encode, 776 ms blob publish and 716 ms commit — R19 and R21 territory.
+- **Corrections to R17.** `bench/RESULTS-write-cost-ledger.md` gains a §12 that
+  corrects three derived statements: a predictor *is* needed to keep level 19 for
+  other corpora; two-stage C is 182 ms slower than C-noz19 rather than at its
+  level; and skipping the losing mode-9 encodes saves ~0 ms, not ~1.1 s.
+- **Gates.** WeftCodec `cargo test --all-targets` (82 unit tests + every
+  integration binary incl. the new `tests/float_tensor_len.rs` 5/5), 0 failed.
+  Rust `cargo test --all-targets` and FUSE
+  `--features fuse --all-targets`: see the gate block below.
+  Go planner tests unchanged and passing. No `verify-all` run (not required for
+  this subphase; its 45/45 receipt remains the cited aggregate and predates R18).
+- **Not claimed.** No Go two-stage rule and no Go parity measurement (the
+  `WeftFS-Go` pointer is frozen here; Go reaches the same decisions by exhaustive
+  encoding and pays that cost); no power-loss, fleet, cloud or cold-media claim;
+  the level-3 sampler cannot describe a heterogeneous tensor (the 272 MB
+  embedding's interval degenerates and forces one safe extra encode); the 500 bps
+  interval floor is calibrated on four real families only; `plan_tensor` and
+  rebase remain exhaustive.

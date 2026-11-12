@@ -350,7 +350,23 @@ because D/E publish protocol commits after the tensor writes.
    R20/R21; the final rung (≤336 ms) is not reachable with a 330 MB write on
    this backend.
 
-## 12. Not claimed
+## 12. R18 correction to this ledger (2026-11-12)
+
+R18 was executed
+([`RESULTS-planner-two-stage.md`](RESULTS-planner-two-stage.md)); three rows in
+§11 are now measured rather than predicted, and one was wrong:
+
+| §11 statement | R18 measurement |
+|---|---|
+| "A cheap predictor is not needed to justify removing level-19 on this evidence" | A predictor **is** needed to keep it for another corpus: on the pythia-70m trajectory level 19 is smaller than level 3 for **26 of 26** eligible tensors (163,863,698 vs 173,186,380 B), so deleting the candidate would lose 5.4 % of that footprint. R18 gates it instead. |
+| "after R18, C-noz19 is 3.85 s" | Two-stage C is **4,117.8 ms** (least contended, 7 reps), 182 ms **slower** than the C-noz19 ablation (3,936.0 ms). |
+| implicit: skipping the 66 losing mode-9 encodes saves ~1.1 s | It saves ~0 ms: those 66 tensors total **93,696 logical bytes** (0.022 % of the fixture). The 35 mode-9 winners hold 424,345,600 of 424,439,296 bytes. |
+
+The correction matters for R19/R21: the remaining C wall is 1,790 ms of mode-9
+encode, 349 ms of new analysis, 776 ms of blob publish and 716 ms of commit, not
+a mode-9 encode count that can be reduced by planning.
+
+## 13. Not claimed
 
 - No claim that these proportions hold on another corpus, another backend, a
   cold page cache, a fleet, or a GPU.
