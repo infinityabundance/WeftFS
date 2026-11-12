@@ -9295,10 +9295,13 @@ candidate and discards the losers. Deliverable:
   level; and skipping the losing mode-9 encodes saves ~0 ms, not ~1.1 s.
 - **Gates.** WeftCodec `cargo test --all-targets` (82 unit tests + every
   integration binary incl. the new `tests/float_tensor_len.rs` 5/5), 0 failed.
-  Rust `cargo test --all-targets` and FUSE
-  `--features fuse --all-targets`: see the gate block below.
-  Go planner tests unchanged and passing. No `verify-all` run (not required for
-  this subphase; its 45/45 receipt remains the cited aggregate and predates R18).
+  Rust `cargo test --all-targets` **795 passed / 0 failed / 0 ignored, 166
+  suites**; FUSE `cargo test --features fuse --all-targets` **838 passed / 0
+  failed / 2 pre-existing ignored, 166 suites**; Go planner tests unchanged and
+  passing at the pinned `WeftFS-Go` revision. Spec drift 60/60, conformance
+  manifest and coverage 420 entries OK, `check-claims.sh` 985 entries OK. No
+  `verify-all` run (not required for this subphase; its 45/45 receipt remains the
+  cited aggregate and predates R18).
 - **Not claimed.** No Go two-stage rule and no Go parity measurement (the
   `WeftFS-Go` pointer is frozen here; Go reaches the same decisions by exhaustive
   encoding and pays that cost); no power-loss, fleet, cloud or cold-media claim;
