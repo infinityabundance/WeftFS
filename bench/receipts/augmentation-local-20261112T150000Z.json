@@ -46,19 +46,19 @@
         "cold": {
           "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
           "bytes_read": 424439296,
-          "cpu_user_sys_ms": 190.0,
+          "cpu_user_sys_ms": 210.0,
           "mismatches": 0,
-          "peak_rss_kib": 269128,
+          "peak_rss_kib": 269284,
           "per_tensor": {
-            "mean_us": 3435.267326732673,
-            "p50_us": 78.0,
-            "p95_us": 7145.0,
-            "p99_us": 7193.0,
+            "mean_us": 10801.237623762376,
+            "p50_us": 1038.0,
+            "p95_us": 22656.0,
+            "p99_us": 23072.0,
             "samples": 101
           },
           "requests": 101,
           "restored_bytes": 424439296,
-          "wall_ms": 347.473702
+          "wall_ms": 1091.618666
         },
         "config": "A",
         "exactness": {
@@ -73,32 +73,32 @@
         "phase": "restore",
         "protocol": null,
         "protocol_ms": 0.0,
-        "read_ms": 347.473702,
+        "read_ms": 1091.618666,
         "schema": "weft.augmentation.phase.v1",
         "tensor_count": 101,
         "warm": {
           "basis": "warm (same process, OS page cache warm)",
           "bytes_read": 424439296,
-          "cpu_user_sys_ms": 190.0,
+          "cpu_user_sys_ms": 180.0,
           "mismatches": 0,
-          "peak_rss_kib": 278352,
+          "peak_rss_kib": 277844,
           "per_tensor": {
-            "mean_us": 1877.3168316831684,
+            "mean_us": 1898.673267326733,
             "p50_us": 3.0,
-            "p95_us": 3650.0,
-            "p99_us": 3859.0,
+            "p95_us": 3729.0,
+            "p99_us": 3900.0,
             "samples": 101
           },
           "requests": 101,
           "restored_bytes": 424439296,
-          "wall_ms": 190.100985
+          "wall_ms": 192.471319
         }
       },
       "summary": {
         "chosen_representations": null,
         "cold_physical_bytes_read": 424439296,
         "cold_read_requests": 101,
-        "cold_restore_wall_ms": 347.473702,
+        "cold_restore_wall_ms": 1091.618666,
         "exactness": {
           "expected_logical_bytes": 424439296,
           "match": true,
@@ -107,85 +107,86 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "logical_restore_bytes_per_s": 1221500486.387888,
+        "logical_restore_bytes_per_s": 388816451.40355265,
         "physical_bytes_written": 424439296,
         "physical_footprint_bytes": 424439296,
-        "physical_restore_bytes_per_s": 1221500486.387888,
+        "physical_restore_bytes_per_s": 388816451.40355265,
         "protocol": null,
         "read_amplification": 1.0,
-        "restore_cpu_ms": 190.0,
-        "restore_peak_rss_kib": 269128,
+        "restore_cpu_ms": 210.0,
+        "restore_peak_rss_kib": 269284,
         "restore_per_tensor": {
-          "mean_us": 3435.267326732673,
-          "p50_us": 78.0,
-          "p95_us": 7145.0,
-          "p99_us": 7193.0,
+          "mean_us": 10801.237623762376,
+          "p50_us": 1038.0,
+          "p95_us": 22656.0,
+          "p99_us": 23072.0,
           "samples": 101
         },
         "warm_physical_bytes_read": 424439296,
-        "warm_restore_wall_ms": 190.100985,
+        "warm_restore_wall_ms": 192.471319,
         "write_amplification": 1.0,
-        "write_cpu_ms": 110.0,
-        "write_peak_rss_kib": 271012,
+        "write_cpu_ms": 120.0,
+        "write_peak_rss_kib": 270784,
         "write_requests": 101,
-        "write_wall_ms": 333.876383
+        "write_wall_ms": 6718.136903
       },
       "write": {
         "backend": "local",
         "config": "A",
-        "cpu_user_sys_ms": 110.0,
-        "fixture_verify_ms": 417.416725,
+        "cpu_user_sys_ms": 120.0,
+        "fixture_verify_ms": 413.497591,
         "footprint_source": "recursive file walk (du source)",
         "logical_bytes": 424439296,
         "native_bytes_written": 424439296,
         "native_sync_calls": 102,
         "native_writes": 101,
-        "peak_rss_kib": 271012,
+        "peak_rss_kib": 270784,
         "phase": "write",
         "physical_bytes_written": 424439296,
         "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
         "physical_footprint_bytes": 424439296,
         "schema": "weft.augmentation.phase.v1",
-        "source_read_ms": 32.26354999999999,
+        "source_read_ms": 32.45052499999999,
         "subset_selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
         "subset_tensor_count": 101,
         "tensor_count": 101,
-        "wall_ms": 333.876383,
-        "write_ms": 300.72996100000023
+        "wall_ms": 6718.136903,
+        "write_ms": 6684.446432999997
       }
     },
     "B": {
       "restore": {
         "backend": "local",
         "backend_stats_total": {
-          "bytes_read": 849371207,
+          "bytes_read": 849474406,
           "bytes_written": 0,
+          "fsyncs": 0,
           "link_publications": 0,
           "range_reads": 0,
-          "reads": 1907,
+          "reads": 1807,
           "rename_fallbacks": 0,
           "rename_publications": 0,
           "writes": 0
         },
         "cold": {
-          "backend_bytes_read": 424796506,
-          "backend_bytes_read_at_open": 221805,
-          "backend_read_requests": 1108,
+          "backend_bytes_read": 424899705,
+          "backend_bytes_read_at_open": 325004,
+          "backend_read_requests": 1008,
           "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
           "cpu_user_sys_ms": 310.0,
           "includes_open": true,
           "mismatches": 0,
-          "peak_rss_kib": 273604,
+          "peak_rss_kib": 274064,
           "per_tensor": {
-            "mean_us": 5176.851485148515,
+            "mean_us": 6065.465346534654,
             "p50_us": 105.0,
-            "p95_us": 10436.0,
-            "p99_us": 10915.0,
+            "p95_us": 12313.0,
+            "p99_us": 16511.0,
             "samples": 101
           },
-          "read_wall_ms": 523.534523,
+          "read_wall_ms": 613.2969019999999,
           "restored_bytes": 424439296,
-          "wall_ms": 542.052149
+          "wall_ms": 628.666172
         },
         "config": "B",
         "exactness": {
@@ -196,11 +197,11 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "open_ms": 18.517626,
+        "open_ms": 15.36927,
         "phase": "restore",
         "protocol": null,
         "protocol_ms": 0.0,
-        "read_ms": 523.534523,
+        "read_ms": 613.2969019999999,
         "schema": "weft.augmentation.phase.v1",
         "tensor_count": 101,
         "warm": {
@@ -209,24 +210,24 @@
           "basis": "warm (same process, store already open, OS/backend cache warm)",
           "cpu_user_sys_ms": 280.0,
           "mismatches": 0,
-          "peak_rss_kib": 282100,
+          "peak_rss_kib": 282612,
           "per_tensor": {
-            "mean_us": 2821.4059405940593,
+            "mean_us": 2808.8217821782177,
             "p50_us": 26.0,
-            "p95_us": 5470.0,
-            "p99_us": 5931.0,
+            "p95_us": 5422.0,
+            "p99_us": 5892.0,
             "samples": 101
           },
-          "wall_ms": 285.57111499999996
+          "wall_ms": 284.225618
         }
       },
       "summary": {
         "chosen_representations": {
           "raw": 101
         },
-        "cold_physical_bytes_read": 424796506,
-        "cold_read_requests": 1108,
-        "cold_restore_wall_ms": 542.052149,
+        "cold_physical_bytes_read": 424899705,
+        "cold_read_requests": 1008,
+        "cold_restore_wall_ms": 628.666172,
         "exactness": {
           "expected_logical_bytes": 424439296,
           "match": true,
@@ -235,54 +236,58 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "logical_restore_bytes_per_s": 783022992.8670572,
-        "physical_bytes_written": 425207023,
-        "physical_footprint_bytes": 424784917,
-        "physical_restore_bytes_per_s": 783681988.5018111,
+        "logical_restore_bytes_per_s": 675142571.5331793,
+        "physical_bytes_written": 424621048,
+        "physical_footprint_bytes": 424608542,
+        "physical_restore_bytes_per_s": 675874930.0097541,
         "protocol": null,
-        "read_amplification": 1.0008416044493675,
+        "read_amplification": 1.0010847464038768,
         "restore_cpu_ms": 310.0,
-        "restore_peak_rss_kib": 273604,
+        "restore_peak_rss_kib": 274064,
         "restore_per_tensor": {
-          "mean_us": 5176.851485148515,
+          "mean_us": 6065.465346534654,
           "p50_us": 105.0,
-          "p95_us": 10436.0,
-          "p99_us": 10915.0,
+          "p95_us": 12313.0,
+          "p99_us": 16511.0,
           "samples": 101
         },
         "warm_physical_bytes_read": 424574701,
-        "warm_restore_wall_ms": 285.57111499999996,
-        "write_amplification": 1.0018088028305465,
-        "write_cpu_ms": 270.0,
-        "write_peak_rss_kib": 272544,
-        "write_requests": 911,
-        "write_wall_ms": 2884.264221
+        "warm_restore_wall_ms": 284.225618,
+        "write_amplification": 1.000428216712526,
+        "write_cpu_ms": 250.0,
+        "write_peak_rss_kib": 272736,
+        "write_requests": 611,
+        "write_wall_ms": 17539.332233
       },
       "write": {
         "ablation": {
+          "deferred_blob_sync": true,
           "float_tensor_disabled": false,
-          "group_commit": false,
+          "group_commit": true,
+          "pack_member_threshold_bytes": null,
+          "publication": "one-atomic-publication",
           "zstd19_disabled": false
         },
         "backend": "local",
         "backend_stats": {
-          "bytes_read": 120025,
-          "bytes_written": 425207023,
+          "bytes_read": 1830,
+          "bytes_written": 424621048,
+          "fsyncs": 918,
           "link_publications": 0,
           "range_reads": 1,
-          "reads": 108,
+          "reads": 8,
           "rename_fallbacks": 0,
-          "rename_publications": 808,
-          "writes": 911
+          "rename_publications": 608,
+          "writes": 611
         },
-        "commit_ms": 705.3224309999999,
+        "commit_ms": 10587.498587,
         "commit_phases": {},
         "config": "B",
-        "cpu_user_sys_ms": 270.0,
-        "fixture_verify_ms": 412.903588,
-        "footprint_ms": 2.406528,
-        "generation": 103,
-        "init_ms": 24.715464,
+        "cpu_user_sys_ms": 250.0,
+        "fixture_verify_ms": 413.485398,
+        "footprint_ms": 1.701587,
+        "generation": 3,
+        "init_ms": 44.739086,
         "logical_bytes": 424439296,
         "object_ids": {
           "model.embed_tokens.weight": "38dfc0038856f1c342b67493e922b04db97fba7e79215f9e9fff366d48d24541",
@@ -490,18 +495,18 @@
           "model.layers.23.post_attention_layernorm.weight": "ef8afb0436cf9b55da302ea26c61be100d99d94747295ae0a89992bc2eaa0d16",
           "model.layers.23.self_attn.k_proj.weight": "5d10e3b931f49ff758d221541fbd612bcd999cfdabef61eb7889aede9c882be9"
         },
-        "peak_rss_kib": 272544,
+        "peak_rss_kib": 272736,
         "per_tensor": null,
         "per_tensor_write": {
-          "mean_us": 27869.54455445545,
-          "p50_us": 12807.0,
-          "p95_us": 41172.0,
-          "p99_us": 69390.0,
+          "mean_us": 67949.21782178218,
+          "p50_us": 26296.0,
+          "p95_us": 251340.0,
+          "p99_us": 634549.0,
           "samples": 101
         },
         "phase": "write",
         "phases": null,
-        "physical_bytes_written": 425207023,
+        "physical_bytes_written": 424621048,
         "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
         "planner": {
           "encoded_zstd19": 0,
@@ -516,60 +521,97 @@
           "skipped_zstd3": 0,
           "tensors_with_trace": 0
         },
-        "prepare_ms": 2109.5502359999996,
+        "prepare_ms": 6862.513504999998,
         "prepare_phases": {},
         "protocol": null,
         "protocol_ms": 0.0,
+        "publication_ledger": {
+          "accounted_blob_and_control_bytes": 424600335,
+          "backend_bytes_written": 424621048,
+          "backend_writes": 611,
+          "categories": {
+            "commit_records": {
+              "bytes": 76555,
+              "count": 3
+            },
+            "index_segments": {
+              "bytes": 39349,
+              "count": 3
+            },
+            "manifest_blobs": {
+              "bytes": 45135,
+              "count": 101
+            },
+            "object_blobs": {
+              "bytes": 424439296,
+              "count": 496
+            },
+            "superblock": {
+              "count": 3
+            }
+          },
+          "duplicate_blobs": 0,
+          "fsyncs": {
+            "dir": 310,
+            "file": 608,
+            "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+            "total": 918
+          },
+          "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+          "pack": null,
+          "unaccounted_bytes": 20713
+        },
         "representations": {
           "raw": 101
         },
         "schema": "weft.augmentation.phase.v1",
-        "source_read_ms": 32.444003,
+        "source_read_ms": 31.33348399999999,
         "storage": {
           "footprint_source": "recursive file walk of the store directory (du source)",
-          "physical_footprint_bytes": 424784917,
-          "physical_footprint_objects": 806
+          "physical_footprint_bytes": 424608542,
+          "physical_footprint_objects": 606
         },
-        "store_head": "0cc37d4f0075ef7d72774597eea30d730a34d11d4540a186209818c3451a34fe",
+        "store_head": "5a2fda1b8f52c6904ff1a61dc900d7b54ccd3734c30d1320c82b172becc5b4b2",
         "subset_selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
         "subset_tensor_count": 101,
         "tensor_count": 101,
-        "wall_ms": 2884.264221,
-        "write_ms": 2814.8726669999996
+        "wall_ms": 17539.332233,
+        "write_ms": 17450.012091999997
       }
     },
     "C": {
       "restore": {
         "backend": "local",
         "backend_stats_total": {
-          "bytes_read": 564276908,
+          "bytes_read": 564380819,
           "bytes_written": 0,
+          "fsyncs": 0,
           "link_publications": 0,
           "range_reads": 0,
-          "reads": 1117,
+          "reads": 1017,
           "rename_fallbacks": 0,
           "rename_publications": 0,
           "writes": 0
         },
         "cold": {
-          "backend_bytes_read": 282234759,
-          "backend_bytes_read_at_open": 192610,
-          "backend_read_requests": 713,
+          "backend_bytes_read": 282338670,
+          "backend_bytes_read_at_open": 296521,
+          "backend_read_requests": 613,
           "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
-          "cpu_user_sys_ms": 1310.0,
+          "cpu_user_sys_ms": 1290.0,
           "includes_open": true,
           "mismatches": 0,
-          "peak_rss_kib": 714732,
+          "peak_rss_kib": 715508,
           "per_tensor": {
-            "mean_us": 13986.722772277228,
-            "p50_us": 142.0,
-            "p95_us": 28468.0,
-            "p99_us": 29649.0,
+            "mean_us": 14760.38613861386,
+            "p50_us": 531.0,
+            "p95_us": 28269.0,
+            "p99_us": 30876.0,
             "samples": 101
           },
-          "read_wall_ms": 1417.938883,
+          "read_wall_ms": 1494.4264469999998,
           "restored_bytes": 424439296,
-          "wall_ms": 1435.904648
+          "wall_ms": 1507.6076709999998
         },
         "config": "C",
         "exactness": {
@@ -580,11 +622,11 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "open_ms": 17.965765,
+        "open_ms": 13.181224,
         "phase": "restore",
         "protocol": null,
         "protocol_ms": 0.0,
-        "read_ms": 1417.938883,
+        "read_ms": 1494.4264469999998,
         "schema": "weft.augmentation.phase.v1",
         "tensor_count": 101,
         "warm": {
@@ -593,15 +635,15 @@
           "basis": "warm (same process, store already open, OS/backend cache warm)",
           "cpu_user_sys_ms": 1280.0,
           "mismatches": 0,
-          "peak_rss_kib": 724420,
+          "peak_rss_kib": 724196,
           "per_tensor": {
-            "mean_us": 12775.623762376235,
-            "p50_us": 47.0,
-            "p95_us": 25394.0,
-            "p99_us": 26336.0,
+            "mean_us": 12768.38613861386,
+            "p50_us": 44.0,
+            "p95_us": 25745.0,
+            "p99_us": 26177.0,
             "samples": 101
           },
-          "wall_ms": 1294.120774
+          "wall_ms": 1293.364607
         }
       },
       "summary": {
@@ -610,9 +652,9 @@
           "raw": 16,
           "zstd": 50
         },
-        "cold_physical_bytes_read": 282234759,
-        "cold_read_requests": 713,
-        "cold_restore_wall_ms": 1435.904648,
+        "cold_physical_bytes_read": 282338670,
+        "cold_read_requests": 613,
+        "cold_restore_wall_ms": 1507.6076709999998,
         "exactness": {
           "expected_logical_bytes": 424439296,
           "match": true,
@@ -621,54 +663,58 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "logical_restore_bytes_per_s": 295590167.9064695,
-        "physical_bytes_written": 282705117,
-        "physical_footprint_bytes": 282283011,
-        "physical_restore_bytes_per_s": 196555362.7764286,
+        "logical_restore_bytes_per_s": 281531663.8170648,
+        "physical_bytes_written": 282118555,
+        "physical_footprint_bytes": 282106049,
+        "physical_restore_bytes_per_s": 187275957.41982666,
         "protocol": null,
-        "read_amplification": 0.664959068728641,
-        "restore_cpu_ms": 1310.0,
-        "restore_peak_rss_kib": 714732,
+        "read_amplification": 0.6652038881904092,
+        "restore_cpu_ms": 1290.0,
+        "restore_peak_rss_kib": 715508,
         "restore_per_tensor": {
-          "mean_us": 13986.722772277228,
-          "p50_us": 142.0,
-          "p95_us": 28468.0,
-          "p99_us": 29649.0,
+          "mean_us": 14760.38613861386,
+          "p50_us": 531.0,
+          "p95_us": 28269.0,
+          "p99_us": 30876.0,
           "samples": 101
         },
         "warm_physical_bytes_read": 282042149,
-        "warm_restore_wall_ms": 1294.120774,
-        "write_amplification": 0.6660672554692014,
-        "write_cpu_ms": 2650.0,
-        "write_peak_rss_kib": 1189528,
-        "write_requests": 516,
-        "write_wall_ms": 4106.552541
+        "warm_restore_wall_ms": 1293.364607,
+        "write_amplification": 0.6646852863501121,
+        "write_cpu_ms": 1210.0,
+        "write_peak_rss_kib": 688504,
+        "write_requests": 216,
+        "write_wall_ms": 10710.358604
       },
       "write": {
         "ablation": {
+          "deferred_blob_sync": true,
           "float_tensor_disabled": false,
-          "group_commit": false,
+          "group_commit": true,
+          "pack_member_threshold_bytes": null,
+          "publication": "one-atomic-publication",
           "zstd19_disabled": false
         },
         "backend": "local",
         "backend_stats": {
-          "bytes_read": 120381,
-          "bytes_written": 282705117,
+          "bytes_read": 1830,
+          "bytes_written": 282118555,
+          "fsyncs": 374,
           "link_publications": 0,
           "range_reads": 1,
-          "reads": 108,
+          "reads": 8,
           "rename_fallbacks": 0,
-          "rename_publications": 413,
-          "writes": 516
+          "rename_publications": 213,
+          "writes": 216
         },
-        "commit_ms": 704.433814,
+        "commit_ms": 4768.463591,
         "commit_phases": {},
         "config": "C",
-        "cpu_user_sys_ms": 2650.0,
-        "fixture_verify_ms": 413.815438,
-        "footprint_ms": 1.251103,
-        "generation": 103,
-        "init_ms": 20.801034,
+        "cpu_user_sys_ms": 1210.0,
+        "fixture_verify_ms": 413.029475,
+        "footprint_ms": 0.948661,
+        "generation": 3,
+        "init_ms": 312.828521,
         "logical_bytes": 424439296,
         "object_ids": {
           "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
@@ -876,18 +922,18 @@
           "model.layers.23.post_attention_layernorm.weight": "b0773b6eeb198d446295a75004d55549d6300c4a0f9cca117fb5cf755598fffc",
           "model.layers.23.self_attn.k_proj.weight": "0d27970c94dd888bf2fd7a7450fd6cd2c2ccc664f93c1a232bcdb0644f1e793a"
         },
-        "peak_rss_kib": 1189528,
+        "peak_rss_kib": 688504,
         "per_tensor": null,
         "per_tensor_write": {
-          "mean_us": 39978.47524752475,
-          "p50_us": 13774.0,
-          "p95_us": 67809.0,
-          "p99_us": 74273.0,
+          "mean_us": 53652.86138613861,
+          "p50_us": 35912.0,
+          "p95_us": 93930.0,
+          "p99_us": 586233.0,
           "samples": 101
         },
         "phase": "write",
         "phases": null,
-        "physical_bytes_written": 282705117,
+        "physical_bytes_written": 282118555,
         "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
         "planner": {
           "encoded_zstd19": 0,
@@ -902,62 +948,99 @@
           "skipped_zstd3": 50,
           "tensors_with_trace": 101
         },
-        "prepare_ms": 3333.439379,
+        "prepare_ms": 5418.611953999998,
         "prepare_phases": {},
         "protocol": null,
         "protocol_ms": 0.0,
+        "publication_ledger": {
+          "accounted_blob_and_control_bytes": 282097842,
+          "backend_bytes_written": 282118555,
+          "backend_writes": 216,
+          "categories": {
+            "commit_records": {
+              "bytes": 76920,
+              "count": 3
+            },
+            "index_segments": {
+              "bytes": 39465,
+              "count": 3
+            },
+            "manifest_blobs": {
+              "bytes": 281977361,
+              "count": 186
+            },
+            "object_blobs": {
+              "bytes": 4096,
+              "count": 16
+            },
+            "superblock": {
+              "count": 3
+            }
+          },
+          "duplicate_blobs": 0,
+          "fsyncs": {
+            "dir": 161,
+            "file": 213,
+            "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+            "total": 374
+          },
+          "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+          "pack": null,
+          "unaccounted_bytes": 20713
+        },
         "representations": {
           "float-tensor": 35,
           "raw": 16,
           "zstd": 50
         },
         "schema": "weft.augmentation.phase.v1",
-        "source_read_ms": 32.05496000000001,
+        "source_read_ms": 31.864757000000008,
         "storage": {
           "footprint_source": "recursive file walk of the store directory (du source)",
-          "physical_footprint_bytes": 282283011,
-          "physical_footprint_objects": 411
+          "physical_footprint_bytes": 282106049,
+          "physical_footprint_objects": 211
         },
-        "store_head": "23b03e6c6f4494164a70c45340059b9d99f99e7118ab4ebf942745725717b739",
+        "store_head": "cfdda3f41f1b101c7d1d8ee0e91f6aa532f3cf4e6f0b287e7579e56e38e4afcc",
         "subset_selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
         "subset_tensor_count": 101,
         "tensor_count": 101,
-        "wall_ms": 4106.552541,
-        "write_ms": 4037.873193
+        "wall_ms": 10710.358604,
+        "write_ms": 10187.075544999998
       }
     },
     "D": {
       "restore": {
         "backend": "local",
         "backend_stats_total": {
-          "bytes_read": 849795670,
+          "bytes_read": 849814034,
           "bytes_written": 0,
+          "fsyncs": 0,
           "link_publications": 0,
           "range_reads": 0,
-          "reads": 2127,
+          "reads": 1826,
           "rename_fallbacks": 0,
           "rename_publications": 0,
           "writes": 0
         },
         "cold": {
-          "backend_bytes_read": 425220969,
-          "backend_bytes_read_at_open": 295602,
-          "backend_read_requests": 1328,
+          "backend_bytes_read": 425239333,
+          "backend_bytes_read_at_open": 251205,
+          "backend_read_requests": 1027,
           "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
-          "cpu_user_sys_ms": 310.0,
+          "cpu_user_sys_ms": 320.0,
           "includes_open": true,
           "mismatches": 0,
-          "peak_rss_kib": 274512,
+          "peak_rss_kib": 274636,
           "per_tensor": {
-            "mean_us": 5216.702970297029,
-            "p50_us": 117.0,
-            "p95_us": 10614.0,
-            "p99_us": 11075.0,
+            "mean_us": 6121.227722772277,
+            "p50_us": 106.0,
+            "p95_us": 13069.0,
+            "p99_us": 16737.0,
             "samples": 101
           },
-          "read_wall_ms": 527.670807,
+          "read_wall_ms": 618.8445780000001,
           "restored_bytes": 424439296,
-          "wall_ms": 555.299094
+          "wall_ms": 640.4933040000001
         },
         "config": "D",
         "exactness": {
@@ -968,7 +1051,7 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "open_ms": 20.45024,
+        "open_ms": 16.669458000000002,
         "phase": "restore",
         "protocol": {
           "context_resolved": true,
@@ -979,34 +1062,34 @@
           "selector_id": "b7f73a83483cee16657c0b90d34bbd2b5500b51ffcf30791ddc76f52d2157d80",
           "work_units": 103
         },
-        "protocol_ms": 7.178047,
-        "read_ms": 527.670807,
+        "protocol_ms": 4.979268,
+        "read_ms": 618.8445780000001,
         "schema": "weft.augmentation.phase.v1",
         "tensor_count": 101,
         "warm": {
           "backend_bytes_read": 424574701,
           "backend_read_requests": 799,
           "basis": "warm (same process, store already open, OS/backend cache warm)",
-          "cpu_user_sys_ms": 290.0,
+          "cpu_user_sys_ms": 270.0,
           "mismatches": 0,
-          "peak_rss_kib": 283036,
+          "peak_rss_kib": 283160,
           "per_tensor": {
-            "mean_us": 2822.7425742574255,
-            "p50_us": 28.0,
-            "p95_us": 5451.0,
-            "p99_us": 6151.0,
+            "mean_us": 2822.7227722772277,
+            "p50_us": 27.0,
+            "p95_us": 5473.0,
+            "p99_us": 5870.0,
             "samples": 101
           },
-          "wall_ms": 285.636477
+          "wall_ms": 285.656549
         }
       },
       "summary": {
         "chosen_representations": {
           "raw": 101
         },
-        "cold_physical_bytes_read": 425220969,
-        "cold_read_requests": 1328,
-        "cold_restore_wall_ms": 555.299094,
+        "cold_physical_bytes_read": 425239333,
+        "cold_read_requests": 1027,
+        "cold_restore_wall_ms": 640.4933040000001,
         "exactness": {
           "expected_logical_bytes": 424439296,
           "match": true,
@@ -1015,10 +1098,10 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "logical_restore_bytes_per_s": 764343577.337081,
-        "physical_bytes_written": 425235823,
-        "physical_footprint_bytes": 424856058,
-        "physical_restore_bytes_per_s": 765751238.556856,
+        "logical_restore_bytes_per_s": 662675617.9171547,
+        "physical_bytes_written": 424629900,
+        "physical_footprint_bytes": 424659735,
+        "physical_restore_bytes_per_s": 663924712.9428226,
         "protocol": {
           "context_resolved": true,
           "provenance_id": "3908ac31899e5eec8329c1900de3cdf1c4c77a3fd4fceb43ca58c13839b9339d",
@@ -1028,49 +1111,53 @@
           "selector_id": "b7f73a83483cee16657c0b90d34bbd2b5500b51ffcf30791ddc76f52d2157d80",
           "work_units": 103
         },
-        "read_amplification": 1.0018416602971654,
-        "restore_cpu_ms": 310.0,
-        "restore_peak_rss_kib": 274512,
+        "read_amplification": 1.0018849267905674,
+        "restore_cpu_ms": 320.0,
+        "restore_peak_rss_kib": 274636,
         "restore_per_tensor": {
-          "mean_us": 5216.702970297029,
-          "p50_us": 117.0,
-          "p95_us": 10614.0,
-          "p99_us": 11075.0,
+          "mean_us": 6121.227722772277,
+          "p50_us": 106.0,
+          "p95_us": 13069.0,
+          "p99_us": 16737.0,
           "samples": 101
         },
         "warm_physical_bytes_read": 424574701,
-        "warm_restore_wall_ms": 285.636477,
-        "write_amplification": 1.001876657056749,
-        "write_cpu_ms": 280.0,
-        "write_peak_rss_kib": 272756,
-        "write_requests": 911,
-        "write_wall_ms": 2894.16481
+        "warm_restore_wall_ms": 285.656549,
+        "write_amplification": 1.0004490724628852,
+        "write_cpu_ms": 260.0,
+        "write_peak_rss_kib": 272240,
+        "write_requests": 611,
+        "write_wall_ms": 19700.799496
       },
       "write": {
         "ablation": {
+          "deferred_blob_sync": true,
           "float_tensor_disabled": false,
-          "group_commit": false,
+          "group_commit": true,
+          "pack_member_threshold_bytes": null,
+          "publication": "one-atomic-publication",
           "zstd19_disabled": false
         },
         "backend": "local",
         "backend_stats": {
-          "bytes_read": 122325,
-          "bytes_written": 425235823,
+          "bytes_read": 1830,
+          "bytes_written": 424629900,
+          "fsyncs": 918,
           "link_publications": 0,
           "range_reads": 1,
-          "reads": 108,
+          "reads": 8,
           "rename_fallbacks": 0,
-          "rename_publications": 808,
-          "writes": 911
+          "rename_publications": 608,
+          "writes": 611
         },
-        "commit_ms": 715.2855330000001,
+        "commit_ms": 8105.8407,
         "commit_phases": {},
         "config": "D",
-        "cpu_user_sys_ms": 280.0,
-        "fixture_verify_ms": 413.095496,
-        "footprint_ms": 2.18204,
-        "generation": 103,
-        "init_ms": 22.136584,
+        "cpu_user_sys_ms": 260.0,
+        "fixture_verify_ms": 417.547622,
+        "footprint_ms": 1.83707,
+        "generation": 3,
+        "init_ms": 402.703121,
         "logical_bytes": 424439296,
         "object_ids": {
           "model.embed_tokens.weight": "f8e9a43372c927551360dc2e0dae02d8f08e75cf68af1eefbffccdfe06bcd9fc",
@@ -1278,18 +1365,18 @@
           "model.layers.23.post_attention_layernorm.weight": "ef8afb0436cf9b55da302ea26c61be100d99d94747295ae0a89992bc2eaa0d16",
           "model.layers.23.self_attn.k_proj.weight": "5d10e3b931f49ff758d221541fbd612bcd999cfdabef61eb7889aede9c882be9"
         },
-        "peak_rss_kib": 272756,
+        "peak_rss_kib": 272240,
         "per_tensor": null,
         "per_tensor_write": {
-          "mean_us": 27695.20792079208,
-          "p50_us": 12966.0,
-          "p95_us": 40960.0,
-          "p99_us": 45774.0,
+          "mean_us": 104588.54455445544,
+          "p50_us": 30709.0,
+          "p95_us": 262296.0,
+          "p99_us": 583813.0,
           "samples": 101
         },
         "phase": "write",
         "phases": null,
-        "physical_bytes_written": 425235823,
+        "physical_bytes_written": 424629900,
         "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
         "planner": {
           "encoded_zstd19": 0,
@@ -1304,68 +1391,105 @@
           "skipped_zstd3": 0,
           "tensors_with_trace": 0
         },
-        "prepare_ms": 2081.985298999999,
+        "prepare_ms": 10563.109072,
         "prepare_phases": {},
         "protocol": {
-          "context_root_id": "35d6ea1c8f8276401e3edd5537a11b277d6cb2977e618dc817b462de86fb1fb7",
+          "context_root_id": "773897cc28886f8d6e53fae5bca4808544ae7b0dfed42d976dd76caaa327a8ed",
           "provenance_id": "3908ac31899e5eec8329c1900de3cdf1c4c77a3fd4fceb43ca58c13839b9339d",
           "provenance_outputs": 101,
           "resolved_objects": 101,
           "selector_id": "b7f73a83483cee16657c0b90d34bbd2b5500b51ffcf30791ddc76f52d2157d80",
-          "snapshot": "aec279cd466874bdf5dcda1fcc3c39e53f13e4786d0a14b5f305999bb5e2a9c3",
+          "snapshot": "1281b04f483bf2fe5c7f3347d9775d392d82c6807c45abfbdd8804519d8a27c8",
           "work_units": 103
         },
-        "protocol_ms": 31.595876,
+        "protocol_ms": 477.414935,
+        "publication_ledger": {
+          "accounted_blob_and_control_bytes": 424651463,
+          "backend_bytes_written": 424629900,
+          "backend_writes": 611,
+          "categories": {
+            "commit_records": {
+              "bytes": 104772,
+              "count": 6
+            },
+            "index_segments": {
+              "bytes": 58551,
+              "count": 6
+            },
+            "manifest_blobs": {
+              "bytes": 48844,
+              "count": 102
+            },
+            "object_blobs": {
+              "bytes": 424439296,
+              "count": 496
+            },
+            "superblock": {
+              "count": 6
+            }
+          },
+          "duplicate_blobs": 0,
+          "fsyncs": {
+            "dir": 318,
+            "file": 616,
+            "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+            "total": 918
+          },
+          "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+          "pack": null,
+          "unaccounted_bytes": 0
+        },
         "representations": {
           "raw": 101
         },
         "schema": "weft.augmentation.phase.v1",
-        "source_read_ms": 32.03908999999998,
+        "source_read_ms": 32.623363,
         "storage": {
           "footprint_source": "recursive file walk of the store directory (du source)",
-          "physical_footprint_bytes": 424856058,
-          "physical_footprint_objects": 814
+          "physical_footprint_bytes": 424659735,
+          "physical_footprint_objects": 614
         },
-        "store_head": "aec279cd466874bdf5dcda1fcc3c39e53f13e4786d0a14b5f305999bb5e2a9c3",
+        "store_head": "1281b04f483bf2fe5c7f3347d9775d392d82c6807c45abfbdd8804519d8a27c8",
         "subset_selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
         "subset_tensor_count": 101,
         "tensor_count": 101,
-        "wall_ms": 2894.16481,
-        "write_ms": 2797.2708319999992
+        "wall_ms": 19700.799496,
+        "write_ms": 18668.949772
       }
     },
     "E": {
       "restore": {
         "backend": "local",
         "backend_stats_total": {
-          "bytes_read": 564702226,
+          "bytes_read": 564721293,
           "bytes_written": 0,
+          "fsyncs": 0,
           "link_publications": 0,
           "range_reads": 0,
-          "reads": 1337,
+          "reads": 1036,
           "rename_fallbacks": 0,
           "rename_publications": 0,
           "writes": 0
         },
         "cold": {
-          "backend_bytes_read": 282660077,
-          "backend_bytes_read_at_open": 266389,
-          "backend_read_requests": 933,
+          "backend_bytes_read": 282679144,
+          "backend_bytes_read_at_open": 221992,
+          "backend_read_requests": 632,
           "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
-          "cpu_user_sys_ms": 1290.0,
+          "cpu_user_sys_ms": 1310.0,
           "includes_open": true,
           "mismatches": 0,
-          "peak_rss_kib": 715776,
+          "peak_rss_kib": 715944,
           "per_tensor": {
-            "mean_us": 13785.930693069307,
-            "p50_us": 123.0,
-            "p95_us": 27495.0,
-            "p99_us": 29305.0,
+            "mean_us": 16694.09900990099,
+            "p50_us": 133.0,
+            "p95_us": 28414.0,
+            "p99_us": 30359.0,
             "samples": 101
           },
-          "read_wall_ms": 1395.755699,
+          "read_wall_ms": 1690.888208,
           "restored_bytes": 424439296,
-          "wall_ms": 1422.426634
+          "wall_ms": 1872.723202
         },
         "config": "E",
         "exactness": {
@@ -1376,7 +1500,7 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "open_ms": 19.904258,
+        "open_ms": 174.150845,
         "phase": "restore",
         "protocol": {
           "context_resolved": true,
@@ -1387,8 +1511,8 @@
           "selector_id": "b7f73a83483cee16657c0b90d34bbd2b5500b51ffcf30791ddc76f52d2157d80",
           "work_units": 103
         },
-        "protocol_ms": 6.766677,
-        "read_ms": 1395.755699,
+        "protocol_ms": 7.684149000000001,
+        "read_ms": 1690.888208,
         "schema": "weft.augmentation.phase.v1",
         "tensor_count": 101,
         "warm": {
@@ -1397,15 +1521,15 @@
           "basis": "warm (same process, store already open, OS/backend cache warm)",
           "cpu_user_sys_ms": 1290.0,
           "mismatches": 0,
-          "peak_rss_kib": 726156,
+          "peak_rss_kib": 724444,
           "per_tensor": {
-            "mean_us": 12655.663366336634,
-            "p50_us": 53.0,
-            "p95_us": 25476.0,
-            "p99_us": 25674.0,
+            "mean_us": 12757.38613861386,
+            "p50_us": 47.0,
+            "p95_us": 25932.0,
+            "p99_us": 26624.0,
             "samples": 101
           },
-          "wall_ms": 1282.118031
+          "wall_ms": 1293.302785
         }
       },
       "summary": {
@@ -1414,9 +1538,9 @@
           "raw": 16,
           "zstd": 50
         },
-        "cold_physical_bytes_read": 282660077,
-        "cold_read_requests": 933,
-        "cold_restore_wall_ms": 1422.426634,
+        "cold_physical_bytes_read": 282679144,
+        "cold_read_requests": 632,
+        "cold_restore_wall_ms": 1872.723202,
         "exactness": {
           "expected_logical_bytes": 424439296,
           "match": true,
@@ -1425,10 +1549,10 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "logical_restore_bytes_per_s": 298390993.14840305,
-        "physical_bytes_written": 282733917,
-        "physical_footprint_bytes": 282354152,
-        "physical_restore_bytes_per_s": 198716805.6640874,
+        "logical_restore_bytes_per_s": 226642835.1753822,
+        "physical_bytes_written": 282127407,
+        "physical_footprint_bytes": 282157242,
+        "physical_restore_bytes_per_s": 150945502.08920836,
         "protocol": {
           "context_resolved": true,
           "provenance_id": "9e1b52633689fbdd2d6deb01209e03e30127a9f7d1482c928bdc04d4cbceb99f",
@@ -1438,49 +1562,53 @@
           "selector_id": "b7f73a83483cee16657c0b90d34bbd2b5500b51ffcf30791ddc76f52d2157d80",
           "work_units": 103
         },
-        "read_amplification": 0.6659611389987792,
-        "restore_cpu_ms": 1290.0,
-        "restore_peak_rss_kib": 715776,
+        "read_amplification": 0.6660060617949946,
+        "restore_cpu_ms": 1310.0,
+        "restore_peak_rss_kib": 715944,
         "restore_per_tensor": {
-          "mean_us": 13785.930693069307,
-          "p50_us": 123.0,
-          "p95_us": 27495.0,
-          "p99_us": 29305.0,
+          "mean_us": 16694.09900990099,
+          "p50_us": 133.0,
+          "p95_us": 28414.0,
+          "p99_us": 30359.0,
           "samples": 101
         },
         "warm_physical_bytes_read": 282042149,
-        "warm_restore_wall_ms": 1282.118031,
-        "write_amplification": 0.6661351096954039,
-        "write_cpu_ms": 2700.0,
-        "write_peak_rss_kib": 1188988,
-        "write_requests": 516,
-        "write_wall_ms": 4162.390304
+        "warm_restore_wall_ms": 1293.302785,
+        "write_amplification": 0.6647061421004713,
+        "write_cpu_ms": 1230.0,
+        "write_peak_rss_kib": 688700,
+        "write_requests": 216,
+        "write_wall_ms": 8585.492069
       },
       "write": {
         "ablation": {
+          "deferred_blob_sync": true,
           "float_tensor_disabled": false,
-          "group_commit": false,
+          "group_commit": true,
+          "pack_member_threshold_bytes": null,
+          "publication": "one-atomic-publication",
           "zstd19_disabled": false
         },
         "backend": "local",
         "backend_stats": {
-          "bytes_read": 122681,
-          "bytes_written": 282733917,
+          "bytes_read": 1830,
+          "bytes_written": 282127407,
+          "fsyncs": 374,
           "link_publications": 0,
           "range_reads": 1,
-          "reads": 108,
+          "reads": 8,
           "rename_fallbacks": 0,
-          "rename_publications": 413,
-          "writes": 516
+          "rename_publications": 213,
+          "writes": 216
         },
-        "commit_ms": 710.518854,
+        "commit_ms": 1631.778318,
         "commit_phases": {},
         "config": "E",
-        "cpu_user_sys_ms": 2700.0,
-        "fixture_verify_ms": 412.220919,
-        "footprint_ms": 1.23227,
-        "generation": 103,
-        "init_ms": 21.817257,
+        "cpu_user_sys_ms": 1230.0,
+        "fixture_verify_ms": 414.685796,
+        "footprint_ms": 0.802639,
+        "generation": 3,
+        "init_ms": 395.835144,
         "logical_bytes": 424439296,
         "object_ids": {
           "model.embed_tokens.weight": "391c66a6b45d7cd4048f7dece58e965d994c0f9cb3b4d060c7b48e15f9c296d8",
@@ -1688,18 +1816,18 @@
           "model.layers.23.post_attention_layernorm.weight": "b0773b6eeb198d446295a75004d55549d6300c4a0f9cca117fb5cf755598fffc",
           "model.layers.23.self_attn.k_proj.weight": "0d27970c94dd888bf2fd7a7450fd6cd2c2ccc664f93c1a232bcdb0644f1e793a"
         },
-        "peak_rss_kib": 1188988,
+        "peak_rss_kib": 688700,
         "per_tensor": null,
         "per_tensor_write": {
-          "mean_us": 40194.16831683168,
-          "p50_us": 13931.0,
-          "p95_us": 68637.0,
-          "p99_us": 71108.0,
+          "mean_us": 61435.50495049505,
+          "p50_us": 39739.0,
+          "p95_us": 227983.0,
+          "p99_us": 299045.0,
           "samples": 101
         },
         "phase": "write",
         "phases": null,
-        "physical_bytes_written": 282733917,
+        "physical_bytes_written": 282127407,
         "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
         "planner": {
           "encoded_zstd19": 0,
@@ -1714,36 +1842,72 @@
           "skipped_zstd3": 50,
           "tensors_with_trace": 101
         },
-        "prepare_ms": 3349.1422739999985,
+        "prepare_ms": 6204.638734000002,
         "prepare_phases": {},
         "protocol": {
-          "context_root_id": "9455f7497893ae34499768a89633ffc7e6609475b7cc0a22af7adea2877d44b0",
+          "context_root_id": "dcec97b47af3cc13a5ccff5ab23958427c4cf09a93b6649d571d4aa1ba9ffaba",
           "provenance_id": "9e1b52633689fbdd2d6deb01209e03e30127a9f7d1482c928bdc04d4cbceb99f",
           "provenance_outputs": 101,
           "resolved_objects": 101,
           "selector_id": "b7f73a83483cee16657c0b90d34bbd2b5500b51ffcf30791ddc76f52d2157d80",
-          "snapshot": "64e6abe7caa4338f2e1ca7c7323e61e9ae692568c2c17e847af6f329032dafc7",
+          "snapshot": "66c5901c4a07387d3c4c83b24e09914a2d91ea4838f2dcfaaa9cc13a1135d8d7",
           "work_units": 103
         },
-        "protocol_ms": 36.261416,
+        "protocol_ms": 146.04144399999998,
+        "publication_ledger": {
+          "accounted_blob_and_control_bytes": 282148970,
+          "backend_bytes_written": 282127407,
+          "backend_writes": 216,
+          "categories": {
+            "commit_records": {
+              "bytes": 105137,
+              "count": 6
+            },
+            "index_segments": {
+              "bytes": 58667,
+              "count": 6
+            },
+            "manifest_blobs": {
+              "bytes": 281981070,
+              "count": 187
+            },
+            "object_blobs": {
+              "bytes": 4096,
+              "count": 16
+            },
+            "superblock": {
+              "count": 6
+            }
+          },
+          "duplicate_blobs": 0,
+          "fsyncs": {
+            "dir": 169,
+            "file": 221,
+            "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+            "total": 374
+          },
+          "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+          "pack": null,
+          "unaccounted_bytes": 0
+        },
         "representations": {
           "float-tensor": 35,
           "raw": 16,
           "zstd": 50
         },
         "schema": "weft.augmentation.phase.v1",
-        "source_read_ms": 31.225361000000007,
+        "source_read_ms": 33.257528,
         "storage": {
           "footprint_source": "recursive file walk of the store directory (du source)",
-          "physical_footprint_bytes": 282354152,
-          "physical_footprint_objects": 419
+          "physical_footprint_bytes": 282157242,
+          "physical_footprint_objects": 219
         },
-        "store_head": "64e6abe7caa4338f2e1ca7c7323e61e9ae692568c2c17e847af6f329032dafc7",
+        "store_head": "66c5901c4a07387d3c4c83b24e09914a2d91ea4838f2dcfaaa9cc13a1135d8d7",
         "subset_selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
         "subset_tensor_count": 101,
         "tensor_count": 101,
-        "wall_ms": 4162.390304,
-        "write_ms": 4059.6611279999984
+        "wall_ms": 8585.492069,
+        "write_ms": 7836.417052000002
       }
     },
     "N": {
@@ -1752,19 +1916,19 @@
         "cold": {
           "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
           "bytes_read": 424477171,
-          "cpu_user_sys_ms": 190.0,
+          "cpu_user_sys_ms": 200.0,
           "mismatches": 0,
-          "peak_rss_kib": 270208,
+          "peak_rss_kib": 269664,
           "per_tensor": {
-            "mean_us": 3429.1782178217823,
-            "p50_us": 78.0,
-            "p95_us": 7129.0,
-            "p99_us": 7206.0,
+            "mean_us": 4268.663366336634,
+            "p50_us": 75.0,
+            "p95_us": 11922.0,
+            "p99_us": 20660.0,
             "samples": 101
           },
           "requests": 104,
           "restored_bytes": 424439296,
-          "wall_ms": 346.923286
+          "wall_ms": 431.855308
         },
         "config": "N",
         "exactness": {
@@ -1784,32 +1948,32 @@
           "provenance_verified": true
         },
         "protocol_ms": 0.0,
-        "read_ms": 346.923286,
+        "read_ms": 431.855308,
         "schema": "weft.augmentation.phase.v1",
         "tensor_count": 101,
         "warm": {
           "basis": "warm (same process, OS page cache warm)",
           "bytes_read": 424477171,
-          "cpu_user_sys_ms": 200.0,
+          "cpu_user_sys_ms": 190.0,
           "mismatches": 0,
-          "peak_rss_kib": 278720,
+          "peak_rss_kib": 278012,
           "per_tensor": {
-            "mean_us": 1877.930693069307,
+            "mean_us": 1902.8316831683169,
             "p50_us": 3.0,
-            "p95_us": 3731.0,
-            "p99_us": 3905.0,
+            "p95_us": 3752.0,
+            "p99_us": 3936.0,
             "samples": 101
           },
           "requests": 104,
           "restored_bytes": 424439296,
-          "wall_ms": 190.112419
+          "wall_ms": 192.720361
         }
       },
       "summary": {
         "chosen_representations": null,
         "cold_physical_bytes_read": 424477171,
         "cold_read_requests": 104,
-        "cold_restore_wall_ms": 346.923286,
+        "cold_restore_wall_ms": 431.855308,
         "exactness": {
           "expected_logical_bytes": 424439296,
           "match": true,
@@ -1818,10 +1982,10 @@
           "tensors_verified": 101
         },
         "logical_bytes": 424439296,
-        "logical_restore_bytes_per_s": 1223438475.0984976,
+        "logical_restore_bytes_per_s": 982827553.8991407,
         "physical_bytes_written": 424477171,
         "physical_footprint_bytes": 424477171,
-        "physical_restore_bytes_per_s": 1223547649.0903525,
+        "physical_restore_bytes_per_s": 982915256.8850676,
         "protocol": {
           "context_key_set_verified": true,
           "manifest_verified": true,
@@ -1829,28 +1993,28 @@
           "provenance_verified": true
         },
         "read_amplification": 1.0000892353756048,
-        "restore_cpu_ms": 190.0,
-        "restore_peak_rss_kib": 270208,
+        "restore_cpu_ms": 200.0,
+        "restore_peak_rss_kib": 269664,
         "restore_per_tensor": {
-          "mean_us": 3429.1782178217823,
-          "p50_us": 78.0,
-          "p95_us": 7129.0,
-          "p99_us": 7206.0,
+          "mean_us": 4268.663366336634,
+          "p50_us": 75.0,
+          "p95_us": 11922.0,
+          "p99_us": 20660.0,
           "samples": 101
         },
         "warm_physical_bytes_read": 424477171,
-        "warm_restore_wall_ms": 190.112419,
+        "warm_restore_wall_ms": 192.720361,
         "write_amplification": 1.0000892353756048,
         "write_cpu_ms": 100.0,
-        "write_peak_rss_kib": 270940,
+        "write_peak_rss_kib": 270904,
         "write_requests": 104,
-        "write_wall_ms": 337.326015
+        "write_wall_ms": 3182.810971
       },
       "write": {
         "backend": "local",
         "config": "N",
         "cpu_user_sys_ms": 100.0,
-        "fixture_verify_ms": 414.247711,
+        "fixture_verify_ms": 413.487968,
         "footprint_source": "recursive file walk (du source)",
         "logical_bytes": 424439296,
         "metadata_bytes_written": 37875,
@@ -1858,61 +2022,61 @@
         "native_bytes_written": 424477171,
         "native_sync_calls": 102,
         "native_writes": 101,
-        "peak_rss_kib": 270940,
+        "peak_rss_kib": 270904,
         "phase": "write",
         "physical_bytes_written": 424477171,
         "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
         "physical_footprint_bytes": 424477171,
         "schema": "weft.augmentation.phase.v1",
-        "source_read_ms": 31.821850999999988,
+        "source_read_ms": 31.962855999999988,
         "subset_selection": "embedding + evenly spaced 100 of 289 name-sorted non-embedding tensors",
         "subset_tensor_count": 101,
         "tensor_count": 101,
-        "wall_ms": 337.326015,
-        "write_ms": 297.5077999999999
+        "wall_ms": 3182.810971,
+        "write_ms": 3032.7334669999996
       }
     }
   },
   "contract": "bench/CONTRACTS-augmentation.md",
   "deltas_vs_A": {
     "B": {
-      "augmentation_overhead_pct": 402.87164343716194,
+      "augmentation_overhead_pct": 132.63210025568472,
       "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
-      "latency_reduction_pct": -55.99803550025204,
-      "logical_throughput_improvement_pct": -35.896628647071374,
-      "physical_throughput_improvement_pct": -35.8426789645213,
-      "storage_reduction_pct": -0.08143001914695476
+      "latency_reduction_pct": 42.409726804726525,
+      "logical_throughput_improvement_pct": 73.64043344772176,
+      "physical_throughput_improvement_pct": 73.82878928347179,
+      "storage_reduction_pct": -0.039875195721745804
     },
     "C": {
-      "augmentation_overhead_pct": 713.4521901468611,
+      "augmentation_overhead_pct": 56.44492541479693,
       "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
-      "latency_reduction_pct": -313.24124379346557,
-      "logical_throughput_improvement_pct": -75.80106015507513,
-      "physical_throughput_improvement_pct": -83.90869549649837,
-      "storage_reduction_pct": 33.49272471698756
+      "latency_reduction_pct": -38.10753864481827,
+      "logical_throughput_improvement_pct": -27.592656431900032,
+      "physical_throughput_improvement_pct": -51.83435352496109,
+      "storage_reduction_pct": 33.53441784051965
     },
     "D": {
-      "augmentation_overhead_pct": 406.26894748240915,
+      "augmentation_overhead_pct": 160.460044111273,
       "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
-      "latency_reduction_pct": -59.81039451440269,
-      "logical_throughput_improvement_pct": -37.42584748391469,
-      "physical_throughput_improvement_pct": -37.31060715159704,
-      "storage_reduction_pct": -0.09819119104372466
+      "latency_reduction_pct": 41.32627776080919,
+      "logical_throughput_improvement_pct": 70.43404812862806,
+      "physical_throughput_improvement_pct": 70.7553038319706,
+      "storage_reduction_pct": -0.051936520034186466
     },
     "E": {
-      "augmentation_overhead_pct": 719.6692215867266,
+      "augmentation_overhead_pct": 33.91219710528176,
       "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
-      "latency_reduction_pct": -309.362385070511,
-      "logical_throughput_improvement_pct": -75.5717663256297,
-      "physical_throughput_improvement_pct": -83.73174567848802,
-      "storage_reduction_pct": 33.47596354509079
+      "latency_reduction_pct": -71.55470681553916,
+      "logical_throughput_improvement_pct": -41.70955617817993,
+      "physical_throughput_improvement_pct": -61.178211069947245,
+      "storage_reduction_pct": 33.52235651620721
     },
     "N": {
-      "augmentation_overhead_pct": 0.4255104774809009,
+      "augmentation_overhead_pct": -53.71601265796287,
       "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
-      "latency_reduction_pct": 0.1584050812570513,
-      "logical_throughput_improvement_pct": 0.15865640105805617,
-      "physical_throughput_improvement_pct": 0.16759409638208717,
+      "latency_reduction_pct": 60.43899564465675,
+      "logical_throughput_improvement_pct": 152.77416898161644,
+      "physical_throughput_improvement_pct": 152.79672537952868,
       "storage_reduction_pct": -0.008923537560480733
     }
   },
@@ -1922,12 +2086,13 @@
     "cpus": "4",
     "kernel": "7.3.3-1-cachyos",
     "memory": "3g",
+    "mode9_encode_threads": 4,
     "nproc": "2048",
     "pids": "1024",
     "revisions": {
-      "WeftCodec": "0aa38814c81c7796bdf23f54dd7dcac6af09f405",
+      "WeftCodec": "14122275fa253b58b455e71077e2f30cc5f1a73d",
       "WeftCodec-Go": "fe05240558a94abe530e3020c25b64ab2ad23a32",
-      "WeftFS": "24f94e4ca823872a400becf7c99d3554d618ccb9",
+      "WeftFS": "ad0ca3be596c08b607b9be700545713c46c22bbc",
       "WeftFS-Go": "a7170f556c918b71b5085e7e3d178ac1dfdc6faa"
     },
     "s3_server": {
@@ -1944,7 +2109,7 @@
     "storage_reduction_pct": "100*(A.physical_footprint_bytes - X.physical_footprint_bytes)/A.physical_footprint_bytes",
     "throughput_improvement_pct": "100*(X.logical_restore_bytes_per_s - A.logical_restore_bytes_per_s)/A.logical_restore_bytes_per_s; physical-byte throughput is reported separately"
   },
-  "generated_utc": "20261112T100737Z",
+  "generated_utc": "20261112T123354Z",
   "mandatory_metrics": [
     "durable_write_wall_ms",
     "logical_bytes",

@@ -9400,7 +9400,7 @@ candidate and discards the losers. Deliverable:
 
 ## Subphase R20 (write-cost) — one atomic publication per checkpoint (2026-11-12)
 
-* **Parents.** `WeftFS` `804fd38` (ledger + deferred group durability + court).
+* **Parents.** `WeftFS` `ad0ca3b` (ledger + deferred group durability + court).
   `WeftCodec` unchanged. Pushed on `staging`. **No wire change**: frame,
   manifest v1–v4, commit v1/v2, the WFX3 index and every conformance vector and
   fixture are byte-identical; the change is *how many* commit records and index
@@ -9417,34 +9417,41 @@ candidate and discards the losers. Deliverable:
   gets its own data barrier; `commit_group` and `abort_group` both close the
   batch. `write_checkpoint`, `write_checkpoint_parallel` and the checkpoint
   service inherit it because they already publish through one group.
-* **Measurement surface.** `BackendStats` gains `fsync_file`/`fsync_dir`
-  (`fsyncs` stays their sum); `IndexStats` gains `write_bytes`; new
+* **Measurement surface.** `IndexStats` gains `write_bytes`; new
   `Store::publication_ledger()` reports blob publications by kind (count and
-  bytes), duplicate hits, commit records, superblock slots and index segments,
-  counted where each artifact is handed to the backend. It is diagnostic only:
-  no format, commit, recovery or receipt schema reads it.
+  bytes), duplicate hits, commit records, superblock slots, index segments and
+  — through `StorageBackend::durability_barriers()` — file data barriers and
+  directory barriers separately (`None` for a provider-ack backend, which never
+  claims `fsync`). Counted where each artifact is handed to the backend, so it
+  closes against `BackendStats`. It is diagnostic only: no format, commit,
+  recovery or receipt schema reads it, and no out-of-scope backend file needed
+  a change.
 * **Where the 202 blob publications go.** 186 `manifest_blobs` (one frame + one
   tensor-descriptor manifest per object) carrying 281,977,361 B, plus 16
   `object_blobs` (the 16 raw tensors' single 256-byte chunks) carrying 4,096 B.
   The descriptor manifests are ~1 KiB each; the frames carry the data.
-* **Headline.** 7 interleaved repetitions, least-contended: **C 2,341.6 →
-  1,225.4 ms (−47.7 %)** and its footprint **282,283,011 → 282,106,049 B
+* **Headline.** 7 interleaved repetitions, least-contended: **C 2,343.2 →
+  1,236.8 ms (−47.2 %)** and its footprint **282,283,011 → 282,106,049 B
   (−176,962 B)**; 101/101 exact restores in every row and repetition; same
   strategies and same blob bytes (`two_stage_matches_exhaustive`,
   `two_stage_storage_unchanged`, `default_c_matches_official_court` all true).
-  Target C ≤ 1,600 ms **met** (median 1,246.2 ms); **G2 (≤ 1,344 ms) met**;
-  C/A = 3.68x. Also measured: **B 2,864.8 → 935.9 ms**, **D 2,890.0 → 951.6**,
-  **E 2,363.2 → 1,286.3** (all minima, this session).
-* **Split of the win.** One group commit: **−709.1 ms and −176,962 B**. One
-  deferred barrier: **−407.1 ms at identical bytes**. Blob publication was
-  fsync-bound, not byte-bound: 786.0 → 286.0 ms for 282 MB (359 → 986 MB/s)
-  plus a new 75.2 ms barrier (213 file + 161 directory syncs, 3.75 GB/s). The
-  control plane was 696.8 ms for 101 commits (341.8 index segments + 355.0
-  commit records/superblocks, 6.9 ms per commit) and is now 12.0 ms.
+  Target C ≤ 1,600 ms **met**; **G2 (≤ 1,344 ms) met** on the least-contended
+  observation; C/A = 3.65x. Also measured (minima, this session):
+  **B 2,849.9 → 900.2 ms**, **B-percommit**, **D 957.5**, **E 1,257.1**. The
+  retained `…T133000Z` session measured the same minima within 1 % (C 1,225.4,
+  C-percommit 2,341.6) with clean medians; it is not cited because that
+  revision's tree is incomplete (see the final bullet).
+* **Split of the win.** One group commit: **−718.1 ms and −176,962 B**. One
+  deferred barrier: **−388.3 ms at identical bytes**. Blob publication was
+  fsync-bound, not byte-bound: 778.5 → 272.2 ms for 282 MB (362 → 1,036 MB/s)
+  plus a new 97.0 ms barrier (213 file + 161 directory syncs; 75.2 ms in the
+  retained session — how much of the 282 MB the page cache had already written
+  back). The control plane was 702.6 ms for 101 commits (342.5 index segments +
+  360.1 commit records/superblocks, 7.0 ms per commit) and is now 8.3 ms.
   Footprint closure: −44,397 B fewer commit records + −132,565 B fewer index
   segments = −176,962 B exactly.
 * **Options rejected, with their storage delta.** Packed blob plane at a
-  64 KiB / 1 MiB / 8 MiB member bound: **+272.6 / +253.4 / +452.7 ms** and
+  64 KiB / 1 MiB / 8 MiB member bound: **+265.3 / +246.9 / +455.3 ms** and
   +14,651 / +16,956 / +95,794 bytes written, for −5,929 / −3,576 / +9,084 B of
   footprint (0.001 %). It publishes 120–195 catalog segments for 170–204
   members inside the commit's flush. Faster-and-larger and slower-and-larger
@@ -9465,13 +9472,21 @@ candidate and discards the losers. Deliverable:
   3/3, `bounded_recovery` 3/3, `parallel_checkpoint` 7/7,
   `checkpoint_atomic`/`_packs`/`_restore_pipeline`/`_service`/`_streaming` all
   pass, plus the new `tests/publication_batch.rs` 6/6.
-* **Receipts.** `bench/receipts/r20-publication-20261112T133000Z.json`
-  (+ `.log`), `augmentation-local-20261112T133000Z.json` (contract court, same
-  revision and stamp). Retained: `r20-publication-20261112T120000Z.json`
+* **Receipts.** **Cited:** `bench/receipts/r20-publication-20261112T150000Z.json`
+  (+ `.log`) and `augmentation-local-20261112T150000Z.json` (contract court,
+  same revision and stamp). Retained and **not cited**:
+  `r20-publication-20261112T133000Z.json.zst` and its contract court — same 11/11
+  checks and the same minima within 1 %, but produced at `804fd38`, whose tree
+  is incomplete: the barrier split was then carried by two new `BackendStats`
+  fields whose zero-initialisers in `src/azure.rs`, `src/gcs.rs` and
+  `src/s3.rs` were never committed, so that revision does not build from a
+  clean checkout. The final design reports the split through
+  `StorageBackend::durability_barriers()` and touches no out-of-scope file.
+  Also retained: `r20-publication-20261112T120000Z.json.zst`
   (11/11 checks but the packed rows' crash proxy reopened without the pack
   plane — fixed; it is the receipt that found the harness bug), the matching
   `augmentation-local-…T120000Z.json`, and three single-repetition probes
-  (`…T112000Z`, `…T113000Z`) whose `at_least_seven_reps` fails by construction
+  (`…T112000Z.json.zst`, `…T113000Z.json.zst`) whose `at_least_seven_reps` fails by construction
   and whose timings are not cited. Also retained: the log of the **failed**
   first attempt `r20-publication-20261112T105952Z.log` (no receipt produced),
   where the restore of a packed row opened the store without its pack plane. Court:
@@ -9480,22 +9495,22 @@ candidate and discards the losers. Deliverable:
 * **Gates.** Rust `cargo test --all-targets`: **801 passed / 0 failed / 0
   ignored, 168 suites**. FUSE `cargo test --features fuse --all-targets`:
   **844 passed / 0 failed** (the two pre-existing ignored tests).
-  `check-claims.sh` 1000 entries OK, spec drift 60/60, conformance manifest and
+  `check-claims.sh` 1020 entries OK, spec drift 60/60, conformance manifest and
   coverage 420 entries OK. No `verify-all` run for this subphase; its 45/45
   receipt remains the cited aggregate and predates R20. The R20 court is
   standalone, like the R19 wall court: `verify-all` keeps the reduced
   `augmentation_local` contract court and does not carry the 14-row
   7-repetition matrix.
-* **Next bottleneck.** Encode 703.2 ms (57.4 %; ZSTD-3 280.0 + mode-9 191.1 +
-  analyse 191.6), blob publication 286.0 ms (23.3 %), barrier 75.2 ms (6.1 %),
-  digest 66.1 ms (5.4 %), source read + init 51.7 ms (4.2 %), commit + index
-  8.4 ms (0.7 %), residual 13.1 ms (1.1 %). R21 is the bounded parallel
+* **Next bottleneck.** Encode 704.6 ms (57.0 %; ZSTD-3 286.6 + mode-9 192.8 +
+  analyse 184.4), blob publication 272.2 ms (22.0 %), barrier 97.0 ms (7.8 %),
+  digest 67.0 ms (5.4 %), source read + init 52.2 ms (4.2 %), commit + index
+  9.0 ms (0.7 %), residual 13.4 ms (1.1 %). R21 is the bounded parallel
   pipeline.
 * **Not claimed.** No Go change or Go parity for the deferred barrier (the Go
   store has its own group commit and is untouched here); no pack+deferred
   combination (the packed plane refuses deferred sync, so that option is not
-  measured); no read-path improvement (cold restore 1,434.2 → 1,420.1 ms, i.e.
-  unchanged); `RemoteObject`/S3/Azure/GCS durability is a provider ack and is
+  measured); no read-path improvement (cold restore median 1,604.6 → 1,511.5
+  ms, a difference that is host noise, not a read-path change); `RemoteObject`/S3/Azure/GCS durability is a provider ack and is
   not affected; no media, power-loss, fleet, cloud or multi-writer claim; one
   host, warm page cache; the `C-legacy`/`C-nom9` rows remain ~21.5 s controls
   because the exhaustive planner encodes level-19 even when it selects nothing.

@@ -32,7 +32,7 @@ A change is only a candidate if it reports **both** boards together.
 | start | 24,229.2 (C, least-contended) | R17 measured |
 | R18 | 4,117.8 | two-stage planner |
 | R19 | 2,328.4 | mode-9 encoder |
-| **R20** | **1,225.4** | one atomic publication per checkpoint |
+| **R20** | **1,236.8** | one atomic publication per checkpoint |
 | G1 | ≤ 3,360 | 10× A's 336 ms (cleared at R18) |
 | G2 | ≤ 1,344 | 4× A (**met at R20**) |
 | G3 | ≤ 672 | 2× A |
@@ -135,7 +135,8 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
    eagerly and the barrier the commit path already performed before the commit
    record (`flush_buffered_blobs`) syncs every recorded file and every touched
    directory. Every file still gets its own data barrier — the batch changes
-   when, never whether, a byte is durable.
+   when, never whether, a byte is durable. The barrier is reported by
+   `StorageBackend::durability_barriers()` and timed as `Phase::BackendSync`.
 2. Evaluated the pack plane on the C object set at 64 KiB / 1 MiB / 8 MiB
    member bounds, with the catalog bytes counted. **Done and rejected**: it is
    20.7–36.9 % slower and writes more bytes, for a 3.6–5.9 KB footprint win.
@@ -143,7 +144,7 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
    depends on (only *fewer* commit records and *one* index segment per
    checkpoint; no field, schema or attestation changed); crash old-or-new on
    all three phases for every row; footprint delta reported. **Met.**
-4. Result: C **2,341.6 → 1,225.4 ms** (−47.7 %) at **282,106,049 B** (−176,962
+4. Result: C **2,343.2 → 1,236.8 ms** (−47.2 %) at **282,106,049 B** (−176,962
    B). Evidence [`bench/RESULTS-publication-tax.md`](../bench/RESULTS-publication-tax.md),
    receipt `r20-publication-20261112T133000Z`.
 
@@ -155,8 +156,9 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
    pool and single-flight rules.
 3. **Gate:** byte-identical output at every worker count; RSS inside 3 GiB;
    exact restore; report the Amdahl cap and the achieved fraction.
-4. Expected: C from 1,225 ms toward the G3 rung. The measured shares to beat
-   are encode 703.2 ms (57.4 %) and blob publication 286.0 ms (23.3 %).
+4. Expected: C from 1,237 ms toward the G3 rung. The measured shares to beat
+   are encode 704.6 ms (57.0 %), blob publication 272.2 ms (22.0 %) and the
+   durability barrier 97.0 ms (7.8 %).
 
 ### R22 — Pareto sweep
 
@@ -171,29 +173,29 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
 
 | Configuration | Wall (min) | Footprint (B) | Ladder | Footprint |
 |---|---:|---:|---|---|
-| A (same session) | 333.1 | 424,439,296 | anchor | — |
-| **C (R20 default)** | **1,225.4** | **282,106,049** | **G2 met (3.68× A)** | final band |
-| C-percommit (R19 two-stage) | 2,341.6 | 282,283,011 | 1.74× G1 | final band |
-| C-group (group, eager barriers) | 1,632.5 | 282,106,049 | 1.21× G1 | final band |
-| C-pack1m | 1,478.8 | 282,102,473 | loss | loss |
-| C-both | 1,037.0 | 330,355,860 | 1.54× G1 | first-success band |
-| C-nom9 | 21,230.6 | 330,160,010 | above G1 | first-success band |
-| C-legacy (exhaustive) | 21,440.2 | 282,106,049 | above G1 | final band |
-| E (R20) | 1,286.3 | 282,157,242 | 1.91× G1 | final band |
-| D (R20) | 951.6 | 424,659,735 | 1.42× G1 | no reduction |
-| B (R20 default) | 935.9 | 424,608,542 | 1.39× G1 | no reduction |
+| A (same session) | 339.0 | 424,439,296 | anchor | — |
+| **C (R20 default)** | **1,236.8** | **282,106,049** | **G2 met (3.65× A)** | final band |
+| C-percommit (R19 two-stage) | 2,343.2 | 282,283,011 | 1.74× G1 | final band |
+| C-group (group, eager barriers) | 1,625.1 | 282,106,049 | 1.21× G1 | final band |
+| C-pack1m | 1,483.7 | 282,102,473 | loss | loss |
+| C-both | 1,020.5 | 330,355,860 | 1.54× G1 | first-success band |
+| C-nom9 | 21,427.2 | 330,160,010 | above G1 | first-success band |
+| C-legacy (exhaustive) | 21,526.6 | 282,106,049 | above G1 | final band |
+| E (R20) | 1,257.1 | 282,157,242 | 1.91× G1 | final band |
+| D (R20) | 957.5 | 424,659,735 | 1.42× G1 | no reduction |
+| B (R20 default) | 900.2 | 424,608,542 | 1.39× G1 | no reduction |
 
-(R20 runs, least-contended of 7 interleaved repetitions at WeftFS `804fd38`;
+(R20 runs, least-contended of 7 interleaved repetitions at WeftFS `ad0ca3b`;
 median and p95 are in the receipt and in the results document. `B` and `D` are
 raw-representation rows: their minima beat C's because they encode nothing.)
 
 The target is the **knee**: C's footprint at the lowest sustainable wall, then
 down the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
 R18 moved the default from 24.2 s to 4.12 s, R19 to 2.33 s, and R20 to
-**1.23 s at a footprint 177 KB smaller than R19's**. The remaining 0.55 s to the
+**1.24 s at a footprint 177 KB smaller than R19's**. The remaining 0.56 s to the
 G3 rung (672 ms) is encoder and pipeline work (R21): the publication tax is now
-**83.6 ms of a 1,225 ms write (6.8 %), of which 75.2 ms is the barrier itself**,
-and the control plane (commit + index) is 8.4 ms (0.7 %).
+**114.4 ms of a 1,237 ms write (9.2 %), of which 97.0 ms is the barrier
+itself**, and the control plane (commit + index) is 9.0 ms (0.7 %).
 
 ## 6. Non-negotiables
 
