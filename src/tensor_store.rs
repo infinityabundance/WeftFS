@@ -1029,6 +1029,21 @@ pub struct TensorPlanOptions {
     /// `min(available_parallelism, 4)`; the measured effect is in
     /// `bench/RESULTS-mode9-encoder.md`.
     pub tensor_encode_threads: usize,
+    /// Encode the level-3 ZSTD and mode-9 `FLOAT_TENSOR` candidates for **one
+    /// tensor** on two threads when both are certain to run (R21).
+    ///
+    /// This is a pure schedule change: both frames are produced from the same
+    /// immutable input slice by encoders that share nothing but the input, and
+    /// their results are fed through the existing decision code in the existing
+    /// order, so every chosen representation, frame byte, plan and violation
+    /// entry is unchanged. It only helps where one tensor's two candidate
+    /// encodes are the critical path (a 272 MB embedding is 295 ms of level-3
+    /// plus 122 ms of mode 9). Off by default; the pipelined group writer turns
+    /// it on above `candidate_parallel_min_bytes`.
+    pub parallel_candidates: bool,
+    /// Tensor length at which [`Self::parallel_candidates`] applies. Ignored
+    /// when `parallel_candidates` is false.
+    pub candidate_parallel_min_bytes: u64,
 }
 
 impl Default for TensorPlanOptions {
@@ -1069,6 +1084,9 @@ impl Default for TensorPlanOptions {
             zstd_patch_cpu_budget_ns: 20_000_000_000,
             planner: PlannerMode::TwoStage,
             tensor_encode_threads: default_tensor_encode_threads(),
+            parallel_candidates: false,
+            candidate_parallel_min_bytes:
+                crate::tensor_pipeline::DEFAULT_CANDIDATE_PARALLEL_MIN_BYTES,
         }
     }
 }
@@ -1277,6 +1295,59 @@ pub struct PreparedTensorObject {
     /// Causal parent version ids recorded with the object record (checkpoint
     /// causal parents). Copied into the commit op by the committer.
     pub causal: Vec<Hash32>,
+}
+
+/// One encoded (but not yet published) tensor object (R21).
+///
+/// [`Store::encode_tensor_object`] returns this; [`Store::publish_encoded_tensor`]
+/// turns it into a [`PreparedTensorObject`]. Splitting the two halves is what
+/// lets a pipelined writer overlap CPU encoding with backend publication: every
+/// byte published second is already decided by the first, so the halves can run
+/// on different threads (and, in a multi-process design, in different
+/// processes).
+#[derive(Clone, Debug)]
+pub struct EncodedTensor {
+    /// ObjectId seed chosen by the caller (deterministic when supplied).
+    pub seed: [u8; 32],
+    pub dtype: TensorElementDtype,
+    pub shape: Vec<u64>,
+    pub layout: TensorLayoutSpec,
+    /// `LogicalTensorRoot` of the stored (canonicalised) tensor bytes.
+    pub logical_root: Hash32,
+    /// Canonical tensor length.
+    pub size: u64,
+    /// `H("weft/chunk/v1", logical_bytes)`.
+    pub content_root: Hash32,
+    /// Which representation was chosen.
+    pub kind: RepresentationKind,
+    /// Chosen representation strategy name.
+    pub strategy_name: String,
+    /// The chosen frame, for the codec and tensor kinds.
+    pub frame: Option<Vec<u8>>,
+    pub dependencies: Vec<Hash32>,
+    pub tensor: Option<TensorRepresentation>,
+    pub tile_shape: Option<Vec<u64>>,
+    /// Canonical tensor bytes, retained only when the `raw` representation was
+    /// chosen (its chunk table is built from them).
+    pub raw: Option<Vec<u8>>,
+    /// Causal parent version ids for the object record.
+    pub causal: Vec<Hash32>,
+    /// The planner decision that produced this object.
+    pub plan: TensorPlan,
+}
+
+impl EncodedTensor {
+    /// Bytes this fragment holds while it waits to be published. This is the
+    /// quantity the pipelined writer charges against its in-flight budget.
+    pub fn resident_bytes(&self) -> u64 {
+        let frame = self
+            .frame
+            .as_ref()
+            .map(|frame| frame.len() as u64)
+            .unwrap_or(0);
+        let raw = self.raw.as_ref().map(|raw| raw.len() as u64).unwrap_or(0);
+        frame.saturating_add(raw)
+    }
 }
 
 /// Which candidate set the planned writer encodes (R18).
@@ -1759,6 +1830,38 @@ impl Store {
         spec: &TensorWriteSpec,
         seed: &[u8; 32],
     ) -> Result<(PreparedTensorObject, TensorPlan)> {
+        // R21: the prepare half is split into a pure encode (no publication)
+        // and a publication half, so the pipelined group writer can overlap
+        // encoding with publication. This function remains the sequential
+        // composition of exactly the same two halves.
+        let encoded = self.encode_tensor_object(dtype, shape, bytes, layout, spec, seed)?;
+        let plan = encoded.plan.clone();
+        let prepared = self.publish_encoded_tensor(encoded)?;
+        Ok((prepared, plan))
+    }
+
+    /// Encode one tensor object **without publishing anything** (R21).
+    ///
+    /// Runs the same planner, the same candidate encodes and the same
+    /// canonicalisation as [`Store::prepare_tensor_object_with_spec_seeded_planned`]
+    /// and returns the chosen representation's immutable bytes plus the plan.
+    /// Every byte the later publication writes is already fixed here, so the
+    /// encode half is pure: it takes `&self`, publishes nothing, and may run
+    /// concurrently with other encodes of the same store.
+    ///
+    /// The returned [`EncodedTensor`] holds the chosen frame (or, for the `raw`
+    /// representation, the canonical tensor bytes the chunk table is built
+    /// from), which is why the pipelined writer charges it against a byte
+    /// budget rather than a thread count.
+    pub fn encode_tensor_object(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+    ) -> Result<EncodedTensor> {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         // Row-major callers already hold the canonical bytes; borrowing avoids a
@@ -1793,33 +1896,85 @@ impl Store {
             Some(tensor) => tensor.logical_root,
             None => self.logical_root_for_bytes(dtype, shape, logical.as_ref(), None)?,
         };
-        let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(dtype, shape, logical.as_ref(), layout, &artifact)?;
+        let size = logical.len() as u64;
+        let content_root = crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+            identity::content_hash(logical.as_ref())
+        });
+        // The raw representation's chunk table is built from the canonical
+        // bytes, so only that representation has to keep them. Every other
+        // representation publishes a frame that already exists.
+        let raw = match artifact.kind {
+            RepresentationKind::Raw => Some(logical.into_owned()),
+            _ => None,
+        };
+        Ok(EncodedTensor {
+            seed: *seed,
+            dtype,
+            shape: shape.to_vec(),
+            layout: layout.clone(),
+            logical_root: root,
+            size,
+            content_root,
+            kind: artifact.kind,
+            strategy_name: artifact.strategy_name,
+            frame: artifact.frame,
+            dependencies: artifact.dependencies,
+            tensor: artifact.tensor,
+            tile_shape: artifact.tile_shape,
+            raw,
+            causal: spec.causal.clone(),
+            plan,
+        })
+    }
+
+    /// Publish the immutable blobs of one [`EncodedTensor`] and return the
+    /// prepared fragment the committer installs (R21).
+    ///
+    /// This is the only half that touches the backend, so a pipelined writer can
+    /// run every publication on one thread while encoders keep working. The
+    /// bytes are a pure function of the input, so publication is idempotent and
+    /// order-independent: two handles cannot disagree about the bytes behind a
+    /// hash.
+    pub fn publish_encoded_tensor(&self, encoded: EncodedTensor) -> Result<PreparedTensorObject> {
+        let artifact = PreparedArtifact {
+            kind: encoded.kind,
+            strategy_name: encoded.strategy_name.clone(),
+            frame: encoded.frame,
+            dependencies: encoded.dependencies.clone(),
+            tensor: encoded.tensor.clone(),
+            tile_shape: encoded.tile_shape.clone(),
+        };
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            encoded.dtype,
+            &encoded.shape,
+            encoded.size,
+            encoded.content_root,
+            &encoded.layout,
+            &artifact,
+            encoded.raw.as_deref(),
+        )?;
         let mut attrs = BTreeMap::new();
         apply_tensor_attrs(
             &mut attrs,
-            dtype,
-            shape,
-            root,
-            layout,
+            encoded.dtype,
+            &encoded.shape,
+            encoded.logical_root,
+            &encoded.layout,
             artifact.strategy_name.as_str(),
             artifact.tile_shape.as_deref(),
         )?;
-        Ok((
-            PreparedTensorObject {
-                seed: *seed,
-                manifest_id,
-                content_root: content_hash,
-                size,
-                logical_root: root,
-                attrs,
-                dtype: dtype.as_str().to_owned(),
-                shape: shape.to_vec(),
-                strategy: artifact.strategy_name.clone(),
-                causal: spec.causal.clone(),
-            },
-            plan,
-        ))
+        Ok(PreparedTensorObject {
+            seed: encoded.seed,
+            manifest_id,
+            content_root: content_hash,
+            size,
+            logical_root: encoded.logical_root,
+            attrs,
+            dtype: encoded.dtype.as_str().to_owned(),
+            shape: encoded.shape,
+            strategy: encoded.strategy_name,
+            causal: encoded.causal,
+        })
     }
 
     /// Publish the state ops for one prepared tensor object.
@@ -2001,8 +2156,17 @@ impl Store {
             Some(tensor) => tensor.logical_root,
             None => self.logical_root_for_bytes(meta.dtype, &meta.shape, &logical, None)?,
         };
-        let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(meta.dtype, &meta.shape, &logical, &meta.layout, &artifact)?;
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            meta.dtype,
+            &meta.shape,
+            logical.len() as u64,
+            crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                identity::content_hash(&logical)
+            }),
+            &meta.layout,
+            &artifact,
+            Some(&logical),
+        )?;
         let mut attrs = old.attrs.clone();
         apply_tensor_attrs(
             &mut attrs,
@@ -2300,9 +2464,13 @@ impl Store {
         let (manifest_id, content_hash, size) = self.store_tensor_artifact(
             tensor.dtype,
             &meta.table_shape,
-            &new_table,
+            new_table.len() as u64,
+            crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                identity::content_hash(&new_table)
+            }),
             &layout,
             &artifact,
+            Some(&new_table),
         )?;
         let mut attrs = BTreeMap::new();
         apply_tensor_attrs(
@@ -3446,8 +3614,17 @@ impl Store {
             Some(tensor) => tensor.logical_root,
             None => self.logical_root_for_bytes(meta.dtype, &meta.shape, &logical, None)?,
         };
-        let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(meta.dtype, &meta.shape, &logical, &meta.layout, &artifact)?;
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            meta.dtype,
+            &meta.shape,
+            logical.len() as u64,
+            crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                identity::content_hash(&logical)
+            }),
+            &meta.layout,
+            &artifact,
+            Some(&logical),
+        )?;
         let mut attrs = old.attrs.clone();
         apply_tensor_attrs(
             &mut attrs,
@@ -3846,6 +4023,103 @@ impl Store {
             .as_ref()
             .map(|trace| trace.decision.need_zstd3)
             .unwrap_or(true);
+        // ------------------------------------------------------------------
+        // R21: run the two expensive candidate encodes for one tensor on two
+        // threads when both are certain to run.
+        // ------------------------------------------------------------------
+        //
+        // The level-3 frame and the mode-9 frame are both functions of the same
+        // immutable `logical` slice and of nothing else. On a large tensor they
+        // are also the critical path (a 272 MB bf16 embedding measured 295.0 ms
+        // of level 3 against 121.6 ms of mode 9). Encoding them one after the
+        // other therefore charges their sum; encoding them concurrently charges
+        // their maximum, with **no** effect on what is emitted, because the
+        // results are consumed below in the historical order.
+        //
+        // The prefetch only happens when the decision stream already guarantees
+        // that both encodes run:
+        // * level 3 runs iff `need_zstd3` and the tensor is not q8_0;
+        // * mode 9 runs unless the R18 gate *failed* (a `Pass` or an
+        //   `Unresolved` gate both encode it and decide from the measured
+        //   sizes), and unless the candidate was disabled.
+        // A `Fail` gate or a disabled candidate keeps the sequential path, so a
+        // candidate that cannot win is still never encoded.
+        let mode9_prefetchable = !quantized
+            && matches!(
+                float_tensor_dtype(dtype),
+                Some(_) if options.float_tensor || hint == Some(TensorStrategy::FloatTensor)
+            )
+            && trace
+                .as_ref()
+                .map(|trace| trace.decision.mode9 != crate::two_stage::Mode9Gate::Fail)
+                .unwrap_or(true);
+        let run_concurrently = options.parallel_candidates
+            && size >= options.candidate_parallel_min_bytes
+            && encode_zstd3
+            && !quantized
+            && mode9_prefetchable;
+        let mut prefetched_zstd: Option<weftcodec::Result<Vec<u8>>> = None;
+        let mut prefetched_mode9: Option<weftcodec::Result<Vec<u8>>> = None;
+        if run_concurrently {
+            let float_dtype = float_tensor_dtype(dtype)
+                .ok_or_else(|| Error::invalid_argument("parallel candidates need a float dtype"))?;
+            let histogram = trace
+                .as_ref()
+                .and_then(|trace| trace.analysis.mode9.as_ref())
+                .map(|prediction| std::sync::Arc::clone(&prediction.exponent_histogram));
+            let encode_options = weftcodec::modes::FloatTensorEncodeOptions::with_threads(
+                options.tensor_encode_threads,
+            );
+            let panicked = std::thread::scope(|scope| {
+                let zstd = scope.spawn(|| {
+                    crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                        weftcodec::modes::encode_zstd(
+                            logical,
+                            crate::representation::CODEC_ZSTD_LEVEL,
+                            Some(codec_chunk),
+                            &limits,
+                        )
+                    })
+                });
+                let mode9 = scope.spawn(|| {
+                    crate::phase_profile::timed(
+                        crate::phase_profile::Phase::EncodeFloatTensor,
+                        || match &histogram {
+                            Some(histogram) => {
+                                weftcodec::modes::encode_float_tensor_with_histogram(
+                                    logical,
+                                    float_dtype,
+                                    shape,
+                                    &limits,
+                                    histogram,
+                                    encode_options,
+                                )
+                            }
+                            None => weftcodec::modes::encode_float_tensor_with(
+                                logical,
+                                float_dtype,
+                                shape,
+                                &limits,
+                                encode_options,
+                            ),
+                        },
+                    )
+                });
+                match (zstd.join(), mode9.join()) {
+                    (Ok(zstd), Ok(mode9)) => {
+                        prefetched_zstd = Some(zstd);
+                        prefetched_mode9 = Some(mode9);
+                        false
+                    }
+                    _ => true,
+                }
+            });
+            if panicked {
+                return Err(Error::corrupt(
+                    "a concurrent candidate encoder panicked; nothing was published",
+                ));
+            }
+        }
         if quantized {
             out.push(skipped(
                 TensorStrategy::Zstd,
@@ -3862,14 +4136,20 @@ impl Store {
                     }),
             ));
         } else {
-            match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                weftcodec::modes::encode_zstd(
-                    logical,
-                    crate::representation::CODEC_ZSTD_LEVEL,
-                    Some(codec_chunk),
-                    &limits,
-                )
-            }) {
+            let encoded = match prefetched_zstd.take() {
+                Some(zstd) => zstd,
+                None => {
+                    crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                        weftcodec::modes::encode_zstd(
+                            logical,
+                            crate::representation::CODEC_ZSTD_LEVEL,
+                            Some(codec_chunk),
+                            &limits,
+                        )
+                    })
+                }
+            };
+            match encoded {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
                     if let Some(trace) = trace.as_mut() {
@@ -4168,28 +4448,32 @@ impl Store {
                     let encode_options = weftcodec::modes::FloatTensorEncodeOptions::with_threads(
                         options.tensor_encode_threads,
                     );
-                    match crate::phase_profile::timed(
-                        crate::phase_profile::Phase::EncodeFloatTensor,
-                        || match &histogram {
-                            Some(histogram) => {
-                                weftcodec::modes::encode_float_tensor_with_histogram(
+                    let encoded = match prefetched_mode9.take() {
+                        Some(mode9) => mode9,
+                        None => crate::phase_profile::timed(
+                            crate::phase_profile::Phase::EncodeFloatTensor,
+                            || match &histogram {
+                                Some(histogram) => {
+                                    weftcodec::modes::encode_float_tensor_with_histogram(
+                                        logical,
+                                        float_dtype,
+                                        shape,
+                                        &limits,
+                                        histogram,
+                                        encode_options,
+                                    )
+                                }
+                                None => weftcodec::modes::encode_float_tensor_with(
                                     logical,
                                     float_dtype,
                                     shape,
                                     &limits,
-                                    histogram,
                                     encode_options,
-                                )
-                            }
-                            None => weftcodec::modes::encode_float_tensor_with(
-                                logical,
-                                float_dtype,
-                                shape,
-                                &limits,
-                                encode_options,
-                            ),
-                        },
-                    ) {
+                                ),
+                            },
+                        ),
+                    };
+                    match encoded {
                         Ok(frame) => {
                             let physical = frame.len() as u64;
                             if let Some(trace) = trace.as_mut() {
@@ -5527,16 +5811,17 @@ impl Store {
         &self,
         dtype: TensorElementDtype,
         shape: &[u64],
-        logical: &[u8],
+        size: u64,
+        content_hash: Hash32,
         layout: &TensorLayoutSpec,
         artifact: &PreparedArtifact,
+        raw: Option<&[u8]>,
     ) -> Result<(Hash32, Hash32, u64)> {
-        let content_hash = crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
-            identity::content_hash(logical)
-        });
-        let size = logical.len() as u64;
         let representation = match artifact.kind {
             RepresentationKind::Raw => {
+                let logical = raw.ok_or_else(|| {
+                    Error::corrupt("a raw tensor artifact was published without its bytes")
+                })?;
                 let manifest =
                     self.build_raw_manifest(logical, self.options().chunk_size, content_hash)?;
                 Representation {

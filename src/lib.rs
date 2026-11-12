@@ -79,6 +79,7 @@ pub mod service_account;
 pub mod singleflight;
 pub mod state;
 pub mod store;
+pub mod tensor_pipeline;
 pub mod tensor_store;
 pub mod threefs;
 pub mod timeparse;

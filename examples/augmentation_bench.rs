@@ -405,6 +405,17 @@ struct Args {
     /// (`at_least_seven_reps`, the same-revision identity gate) are omitted from
     /// the receipt rather than asserted, and the receipt records the mode.
     diff_only: bool,
+    /// R21: encode threads for the pipelined group writer. `None` runs the
+    /// sequential writer (the exact pre-R21 path) unless the configuration key
+    /// carries a `pipe<N>` suffix.
+    pipeline_workers: Option<usize>,
+    pipeline_staging_bytes: Option<u64>,
+    pipeline_encode_bytes: Option<u64>,
+    pipeline_publish_bytes: Option<u64>,
+    pipeline_worker_bytes: Option<u64>,
+    pipeline_sync_bytes: Option<u64>,
+    pipeline_candidate_min_bytes: Option<u64>,
+    pipeline_cpu_tokens: Option<usize>,
 }
 
 impl Default for Args {
@@ -436,6 +447,14 @@ impl Default for Args {
             official_receipt: None,
             fixture_sha256: None,
             diff_only: false,
+            pipeline_workers: None,
+            pipeline_staging_bytes: None,
+            pipeline_encode_bytes: None,
+            pipeline_publish_bytes: None,
+            pipeline_worker_bytes: None,
+            pipeline_sync_bytes: None,
+            pipeline_candidate_min_bytes: None,
+            pipeline_cpu_tokens: None,
         }
     }
 }
@@ -494,6 +513,56 @@ fn parse_args() -> Result<Args, String> {
             }
             "--fixture-sha256" => args.fixture_sha256 = Some(value("--fixture-sha256")?),
             "--diff-only" => args.diff_only = true,
+            "--pipeline-workers" => {
+                args.pipeline_workers = Some(
+                    value("--pipeline-workers")?
+                        .parse()
+                        .map_err(|_| "--pipeline-workers must be an integer".to_owned())?,
+                )
+            }
+            "--pipeline-staging-bytes" => {
+                args.pipeline_staging_bytes = Some(parse_u64_flag(
+                    "--pipeline-staging-bytes",
+                    &value("--pipeline-staging-bytes")?,
+                )?)
+            }
+            "--pipeline-encode-bytes" => {
+                args.pipeline_encode_bytes = Some(parse_u64_flag(
+                    "--pipeline-encode-bytes",
+                    &value("--pipeline-encode-bytes")?,
+                )?)
+            }
+            "--pipeline-publish-bytes" => {
+                args.pipeline_publish_bytes = Some(parse_u64_flag(
+                    "--pipeline-publish-bytes",
+                    &value("--pipeline-publish-bytes")?,
+                )?)
+            }
+            "--pipeline-worker-bytes" => {
+                args.pipeline_worker_bytes = Some(parse_u64_flag(
+                    "--pipeline-worker-bytes",
+                    &value("--pipeline-worker-bytes")?,
+                )?)
+            }
+            "--pipeline-sync-bytes" => {
+                args.pipeline_sync_bytes = Some(parse_u64_flag(
+                    "--pipeline-sync-bytes",
+                    &value("--pipeline-sync-bytes")?,
+                )?)
+            }
+            "--pipeline-candidate-min-bytes" => {
+                args.pipeline_candidate_min_bytes = Some(parse_u64_flag(
+                    "--pipeline-candidate-min-bytes",
+                    &value("--pipeline-candidate-min-bytes")?,
+                )?)
+            }
+            "--pipeline-cpu-tokens" => {
+                args.pipeline_cpu_tokens = Some(
+                    value("--pipeline-cpu-tokens")?
+                        .parse()
+                        .map_err(|_| "--pipeline-cpu-tokens must be an integer".to_owned())?,
+                )
+            }
             other => return Err(format!("unknown flag `{other}`")),
         }
     }
@@ -506,6 +575,20 @@ fn parse_bool(text: &str) -> Result<bool, String> {
         "0" | "false" | "no" => Ok(false),
         other => Err(format!("expected 0|1, got `{other}`")),
     }
+}
+
+/// Parse a byte count, accepting a `k`/`m`/`g` suffix.
+fn parse_u64_flag(name: &str, text: &str) -> Result<u64, String> {
+    let (digits, scale) = match text.chars().last() {
+        Some('k') | Some('K') => (&text[..text.len() - 1], 1024u64),
+        Some('m') | Some('M') => (&text[..text.len() - 1], 1024 * 1024),
+        Some('g') | Some('G') => (&text[..text.len() - 1], 1024 * 1024 * 1024),
+        _ => (text, 1),
+    };
+    digits
+        .parse::<u64>()
+        .map(|value| value.saturating_mul(scale))
+        .map_err(|_| format!("{name} must be an integer (optionally k/m/g)"))
 }
 
 fn base_seed(seed: &str) -> [u8; 32] {
@@ -1020,6 +1103,8 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
         ablate_float: false,
         publication: publication_default(),
         planner: PlannerMode::TwoStage,
+        pipeline_workers: 0,
+        pipeline_sync_bytes: None,
     };
     // Suffixes compose with `-`: `noz19-percommit` is the R17 attribution row
     // with the historical per-commit publication, `pack1m-group` is a packed
@@ -1052,6 +1137,21 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
             "atomic" => flags.publication = Publication::Atomic,
             part if part.starts_with("pack") => {
                 flags.publication = Publication::Packed(pack_threshold(part)?)
+            }
+            // R21: keep one durability batch for the whole group, so the
+            // barrier is not overlapped with encoding (the ablation control).
+            "nosync" => flags.pipeline_sync_bytes = Some(0),
+            // R21 pipelined group writer: `pipe1` / `pipe2` / `pipe4` / `pipe8`.
+            part if part.starts_with("pipe") => {
+                let workers: usize = part[4..]
+                    .parse()
+                    .map_err(|_| format!("configuration `{key}` has no numeric pipe count"))?;
+                if workers == 0 || workers > 64 {
+                    return Err(format!(
+                        "configuration `{key}` asks for {workers} pipeline workers (bound 1..=64)"
+                    ));
+                }
+                flags.pipeline_workers = workers;
             }
             part => {
                 return Err(format!(
@@ -1136,6 +1236,12 @@ struct ConfigFlags {
     ablate_float: bool,
     publication: Publication,
     planner: PlannerMode,
+    /// R21: encode threads for the pipelined group writer; `0` is the
+    /// sequential (pre-R21) writer.
+    pipeline_workers: usize,
+    /// R21: `Some(0)` keeps one deferred durability batch for the whole group
+    /// (the R20 behaviour) instead of syncing every `publish_sync_bytes`.
+    pipeline_sync_bytes: Option<u64>,
 }
 
 fn uses_protocol(config: &str) -> bool {
@@ -1280,6 +1386,104 @@ fn planner_json(plan: &weftfs::tensor_store::TensorPlan) -> Json {
     })
 }
 
+/// The R18 decision-stream counters for one write, accumulated from the
+/// per-tensor planner traces. One implementation for the sequential and the
+/// pipelined writer, so the two cannot drift.
+#[derive(Clone, Copy, Debug, Default)]
+struct PlannerTally {
+    tensors: u64,
+    skipped_zstd3: u64,
+    skipped_zstd19: u64,
+    encoded_zstd19: u64,
+    mode9_pass: u64,
+    mode9_fail: u64,
+    mode9_unresolved: u64,
+    violation_tensors: u64,
+    fallback_tensors: u64,
+}
+
+impl PlannerTally {
+    fn add(&mut self, plan: &weftfs::tensor_store::TensorPlan) {
+        let Some(trace) = plan.planner.as_ref() else {
+            return;
+        };
+        self.tensors += 1;
+        if !trace.decision.need_zstd3 {
+            self.skipped_zstd3 += 1;
+        }
+        if trace.level19.as_ref().map(|decision| decision.encode) == Some(true) {
+            self.encoded_zstd19 += 1;
+        } else {
+            self.skipped_zstd19 += 1;
+        }
+        match trace.decision.mode9 {
+            weftfs::two_stage::Mode9Gate::Pass => self.mode9_pass += 1,
+            weftfs::two_stage::Mode9Gate::Fail => self.mode9_fail += 1,
+            weftfs::two_stage::Mode9Gate::Unresolved => self.mode9_unresolved += 1,
+        }
+        if !trace.prediction_violations.is_empty() {
+            self.violation_tensors += 1;
+        }
+        if trace.fallback_exhaustive {
+            self.fallback_tensors += 1;
+        }
+    }
+}
+
+/// The measured pipeline behaviour, in the receipt's field names.
+fn pipeline_stats_json(stats: &weftfs::tensor_pipeline::TensorPipelineStats) -> Json {
+    json!({
+        "tensors": stats.tensors,
+        "encode_threads": stats.encode_threads,
+        "cpu_tokens": stats.cpu_tokens,
+        "budgets": {
+            "staging_bytes": stats.staging_bytes,
+            "encode_bytes": stats.encode_bytes,
+            "publish_bytes": stats.publish_bytes,
+            "worker_bytes": stats.worker_bytes,
+            "publish_sync_bytes": stats.publish_sync_bytes,
+            "candidate_parallel_min_bytes": stats.candidate_parallel_min_bytes,
+            "reservation_bound_bytes": stats.reservation_bound_bytes,
+        },
+        "observed": {
+            "max_staging_bytes": stats.observed_max_staging_bytes,
+            "max_encode_bytes": stats.observed_max_encode_bytes,
+            "max_publish_bytes": stats.observed_max_publish_bytes,
+            "max_worker_bytes": stats.observed_max_worker_bytes,
+            "max_resident_tensors": stats.observed_max_resident_tensors,
+            "oversize_staging": stats.oversize_staging,
+            "oversize_publish": stats.oversize_publish,
+            "candidate_parallel_tensors": stats.candidate_parallel_tensors,
+        },
+        "stages_ms": {
+            "reader": stats.reader_ms,
+            "encode_busy": stats.encode_busy_ms,
+            "publish_busy": stats.publish_busy_ms,
+            "encode_wall": stats.encode_wall_ms,
+            "publish_wall": stats.publish_wall_ms,
+            "pipeline_wall": stats.pipeline_wall_ms,
+        },
+        "overlap": {
+            "encode_overlapped_ms": stats.encode_overlapped_ms,
+            "encode_overlap_fraction": stats.encode_overlap_fraction(),
+            "publish_overlapped_ms": stats.publish_overlapped_ms,
+            "publish_hidden_fraction": stats.publish_hidden_fraction(),
+        },
+        "waits_ms": {
+            "staging": stats.staging_wait_ms,
+            "worker_bytes": stats.worker_bytes_wait_ms,
+            "encode_queue": stats.encode_queue_wait_ms,
+            "publish_idle": stats.publish_idle_ms,
+            "cpu_tokens": stats.cpu_token_wait_ms,
+        },
+        "durability": {
+            "batched_barriers": stats.batched_barriers,
+            "batched_barrier_ms": stats.batched_barrier_ms,
+        },
+        "source": "Store::prepare_tensor_group_pipelined (R21); every field is measured, never estimated",
+    })
+}
+
 fn write_weftfs(
     args: &Args,
     config: &str,
@@ -1292,6 +1496,8 @@ fn write_weftfs(
         ablate_float,
         publication,
         planner,
+        pipeline_workers,
+        pipeline_sync_bytes,
     } = flags;
     let group_commit = publication.group_commit();
     let work = args.work.clone().unwrap();
@@ -1333,156 +1539,214 @@ fn write_weftfs(
     let mut commit_phases: BTreeMap<&'static str, (u64, u128)> = BTreeMap::new();
     let mut details: Vec<Json> = Vec::new();
     // R18 decision-stream counters for this write.
-    let mut planner_tensors = 0u64;
-    let mut planner_skipped_zstd3 = 0u64;
-    let mut planner_skipped_zstd19 = 0u64;
-    let mut planner_encoded_zstd19 = 0u64;
-    let mut planner_mode9_pass = 0u64;
-    let mut planner_mode9_fail = 0u64;
-    let mut planner_mode9_unresolved = 0u64;
-    let mut planner_violation_tensors = 0u64;
-    let mut planner_fallback_tensors = 0u64;
+    let mut tally = PlannerTally::default();
     // Group mode stages every prepared object and publishes one commit. The
     // group is opened *before* preparation so a deferred durability barrier
     // covers the blobs those preparations publish.
     let mut staged: Vec<(String, weftfs::tensor_store::PreparedTensorObject, usize)> = Vec::new();
+    let mut pipeline_stats = Json::Null;
     if group_commit {
         store
             .begin_group()
             .map_err(|err| format!("begin group: {err}"))?;
     }
 
-    for sel in &subset.tensors {
-        let tensor = file
+    if pipeline_workers > 0 {
+        // R21: bounded parallel encode-and-publish pipeline. Byte-identical to
+        // the sequential loop (same planner, same seeds, same blobs), with the
+        // encoding overlapped by publication.
+        let mut popts = weftfs::tensor_pipeline::TensorPipelineOptions::default();
+        popts.encode_threads = pipeline_workers;
+        popts.cpu_tokens = args.pipeline_cpu_tokens.unwrap_or(pipeline_workers);
+        if let Some(value) = args.pipeline_staging_bytes {
+            popts.staging_bytes = value;
+        }
+        if let Some(value) = args.pipeline_encode_bytes {
+            popts.encode_bytes = value;
+        }
+        if let Some(value) = args.pipeline_publish_bytes {
+            popts.publish_bytes = value;
+        }
+        if let Some(value) = args.pipeline_worker_bytes {
+            popts.worker_bytes = value;
+        }
+        if let Some(value) = args.pipeline_sync_bytes.or(pipeline_sync_bytes) {
+            popts.publish_sync_bytes = value;
+        }
+        if let Some(value) = args.pipeline_candidate_min_bytes {
+            popts.candidate_parallel_min_bytes = value;
+        }
+        let spec = representation_spec(config, ablate_zstd19, ablate_float, planner);
+        let pipeline_tensors: Vec<weftfs::tensor_pipeline::TensorPipelineTensor<'_>> = subset
             .tensors
             .iter()
-            .find(|t| t.name == sel.name)
-            .ok_or_else(|| format!("tensor `{}` missing", sel.name))?;
-        let read_started = Instant::now();
-        let mut bytes = vec![0u8; sel.bytes as usize];
-        file.read_tensor_range(tensor, 0, &mut bytes)
-            .map_err(|err| format!("read `{}`: {err}", sel.name))?;
-        source_read_ms += read_started.elapsed().as_secs_f64() * 1000.0;
-
-        let stats_before = store.backend_stats();
-        let snap_before = profiling.then(phase_profile::snapshot);
-        let started = Instant::now();
-        let spec = representation_spec(config, ablate_zstd19, ablate_float, planner);
-        let seed = object_seed(&seed_base, config, &sel.name);
-        let (mut prepared, plan) = store
-            .prepare_tensor_object_with_spec_seeded_planned(
-                &sel.dtype, &sel.shape, &bytes, &layout, &spec, &seed,
-            )
-            .map_err(|err| format!("prepare `{}`: {err}", sel.name))?;
-        let prepare_elapsed = started.elapsed();
-        prepare_ms += prepare_elapsed.as_secs_f64() * 1000.0;
-        if let Some(trace) = plan.planner.as_ref() {
-            planner_tensors += 1;
-            if !trace.decision.need_zstd3 {
-                planner_skipped_zstd3 += 1;
-            }
-            if trace.level19.as_ref().map(|decision| decision.encode) == Some(true) {
-                planner_encoded_zstd19 += 1;
-            } else {
-                planner_skipped_zstd19 += 1;
-            }
-            match trace.decision.mode9 {
-                weftfs::two_stage::Mode9Gate::Pass => planner_mode9_pass += 1,
-                weftfs::two_stage::Mode9Gate::Fail => planner_mode9_fail += 1,
-                weftfs::two_stage::Mode9Gate::Unresolved => planner_mode9_unresolved += 1,
-            }
-            if !trace.prediction_violations.is_empty() {
-                planner_violation_tensors += 1;
-            }
-            if trace.fallback_exhaustive {
-                planner_fallback_tensors += 1;
-            }
-        }
-        let snap_after_prepare = profiling.then(phase_profile::snapshot);
-        let prepare_delta = match (&snap_before, &snap_after_prepare) {
-            (Some(before), Some(after)) => {
-                let delta = after.since(before);
-                add_phase_totals(&mut prepare_phases, &delta);
-                Some(delta)
-            }
-            _ => None,
+            .map(|sel| weftfs::tensor_pipeline::TensorPipelineTensor {
+                name: &sel.name,
+                dtype: &sel.dtype,
+                shape: &sel.shape,
+                seed: object_seed(&seed_base, config, &sel.name),
+                byte_len: sel.bytes,
+            })
+            .collect();
+        let read = |index: usize, buf: &mut [u8]| -> weftfs::Result<()> {
+            let sel = &subset.tensors[index];
+            let tensor = file
+                .tensors
+                .iter()
+                .find(|t| t.name == sel.name)
+                .ok_or_else(|| {
+                    weftfs::Error::not_found(format!("tensor `{}` is missing", sel.name))
+                })?;
+            file.read_tensor_range(tensor, 0, buf)
         };
-        if uses_protocol(config) {
-            prepared.attrs.insert(
-                PROJECT_ATTR.to_owned(),
-                WcbValue::Str(PROJECT_VALUE.to_owned()),
-            );
-        }
-        let detail_index = details.len();
-        let mut detail = json!({
-            "name": sel.name,
-            "dtype": sel.dtype,
-            "shape": sel.shape,
-            "logical_bytes": sel.bytes,
-            "prepare_ms": prepare_elapsed.as_secs_f64() * 1000.0,
-            "plan": plan_json(&plan),
-        });
-        if let Some(delta) = &prepare_delta {
-            let encode_total = phase_ms(delta, Phase::Encode);
-            let zstd = phase_ms(delta, Phase::EncodeZstd);
-            let zstd19 = phase_ms(delta, Phase::EncodeZstd19);
-            let float = phase_ms(delta, Phase::EncodeFloatTensor);
-            detail["prepare_phase_ms"] = json!({
-                "encode": encode_total,
-                "encode_zstd_level3": zstd,
-                "encode_zstd_level19": zstd19,
-                "encode_float_tensor": float,
-                "encode_other": (encode_total - zstd - zstd19 - float).max(0.0),
-                "digest": phase_ms(delta, Phase::Digest),
-                "blob_publish": phase_ms(delta, Phase::BlobPublish),
-            });
-            detail["prepare_phase_counts"] = json!({
-                "encode_zstd_level3": phase_count(delta, Phase::EncodeZstd),
-                "encode_zstd_level19": phase_count(delta, Phase::EncodeZstd19),
-                "encode_float_tensor": phase_count(delta, Phase::EncodeFloatTensor),
-            });
-            detail["prepare_phase_ns"] = delta.to_json();
-        }
-
-        if group_commit {
-            staged.push((sel.name.clone(), prepared, detail_index));
-            details.push(detail);
-        } else {
-            let stats_before_commit = store.backend_stats();
-            let snap_before_commit = profiling.then(phase_profile::snapshot);
-            let commit_started = Instant::now();
-            let id = store
-                .commit_prepared_tensor_object(tensors_dir, sel.name.as_bytes(), &prepared, 0o644)
-                .map_err(|err| format!("commit `{}`: {err}", sel.name))?;
-            let commit_elapsed = commit_started.elapsed();
-            commit_ms += commit_elapsed.as_secs_f64() * 1000.0;
-            let stats_after = store.backend_stats();
-            if profiling {
-                if let Some(before) = &snap_before_commit {
-                    let delta = phase_profile::snapshot().since(before);
-                    add_phase_totals(&mut commit_phases, &delta);
-                    detail["commit_phase_ms"] = delta.to_json();
-                }
+        let outcome = store
+            .prepare_tensor_group_pipelined(&pipeline_tensors, &read, &spec, &layout, &popts)
+            .map_err(|err| format!("pipeline: {err}"))?;
+        source_read_ms = outcome.stats.reader_ms;
+        prepare_ms = outcome.stats.pipeline_wall_ms;
+        pipeline_stats = pipeline_stats_json(&outcome.stats);
+        for (index, result) in outcome.results.into_iter().enumerate() {
+            let sel = &subset.tensors[index];
+            tally.add(&result.plan);
+            let mut prepared = result.prepared;
+            if uses_protocol(config) {
+                prepared.attrs.insert(
+                    PROJECT_ATTR.to_owned(),
+                    WcbValue::Str(PROJECT_VALUE.to_owned()),
+                );
             }
-            detail["commit_ms"] = json!(commit_elapsed.as_secs_f64() * 1000.0);
-            detail["publication_writes"] = json!(stats_after
-                .writes
-                .saturating_sub(stats_before_commit.writes));
-            detail["publication_bytes"] = json!(stats_after
-                .bytes_written
-                .saturating_sub(stats_before_commit.bytes_written));
-            detail["durable_operations_total"] = json!(stats_after.writes);
-            samples.push(prepare_elapsed + commit_elapsed);
+            let detail = json!({
+                "name": sel.name,
+                "dtype": sel.dtype,
+                "shape": sel.shape,
+                "logical_bytes": sel.bytes,
+                "prepare_ms": result.encode_ms + result.publish_ms,
+                "pipeline": {
+                    "encode_ms": result.encode_ms,
+                    "publish_ms": result.publish_ms,
+                },
+                "plan": plan_json(&result.plan),
+            });
+            let detail_index = details.len();
             details.push(detail);
-            ids.push(id);
-            id_by_name.insert(sel.name.clone(), id.to_hex());
-            output_contents.insert(prepared.manifest_id);
-            *representations
-                .entry(prepared.strategy.clone())
-                .or_insert(0) += 1;
-            content_by_name.insert(sel.name.clone(), prepared.manifest_id.to_hex());
-            if std::env::var("WEFT_AUG_TRACE").is_ok() {
-                eprintln!(
+            staged.push((sel.name.clone(), prepared, detail_index));
+        }
+    } else {
+        for sel in &subset.tensors {
+            let tensor = file
+                .tensors
+                .iter()
+                .find(|t| t.name == sel.name)
+                .ok_or_else(|| format!("tensor `{}` missing", sel.name))?;
+            let read_started = Instant::now();
+            let mut bytes = vec![0u8; sel.bytes as usize];
+            file.read_tensor_range(tensor, 0, &mut bytes)
+                .map_err(|err| format!("read `{}`: {err}", sel.name))?;
+            source_read_ms += read_started.elapsed().as_secs_f64() * 1000.0;
+
+            let stats_before = store.backend_stats();
+            let snap_before = profiling.then(phase_profile::snapshot);
+            let started = Instant::now();
+            let spec = representation_spec(config, ablate_zstd19, ablate_float, planner);
+            let seed = object_seed(&seed_base, config, &sel.name);
+            let (mut prepared, plan) = store
+                .prepare_tensor_object_with_spec_seeded_planned(
+                    &sel.dtype, &sel.shape, &bytes, &layout, &spec, &seed,
+                )
+                .map_err(|err| format!("prepare `{}`: {err}", sel.name))?;
+            let prepare_elapsed = started.elapsed();
+            prepare_ms += prepare_elapsed.as_secs_f64() * 1000.0;
+            tally.add(&plan);
+            let snap_after_prepare = profiling.then(phase_profile::snapshot);
+            let prepare_delta = match (&snap_before, &snap_after_prepare) {
+                (Some(before), Some(after)) => {
+                    let delta = after.since(before);
+                    add_phase_totals(&mut prepare_phases, &delta);
+                    Some(delta)
+                }
+                _ => None,
+            };
+            if uses_protocol(config) {
+                prepared.attrs.insert(
+                    PROJECT_ATTR.to_owned(),
+                    WcbValue::Str(PROJECT_VALUE.to_owned()),
+                );
+            }
+            let detail_index = details.len();
+            let mut detail = json!({
+                "name": sel.name,
+                "dtype": sel.dtype,
+                "shape": sel.shape,
+                "logical_bytes": sel.bytes,
+                "prepare_ms": prepare_elapsed.as_secs_f64() * 1000.0,
+                "plan": plan_json(&plan),
+            });
+            if let Some(delta) = &prepare_delta {
+                let encode_total = phase_ms(delta, Phase::Encode);
+                let zstd = phase_ms(delta, Phase::EncodeZstd);
+                let zstd19 = phase_ms(delta, Phase::EncodeZstd19);
+                let float = phase_ms(delta, Phase::EncodeFloatTensor);
+                detail["prepare_phase_ms"] = json!({
+                    "encode": encode_total,
+                    "encode_zstd_level3": zstd,
+                    "encode_zstd_level19": zstd19,
+                    "encode_float_tensor": float,
+                    "encode_other": (encode_total - zstd - zstd19 - float).max(0.0),
+                    "digest": phase_ms(delta, Phase::Digest),
+                    "blob_publish": phase_ms(delta, Phase::BlobPublish),
+                });
+                detail["prepare_phase_counts"] = json!({
+                    "encode_zstd_level3": phase_count(delta, Phase::EncodeZstd),
+                    "encode_zstd_level19": phase_count(delta, Phase::EncodeZstd19),
+                    "encode_float_tensor": phase_count(delta, Phase::EncodeFloatTensor),
+                });
+                detail["prepare_phase_ns"] = delta.to_json();
+            }
+
+            if group_commit {
+                staged.push((sel.name.clone(), prepared, detail_index));
+                details.push(detail);
+            } else {
+                let stats_before_commit = store.backend_stats();
+                let snap_before_commit = profiling.then(phase_profile::snapshot);
+                let commit_started = Instant::now();
+                let id = store
+                    .commit_prepared_tensor_object(
+                        tensors_dir,
+                        sel.name.as_bytes(),
+                        &prepared,
+                        0o644,
+                    )
+                    .map_err(|err| format!("commit `{}`: {err}", sel.name))?;
+                let commit_elapsed = commit_started.elapsed();
+                commit_ms += commit_elapsed.as_secs_f64() * 1000.0;
+                let stats_after = store.backend_stats();
+                if profiling {
+                    if let Some(before) = &snap_before_commit {
+                        let delta = phase_profile::snapshot().since(before);
+                        add_phase_totals(&mut commit_phases, &delta);
+                        detail["commit_phase_ms"] = delta.to_json();
+                    }
+                }
+                detail["commit_ms"] = json!(commit_elapsed.as_secs_f64() * 1000.0);
+                detail["publication_writes"] = json!(stats_after
+                    .writes
+                    .saturating_sub(stats_before_commit.writes));
+                detail["publication_bytes"] = json!(stats_after
+                    .bytes_written
+                    .saturating_sub(stats_before_commit.bytes_written));
+                detail["durable_operations_total"] = json!(stats_after.writes);
+                samples.push(prepare_elapsed + commit_elapsed);
+                details.push(detail);
+                ids.push(id);
+                id_by_name.insert(sel.name.clone(), id.to_hex());
+                output_contents.insert(prepared.manifest_id);
+                *representations
+                    .entry(prepared.strategy.clone())
+                    .or_insert(0) += 1;
+                content_by_name.insert(sel.name.clone(), prepared.manifest_id.to_hex());
+                if std::env::var("WEFT_AUG_TRACE").is_ok() {
+                    eprintln!(
                     "trace {config} {} logical={} strategy={} written_delta={} written_total={}",
                     sel.name,
                     bytes.len(),
@@ -1492,6 +1756,7 @@ fn write_weftfs(
                         .saturating_sub(stats_before.bytes_written),
                     stats_after.bytes_written
                 );
+                }
             }
         }
     }
@@ -1688,17 +1953,18 @@ fn write_weftfs(
         "commit_phases": phase_totals_json(&commit_phases),
         "planner": json!({
             "mode": planner.as_str(),
-            "tensors_with_trace": planner_tensors,
-            "skipped_zstd3": planner_skipped_zstd3,
-            "skipped_zstd19": planner_skipped_zstd19,
-            "encoded_zstd19": planner_encoded_zstd19,
-            "mode9_gate_pass": planner_mode9_pass,
-            "mode9_gate_fail": planner_mode9_fail,
-            "mode9_gate_unresolved": planner_mode9_unresolved,
-            "prediction_violation_tensors": planner_violation_tensors,
-            "exhaustive_fallback_tensors": planner_fallback_tensors,
+            "tensors_with_trace": tally.tensors,
+            "skipped_zstd3": tally.skipped_zstd3,
+            "skipped_zstd19": tally.skipped_zstd19,
+            "encoded_zstd19": tally.encoded_zstd19,
+            "mode9_gate_pass": tally.mode9_pass,
+            "mode9_gate_fail": tally.mode9_fail,
+            "mode9_gate_unresolved": tally.mode9_unresolved,
+            "prediction_violation_tensors": tally.violation_tensors,
+            "exhaustive_fallback_tensors": tally.fallback_tensors,
             "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
         }),
+        "pipeline": pipeline_stats,
         "phases": whole_phases,
         "per_tensor": if args.per_tensor_detail { Json::Array(details) } else { Json::Null },
     }))
