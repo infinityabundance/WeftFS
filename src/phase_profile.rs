@@ -106,6 +106,13 @@ pub enum Phase {
     EncodeFloatTensor,
     /// The mode-14 semantic-candidate search (nested in [`Phase::Encode`]).
     EncodeSemantic,
+    /// The R18 analyse stage: bounded chunk sampling, the mode-9 exponent
+    /// histogram and the size prediction (nested in [`Phase::Encode`]).
+    Analyze,
+    /// The exact mode-9 prediction inside the analyse stage: the exponent
+    /// histogram plus the codec's frame-length computation (nested in
+    /// [`Phase::Analyze`]).
+    AnalyzeMode9,
 }
 
 impl Phase {
@@ -130,6 +137,8 @@ impl Phase {
             Phase::EncodeZstd19 => "encode_zstd19",
             Phase::EncodeFloatTensor => "encode_float_tensor",
             Phase::EncodeSemantic => "encode_semantic",
+            Phase::Analyze => "analyze",
+            Phase::AnalyzeMode9 => "analyze_mode9",
         }
     }
 
@@ -144,13 +153,15 @@ impl Phase {
             Phase::EncodeZstd
             | Phase::EncodeZstd19
             | Phase::EncodeFloatTensor
-            | Phase::EncodeSemantic => Some(Phase::Encode),
+            | Phase::EncodeSemantic
+            | Phase::Analyze => Some(Phase::Encode),
+            Phase::AnalyzeMode9 => Some(Phase::Analyze),
             _ => None,
         }
     }
 
     /// Every phase, in report order.
-    pub const ALL: [Phase; 18] = [
+    pub const ALL: [Phase; 20] = [
         Phase::SourceRead,
         Phase::Digest,
         Phase::Encode,
@@ -169,6 +180,8 @@ impl Phase {
         Phase::EncodeZstd19,
         Phase::EncodeFloatTensor,
         Phase::EncodeSemantic,
+        Phase::Analyze,
+        Phase::AnalyzeMode9,
     ];
 }
 

@@ -998,7 +998,9 @@ pub struct TensorPlanOptions {
     /// Offer a level-19 ZSTD candidate in addition to the level-3 one.
     /// Level 19 encoding is ~28.5 MiB/s measured; it is only offered by the
     /// `Planned` policy (never `Fast`/`Auto`-resolved-fast) and only when the
-    /// size threshold and the CPU budget below both hold.
+    /// size threshold and the CPU budget below both hold. Under the default
+    /// [`PlannerMode::TwoStage`] the offer is also gated by prediction: the
+    /// encode only runs when its size could still win.
     pub zstd19: bool,
     pub zstd19_min_bytes: u64,
     /// Refuse the level-19 candidate when its estimated encode time exceeds
@@ -1016,6 +1018,10 @@ pub struct TensorPlanOptions {
     pub zstd_patch_level: i32,
     pub zstd_patch_min_bytes: u64,
     pub zstd_patch_cpu_budget_ns: u64,
+    /// Which candidate set the planned writer encodes (R18). Default
+    /// `TwoStage`; `Exhaustive` reproduces the pre-R18 planner and is the
+    /// control the decision-diff court compares against.
+    pub planner: PlannerMode,
 }
 
 impl Default for TensorPlanOptions {
@@ -1054,6 +1060,7 @@ impl Default for TensorPlanOptions {
             zstd_patch_level: 12,
             zstd_patch_min_bytes: 1024 * 1024,
             zstd_patch_cpu_budget_ns: 20_000_000_000,
+            planner: PlannerMode::TwoStage,
         }
     }
 }
@@ -1252,6 +1259,69 @@ pub struct PreparedTensorObject {
     pub causal: Vec<Hash32>,
 }
 
+/// Which candidate set the planned writer encodes (R18).
+///
+/// `Exhaustive` is the historical behaviour: every offered candidate is
+/// encoded and the cheapest measured one is published. `TwoStage` analyses
+/// first and encodes only the candidates whose physical-size interval could
+/// still change the decision (see [`crate::two_stage`]); a candidate that cannot
+/// win is recorded in the plan with the bound that made the skip safe. The
+/// chosen representation is identical whenever the interval holds — the
+/// decision-diff court is the evidence for that claim, not this comment.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PlannerMode {
+    /// Analyse, then encode only the candidates that could still win.
+    #[default]
+    TwoStage,
+    /// Encode and measure every offered candidate (pre-R18 behaviour).
+    Exhaustive,
+}
+
+impl PlannerMode {
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "two-stage" | "twostage" | "default" => Ok(PlannerMode::TwoStage),
+            "exhaustive" | "legacy" => Ok(PlannerMode::Exhaustive),
+            other => Err(Error::invalid_argument(format!(
+                "unknown planner mode `{other}` (expected two-stage or exhaustive)"
+            ))),
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            PlannerMode::TwoStage => "two-stage",
+            PlannerMode::Exhaustive => "exhaustive",
+        }
+    }
+}
+
+/// One planned-write decision trace, attached to the returned plan.
+///
+/// This is the machine-readable decision stream: what was predicted, what was
+/// encoded, and the bound behind every skip. It is diagnostics only — nothing
+/// here is persisted or hashed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PlannerTrace {
+    pub mode: PlannerMode,
+    pub analysis: crate::two_stage::Analysis,
+    pub decision: crate::two_stage::Decision,
+    /// Level-19 verdict, decided after level 3 was measured.
+    pub level19: Option<crate::two_stage::Level19Decision>,
+    /// The non-physical price terms the decisions were taken under.
+    pub fixed: crate::two_stage::FixedCosts,
+    /// Measured frame length of the level-3 encode, when it ran.
+    pub actual_zstd3: Option<u64>,
+    /// Measured frame length of the level-19 encode, when it ran.
+    pub actual_zstd19: Option<u64>,
+    /// Measured frame length of the mode-9 encode, when it ran.
+    pub actual_mode9: Option<u64>,
+    /// Predictions the actual sizes contradicted.
+    pub prediction_violations: Vec<String>,
+    /// Whether a violation forced this tensor back onto the exhaustive planner.
+    pub fallback_exhaustive: bool,
+}
+
 /// One priced planner candidate.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TensorPlanCandidate {
@@ -1282,6 +1352,9 @@ pub struct TensorPlan {
     pub runner_up_estimated_encode_ns: Option<u64>,
     pub runner_up_cost: Option<u128>,
     pub candidates: Vec<TensorPlanCandidate>,
+    /// R18 decision stream. `None` only for plans that never ran the two-stage
+    /// analysis (independent/rebase pricing).
+    pub planner: Option<PlannerTrace>,
 }
 
 /// The priced decision among standalone representations (rebase input).
@@ -1671,7 +1744,7 @@ impl Store {
         // Row-major callers already hold the canonical bytes; borrowing avoids a
         // second full-tensor copy in the middle of the planner.
         let logical = layout.canonicalize_cow(dtype, shape, bytes)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, planner_trace) = self.prepare_candidates(
             dtype,
             shape,
             logical.as_ref(),
@@ -1688,9 +1761,10 @@ impl Store {
                     .is_some_and(TensorStrategy::is_experimental),
             spec.strategy_hint,
             true,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
-        let plan = plan_from_prepared(&prepared, chosen);
+        let plan = plan_from_prepared(&prepared, chosen, planner_trace);
         let artifact = chosen
             .artifact
             .clone()
@@ -1765,7 +1839,7 @@ impl Store {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize_cow(dtype, shape, bytes)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, planner_trace) = self.prepare_candidates(
             dtype,
             shape,
             logical.as_ref(),
@@ -1777,9 +1851,10 @@ impl Store {
             options.allow_experimental_modes,
             None,
             false,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, None)?;
-        Ok(plan_from_prepared(&prepared, chosen))
+        Ok(plan_from_prepared(&prepared, chosen, planner_trace))
     }
 
     /// Price only the standalone representations of an existing tensor object.
@@ -1794,7 +1869,7 @@ impl Store {
     ) -> Result<TensorIndependentPlan> {
         let meta = self.tensor_metadata(id)?;
         let logical = self.read_object_uncounted(id)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, _planner_trace) = self.prepare_candidates(
             meta.dtype,
             &meta.shape,
             &logical,
@@ -1805,6 +1880,7 @@ impl Store {
             true,
             options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
             hint,
+            false,
             false,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
@@ -1862,7 +1938,7 @@ impl Store {
             ));
         }
         let logical = self.read_object_uncounted(id)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, _planner_trace) = self.prepare_candidates(
             meta.dtype,
             &meta.shape,
             &logical,
@@ -1874,6 +1950,7 @@ impl Store {
             options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
             hint,
             true,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
         let plan = TensorIndependentPlan {
@@ -3323,7 +3400,7 @@ impl Store {
         let old = self.object_meta(id)?;
         let mut causal = spec.causal.clone();
         causal.push(old.version);
-        let prepared = self.prepare_candidates(
+        let (prepared, _planner_trace) = self.prepare_candidates(
             meta.dtype,
             &meta.shape,
             &logical,
@@ -3338,6 +3415,7 @@ impl Store {
                     .is_some_and(TensorStrategy::is_experimental),
             spec.strategy_hint,
             true,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -3386,7 +3464,8 @@ impl Store {
         allow_experimental: bool,
         hint: Option<TensorStrategy>,
         keep_artifacts: bool,
-    ) -> Result<Vec<PreparedCandidate>> {
+        fallback_exhaustive: bool,
+    ) -> Result<(Vec<PreparedCandidate>, Option<PlannerTrace>)> {
         let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Encode);
         let limits = Limits::default();
         let size = logical.len() as u64;
@@ -3401,6 +3480,96 @@ impl Store {
             ));
         }
         let quantized = dtype == TensorElementDtype::Q8_0;
+
+        // ------------------------------------------------------------------
+        // Stage 1 + 2 (R18): analyse, then decide which candidates to encode.
+        // ------------------------------------------------------------------
+        //
+        // Applies to the auto-selected write path only: an explicit strategy
+        // hint, a pricing-only independent plan (rebase), or the `Fast` policy
+        // (which returned above) keep their historical behaviour. The four
+        // candidates the R17 ledger prices are covered: raw (exact size), ZSTD
+        // level 3 (sampled estimate), ZSTD level 19 (sampled ratio) and mode 9
+        // (bit-exact prediction). Every other candidate is prepared exactly as
+        // before, so this cannot change the decision among them.
+        let two_stage_active = options.planner == PlannerMode::TwoStage
+            && !independent_only
+            && hint.is_none()
+            && !quantized
+            && !options.write_policy.is_fast()
+            // The pricing-only entry points (`plan_tensor`, rebase) keep the
+            // exhaustive candidate set so a caller can inspect every measured
+            // size; the two-stage rule governs what a *write* encodes.
+            && keep_artifacts;
+        let mut trace: Option<PlannerTrace> = if two_stage_active {
+            let chunk_bytes =
+                crate::representation::codec_chunk_size(self.options().chunk_size.max(1));
+            let zstd19_offered = options.zstd19
+                && size >= options.zstd19_min_bytes
+                && crate::cost_model::estimate_encode_ns(
+                    crate::cost_model::EncodeClass::Zstd19,
+                    size,
+                ) <= options.zstd19_cpu_budget_ns;
+            let mode9_offered = options.float_tensor && float_tensor_dtype(dtype).is_some();
+            let decode_lambda = u128::from(options.lambda_ns);
+            let write_lambda = u128::from(options.effective_write_lambda());
+            let fixed_for = |class: crate::cost_model::CostClass,
+                             strategy: TensorStrategy,
+                             encode_class: crate::cost_model::EncodeClass|
+             -> u128 {
+                let decode = options.estimate_ns_at_pattern(class, strategy, size);
+                let encode = crate::cost_model::estimate_encode_ns(encode_class, size);
+                decode_lambda * u128::from(decode) + write_lambda * u128::from(encode)
+            };
+            let fixed = crate::two_stage::FixedCosts {
+                raw: fixed_for(
+                    crate::cost_model::CostClass::Raw,
+                    TensorStrategy::Raw,
+                    TensorStrategy::Raw.encode_class(),
+                ),
+                zstd3: fixed_for(
+                    crate::cost_model::CostClass::Zstd,
+                    TensorStrategy::Zstd,
+                    TensorStrategy::Zstd.encode_class(),
+                ),
+                zstd19: fixed_for(
+                    crate::cost_model::CostClass::Zstd,
+                    TensorStrategy::Zstd,
+                    crate::cost_model::EncodeClass::Zstd19,
+                ),
+                mode9: fixed_for(
+                    crate::cost_model::CostClass::FloatTensor,
+                    TensorStrategy::FloatTensor,
+                    TensorStrategy::FloatTensor.encode_class(),
+                ),
+            };
+            let analysis =
+                crate::phase_profile::timed(crate::phase_profile::Phase::Analyze, || {
+                    crate::two_stage::analyse_tensor(
+                        logical,
+                        chunk_bytes,
+                        zstd19_offered,
+                        float_tensor_dtype(dtype),
+                        shape,
+                        &limits,
+                    )
+                })?;
+            let decision = crate::two_stage::select_before_encodes(&analysis, mode9_offered, fixed);
+            Some(PlannerTrace {
+                mode: PlannerMode::TwoStage,
+                analysis,
+                decision,
+                level19: None,
+                fixed,
+                actual_zstd3: None,
+                actual_zstd19: None,
+                actual_mode9: None,
+                prediction_violations: Vec::new(),
+                fallback_exhaustive: false,
+            })
+        } else {
+            None
+        };
 
         // Critical-path fast path: build at most one linear-pass representation
         // and return without encoding a single planned candidate. Nothing here
@@ -3498,7 +3667,7 @@ impl Store {
                     Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
                 }
             }
-            return Ok(out);
+            return Ok((out, None));
         }
 
         // Raw chunks (v2 kind:"raw").
@@ -3546,7 +3715,7 @@ impl Store {
                 }),
             };
             retain_candidate(&mut out, hint, keep_artifacts, raw_candidate);
-            return Ok(out);
+            return Ok((out, None));
         }
         if hint == Some(TensorStrategy::Zstd) && !quantized {
             let codec_chunk =
@@ -3600,7 +3769,7 @@ impl Store {
                 }
                 Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
             }
-            return Ok(out);
+            return Ok((out, None));
         }
 
         let raw_candidate = if quantized {
@@ -3649,10 +3818,28 @@ impl Store {
         // Zstandard frame.
         let codec_chunk =
             crate::representation::codec_chunk_size(self.options().chunk_size.max(1)) as usize;
+        // R18: level 3 is the measured incumbent, so it is encoded whenever its
+        // trusted lower bound could still beat the best exact candidate (or the
+        // prediction cannot decide the mode-9 1/64 gate). Otherwise the skip is
+        // recorded with the bound.
+        let encode_zstd3 = trace
+            .as_ref()
+            .map(|trace| trace.decision.need_zstd3)
+            .unwrap_or(true);
         if quantized {
             out.push(skipped(
                 TensorStrategy::Zstd,
                 "q8_0 identity requires the mode-10 scale plane".to_owned(),
+            ));
+        } else if !encode_zstd3 {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                trace
+                    .as_ref()
+                    .and_then(|trace| trace.decision.zstd3_skip_bound.clone())
+                    .unwrap_or_else(|| {
+                        "level-3 ZSTD not encoded: the planner proved it cannot win".to_owned()
+                    }),
             ));
         } else {
             match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
@@ -3665,6 +3852,18 @@ impl Store {
             }) {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
+                    if let Some(trace) = trace.as_mut() {
+                        trace.actual_zstd3 = Some(physical);
+                        if let Some(estimate) = &trace.analysis.zstd3 {
+                            if !estimate.contains(physical) {
+                                trace.prediction_violations.push(format!(
+                                    "level-3 actual {physical} B is outside the predicted interval {} (method {})",
+                                    estimate.interval(),
+                                    estimate.method
+                                ));
+                            }
+                        }
+                    }
                     let estimate = options.estimate_ns_at_pattern(
                         crate::cost_model::CostClass::Zstd,
                         TensorStrategy::Zstd,
@@ -3737,6 +3936,60 @@ impl Store {
         } else {
             let encode_ns =
                 crate::cost_model::estimate_encode_ns(crate::cost_model::EncodeClass::Zstd19, size);
+            // R18: level 19 is decided **after** level 3 is measured, against an
+            // incumbent built only from measured or exact sizes. Its own
+            // estimate is recomputed from the measured level-3 frame, so a
+            // heterogeneous tensor (whose sampled level-3 interval degenerates)
+            // does not turn the decision into "encode it to be safe".
+            let level19_decision = trace.as_mut().map(|trace| {
+                let measured_zstd3 = out
+                    .iter()
+                    .find(|item| {
+                        item.candidate.strategy == TensorStrategy::Zstd && item.candidate.applicable
+                    })
+                    .and_then(|item| item.candidate.physical_bytes);
+                let estimate = crate::two_stage::refine_level19(&trace.analysis, measured_zstd3);
+                let mut incumbent = crate::two_stage::Incumbent::priced(
+                    trace.analysis.raw_bytes,
+                    trace.fixed.raw,
+                    "raw",
+                );
+                if let Some(measured) = measured_zstd3 {
+                    let candidate = crate::two_stage::Incumbent::priced(
+                        measured,
+                        trace.fixed.zstd3,
+                        "measured zstd level 3",
+                    );
+                    if candidate.cost < incumbent.cost {
+                        incumbent = candidate;
+                    }
+                }
+                if let Some(prediction) = &trace.analysis.mode9 {
+                    // The exact mode-9 size is known whether or not its gate
+                    // passes. Including it can only make the incumbent smaller,
+                    // i.e. make a level-19 skip harder: conservative.
+                    let candidate = crate::two_stage::Incumbent::priced(
+                        prediction.exact_bytes,
+                        trace.fixed.mode9,
+                        "mode-9 float-tensor (exact)",
+                    );
+                    if candidate.cost < incumbent.cost {
+                        incumbent = candidate;
+                    }
+                }
+                let decision = crate::two_stage::select_level19(
+                    estimate.as_ref(),
+                    trace.fixed.zstd19,
+                    incumbent,
+                );
+                trace.analysis.zstd19 = decision.estimate.clone();
+                trace.level19 = Some(decision.clone());
+                decision
+            });
+            let encode_zstd19 = level19_decision
+                .as_ref()
+                .map(|decision| decision.encode)
+                .unwrap_or(true);
             if encode_ns > options.zstd19_cpu_budget_ns {
                 out.push(skipped(
                     TensorStrategy::Zstd,
@@ -3745,12 +3998,38 @@ impl Store {
                         options.zstd19_cpu_budget_ns
                     ),
                 ));
+            } else if !encode_zstd19 {
+                out.push(skipped(
+                    TensorStrategy::Zstd,
+                    level19_decision
+                        .as_ref()
+                        .and_then(|decision| decision.skip_bound.clone())
+                        .unwrap_or_else(|| {
+                            "level-19 ZSTD not encoded: the planner proved it cannot win".to_owned()
+                        }),
+                ));
             } else {
                 match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd19, || {
                     weftcodec::modes::encode_zstd(logical, 19, Some(codec_chunk), &limits)
                 }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
+                        if let Some(trace) = trace.as_mut() {
+                            trace.actual_zstd19 = Some(physical);
+                            if let Some(estimate) = trace
+                                .level19
+                                .as_ref()
+                                .and_then(|decision| decision.estimate.as_ref())
+                            {
+                                if !estimate.contains(physical) {
+                                    trace.prediction_violations.push(format!(
+                                        "level-19 actual {physical} B is outside the predicted interval {} (method {})",
+                                        estimate.interval(),
+                                        estimate.method
+                                    ));
+                                }
+                            }
+                        }
                         let estimate = options.estimate_ns_at_pattern(
                             crate::cost_model::CostClass::Zstd,
                             TensorStrategy::Zstd,
@@ -3812,80 +4091,148 @@ impl Store {
                 ));
             }
             Some(float_dtype) => {
-                match crate::phase_profile::timed(
-                    crate::phase_profile::Phase::EncodeFloatTensor,
-                    || weftcodec::modes::encode_float_tensor(logical, float_dtype, shape, &limits),
-                ) {
-                    Ok(frame) => {
-                        let physical = frame.len() as u64;
-                        let worthwhile = match zstd_physical {
-                            Some(zstd) => physical.saturating_mul(64) <= zstd.saturating_mul(63),
-                            None => true,
-                        };
-                        if !worthwhile {
-                            out.push(skipped(
+                // R18: with the exact prediction and a trusted level-3 interval the
+                // 1/64 rule is decided *before* the encode. `None` means the
+                // historical measured-after-encode rule.
+                let mode9_pre_decided: Option<bool> =
+                    trace.as_ref().map(|trace| match trace.decision.mode9 {
+                        crate::two_stage::Mode9Gate::Pass => true,
+                        crate::two_stage::Mode9Gate::Fail => false,
+                        crate::two_stage::Mode9Gate::Unresolved => trace
+                            .analysis
+                            .mode9
+                            .as_ref()
+                            .map(|prediction| {
+                                zstd_physical
+                                    .map(|zstd| {
+                                        prediction.exact_bytes.saturating_mul(64)
+                                            <= zstd.saturating_mul(63)
+                                    })
+                                    .unwrap_or(true)
+                            })
+                            .unwrap_or(true),
+                    });
+                let mode9_skip_detail: Option<String> = match (&trace, mode9_pre_decided) {
+                    (Some(trace), Some(false)) => trace.analysis.mode9.as_ref().map(|prediction| {
+                        let estimate = trace.analysis.zstd3.as_ref();
+                        match estimate {
+                            Some(estimate) => format!(
+                                "mode 9 not encoded: the exact predicted frame is {} B, which \
+                                     cannot reach 63/64 of the level-3 interval {} ({} B at the \
+                                     upper end), so the 1/64 rule fails",
+                                prediction.exact_bytes,
+                                estimate.interval(),
+                                estimate.upper.saturating_mul(63) / 64,
+                            ),
+                            None => format!(
+                                "mode 9 not encoded: the exact predicted frame is {} B and it \
+                                     cannot pass the 1/64 rule",
+                                prediction.exact_bytes
+                            ),
+                        }
+                    }),
+                    _ => None,
+                };
+                if let Some(detail) = mode9_skip_detail {
+                    out.push(skipped(TensorStrategy::FloatTensor, detail));
+                } else {
+                    match crate::phase_profile::timed(
+                        crate::phase_profile::Phase::EncodeFloatTensor,
+                        || {
+                            weftcodec::modes::encode_float_tensor(
+                                logical,
+                                float_dtype,
+                                shape,
+                                &limits,
+                            )
+                        },
+                    ) {
+                        Ok(frame) => {
+                            let physical = frame.len() as u64;
+                            if let Some(trace) = trace.as_mut() {
+                                trace.actual_mode9 = Some(physical);
+                                if let Some(prediction) = &trace.analysis.mode9 {
+                                    if prediction.exact_bytes != physical {
+                                        trace.prediction_violations.push(format!(
+                                        "mode-9 actual {physical} B is not the exact predicted {} B",
+                                        prediction.exact_bytes
+                                    ));
+                                    }
+                                }
+                            }
+                            let worthwhile = match mode9_pre_decided {
+                                Some(decided) => decided,
+                                None => match zstd_physical {
+                                    Some(zstd) => {
+                                        physical.saturating_mul(64) <= zstd.saturating_mul(63)
+                                    }
+                                    None => true,
+                                },
+                            };
+                            if !worthwhile {
+                                out.push(skipped(
                                 TensorStrategy::FloatTensor,
                                 format!(
                                     "mode 9 saves less than 1/64 of the zstd frame                                      ({physical} vs {} bytes); not worth the decode cost",
                                     zstd_physical.unwrap_or(0)
                                 ),
                             ));
-                        } else {
-                            let estimate = options.estimate_ns_at_pattern(
-                                crate::cost_model::CostClass::FloatTensor,
-                                TensorStrategy::FloatTensor,
-                                size,
-                            );
-                            let root = self.logical_root_for_bytes(dtype, shape, logical, None)?;
-                            retain_candidate(
-                                &mut out,
-                                hint,
-                                keep_artifacts,
-                                PreparedCandidate {
-                                    candidate: TensorPlanCandidate {
-                                        strategy: TensorStrategy::FloatTensor,
-                                        applicable: true,
-                                        detail: format!(
-                                            "one mode-9 FLOAT_TENSOR frame ({})",
-                                            float_dtype.as_str()
-                                        ),
-                                        physical_bytes: Some(physical),
-                                        estimated_decode_ns: Some(estimate),
-                                        estimated_encode_ns: Some(
-                                            options.estimate_encode_ns(
+                            } else {
+                                let estimate = options.estimate_ns_at_pattern(
+                                    crate::cost_model::CostClass::FloatTensor,
+                                    TensorStrategy::FloatTensor,
+                                    size,
+                                );
+                                let root =
+                                    self.logical_root_for_bytes(dtype, shape, logical, None)?;
+                                retain_candidate(
+                                    &mut out,
+                                    hint,
+                                    keep_artifacts,
+                                    PreparedCandidate {
+                                        candidate: TensorPlanCandidate {
+                                            strategy: TensorStrategy::FloatTensor,
+                                            applicable: true,
+                                            detail: format!(
+                                                "one mode-9 FLOAT_TENSOR frame ({})",
+                                                float_dtype.as_str()
+                                            ),
+                                            physical_bytes: Some(physical),
+                                            estimated_decode_ns: Some(estimate),
+                                            estimated_encode_ns: Some(options.estimate_encode_ns(
                                                 TensorStrategy::FloatTensor,
                                                 size,
-                                            ),
-                                        ),
-                                        cost: Some(options.price_candidate(
-                                            physical,
-                                            estimate,
-                                            options.estimate_encode_ns(
-                                                TensorStrategy::FloatTensor,
-                                                size,
-                                            ),
-                                        )),
-                                        dependency: None,
-                                    },
-                                    artifact: Some(PreparedArtifact {
-                                        kind: RepresentationKind::Tensor,
-                                        strategy_name: "float-tensor".to_owned(),
-                                        frame: Some(frame),
-                                        dependencies: Vec::new(),
-                                        tensor: Some(TensorRepresentation {
-                                            tensor_mode: 9,
-                                            dtype,
-                                            shape: shape.to_vec(),
-                                            logical_root: root,
-                                            layout: layout.to_value(dtype, shape)?,
+                                            )),
+                                            cost: Some(options.price_candidate(
+                                                physical,
+                                                estimate,
+                                                options.estimate_encode_ns(
+                                                    TensorStrategy::FloatTensor,
+                                                    size,
+                                                ),
+                                            )),
+                                            dependency: None,
+                                        },
+                                        artifact: Some(PreparedArtifact {
+                                            kind: RepresentationKind::Tensor,
+                                            strategy_name: "float-tensor".to_owned(),
+                                            frame: Some(frame),
+                                            dependencies: Vec::new(),
+                                            tensor: Some(TensorRepresentation {
+                                                tensor_mode: 9,
+                                                dtype,
+                                                shape: shape.to_vec(),
+                                                logical_root: root,
+                                                layout: layout.to_value(dtype, shape)?,
+                                            }),
+                                            tile_shape: None,
                                         }),
-                                        tile_shape: None,
-                                    }),
-                                },
-                            );
+                                    },
+                                );
+                            }
                         }
+                        Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
                     }
-                    Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
                 }
             }
             None => out.push(skipped(
@@ -4633,7 +4980,36 @@ impl Store {
             }
         }
 
-        Ok(out)
+        // Stage 3: a prediction the actual bytes contradicted means the skip
+        // decisions taken from that interval are not trustworthy for this
+        // tensor, so the tensor is re-planned with the exhaustive planner
+        // (explicitly allowed, recorded, and deterministic). This is the only
+        // path that can publish a candidate chosen on measured bytes after a
+        // two-stage attempt.
+        if let Some(trace) = trace.as_mut() {
+            if !trace.prediction_violations.is_empty() && !fallback_exhaustive {
+                let mut exhaustive = options.clone();
+                exhaustive.planner = PlannerMode::Exhaustive;
+                let (prepared, _) = self.prepare_candidates(
+                    dtype,
+                    shape,
+                    logical,
+                    layout,
+                    causal,
+                    &exhaustive,
+                    tile_shape,
+                    independent_only,
+                    allow_experimental,
+                    hint,
+                    keep_artifacts,
+                    true,
+                )?;
+                trace.fallback_exhaustive = true;
+                return Ok((prepared, Some(trace.clone())));
+            }
+        }
+
+        Ok((out, trace))
     }
 
     fn prepare_mode10(
@@ -5973,7 +6349,11 @@ impl Store {
     }
 }
 
-fn plan_from_prepared(prepared: &[PreparedCandidate], chosen: &PreparedCandidate) -> TensorPlan {
+fn plan_from_prepared(
+    prepared: &[PreparedCandidate],
+    chosen: &PreparedCandidate,
+    planner: Option<PlannerTrace>,
+) -> TensorPlan {
     let mut runner_up: Option<&PreparedCandidate> = None;
     let mut applicable: Vec<&PreparedCandidate> = prepared
         .iter()
@@ -6005,6 +6385,7 @@ fn plan_from_prepared(prepared: &[PreparedCandidate], chosen: &PreparedCandidate
             .and_then(|item| item.candidate.estimated_encode_ns),
         runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
         candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
+        planner,
     }
 }
 

@@ -48,7 +48,8 @@ use weftfs::store::{
     OpenMode, Options, RepresentationMode, SetAttr, Store, DEFAULT_CODEC_MIN_BYTES,
 };
 use weftfs::tensor_store::{
-    AccessPattern, TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec,
+    AccessPattern, PlannerMode, TensorLayoutSpec, TensorPlanOptions, TensorStrategy,
+    TensorWriteSpec,
 };
 use weftfs::threefs::ThreeFsConfig;
 use weftfs::training_ready::{verify_training_ready_output, TrainingReadyOptions};
@@ -421,6 +422,11 @@ enum Command {
         /// Do not offer the ZSTD level-19 candidate.
         #[arg(long = "no-zstd19")]
         no_zstd19: bool,
+        /// Candidate set the planned writer encodes: `two-stage` analyses first
+        /// and encodes only candidates that could still win (default);
+        /// `exhaustive` encodes and measures every candidate (pre-R18).
+        #[arg(long, value_name = "two-stage|exhaustive", default_value = "two-stage")]
+        planner: String,
         /// Do not offer the mode-9 `FLOAT_TENSOR` candidate. Additive R17
         /// ablation control; the default offers it.
         #[arg(long = "no-float-tensor")]
@@ -514,6 +520,11 @@ enum Command {
         /// Do not offer the ZSTD level-19 candidate.
         #[arg(long = "no-zstd19")]
         no_zstd19: bool,
+        /// Kept for CLI symmetry with `write`. `plan` always prices the
+        /// exhaustive candidate set so every representation's measured size is
+        /// visible; the two-stage rule governs writes.
+        #[arg(long, value_name = "two-stage|exhaustive", default_value = "two-stage")]
+        planner: String,
         /// Do not offer the mode-9 `FLOAT_TENSOR` candidate. Additive R17
         /// ablation control; the default offers it.
         #[arg(long = "no-float-tensor")]
@@ -2323,6 +2334,7 @@ fn run(cli: Cli) -> Result<()> {
             allow_experimental_modes,
             no_zstd19,
             no_float_tensor,
+            planner,
             zstd19_cpu_budget_ns,
             no_zstd_patch,
             zstd_patch_level,
@@ -2363,6 +2375,7 @@ fn run(cli: Cli) -> Result<()> {
                         float_tensor: !no_float_tensor,
                         zstd19: !no_zstd19,
                         zstd19_cpu_budget_ns,
+                        planner: PlannerMode::parse(&planner)?,
                         zstd_patch: !no_zstd_patch,
                         zstd_patch_level,
                         cost_model: planner_cost_model,
@@ -2433,6 +2446,7 @@ fn run(cli: Cli) -> Result<()> {
             zstd19_cpu_budget_ns,
             no_zstd_patch,
             zstd_patch_level,
+            planner,
             causal,
             semantic_policy,
             candidates,
@@ -2460,6 +2474,7 @@ fn run(cli: Cli) -> Result<()> {
                 float_tensor: !no_float_tensor,
                 zstd19: !no_zstd19,
                 zstd19_cpu_budget_ns,
+                planner: PlannerMode::parse(&planner)?,
                 zstd_patch: !no_zstd_patch,
                 zstd_patch_level,
                 cost_model: planner_cost_model,

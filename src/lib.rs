@@ -84,6 +84,7 @@ pub mod threefs;
 pub mod timeparse;
 pub mod training_ready;
 pub mod transcode;
+pub mod two_stage;
 pub mod wcb_util;
 pub mod writer_fence;
 pub mod writer_lock;
