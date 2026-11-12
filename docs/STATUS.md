@@ -9694,8 +9694,10 @@ write is now durability-bound, not encode-bound.
   R22 *pipeline* over S3 (the S3 arm measures the planned writer).
 * **Gates.** Rust `cargo test --all-targets`: **807 passed / 0 failed / 0
   ignored (170 binaries)**. FUSE `cargo test --features fuse --all-targets`:
-  **850 passed / 0 failed / 2 ignored**. WeftCodec `zstd_chunk_parallel` 5/5 and
-  `histogram_parallel` 3/3; Rust-Go cross gate `all checks passed` (41 frames
+  **850 passed / 0 failed / 2 ignored**. WeftCodec `cargo test --all-targets`:
+  **290 passed / 0 failed / 0 ignored** (45 binaries, including
+  `zstd_chunk_parallel` 5/5 and `histogram_parallel` 3/3); Rust-Go cross gate
+  `all checks passed` (41 frames
   each way, every mode fixture byte-identical); `verify --full` ok on a
   chunk-parallel-written store; crash proxy old-or-new on every row. No
   `verify-all` aggregate was run for this subphase, so

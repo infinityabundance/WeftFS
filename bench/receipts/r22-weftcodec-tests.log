@@ -1,0 +1,563 @@
++ exec docker run --rm --init --name weft-rust-court-148842 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=dd83de0cfdfc1b0daf920ed2edbd65a6bc2e60ca -e WEFT_REPO_WEFTFS_GO=a7170f556c918b71b5085e7e3d178ac1dfdc6faa -e WEFT_REPO_WEFTCODEC=41b2a1098329ff533378e2629b2f72ff9d7599dc -e WEFT_REPO_WEFTCODEC_GO=fe05240558a94abe530e3020c25b64ab2ad23a32 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftCodec && cargo test --all-targets 2>&1'
+   Compiling weftcodec v1.3.0 (/work/WeftCodec)
+    Finished `test` profile [optimized + debuginfo] target(s) in 23.97s
+     Running unittests src/lib.rs (/work/.docker-cache/target-rust/debug/deps/weftcodec-50bc25ab80109fd9)
+
+running 86 tests
+test archive::tests::cycle_rejected ... ok
+test archive::tests::missing_dependency_rejected ... ok
+test archive::tests::roundtrip_single_frame ... ok
+test capability::tests::rejects_unsorted_grants ... ok
+test context::tests::budget_roundtrip_and_rejects ... ok
+test capability::tests::canonical_round_trip ... ok
+test context::tests::capability_scope_roundtrip ... ok
+test context::tests::causal_closure_roundtrip_and_strictness ... ok
+test context::tests::context_root_roundtrip_and_uri ... ok
+test context::tests::descriptor_roundtrip ... ok
+test context::tests::identity_mode_parsing ... ok
+test capability::tests::sign_verify_round_trip ... ok
+test context::tests::text_validators ... ok
+test context::tests::rejects_bad_uri_spellings ... ok
+test generated::tests::generated_constants_match_the_runtime_context_layer ... ok
+test hash::tests::domain_hasher_matches_one_shot ... ok
+test capability::tests::reject_matrix ... ok
+test hash::tests::domain_separation_changes_digest ... ok
+test hash::tests::domain_validation ... ok
+test engram::tests::round_trip_and_region ... ok
+test hash::tests::hand_computed_domain_prefix ... ok
+test hash::tests::hex_roundtrip ... ok
+test engram::tests::reference_round_trip ... ok
+test huffman::tests::deterministic_bytes_for_fixed_input ... ok
+test huffman::tests::empty_plane ... ok
+test huffman::tests::all_256_distinct ... ok
+test huffman::tests::histogram_matches_a_plain_count ... ok
+test huffman::tests::highly_skewed ... ok
+test huffman::tests::length_limiting_is_applied_and_bounded ... ok
+test huffman::tests::partitioned_emission_stitches_to_the_single_stream ... ok
+test huffman::tests::random_uniform ... ok
+test huffman::tests::reference_decoder_agrees_on_prefix_consumption ... ok
+test huffman::tests::reference_decoder_matches_before_any_change ... ok
+test huffman::tests::rejects_code_length_too_long ... ok
+test huffman::tests::rejects_incomplete_table ... ok
+test huffman::tests::rejects_non_zero_padding ... ok
+test huffman::tests::rejects_over_subscribed_table ... ok
+test huffman::tests::rejects_short_table ... ok
+test huffman::tests::rejects_single_symbol_with_extra_bits ... ok
+test huffman::tests::rejects_trailing_bytes ... ok
+test huffman::tests::rejects_truncation ... ok
+test huffman::tests::single_distinct_byte ... ok
+test huffman::tests::table_bit_lengths_are_exact ... ok
+test huffman::tests::fast_emitter_matches_the_byte_at_a_time_reference ... ok
+test limits::tests::builders_and_checks ... ok
+test limits::tests::defaults_match_spec ... ok
+test selector::tests::canonical_example ... ok
+test selector::tests::error_positions_and_escapes ... ok
+test selector::tests::grammar_forms ... ok
+test selector::tests::limits ... ok
+test selector::tests::non_canonical_rejected ... ok
+test selector::tests::normalization ... ok
+test selector::tests::operand_order_changes_identity ... ok
+test selector::tests::whitespace_and_hex_case_identity ... ok
+test semantic::tests::block_quantize_is_deterministic_and_rejects_non_divisors ... ok
+test semantic::tests::mantissa_truncate_preserves_nan_inf_and_groups_low_bits ... ok
+test semantic::tests::none_policy_uses_the_exact_values_hash ... ok
+test simd::tests::bf16_join_matches_scalar ... ok
+test simd::tests::path_is_reported ... ok
+test tensor::tests::duplicate_missing_and_inconsistent_shards_are_rejected ... ok
+test tensor::tests::four_layouts_produce_one_logical_root ... ok
+test tensor::tests::logical_record_round_trips ... ok
+test tensor::tests::region_reads_match_the_logical_slice ... ok
+test tensor::tests::shape_and_layout_rejects ... ok
+test tensor::tests::shard_container_round_trips_and_binds_payload ... ok
+test tensor::tests::shuffled_shards_are_reordered_by_index ... ok
+test tensor::tests::streamed_values_hash_matches_one_shot ... ok
+test transport::tests::deterministic_and_padded ... ok
+test transport::tests::misaligned_offset_rejected ... ok
+test transport::tests::payload_hash_covers_frames_only ... ok
+test transport::tests::roundtrip_single_section ... ok
+test transport::tests::wrong_root_rejected ... ok
+test varint::tests::rejects_non_minimal ... ok
+test varint::tests::rejects_overlong_and_truncated ... ok
+test varint::tests::roundtrip_boundaries ... ok
+test varint::tests::zigzag_roundtrip ... ok
+test wcb::tests::limits ... ok
+test wcb::tests::map_sorted_by_encoded_key_bytes ... ok
+test wcb::tests::rejects_non_minimal_varint ... ok
+test wcb::tests::rejects_non_text_key_and_trailing_and_unknown_tag ... ok
+test wcb::tests::rejects_truncation ... ok
+test wcb::tests::rejects_unsorted_and_duplicate_keys ... ok
+test wcb::tests::scalar_roundtrip ... ok
+test huffman::tests::two_megabyte_plane ... ok
+test huffman::tests::multi_stream_kernel_matches_independent_decoders ... ok
+test huffman::tests::differential_against_reference_decoder ... ok
+
+test result: ok. 86 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s
+
+     Running unittests src/main.rs (/work/.docker-cache/target-rust/debug/deps/weftcodec-1829d4beaa1ba798)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/activation_stream.rs (/work/.docker-cache/target-rust/debug/deps/activation_stream-f1939e53dfc1cdad)
+
+running 6 tests
+test append_never_decodes_a_previous_chunk ... ok
+test chunk_three_of_four_decodes_without_earlier_chunks ... ok
+test assembly_orders_by_chunk_index_and_rejects_duplicates_or_missing ... ok
+test range_decode_of_one_chunk_touches_only_that_chunk ... ok
+test roundtrip_preserves_every_bit_pattern ... ok
+test conformance_vectors_replay_and_reencode ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ai_modes.rs (/work/.docker-cache/target-rust/debug/deps/ai_modes-43737105d4453a0f)
+
+running 10 tests
+test tensor_rejects_bad_rank_and_overflow ... ok
+test tensor_rejects_payload_shape_mismatch_on_encode ... ok
+test ai_domain_binding_is_mode_specific ... ok
+test tensor_decode_rejects_bad_metadata ... ok
+test tensor_zero_element_is_exact ... ok
+test token_decode_rejects_malformed_payloads ... ok
+test token_limits_fail_closed ... ok
+test token_payload_roundtrips_all_u64_edges ... ok
+test tensor_roundtrip_all_dtypes_and_shapes ... ok
+test tokens_roundtrip_boundaries ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cli.rs (/work/.docker-cache/target-rust/debug/deps/cli-506ed08da38be948)
+
+running 8 tests
+test archive_cli_roundtrip ... ok
+test auto_chooses_zstd_for_repetitive_data ... ok
+test auto_chooses_raw_when_compression_loses ... ok
+test inspect_reports_wire_fields ... ok
+test errors_exit_nonzero_and_print_class ... ok
+test delta_with_dependency_directory ... ok
+test selector_cli_id_and_canonicalize ... ok
+test structured_cli_roundtrip ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/conformance.rs (/work/.docker-cache/target-rust/debug/deps/conformance-8f5236559ee6ca4c)
+
+running 5 tests
+test structured_vectors ... ok
+test selector_vectors ... ok
+test capability_vectors ... ok
+test vectors_are_not_empty_and_cover_modes ... ok
+test codec_vectors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/context.rs (/work/.docker-cache/target-rust/debug/deps/context-b9155bea8995ae61)
+
+running 5 tests
+test budget_is_participates_in_identity ... ok
+test causal_vectors ... ok
+test vectors_cover_rejection_classes ... ok
+test context_vectors ... ok
+test context_cli_id_uri_parse_and_causal ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dependencies.rs (/work/.docker-cache/target-rust/debug/deps/dependencies-df0c78a849593509)
+
+running 12 tests
+test archive_dependency_graph_cycle_rejected ... ok
+test archive_duplicate_conflicting_frame_rejected ... ok
+test archive_duplicate_identical_frame_accepted ... ok
+test archive_missing_dependency_rejected ... ok
+test cycle_broken_by_resolver_is_still_rejected ... ok
+test archive_truncation_and_crc ... ok
+test archive_non_topological_rejected ... ok
+test frame_dag_cycle ... ok
+test frame_dag_depth_limit ... ok
+test frame_dag_fetch_limit_and_missing ... ok
+test frame_dag_success ... ok
+test archive_roundtrip_and_topological_order ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/engram.rs (/work/.docker-cache/target-rust/debug/deps/engram-2aeaaa5771f92ccb)
+
+running 4 tests
+test engram_round_trip_is_exact_and_deterministic ... ok
+test reference_and_supersession_vectors_are_reachable ... ok
+test untouched_groups_are_not_decoded ... ok
+test conformance_engram_vectors_replay ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/entropy_experimental.rs (/work/.docker-cache/target-rust/debug/deps/entropy_experimental-5e4910e5d9f92fae)
+
+running 10 tests
+test rans_rejects_table_and_stream_corruption ... ok
+test tunstall_construction_is_deterministic_and_sorted ... ok
+test deterministic_bytes_for_fixed_input ... ok
+test tunstall_rejects_an_unknown_width ... ok
+test tunstall_shared_dictionary_covers_symbols_it_never_saw ... ok
+test tunstall_split_budget_matches_the_full_alphabet_arithmetic ... ok
+test tunstall_splits_the_most_probable_phrase_first ... ok
+test every_coder_round_trips_every_edge_case ... ok
+test rans_matches_the_reference_decoder_on_random_and_malformed_input ... ok
+test tunstall_matches_the_reference_decoder_on_random_and_malformed_input ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.11s
+
+     Running tests/float_tensor.rs (/work/.docker-cache/target-rust/debug/deps/float_tensor-3d7d2946dae40738)
+
+running 6 tests
+test encode_rejects_bad_shape_and_length ... ok
+test mantissa_padding_bits_must_be_zero ... ok
+test decode_rejects_bad_descriptors ... ok
+test skewed_exponent_plane_uses_canonical_huffman ... ok
+test special_values_are_bit_exact ... ok
+test roundtrip_all_dtypes_and_shapes ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/float_tensor_join.rs (/work/.docker-cache/target-rust/debug/deps/float_tensor_join-68c8793ab2e716a3)
+
+running 7 tests
+test rejects_non_zero_mantissa_padding ... ok
+test rejects_out_of_width_exponent_byte ... ok
+test rejects_wrong_plane_lengths ... ok
+test special_values_round_trip_every_dtype ... ok
+test handles_element_counts_with_padding_bits ... ok
+test fast_join_matches_reference_on_mutated_planes ... ok
+test fast_join_matches_reference_on_random_planes ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s
+
+     Running tests/float_tensor_len.rs (/work/.docker-cache/target-rust/debug/deps/float_tensor_len-2038712cd9e69729)
+
+running 5 tests
+test predictor_matches_encoder_for_bit_pattern_extremes ... ok
+test predictor_matches_encoder_for_degenerate_histograms ... ok
+test huffman_encoded_len_matches_encoder ... ok
+test predictor_matches_encoder_across_dtypes_and_sizes ... ok
+test predictor_reproduces_committed_mode9_vectors ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/float_tiled.rs (/work/.docker-cache/target-rust/debug/deps/float_tiled-b0d925b355795c4b)
+
+running 5 tests
+test fp8_has_no_tensor_identity_layout ... ok
+test non_dividing_tile_shape_is_rejected ... ok
+test encoding_is_deterministic_and_rank_one_works ... ok
+test bf16_tiles_round_trip_and_verify_every_root ... ok
+test region_reads_touch_only_intersecting_tiles ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/float_tiled_streams.rs (/work/.docker-cache/target-rust/debug/deps/float_tiled_streams-090ba2321d9943fb)
+
+running 7 tests
+test invalid_stream_counts_are_rejected ... ok
+test more_streams_than_plane_bytes_is_legal ... ok
+test n_streams_one_payload_is_byte_identical_to_mode17 ... ok
+test tile_root_covers_stream_count_and_offsets ... ok
+test region_reads_report_tiles_and_streams_touched ... ok
+test replay_committed_vectors ... ok
+test every_stream_count_round_trips_exactly ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/histogram_parallel.rs (/work/.docker-cache/target-rust/debug/deps/histogram_parallel-cac19e6e26b86024)
+
+running 3 tests
+test a_partial_element_payload_is_refused ... ok
+test the_mode9_prediction_is_unchanged_by_the_window_split ... ok
+test threaded_histogram_equals_one_pass_for_every_dtype_and_thread_count ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/kv_cache.rs (/work/.docker-cache/target-rust/debug/deps/kv_cache-02d3de83a8e0c1bf)
+
+running 6 tests
+test bf16_roundtrip_preserves_nan_denormal_and_signed_zero ... ok
+test descriptor_rejects_are_typed ... ok
+test fp32_roundtrip_is_bit_exact ... ok
+test range_decode_of_one_page_touches_only_that_page ... ok
+test page_seven_of_eight_decodes_without_pages_zero_to_six ... ok
+test conformance_vectors_replay_and_reencode ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/kv_prov.rs (/work/.docker-cache/target-rust/debug/deps/kv_prov-c57528345e7e8911)
+
+running 9 tests
+test duplicate_extension_names_are_rejected ... ok
+test a_swapped_payload_is_rejected_by_the_payload_hash ... ok
+test adapter_set_is_order_independent_and_cardinality_sensitive ... ok
+test identical_payload_with_different_adapter_roots_has_a_different_root ... ok
+test salt_changes_the_root_and_nothing_else ... ok
+test roundtrip_is_bit_exact_and_deterministic ... ok
+test zero_model_root_is_rejected ... ok
+test tampered_descriptor_dimensions_fail_closed ... ok
+test committed_kv_prov_vectors_replay ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/malformed.rs (/work/.docker-cache/target-rust/debug/deps/malformed-3077dd853fe45546)
+
+running 8 tests
+test frame_source_content_hash_binding ... ok
+test chunk_table_errors ... ok
+test delta_op_errors ... ok
+test structured_frame_non_canonical_body ... ok
+test dependency_table_errors ... ok
+test structural_header_errors ... ok
+test limit_enforcement ... ok
+test wcb_canonical_errors ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/mode9_encoder_identity.rs (/work/.docker-cache/target-rust/debug/deps/mode9_encoder_identity-bbda430e6def994a)
+
+running 6 tests
+test multi_dimensional_shape_indices_do_not_change_the_bytes ... ok
+test committed_mode9_vectors_reencode_byte_identically ... ok
+test fused_histogram_equals_the_standalone_count ... ok
+test specialised_bf16_split_matches_the_generic_reference ... ok
+test parallel_emission_is_byte_identical_on_a_large_skewed_plane ... ok
+test shipped_encoder_matches_the_reference_across_dtypes_and_sizes ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/modes.rs (/work/.docker-cache/target-rust/debug/deps/modes-fc845315ec2ddfe5)
+
+running 9 tests
+test delta_empty_target_and_identical_target ... ok
+test dictionary_roundtrip ... ok
+test header_hash_is_plaintext_hash ... ok
+test reference_roundtrip_and_mismatch ... ok
+test structured_values ... ok
+test delta_realistic_edits ... ok
+test zstd_compresses_repetitive_data ... ok
+test raw_and_zstd_chunked ... ok
+test deterministic_encoding ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/no_unsafe_outside_simd.rs (/work/.docker-cache/target-rust/debug/deps/no_unsafe_outside_simd-73993cdbde3a6ed7)
+
+running 1 test
+test unsafe_is_confined_to_simd_module ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/roundtrip.rs (/work/.docker-cache/target-rust/debug/deps/roundtrip-d848febdc369f2c7)
+
+running 7 tests
+test invalid_utf8_payload_bytes ... ok
+test four_kib_random ... ok
+test one_byte ... ok
+test chunked_frames_have_same_content_hash ... ok
+test zero_length ... ok
+test one_mib_random ... ok
+test four_mib_repetitive ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/selectors.rs (/work/.docker-cache/target-rust/debug/deps/selectors-47a23a027cc3a32f)
+
+running 7 tests
+test escapes_are_byte_exact_and_not_normalized ... ok
+test grammar_forms_and_normalization ... ok
+test operand_reordering_changes_identity ... ok
+test canonical_bytes_decode_back_to_same_ast ... ok
+test selector_limits ... ok
+test parse_errors_carry_positions ... ok
+test whitespace_hex_case_and_offset_zero_are_identity_preserving ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/semantic_delta.rs (/work/.docker-cache/target-rust/debug/deps/semantic_delta-00973fd51e43e651)
+
+running 6 tests
+test block_quantize_keeps_small_changes_in_one_group ... ok
+test different_shapes_are_never_matched ... ok
+test descriptor_rejects_have_typed_classes ... ok
+test semantic_root_vectors_replay ... ok
+test semantic_delta_vectors_replay ... ok
+test near_duplicate_pair_selects_the_right_base_and_stays_exact ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/simd_differential.rs (/work/.docker-cache/target-rust/debug/deps/simd_differential-f427ca9fa4a01a51)
+
+running 3 tests
+test active_path_is_named ... ok
+test join_kernels_agree_on_10000_randomised_plane_pairs ... ok
+test huffman_kernels_agree_on_10000_randomised_streams ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+
+     Running tests/sparse_delta.rs (/work/.docker-cache/target-rust/debug/deps/sparse_delta-1fd6e9d4af0f647f)
+
+running 12 tests
+test all_zero_delta_is_a_run_count_of_zero ... ok
+test base_dtype_and_shape_mismatches_fail_closed ... ok
+test bf16_roundtrip_preserves_every_bit_pattern ... ok
+test dependency_cycle_fails_closed ... ok
+test descriptor_and_run_stream_rejects_have_typed_classes ... ok
+test fp16_fp32_and_q8_0_roundtrip ... ok
+test missing_base_fails_closed ... ok
+test q4_0_roundtrip_keeps_nibbles_in_range ... ok
+test committed_vectors_replay ... ok
+test cli_encode_decode_inspect_roundtrip ... ok
+test mode16_is_smaller_than_mode11_on_sparse_and_larger_on_dense ... ok
+test sparse_densities_roundtrip_exactly ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+     Running tests/stream.rs (/work/.docker-cache/target-rust/debug/deps/stream-866c54c2dfafdb50)
+
+running 4 tests
+test range_read_only_decodes_intersecting_chunks ... ok
+test unchunked_range_read ... ok
+test chunked_zstd_random_ranges ... ok
+test chunked_raw_random_ranges ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/tensor.rs (/work/.docker-cache/target-rust/debug/deps/tensor-c11a07a852a3d4f7)
+
+running 2 tests
+test tensor_vectors ... ok
+test tensor_cli_root_split_reassemble ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/tensor_sharded.rs (/work/.docker-cache/target-rust/debug/deps/tensor_sharded-8c848507fbfea082)
+
+running 8 tests
+test limits_fail_closed_before_allocation ... ok
+test duplicate_and_missing_shards_are_rejected ... ok
+test logical_root_is_independent_of_shard_axis_and_count ... ok
+test element_count_and_block_size_and_divisibility_and_index_rejects ... ok
+test q8_0_rank1_single_shard_roundtrip ... ok
+test q4_0_rank3_four_shards_roundtrip_and_nibbles ... ok
+test q8_0_rank2_two_shards_roundtrip ... ok
+test scale_plane_mismatch_and_malformed_huffman_are_rejected ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/tensor_tiled.rs (/work/.docker-cache/target-rust/debug/deps/tensor_tiled-864c3d14ec6d78c7)
+
+running 7 tests
+test non_dividing_tile_shape_is_rejected ... ok
+test rank_mismatched_tile_shape_is_rejected ... ok
+test bf16_square_tiles_roundtrip ... ok
+test fp32_rank_three_tiles_roundtrip ... ok
+test single_tile_roundtrip ... ok
+test region_reads_decode_only_intersecting_tiles ... ok
+test conformance_vectors_replay ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/weight_delta.rs (/work/.docker-cache/target-rust/debug/deps/weight_delta-7500ffecd66fd806)
+
+running 11 tests
+test base_dtype_and_shape_mismatches_fail_closed ... ok
+test bf16_roundtrip_preserves_every_bit_pattern ... ok
+test dependency_cycle_fails_closed ... ok
+test descriptor_rejects_have_typed_classes ... ok
+test committed_vectors_replay ... ok
+test fp32_all_zero_delta_reconstructs_exactly ... ok
+test missing_base_fails_closed ... ok
+test q8_0_and_q4_0_roundtrip ... ok
+test cli_requires_a_base_frame_for_encoding ... ok
+test cli_encode_decode_inspect_roundtrip ... ok
+test four_mib_bf16_one_percent_delta_is_small_and_exact ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/zstd_chunk_parallel.rs (/work/.docker-cache/target-rust/debug/deps/zstd_chunk_parallel-638a0faa34b338b8)
+
+running 5 tests
+test a_zero_batch_bound_is_refused ... ok
+test incompressible_and_degenerate_inputs_are_byte_identical ... ok
+test the_sequential_paths_are_unchanged ... ok
+test randomised_differential_is_byte_identical ... ok
+test every_chunk_boundary_and_thread_count_is_byte_identical ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.09s
+
+     Running unittests examples/bench_kv_activation.rs (/work/.docker-cache/target-rust/debug/examples/bench_kv_activation-8eb5f7a7e68376f4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_semantic_delta.rs (/work/.docker-cache/target-rust/debug/examples/bench_semantic_delta-f6cbcf1ad95cb02a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_weight_delta.rs (/work/.docker-cache/target-rust/debug/examples/bench_weight_delta-2a435c82ba570537)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/decode_floor_bench.rs (/work/.docker-cache/target-rust/debug/examples/decode_floor_bench-956f47c881e93f6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/entropy_coder_court.rs (/work/.docker-cache/target-rust/debug/examples/entropy_coder_court-e63765b813c9c8a9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/float_tensor_bench.rs (/work/.docker-cache/target-rust/debug/examples/float_tensor_bench-cfdb01b6fad0d0ac)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/fuzz_differential.rs (/work/.docker-cache/target-rust/debug/examples/fuzz_differential-1af34536c561c27e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gen_fuzz_seeds.rs (/work/.docker-cache/target-rust/debug/examples/gen_fuzz_seeds-3a0c14b4b1bfe805)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/huffman_decode_bench.rs (/work/.docker-cache/target-rust/debug/examples/huffman_decode_bench-1829e199096e2eca)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/real_float_tensor_bench.rs (/work/.docker-cache/target-rust/debug/examples/real_float_tensor_bench-cddb17eb0d748475)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/real_sparse_delta_bench.rs (/work/.docker-cache/target-rust/debug/examples/real_sparse_delta_bench-e1950061eb60d865)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/wefttensor_bench.rs (/work/.docker-cache/target-rust/debug/examples/wefttensor_bench-14f44b245bc635b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -401,8 +401,7 @@ the chunk loop (§2), worth ~19 ms of wall.
 | `scripts/docker-court.sh bench "bash bench/scripts/r22_family_court.sh"` | 15/15 measured rows, every restore exact |
 | `cargo test --all-targets` (rust court) | **807 passed / 0 failed / 0 ignored** (170 test binaries) — log `bench/receipts/r22-rust-tests.log` |
 | `cargo test --features fuse --all-targets` (fuse court) | **850 passed / 0 failed / 2 ignored** (the two pre-existing kernel/CAP_SETUID tests) — log `bench/receipts/r22-fuse-tests.log` |
-| `WeftCodec` `cargo test --test zstd_chunk_parallel` | 5/5 |
-| `WeftCodec` `cargo test --test histogram_parallel` | 3/3 |
+| `WeftCodec` `cargo test --all-targets` (rust court) | **290 passed / 0 failed / 0 ignored** (45 test binaries) — log `bench/receipts/r22-weftcodec-tests.log`; includes `zstd_chunk_parallel` 5/5 and `histogram_parallel` 3/3 |
 | Rust↔Go cross gate (`WeftCodec-Go/hack/cross.sh`, fuse court) | 41 frames each way, all mode fixtures `YES byte-identical`, `all checks passed` |
 | determinism across worker counts / chunk threads | `tests/tensor_pipeline.rs` 6/6; every court row publishes 282,106,049 B |
 | crash proxy | `crash_proxy_old_or_new: true` on every Weft row |
