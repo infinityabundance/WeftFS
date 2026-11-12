@@ -9309,3 +9309,81 @@ candidate and discards the losers. Deliverable:
   embedding's interval degenerates and forces one safe extra encode); the 500 bps
   interval floor is calibrated on four real families only; `plan_tensor` and
   rebase remain exhaustive.
+
+## Subphase R19 (write-cost) — mode-9 encoder: byte-identical, 2.85x faster (2026-11-12)
+
+* **Parents.** `WeftFS` `c3f5e1a` (store wiring, bench, court scripts),
+  `WeftCodec` `1412227` (fast encoder; `dfc60f4`). Both pushed on `staging`.
+  No wire change: the frame, descriptor, canonical table, padding and every
+  content root are untouched.
+* **Where the time was.** R17's "frame assembly/other = 446.90 ms" was a
+  mis-attribution caused by measuring stages in isolation. A faithful
+  line-by-line replica of the pre-R19 encoder adds up to its wall (embedding:
+  1,185.63 ms replica sum vs 1,187.99 ms wall) and shows the real split:
+  generic plane split **705.8 ms**, Huffman emission **301.12 ms**, histogram
+  57.71, plane concatenation 13.96, `payload_hash` 17.59, body copy 13.82,
+  `encode_frame` copy + two CRC passes 46.62, `content_hash` 26.96. The
+  pre-R19 encoder also took **9,814 minor page faults** per embedding encode
+  because it held five ~272 MB mappings at once.
+* **What changed** (all in WeftCodec, mirrored by the store):
+  `split_bf16_planes` derives `(w >> 7)` and `((w >> 8) & 0x80) | (w & 0x7f)` over
+  eight-byte windows into pre-sized planes **and** returns the four-bank
+  exponent histogram from the same pass; `huffman::EncoderTable` packs
+  `code | length << 32` per symbol and `huffman::BitStream` flushes four bytes
+  at a time into a pre-sized slice (replacing `append_bits`, which is kept
+  verbatim as the test oracle); `encode_float_tensor` plans the exact frame
+  length, allocates **one** buffer, writes the descriptor and both planes into
+  it (`frame::encode_frame_with_body`), hashes the stored region in place and
+  appends the trailer CRC. `two_stage::Mode9Prediction` carries the analyser's
+  exact histogram and the store calls `encode_float_tensor_with_histogram`.
+* **Bounded parallel emission.** `FloatTensorEncodeOptions` splits the element
+  range, prefix-sums the exact per-partition bit lengths, emits into disjoint
+  byte ranges at per-partition bit offsets, spills one byte per partition into a
+  one-byte scratch slot and ORs the shared bytes serially. Byte-identical to
+  sequential at every thread count. Extra memory beyond the frame: one `u64`
+  and one `u8` per partition. Bounds 1 MiB minimum bitstream, 512 MiB maximum,
+  65,536 elements minimum per partition; the store defaults to
+  `min(available_parallelism, 4)` and `--`/`WEFT_AUG_ENCODE_THREADS` can force 1.
+* **Headline.** 7 interleaved repetitions, least-contended: **C 4,101.6 →
+  2,328.4 ms (−43.2 %)** and **E 4,156.4 → 2,363.2 ms (−43.1 %)**, footprint
+  **unchanged** (282,283,011 B and 282,354,152 B), 101/101 exact restores, same
+  strategies and chosen sizes (`two_stage_matches_exhaustive`,
+  `two_stage_storage_unchanged` true). A, C-nom9, C-both and D are within noise
+  of their before values, which is the control that the delta is the encoder.
+  CPU C 2,690 → 1,240 ms; peak RSS C 1,188,052 → 687,864 KiB (−42 %); cold
+  restore unchanged (1,432.0 → 1,432.7 ms). C/A = 12.44x → 7.06x.
+* **Encoder.** 9 tensors / 341,999,616 B, 7 reps: **262.28 → 748.37 MB/s
+  (2.85x)** sequential and **1,524.81 MB/s (5.81x)** at four emission threads.
+  Embedding 272,269,312 B: 1,044.2 (reference) / 1,188.0 (replica wall) →
+  363.87 ms, 177.24 ms at 4 threads, faults 9,814 → 644.
+* **Byte identity.** `WeftCodec/tests/mode9_encoder_identity.rs` 6/6: every
+  committed mode-9 vector re-encoded byte-exactly (shipped, reference,
+  histogram hand-off, 2/3/4/8 threads); the specialised splitter vs the generic
+  oracle over **every 16-bit word** and randomised planes; whole-frame
+  differential over 5 dtypes × 30 sizes × 5 thread counts including a
+  forced-parallel configuration with one element per partition; a
+  300,000-element plane at 1..8 threads. The court compares shipped vs
+  reference on 9 tensors × 7 reps, 0 mismatches. Conformance vectors and the
+  Rust↔Go cross gate are unchanged.
+* **Receipts.** `mode9-encoder-20261112T160000Z.json` (stage table, faults,
+  allocation probe), `r19-wall-before-20261112T150000Z.json`,
+  `r19-wall-after-20261112T140000Z.json`,
+  `augmentation-local-20261112T140000Z.json` / `…T150000Z.json` (R3 contract
+  court, after / before). Retained and **not** used: the first "official"
+  attempt `augmentation-local-20261112T131500Z.json` (host write latency ~4x
+  worse: A 6,275.9, C 17,950.7 ms) and the 1-rep/4-configuration probe
+  `r19-diag.json`. Courts: `bench/scripts/mode9_encoder_court.sh` (inside the
+  bench court), `bench/scripts/r19_wall_court.sh` (inside the bench court),
+  `scripts/augmentation_court.sh --local` (host orchestrator).
+* **Gates.** WeftCodec `cargo test --all-targets`: all suites pass. Rust
+  `cargo test --all-targets` and FUSE `cargo test --features fuse --all-targets`:
+  pass, with the two pre-existing ignored FUSE tests. Conformance: Rust and Go
+  adapters, all mode-9 vectors; cross gate Rust↔Go byte-identical.
+  `check-claims.sh`, spec drift, conformance manifest/coverage: pass. No
+  `verify-all` run for this subphase (not required); the 45/45 aggregate
+  receipt remains the cited one and predates R19.
+* **Not claimed.** No Go encoder change or Go performance claim (the Go codec
+  already emitted these exact bytes and the format did not move); no AVX2 split
+  kernel (measured headroom does not justify a second path); FP16/FP32/FP8 keep
+  the generic splitter; no inter-tensor parallelism (R21), no shared pool, no
+  power-loss, fleet, cloud or cold-media claim; one host, warm page cache.

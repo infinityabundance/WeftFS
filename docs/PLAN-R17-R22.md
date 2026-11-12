@@ -1,6 +1,6 @@
 # Plan R17–R22 — compressed-write parity
 
-**Status:** R17 and R18 executed; R19–R22 planned. This plan is driven by the
+**Status:** R17, R18 and R19 executed; R20–R22 planned. This plan is driven by the
 measured ledger in [`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md)
 and its R18 correction, not by intuition. Nothing in R19–R22 may weaken the
 exactness or durability contracts to hit a number.
@@ -99,17 +99,25 @@ receipt `planner-two-stage-20261112T081151Z`.
    come from mode-9 encoder work (R19), batched publication (R20) and the
    bounded parallel pipeline (R21, which also parallelises the analyse pass).
 
-### R19 — BF16 mode-9 encoder (next)
+### R19 — BF16 mode-9 encoder (done, 2026-11-12)
 
 Targets from the stage profile: emission is 79 % of Huffman, histogram 17 %,
-tree/code construction is free; frame assembly is 447 ms for the embedding.
+tree/code construction is free; "frame assembly" 447 ms for the embedding.
 1. A faster bit-emission kernel (wide accumulator, table-driven symbol lookup)
-   with byte-identical output and the same differential court.
+   with byte-identical output and the same differential court. **Done**:
+   `EncoderTable` + a four-byte-flush `BitStream`; the byte-at-a-time emitter is
+   kept as the test oracle.
 2. Remove avoidable frame-assembly copies; keep `payload_hash` and the exact
-   stored plane layout.
+   stored plane layout. **Done**: one allocation, planes written in place, one
+   CRC pass. The faithful replica showed the real cost was the generic
+   splitter (705.8 ms) and the emitter (301.1 ms), not the copies (74 ms).
 3. **Gate:** byte-identical mode-9 frames, the existing conformance vectors
-   unchanged, encoder ≥ 2× faster with no footprint change.
-4. Expected: mode 9 from 1.74 s to ≤ 0.9 s, footprint unchanged at 282.3 MB.
+   unchanged, encoder ≥ 2× faster with no footprint change. **Met**: 2.85x
+   sequential, 5.81x at four emission threads, 0 byte mismatches, footprint
+   unchanged at 282,283,011 B.
+4. Expected "mode 9 from 1.74 s to ≤ 0.9 s": **met and exceeded** — C's write
+   wall went 4,101.6 → 2,328.4 ms (−43.2 %) and E 4,156.4 → 2,363.2 ms.
+   Receipts in `bench/RESULTS-mode9-encoder.md`.
 
 ### R20 — publication tax
 
@@ -143,17 +151,26 @@ tree/code construction is free; frame assembly is 447 ms for the embedding.
 
 | Configuration | Wall (min) | Footprint (B) | Ladder | Footprint |
 |---|---:|---:|---|---|
-| A | 327.8 | 424,439,296 | anchor | — |
-| **C (R18 two-stage)** | **4,117.8** | **282,283,011** | 1.23× G1 | final band |
-| C-legacy (exhaustive) | 24,175.8 | 282,283,011 | above G1 | final band |
-| C-noz19 (exhaustive) | 3,936.0 | 282,283,011 | 1.17× G1 | final band |
-| C-both | 2,136.6 | 330,532,422 | between G2 and G1 | first-success band |
-| B-group | 2,144.3 | 424,608,542 | between G2 and G1 | no reduction |
+| A | 329.8 | 424,439,296 | anchor | — |
+| **C (R19 two-stage)** | **2,328.4** | **282,283,011** | **1.73× G1** | final band |
+| C-legacy (exhaustive) | 22,791.2 | 282,283,011 | above G1 | final band |
+| C-noz19 | 2,376.8 | 282,283,011 | 1.77× G1 | final band |
+| C-both | 2,134.3 | 330,532,422 | 1.59× G1 | first-success band |
+| E (R19) | 2,363.2 | 282,354,152 | 1.76× G1 | final band |
+| D (R19) | 2,890.0 | 424,856,058 | 2.15× G1 | no reduction |
+
+(R19 runs, least-contended of 7 interleaved repetitions. The R18 row for the
+same command was C 4,117.8 / 282,283,011; the before run reproduced it at
+4,101.6. B and B-group are omitted from the R19 wall court because their 405
+`fsync` publications dominate their own wall and they encode no mode 9.)
 
 The target is the **knee**: C's footprint at the lowest sustainable wall, then
 down the ladder without leaving the 340 MB (first) and 284.14 MB (final) bands.
-R18 moved the default from 24.2 s to 4.12 s at the same footprint; the next
-0.76 s is R19/R20/R21 work, not planning work.
+R18 moved the default from 24.2 s to 4.12 s, and R19 moved it again to
+2.33 s at the same footprint. The next 0.99 s to the G1 rung (3,360 ms is now
+passed; the remaining gap to G2 at 1,344 ms is 0.98 s) is publication and
+pipeline work (R20, R21), not encoder or planner work: the mode-9 encode is
+now ~0.35 s of a 2.33 s write.
 
 ## 6. Non-negotiables
 

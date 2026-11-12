@@ -1,0 +1,167 @@
+{
+  "checks": {
+    "byte_identity_cases": 2,
+    "byte_identity_mismatches": 0,
+    "mean_shipped_ms": 583.0966805
+  },
+  "environment": {
+    "court": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024",
+    "simd_path": "avx2",
+    "weftcodec_revision": "0aa38814c81c7796bdf23f54dd7dcac6af09f405",
+    "weftfs_revision": "24f94e4ca823872a400becf7c99d3554d618ccb9"
+  },
+  "fixture": {
+    "bytes": 988097824,
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+    "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "tensors_measured": 2
+  },
+  "generated_utc": "20261112T090138Z",
+  "label": "before-probe",
+  "memory_probe": {
+    "bytes": 272269312,
+    "fresh_allocating_copy_ms": 23.116296000000002,
+    "fresh_zeroed_page_faults": 556.0,
+    "fresh_zeroed_touch_every_page_ms": 12.190083000000001,
+    "note": "fresh means a new mapping (the allocator cannot reuse the previous block because every probe buffer is held until it returns); recycled means the pages are already present, so only the memcpy remains",
+    "recycled_copy_ms": 21.792361,
+    "reps": 2
+  },
+  "method": {
+    "assembly_residual": "reference_encode - split - huffman - payload_hash - content_hash; it contains allocator first-touch, the body copy, the trailer CRC and the self-parse CRC inside encode_frame",
+    "byte_identity": "the shipped mode-9 frame is compared with the pre-R19 reference encoder on every tensor and repetition",
+    "replica": "stage timings are harness-local replicas; every measured tensor is checked byte-for-byte against the shipped codec (split planes, huffman stream, hand-assembled frame) before any number is recorded",
+    "statistic": "median of repetitions per tensor; totals are sums of the per-tensor medians"
+  },
+  "not_claimed": [
+    "single host, warm page cache",
+    "the stage split is a harness replication validated against the codec, not a codec-internal profile",
+    "BF16 tensors from one public checkpoint only"
+  ],
+  "schema": "weft.mode9_encoder_bench.v1",
+  "tensors": [
+    {
+      "byte_identical_to_reference": true,
+      "elements": 136134656,
+      "frame_bytes": 180547519,
+      "logical_bytes": 272269312,
+      "reference_encode_ms": 1153.405375,
+      "reference_faults_minor": 10419.0,
+      "reference_mb_per_s": 236.05691277448747,
+      "reference_staged_gap_ms": 0.0,
+      "reference_staged_stages_ms": {
+        "body_build": 13.839395000000001,
+        "content_hash": 27.230152,
+        "frame_encode": 30.162632000000002,
+        "payload_hash": 17.766686,
+        "split_payload": 1080.878258,
+        "stored_build": 14.225377000000002
+      },
+      "reference_staged_sum_ms": 1193.375078,
+      "reference_staged_wall_ms": 1194.983012,
+      "replica": {
+        "assembly_residual_ms": 433.8785230000001,
+        "body_build_ms": 13.794993,
+        "content_hash_ms": 27.270248,
+        "crc32c_ms": 5.390736,
+        "frame_encode_ms": 25.972851000000002,
+        "huffman_codes_ms": 0.002405,
+        "huffman_emit_ms": 290.959435,
+        "huffman_histogram_ms": 58.17237,
+        "huffman_lengths_ms": 0.02178,
+        "huffman_total_ms": 335.791573,
+        "payload_hash_ms": 17.932736000000002,
+        "split_ms": 338.532295,
+        "stored_build_ms": 14.352794000000001
+      },
+      "replica_huffman_faults_minor": 327.0,
+      "replica_split_faults_minor": 8511.0,
+      "replica_validated": true,
+      "reps": 3,
+      "shape": [
+        151936,
+        896
+      ],
+      "shipped_encode_ms": 1131.15634,
+      "shipped_faults_minor": 10419.0,
+      "shipped_mb_per_s": 240.69998316943528,
+      "split_payload_first_ms": 1084.214724,
+      "split_payload_last_ms": 1080.878258,
+      "staged_split_payload_faults_minor": 8998.0,
+      "tensor": "model.embed_tokens.weight"
+    },
+    {
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "frame_bytes": 5798340,
+      "logical_bytes": 8716288,
+      "reference_encode_ms": 34.66191,
+      "reference_faults_minor": 1242.0,
+      "reference_mb_per_s": 251.4658886368351,
+      "reference_staged_gap_ms": 0.7064590000000024,
+      "reference_staged_stages_ms": {
+        "body_build": 0.09032899999999999,
+        "content_hash": 0.81865,
+        "frame_encode": 0.747668,
+        "payload_hash": 0.480809,
+        "split_payload": 31.730422,
+        "stored_build": 0.094136
+      },
+      "reference_staged_sum_ms": 33.955451,
+      "reference_staged_wall_ms": 33.976368,
+      "replica": {
+        "assembly_residual_ms": 12.31299,
+        "body_build_ms": 0.072475,
+        "content_hash_ms": 0.846102,
+        "crc32c_ms": 0.142426,
+        "frame_encode_ms": 0.950245,
+        "huffman_codes_ms": 0.001904,
+        "huffman_emit_ms": 8.872191,
+        "huffman_histogram_ms": 1.788683,
+        "huffman_lengths_ms": 0.004749,
+        "huffman_total_ms": 10.227815,
+        "payload_hash_ms": 0.481881,
+        "split_ms": 10.793122,
+        "stored_build_ms": 0.465791
+      },
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 0.0,
+      "replica_validated": true,
+      "reps": 3,
+      "shape": [
+        896,
+        4864
+      ],
+      "shipped_encode_ms": 35.037021,
+      "shipped_faults_minor": 1274.0,
+      "shipped_mb_per_s": 248.7736614365702,
+      "split_payload_first_ms": 32.414479,
+      "split_payload_last_ms": 31.730422,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.0.mlp.down_proj.weight"
+    }
+  ],
+  "totals": {
+    "assembly_residual_ms": 446.1915130000001,
+    "body_build_ms": 13.867468,
+    "content_hash_ms": 28.116349999999997,
+    "crc32c_ms": 5.533162000000001,
+    "frame_encode_ms": 26.923096,
+    "huffman_emit_ms": 299.83162599999997,
+    "huffman_histogram_ms": 59.961053,
+    "huffman_total_ms": 346.01938800000005,
+    "logical_bytes": 280985600.0,
+    "payload_hash_ms": 18.414617000000003,
+    "reference_encode_ms": 1188.067285,
+    "reference_mb_per_s": 236.5064702543341,
+    "shipped_encode_ms": 1166.193361,
+    "shipped_mb_per_s": 240.94254812002822,
+    "split_ms": 349.32541699999996,
+    "stored_build_ms": 14.818585
+  }
+}

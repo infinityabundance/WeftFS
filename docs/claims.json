@@ -2579,8 +2579,8 @@
  },
  {
   "id": "python_reader_all_modes",
-  "claim": "The Python reader implements every allocated mode 0–18; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
-  "value": "mode 0–18",
+  "claim": "The Python reader implements every allocated mode 0\u201318; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
+  "value": "mode 0\u201318",
   "locations": [
    "docs/STATUS.md",
    "docs/CONFORMANCE.md",
@@ -9959,182 +9959,182 @@
   "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
   "kind": "present"
  },
-{
- "id": "r12c_incremental_flat_100k",
- "claim": "With a constant live set, incremental index maintenance keeps commit p50 flat within 1.8 % from 1,000 to 100,000 generations at the same index bytes.",
- "value": "flat within 1.8 %",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
- "kind": "present"
-},
-{
- "id": "r12c_incremental_index_bytes_identical",
- "claim": "The operation-derived writer seals byte-identical WFX3 segments: index bytes are identical in every compared cell.",
- "value": "identical in every cell",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
- "kind": "present"
-},
-{
- "id": "r12c_incremental_live1000_p50",
- "claim": "At 1,000 live objects and 1,000 generations the incremental writer commits in p50 0.641 ms (baseline 2.077 ms).",
- "value": "0.641",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T231000Z-post-delta-live1000.json",
- "kind": "present"
-},
-{
- "id": "r12c_incremental_live10000_p50",
- "claim": "At 10,000 live objects and 1,000 generations the incremental writer commits in p50 5.569 ms (baseline 22.577 ms); the live-state dependency is reduced, not removed.",
- "value": "5.569",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T235000Z-post-delta-live10000.json",
- "kind": "present"
-},
-{
- "id": "r12c_incremental_merge_bound",
- "claim": "A reader merges at most index_chain_max_deltas deltas plus one full ancestor, 32 + 1 = 33 by default.",
- "value": "32 + 1 = 33",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": null,
- "kind": "present"
-},
-{
- "id": "r12c_incremental_oracle_seeds",
- "claim": "The randomized oracle-equality court covers 10,000 operations per seed for seeds 1, 7, 2026 with byte-exact WFX2 section equality.",
- "value": "seeds 1, 7, 2026",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": null,
- "kind": "present"
-},
-{
- "id": "r12c_incremental_crosslang_verify",
- "claim": "A Rust store written at the new revision verifies --full from Go (generation=6); Go has no incremental maintenance parity in this session.",
- "value": "generation=6",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": null,
- "kind": "present"
-},
-{
- "id": "r12c_incremental_gc_defect",
- "claim": "Before item 2.1, index GC refused once a store retained a few checkpoints because the hard chain-depth bound was applied to one visited set shared by every retained root; the refusal text is retained in the failing receipt and quoted in the docs.",
- "value": "index GC skipped",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_bound_per_root",
- "claim": "Index GC's chain-depth bound is applied per retained root, not to the union of every retained chain: the fixing court's fixture retains 14 roots whose chains union to more than 256 segments.",
- "value": "404 segments",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_bound_reclaim",
- "claim": "On the identical fixture the per-root bound reclaims 182,321 B of advisory index segments that the shared-set bound refused to touch.",
- "value": "182,321 B",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_bound_no_retention_control",
- "claim": "A store with no retention beyond the head reclaims exactly the same bytes before and after the fix (single-root control).",
- "value": "87,891 B",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_512_live_100k",
- "claim": "With the per-root GC bound, 512 live objects at 100,000 generations keep a steady-state index of 0.534x the data bytes; the item-2 baseline could not reach that size.",
- "value": "0.534x",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T211000Z-post-gc-live512-sweep.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_200k",
- "claim": "A 64-live-object history sweep reaches 200,000 generations with GC every 20,000 and a flat post-GC index/data ratio.",
- "value": "200,000 generations",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T215000Z-post-gc-live64-200k.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_1m_attempt",
- "claim": "1,000,000 generations was attempted; it exhausts the bounded /tmp at generation 169,701 and the failure record's allocation breakdown names the measured limiter.",
- "value": "169,701",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_1m_limiter",
- "claim": "The 1,000,000-generation limiter is the tmpfs page floor of the commit history (4,096 B of commit pages per generation), not the index GC bound.",
- "value": "4,096 B of commit pages per generation",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
- "kind": "present"
-},
-{
- "id": "r12c_gc_go_same_defect_fixed",
- "claim": "WeftFS-Go had the identical shared-visited index GC defect and is fixed with the same per-root walk, memoised distance, and fail-closed behaviour.",
- "value": "WeftFS-Go/store/index.go",
- "locations": [
-  "bench/RESULTS-incremental-index.md",
-  "docs/STATUS.md"
- ],
- "receipt": null,
- "kind": "present"
-},
+ {
+  "id": "r12c_incremental_flat_100k",
+  "claim": "With a constant live set, incremental index maintenance keeps commit p50 flat within 1.8 % from 1,000 to 100,000 generations at the same index bytes.",
+  "value": "flat within 1.8 %",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_index_bytes_identical",
+  "claim": "The operation-derived writer seals byte-identical WFX3 segments: index bytes are identical in every compared cell.",
+  "value": "identical in every cell",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_live1000_p50",
+  "claim": "At 1,000 live objects and 1,000 generations the incremental writer commits in p50 0.641 ms (baseline 2.077 ms).",
+  "value": "0.641",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T231000Z-post-delta-live1000.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_live10000_p50",
+  "claim": "At 10,000 live objects and 1,000 generations the incremental writer commits in p50 5.569 ms (baseline 22.577 ms); the live-state dependency is reduced, not removed.",
+  "value": "5.569",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T235000Z-post-delta-live10000.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_merge_bound",
+  "claim": "A reader merges at most index_chain_max_deltas deltas plus one full ancestor, 32 + 1 = 33 by default.",
+  "value": "32 + 1 = 33",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_oracle_seeds",
+  "claim": "The randomized oracle-equality court covers 10,000 operations per seed for seeds 1, 7, 2026 with byte-exact WFX2 section equality.",
+  "value": "seeds 1, 7, 2026",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_crosslang_verify",
+  "claim": "A Rust store written at the new revision verifies --full from Go (generation=6); Go has no incremental maintenance parity in this session.",
+  "value": "generation=6",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_gc_defect",
+  "claim": "Before item 2.1, index GC refused once a store retained a few checkpoints because the hard chain-depth bound was applied to one visited set shared by every retained root; the refusal text is retained in the failing receipt and quoted in the docs.",
+  "value": "index GC skipped",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_bound_per_root",
+  "claim": "Index GC's chain-depth bound is applied per retained root, not to the union of every retained chain: the fixing court's fixture retains 14 roots whose chains union to more than 256 segments.",
+  "value": "404 segments",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_bound_reclaim",
+  "claim": "On the identical fixture the per-root bound reclaims 182,321 B of advisory index segments that the shared-set bound refused to touch.",
+  "value": "182,321 B",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_bound_no_retention_control",
+  "claim": "A store with no retention beyond the head reclaims exactly the same bytes before and after the fix (single-root control).",
+  "value": "87,891 B",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_512_live_100k",
+  "claim": "With the per-root GC bound, 512 live objects at 100,000 generations keep a steady-state index of 0.534x the data bytes; the item-2 baseline could not reach that size.",
+  "value": "0.534x",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T211000Z-post-gc-live512-sweep.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_200k",
+  "claim": "A 64-live-object history sweep reaches 200,000 generations with GC every 20,000 and a flat post-GC index/data ratio.",
+  "value": "200,000 generations",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T215000Z-post-gc-live64-200k.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_1m_attempt",
+  "claim": "1,000,000 generations was attempted; it exhausts the bounded /tmp at generation 169,701 and the failure record's allocation breakdown names the measured limiter.",
+  "value": "169,701",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_1m_limiter",
+  "claim": "The 1,000,000-generation limiter is the tmpfs page floor of the commit history (4,096 B of commit pages per generation), not the index GC bound.",
+  "value": "4,096 B of commit pages per generation",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_go_same_defect_fixed",
+  "claim": "WeftFS-Go had the identical shared-visited index GC defect and is fixed with the same per-root walk, memoised distance, and fail-closed behaviour.",
+  "value": "WeftFS-Go/store/index.go",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
  {
   "id": "r12c_dcp_metadata_baseline_ms",
   "claim": "The pure-Python DCP metadata encoder costs 3.957 ms p50 at the 169-entry R11/R12b fixture (71,559 B), confirming the R12b 4.2 ms figure.",
@@ -10469,6 +10469,139 @@
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_wall_before",
+  "claim": "At WeftFS 24f94e4 / WeftCodec 0aa3881 the shipped two-stage planned write measured 4,101.6 ms (least contended of 7 interleaved repetitions) on the frozen 101-tensor fixture.",
+  "value": "4,101.6",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-before-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_wall_after",
+  "claim": "At WeftFS c3f5e1a / WeftCodec 1412227 the same command measured 2,328.4 ms, i.e. -43.2 % at an unchanged footprint.",
+  "value": "2,328.4",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_footprint_unchanged",
+  "claim": "The R19 mode-9 encoder speed-up changes no published byte: the C footprint is unchanged at 282,283,011 B.",
+  "value": "282,283,011",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_encoder_speedup",
+  "claim": "The mode-9 encoder is 2.85x faster sequentially on the measured nine-tensor set (262.28 to 748.37 MB/s).",
+  "value": "2.85x",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_threaded_speedup",
+  "claim": "With four bounded emission threads the same set runs at 1,524.81 MB/s, 5.81x the pre-R19 encoder.",
+  "value": "5.81x",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_byte_identity_court",
+  "claim": "tests/mode9_encoder_identity.rs re-encodes every committed mode-9 vector, compares the specialised BF16 splitter with the generic oracle over every 16-bit word, and diff-tests 5 dtypes x 30 sizes x 5 thread counts including a forced-parallel configuration.",
+  "value": "tests/mode9_encoder_identity.rs",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_encoder_court_receipt",
+  "claim": "The R19 stage-profile court receipt records 9 tensors, 7 repetitions, byte-identity checks, page-fault counts and an allocation probe.",
+  "value": "mode9-encoder-20261112T160000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_page_faults",
+  "claim": "The pre-R19 encoder took 9,814 minor page faults around one 272 MB embedding encode; the shipped encoder takes 644.",
+  "value": "9,814",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_peak_rss",
+  "claim": "Peak RSS for the C write falls from 1,188,052 KiB to 687,864 KiB because the encoder no longer holds five copies of the planes.",
+  "value": "687,864",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_retained_contended_run",
+  "claim": "The first attempted official R3 court run for R19 is retained with the host write-latency diagnosis and is not used for any claim.",
+  "value": "augmentation-local-20261112T131500Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/augmentation-local-20261112T131500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_parallel_memory_bound",
+  "claim": "Parallel emission adds no heap beyond the frame: one u64 and one u8 per partition, bounded by a 1 MiB minimum and 512 MiB maximum bitstream.",
+  "value": "512 MiB",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_no_go_change",
+  "claim": "R19 changes no wire byte, so the Go codec needed no change and no Go performance claim is made.",
+  "value": "Go performance claim",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
   ],
   "receipt": null,
   "kind": "present"
