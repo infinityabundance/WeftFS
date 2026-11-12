@@ -165,7 +165,7 @@ G2, and R21 made G3.
 | exact restores | 101/101 | **101/101** in every row, `mismatches: 0` |
 | crash consistency | old-or-new whole | `crash_proxy_old_or_new: true` on every Weft row (three phases each), 0 partial |
 | court limits | unchanged | 4 CPUs / 3 GiB; peak RSS 939,256 KiB (939,256 KiB of 3,145,728 KiB available), 0 OOM, 0 pids refusals |
-| Rust/Go format compatibility | no regression | Rust 772/0/0, FUSE 815/0/2 ignored, Rust↔Go cross gate passed, `verify --full` ok on a chunk-parallel-written store |
+| Rust/Go format compatibility | no regression | Rust 807/0/0, FUSE 850/0/2 ignored, Rust↔Go cross gate passed, `verify --full` ok on a chunk-parallel-written store |
 <!-- END GENERATED:release-scoreboard -->
 
 The wall ends when the commit record and superblock are published and every
@@ -316,12 +316,12 @@ That is work for a later release, not a claim here.
 ## Verification
 
 <!-- BEGIN GENERATED:release-verification (scripts/perf_numbers.py) -->
-`bench/receipts/verify-20261111T182601Z.json`: **45/45** courts pass,
+`bench/receipts/verify-20261112T223540Z.json`: **46/46** courts pass,
 0 failed, 0 skipped, result `pass`, at WeftFS
-`3ab54c75b7205e9897e185aa1fac670b6dff16ff` (WeftCodec `58db5aa`, WeftCodec-Go `9812d15`,
-WeftFS-Go `1fa3d32`). Rust all-targets **772** passed / 0 failed; FUSE
-all-targets **815** passed / 0 failed / 2 ignored (the two
-pre-existing kernel/`CAP_SETUID` tests); WeftCodec **267** passed; the Go
+`0461132d4fc63ce458de6b388b38a8f27222d387` (WeftCodec `58db5aa`, WeftCodec-Go `9812d15`,
+WeftFS-Go `1fa3d32`). Rust all-targets **807** passed / 0 failed; FUSE
+all-targets **850** passed / 0 failed / 2 ignored (the two
+pre-existing kernel/`CAP_SETUID` tests); WeftCodec **290** passed; the Go
 whole suite passes under `-race` in the fuse court (R14d receipt
 `bench/receipts/r14d-go-suite-20261112T221649Z.json`). The conformance manifest
 holds **420** vectors, aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; the claims manifest

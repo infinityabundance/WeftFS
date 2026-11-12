@@ -2,12 +2,12 @@
 
 <!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
 **At a glance (generated from receipts).** v1.4.0 is released. The cited
-aggregate is `bench/receipts/verify-20261111T182601Z.json` — **45/45**
+aggregate is `bench/receipts/verify-20261112T223540Z.json` — **46/46**
 courts pass, 0 failed, 0 skipped — at WeftFS
-`3ab54c75b7205e9897e185aa1fac670b6dff16ff`. The shipped compressed write is **592.6 ms**
+`0461132d4fc63ce458de6b388b38a8f27222d387`. The shipped compressed write is **592.6 ms**
 least-contended / 600.9 ms median at **282,106,049 B**
 (33.5 % below the native control). Rust all-targets
-**772** tests pass; FUSE **815** passed /
+**807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,046** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py`

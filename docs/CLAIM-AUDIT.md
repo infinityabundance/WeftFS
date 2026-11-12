@@ -1,8 +1,15 @@
 # Claim audit — README and v1.2.0 release note
 
-**Status:** R13 (2026-11-11). This is an adversarial audit of the externally
-visible claims in [`README.md`](../README.md) and
-[`RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md).
+**Status:** first performed at R13 (2026-11-11) and re-run at the v1.4.0 tree
+(2026-11-12). This is an adversarial audit of the externally visible claims in
+[`README.md`](../README.md) and the release notes.
+
+**Audit revision.** The rows below were written against the trees they name —
+mostly the R13 tree, whose aggregate was 45/45, and the v1.3.0 tree. The
+current aggregate is **46/46** (`verify-20261112T223540Z`) and the current test
+counts are in the generated block at the top of [`STATUS.md`](STATUS.md). A
+number in a row below is the value at that row's revision, not a current claim;
+current claims are generated from receipts by `scripts/perf_numbers.py`.
 
 Method: each claim was opened against the receipt or specification it cites.
 Where a receipt is machine-readable, the cited number was re-read from the JSON

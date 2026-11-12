@@ -200,23 +200,23 @@ shipped planned write. Receipt
 <!-- BEGIN GENERATED:perf-catalog-verification (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `verify.courts` | 45 | courts | Courts in the cited aggregate | `bench/receipts/verify-20261111T182601Z.json` | 20261111T182601Z | 3ab54c75b720 |
-| `verify.passed` | 45 | courts | Courts passed | `bench/receipts/verify-20261111T182601Z.json` | 20261111T182601Z | 3ab54c75b720 |
-| `verify.failed` | 0 | courts | Courts failed | `bench/receipts/verify-20261111T182601Z.json` | 20261111T182601Z | 3ab54c75b720 |
-| `verify.skipped` | 0 | courts | Courts skipped | `bench/receipts/verify-20261111T182601Z.json` | 20261111T182601Z | 3ab54c75b720 |
-| `verify.stamp` | 20261111T182601Z | text | Aggregate stamp | `bench/receipts/verify-20261111T182601Z.json` | 20261111T182601Z | 3ab54c75b720 |
-| `verify.revision` | 3ab54c75b7205e9897e185aa1fac670b6dff16ff | text | Aggregate WeftFS revision | `bench/receipts/verify-20261111T182601Z.json` | 20261111T182601Z | 3ab54c75b720 |
+| `verify.courts` | 46 | courts | Courts in the cited aggregate | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.passed` | 46 | courts | Courts passed | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.failed` | 0 | courts | Courts failed | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.skipped` | 0 | courts | Courts skipped | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.stamp` | 20261112T223540Z | text | Aggregate stamp | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.revision` | 0461132d4fc63ce458de6b388b38a8f27222d387 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
 | `claims.count` | 1,046 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
-| `tests.rust_store_passed` | 772 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261111T182601Z.tests.json` | — | — |
-| `tests.rust_store_binaries` | 158 | tests | Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261111T182601Z.tests.json` | — | — |
-| `tests.rust_fuse_passed` | 815 | tests | FUSE all-targets tests passed | `bench/receipts/verify-20261111T182601Z.tests.json` | — | — |
-| `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261111T182601Z.tests.json` | — | — |
-| `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261111T182601Z.tests.json` | — | — |
-| `tests.rust_codec_passed` | 267 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261111T182601Z.tests.json` | — | — |
+| `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.rust_store_binaries` | 170 | tests | Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.rust_fuse_passed` | 850 | tests | FUSE all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.rust_codec_passed` | 290 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Historical quotations
