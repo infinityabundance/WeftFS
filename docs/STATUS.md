@@ -9352,8 +9352,15 @@ candidate and discards the losers. Deliverable:
   of their before values, which is the control that the delta is the encoder.
   CPU C 2,690 → 1,240 ms; peak RSS C 1,188,052 → 687,864 KiB (−42 %); cold
   restore unchanged (1,432.0 → 1,432.7 ms). C/A = 12.44x → 7.06x.
-* **Encoder.** 9 tensors / 341,999,616 B, 7 reps: **262.28 → 748.37 MB/s
-  (2.85x)** sequential and **1,524.81 MB/s (5.81x)** at four emission threads.
+* **Encoder, store level.** The wall court's own phase profile (one
+  attribution repetition, `configs.C.attribution_rep.ledger`) gives the
+  in-place delta: **mode-9 encode 1,791.4 → 194.4 ms (9.2x)** and **analyse
+  346.7 → 181.7 ms (1.91x)**, the second because the analyser's histogram is
+  handed to the encoder and its kernel is now four-bank. Prepared total
+  3,323.4 → 1,559.4 ms.
+* **Encoder, codec level.** 9 tensors / 341,999,616 B, 7 reps: **262.28 →
+  748.37 MB/s (2.85x)** sequential and **1,524.81 MB/s (5.81x)** at four
+  emission threads.
   Embedding 272,269,312 B: 1,044.2 (reference) / 1,188.0 (replica wall) →
   363.87 ms, 177.24 ms at 4 threads, faults 9,814 → 644.
 * **Byte identity.** `WeftCodec/tests/mode9_encoder_identity.rs` 6/6: every
@@ -9375,6 +9382,9 @@ candidate and discards the losers. Deliverable:
   `r19-diag.json`. Courts: `bench/scripts/mode9_encoder_court.sh` (inside the
   bench court), `bench/scripts/r19_wall_court.sh` (inside the bench court),
   `scripts/augmentation_court.sh --local` (host orchestrator).
+* **Next bottleneck.** Publication is now 63.1 % of C's wall: blob publish
+  769.2 ms + commit 700.4 ms (index segment 337.8, manifest commit 356.9).
+  Encoding is 30.1 %. That is R20.
 * **Gates.** WeftCodec `cargo test --all-targets`: all suites pass. Rust
   `cargo test --all-targets` and FUSE `cargo test --features fuse --all-targets`:
   pass, with the two pre-existing ignored FUSE tests. Conformance: Rust and Go

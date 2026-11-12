@@ -10605,5 +10605,38 @@
   ],
   "receipt": null,
   "kind": "present"
+ },
+ {
+  "id": "r19_store_level_mode9_ledger",
+  "claim": "In the wall court's own phase profile the store-level mode-9 encode falls from 1,791.4 ms to 194.4 ms and the analyse stage from 346.7 ms to 181.7 ms.",
+  "value": "1,791.4",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_analyse_histogram_handoff",
+  "claim": "The analyse stage gets 1.91x faster because the encoder is handed the analyser's exact histogram and the histogram kernel is four-bank.",
+  "value": "181.7",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_next_bottleneck",
+  "claim": "After R19, publication is 63.1 % of the C wall (blob publish 769.2 ms + commit 700.4 ms) and encoding 30.1 %, which is R20's target.",
+  "value": "63.1 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
  }
 ]

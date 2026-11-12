@@ -258,6 +258,46 @@ R18's own published C figure was 4,117.8 ms at the same codec revision; the
 before run here reproduces it (4,101.6), so the pair is comparable across
 sessions and the after figure is not an artefact of a lucky host.
 
+## 6a. The measured ledger at the R19 revision
+
+The wall court records the shipped phase profile for one attribution repetition
+(`configs.C.attribution_rep.ledger` in both receipts), so the delta is not a
+projection:
+
+| Phase | before (ms) | after (ms) | share of the after wall |
+|---|---:|---:|---:|
+| mode-9 `FLOAT_TENSOR` encode (35 tensors) | 1,791.4 | **194.4** | 8.4 % |
+| analyse (exact histogram + ZSTD sampling) | 346.7 | **181.7** | 7.8 % |
+| ZSTD level 3 (51 tensors) | 278.8 | 283.9 | 12.2 % |
+| other encode / planning / raw | 41.9 | 40.5 | 1.7 % |
+| **prepare** | **3,323.4** | **1,559.4** | 67.0 % |
+| ├ encode total | 2,458.8 | 700.5 | 30.1 % |
+| ├ blob publish (202 publications) | 774.2 | 769.2 | 33.0 % |
+| ├ digest | 66.2 | 66.4 | 2.9 % |
+| └ prepare unattributed | 24.2 | 23.3 | 1.0 % |
+| **commit** | **708.1** | **700.4** | 30.1 % |
+| ├ index segment (advisory, per commit) | 347.6 | 337.8 | 14.5 % |
+| └ manifest commit (records + superblock) | 354.6 | 356.9 | 15.3 % |
+| init + source read + footprint walk | 54.8 | 53.3 | 2.3 % |
+| unattributed residual | 15.4 | 15.4 | 0.7 % |
+| **wall** | **4,101.6** | **2,328.4** | 100 % |
+
+The store-level mode-9 encode falls **9.2x** (1,791.4 → 194.4 ms), more than
+the codec-level 2.85x/5.81x, for two reasons that are both attributable: the
+analyser's histogram is now handed to the encoder instead of being recomputed
+(one fewer pass over every gated tensor), and the eight-tensor MLP tail and the
+embedding now run their emission on four threads.
+
+## 6b. Next bottleneck
+
+Publication is now 63.1 % of the wall: **blob publish 769.2 ms + commit 700.4 ms
+= 1,469.6 ms**, of which the advisory full-state index segment is 337.8 ms and
+the 101 commit-record/superblock publications are 356.9 ms. Encoding is 30.1 %.
+That is exactly R20's target ("publication tax"): the shipped `Store::group`
+path already saves ~689 ms of control-plane work on the B ablation (R17 §8), and
+the pack plane trades requests and metadata for bytes on the 330 MB C object
+set. R19 does not touch either.
+
 ## 7. Losses, limits and non-claims
 
 * **One host, warm page cache.** The absolute walls move with host write
