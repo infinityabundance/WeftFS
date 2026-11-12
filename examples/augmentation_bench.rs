@@ -53,7 +53,8 @@ use weftfs::s3::{S3Backend, S3Config};
 use weftfs::safetensors::SafetensorsFile;
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::tensor_store::{
-    FastCodec, TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec, WritePolicy,
+    FastCodec, PlannerMode, TensorLayoutSpec, TensorPlanOptions, TensorStrategy, TensorWriteSpec,
+    WritePolicy,
 };
 
 const FIXTURE_SHA256: &str = "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe";
@@ -395,6 +396,15 @@ struct Args {
     /// Official contract-court receipt used to prove the default C row is
     /// unchanged at this revision.
     official_receipt: Option<PathBuf>,
+    /// Expected SHA-256 of the fixture. Defaults to the frozen Qwen2.5-0.5B
+    /// Instruct container; the cross-family decision-diff court passes the
+    /// pinned digest of the family it is running so the gate never silently
+    /// accepts a different file.
+    fixture_sha256: Option<String>,
+    /// Decision-diff only: one repetition, no timing claim. The timing checks
+    /// (`at_least_seven_reps`, the same-revision identity gate) are omitted from
+    /// the receipt rather than asserted, and the receipt records the mode.
+    diff_only: bool,
 }
 
 impl Default for Args {
@@ -424,6 +434,8 @@ impl Default for Args {
             reps: 7,
             configs: None,
             official_receipt: None,
+            fixture_sha256: None,
+            diff_only: false,
         }
     }
 }
@@ -480,6 +492,8 @@ fn parse_args() -> Result<Args, String> {
             "--official-receipt" => {
                 args.official_receipt = Some(PathBuf::from(value("--official-receipt")?))
             }
+            "--fixture-sha256" => args.fixture_sha256 = Some(value("--fixture-sha256")?),
+            "--diff-only" => args.diff_only = true,
             other => return Err(format!("unknown flag `{other}`")),
         }
     }
@@ -895,7 +909,12 @@ fn write_native_app_s3(
 // WeftFS write (B/C/D/E)
 // ---------------------------------------------------------------------------
 
-fn representation_spec(config: &str, ablate_zstd19: bool, ablate_float: bool) -> TensorWriteSpec {
+fn representation_spec(
+    config: &str,
+    ablate_zstd19: bool,
+    ablate_float: bool,
+    planner: PlannerMode,
+) -> TensorWriteSpec {
     let base = config_base(config);
     let planned = matches!(base, "C" | "E");
     if planned {
@@ -907,6 +926,7 @@ fn representation_spec(config: &str, ablate_zstd19: bool, ablate_float: bool) ->
                 semantic_search: false,
                 zstd19: !ablate_zstd19,
                 float_tensor: !ablate_float,
+                planner,
                 ..TensorPlanOptions::default()
             },
             tile_shape: None,
@@ -922,6 +942,7 @@ fn representation_spec(config: &str, ablate_zstd19: bool, ablate_float: bool) ->
                 fast_codec: FastCodec::Raw,
                 fast_zstd_level: 1,
                 semantic_search: false,
+                planner,
                 ..TensorPlanOptions::default()
             },
             tile_shape: None,
@@ -950,15 +971,23 @@ fn is_weft_store_config(key: &str) -> bool {
     matches!(config_base(key), "B" | "C" | "D" | "E")
 }
 
-/// Parse an ablation key into (ablate zstd-19, ablate mode 9, one group commit).
-fn ablation_flags(key: &str) -> Result<(bool, bool, bool), String> {
+/// Parse an ablation key into (ablate zstd-19, ablate mode 9, one group commit,
+/// planner mode).
+///
+/// `-legacy` is the R18 decision-diff control: it pins the pre-R18 exhaustive
+/// planner on the unmodified candidate set. The R17 ablations (`-noz19`,
+/// `-nom9`, `-both`) are defined on that same exhaustive planner, because
+/// "encode this candidate and throw it away" only has a meaning there; the
+/// default rows (`C`, `E`) run the shipped two-stage planner.
+fn ablation_flags(key: &str) -> Result<(bool, bool, bool, PlannerMode), String> {
     let base = config_base(key);
     match config_suffix(key) {
-        "" => Ok((false, false, false)),
-        "group" if base == "B" => Ok((false, false, true)),
-        "noz19" if matches!(base, "C" | "E") => Ok((true, false, false)),
-        "nom9" if matches!(base, "C" | "E") => Ok((false, true, false)),
-        "both" if matches!(base, "C" | "E") => Ok((true, true, false)),
+        "" => Ok((false, false, false, PlannerMode::TwoStage)),
+        "group" if base == "B" => Ok((false, false, true, PlannerMode::TwoStage)),
+        "legacy" if matches!(base, "C" | "E") => Ok((false, false, false, PlannerMode::Exhaustive)),
+        "noz19" if matches!(base, "C" | "E") => Ok((true, false, false, PlannerMode::Exhaustive)),
+        "nom9" if matches!(base, "C" | "E") => Ok((false, true, false, PlannerMode::Exhaustive)),
+        "both" if matches!(base, "C" | "E") => Ok((true, true, false, PlannerMode::Exhaustive)),
         suffix => Err(format!(
             "configuration `{key}` has unknown ablation suffix `{suffix}`"
         )),
@@ -1048,6 +1077,62 @@ fn plan_json(plan: &weftfs::tensor_store::TensorPlan) -> Json {
         "runner_up": plan.runner_up.map(|strategy| strategy.as_str()),
         "runner_up_physical_bytes": plan.runner_up_physical_bytes,
         "candidates": candidates,
+        "planner": planner_json(plan),
+    })
+}
+
+fn estimate_json(estimate: &weftfs::two_stage::SampleEstimate) -> Json {
+    json!({
+        "method": estimate.method,
+        "level": estimate.level,
+        "predicted": estimate.predicted,
+        "lower": estimate.lower,
+        "upper": estimate.upper,
+        "sampled_chunks": estimate.sampled_chunks,
+        "sampled_bytes": estimate.sampled_bytes,
+        "total_chunks": estimate.total_chunks,
+    })
+}
+
+/// The R18 decision stream for one tensor, in machine-readable form.
+fn planner_json(plan: &weftfs::tensor_store::TensorPlan) -> Json {
+    let Some(trace) = &plan.planner else {
+        return Json::Null;
+    };
+    let analysis = &trace.analysis;
+    json!({
+        "mode": trace.mode.as_str(),
+        "analysis": {
+            "logical_bytes": analysis.logical_bytes,
+            "raw_bytes": analysis.raw_bytes,
+            "chunk_bytes": analysis.chunk_bytes,
+            "zstd3": analysis.zstd3.as_ref().map(estimate_json),
+            "zstd19": analysis.zstd19.as_ref().map(estimate_json),
+            "mode9_exact": analysis.mode9.as_ref().map(|p| p.exact_bytes),
+            "mode9_exponent_symbols": analysis.mode9.as_ref().map(|p| p.exponent_symbols),
+            "sampled_chunks": analysis.samples.len(),
+        },
+        "decision": {
+            "encode_zstd3": trace.decision.need_zstd3,
+            "mode9_gate": match trace.decision.mode9 {
+                weftfs::two_stage::Mode9Gate::Pass => "pass",
+                weftfs::two_stage::Mode9Gate::Fail => "fail",
+                weftfs::two_stage::Mode9Gate::Unresolved => "unresolved",
+            },
+            "zstd3_skip_bound": trace.decision.zstd3_skip_bound,
+        },
+        "level19": trace.level19.as_ref().map(|decision| json!({
+            "encode": decision.encode,
+            "skip_bound": decision.skip_bound,
+            "estimate": decision.estimate.as_ref().map(estimate_json),
+        })),
+        "actual": {
+            "zstd3": trace.actual_zstd3,
+            "zstd19": trace.actual_zstd19,
+            "mode9": trace.actual_mode9,
+        },
+        "prediction_violations": trace.prediction_violations,
+        "fallback_exhaustive": trace.fallback_exhaustive,
     })
 }
 
@@ -1057,7 +1142,7 @@ fn write_weftfs(
     subset: &Subset,
     file: &SafetensorsFile,
 ) -> Result<Json, String> {
-    let (ablate_zstd19, ablate_float, group_commit) = ablation_flags(config)?;
+    let (ablate_zstd19, ablate_float, group_commit, planner) = ablation_flags(config)?;
     let work = args.work.clone().unwrap();
     let store_path = config_store_path(&work, config);
     if store_path.exists() {
@@ -1094,6 +1179,16 @@ fn write_weftfs(
     let mut prepare_phases: BTreeMap<&'static str, (u64, u128)> = BTreeMap::new();
     let mut commit_phases: BTreeMap<&'static str, (u64, u128)> = BTreeMap::new();
     let mut details: Vec<Json> = Vec::new();
+    // R18 decision-stream counters for this write.
+    let mut planner_tensors = 0u64;
+    let mut planner_skipped_zstd3 = 0u64;
+    let mut planner_skipped_zstd19 = 0u64;
+    let mut planner_encoded_zstd19 = 0u64;
+    let mut planner_mode9_pass = 0u64;
+    let mut planner_mode9_fail = 0u64;
+    let mut planner_mode9_unresolved = 0u64;
+    let mut planner_violation_tensors = 0u64;
+    let mut planner_fallback_tensors = 0u64;
     // Group mode stages every prepared object and publishes one commit.
     let mut staged: Vec<(String, weftfs::tensor_store::PreparedTensorObject, usize)> = Vec::new();
 
@@ -1112,7 +1207,7 @@ fn write_weftfs(
         let stats_before = store.backend_stats();
         let snap_before = profiling.then(phase_profile::snapshot);
         let started = Instant::now();
-        let spec = representation_spec(config, ablate_zstd19, ablate_float);
+        let spec = representation_spec(config, ablate_zstd19, ablate_float, planner);
         let seed = object_seed(&seed_base, config, &sel.name);
         let (mut prepared, plan) = store
             .prepare_tensor_object_with_spec_seeded_planned(
@@ -1121,6 +1216,28 @@ fn write_weftfs(
             .map_err(|err| format!("prepare `{}`: {err}", sel.name))?;
         let prepare_elapsed = started.elapsed();
         prepare_ms += prepare_elapsed.as_secs_f64() * 1000.0;
+        if let Some(trace) = plan.planner.as_ref() {
+            planner_tensors += 1;
+            if !trace.decision.need_zstd3 {
+                planner_skipped_zstd3 += 1;
+            }
+            if trace.level19.as_ref().map(|decision| decision.encode) == Some(true) {
+                planner_encoded_zstd19 += 1;
+            } else {
+                planner_skipped_zstd19 += 1;
+            }
+            match trace.decision.mode9 {
+                weftfs::two_stage::Mode9Gate::Pass => planner_mode9_pass += 1,
+                weftfs::two_stage::Mode9Gate::Fail => planner_mode9_fail += 1,
+                weftfs::two_stage::Mode9Gate::Unresolved => planner_mode9_unresolved += 1,
+            }
+            if !trace.prediction_violations.is_empty() {
+                planner_violation_tensors += 1;
+            }
+            if trace.fallback_exhaustive {
+                planner_fallback_tensors += 1;
+            }
+        }
         let snap_after_prepare = profiling.then(phase_profile::snapshot);
         let prepare_delta = match (&snap_before, &snap_after_prepare) {
             (Some(before), Some(after)) => {
@@ -1398,6 +1515,19 @@ fn write_weftfs(
         "output_contents": content_by_name,
         "prepare_phases": phase_totals_json(&prepare_phases),
         "commit_phases": phase_totals_json(&commit_phases),
+        "planner": json!({
+            "mode": planner.as_str(),
+            "tensors_with_trace": planner_tensors,
+            "skipped_zstd3": planner_skipped_zstd3,
+            "skipped_zstd19": planner_skipped_zstd19,
+            "encoded_zstd19": planner_encoded_zstd19,
+            "mode9_gate_pass": planner_mode9_pass,
+            "mode9_gate_fail": planner_mode9_fail,
+            "mode9_gate_unresolved": planner_mode9_unresolved,
+            "prediction_violation_tensors": planner_violation_tensors,
+            "exhaustive_fallback_tensors": planner_fallback_tensors,
+            "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+        }),
         "phases": whole_phases,
         "per_tensor": if args.per_tensor_detail { Json::Array(details) } else { Json::Null },
     }))
@@ -2486,7 +2616,8 @@ fn assemble_cmd(args: &Args) -> Result<(), String> {
     Ok(())
 }
 
-const DEFAULT_ABLATION_CONFIGS: &str = "A,B,C,D,E,N,B-group,C-noz19,C-nom9,C-both";
+/** The R17/R18 configuration matrix. */
+const DEFAULT_ABLATION_CONFIGS: &str = "A,B,C,C-legacy,D,E,N,B-group,C-noz19,C-nom9,C-both";
 
 /// Pinned C row from the R3 receipt (`augmentation-local-20261109T134132Z`).
 /// Strategy counts must stay identical across revisions; the physical footprint
@@ -2687,7 +2818,8 @@ fn build_ledger(write: &Json) -> Json {
     let zstd3 = prepare_phase("encode_zstd");
     let zstd19 = prepare_phase("encode_zstd19");
     let mode9 = prepare_phase("encode_float_tensor");
-    let encode_other = (encode - zstd3 - zstd19 - mode9).max(0.0);
+    let analyze = prepare_phase("analyze");
+    let encode_other = (encode - zstd3 - zstd19 - mode9 - analyze).max(0.0);
     let prepare_digest = prepare_phase("digest");
     let prepare_publish = prepare_phase("blob_publish");
     let prepare_residual = (prepare - encode - prepare_digest - prepare_publish).max(0.0);
@@ -2709,6 +2841,7 @@ fn build_ledger(write: &Json) -> Json {
             "encode_zstd_level3_ms": zstd3,
             "encode_zstd_level19_ms": zstd19,
             "encode_mode9_float_tensor_ms": mode9,
+            "encode_analyze_ms": analyze,
             "encode_other_planning_and_raw_ms": encode_other,
             "digest_ms": prepare_digest,
             "blob_publish_ms": prepare_publish,
@@ -2737,8 +2870,119 @@ fn build_ledger(write: &Json) -> Json {
             "zstd_level19": write["prepare_phases"]["encode_zstd19"]["count"],
             "mode9_float_tensor": write["prepare_phases"]["encode_float_tensor"]["count"],
         },
+        "planner": write["planner"],
         "next_instrumentation": "fsync is inside BlobPublish/ManifestCommit on the local backend; a separate BackendSync phase would move it out of those two and shrink the residual further. The store footprint walk is now measured separately.",
     })
+}
+
+/// Per-tensor decision diff between two planned-write configurations.
+///
+/// `before` is normally the exhaustive planner (`C-legacy`) and `after` the
+/// shipped two-stage planner (`C`). The diff answers, tensor by tensor: did the
+/// representation change, did its published size change, which candidates were
+/// skipped and with what bound, and did any prediction interval get violated.
+fn decision_diff(
+    before_key: &str,
+    after_key: &str,
+    before: &Json,
+    after: &Json,
+) -> Result<Json, String> {
+    let rows = |write: &Json| -> Result<BTreeMap<String, Json>, String> {
+        let per_tensor = write["per_tensor"].as_array().ok_or_else(|| {
+            "per-tensor detail missing (--per-tensor-detail was not set)".to_owned()
+        })?;
+        let mut out = BTreeMap::new();
+        for row in per_tensor {
+            let name = row["name"].as_str().unwrap_or_default().to_owned();
+            out.insert(name, row.clone());
+        }
+        Ok(out)
+    };
+    let before_rows = rows(before)?;
+    let after_rows = rows(after)?;
+    let mut changed: Vec<Json> = Vec::new();
+    let mut compared = 0u64;
+    let mut mode9_checked = 0u64;
+    let mut mode9_mismatches = 0u64;
+    let mut violation_tensors = 0u64;
+    let mut skipped_zstd3_with_bound = 0u64;
+    let mut skipped_zstd19_with_bound = 0u64;
+    for (name, before_row) in &before_rows {
+        let Some(after_row) = after_rows.get(name) else {
+            return Err(format!("tensor `{name}` missing from the {after_key} row"));
+        };
+        compared += 1;
+        let before_strategy = before_row["plan"]["chosen"].as_str().unwrap_or_default();
+        let after_strategy = after_row["plan"]["chosen"].as_str().unwrap_or_default();
+        let before_bytes = before_row["plan"]["chosen_physical_bytes"].as_u64();
+        let after_bytes = after_row["plan"]["chosen_physical_bytes"].as_u64();
+        if before_strategy != after_strategy || before_bytes != after_bytes {
+            changed.push(json!({
+                "name": name,
+                "before_strategy": before_strategy,
+                "after_strategy": after_strategy,
+                "before_bytes": before_bytes,
+                "after_bytes": after_bytes,
+            }));
+        }
+        // The exact mode-9 prediction: wherever the encode ran, the measured
+        // frame must equal it; wherever it did not, the prediction is still
+        // recorded and the skip carries a bound.
+        let planner = &after_row["plan"]["planner"];
+        if let (Some(predicted), Some(actual)) = (
+            planner["analysis"]["mode9_exact"].as_u64(),
+            planner["actual"]["mode9"].as_u64(),
+        ) {
+            mode9_checked += 1;
+            if predicted != actual {
+                mode9_mismatches += 1;
+            }
+        }
+        if planner["prediction_violations"]
+            .as_array()
+            .map(|items| !items.is_empty())
+            .unwrap_or(false)
+        {
+            violation_tensors += 1;
+        }
+        if planner["decision"]["zstd3_skip_bound"].is_string() {
+            skipped_zstd3_with_bound += 1;
+        }
+        if planner["level19"]["skip_bound"].is_string() {
+            skipped_zstd19_with_bound += 1;
+        }
+    }
+    let sum = |write: &Json| -> u64 {
+        write["per_tensor"]
+            .as_array()
+            .map(|rows| {
+                rows.iter()
+                    .filter_map(|row| row["plan"]["chosen_physical_bytes"].as_u64())
+                    .sum()
+            })
+            .unwrap_or(0)
+    };
+    let before_bytes_total = sum(before);
+    let after_bytes_total = sum(after);
+    let planner_counts = |write: &Json| write["planner"].clone();
+    Ok(json!({
+        "before": before_key,
+        "after": after_key,
+        "tensors_compared": compared,
+        "strategy_or_size_changes": changed.len(),
+        "changed": changed,
+        "decisions_match": changed.is_empty(),
+        "chosen_bytes_before": before_bytes_total,
+        "chosen_bytes_after": after_bytes_total,
+        "chosen_bytes_delta": after_bytes_total as i64 - before_bytes_total as i64,
+        "planner_before": planner_counts(before),
+        "planner_after": planner_counts(after),
+        "mode9_predictions_checked_against_actual": mode9_checked,
+        "mode9_prediction_mismatches": mode9_mismatches,
+        "interval_violation_tensors": violation_tensors,
+        "skipped_zstd3_with_bound": skipped_zstd3_with_bound,
+        "skipped_zstd19_with_bound": skipped_zstd19_with_bound,
+    }))
 }
 
 fn ablate(args: &Args) -> Result<(), String> {
@@ -2774,9 +3018,13 @@ fn ablate(args: &Args) -> Result<(), String> {
     let file =
         SafetensorsFile::parse(&fixture).map_err(|err| format!("{}: {err}", fixture.display()))?;
     let actual = hex::encode(file.sha256);
-    if actual != FIXTURE_SHA256 {
+    let expected_sha256 = args
+        .fixture_sha256
+        .clone()
+        .unwrap_or_else(|| FIXTURE_SHA256.to_owned());
+    if actual != expected_sha256 {
         return Err(format!(
-            "fixture SHA-256 mismatch: expected {FIXTURE_SHA256}, got {actual}"
+            "fixture SHA-256 mismatch: expected {expected_sha256}, got {actual}"
         ));
     }
     let subset = select_subset(&file, args.include_embedding, args.max_others)?;
@@ -3084,23 +3332,82 @@ fn ablate(args: &Args) -> Result<(), String> {
     };
     let default_identity_ok = official_court_comparison["match"].as_bool() == Some(true);
     let zstd19_eligible = subset.tensors.iter().any(|sel| sel.bytes >= 1 << 20);
-    let ablation_counts_ok = ["C", "C-noz19", "C-nom9", "C-both"].iter().all(|key| {
-        let counts = &configs_receipt[*key]["attribution_rep"]["ledger"]["encode_counts"];
+    let tensors = subset.tensors.len() as u64;
+    // R18 decision diff: the exhaustive planner (`-legacy`) against the shipped
+    // two-stage planner. Both rows must be present for the diff to exist.
+    let diff_pair = if detail_rep.contains_key("C") && detail_rep.contains_key("C-legacy") {
+        Some(("C-legacy", "C"))
+    } else if detail_rep.contains_key("E") && detail_rep.contains_key("E-legacy") {
+        Some(("E-legacy", "E"))
+    } else {
+        None
+    };
+    let decision_diff_json = match diff_pair {
+        Some((before_key, after_key)) => Some(decision_diff(
+            before_key,
+            after_key,
+            &detail_rep[before_key]["write"],
+            &detail_rep[after_key]["write"],
+        )?),
+        None => None,
+    };
+    let decision_diff_ok = match (&decision_diff_json, diff_pair) {
+        (Some(diff), Some(_)) => {
+            diff["decisions_match"].as_bool() == Some(true)
+                && diff["mode9_prediction_mismatches"].as_u64() == Some(0)
+                && diff["interval_violation_tensors"].as_u64() == Some(0)
+        }
+        _ => false,
+    };
+    let storage_unchanged_ok = match diff_pair {
+        Some((before_key, after_key)) => {
+            let before = configs_receipt[before_key]["physical_footprint_bytes"]["median"].as_f64();
+            let after = configs_receipt[after_key]["physical_footprint_bytes"]["median"].as_f64();
+            before.is_some() && before == after
+        }
+        None => false,
+    };
+    // Encode counts: the exhaustive rows keep their R17 meaning (the ablation
+    // suffix removes exactly one candidate); a two-stage row must instead agree
+    // with its own decision stream.
+    let ablation_counts_ok = configs_receipt.keys().all(|key| {
+        if !is_weft_store_config(key) {
+            return true;
+        }
+        let counts = &configs_receipt[key]["attribution_rep"]["ledger"]["encode_counts"];
+        let planner = &configs_receipt[key]["attribution_rep"]["ledger"]["planner"];
+        let zstd3 = counts["zstd_level3"].as_u64().unwrap_or(0);
         let zstd19 = counts["zstd_level19"].as_u64().unwrap_or(0);
         let mode9 = counts["mode9_float_tensor"].as_u64().unwrap_or(0);
-        let disabled_zstd19 = key.contains("noz19") || key.contains("both");
-        let disabled_mode9 = key.contains("nom9") || key.contains("both");
-        let zstd19_ok = if disabled_zstd19 {
-            zstd19 == 0
-        } else {
-            !zstd19_eligible || zstd19 > 0
-        };
-        let mode9_ok = if disabled_mode9 {
-            mode9 == 0
-        } else {
-            mode9 > 0
-        };
-        zstd19_ok && mode9_ok
+        match config_base(key) {
+            // The Fast pass-through rows run no planned encoder at all.
+            "B" | "D" => zstd3 == 0 && zstd19 == 0 && mode9 == 0,
+            _ => match config_suffix(key) {
+                "" => {
+                    // Two-stage: encode counts follow the recorded decisions.
+                    let pass = planner["mode9_gate_pass"].as_u64().unwrap_or(0);
+                    let unresolved = planner["mode9_gate_unresolved"].as_u64().unwrap_or(0);
+                    let encoded19 = planner["encoded_zstd19"].as_u64().unwrap_or(0);
+                    zstd3 <= tensors && zstd19 == encoded19 && mode9 == pass + unresolved
+                }
+                suffix => {
+                    // Exhaustive planner: the R17 ablation contract.
+                    let disabled_zstd19 = matches!(suffix, "noz19" | "both");
+                    let disabled_mode9 = matches!(suffix, "nom9" | "both");
+                    let zstd19_ok = if disabled_zstd19 {
+                        zstd19 == 0
+                    } else {
+                        !zstd19_eligible || zstd19 > 0
+                    };
+                    let mode9_ok = if disabled_mode9 {
+                        mode9 == 0
+                    } else {
+                        mode9 == tensors
+                    };
+                    zstd19_ok && mode9_ok
+                }
+            },
+        }
     });
     let crash_ok = configs_receipt.iter().all(|(_, entry)| {
         let crash = &entry["attribution_rep"]["crash"];
@@ -3116,16 +3423,52 @@ fn ablate(args: &Args) -> Result<(), String> {
     let reps_ok = configs_receipt
         .iter()
         .all(|(_, entry)| entry["reps"].as_u64().unwrap_or(0) >= 7);
-    let checks = json!({
-        "all_configs_present": configs_receipt.len() == rows.len(),
-        "at_least_seven_reps": reps_ok,
-        "all_restores_exact": all_exact,
-        "strategies_stable_across_reps": configs_receipt.iter().all(|(_, entry)| entry["strategies_stable_across_reps"].as_bool() == Some(true)),
-        "default_c_row_matches_r3_strategies": c_strategies_ok,
-        "default_c_matches_official_court": default_identity_ok,
-        "ablation_encode_counts_exact": ablation_counts_ok,
-        "crash_proxy_old_or_new": crash_ok,
-    });
+    let mut checks: serde_json::Map<String, Json> = serde_json::Map::new();
+    if !args.diff_only {
+        checks.insert(
+            "all_configs_present".to_owned(),
+            json!(configs_receipt.len() == rows.len()),
+        );
+        checks.insert("at_least_seven_reps".to_owned(), json!(reps_ok));
+        checks.insert(
+            "default_c_matches_official_court".to_owned(),
+            json!(default_identity_ok),
+        );
+        checks.insert("crash_proxy_old_or_new".to_owned(), json!(crash_ok));
+    }
+    checks.insert("all_restores_exact".to_owned(), json!(all_exact));
+    checks.insert(
+        "strategies_stable_across_reps".to_owned(),
+        json!(configs_receipt
+            .iter()
+            .all(|(_, entry)| entry["strategies_stable_across_reps"].as_bool() == Some(true))),
+    );
+    if !args.diff_only {
+        // The R3 strategy counts are the frozen Qwen fixture's. A cross-family
+        // decision diff runs on a different container, so the check is omitted
+        // there rather than asserted or faked.
+        checks.insert(
+            "default_c_row_matches_r3_strategies".to_owned(),
+            json!(c_strategies_ok),
+        );
+    }
+    checks.insert(
+        "ablation_encode_counts_exact".to_owned(),
+        json!(ablation_counts_ok),
+    );
+    checks.insert(
+        "two_stage_decision_diff_present".to_owned(),
+        json!(decision_diff_json.is_some()),
+    );
+    checks.insert(
+        "two_stage_matches_exhaustive".to_owned(),
+        json!(decision_diff_ok),
+    );
+    checks.insert(
+        "two_stage_storage_unchanged".to_owned(),
+        json!(storage_unchanged_ok),
+    );
+    let checks = Json::Object(checks);
     let result = if checks
         .as_object()
         .map(|map| map.values().all(|value| value.as_bool() == Some(true)))
@@ -3139,6 +3482,7 @@ fn ablate(args: &Args) -> Result<(), String> {
         "schema": "weft.write_cost_ablation.v1",
         "generated_utc": utc_stamp(),
         "result": result,
+        "mode": if args.diff_only { "decision-diff" } else { "matrix" },
         "contract": "bench/CONTRACTS-augmentation.md",
         "methodology": {
             "reps": reps,
@@ -3164,6 +3508,7 @@ fn ablate(args: &Args) -> Result<(), String> {
         },
         "orders": orders,
         "configs": configs_receipt,
+        "decision_diff": decision_diff_json,
         "default_identity": {
             "c_footprint_delta_vs_r3_bytes": c_footprint_delta,
             "r3_footprint_bytes": R3_C_PHYSICAL_FOOTPRINT,
@@ -3245,9 +3590,17 @@ fn run(args: Args) -> Result<(), String> {
             parse_started.elapsed().as_secs_f64() * 1000.0
         ),
     );
-    if actual != FIXTURE_SHA256 {
+    if actual
+        != args
+            .fixture_sha256
+            .clone()
+            .unwrap_or_else(|| FIXTURE_SHA256.to_owned())
+    {
         return Err(format!(
-            "fixture SHA-256 mismatch: expected {FIXTURE_SHA256}, got {actual}"
+            "fixture SHA-256 mismatch: expected {}, got {actual}",
+            args.fixture_sha256
+                .clone()
+                .unwrap_or_else(|| FIXTURE_SHA256.to_owned())
         ));
     }
     let subset = select_subset(&file, args.include_embedding, args.max_others)?;
@@ -3405,9 +3758,13 @@ fn main() {
                 .ok_or_else(|| "--work is required".to_owned())?;
             let file = SafetensorsFile::parse(&fixture).map_err(|err| err.to_string())?;
             let actual = hex::encode(file.sha256);
-            if actual != FIXTURE_SHA256 {
+            let expected_sha256 = args
+                .fixture_sha256
+                .clone()
+                .unwrap_or_else(|| FIXTURE_SHA256.to_owned());
+            if actual != expected_sha256 {
                 return Err(format!(
-                    "fixture SHA-256 mismatch: expected {FIXTURE_SHA256}, got {actual}"
+                    "fixture SHA-256 mismatch: expected {expected_sha256}, got {actual}"
                 ));
             }
             let subset = select_subset(&file, args.include_embedding, args.max_others)?;
