@@ -49,8 +49,14 @@ stamp="${WEFT_QUEUE_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 phase="${WEFT_QUEUE_PHASE:-after}"
 receipt="${WEFT_QUEUE_RECEIPT:-bench/receipts/checkpoint-queue-${section}-${phase}-${stamp}.json}"
 log="${receipt%.json}.log"
-work="${WEFT_QUEUE_WORK:-/tmp/weft-checkpoint-queue-${section}-${phase}}"
+work="${WEFT_QUEUE_WORK:-/work/.docker-cache/checkpoint-queue-${section}-${phase}}"
 mkdir -p "$(dirname "$receipt")"
+mkdir -p "$work"
+
+# Space is part of the result: the court's /tmp is a bounded tmpfs, so the
+# scratch store lives on the bind-mounted work tree and the observed usage is
+# recorded in the log beside the receipt.
+df -h /tmp /work 2>&1 || true
 
 args=("$section" --receipt "$receipt" --stamp "$stamp" --phase "$phase"
       --work-dir "$work" --weftfs-cli "$cli")
@@ -85,3 +91,4 @@ esac
 echo "checkpoint queue court: section=$section phase=$phase receipt=$receipt"
 echo "checkpoint queue court: args=${args[*]}"
 python3 python/courts/checkpoint_queue.py "${args[@]}" 2>&1 | tee "$log"
+df -h /tmp /work 2>&1 || true
