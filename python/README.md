@@ -11,36 +11,31 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install dist/weftcodec-1.3.0-py3-none-any.whl
+pip install dist/weftcodec-1.4.0-py3-none-any.whl
 # with the optional dataset extra
-pip install "dist/weftcodec-1.3.0-py3-none-any.whl[torch]"
+pip install "dist/weftcodec-1.4.0-py3-none-any.whl[torch]"
 # with the optional JAX/Orbax adapter extra
-pip install "dist/weftcodec-1.3.0-py3-none-any.whl[orbax]"
+pip install "dist/weftcodec-1.4.0-py3-none-any.whl[orbax]"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-> **PyPI.** `weftcodec 1.3.0` is **not published on PyPI.**
-> `scripts/publish-pypi.sh` requires `.docker-cache/.pypi-token`; that file does
-> not exist and no token was available, so the wheel and sdist are built and
-> `twine check`-clean but were not uploaded. Exact artifacts:
-> `weftcodec-1.3.0-py3-none-any.whl` sha256
-> `ba1ddf26c8fcb2791f875d9a16b766dfaa7ba999c4fbcbb10bf4d744d51f3660` and
-> `weftcodec-1.3.0.tar.gz` sha256
-> `d6eb391ef25bbe7e361a7232422f0d239f50af2bc60bd52203b194cefea655c7`; the
-> built files sit in `python/dist/`. Recorded in
-> `bench/receipts/release-artifacts-20261111T200115Z.json`. **PyPI serves
-> 1.2.0**, whose published long description is stale (it says PyPI is
-> unpublished and stops at mode 16); it is superseded by this document, not
-> re-uploaded.
+> **PyPI.** PyPI serves **`weftcodec 1.2.0`**. This document is the long
+> description for **1.4.0**; the 1.4.0 wheel and sdist are built and
+> `twine check`-clean in `python/dist/` but are **not uploaded** because
+> `scripts/publish-pypi.sh` requires `.docker-cache/.pypi-token`, which does
+> not exist. `docs/RELEASE-v1.4.0.md` records the exact artifact names, sizes
+> and sha256 values. The 1.2.0 description PyPI still shows is older than this
+> text; it is superseded by this document on the next upload, not re-uploaded
+> on its own.
 >
 > ```sh
 > pip install weftcodec==1.2.0     # what PyPI actually serves today
 > ```
 
-Install the 1.3.0 wheel from `python/dist/` (commands above) or from the GitHub
-release; `pip install weftcodec==1.3.0` fails until the upload is unblocked.
+Install the 1.4.0 wheel from `python/dist/` (commands above) or from the GitHub
+release; `pip install weftcodec==1.4.0` fails until the upload is unblocked.
 
 ## Usage
 
