@@ -1,0 +1,88 @@
+queue court sweep interval=1 config=weft
+sweep interval=1 config=weft rep=1/2
+Traceback (most recent call last):
+  File "/work/python/courts/checkpoint_queue.py", line 597, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/checkpoint_queue.py", line 593, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/checkpoint_queue.py", line 181, in run_sweep
+    cell = tg._sweep_cell(args, interval, config, work)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1807, in _sweep_cell
+    result = run_one_loop(local, config, rep, run_dir)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1117, in run_one_loop
+    raise RuntimeError(
+RuntimeError: loop child weft rep 0 failed (rc=1)
+on3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+Traceback (most recent call last):
+  File "/work/python/courts/training_goodput.py", line 3049, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/training_goodput.py", line 3045, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 709, in child_loop
+    inflight.finalize()
+  File "/work/python/courts/training_goodput.py", line 492, in finalize
+    self.async_handle.result()
+  File "/work/python/weftcodec/dcp.py", line 2988, in result
+    metadata = self._future.result(timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/dcp.py", line 3083, in _run
+    return dcp.save(
+           ^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py", line 90, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py", line 488, in inner_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/state_dict_saver.py", line 196, in save
+    return _save_state_dict(
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/state_dict_saver.py", line 513, in _save_state_dict
+    metadata = distW.all_reduce("write", write_data, finish_checkpoint)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py", line 264, in all_reduce
+    raise final_result
+torch.distributed.checkpoint.api.CheckpointException: CheckpointException ranks:dict_keys([0])
+Traceback (most recent call last): (RANK 0)
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py", line 242, in all_reduce
+    local_data = map_fun()
+                 ^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py", line 90, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/state_dict_saver.py", line 502, in write_data
+    all_writes.wait()
+  File "/usr/local/lib/python3.12/site-packages/torch/futures/__init__.py", line 80, in wait
+    return super().wait()
+           ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/futures/__init__.py", line 279, in raise_error
+    raise fut_result
+  File "/work/python/weftcodec/dcp.py", line 1872, in write_data
+    results = self._execute(plan, planner)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/dcp.py", line 2191, in _execute
+    write_report = service.write_checkpoint(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/service.py", line 951, in write_checkpoint
+    response = self._call(opcode, bytes(body), fd=fd)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/service.py", line 660, in _call
+    raise ServiceError(class_name, message, request_id=request_id)
+weftcodec.service.ServiceError: Io: checkpoint tensor `model.blocks.2.proj.weight` shard 0/1: No space left on device (os error 28)
+
+

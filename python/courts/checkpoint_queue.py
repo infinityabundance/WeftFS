@@ -375,10 +375,40 @@ def _race_submissions(args, *, mode, count, max_outstanding=None, policy="fail")
         except BaseException as exc:  # noqa: BLE001 - the class is the datum
             if isinstance(exc, (SystemExit, KeyboardInterrupt)):
                 raise
+            root = exc
+            depth = 0
+            while getattr(root, "__cause__", None) is not None and depth < 8:
+                root = root.__cause__
+                depth += 1
             row["outcome"] = "raised"
             row["error_class"] = type(exc).__name__
-            row["error"] = str(exc)[:600]
+            row["root_class"] = type(root).__name__
+            row["root_message"] = str(root)[:400]
+            row["error"] = str(exc)[-600:]
             row["dcp_error"] = isinstance(exc, DcpError)
+            # PyTorch aggregates per-rank failures in `_failures` (and, in some
+            # versions, `.exceptions`) rather than chaining `__cause__`, so the
+            # store's typed error is dug out of both.
+            inner = []
+            for attribute in ("_failures", "exceptions"):
+                collected = getattr(exc, attribute, None)
+                if isinstance(collected, dict):
+                    collected = list(collected.values())
+                elif not isinstance(collected, (list, tuple)):
+                    continue
+                for item in collected:
+                    # `_failures` maps rank -> (exception, traceback frames).
+                    if isinstance(item, (list, tuple)) and item:
+                        item = item[0]
+                    inner.append(item)
+            row["inner_classes"] = sorted({type(item).__name__ for item in inner})
+            row["inner_messages"] = sorted(
+                {
+                    str(item).strip().splitlines()[-1][:300]
+                    for item in inner
+                    if str(item).strip()
+                }
+            )
         finally:
             outcomes.append(row)
 
@@ -402,7 +432,7 @@ def _race_submissions(args, *, mode, count, max_outstanding=None, policy="fail")
     wall_ms = (time.perf_counter() - wall_started) * 1000.0
     watcher.join(timeout=1.0)
 
-    drain = session.close()
+    drain = session.close() or {}
     landed_reported = [row for row in outcomes if row["outcome"] == "landed"]
     raised = [row for row in outcomes if row["outcome"] == "raised"]
     names = _store_checkpoints(args.weftfs_cli, store)
@@ -422,6 +452,18 @@ def _race_submissions(args, *, mode, count, max_outstanding=None, policy="fail")
         "landed": len(landed_reported),
         "raised": len(raised),
         "raised_classes": _count_classes(raised),
+        "raised_root_classes": _count_classes(raised, "root_class"),
+        "raised_inner_classes": _count_list_classes(raised, "inner_classes"),
+        "raised_inner_messages": sorted(
+            {
+                message
+                for row in raised
+                for message in row.get("inner_messages", [])
+            }
+        ),
+        "raised_root_messages": sorted(
+            {row.get("root_message", "") for row in raised}
+        ),
         "store_checkpoints": names,
         "store_checkpoint_count": len(names),
         "landed_equals_store": len(landed_reported) == len(names),
@@ -435,28 +477,39 @@ def _race_submissions(args, *, mode, count, max_outstanding=None, policy="fail")
     }
 
 
-def _count_classes(rows):
+def _count_classes(rows, key="error_class"):
     counts = {}
     for row in rows:
-        counts[row["error_class"]] = counts.get(row["error_class"], 0) + 1
+        value = row.get(key)
+        counts[value] = counts.get(value, 0) + 1
+    return counts
+
+
+def _count_list_classes(rows, key):
+    counts = {}
+    for row in rows:
+        for value in row.get(key, []):
+            counts[value] = counts.get(value, 0) + 1
     return counts
 
 
 def run_overload(args):
     import torch
 
+    counts = [int(item) for item in str(args.counts).split(",") if item.strip()]
     fixture = fixture_block(torch)
     results = {"fixture": fixture, "runs": []}
-    for count in args.counts:
+    from weftcodec.dcp import CheckpointSession
+
+    queue_api_present = hasattr(CheckpointSession, "submit")
+    for count in counts:
         results["runs"].append(
             _race_submissions(args, mode="async-api", count=count)
         )
         results["runs"].append(
             _race_submissions(args, mode="session-save", count=count)
         )
-        from weftcodec.dcp import CheckpointSession  # noqa: F401
-
-        if hasattr(CheckpointSession, "submit"):
+        if queue_api_present:
             results["runs"].append(
                 _race_submissions(
                     args,
@@ -475,10 +528,7 @@ def run_overload(args):
                     policy="block",
                 )
             )
-    results["queue_api_present"] = hasattr(
-        __import__("weftcodec.dcp", fromlist=["CheckpointSession"]).CheckpointSession,
-        "submit",
-    )
+    results["queue_api_present"] = queue_api_present
     receipt = {
         "schema": SCHEMA_RECEIPT,
         "section": "overload",
