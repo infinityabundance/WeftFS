@@ -9159,3 +9159,77 @@ in that phase.
     metadata encoding; Orbax (its encoder is untouched and unmeasured); 20 ms
     completion; multi-rank, fleet, GPU or durability. No Rust native
     encoder was written — option (b) is a measurement, not an implementation.
+
+## Subphase R17 (write-cost) — attribution and ablation (2026-11-12)
+
+**Status: executed; attribution and ablation only — no optimisation was
+performed in this subphase.** The deliverable is
+[`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md)
+and the six-phase plan [`docs/PLAN-R17-R22.md`](PLAN-R17-R22.md).
+
+- **Controls (additive, defaults unchanged).** `TensorPlanOptions::float_tensor`
+  (default `true`) and the existing `zstd19` gate are the two independent
+  controls; both gain a CLI flag (`--no-float-tensor`, `--no-zstd19`). The
+  default path is proven unchanged **at this revision**: the ablation runner's C
+  row and the unmodified contract court's C row have identical strategies,
+  per-tensor manifest sets, physical footprint and bytes written
+  (`default_c_matches_official_court: true`). `tests/float_tensor_ablation.rs`
+  additionally proves the exact encode counts (1/1 default, 1/0 and 0/1 for
+  each control, 0/0 for both) and that the chosen manifest bytes are unchanged
+  when the removed candidate was not selected. No frozen format, frame,
+  manifest, commit or index byte changed.
+- **Baseline at this revision** (`augmentation-local-20261112T041225Z`, one run
+  per row): A 364.5 ms / 424,439,296 B; B 2,892.1 / 424,784,917; C 24,459.1 /
+  282,283,011; D 2,910.4 / 424,856,058; E 24,174.7 / 282,354,152; N 5,504.4
+  (host-contended; earlier run 358.2). 101/101 exact restores in every row.
+- **Ablation matrix** (`write-cost-ablation-20261112T052203Z`, 7 interleaved
+  repetitions × 10 configurations, all checks pass; least-contended values):
+  C 24,229.2 ms / 282,283,011 B; C-noz19 3,849.9 / 282,283,011;
+  C-nom9 22,443.3 / 330,336,572; C-both 2,132.6 / 330,532,422;
+  B 2,840.2 / 424,784,917; B-group 2,139.3 / 424,608,542;
+  D 2,885.6 / 424,856,058; E 24,171.0 / 282,354,152.
+  C encodes 101 level-3, 18 level-19 and 101 mode-9 frames; `--no-zstd19`
+  leaves 0 level-19 encodes, `--no-float-tensor` leaves 0 mode-9 encodes, both
+  off leaves 0/0. **Level 19 is selected for zero tensors and saves zero bytes.**
+- **Ledger (C, 24,229.17 ms):** ZSTD-19 20,352.99 ms (84.00 %); mode 9
+  1,743.05 (7.19 %); blob publish 777.37 (3.21 %); commit/index 711.51
+  (2.94 %, of which index 343.47 and manifest+superblock 362.86);
+  ZSTD-3 436.78 (1.80 %); digest 66.33; source read 32.27; init 24.67;
+  other encode/plan 41.46; prepare unattributed 25.45; footprint walk 1.43;
+  **unattributed residual 15.86 ms (0.065 %)**.
+- **Mode 9 trade:** 1.74 s write and ~0.6–0.7 s extra cold restore for
+  48.05–48.25 MB (14.5–14.6 %), +~496 MB peak write RSS. It is the only
+  footprint-reducing candidate on this fixture.
+- **One-group-commit B:** commit/index 696.9 → 8.8 ms (-688.1 ms), wall
+  2,840.2 → 2,139.3 (-24.7 %), footprint -176,375 B, requests 911 → 611;
+  blob publish unchanged (1,948.5 → 1,943.5 ms). C-both (2,132.6 ms /
+  330.5 MB) matches B-group's wall while being 22.2 % smaller.
+- **BF16 stage profile** (`bf16-plane-profile-20261112T054210Z`, embedding +
+  8 × 8.7 MB MLP tensors, 5 reps, replica validated byte-for-byte against the
+  codec): embedding split 307.31 ms; Huffman 337.61 (histogram 57.76, lengths
+  0.023, codes 0.003, emission 266.55); hashes 27.07 + 17.84 + 27.06;
+  `encode_float_tensor` 1,163.80 ms; frame assembly 446.90 ms; ratio 0.663.
+- **Exactness and crash:** every configuration restored 101/101 tensors with
+  SHA-256 equality in every repetition; every Weft configuration's three-phase
+  process-fault proxy reopened old-or-new-whole (old 2 / new 1 / partial 0) with
+  a full verify and 101 exact tensors. The `after_commit_file` tail is the one
+  expected `verify` note, not a partial state.
+- **Host contention, disclosed:** the host ran an external CPU/I/O-heavy
+  process during the matrix, producing bimodal walls (2.8 s clean vs 26–43 s
+  stalled). Raw samples, median and p95 are published; the ledger uses the
+  least-contended repetition and records both walls. Minima agree with the
+  one-run contract court within 0–2 %.
+- **Losses:** the medians and p95 are not intrinsic costs; level-19 is pure cost
+  on this fixture; mode 9 raises RSS by ~496 MB and slows restore; C-both is
+  faster than B only because it publishes fewer bytes; `fsync` is not a
+  separate phase; the stage profile is a harness replica, not codec-internal;
+  the store head is not reproducible because `/tensors` uses a random ObjectId
+  seed.
+- **Gates:** Rust `cargo test --all-targets` 165 suites / 788 passed / 0 failed
+  / 0 ignored; FUSE `--features fuse --all-targets` 165 / 831 passed / 0 failed
+  / 2 pre-existing ignored; claims and spec drift updated in the docs commit.
+  No `verify-all` run (not required for this subphase; its 45/45 receipt remains
+  the cited aggregate and predates R17).
+- **Not claimed:** no write-path optimisation, no format change, no Go parity
+  for the R17 harness, no fleet/cloud/cold-media/power-loss claim, no claim that
+  these proportions transfer to another corpus or backend.

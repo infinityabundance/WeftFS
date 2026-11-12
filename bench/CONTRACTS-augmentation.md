@@ -12,6 +12,14 @@ fleet, device-cache, media, or power-loss claim.
 
 ## 1. The five configurations
 
+**What is compared.** The comparator is the **same backend with and without
+this augmentation**. A is that backend's own durable path for the same bytes;
+B/C/D/E add, respectively, the store protocol, the codec, the context/provenance
+protocol, and both. The WeftFS reference FUSE filesystem is **not** a comparator:
+no row in this contract measures it, and no result may cite it as the baseline
+for a write-path claim. A backend's own filesystem, object store or checkpoint
+writer is the native side.
+
 The distinction is **where the work happens**, not which feature is advertised.
 All five configurations write and restore the **identical logical tensor set**
 from one verified source container, and every restored tensor is compared with
@@ -115,6 +123,21 @@ atomic publication of the metadata, selection by an explicit key set, and
 provenance capture. It does **not** match D on selector expressiveness, causal
 history, capability policy, or exact reconstruction of arbitrary
 representations. It is reported separately and never folded into the A–E table.
+
+### Derived ablation rows (R17)
+
+R17 adds **derived** rows used only to attribute cost. They never replace A–E
+and are always labelled with the row they derive from:
+
+- `C-noz19` — C with the level-19 ZSTD candidate removed;
+- `C-nom9` — C with the mode-9 `FLOAT_TENSOR` candidate removed;
+- `C-both` — C with both removed;
+- `B-group` — B with all state ops published in one shipped group commit.
+
+The controls are additive and default-off in the product; the default C row is
+byte-identical to the contract row (same chosen strategies, same physical
+bytes, same per-tensor manifests), which the receipt verifies against the
+unmodified contract court.
 
 ## 2. Fixture and subset
 
@@ -268,6 +291,12 @@ ahead on physical bytes, and the prose must say which one is being discussed.
    indexes make it larger than A, if D's metadata dominates at small object
    counts, or if E loses on either axis, the receipt and the results document
    say so in the headline table and the prose.
+10. **Derived-row repetitions.** A derived row (≤ 1 above) is measured with at
+    least **seven** independently timed repetitions, interleaved with the other
+    rows and rotated so no row always occupies the same position. Median, p95
+    and the raw samples are published. If the host is shared, the
+    least-contended repetition is used for phase attribution and is labelled as
+    such; the medians are never silently replaced by minima.
 
 ## 7. Comparison rules
 
