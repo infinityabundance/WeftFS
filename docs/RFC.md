@@ -1,6 +1,6 @@
 # WeftFS normative index (RFC-shaped)
 
-**Status:** index of record, R13 (2026-11-11). This file allocates stable
+**Status:** index of record, v1.4.0 (2026-11-12). This file allocates stable
 identifiers and states the change process. It does not add a format; the
 normative text remains the cited document.
 
@@ -55,11 +55,14 @@ without the `v1` is the program-home composite-fixture tree.
 | **WEFT-017** | [`WEFT-RETENTION.md`](WEFT-RETENTION.md) | Retention bindings for cached artifacts | **Frozen** record and ordering | 1.0.0 | `weft.retention.v1`, classes, epoch fencing, class-aware GC | `tests/retention.rs` (8); `scripts/retention_cross.sh` (12) |
 | **WEFT-018** | [`WEFT-MULTIWRITER.md`](WEFT-MULTIWRITER.md) | Writer capability levels and MW2 transactions | **Frozen** contract; MW2 opt-in; MW3 not implemented | 1.0.0 | MW0–MW2, transaction lifecycle, conflicts, GC pins | `tests/multiwriter.rs` (12); `verification/tla/WeftMultiWriter.tla` |
 
-Mode coverage as reported by `scripts/check-conformance-coverage.sh` on the
-420-entry manifest: `0:6/20 1:2/6 2:1/2 3:1/9 4:1/2 5:1/5 6:3/8 7:2/6 8:3/8
-9:3/14 10:3/8 11:3/8 12:3/8 13:3/8 14:3/6 15:3/8 16:4/14 17:3/8 18:4/12
-19:8/12 20:6/14` (valid/reject). Identity kinds: WCB 12, selector 22, context
-11, tensor 12, checkpoint 1, capability 2.
+<!-- BEGIN GENERATED:rfc-conformance (scripts/perf_numbers.py) -->
+Manifest: **420** vectors, aggregate
+`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; the per-mode distribution is the `modes` object in
+`conformance/manifest.json`. Regenerate with
+`scripts/gen-conformance-manifest.sh` and check with `--check`;
+`scripts/check-conformance-coverage.sh` fails when an allocated mode lacks a
+valid and a reject vector.
+<!-- END GENERATED:rfc-conformance -->
 
 ---
 
@@ -246,7 +249,7 @@ finally `payload_hash`. A single-section reader must not claim it verified
 
 | Gate | Script | What it proves |
 |---|---|---|
-| Manifest drift | `scripts/gen-conformance-manifest.sh --check` | 420 vectors, aggregate `6287b817…` |
+| Manifest drift | `scripts/gen-conformance-manifest.sh --check` | <!-- BEGIN GENERATED:rfc-manifest-row (scripts/perf_numbers.py) --> **420** vectors, aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8` <!-- END GENERATED:rfc-manifest-row --> |
 | Coverage | `scripts/check-conformance-coverage.sh` | every mode 0–20 has valid and reject vectors; every entry has an expectation |
 | Spec drift | `scripts/check-spec-drift.sh` | 57 mirrored spec files agree across the four repositories |
 | Claims | `scripts/check-claims.sh` | externally visible claims match the committed text |

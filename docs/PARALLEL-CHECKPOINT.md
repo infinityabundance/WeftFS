@@ -44,6 +44,47 @@ single-writer protocol are untouched.
   then publishes **one** group commit. `Store::commit_prepared_tensor_object`
   only stages state ops: no blob is written during the commit phase.
 
+### One group commit is also one durability barrier (R20)
+
+The committer's single group commit now closes **one deferred durability
+barrier** instead of syncing each blob where it is written
+(`Options::defer_group_blob_sync`, default on). Workers that publish blobs
+through their own handles still sync eagerly — they are not inside the
+group — so the split path keeps its per-worker durability and only the
+committer's own publications are batched. The ordering rule is unchanged:
+the barrier runs inside `flush_buffered_blobs`, before the commit record, and
+every recorded file is still synced individually. The 407.1 ms / 0-byte figure
+is measured on the augmentation C row (101 tensor files, 202 blobs), see
+[`bench/RESULTS-publication-tax.md`](../bench/RESULTS-publication-tax.md); the
+checkpoint path is covered by its own test suites
+(`tests/parallel_checkpoint.rs`, `tests/checkpoint_*`) and is **not**
+separately timed for this change, so no checkpoint wall-time claim is made.
+Sequential `Store::write_checkpoint` inherits the mechanism because it already
+publishes through `begin_group` / `commit_group`.
+
+### Relationship to the R21 group pipeline (2026-11-12)
+
+Two different mechanisms now share one prepare/publish split, and they are not
+interchangeable:
+
+| | `write_checkpoint_parallel` (this document) | `prepare_tensor_group_pipelined` (R21) |
+|---|---|---|
+| unit | a checkpoint: one tensor per task, sharded | a group of tensor files under one directory |
+| workers | N **separate handles** (`open_blob_worker`), one per rank, each with its own backend and replayed state | N threads on **one handle**, one backend |
+| output | fragments re-verified and reassembled by the committer | prepared objects installed in the caller's open group |
+| publication | inside each worker, eagerly synced per handle (workers are outside the committer's deferred batch) | one publisher thread inside the committer's deferred batch, with an early-barrier thread |
+| measured | 3.50 s prepare at 8 ranks on the real model | 623.3 ms wall on the R21 fixture |
+
+R21 split `prepare_tensor_object_with_spec_seeded_planned` into
+`encode_tensor_object` (planner, candidates, logical root, content hash; no
+publication) and `publish_encoded_tensor` (frame or raw chunk table plus the
+descriptor manifest). The checkpoint path is unchanged in behaviour and bytes —
+it calls the same two halves through the same function — and its suites
+(`tests/parallel_checkpoint.rs`, `tests/checkpoint_*`) still pass unchanged.
+`TensorPlanOptions::parallel_candidates` (the R21 concurrent level-3/mode-9
+encode) is off by default, so a checkpoint write is unaffected unless a caller
+opts in.
+
 ### The single-writer proof is untouched
 
 There is no second writer of control state. Workers never touch the superblock,

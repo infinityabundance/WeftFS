@@ -64,11 +64,26 @@ authoritative rather than self-referential.
 }
 ```
 
-The writer builds the index *before* publishing, derives `candidates_root` from
-the exact section bytes it will write, and derives `state_root` from the commit
-fields. The segment is written after the commit publishes and reuses the same
-in-memory index (no second build). If the index is incomplete it is not
-persisted and the commit carries no attestation (v1).
+The writer derives the index *before* publishing. It takes the previous
+head's index from the in-memory attested cache (validated against the
+published commit record: counts, chain kind/base/depth/root, and the
+`candidates_root` recorded when that index was written), applies only the rows
+the committed ops changed, and records the element-level changes. `encode_delta`
+only re-states those rows; a unit test proves its bytes equal the whole-state
+diff's. `StateIndex::build` is the **oracle and the fallback**: a cold start, a
+missing or inconsistent base, a missing pre-image, or an op the base cannot
+explain rebuilds the whole index and publishes a full segment
+(`maintenance_fallbacks`). The writer then derives `candidates_root` from the
+exact section bytes it will write and `state_root` from the commit fields. The
+segment is written after the commit publishes and reuses the same in-memory
+index (no second build). If the index is incomplete it is not persisted and the
+commit carries no attestation (v1).
+
+Only the in-memory cache skips re-deriving `candidates_root`; every read path
+still recomputes it from the bytes it loaded, and the disk-based writer
+fallback recomputes it when resolving a chain. See
+`bench/RESULTS-incremental-index.md` for the design, the reader-merge bound
+(`index_chain_max_deltas` deltas + one full ancestor) and the measurements.
 
 ## Migration note
 

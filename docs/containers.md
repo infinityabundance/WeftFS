@@ -21,8 +21,13 @@ image on a `v*` tag or manual dispatch.
 | `ghcr.io/infinityabundance/weftfs-go` | `weftfs` (Go) | store + FUSE CLI |
 
 Tags: `v1.3.0` and `latest` (release workflow). The v1.2.0 images remain
-published; the v1.3.0 tag is cut by this release's publishing step. Images are
-built from the program home commit and the pinned submodule commits.
+published, and the four `v1.3.0` images are published; their image-index
+digests are recorded in
+`bench/receipts/release-artifacts-20261111T200115Z.json`. Images are
+built from the program home commit and the pinned submodule commits. **The
+v1.4.0 images are not published in the v1.4.0 release run** (`staging` is
+1.4.0; publication is the coordinator's registry step), so every command below
+names `v1.3.0`, which is what GHCR serves.
 
 ## Pull and run
 
@@ -65,8 +70,14 @@ weftfs = "1.3.0"
 
 `weftcodec` is the codec/framing library and CLI; `weftfs` is the store plus
 FUSE frontend (the `fuse` feature enables mounting). The v1.2.0 crates remain
-published; the v1.3.0 crates are published by this release's publishing step.
-See `docs/RELEASE-v1.3.0.md`, the previous `docs/RELEASE-v1.2.0.md`,
+published, and crates.io serves `weftcodec 1.3.0` and `weftfs 1.3.0`; the live
+checksums are recorded in
+`bench/receipts/release-artifacts-20261111T200115Z.json`. **The tree is 1.4.0**
+(`Cargo.toml`, `WeftCodec/Cargo.toml`) but the 1.4.0 crates are built and
+dry-run-checked only; the `cargo add` versions above stay at 1.3.0 so they work
+as written until the coordinator runs `scripts/publish-crates.sh` for 1.4.0.
+See `docs/RELEASE-v1.4.0.md`, `docs/RELEASE-v1.3.0.md`, the previous
+`docs/RELEASE-v1.2.0.md`,
 `docs/RELEASE-v1.1.0.md`,
 `docs/RELEASE-v1.0.0.md`,
 `docs/RELEASE-v0.9.0.md`, and `docs/RELEASE-v0.8.0.md`. Image tags

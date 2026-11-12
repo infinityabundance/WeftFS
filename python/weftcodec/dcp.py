@@ -36,6 +36,8 @@ unless ``--import`` is requested.
 from __future__ import annotations
 
 import ctypes
+import atexit
+import collections
 import importlib
 import io
 import json
@@ -53,8 +55,10 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import wcb
+from . import varint, wcb, wcb_fast
+from .errors import LimitExceeded
 from .hashing import content_root
+from .limits import Limits
 from .service import (
     CheckpointService,
     ServiceError,
@@ -68,6 +72,7 @@ from .service import (
 __all__ = [
     "AsyncSaveHandle",
     "CheckpointSession",
+    "CheckpointTicket",
     "DCP_METADATA_NAME",
     "DCP_METADATA_SCHEMA",
     "DcpError",
@@ -75,8 +80,11 @@ __all__ = [
     "InvalidCheckpointId",
     "InvalidMetadata",
     "MetadataMissing",
+    "QueueClosed",
+    "QueueFull",
     "RestoredEntry",
     "SaveFailed",
+    "SaveNotStarted",
     "StagingLimitExceeded",
     "StoreCommandError",
     "StoreUnavailable",
@@ -97,6 +105,16 @@ DCP_METADATA_SCHEMA = "weft.dcp.metadata.v1"
 DCP_METADATA_NAME = "dcp.metadata"
 DEFAULT_STAGING_BYTES = 256 * 1024 * 1024
 DEFAULT_TIMEOUT_SECONDS = 1800.0
+
+# Checkpoint queue bounds (R12c item 4). `MAX_OUTSTANDING` is chosen from the
+# measured `max_outstanding` sweep (1/2/4/8 at a 1- and 4-step interval): 2 is as
+# fast as 4 or 8 within noise at a 1-step interval, strictly faster than 1, and
+# buys less measured completion latency and peak RSS than a deeper queue. See
+# bench/RESULTS-checkpoint-queue.md.
+DEFAULT_QUEUE_MAX_OUTSTANDING = 2
+DEFAULT_QUEUE_MAX_STAGED_BYTES = 1 << 30
+DEFAULT_QUEUE_ADMISSION_WAIT_MS = 30000.0
+QUEUE_ADMISSION_POLICIES = ("block", "fail")
 DEFAULT_CLI = "/work/.docker-cache/target-rust/release/weftfs"
 
 #: torch dtype spelling -> (canonical WEFT-TENSOR dtype, safetensors spelling,
@@ -171,6 +189,51 @@ class TorchRequired(DcpError):
 
 class SaveFailed(DcpError):
     """A save did not produce a usable checkpoint."""
+
+
+class QueueFull(DcpError):
+    """A durable save was refused admission; nothing was published.
+
+    Raised by :meth:`CheckpointSession.submit` (and therefore by
+    :meth:`CheckpointSession.save`) when the documented queue bound is
+    reached and either ``admission_policy="fail"`` or the bounded waiting
+    time expired. The message names every bound the policy applied, so a
+    refusal is actionable and never silent.
+    """
+
+    def __init__(
+        self,
+        message,
+        *,
+        max_outstanding,
+        outstanding,
+        max_staged_bytes=None,
+        staged_bytes=0,
+        requested_bytes=0,
+        byte_budget=None,
+        waited_ms=0.0,
+    ):
+        super().__init__(message)
+        self.max_outstanding = max_outstanding
+        self.outstanding = outstanding
+        self.max_staged_bytes = max_staged_bytes
+        self.staged_bytes = staged_bytes
+        self.requested_bytes = requested_bytes
+        self.byte_budget = byte_budget
+        self.waited_ms = waited_ms
+
+
+class QueueClosed(DcpError):
+    """A save was submitted to a session that is closed or draining."""
+
+
+class SaveNotStarted(DcpError):
+    """An admitted save was cancelled before it started; it published nothing.
+
+    The queue's only cancellation point is "before a save starts", because a
+    save that has begun publishing cannot be abandoned safely. A save that was
+    cancelled here wrote no blob and no commit.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -668,38 +731,35 @@ class RestoredEntry:
         return self.content_root.hex()
 
 
+def _state_dict_row_value(fqn, item):
+    """One ``state_dict`` row, exactly as the canonical metadata encodes it."""
+    if _TensorStorageMetadata is not None and isinstance(item, _TensorStorageMetadata):
+        return {
+            "fqn": fqn,
+            "kind": "tensor",
+            "dtype": _dtype_name(item.properties.dtype),
+            "size": _u_list(item.size),
+            "chunks": [
+                {
+                    "offsets": _u_list(chunk.offsets),
+                    "sizes": _u_list(chunk.sizes),
+                }
+                for chunk in item.chunks
+            ],
+        }
+    if _BytesStorageMetadata is not None and isinstance(item, _BytesStorageMetadata):
+        return {"fqn": fqn, "kind": "bytes"}
+    raise UnsupportedStateObject(
+        "state dict entry %r has storage metadata %s; this adapter "
+        "persists plain tensors and byte objects only"
+        % (fqn, type(item).__name__)
+    )
+
+
 def _state_dict_value(state_dict_metadata):
     rows = []
     for fqn in sorted(state_dict_metadata):
-        item = state_dict_metadata[fqn]
-        if _TensorStorageMetadata is not None and isinstance(
-            item, _TensorStorageMetadata
-        ):
-            rows.append(
-                {
-                    "fqn": fqn,
-                    "kind": "tensor",
-                    "dtype": _dtype_name(item.properties.dtype),
-                    "size": _u_list(item.size),
-                    "chunks": [
-                        {
-                            "offsets": _u_list(chunk.offsets),
-                            "sizes": _u_list(chunk.sizes),
-                        }
-                        for chunk in item.chunks
-                    ],
-                }
-            )
-        elif _BytesStorageMetadata is not None and isinstance(
-            item, _BytesStorageMetadata
-        ):
-            rows.append({"fqn": fqn, "kind": "bytes"})
-        else:
-            raise UnsupportedStateObject(
-                "state dict entry %r has storage metadata %s; this adapter "
-                "persists plain tensors and byte objects only"
-                % (fqn, type(item).__name__)
-            )
+        rows.append(_state_dict_row_value(fqn, state_dict_metadata[fqn]))
     return rows
 
 
@@ -725,30 +785,43 @@ def _planner_data_value(planner_data):
     )
 
 
-def serialize_metadata(metadata, *, checkpoint_id, storage_name) -> bytes:
-    """Canonical WCB bytes for a DCP ``Metadata`` object."""
-    storage_rows = []
+def _storage_key_order(key):
+    return (key.fqn, tuple(key.offset or ()))
+
+
+def _storage_row_value(key, info):
+    return {
+        "fqn": key.fqn,
+        "offset": None if key.offset is None else _u_list(key.offset),
+        "index": None if key.index is None else _u(key.index),
+        "info": info.to_value(),
+    }
+
+
+def metadata_parts(metadata, *, checkpoint_id, storage_name):
+    """The canonical ``weft.dcp.metadata.v1`` value tree.
+
+    This is the single description of the metadata schema: the reference
+    encoder (``serialize_metadata``) and the fast path
+    (``serialize_metadata_fast``) both derive from it.
+    """
     storage_data = metadata.storage_data
     if storage_data is None:
-        raise InvalidMetadata("metadata.storage_data is None; write_data/finish "
-                              "must run before metadata is serialised")
-    for key in sorted(storage_data, key=lambda k: (k.fqn, tuple(k.offset or ()))):
+        raise InvalidMetadata(
+            "metadata.storage_data is None; write_data/finish "
+            "must run before metadata is serialised"
+        )
+    storage_rows = []
+    for key in sorted(storage_data, key=_storage_key_order):
         info = storage_data[key]
         if not isinstance(info, StorageInfo):
             raise InvalidMetadata(
                 "storage_data[%r] is %s, expected StorageInfo"
                 % (key, type(info).__name__)
             )
-        storage_rows.append(
-            {
-                "fqn": key.fqn,
-                "offset": None if key.offset is None else _u_list(key.offset),
-                "index": None if key.index is None else _u(key.index),
-                "info": info.to_value(),
-            }
-        )
+        storage_rows.append(_storage_row_value(key, info))
     version = getattr(metadata, "version", None)
-    value = {
+    return {
         "schema": DCP_METADATA_SCHEMA,
         "checkpoint_id": checkpoint_id,
         "storage_name": storage_name,
@@ -757,7 +830,566 @@ def serialize_metadata(metadata, *, checkpoint_id, storage_name) -> bytes:
         "storage_data": storage_rows,
         "planner_data": _planner_data_value(getattr(metadata, "planner_data", None)),
     }
-    return wcb.encode(value)
+
+
+def serialize_metadata(metadata, *, checkpoint_id, storage_name) -> bytes:
+    """Canonical WCB bytes for a DCP ``Metadata`` object.
+
+    This is the **reference oracle** for ``weft.dcp.metadata.v1``: the bytes it
+    emits define the format, and every faster path is differentially checked
+    against it (``tests/test_dcp_metadata_fast.py``).
+    """
+    return wcb.encode(
+        metadata_parts(
+            metadata, checkpoint_id=checkpoint_id, storage_name=storage_name
+        )
+    )
+
+
+# -- fast metadata encoding (R12c item 3) -------------------------------------
+#
+# `serialize_metadata` above is the reference oracle and stays the definition of
+# the bytes. `serialize_metadata_fast` builds the same bytes from a
+# `MetadataPlan`: the per-entry fragments are encoded once per (entry-set shape,
+# limits), and each later save re-emits only the fields that change (content
+# roots, checkpoint/storage names, planner data, DCP version).
+#
+# Safety rules, in order of application:
+#   1. A plan is only cached after its assembled bytes have been compared with
+#      the oracle's bytes for the same metadata object. A mismatch is reported
+#      (`mode == "reference"`) and the plan is never cached.
+#   2. Every save re-derives the plan's signature from the current metadata
+#      *before* any fragment is emitted. A plan that does not match is not used:
+#      the save falls back to a whole-tree encode and rebuilds the plan.
+#   3. The plan holds no store, capability or authorization state; it is a pure
+#      function of the entry-set shape and the limits.
+
+_TAG_TEXT_B = bytes((wcb.TAG_TEXT,))
+_TAG_BYTES_B = bytes((wcb.TAG_BYTES,))
+_TAG_MAP_B = bytes((wcb.TAG_MAP,))
+_TAG_ARRAY_B = bytes((wcb.TAG_ARRAY,))
+_TAG_NULL_B = bytes((wcb.TAG_NULL,))
+
+#: Encoded text fragments (map keys and the repeated dtype/kind strings), with
+#: the raw byte length used to re-check a lowered ``max_string_bytes``. Bounded;
+#: a miss recomputes the identical bytes.
+_METADATA_TEXT_CACHE: "dict[str, tuple[bytes, int]]" = {}
+_METADATA_TEXT_CACHE_MAX = 4096
+
+#: Bounded set of cached plans. Each plan holds the encoded static fragments of
+#: one entry-set shape, so the byte bound is the sum of those fragments.
+PLAN_CACHE_MAX_PLANS = 4
+PLAN_CACHE_MAX_BYTES = 8 << 20
+
+
+def _wcb_text_fragment(value, limits):
+    """Encoded WCB text value (and therefore also encoded map key)."""
+    cached = _METADATA_TEXT_CACHE.get(value)
+    if cached is not None:
+        if cached[1] > limits.max_string_bytes:
+            raise LimitExceeded(
+                "text length %d exceeds limit %d"
+                % (cached[1], limits.max_string_bytes)
+            )
+        return cached[0]
+    raw = value.encode("utf-8")
+    length = len(raw)
+    if length > limits.max_string_bytes:
+        raise LimitExceeded(
+            "text length %d exceeds limit %d" % (length, limits.max_string_bytes)
+        )
+    fragment = _TAG_TEXT_B + varint.encode_bytes(length) + raw
+    if len(_METADATA_TEXT_CACHE) >= _METADATA_TEXT_CACHE_MAX:
+        _METADATA_TEXT_CACHE.clear()
+    _METADATA_TEXT_CACHE[value] = (fragment, length)
+    return fragment
+
+
+def _count_items(value):
+    """Values in one tree, counted exactly like ``wcb._Encoder`` (keys are not)."""
+    total = 1
+    if isinstance(value, dict):
+        for child in value.values():
+            total += _count_items(child)
+    elif isinstance(value, (list, tuple)):
+        for child in value:
+            total += _count_items(child)
+    return total
+
+
+def _max_container_depth(value, depth=1):
+    """Deepest array/map depth in one tree (0 for a scalar)."""
+    if isinstance(value, dict):
+        best = depth
+        for child in value.values():
+            child_depth = _max_container_depth(child, depth + 1)
+            if child_depth > best:
+                best = child_depth
+        return best
+    if isinstance(value, (list, tuple)):
+        best = depth
+        for child in value:
+            child_depth = _max_container_depth(child, depth + 1)
+            if child_depth > best:
+                best = child_depth
+        return best
+    return 0
+
+
+class MetadataPlan:
+    """Encoded invariant fragments for one DCP metadata entry-set shape."""
+
+    __slots__ = (
+        "limits",
+        "state_keys",
+        "state_kinds",
+        "state_dtypes",
+        "state_sizes",
+        "state_chunks",
+        "storage_keys",
+        "storage_info",
+        "storage_prefixes",
+        "storage_suffixes",
+        "head",
+        "key_dcp_version",
+        "key_planner_data",
+        "key_storage_data",
+        "key_storage_name",
+        "key_checkpoint_id",
+        "base_items",
+        "static_depth",
+        "cached_bytes",
+    )
+
+    def __init__(self, metadata, limits):
+        self.limits = limits
+        state = metadata.state_dict_metadata
+        storage = metadata.storage_data
+        if storage is None:
+            raise InvalidMetadata(
+                "metadata.storage_data is None; write_data/finish "
+                "must run before metadata is serialised"
+            )
+
+        self.state_keys = sorted(state)
+        self.state_kinds = []
+        self.state_dtypes = []
+        self.state_sizes = []
+        self.state_chunks = []
+        state_rows = []
+        items = 1 + 1 + 1  # root map, schema, state_dict array
+        depth = 2  # the state_dict array itself lives at depth 2
+        for fqn in self.state_keys:
+            item = state[fqn]
+            row_value = _state_dict_row_value(fqn, item)
+            state_rows.append(wcb_fast.encode(row_value, limits))
+            items += _count_items(row_value)
+            depth = max(depth, 2 + _max_container_depth(row_value))
+            if _TensorStorageMetadata is not None and isinstance(
+                item, _TensorStorageMetadata
+            ):
+                self.state_kinds.append("tensor")
+                self.state_dtypes.append(item.properties.dtype)
+                self.state_sizes.append(tuple(item.size))
+                self.state_chunks.append(
+                    tuple(
+                        (tuple(chunk.offsets), tuple(chunk.sizes))
+                        for chunk in item.chunks
+                    )
+                )
+            else:
+                self.state_kinds.append("bytes")
+                self.state_dtypes.append(None)
+                self.state_sizes.append(None)
+                self.state_chunks.append(())
+
+        self.storage_keys = []
+        self.storage_info = []
+        self.storage_prefixes = []
+        self.storage_suffixes = []
+        items += 1  # storage_data array
+        depth = max(depth, 2)
+        for key in sorted(storage, key=_storage_key_order):
+            info = storage[key]
+            if not isinstance(info, StorageInfo):
+                raise InvalidMetadata(
+                    "storage_data[%r] is %s, expected StorageInfo"
+                    % (key, type(info).__name__)
+                )
+            row_value = _storage_row_value(key, info)
+            expected = wcb_fast.encode(row_value, limits)
+            prefix, suffix = self._split_storage_row(key, info, limits)
+            content_root_bytes = bytes(info.content_root)
+            encoded_root = (
+                _TAG_BYTES_B
+                + varint.encode_bytes(len(content_root_bytes))
+                + content_root_bytes
+            )
+            if prefix + encoded_root + suffix != expected:
+                raise _PlanMismatch(
+                    "storage row fragments do not reassemble the canonical row"
+                )
+            self.storage_keys.append(
+                (
+                    key.fqn,
+                    None if key.offset is None else tuple(key.offset),
+                    None if key.index is None else int(key.index),
+                )
+            )
+            self.storage_info.append(
+                (
+                    info.entry,
+                    info.dtype,
+                    info.shape,
+                    info.lengths,
+                    info.storage_offsets,
+                )
+            )
+            self.storage_prefixes.append(prefix)
+            self.storage_suffixes.append(suffix)
+            items += _count_items(row_value)
+            depth = max(depth, 2 + _max_container_depth(row_value))
+
+        text = lambda name: _wcb_text_fragment(name, limits)
+        head = [
+            _TAG_MAP_B + varint.encode_bytes(7),
+            text("schema"),
+            text(DCP_METADATA_SCHEMA),
+            text("state_dict"),
+            _TAG_ARRAY_B + varint.encode_bytes(len(state_rows)),
+        ]
+        head.extend(state_rows)
+        self.head = b"".join(head)
+        self.key_dcp_version = text("dcp_version")
+        self.key_planner_data = text("planner_data")
+        self.key_storage_data = text("storage_data")
+        self.key_storage_name = text("storage_name")
+        self.key_checkpoint_id = text("checkpoint_id")
+        self.base_items = items
+        self.static_depth = depth
+        self.cached_bytes = len(self.head) + sum(
+            len(fragment)
+            for fragment in (
+                list(self.storage_prefixes)
+                + list(self.storage_suffixes)
+                + [
+                    self.key_dcp_version,
+                    self.key_planner_data,
+                    self.key_storage_data,
+                    self.key_storage_name,
+                    self.key_checkpoint_id,
+                ]
+            )
+        )
+
+    @staticmethod
+    def _split_storage_row(key, info, limits):
+        """Static prefix and suffix around the one variable field.
+
+        ``content_root`` is the fifth of six keys in the canonical ``info`` map,
+        so the row is ``prefix + encoded(content_root) + suffix``.
+        """
+        text = lambda value: _wcb_text_fragment(value, limits)
+        info_value = info.to_value()
+        prefix = b"".join(
+            (
+                _TAG_MAP_B + varint.encode_bytes(4),
+                text("fqn"),
+                text(key.fqn),
+                text("info"),
+                _TAG_MAP_B + varint.encode_bytes(6),
+                text("dtype"),
+                text(info_value["dtype"]),
+                text("entry"),
+                text(info_value["entry"]),
+                text("shape"),
+                wcb_fast.encode(info_value["shape"], limits),
+                text("lengths"),
+                wcb_fast.encode(info_value["lengths"], limits),
+                text("content_root"),
+            )
+        )
+        suffix = b"".join(
+            (
+                text("storage_offsets"),
+                wcb_fast.encode(info_value["storage_offsets"], limits),
+                text("index"),
+                wcb_fast.encode(
+                    None if key.index is None else _u(key.index), limits
+                ),
+                text("offset"),
+                wcb_fast.encode(
+                    None if key.offset is None else _u_list(key.offset), limits
+                ),
+            )
+        )
+        return prefix, suffix
+
+    def matches(self, metadata):
+        """Content roots in plan order, or ``None`` when the plan is stale.
+
+        Every cached fragment is re-derived from the current metadata here, so a
+        returned list means every fragment is still the right bytes.
+        """
+        try:
+            state = metadata.state_dict_metadata
+            storage = metadata.storage_data
+            if storage is None or state is None:
+                return None
+            if len(state) != len(self.state_keys):
+                return None
+            if sorted(state) != self.state_keys:
+                return None
+            for index, fqn in enumerate(self.state_keys):
+                item = state[fqn]
+                kind = self.state_kinds[index]
+                if kind == "tensor":
+                    if not (
+                        _TensorStorageMetadata is not None
+                        and isinstance(item, _TensorStorageMetadata)
+                    ):
+                        return None
+                    if item.properties.dtype != self.state_dtypes[index]:
+                        return None
+                    if item.size != self.state_sizes[index]:
+                        return None
+                    chunks = item.chunks
+                    cached_chunks = self.state_chunks[index]
+                    if len(chunks) != len(cached_chunks):
+                        return None
+                    for chunk, cached in zip(chunks, cached_chunks):
+                        if chunk.offsets != cached[0] or chunk.sizes != cached[1]:
+                            return None
+                else:
+                    if not (
+                        _BytesStorageMetadata is not None
+                        and isinstance(item, _BytesStorageMetadata)
+                    ):
+                        return None
+            if len(storage) != len(self.storage_keys):
+                return None
+            roots = []
+            for index, key in enumerate(sorted(storage, key=_storage_key_order)):
+                cached_key = self.storage_keys[index]
+                if key.fqn != cached_key[0]:
+                    return None
+                offset = None if key.offset is None else tuple(key.offset)
+                if offset != cached_key[1]:
+                    return None
+                if (None if key.index is None else int(key.index)) != cached_key[2]:
+                    return None
+                info = storage[key]
+                if not isinstance(info, StorageInfo):
+                    return None
+                cached_info = self.storage_info[index]
+                if (
+                    info.entry != cached_info[0]
+                    or info.dtype != cached_info[1]
+                    or info.shape != cached_info[2]
+                    or info.lengths != cached_info[3]
+                    or info.storage_offsets != cached_info[4]
+                ):
+                    return None
+                roots.append(bytes(info.content_root))
+            return roots
+        except (AttributeError, TypeError, KeyError):
+            return None
+
+    def assemble(self, metadata, checkpoint_id, storage_name, limits, roots):
+        """Emit the metadata bytes from the cached fragments and `roots`."""
+        out = [self.head, self.key_dcp_version]
+        version = getattr(metadata, "version", None)
+        out.append(
+            _TAG_NULL_B
+            if version is None
+            else _wcb_text_fragment(str(version), limits)
+        )
+        out.append(self.key_planner_data)
+        planner_value = _planner_data_value(getattr(metadata, "planner_data", None))
+        out.append(wcb_fast.encode(planner_value, limits))
+        out.append(self.key_storage_data)
+        out.append(_TAG_ARRAY_B + varint.encode_bytes(len(self.storage_prefixes)))
+        for index, raw in enumerate(roots):
+            out.append(self.storage_prefixes[index])
+            out.append(_TAG_BYTES_B + varint.encode_bytes(len(raw)) + raw)
+            out.append(self.storage_suffixes[index])
+        out.append(self.key_storage_name)
+        out.append(_wcb_text_fragment(storage_name, limits))
+        out.append(self.key_checkpoint_id)
+        out.append(_wcb_text_fragment(checkpoint_id, limits))
+
+        items = self.base_items + 3 + _count_items(planner_value)
+        if items > limits.max_structured_items:
+            raise LimitExceeded(
+                "WCB item count %d exceeds limit %d"
+                % (items, limits.max_structured_items)
+            )
+        depth = max(self.static_depth, 1 + _max_container_depth(planner_value))
+        if depth > limits.max_structured_depth:
+            raise LimitExceeded(
+                "WCB nesting depth %d exceeds limit %d"
+                % (depth, limits.max_structured_depth)
+            )
+        return b"".join(out)
+
+
+class _PlanMismatch(Exception):
+    """Internal: a plan failed its own consistency checks; never cached."""
+
+
+class MetadataPlanCache:
+    """Bounded, process-local set of metadata plans with counters."""
+
+    def __init__(self, max_plans=PLAN_CACHE_MAX_PLANS, max_bytes=PLAN_CACHE_MAX_BYTES):
+        self.max_plans = max_plans
+        self.max_bytes = max_bytes
+        self._plans = []
+        self._bytes = 0
+        self._lock = threading.Lock()
+        self.stats = {
+            "plan_hits": 0,
+            "plan_builds": 0,
+            "plan_evictions": 0,
+            "fallbacks": 0,
+            "oracle_checks": 0,
+            "oracle_mismatches": 0,
+            "last_mode": None,
+        }
+
+    def clear(self):
+        with self._lock:
+            self._plans = []
+            self._bytes = 0
+
+    def _match(self, metadata):
+        with self._lock:
+            plans = list(self._plans)
+        for plan in plans:
+            roots = plan.matches(metadata)
+            if roots is not None:
+                return plan, roots
+        return None, None
+
+    def _store(self, plan):
+        with self._lock:
+            if plan.cached_bytes > self.max_bytes:
+                return
+            self._plans.append(plan)
+            self._bytes += plan.cached_bytes
+            while len(self._plans) > self.max_plans or self._bytes > self.max_bytes:
+                dropped = self._plans.pop(0)
+                self._bytes -= dropped.cached_bytes
+                self.stats["plan_evictions"] += 1
+
+    def encode(
+        self, metadata, *, checkpoint_id, storage_name, limits=None, report=None
+    ):
+        limits = limits or Limits()
+        plan, roots = self._match(metadata)
+        if plan is not None and plan.limits == limits:
+            blob = plan.assemble(metadata, checkpoint_id, storage_name, limits, roots)
+            with self._lock:
+                self.stats["plan_hits"] += 1
+                self.stats["last_mode"] = "plan"
+            if report is not None:
+                report.update(self._snapshot("plan"))
+            return blob
+
+        # No usable plan: encode the whole tree with the fast generic encoder,
+        # then try to build and *prove* a plan for later saves.
+        with self._lock:
+            self.stats["fallbacks"] += 1
+        blob = wcb_fast.encode(
+            metadata_parts(
+                metadata, checkpoint_id=checkpoint_id, storage_name=storage_name
+            ),
+            limits,
+        )
+        mode = "rebuilt"
+        try:
+            candidate = MetadataPlan(metadata, limits)
+            candidate_roots = candidate.matches(metadata)
+            if candidate_roots is None:
+                raise _PlanMismatch("a freshly built plan does not match its metadata")
+            assembled = candidate.assemble(
+                metadata, checkpoint_id, storage_name, limits, candidate_roots
+            )
+            with self._lock:
+                self.stats["oracle_checks"] += 1
+            if assembled != blob:
+                with self._lock:
+                    self.stats["oracle_mismatches"] += 1
+                raise _PlanMismatch("plan bytes differ from the encoded tree")
+            self._store(candidate)
+            with self._lock:
+                self.stats["plan_builds"] += 1
+        except _PlanMismatch:
+            # The plan failed its own proof. The generic bytes are already
+            # verified against the shape by construction, but the oracle is the
+            # definition, so pay for it once rather than ship unproven bytes.
+            mode = "reference"
+            blob = serialize_metadata(
+                metadata, checkpoint_id=checkpoint_id, storage_name=storage_name
+            )
+        with self._lock:
+            self.stats["last_mode"] = mode
+        if report is not None:
+            report.update(self._snapshot(mode))
+        return blob
+
+    def _snapshot(self, mode):
+        snapshot = dict(self.stats)
+        snapshot["mode"] = mode
+        snapshot["plans_cached"] = len(self._plans)
+        snapshot["cached_bytes"] = self._bytes
+        return snapshot
+
+
+#: The process-wide plan cache used by ``WeftStorageWriter.finish``.
+METADATA_PLANS = MetadataPlanCache()
+
+
+#: Which metadata encoder a writer uses. ``auto`` is the shipped path (the
+#: reusable plan with the reference oracle as its proof); ``reference`` forces
+#: the pure-Python oracle so a court can measure the two against each other on
+#: one revision. ``WEFT_DCP_METADATA_ENCODING`` selects it for a whole run.
+METADATA_ENCODING_MODES = ("auto", "reference")
+
+
+def _metadata_encoding_from_env():
+    value = os.environ.get("WEFT_DCP_METADATA_ENCODING", "auto").strip().lower()
+    if value not in METADATA_ENCODING_MODES:
+        raise ValueError(
+            "WEFT_DCP_METADATA_ENCODING=%r is not one of %s"
+            % (value, ", ".join(METADATA_ENCODING_MODES))
+        )
+    return value
+
+
+def serialize_metadata_fast(
+    metadata,
+    *,
+    checkpoint_id,
+    storage_name,
+    cache=None,
+    limits=None,
+    report=None,
+) -> bytes:
+    """Canonical DCP metadata bytes from the reusable plan when it is valid.
+
+    Byte-identical to :func:`serialize_metadata`; the plan is verified against
+    that oracle before it is cached, and a plan that does not match the current
+    metadata is never used. ``report`` (a dict) receives the counter snapshot
+    and the ``mode`` used: ``plan``, ``rebuilt`` or ``reference``.
+    """
+    chosen = METADATA_PLANS if cache is None else cache
+    return chosen.encode(
+        metadata,
+        checkpoint_id=checkpoint_id,
+        storage_name=storage_name,
+        limits=limits,
+        report=report,
+    )
 
 
 def _metadata_from_value(value, *, storage_name):
@@ -1037,6 +1669,11 @@ class WeftStorageWriter(_StorageWriterBase):
         When True (default) a second save to the same id is written as a new
         generation ``<id>.v2``, ``<id>.v3``, ... (no store-side delete exists).
         When False an existing generation raises ``FileExistsError``.
+    metadata_encoding:
+        ``auto`` (default) uses the reusable metadata plan, which is proven
+        against the pure-Python reference oracle before it is cached;
+        ``reference`` forces the oracle for an A/B measurement.
+        ``WEFT_DCP_METADATA_ENCODING`` sets the same choice for a whole run.
     """
 
     def __init__(
@@ -1060,9 +1697,20 @@ class WeftStorageWriter(_StorageWriterBase):
         fast_codec=None,
         fast_zstd_level=None,
         direct_container=True,
+        metadata_encoding=None,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
+        # Which metadata encoder this writer uses: `auto` (the shipped plan) or
+        # `reference` (the pure-Python oracle). An invalid override fails here,
+        # before any store access, not at publication time.
+        encoding = metadata_encoding or _metadata_encoding_from_env()
+        if encoding not in METADATA_ENCODING_MODES:
+            raise ValueError(
+                "metadata_encoding=%r is not one of %s"
+                % (encoding, ", ".join(METADATA_ENCODING_MODES))
+            )
+        self.metadata_encoding = encoding
         self._topology = _parse_topology(topology, axis)
         if shard_strategy not in ("tensor-sharded", "tensor-tiled", "zstd", "raw"):
             raise ValueError(
@@ -1100,6 +1748,9 @@ class WeftStorageWriter(_StorageWriterBase):
         self._pending_metadata = None
         self._finished = False
         self._manifest = None
+        # The last metadata encode's plan counters and mode (`plan`, `rebuilt`,
+        # `reference`), so a court can prove which path ran.
+        self._metadata_encode = None
         # An optional long-lived session: when given, the service process (and
         # its writable store handle) outlive this writer, and `close()` leaves
         # it alone. `None` keeps the historical one-service-per-writer shape.
@@ -1213,6 +1864,11 @@ class WeftStorageWriter(_StorageWriterBase):
                 "topology": self._topology,
                 "shard_strategy": self.shard_strategy,
                 "staging_bytes": self.staging_bytes,
+                "metadata_encode": (
+                    None
+                    if self._metadata_encode is None
+                    else dict(self._metadata_encode)
+                ),
             }
         )
         return payload
@@ -1234,6 +1890,7 @@ class WeftStorageWriter(_StorageWriterBase):
             self._pending_metadata = None
             self._finished = False
             self._manifest = None
+            self._metadata_encode = None
             self._release_container()
             self._stats = {
                 "entries": 0,
@@ -1298,11 +1955,28 @@ class WeftStorageWriter(_StorageWriterBase):
             if getattr(metadata, "version", None) is None:
                 metadata.version = "1.0.0"
             serialize_started = time.perf_counter_ns()
-            blob = serialize_metadata(
-                metadata,
-                checkpoint_id=self._path,
-                storage_name=self._storage_name,
-            )
+            encode_report = {}
+            if self.metadata_encoding == "reference":
+                blob = serialize_metadata(
+                    metadata,
+                    checkpoint_id=self._path,
+                    storage_name=self._storage_name,
+                )
+                encode_report = {
+                    "mode": "reference-forced",
+                    "plan_hits": 0,
+                    "plan_builds": 0,
+                    "fallbacks": 0,
+                }
+            else:
+                blob = serialize_metadata_fast(
+                    metadata,
+                    checkpoint_id=self._path,
+                    storage_name=self._storage_name,
+                    report=encode_report,
+                )
+            encode_report["requested"] = self.metadata_encoding
+            self._metadata_encode = encode_report
             _probe("adapter.metadata_serialize", serialize_started)
             commit_started = time.perf_counter_ns()
             metadata_path = "/checkpoints/%s/%s" % (
@@ -1689,6 +2363,236 @@ class WeftStorageWriter(_StorageWriterBase):
             )
 
 
+def _estimate_state_bytes(state_dict, *, depth=4):
+    """Estimate the logical bytes a save will stage, without copying anything.
+
+    Returns ``(bytes, unpriced)``. Tensors contribute ``numel * element_size``;
+    raw byte objects contribute their length; containers are walked to
+    ``depth``. This is an admission estimate (logical bytes), not a claim about
+    resident memory: the live cost of a queued save is the caller's own
+    snapshot plus, once it starts, one container.
+    """
+    total = 0
+    unpriced = 0
+
+    def visit(node, level):
+        nonlocal total, unpriced
+        if isinstance(node, (bytes, bytearray, memoryview)):
+            total += len(node)
+            return
+        numel = getattr(node, "numel", None)
+        if callable(numel):
+            try:
+                element = getattr(node, "element_size", None)
+                total += int(numel()) * int(element() if callable(element) else 1)
+                return
+            except Exception:  # noqa: BLE001 - fall through to structural walk
+                pass
+        if level >= depth:
+            unpriced += 1
+            return
+        if isinstance(node, dict):
+            for value in node.values():
+                visit(value, level + 1)
+            return
+        if isinstance(node, (list, tuple)):
+            for value in node:
+                visit(value, level + 1)
+            return
+        unpriced += 1
+
+    visit(state_dict, 0)
+    return total, unpriced
+
+
+class _QueuedSave:
+    """One admitted save waiting for the session's single worker."""
+
+    __slots__ = ("ticket", "state_dict", "checkpoint_id", "kwargs")
+
+    def __init__(self, ticket, state_dict, checkpoint_id, kwargs):
+        self.ticket = ticket
+        self.state_dict = state_dict
+        self.checkpoint_id = checkpoint_id
+        self.kwargs = kwargs
+
+
+class CheckpointTicket:
+    """One queue submission: its order, its wait and its outcome.
+
+    A ticket is created only when a save is **admitted**; a refused save raises
+    :class:`QueueFull` instead and gets no ticket. ``status`` moves
+    ``queued`` -> ``started`` -> ``completed``/``failed``, or ``queued`` ->
+    ``cancelled_before_start``. The status of a finished ticket is final, and
+    the session's drain report is built from these objects, so no admitted save
+    can go missing without its ticket saying so.
+    """
+
+    QUEUED = "queued"
+    STARTED = "started"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled_before_start"
+
+    __slots__ = (
+        "index",
+        "checkpoint_id",
+        "estimate_bytes",
+        "submitted_perf",
+        "admission_wait_ms",
+        "started_perf",
+        "done_perf",
+        "status",
+        "error",
+        "stats",
+        "writer",
+        "_owner",
+        "_lock",
+        "_done",
+        "_callbacks",
+    )
+
+    def __init__(
+        self,
+        *,
+        index,
+        checkpoint_id,
+        estimate_bytes,
+        submitted_perf,
+        admission_wait_ms,
+        owner,
+    ):
+        self.index = int(index)
+        self.checkpoint_id = checkpoint_id
+        self.estimate_bytes = int(estimate_bytes)
+        self.submitted_perf = submitted_perf
+        self.admission_wait_ms = round(float(admission_wait_ms), 3)
+        self.started_perf = None
+        self.done_perf = None
+        self.status = self.QUEUED
+        self.error = None
+        self.stats = {}
+        self.writer = None
+        self._owner = owner
+        self._lock = threading.Lock()
+        self._done = threading.Event()
+        self._callbacks = []
+
+    # -- worker transitions -------------------------------------------------
+
+    def _mark_started(self, writer, started_perf):
+        """Called by the worker under the queue lock, so cancel() cannot race."""
+        self.writer = writer
+        self.started_perf = started_perf
+        self.status = self.STARTED
+
+    def _mark_completed(self, stats):
+        with self._lock:
+            self.stats = dict(stats or {})
+            self.done_perf = time.perf_counter()
+            self.status = self.COMPLETED
+        self._publish()
+
+    def _mark_failed(self, error):
+        with self._lock:
+            self.error = error
+            if self.writer is not None:
+                try:
+                    self.stats = dict(self.writer.stats)
+                except Exception:  # noqa: BLE001 - diagnostics only
+                    self.stats = {}
+            self.done_perf = time.perf_counter()
+            self.status = self.FAILED
+        self._publish()
+
+    def _mark_cancelled(self, error):
+        """Called by the queue under its own lock, before the worker pops it."""
+        with self._lock:
+            if self.status != self.QUEUED:
+                return False
+            self.error = error
+            self.done_perf = time.perf_counter()
+            self.status = self.CANCELLED
+        self._publish()
+        return True
+
+    def _publish(self):
+        self._done.set()
+        for callback in list(self._callbacks):
+            try:
+                callback(self)
+            except Exception:  # noqa: BLE001 - a callback never breaks a save
+                pass
+
+    # -- caller interface ---------------------------------------------------
+
+    def done(self):
+        return self._done.is_set()
+
+    def started(self):
+        return self.started_perf is not None
+
+    def add_done_callback(self, callback):
+        self._callbacks.append(callback)
+        if self._done.is_set():
+            try:
+                callback(self)
+            except Exception:  # noqa: BLE001
+                pass
+        return None
+
+    def completion_ms(self):
+        if self.done_perf is None:
+            return None
+        return (self.done_perf - self.submitted_perf) * 1000.0
+
+    def queue_wait_ms(self):
+        if self.started_perf is None:
+            return None
+        return (self.started_perf - self.submitted_perf) * 1000.0 - self.admission_wait_ms
+
+    def cancel(self):
+        """Cancel a save that has not started. False once it is running."""
+        return self._owner.cancel_ticket(self)
+
+    def wait(self, timeout=None):
+        return self.result(timeout=timeout)
+
+    def result(self, timeout=None):
+        """Wait for the save; re-raise its error, or return its stats."""
+        if not self._done.wait(timeout):
+            raise TimeoutError(
+                "checkpoint %r (queue ticket %d) did not finish within %rs; the "
+                "session still owns it, and close() will report its outcome"
+                % (self.checkpoint_id, self.index, timeout)
+            )
+        if self.status == self.COMPLETED:
+            return self.stats
+        if self.status == self.CANCELLED:
+            error = self.error or SaveNotStarted(
+                "checkpoint %r was cancelled before it started"
+                % (self.checkpoint_id,)
+            )
+            raise error
+        raise self.error if self.error is not None else SaveFailed(
+            "checkpoint %r failed without a recorded error" % (self.checkpoint_id,)
+        )
+
+    def summary(self):
+        return {
+            "index": self.index,
+            "checkpoint_id": self.checkpoint_id,
+            "status": self.status,
+            "estimate_bytes": self.estimate_bytes,
+            "admission_wait_ms": self.admission_wait_ms,
+            "completion_ms": (
+                None if self.completion_ms() is None else round(self.completion_ms(), 3)
+            ),
+            "error_class": None if self.error is None else type(self.error).__name__,
+            "error": None if self.error is None else str(self.error)[:400],
+        }
+
+
 class CheckpointSession:
     """One long-lived checkpoint service shared by many saves.
 
@@ -1697,6 +2601,27 @@ class CheckpointSession:
     once per checkpoint. The existing API stays exactly as it was: a
     ``WeftStorageWriter`` built without a session still creates and closes its
     own helper.
+
+    Queue and admission control
+    ---------------------------
+
+    Saves go through **one persistent worker** owned by the session and reused
+    across checkpoints; the worker drains a FIFO queue in submission order.
+    One worker is the maximum that can publish: a second concurrent
+    ``prepare`` on the shared helper is refused by the store, and the store is
+    single-writer, so a pool would only add failures.
+
+    Admission is bounded and never silent. A save is admitted while fewer than
+    ``max_outstanding`` saves are outstanding and the staged-byte budget
+    allows it (see :meth:`byte_budget`); otherwise the caller either waits up
+    to ``admission_wait_ms`` or is refused immediately, by policy
+    (``admission_policy`` ``"block"`` or ``"fail"``). A refusal raises
+    :class:`QueueFull` naming the bound and publishes nothing. A requested
+    durable checkpoint is therefore never dropped: it is admitted, or it is a
+    typed error the caller must handle. ``max_outstanding=None`` disables the
+    count bound (``max_staged_bytes=None`` disables the byte bound); an
+    unbounded queue is explicitly the caller's choice and is reported in
+    :attr:`stats` as such.
 
     Ownership and safety
     --------------------
@@ -1709,14 +2634,18 @@ class CheckpointSession:
     * A stale fence is never replaced silently. The service returns the typed
       ``Busy``/``Unauthorized`` error and the caller must reopen; the session
       does not retry a write that the store refused.
-    * The session is not usable across ``fork()``: ``service()`` refuses in a
-      child process, because a child shares the inherited descriptor but not
-      the parent's request stream.
+    * The session is not usable across ``fork()``: ``service()`` and
+      ``submit()`` refuse in a child process, because a child shares the
+      inherited descriptor but not the parent's request stream (and does not
+      share the worker thread at all).
     * An identical retry is idempotent. If a write raises a transport failure
       and the checkpoint then exists with the same container SHA-256, the
       session reports that checkpoint instead of publishing a second
       generation. The container is retained (bounded by ``staging_bytes``) for
       exactly that comparison; a refusal by the store is never masked.
+    * The queue is a scheduling layer only. An admitted save still runs the
+      writer's full atomic prepare/finish publication, so the crash and
+      fencing invariants are the store's, not the queue's.
     """
 
     def __init__(
@@ -1729,6 +2658,10 @@ class CheckpointSession:
         session_idle_secs=30,
         max_tensor_bytes=None,
         extra_args=(),
+        max_outstanding=DEFAULT_QUEUE_MAX_OUTSTANDING,
+        max_staged_bytes=DEFAULT_QUEUE_MAX_STAGED_BYTES,
+        admission_policy="block",
+        admission_wait_ms=DEFAULT_QUEUE_ADMISSION_WAIT_MS,
     ):
         staging_bytes = int(staging_bytes)
         if staging_bytes <= 0:
@@ -1736,9 +2669,29 @@ class CheckpointSession:
         session_idle_secs = int(session_idle_secs)
         if session_idle_secs < 0:
             raise ValueError("session_idle_secs must be non-negative")
+        if max_outstanding is not None:
+            max_outstanding = int(max_outstanding)
+            if max_outstanding < 1:
+                raise ValueError("max_outstanding must be at least 1 (or None)")
+        if max_staged_bytes is not None:
+            max_staged_bytes = int(max_staged_bytes)
+            if max_staged_bytes <= 0:
+                raise ValueError("max_staged_bytes must be positive (or None)")
+        if admission_policy not in QUEUE_ADMISSION_POLICIES:
+            raise ValueError(
+                "admission_policy=%r is not one of %s"
+                % (admission_policy, ", ".join(QUEUE_ADMISSION_POLICIES))
+            )
+        admission_wait_ms = float(admission_wait_ms)
+        if admission_wait_ms < 0:
+            raise ValueError("admission_wait_ms must be non-negative")
         self.store_root = Path(store_root)
         self.staging_bytes = staging_bytes
         self.session_idle_secs = session_idle_secs
+        self.max_outstanding = max_outstanding
+        self.max_staged_bytes = max_staged_bytes
+        self.admission_policy = admission_policy
+        self.admission_wait_ms = admission_wait_ms
         self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
         self._store.requires_store()
         self._cli = _default_cli(weftfs_cli)
@@ -1746,55 +2699,228 @@ class CheckpointSession:
         self._max_tensor_bytes = max_tensor_bytes
         self._extra_args = tuple(str(arg) for arg in extra_args)
         self._service = None
+        self._service_lock = threading.Lock()
+        self._service_gone = False
+        self._close_report = None
         self._closed = False
         self._pid = os.getpid()
+        # The queue: one worker, one lock, FIFO order. `_outstanding` counts
+        # admitted-but-unfinished saves (queued + in flight).
+        self._cond = threading.Condition()
+        self._worker = None
+        self._atexit_registered = False
+        self._pending = collections.deque()
+        self._stopping = False
+        self._tickets = []
+        self._next_index = 0
+        self._outstanding = 0
+        self._staged_bytes = 0
+        self._largest_admitted = 0
+        self._in_flight = None
         self.stats = {
             "saves": 0,
             "services_started": 0,
             "idempotent_recoveries": 0,
             "writable_handle_opens": 0,
+            "submitted": 0,
+            "admitted": 0,
+            "completed": 0,
+            "failed": 0,
+            "cancelled_before_start": 0,
+            "admission_refusals": 0,
+            "admission_waits": 0,
+            "admission_wait_ms_total": 0.0,
+            "admission_wait_ms_max": 0.0,
+            "queue_high_water": 0,
+            "staged_bytes_high_water": 0,
+            "largest_admission_bytes": 0,
+            "unpriced_admissions": 0,
         }
 
     # -- lifecycle ----------------------------------------------------------
 
     def service(self):
-        """The shared helper, started on first use."""
-        if self._closed:
+        """The shared helper, started on first use.
+
+        Stays usable while a drain is in progress, so a save that is already
+        running can finish after ``close()`` has stopped new submissions.
+        """
+        if self._service_gone:
             raise StoreUnavailable("checkpoint session is closed")
         if os.getpid() != self._pid:
             raise ServiceUnavailable(
                 "checkpoint session was created in pid %d; pid %d must create "
                 "its own" % (self._pid, os.getpid())
             )
-        if self._service is None:
-            options = {}
-            if self._max_tensor_bytes is not None:
-                options["max_tensor_bytes"] = int(self._max_tensor_bytes)
-            self._service = CheckpointService(
-                self.store_root,
-                cli=self._cli,
-                timeout=self._timeout,
-                session_idle_secs=self.session_idle_secs,
-                extra_args=self._extra_args,
-                **options,
-            )
-            self.stats["services_started"] += 1
-        return self._service
+        with self._service_lock:
+            if self._service is None:
+                options = {}
+                if self._max_tensor_bytes is not None:
+                    options["max_tensor_bytes"] = int(self._max_tensor_bytes)
+                self._service = CheckpointService(
+                    self.store_root,
+                    cli=self._cli,
+                    timeout=self._timeout,
+                    session_idle_secs=self.session_idle_secs,
+                    extra_args=self._extra_args,
+                    **options,
+                )
+                self.stats["services_started"] += 1
+            return self._service
 
     @property
     def service_pid(self):
         return None if self._service is None else self._service.pid
 
-    def close(self):
-        """Drain and stop the helper. Idempotent."""
-        if self._closed:
-            return
-        self._closed = True
-        if self._service is not None:
+    def close(self, *, wait=True, timeout=300.0):
+        """Stop the queue and the helper; return a drain report.
+
+        ``wait=True`` (the default) drains: every admitted save runs and the
+        report says how each one ended. ``wait=False`` refuses to *start* the
+        saves still queued (they are marked ``cancelled_before_start`` and
+        publish nothing) but still waits for the save already in flight,
+        because abandoning a started publication is not safe. Either way the
+        report accounts for every admitted ticket, so no admitted save can
+        disappear. Idempotent: a second call returns the same report.
+
+        ``timeout`` bounds the wait for the worker. A timed-out drain is
+        reported (``timed_out`` true, plus the unfinished tickets) and the
+        helper is left running for the save that is still working; it exits
+        when the interpreter closes its socket.
+        """
+        timeout = float(timeout)
+        if os.getpid() != self._pid:
+            # In a forked child the worker thread and the parent's socket do not
+            # exist. Release nothing and claim nothing.
+            self._closed = True
+            self._stopping = True
+            self._service = None
+            self._worker = None
+            return {
+                "schema": "weft.checkpoint.queue.drain.v1",
+                "forked_child": True,
+                "admitted": 0,
+                "completed": 0,
+                "failed": 0,
+                "cancelled_before_start": 0,
+                "unfinished": 0,
+                "no_silent_skips": True,
+                "stats": dict(self.stats),
+                "tickets": [],
+            }
+        with self._cond:
+            if self._close_report is not None:
+                return self._close_report
+            self._closed = True
+            self._stopping = True
+            if not wait:
+                for entry in list(self._pending):
+                    self._cancel_locked(
+                        entry,
+                        SaveNotStarted(
+                            "session closed with this checkpoint still queued; "
+                            "it never started and published nothing"
+                        ),
+                    )
+                self._pending.clear()
+            self._cond.notify_all()
+            worker = self._worker
+        if worker is not None:
+            worker.join(timeout)
+        timed_out = worker is not None and worker.is_alive()
+        if not timed_out and self._service is not None:
             try:
                 self._service.close()
             finally:
                 self._service = None
+                self._service_gone = True
+        report = self.drain_report(timed_out=timed_out)
+        with self._cond:
+            self._close_report = report
+        if self._atexit_registered:
+            try:
+                atexit.unregister(self._atexit_close)
+            except Exception:  # noqa: BLE001 - best effort
+                pass
+            self._atexit_registered = False
+        return report
+
+    def _atexit_close(self):
+        """Drain at interpreter exit so an admitted save is never abandoned."""
+        try:
+            self.close(wait=True, timeout=60.0)
+        except Exception:  # noqa: BLE001 - nothing useful can be raised here
+            pass
+
+    def drain_report(self, *, timed_out=False):
+        """The outcome of every admitted ticket, plus the counters."""
+        with self._cond:
+            tickets = [ticket.summary() for ticket in self._tickets]
+            outstanding = self._outstanding
+            pending = len(self._pending)
+        counted = {
+            status: sum(1 for ticket in tickets if ticket["status"] == status)
+            for status in (
+                CheckpointTicket.QUEUED,
+                CheckpointTicket.STARTED,
+                CheckpointTicket.COMPLETED,
+                CheckpointTicket.FAILED,
+                CheckpointTicket.CANCELLED,
+            )
+        }
+        return {
+            "schema": "weft.checkpoint.queue.drain.v1",
+            "timed_out": bool(timed_out),
+            "admitted": len(tickets),
+            "completed": counted[CheckpointTicket.COMPLETED],
+            "failed": counted[CheckpointTicket.FAILED],
+            "cancelled_before_start": counted[CheckpointTicket.CANCELLED],
+            "unfinished": counted[CheckpointTicket.QUEUED]
+            + counted[CheckpointTicket.STARTED],
+            "outstanding": outstanding,
+            "pending": pending,
+            "no_silent_skips": (
+                len(tickets)
+                == counted[CheckpointTicket.COMPLETED]
+                + counted[CheckpointTicket.FAILED]
+                + counted[CheckpointTicket.CANCELLED]
+            ),
+            "stats": dict(self.stats),
+            "tickets": tickets,
+        }
+
+    def cancel_ticket(self, ticket):
+        """Cancel one queued (not yet started) ticket."""
+        with self._cond:
+            for entry in self._pending:
+                if entry.ticket is ticket:
+                    return self._cancel_locked(
+                        entry,
+                        SaveNotStarted(
+                            "checkpoint %r was cancelled before it started; it "
+                            "published nothing" % (ticket.checkpoint_id,)
+                        ),
+                    )
+            return False
+
+    def _cancel_locked(self, entry, error):
+        """Mark a queued save cancelled and release its admission slot.
+
+        Caller holds ``self._cond``. The worker pops and marks a save started
+        under the same lock, so a ticket is never both cancelled and run.
+        """
+        ticket = entry.ticket
+        if not ticket._mark_cancelled(error):
+            return False
+        try:
+            self._pending.remove(entry)
+        except ValueError:
+            pass
+        self._outstanding -= 1
+        self._staged_bytes -= ticket.estimate_bytes
+        self.stats["cancelled_before_start"] += 1
+        self._cond.notify_all()
+        return True
 
     def __enter__(self):
         return self
@@ -1822,8 +2948,114 @@ class CheckpointSession:
         kwargs["retain_container"] = True
         return WeftStorageWriter(checkpoint_id, store_root=self.store_root, **kwargs)
 
+    def queue_depth(self):
+        """Saves queued but not yet started."""
+        with self._cond:
+            return len(self._pending)
+
+    def byte_budget(self, requested_bytes=0):
+        """The staged-byte budget this session applies to an admission.
+
+        The bound is ``max(max_staged_bytes, largest already-admitted save,
+        the save being admitted)``. That rule keeps the byte bound a real
+        memory-protection limit while never deadlocking a workload whose
+        checkpoints are larger than ``max_staged_bytes``: such a workload
+        degenerates to one outstanding save instead of being refused forever.
+        """
+        if self.max_staged_bytes is None:
+            return None
+        with self._cond:
+            return max(self.max_staged_bytes, self._largest_admitted, int(requested_bytes))
+
+    def submit(self, state_dict, *, checkpoint_id, **kwargs):
+        """Admit one durable save and return its :class:`CheckpointTicket`.
+
+        The save runs on the session's single worker in submission order, so an
+        earlier admitted save is never overtaken by a later one and the store's
+        visible history stays monotonic. Nothing is published here; the ticket
+        reports the outcome.
+
+        Raises :class:`QueueFull` when the bound is reached (by policy or after
+        ``admission_wait_ms``), and :class:`QueueClosed` when the session is
+        closed or draining. Both are typed, both publish nothing, and both are
+        counted in :attr:`stats`.
+        """
+        _require_torch("checkpoint session submit")
+        estimate_bytes, unpriced = _estimate_state_bytes(state_dict)
+        submitted_perf = time.perf_counter()
+        wait_started = submitted_perf
+        with self._cond:
+            self._check_submittable_locked()
+            self.stats["submitted"] += 1
+            deadline = wait_started + (
+                self.admission_wait_ms / 1000.0 if self.admission_policy == "block" else 0.0
+            )
+            while self._saturated_locked(estimate_bytes):
+                remaining = deadline - time.perf_counter()
+                if remaining <= 0:
+                    waited_ms = (time.perf_counter() - wait_started) * 1000.0
+                    self.stats["admission_refusals"] += 1
+                    raise self._queue_full_locked(
+                        checkpoint_id, estimate_bytes, waited_ms
+                    )
+                self._cond.wait(remaining)
+                self._check_submittable_locked()
+            waited_ms = (time.perf_counter() - wait_started) * 1000.0
+            self._outstanding += 1
+            self._staged_bytes += estimate_bytes
+            self._largest_admitted = max(self._largest_admitted, estimate_bytes)
+            self._next_index += 1
+            ticket = CheckpointTicket(
+                index=self._next_index,
+                checkpoint_id=checkpoint_id,
+                estimate_bytes=estimate_bytes,
+                submitted_perf=submitted_perf,
+                admission_wait_ms=waited_ms,
+                owner=self,
+            )
+            self._tickets.append(ticket)
+            self._pending.append(
+                _QueuedSave(
+                    ticket,
+                    state_dict,
+                    checkpoint_id,
+                    dict(kwargs),
+                )
+            )
+            self.stats["admitted"] += 1
+            self.stats["largest_admission_bytes"] = self._largest_admitted
+            self.stats["queue_high_water"] = max(
+                self.stats["queue_high_water"], self._outstanding
+            )
+            self.stats["staged_bytes_high_water"] = max(
+                self.stats["staged_bytes_high_water"], self._staged_bytes
+            )
+            if unpriced:
+                self.stats["unpriced_admissions"] += 1
+            if waited_ms > 0.0:
+                self.stats["admission_waits"] += 1
+                self.stats["admission_wait_ms_total"] += waited_ms
+                self.stats["admission_wait_ms_max"] = max(
+                    self.stats["admission_wait_ms_max"], waited_ms
+                )
+            if self._worker is None:
+                # Daemon so an abandoned idle worker can never keep the
+                # interpreter alive; the atexit hook drains the queue first, so
+                # an orderly exit still runs every admitted save.
+                self._worker = threading.Thread(
+                    target=self._worker_loop,
+                    name="weft-checkpoint-queue",
+                    daemon=True,
+                )
+                self._worker.start()
+                if not self._atexit_registered:
+                    atexit.register(self._atexit_close)
+                    self._atexit_registered = True
+            self._cond.notify_all()
+        return ticket
+
     def save(self, state_dict, *, checkpoint_id, **kwargs):
-        """Synchronous save through the shared helper.
+        """Synchronous save through the shared worker and queue.
 
         Returns the writer's stats payload. Exactness, staging bounds and the
         DCP metadata contract are unchanged: this only reuses the transport.
@@ -1835,35 +3067,135 @@ class CheckpointSession:
         generation, so one ``(checkpoint_id, container)`` pair never produces
         two checkpoints.
         """
-        _require_torch("checkpoint session save")
+        return self.submit(state_dict, checkpoint_id=checkpoint_id, **kwargs).result()
+
+    # -- admission ---------------------------------------------------------
+
+    def _check_submittable_locked(self):
+        if self._closed or self._stopping:
+            raise QueueClosed(
+                "checkpoint session at %s is closed; the save was not admitted "
+                "and nothing was published" % (self.store_root,)
+            )
+        if os.getpid() != self._pid:
+            raise ServiceUnavailable(
+                "checkpoint session was created in pid %d; pid %d must create "
+                "its own (the queue worker is a thread and does not survive "
+                "fork())" % (self._pid, os.getpid())
+            )
+
+    def _saturated_locked(self, requested_bytes):
+        if self.max_outstanding is not None and self._outstanding >= self.max_outstanding:
+            return True
+        budget = (
+            None
+            if self.max_staged_bytes is None
+            else max(self.max_staged_bytes, self._largest_admitted, requested_bytes)
+        )
+        return budget is not None and self._staged_bytes + requested_bytes > budget
+
+    def _queue_full_locked(self, checkpoint_id, requested_bytes, waited_ms):
+        budget = (
+            None
+            if self.max_staged_bytes is None
+            else max(self.max_staged_bytes, self._largest_admitted, requested_bytes)
+        )
+        message = (
+            "checkpoint %r was refused admission after waiting %0.1f ms: "
+            "%d of %s saves outstanding (max_outstanding=%s), %d of %s staged "
+            "bytes (max_staged_bytes=%s, budget=%s, this save=%d); nothing was "
+            "published and the store is unchanged"
+            % (
+                checkpoint_id,
+                waited_ms,
+                self._outstanding,
+                "unbounded" if self.max_outstanding is None else self.max_outstanding,
+                self.max_outstanding,
+                self._staged_bytes,
+                "unbounded" if self.max_staged_bytes is None else self.max_staged_bytes,
+                self.max_staged_bytes,
+                budget,
+                requested_bytes,
+            )
+        )
+        return QueueFull(
+            message,
+            max_outstanding=self.max_outstanding,
+            outstanding=self._outstanding,
+            max_staged_bytes=self.max_staged_bytes,
+            staged_bytes=self._staged_bytes,
+            requested_bytes=requested_bytes,
+            byte_budget=budget,
+            waited_ms=waited_ms,
+        )
+
+    # -- worker ------------------------------------------------------------
+
+    def _worker_loop(self):
+        while True:
+            with self._cond:
+                while not self._pending and not self._stopping:
+                    self._cond.wait()
+                if not self._pending:
+                    return
+                entry = self._pending.popleft()
+                started_perf = time.perf_counter()
+                writer = self.writer(entry.checkpoint_id, **entry.kwargs)
+                entry.ticket._mark_started(writer, started_perf)
+                self._in_flight = entry.ticket
+            try:
+                stats = self._run_save(entry)
+                entry.ticket._mark_completed(stats)
+                with self._cond:
+                    self.stats["completed"] += 1
+            except BaseException as exc:  # noqa: BLE001 - always reported
+                entry.ticket._mark_failed(exc)
+                with self._cond:
+                    self.stats["failed"] += 1
+            finally:
+                with self._cond:
+                    self._in_flight = None
+                    self._outstanding -= 1
+                    self._staged_bytes -= entry.ticket.estimate_bytes
+                    self._cond.notify_all()
+
+    def _run_save(self, entry):
+        """The historical save body, run on the worker in queue order."""
         import torch.distributed.checkpoint as dcp
 
-        self.stats["saves"] += 1
-        attempt = 0
-        while True:
-            writer = self.writer(checkpoint_id, **kwargs)
-            try:
-                dcp.save(state_dict, storage_writer=writer, no_dist=True)
-            except ServiceUnavailable as exc:
-                if attempt >= 1:
-                    raise
-                outcome = self._classify_lost_write(writer)
-                attempt += 1
-                if outcome == "published":
-                    raise SaveFailed(
-                        "checkpoint %r was published but the save did not finish "
-                        "(its source SHA-256 matches the bytes written, so it is "
-                        "a complete store artifact without DCP metadata); the "
-                        "session did not publish a second generation: %s"
-                        % (getattr(writer, "last_container_name", None), exc)
-                    ) from exc
-                if outcome != "absent":
-                    raise
-                self.stats["idempotent_recoveries"] += 1
-                continue
-            finally:
-                writer.close()
-            return writer.stats
+        writer = entry.ticket.writer
+        with self._cond:
+            self.stats["saves"] += 1
+        try:
+            attempt = 0
+            while True:
+                try:
+                    dcp.save(entry.state_dict, storage_writer=writer, no_dist=True)
+                except ServiceUnavailable as exc:
+                    if attempt >= 1:
+                        raise
+                    outcome = self._classify_lost_write(writer)
+                    attempt += 1
+                    if outcome == "published":
+                        raise SaveFailed(
+                            "checkpoint %r was published but the save did not "
+                            "finish (its source SHA-256 matches the bytes "
+                            "written, so it is a complete store artifact without "
+                            "DCP metadata); the session did not publish a second "
+                            "generation: %s"
+                            % (getattr(writer, "last_container_name", None), exc)
+                        ) from exc
+                    if outcome != "absent":
+                        raise
+                    with self._cond:
+                        self.stats["idempotent_recoveries"] += 1
+                    continue
+                return writer.stats
+        finally:
+            # Releases the retained container and, if a prepare is still open,
+            # aborts it so the helper carries no pending state into the next
+            # queued save. Nothing is published by an abort.
+            writer.close()
 
     def _classify_lost_write(self, writer):
         """Say whether the allocated name was published, or is still absent.

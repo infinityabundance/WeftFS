@@ -1,0 +1,101 @@
+{
+ "methodology": "bench/scripts/r22_family_court.sh inside the bench court (3 GiB / 4 cpus / 1024 pids); subset = embedding + up to 100 evenly spaced tensors; exactness checked by the restore row",
+ "result": "measured",
+ "role": "R22.5 cross-family write frontier: one repetition per (family, row), same fixture selection rule as the R21 court, local POSIX backend",
+ "rows": [
+  {
+   "bytes_written": 634961920,
+   "config": "A",
+   "cpu_ms": 350.0,
+   "family": "qwen3b-instruct",
+   "fixture_sha256": "54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2",
+   "logical_bytes": null,
+   "peak_rss_kib": 612164,
+   "physical_footprint_bytes": null,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": null,
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 25,
+    "wall_ms": 609.9832590000001
+   },
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 10350.423714999999,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 421562755,
+   "config": "C-pipe4",
+   "cpu_ms": 2150.0,
+   "family": "qwen3b-instruct",
+   "fixture_sha256": "54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2",
+   "logical_bytes": null,
+   "peak_rss_kib": 1980148,
+   "physical_footprint_bytes": 421550249,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 13,
+    "zstd": 12
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 25,
+    "wall_ms": 2127.918323
+   },
+   "stages_ms": {
+    "encode_busy": 1175.388012,
+    "encode_wall": 1201.962848,
+    "pipeline_wall": 1975.131317,
+    "publish_busy": 273.380958,
+    "publish_wall": 273.483472,
+    "reader": 592.860043
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 2031.330468,
+   "writeback_busy_ms": 199.862289
+  },
+  {
+   "bytes_written": 421562755,
+   "config": "C-pipe4-zpar1",
+   "cpu_ms": 2140.0,
+   "family": "qwen3b-instruct",
+   "fixture_sha256": "54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2",
+   "logical_bytes": null,
+   "peak_rss_kib": 1980260,
+   "physical_footprint_bytes": 421550249,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 13,
+    "zstd": 12
+   },
+   "restore": {
+    "exact": true,
+    "mismatches": 0,
+    "tensors_verified": 25,
+    "wall_ms": 2147.662646
+   },
+   "stages_ms": {
+    "encode_busy": 1172.89032,
+    "encode_wall": 1203.102533,
+    "pipeline_wall": 1959.366954,
+    "publish_busy": 283.131437,
+    "publish_wall": 283.251892,
+    "reader": 564.634436
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 2001.1236710000003,
+   "writeback_busy_ms": 205.981187
+  }
+ ],
+ "schema": "weft.r22-family.v1",
+ "stamp": "20261112T234500Z"
+}

@@ -290,22 +290,253 @@ pub(crate) fn encode_delta(
     encode_segment(header, index, Some(base))
 }
 
+/// Encode a delta that carries only the rows the incremental maintainer
+/// recorded as changed.
+///
+/// This is the operation-derived counterpart of [`encode_delta`]: the writer
+/// already knows which elements moved, so it never scans the whole index to
+/// find the difference. The bytes are ordinary WFX3 (same tags, same patch
+/// rules); only the way the row set was computed differs.
+pub(crate) fn encode_delta_changed(
+    delta: &crate::index_incremental::IndexDelta,
+    index: &StateIndex,
+    base_id: Hash32,
+    base_commit: Hash32,
+) -> Result<Vec<u8>> {
+    let base_generation = index
+        .generation()
+        .checked_sub(1)
+        .ok_or_else(|| Error::invalid_argument("a WFX3 delta needs a previous generation"))?;
+    let header = SegmentHeader {
+        kind: SegmentKind::Delta,
+        generation: index.generation(),
+        base_generation,
+        base_id,
+        base_commit,
+        object_count: index.object_count() as u64,
+        relation_count: index.relation_count() as u64,
+        entry_count: index.entry_count() as u64,
+    };
+    let mut out = Vec::with_capacity(HEADER_BYTES + 256);
+    write_header(&mut out, header);
+
+    // objects_with_attr
+    let mut name_rows: Vec<(&String, SetRowWrite)> = Vec::new();
+    for (name, change) in &delta.with_attr {
+        if let Some(row) = changed_set_row(change, index.objects_with_attr.get(name)) {
+            name_rows.push((name, row));
+        }
+    }
+    push_u32(&mut out, name_rows.len() as u64)?;
+    for (name, row) in name_rows {
+        push_str(&mut out, name)?;
+        write_changed_set_row(&mut out, row)?;
+    }
+
+    // objects_by_attr_eq
+    let mut attr_rows: Vec<((String, Vec<u8>), SetRowWrite)> = Vec::new();
+    for (key, change) in &delta.attr_eq {
+        if let Some(row) = changed_set_row(change, index.objects_by_attr_eq.get(key)) {
+            attr_rows.push((key.clone(), row));
+        }
+    }
+    push_u32(&mut out, attr_rows.len() as u64)?;
+    for ((name, key), row) in attr_rows {
+        push_str(&mut out, &name)?;
+        push_bytes(&mut out, &key)?;
+        write_changed_set_row(&mut out, row)?;
+    }
+
+    // relations_from
+    let mut relation_rows: Vec<((Hash32, String), EdgeRowWrite)> = Vec::new();
+    for (key, change) in &delta.relations {
+        if let Some(row) = changed_edge_row(change, index.relations_from.get(key))? {
+            relation_rows.push((key.clone(), row));
+        }
+    }
+    push_u32(&mut out, relation_rows.len() as u64)?;
+    for ((subject, predicate), row) in relation_rows {
+        out.extend_from_slice(subject.as_bytes());
+        push_str(&mut out, &predicate)?;
+        write_changed_edge_row(&mut out, row)?;
+    }
+
+    // tags
+    let mut tag_rows: Vec<(&String, SetRowWrite)> = Vec::new();
+    for (tag, change) in &delta.tags {
+        if let Some(row) = changed_set_row(change, index.tags.get(tag)) {
+            tag_rows.push((tag, row));
+        }
+    }
+    push_u32(&mut out, tag_rows.len() as u64)?;
+    for (tag, row) in tag_rows {
+        push_str(&mut out, tag)?;
+        write_changed_set_row(&mut out, row)?;
+    }
+
+    finish_segment(out)
+}
+
+/// What a changed set-valued row becomes in the segment.
+#[derive(Debug)]
+enum SetRowWrite {
+    Present(BTreeSet<Hash32>),
+    Absent,
+    Patch {
+        added: Vec<Hash32>,
+        removed: Vec<Hash32>,
+    },
+}
+
+/// What a changed relation row becomes in the segment.
+#[derive(Debug)]
+enum EdgeRowWrite {
+    Present(Vec<Vec<u8>>),
+    Absent,
+    Patch {
+        added: Vec<Vec<u8>>,
+        removed: Vec<Vec<u8>>,
+    },
+}
+
+fn changed_set_row(
+    change: &crate::index_incremental::RowChange,
+    new: Option<&BTreeSet<Hash32>>,
+) -> Option<SetRowWrite> {
+    match (change.base_present, new) {
+        (false, None) => None,
+        (false, Some(ids)) => Some(SetRowWrite::Present(ids.clone())),
+        (true, None) => Some(SetRowWrite::Absent),
+        (true, Some(ids)) => {
+            let mut added = Vec::new();
+            let mut removed = Vec::new();
+            for (key, was_present) in &change.elements {
+                let bytes: [u8; 32] = key.as_slice().try_into().ok()?;
+                let id = Hash32::from_bytes(bytes);
+                let present = ids.contains(&id);
+                match (*was_present, present) {
+                    (false, true) => added.push(id),
+                    (true, false) => removed.push(id),
+                    _ => {}
+                }
+            }
+            if added.is_empty() && removed.is_empty() {
+                return None;
+            }
+            added.sort();
+            removed.sort();
+            Some(SetRowWrite::Patch { added, removed })
+        }
+    }
+}
+
+fn changed_edge_row(
+    change: &crate::index_incremental::RowChange,
+    new: Option<&Vec<IndexedRelation>>,
+) -> Result<Option<EdgeRowWrite>> {
+    match (change.base_present, new) {
+        (false, None) => Ok(None),
+        (false, Some(edges)) => Ok(Some(EdgeRowWrite::Present(canonical_edges(Some(edges))?))),
+        (true, None) => Ok(Some(EdgeRowWrite::Absent)),
+        (true, Some(edges)) => {
+            let new_set: BTreeSet<Vec<u8>> = canonical_edges(Some(edges))?.into_iter().collect();
+            let mut added = Vec::new();
+            let mut removed = Vec::new();
+            for (key, was_present) in &change.elements {
+                let present = new_set.contains(key);
+                match (*was_present, present) {
+                    (false, true) => added.push(key.clone()),
+                    (true, false) => removed.push(key.clone()),
+                    _ => {}
+                }
+            }
+            if added.is_empty() && removed.is_empty() {
+                return Ok(None);
+            }
+            Ok(Some(EdgeRowWrite::Patch { added, removed }))
+        }
+    }
+}
+
+fn write_changed_set_row(out: &mut Vec<u8>, row: SetRowWrite) -> Result<()> {
+    match row {
+        SetRowWrite::Present(ids) => {
+            out.push(PRESENT);
+            push_ids(out, &ids)?;
+        }
+        SetRowWrite::Absent => out.push(ABSENT),
+        SetRowWrite::Patch { added, removed } => {
+            out.push(PATCH);
+            push_u32(out, added.len() as u64)?;
+            for id in &added {
+                out.extend_from_slice(id.as_bytes());
+            }
+            push_u32(out, removed.len() as u64)?;
+            for id in &removed {
+                out.extend_from_slice(id.as_bytes());
+            }
+        }
+    }
+    Ok(())
+}
+
+fn write_changed_edge_row(out: &mut Vec<u8>, row: EdgeRowWrite) -> Result<()> {
+    match row {
+        EdgeRowWrite::Present(edges) => {
+            out.push(PRESENT);
+            push_u32(out, edges.len() as u64)?;
+            for edge in &edges {
+                out.extend_from_slice(edge);
+            }
+        }
+        EdgeRowWrite::Absent => out.push(ABSENT),
+        EdgeRowWrite::Patch { added, removed } => {
+            out.push(PATCH);
+            push_u32(out, added.len() as u64)?;
+            for edge in &added {
+                out.extend_from_slice(edge);
+            }
+            push_u32(out, removed.len() as u64)?;
+            for edge in &removed {
+                out.extend_from_slice(edge);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn write_header(out: &mut Vec<u8>, header: SegmentHeader) {
+    out.extend_from_slice(MAGIC_V3);
+    out.extend_from_slice(&VERSION_V3.to_le_bytes());
+    out.push(header.kind.as_u8());
+    push_u64(out, header.generation);
+    push_u64(out, header.base_generation);
+    out.extend_from_slice(header.base_id.as_bytes());
+    out.extend_from_slice(header.base_commit.as_bytes());
+    push_u64(out, header.object_count);
+    push_u64(out, header.relation_count);
+    push_u64(out, header.entry_count);
+}
+
+fn finish_segment(mut out: Vec<u8>) -> Result<Vec<u8>> {
+    if out.len() as u64 + DIGEST_BYTES as u64 > MAX_SEGMENT_BYTES {
+        return Err(Error::limit_exceeded(format!(
+            "WFX3 segment is {} bytes, above the {MAX_SEGMENT_BYTES}-byte cap",
+            out.len() + DIGEST_BYTES
+        )));
+    }
+    let digest = identity::h(SEGMENT_DOMAIN, &out);
+    out.extend_from_slice(digest.as_bytes());
+    Ok(out)
+}
+
 fn encode_segment(
     header: SegmentHeader,
     index: &StateIndex,
     base: Option<&StateIndex>,
 ) -> Result<Vec<u8>> {
     let mut out = Vec::with_capacity(HEADER_BYTES + 1024);
-    out.extend_from_slice(MAGIC_V3);
-    out.extend_from_slice(&VERSION_V3.to_le_bytes());
-    out.push(header.kind.as_u8());
-    push_u64(&mut out, header.generation);
-    push_u64(&mut out, header.base_generation);
-    out.extend_from_slice(header.base_id.as_bytes());
-    out.extend_from_slice(header.base_commit.as_bytes());
-    push_u64(&mut out, header.object_count);
-    push_u64(&mut out, header.relation_count);
-    push_u64(&mut out, header.entry_count);
+    write_header(&mut out, header);
 
     // objects_with_attr
     let mut names: BTreeSet<&String> = index.objects_with_attr.keys().collect();
@@ -410,15 +641,7 @@ fn encode_segment(
         write_id_row(&mut out, ids, old)?;
     }
 
-    if out.len() as u64 + DIGEST_BYTES as u64 > MAX_SEGMENT_BYTES {
-        return Err(Error::limit_exceeded(format!(
-            "WFX3 segment is {} bytes, above the {MAX_SEGMENT_BYTES}-byte cap",
-            out.len() + DIGEST_BYTES
-        )));
-    }
-    let digest = identity::h(SEGMENT_DOMAIN, &out);
-    out.extend_from_slice(digest.as_bytes());
-    Ok(out)
+    finish_segment(out)
 }
 
 /// Write one set-valued row: present, absent, or an element-level patch.

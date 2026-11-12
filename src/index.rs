@@ -72,7 +72,7 @@ pub(crate) struct IndexedRelation {
 }
 
 /// Owned, data-only index derived from one replayed `State`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct StateIndex {
     /// Commit whose replay produced this index (zero for an in-memory build
     /// that has not been attached to a commit yet).
@@ -197,6 +197,36 @@ impl StateIndex {
     pub(crate) fn with_commit(mut self, commit: Hash32) -> StateIndex {
         self.commit = commit;
         self
+    }
+
+    /// Mark the index incomplete after an unencodable scalar attribute value,
+    /// exactly as [`StateIndex::build`] does. An incomplete index is never
+    /// persisted (callers scan instead).
+    pub(crate) fn set_incomplete(&mut self) {
+        self.complete = false;
+    }
+
+    /// Set the generation and the three replayed-state counts on an
+    /// incrementally maintained index.
+    pub(crate) fn set_shape(
+        &mut self,
+        generation: u64,
+        object_count: usize,
+        relation_count: usize,
+        entry_count: usize,
+    ) {
+        self.generation = generation;
+        self.object_count = object_count;
+        self.relation_count = relation_count;
+        self.entry_count = entry_count;
+    }
+
+    /// The four candidate sections without the header or digest. Advisory and
+    /// internal: equality here is byte equality of the attested candidate set
+    /// (`candidates_root` covers exactly these bytes).
+    pub(crate) fn encode_sections(&self) -> Result<Vec<u8>> {
+        let body = self.encode_body()?;
+        Ok(body[INDEX_V2_HEADER_BYTES..].to_vec())
     }
 
     /// Build an index from resolved map state. Used by the WFX3 chain loader
@@ -761,5 +791,16 @@ impl StateIndexCache {
             self.entries.pop_front();
         }
         self.entries.push_back((key, index));
+    }
+
+    /// Drop one entry, releasing this cache's reference to its index.
+    pub(crate) fn remove(&mut self, key: Hash32) {
+        if let Some(position) = self
+            .entries
+            .iter()
+            .position(|(candidate, _)| *candidate == key)
+        {
+            self.entries.remove(position);
+        }
     }
 }

@@ -1,0 +1,16 @@
++ exec docker run --rm --init --name weft-fuse-court-426353 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=a633e0f70b51b2f972889b5209746d891a22c593 -e WEFT_REPO_WEFTFS_GO=1fa3d32fc473acad811bfdae32fdc0f60ce4f78a -e WEFT_REPO_WEFTCODEC=58db5aa440847d67182f6c46e503a1232d277183 -e WEFT_REPO_WEFTCODEC_GO=9812d158bf41be85f73ca667f9e2439661d7db2e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo build --release --features fuse --bin weftfs >/dev/null 2>&1 && cd /work/WeftFS-Go && CGO_ENABLED=0 go build ./... && go vet ./... && WEFTFS_RUST_BIN=/work/.docker-cache/target-rust/release/weftfs go test -race ./... -count=1 2>&1'
+?   	github.com/infinityabundance/WeftFS-Go/auth	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/attest-verify	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/indexbench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/merklebench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/mw2writer	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/openbench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/retentionprobe	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/cmd/tensorbench	[no test files]
+?   	github.com/infinityabundance/WeftFS-Go/resolver	[no test files]
+ok  	github.com/infinityabundance/WeftFS-Go/cmd/weftfs	40.901s
+ok  	github.com/infinityabundance/WeftFS-Go/fusefs	7.212s
+ok  	github.com/infinityabundance/WeftFS-Go/index	1.004s
+ok  	github.com/infinityabundance/WeftFS-Go/model	1.007s
+?   	github.com/infinityabundance/WeftFS-Go/werr	[no test files]
+ok  	github.com/infinityabundance/WeftFS-Go/store	134.040s

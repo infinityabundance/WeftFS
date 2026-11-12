@@ -1,0 +1,14 @@
+{
+ "clean_session_reference_megabytes_per_second": 1280.0,
+ "fsync_megabytes_per_second": [
+  3100.0,
+  3400.0,
+  3500.0
+ ],
+ "median_megabytes_per_second": 3400.0,
+ "note": "the R21 court's native control A (424 MB, 101 fsyncs) wrote in 332 ms, i.e. 1.28 GB/s; a median far below that means the durability path has degraded and every durable-write row in this session is device-bound",
+ "operation": "dd if=/dev/zero bs=1M count=200 conv=fsync, three times, inside the bench court",
+ "regime": "clean",
+ "schema": "weft.r22-device-control.v1",
+ "stamp": "20261112T193000Z"
+}

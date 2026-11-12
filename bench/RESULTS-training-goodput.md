@@ -382,3 +382,18 @@ and the save lands four steps late. `weft-fast` does not help (161.8 ms): its
 frames are larger, and the wait is dominated by the round trip and commit, not
 by encoding. No variant is acknowledged before its representation is durable,
 and all 80 checkpoints of the short-interval run restored exactly.
+
+## 11. Follow-up: a persistent `CheckpointSession` (R12c subphase B)
+
+The R12b short-interval regression above is **not** fixed here, but one of its
+causes now has its own measurement. `bench/RESULTS-training-goodput-session.md`
+(receipt `bench/receipts/training-goodput-session-20261111T220500Z.json`) runs
+the same 169-entry fixture and the same loop with one reusable
+`CheckpointSession` per (store, run) and sweeps 4/8/16/32 steps between
+checkpoints. Warm completion p50 falls from 339.0 to 62.9 ms at the 4-step
+interval (the per-save path reopens the store and replays the commit chain on
+every save), the loop wall from 17,615.8 to 4,476.3 ms, and the wait for the
+previous save from 615.8 to 30.8 ms. It also publishes the losses: a 13 % higher
+clean-step p50 at the 4-step interval, a ~2x slower first checkpoint, and a
+4.3 % higher loop wall at 32 steps. The default court in this document is
+unchanged; the session is an explicit configuration.

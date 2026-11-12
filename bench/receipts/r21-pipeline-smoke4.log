@@ -1,0 +1,72 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["C-pipe4-sync8", "C-pipe4-sync16", "C-pipe4-tokens3", "C-pipe4-sync8-tokens3"] reps=1 backend=local
+ablate: === rep 1/1 order=["C-pipe4-sync8", "C-pipe4-sync16", "C-pipe4-tokens3", "C-pipe4-sync8-tokens3"] ===
+ablate: rep 1 config C-pipe4-sync8 write
+--- write C-pipe4-sync8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync8 restore
+--- restore C-pipe4-sync8 (exit Some(0)) ---
+
+--- crash-check C-pipe4-sync8 (exit Some(0)) ---
+
+crash-write C-pipe4-sync8 after_objects: exit -1
+--- crash-check C-pipe4-sync8 (exit Some(0)) ---
+
+crash-write C-pipe4-sync8 after_commit_file: exit -1
+--- crash-check C-pipe4-sync8 (exit Some(0)) ---
+
+crash-write C-pipe4-sync8 after_superblock_write: exit -1
+--- crash-check C-pipe4-sync8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync16 write
+--- write C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync16 restore
+--- restore C-pipe4-sync16 (exit Some(0)) ---
+
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+crash-write C-pipe4-sync16 after_objects: exit -1
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+crash-write C-pipe4-sync16 after_commit_file: exit -1
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+crash-write C-pipe4-sync16 after_superblock_write: exit -1
+--- crash-check C-pipe4-sync16 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens3 write
+--- write C-pipe4-tokens3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-tokens3 restore
+--- restore C-pipe4-tokens3 (exit Some(0)) ---
+
+--- crash-check C-pipe4-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens3 after_objects: exit -1
+--- crash-check C-pipe4-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens3 after_commit_file: exit -1
+--- crash-check C-pipe4-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-tokens3 after_superblock_write: exit -1
+--- crash-check C-pipe4-tokens3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync8-tokens3 write
+--- write C-pipe4-sync8-tokens3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-sync8-tokens3 restore
+--- restore C-pipe4-sync8-tokens3 (exit Some(0)) ---
+
+--- crash-check C-pipe4-sync8-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-sync8-tokens3 after_objects: exit -1
+--- crash-check C-pipe4-sync8-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-sync8-tokens3 after_commit_file: exit -1
+--- crash-check C-pipe4-sync8-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-sync8-tokens3 after_superblock_write: exit -1
+--- crash-check C-pipe4-sync8-tokens3 (exit Some(0)) ---
+
+ablate: result=fail receipt=/work/bench/receipts/r21-pipeline-smoke4.json

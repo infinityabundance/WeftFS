@@ -1,0 +1,226 @@
+{
+  "control_variables": {
+    "WEFT_GC_HEAD_COMMITS": "unknown",
+    "WEFT_GC_ROOTS": "8"
+  },
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory_limit": "3g",
+    "pids": "1024"
+  },
+  "generated_unix_secs": 1794435961,
+  "generated_utc": "20261111T190100Z-prefix-8roots",
+  "head_only_cell": {
+    "commits": 202,
+    "data_bytes": 5270,
+    "gc": {
+      "deleted_index_bytes": 87891,
+      "deleted_indexes": 199,
+      "index_bytes_after_gc": 6570,
+      "ms": 5.309696,
+      "problems": [],
+      "refused": false,
+      "segments_on_disk_after_gc": 3
+    },
+    "head_chain_depth": 2,
+    "head_chain_segments": 3,
+    "index_bytes_before_gc": 94461,
+    "segments_on_disk_before_gc": 202
+  },
+  "label": "synthetic fixture, tmpfs, single host, one process; index GC bound per retained root",
+  "method": {
+    "chain_walk": "the harness re-reads the WFX3 header of every segment it names (kind at byte 8, base commit at bytes 57..89) and never calls the store's resolver",
+    "gcd": "store.gc(true) with gc_grace_secs = 0",
+    "head_only": "no snapshot and no checkpoint commit; the single-root control",
+    "retained": "each snapshot is pinned when the writer's head chain is at the default maximum delta depth, so each root's chain is as long as the format permits and adjacent chains do not overlap"
+  },
+  "package_version": "1.3.0",
+  "peak_rss_kib": 7272,
+  "profile": "release",
+  "retained_cell": {
+    "commits": 269,
+    "data_bytes": 20591,
+    "gc": {
+      "deleted_index_bytes": 0,
+      "deleted_indexes": 0,
+      "index_bytes_after_gc": 124982,
+      "ms": 63.118484,
+      "problems": [
+        "index GC skipped: cannot resolve a retained segment chain: LimitExceeded: index segment chain exceeds the hard depth bound"
+      ],
+      "refused": true,
+      "segments_on_disk_after_gc": 269
+    },
+    "hard_max_chain_deltas": 256,
+    "index_bytes_before_gc": 124982,
+    "index_ppm_of_data_before_gc": 6069739,
+    "per_root": [
+      {
+        "commit": "0f3a87cef8bb71ffa7d788fde980079956a788f94db5b41a4754f10d600695ea",
+        "depth": 1,
+        "segments": 2
+      },
+      {
+        "commit": "12df36149ffc120b31629550c36386e7b95ea119cbfebf64accb564ee78b0ae2",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "2effbcfd7f03ae7ce11acca25185b3114499c1de833bd8d7ec5c669d7a3a2399",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "5e52d9a7aef05b11f966bc2f549d27c0e4f79f8b8f2975c90c7ffa6268a44031",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "65c0354107b4212748c5ba7df25d3ba7fd946ba93e83ccdd6b59c348a2022d41",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "912ac8b16858795b98674baa5d37ebd36d4d27f63e3ba85886f383176fe6948f",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "c661427c466d48f17a8dcd7fdb2ee72793da0c6254c433aa5912c0ac490e1ec1",
+        "depth": 3,
+        "segments": 4
+      },
+      {
+        "commit": "e6ba682065f6cf529200c057dd59ccfe99c106c115319738ee3de105aeec0d31",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "e6ddd3d31d025e547db697e03f60280a7bae6750fbeb895517e4b662380b12cb",
+        "depth": 32,
+        "segments": 33
+      },
+      {
+        "commit": "e778672788cd25b390df302d89b420c24bf977de8079bcf086de9d6eb2f3d8d0",
+        "depth": 32,
+        "segments": 33
+      }
+    ],
+    "post_gc": [
+      {
+        "builds": 0,
+        "commit": "2effbcfd7f03ae7ce11acca25185b3114499c1de833bd8d7ec5c669d7a3a2399",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.307241,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s0"
+      },
+      {
+        "builds": 0,
+        "commit": "e6ba682065f6cf529200c057dd59ccfe99c106c115319738ee3de105aeec0d31",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.354128,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s1"
+      },
+      {
+        "builds": 0,
+        "commit": "65c0354107b4212748c5ba7df25d3ba7fd946ba93e83ccdd6b59c348a2022d41",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.3386090000000004,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s2"
+      },
+      {
+        "builds": 0,
+        "commit": "912ac8b16858795b98674baa5d37ebd36d4d27f63e3ba85886f383176fe6948f",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.29119,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s3"
+      },
+      {
+        "builds": 0,
+        "commit": "5e52d9a7aef05b11f966bc2f549d27c0e4f79f8b8f2975c90c7ffa6268a44031",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.2812219999999996,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s4"
+      },
+      {
+        "builds": 0,
+        "commit": "e778672788cd25b390df302d89b420c24bf977de8079bcf086de9d6eb2f3d8d0",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.261305,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s5"
+      },
+      {
+        "builds": 0,
+        "commit": "e6ddd3d31d025e547db697e03f60280a7bae6750fbeb895517e4b662380b12cb",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.305016,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s6"
+      },
+      {
+        "builds": 0,
+        "commit": "12df36149ffc120b31629550c36386e7b95ea119cbfebf64accb564ee78b0ae2",
+        "depth": 32,
+        "disk_loads": 1,
+        "matched": 8,
+        "open_ms": 2.273208,
+        "rejects": 0,
+        "scan_matched": 8,
+        "segments_present": true,
+        "snapshot": "s7"
+      }
+    ],
+    "retained_roots": 10,
+    "seed_ms": 1.0772780000000002,
+    "segments_on_disk_before_gc": 269,
+    "union_chain_segments": 268,
+    "verify": {
+      "checked_commits": 269,
+      "checked_manifests": 33,
+      "checked_objects": 32,
+      "generation": 269,
+      "ms": 13.262398999999998,
+      "ok": true,
+      "problems": []
+    }
+  },
+  "revision": "e1ab002d6e7055fdc83a32c77503ce3a98a85ec1",
+  "schema": "weftfs.index-gc-bound.v1"
+}

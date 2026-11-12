@@ -2,12 +2,12 @@
  {
   "id": "verify_receipt_current",
   "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (45/45 courts pass).",
-  "value": "verify-20261111T182601Z.json",
+  "value": "verify-20261112T223540Z.json",
   "locations": [
    "docs/STATUS.md",
    "README.md"
   ],
-  "receipt": "bench/receipts/verify-20261111T182601Z.json",
+  "receipt": "bench/receipts/verify-20261112T223540Z.json",
   "kind": "present"
  },
  {
@@ -2579,8 +2579,8 @@
  },
  {
   "id": "python_reader_all_modes",
-  "claim": "The Python reader implements every allocated mode 0–18; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
-  "value": "mode 0–18",
+  "claim": "The Python reader implements every allocated mode 0\u201318; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
+  "value": "mode 0\u201318",
   "locations": [
    "docs/STATUS.md",
    "docs/CONFORMANCE.md",
@@ -8966,7 +8966,7 @@
  {
   "id": "claim_audit_current_receipt",
   "claim": "The audit and README cite the current 45/45 verification receipt.",
-  "value": "45/45",
+  "value": "46/46",
   "locations": [
    "README.md",
    "docs/CLAIM-AUDIT.md"
@@ -9839,6 +9839,1308 @@
    "bench/receipts/release-artifacts-20261111T200115Z.json"
   ],
   "receipt": "bench/receipts/release-artifacts-20261111T200115Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_plan_document",
+  "claim": "STATUS points at the seven-item R12c plan that this session's subphases A and B are executed against.",
+  "value": "docs/PLAN-R12C.md",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_receipt",
+  "claim": "The session-vs-per-save training-goodput measurement is recorded in a receipt at the named revision.",
+  "value": "training-goodput-session-20261111T220500Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_warm_p50_4_steps",
+  "claim": "At a 4-step checkpoint interval the reused session's warm completion p50 on the unchanged 169-entry fixture.",
+  "value": "62.9",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_persave_warm_p50_4_steps",
+  "claim": "At a 4-step checkpoint interval the per-save-service completion p50 on the same fixture and steps.",
+  "value": "339.0",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_loop_wall_4_steps",
+  "claim": "Session median loop wall at a 4-step checkpoint interval (192 steps).",
+  "value": "4,476.3",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_persave_loop_wall_4_steps",
+  "claim": "Per-save-service median loop wall at a 4-step checkpoint interval (192 steps).",
+  "value": "17,615.8",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_pause_p50_4_steps",
+  "claim": "The session's training-thread pause p50 at a 4-step checkpoint interval.",
+  "value": "0.80",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_fsync_equality",
+  "claim": "Both configurations report the same backend barrier count per save, so the session does not relax durability.",
+  "value": "528",
+  "locations": [
+   "bench/RESULTS-training-goodput-session.md",
+   "bench/receipts/training-goodput-session-20261111T220500Z.json"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_crash_phase_test",
+  "claim": "A reused session is proved old-or-new at every publication phase with the store's own crash injection.",
+  "value": "test_session_save_aborted_at_each_publication_phase_leaves_old_or_new",
+  "locations": [
+   "python/tests/test_dcp.py",
+   "bench/RESULTS-training-goodput-session.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_orphan_commit_reported",
+  "claim": "A crash between the commit-file fsync and the superblock write leaves the old state visible and reports the orphan commit file rather than hiding it.",
+  "value": "above the highest published superblock",
+  "locations": [
+   "python/tests/test_dcp.py",
+   "bench/RESULTS-training-goodput-session.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_session_kill_old_branch",
+  "claim": "The session SIGKILL court exercises the pre-commit branch: the previous checkpoint is resumed and one interval is lost.",
+  "value": "3 old / 0 new",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261111T220500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_flat_100k",
+  "claim": "With a constant live set, incremental index maintenance keeps commit p50 flat within 1.8 % from 1,000 to 100,000 generations at the same index bytes.",
+  "value": "flat within 1.8 %",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_index_bytes_identical",
+  "claim": "The operation-derived writer seals byte-identical WFX3 segments: index bytes are identical in every compared cell.",
+  "value": "identical in every cell",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T230000Z-post-delta-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_live1000_p50",
+  "claim": "At 1,000 live objects and 1,000 generations the incremental writer commits in p50 0.641 ms (baseline 2.077 ms).",
+  "value": "0.641",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T231000Z-post-delta-live1000.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_live10000_p50",
+  "claim": "At 10,000 live objects and 1,000 generations the incremental writer commits in p50 5.569 ms (baseline 22.577 ms); the live-state dependency is reduced, not removed.",
+  "value": "5.569",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T235000Z-post-delta-live10000.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_merge_bound",
+  "claim": "A reader merges at most index_chain_max_deltas deltas plus one full ancestor, 32 + 1 = 33 by default.",
+  "value": "32 + 1 = 33",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_oracle_seeds",
+  "claim": "The randomized oracle-equality court covers 10,000 operations per seed for seeds 1, 7, 2026 with byte-exact WFX2 section equality.",
+  "value": "seeds 1, 7, 2026",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_crosslang_verify",
+  "claim": "A Rust store written at the new revision verifies --full from Go (generation=6); Go has no incremental maintenance parity in this session.",
+  "value": "generation=6",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_incremental_gc_defect",
+  "claim": "Before item 2.1, index GC refused once a store retained a few checkpoints because the hard chain-depth bound was applied to one visited set shared by every retained root; the refusal text is retained in the failing receipt and quoted in the docs.",
+  "value": "index GC skipped",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_bound_per_root",
+  "claim": "Index GC's chain-depth bound is applied per retained root, not to the union of every retained chain: the fixing court's fixture retains 14 roots whose chains union to more than 256 segments.",
+  "value": "404 segments",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_bound_reclaim",
+  "claim": "On the identical fixture the per-root bound reclaims 182,321 B of advisory index segments that the shared-set bound refused to touch.",
+  "value": "182,321 B",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194500Z-fixed-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_bound_no_retention_control",
+  "claim": "A store with no retention beyond the head reclaims exactly the same bytes before and after the fix (single-root control).",
+  "value": "87,891 B",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_512_live_100k",
+  "claim": "With the per-root GC bound, 512 live objects at 100,000 generations keep a steady-state index of 0.534x the data bytes; the item-2 baseline could not reach that size.",
+  "value": "0.534x",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T211000Z-post-gc-live512-sweep.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_200k",
+  "claim": "A 64-live-object history sweep reaches 200,000 generations with GC every 20,000 and a flat post-GC index/data ratio.",
+  "value": "200,000 generations",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T215000Z-post-gc-live64-200k.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_1m_attempt",
+  "claim": "1,000,000 generations was attempted; it exhausts the bounded /tmp at generation 169,701 and the failure record's allocation breakdown names the measured limiter.",
+  "value": "169,701",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_1m_limiter",
+  "claim": "The 1,000,000-generation limiter is the tmpfs page floor of the commit history (4,096 B of commit pages per generation), not the index GC bound.",
+  "value": "4,096 B of commit pages per generation",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/incremental-index-20261111T214000Z-post-gc-1m-live64.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_gc_go_same_defect_fixed",
+  "claim": "WeftFS-Go had the identical shared-visited index GC defect and is fixed with the same per-root walk, memoised distance, and fail-closed behaviour.",
+  "value": "WeftFS-Go/store/index.go",
+  "locations": [
+   "bench/RESULTS-incremental-index.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_baseline_ms",
+  "claim": "The pure-Python DCP metadata encoder costs 3.957 ms p50 at the 169-entry R11/R12b fixture (71,559 B), confirming the R12b 4.2 ms figure.",
+  "value": "3.957",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md"
+  ],
+  "receipt": "bench/receipts/dcp-metadata-20261111T230500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_phase_split",
+  "claim": "At 169 entries the encoder wall is 83.1 % wcb.encode and 17.2 % tree construction, with zero Rust round trips counted during the serialisation window.",
+  "value": "83.1 %",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md"
+  ],
+  "receipt": "bench/receipts/dcp-metadata-20261111T230500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_plan_ms",
+  "claim": "The shipped reusable metadata plan encodes the 169-entry metadata in 0.555 ms p50 (0.121 signature + 0.400 assembly) against 4.06 ms for the reference oracle.",
+  "value": "0.555",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md"
+  ],
+  "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_native_floor",
+  "claim": "The native-encoder floor (one service round trip plus client marshalling, excluding any Rust encoding work) is 0.443 ms at 169 entries, 80 % of the plan's total, so the native option is refuted without being built.",
+  "value": "0.443 ms at 169",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md"
+  ],
+  "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_phase_delta",
+  "claim": "On one revision with only the encoder changed, the session-court metadata serialise phase falls from 4.679 to 0.631 ms p50 (-4.05 ms), which is the delta attributable to item 3.",
+  "value": "0.631",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/checkpoint-latency-20261112T001500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_completion_delta",
+  "claim": "Session completion p50 falls from 40.03 to 34.58 ms in the same-revision A/B; the isolated 4.05 ms phase delta is the attributable amount and the rest is court residual.",
+  "value": "34.58",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/checkpoint-latency-20261112T001500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_modes_counted",
+  "claim": "The A/B counts the encoder mode per save: the before run reports only reference-forced, the after run reports plan hits plus one rebuilt first save, so the fast path is taken and the oracle is never silently substituted.",
+  "value": "reference-forced",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/checkpoint-latency-20261112T000500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_goodput_delta",
+  "claim": "Training-goodput session-court warm completion p50 falls by a mean of -3.39 ms across the 4/8/16/32-step sweep with 136/136 exactness checks in both arms.",
+  "value": "-3.39",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/training-goodput-session-20261112T004500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_first_save_loss",
+  "claim": "The first save of an entry-set shape pays a plan build plus its oracle proof (6.28 ms at 169 entries) on top of a generic encode, a published loss that breaks even at the second save.",
+  "value": "6.28",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_oracle_unchanged",
+  "claim": "The format is unchanged: serialize_metadata stays the reference oracle and the fast path is byte-identical to it for 5 seeds x 200 randomized metadata trees, a 12-case stale-plan matrix and the store-backed 169-entry fixture.",
+  "value": "reference oracle",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/dcp-metadata-20261111T235500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_python_suite",
+  "claim": "The Python suite in the python court at 4947ef2 passes with no failures.",
+  "value": "423 passed / 70 skipped / 0 failed",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r12c_dcp_metadata_no_court_aggregate",
+  "claim": "No verify-all aggregate was run for R12c item 3; item 7 owns that gate.",
+  "value": "item 7",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r17_ledger_receipt",
+  "claim": "bench/RESULTS-write-cost-ledger.md cites the 7-repetition R17 ablation receipt.",
+  "value": "write-cost-ablation-20261112T052203Z",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_zstd19_share",
+  "claim": "The C write ledger attributes 20,352.99 ms to the level-19 ZSTD candidate (84.00 % of the wall).",
+  "value": "20,352.99",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_zstd19_zero_selection",
+  "claim": "On the frozen 101-tensor fixture level 19 is selected for zero tensors and saves zero bytes.",
+  "value": "selected for zero tensors and saves zero bytes",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_mode9_cost",
+  "claim": "The mode-9 FLOAT_TENSOR candidate costs 1,743.05 ms of the C write wall.",
+  "value": "1,743.05",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_unattributed_residual",
+  "claim": "The complete C ledger leaves an unattributed residual of 15.86 ms (0.065 % of the wall).",
+  "value": "15.86 ms",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_group_commit_tax",
+  "claim": "One shipped group commit collapses 101 per-tensor publications from 696.9 ms to 8.8 ms.",
+  "value": "8.8 ms",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_bf16_emission",
+  "claim": "BF16 Huffman emission is 266.55 ms of the 337.61 ms embedding Huffman encode.",
+  "value": "266.55",
+  "locations": [
+   "bench/RESULTS-write-cost-ledger.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/bf16-plane-profile-20261112T054210Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r17_plan",
+  "claim": "R17 publishes the six-phase recovery plan docs/PLAN-R17-R22.md with both scoreboards and the deferred-transcode rule.",
+  "value": "docs/PLAN-R17-R22.md",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-write-cost-ledger.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r17_default_identity",
+  "claim": "The default C configuration is byte-identical at this revision (same strategies, per-tensor manifests, footprint and bytes) across the contract court and the ablation runner.",
+  "value": "default_c_matches_official_court",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/write-cost-ablation-20261112T052203Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_two_stage_receipt",
+  "claim": "R18's evidence is one assembled receipt with the 7-repetition matrix, the per-tensor decision diff and three cross-family decision diffs.",
+  "value": "planner-two-stage-20261112T081151Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_wall_and_footprint",
+  "claim": "The two-stage planned write on the frozen 101-tensor fixture is 4,117.8 ms (least contended of 7 interleaved repetitions) at 282,283,011 B.",
+  "value": "4,117.8",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_footprint_unchanged",
+  "claim": "The two-stage planner publishes the same footprint as the exhaustive planner on the frozen fixture: 282,283,011 B.",
+  "value": "282,283,011",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_zero_decision_changes",
+  "claim": "Between the exhaustive and the two-stage planners, 0 of 101 tensors change strategy or chosen size on the frozen fixture.",
+  "value": "0 of 101",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_mode9_exact_predictor",
+  "claim": "The mode-9 frame length is predicted bit-exactly from the exponent histogram by modes::float_tensor_encoded_len_from_histogram.",
+  "value": "float_tensor_encoded_len_from_histogram",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_level19_is_conditional",
+  "claim": "Level-19 ZSTD is gated, not deleted: on pythia-70m step0 it is smaller than level 3 for 26 of 26 eligible tensors and the planner keeps it (163,863,698 vs 173,186,380 B).",
+  "value": "163,863,698",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_mode9_skips_are_small",
+  "claim": "The 66 tensors whose mode-9 encode the planner skips total 93,696 logical bytes (0.022 % of the fixture), which is why skipping them saves almost no wall time.",
+  "value": "93,696",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md",
+   "bench/RESULTS-write-cost-ledger.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_target_missed",
+  "claim": "R18's stated expectation was C at about 3,850 ms; the measured 4,117.8 ms is 7.0 % above it, and that miss is published with its measured cause.",
+  "value": "7.0 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/planner-two-stage-20261112T081151Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r18_planner_mode_control",
+  "claim": "The exhaustive planner remains selectable as the decision-diff control via PlannerMode::Exhaustive and --planner exhaustive.",
+  "value": "PlannerMode",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r18_go_divergence",
+  "claim": "Go has no two-stage rule: it reaches the same decisions by exhaustive encoding and no Go parity is claimed for R18.",
+  "value": "two-stage rule",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-planner-two-stage.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_wall_before",
+  "claim": "At WeftFS 24f94e4 / WeftCodec 0aa3881 the shipped two-stage planned write measured 4,101.6 ms (least contended of 7 interleaved repetitions) on the frozen 101-tensor fixture.",
+  "value": "4,101.6",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-before-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_wall_after",
+  "claim": "At WeftFS c3f5e1a / WeftCodec 1412227 the same command measured 2,328.4 ms, i.e. -43.2 % at an unchanged footprint.",
+  "value": "2,328.4",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_footprint_unchanged",
+  "claim": "The R19 mode-9 encoder speed-up changes no published byte: the C footprint is unchanged at 282,283,011 B.",
+  "value": "282,283,011",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_encoder_speedup",
+  "claim": "The mode-9 encoder is 2.85x faster sequentially on the measured nine-tensor set (262.28 to 748.37 MB/s).",
+  "value": "2.85x",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_threaded_speedup",
+  "claim": "With four bounded emission threads the same set runs at 1,524.81 MB/s, 5.81x the pre-R19 encoder.",
+  "value": "5.81x",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_byte_identity_court",
+  "claim": "tests/mode9_encoder_identity.rs re-encodes every committed mode-9 vector, compares the specialised BF16 splitter with the generic oracle over every 16-bit word, and diff-tests 5 dtypes x 30 sizes x 5 thread counts including a forced-parallel configuration.",
+  "value": "tests/mode9_encoder_identity.rs",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_encoder_court_receipt",
+  "claim": "The R19 stage-profile court receipt records 9 tensors, 7 repetitions, byte-identity checks, page-fault counts and an allocation probe.",
+  "value": "mode9-encoder-20261112T160000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_page_faults",
+  "claim": "The pre-R19 encoder took 9,814 minor page faults around one 272 MB embedding encode; the shipped encoder takes 644.",
+  "value": "9,814",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/mode9-encoder-20261112T160000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_peak_rss",
+  "claim": "Peak RSS for the C write falls from 1,188,052 KiB to 687,864 KiB because the encoder no longer holds five copies of the planes.",
+  "value": "687,864",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_retained_contended_run",
+  "claim": "The first attempted official R3 court run for R19 is retained with the host write-latency diagnosis and is not used for any claim.",
+  "value": "augmentation-local-20261112T131500Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/augmentation-local-20261112T131500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_parallel_memory_bound",
+  "claim": "Parallel emission adds no heap beyond the frame: one u64 and one u8 per partition, bounded by a 1 MiB minimum and 512 MiB maximum bitstream.",
+  "value": "512 MiB",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_no_go_change",
+  "claim": "R19 changes no wire byte, so the Go codec needed no change and no Go performance claim is made.",
+  "value": "Go performance claim",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r19_store_level_mode9_ledger",
+  "claim": "In the wall court's own phase profile the store-level mode-9 encode falls from 1,791.4 ms to 194.4 ms and the analyse stage from 346.7 ms to 181.7 ms.",
+  "value": "1,791.4",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_analyse_histogram_handoff",
+  "claim": "The analyse stage gets 1.91x faster because the encoder is handed the analyser's exact histogram and the histogram kernel is four-bank.",
+  "value": "181.7",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r19_next_bottleneck",
+  "claim": "After R19, publication is 63.1 % of the C wall (blob publish 769.2 ms + commit 700.4 ms) and encoding 30.1 %, which is R20's target.",
+  "value": "63.1 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-mode9-encoder.md"
+  ],
+  "receipt": "bench/receipts/r19-wall-after-20261112T140000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_headline_wall",
+  "claim": "At WeftFS 804fd38 the shipped two-stage planned write (C) measured 1,236.8 ms, the least contended of 7 interleaved repetitions on the frozen 101-tensor fixture.",
+  "value": "1,236.8",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_before_wall",
+  "claim": "The same command with the historical per-tensor publication (C-percommit) measured 2,343.2 ms in the same session, reproducing the R19 row within 0.6 %.",
+  "value": "2,343.2",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_footprint_after",
+  "claim": "One atomic publication per checkpoint shrinks the C physical footprint to 282,106,049 B.",
+  "value": "282,106,049",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_footprint_before",
+  "claim": "The R19/R20-before C footprint was 282,283,011 B; R20 does not trade footprint for wall time.",
+  "value": "282,283,011",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_footprint_delta",
+  "claim": "The footprint saving is 176,962 B and equals 44,397 B of fewer commit records plus 132,565 B of fewer advisory index segments.",
+  "value": "176,962",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md",
+   "docs/PLAN-R17-R22.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_wall_reduction",
+  "claim": "R20 reduces the C durable write wall by 47.2 % (2,341.6 to 1,225.4 ms) at a smaller footprint and with byte-identical restored tensors.",
+  "value": "47.2 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_group_commit_delta",
+  "claim": "Publishing the 101 namespace changes as one group commit with one index segment saves 718.1 ms and 176,962 B.",
+  "value": "718.1",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_barrier_delta",
+  "claim": "Replacing one durability barrier per blob with one barrier per group saves a further 388.3 ms at identical bytes.",
+  "value": "388.3",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_barrier_cost",
+  "claim": "The single deferred durability barrier costs 97.0 ms for 213 file syncs and 161 directory syncs over 282 MB.",
+  "value": "97.0",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_blob_publish_after",
+  "claim": "Blob publication was fsync-bound: the same 202 blobs and 282 MB take 272.2 ms under the deferred barrier instead of 778.5 ms with a barrier per blob.",
+  "value": "272.2",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_g2_met",
+  "claim": "R20 clears the G2 ladder rung (1,344 ms) with 1,225.4 ms least contended and 1,246.2 ms median.",
+  "value": "1,344",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_pack_loss",
+  "claim": "The packed blob plane is rejected for this object set: at a 1 MiB member bound it costs 246.9 ms more and writes more bytes for a 3,576 B footprint win.",
+  "value": "246.9",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_cold_restore_unchanged",
+  "claim": "R20 is a write-path change: the C cold restore median is 1,511.5 ms, unchanged from 1,434.2 ms before.",
+  "value": "1,511.5",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_receipt_cited",
+  "claim": "docs/STATUS.md and RESULTS cite the R20 publication court receipt with 7 repetitions and 11 passing checks.",
+  "value": "r20-publication-20261112T150000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_revision",
+  "claim": "The R20 court ran at WeftFS ad0ca3b with an unchanged WeftCodec 1412227.",
+  "value": "ad0ca3b",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_contract_court_same_stamp",
+  "claim": "The unmodified R3 contract court ran at the same stamp as the R20 matrix and its C row is the identity proof (default_c_matches_official_court true).",
+  "value": "augmentation-local-20261112T150000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/augmentation-local-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_retained_harness_bug",
+  "claim": "The retained first R20 matrix is published because it found a real harness bug: the crash proxy reopened packed rows without the pack plane.",
+  "value": "r20-publication-20261112T120000Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T120000Z.json.zst",
+  "kind": "present"
+ },
+ {
+  "id": "r20_no_go_parity",
+  "claim": "R20 changes the Rust store's group publication only; no Go change and no Go parity claim is made for the deferred barrier.",
+  "value": "Go parity",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r20_conformance_unchanged",
+  "claim": "R20 publishes the same conformance surface: manifest and coverage report 420 entries OK and spec drift is 60/60.",
+  "value": "420 entries",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/r20-publication-20261112T150000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r20_checkpoint_path_verify",
+  "claim": "The shipped CLI checkpoint path (one group commit, deferred barrier) writes 12 tensors, passes `verify --full` with 0 problems, and restores 29,826,096 B with the same SHA-256 over two runs.",
+  "value": "r20-checkpoint-verify-20261112T121955Z",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-publication-tax.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r21_pipeline_wall",
+  "claim": "R21's shipped pipeline writes the 101-tensor Qwen2.5-0.5B-Instruct subset in 623.3 ms least-contended (median 653.9 ms) against 1,206.2 ms for the sequential writer, at a byte-identical 282,106,049 B footprint, with 101/101 exact restores.",
+  "value": "623.3 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_pipeline_g3",
+  "claim": "G3 (durable write wall \u2264 672 ms, 2x the native comparator) is met by the shipped pipeline: 623.3 ms least-contended and 653.9 ms median at 4 encode workers.",
+  "value": "G3 (\u2264 672 ms) is met",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_pipeline_footprint_unchanged",
+  "claim": "Every R21 row publishes the frozen 282,106,049 B footprint: the pipeline and the concurrent candidate encode change no frame, manifest, commit or index byte.",
+  "value": "282,106,049",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_pipeline_determinism",
+  "claim": "R21's pipelined group write is byte-identical for 1, 2, 4 and 8 workers (same store head, per-object manifest ids and content roots, same manifest blob bytes), candidate parallelism off vs on is byte-identical too, and every written store passes verify --full.",
+  "value": "tests/tensor_pipeline.rs",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r21_pipeline_overlap",
+  "claim": "At four encode workers 90.1 % of encoder-thread time overlapped publication and 89.9 % of publication time was hidden under encoding, measured from per-tensor stage intervals.",
+  "value": "90.1 %",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_early_barrier",
+  "claim": "Draining the deferred batch's file list every 8 MiB to a writeback thread moves the whole group's writeback under the encoders and cuts the commit barrier from 329.6 ms to 1.3 ms without weakening durability.",
+  "value": "329.6 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_reservation_bound",
+  "claim": "The pipeline's byte reservations bound its resident bytes: reservation_bound = 1,744,830,464 B and the measured peak RSS is 921,388 KiB at four workers.",
+  "value": "1,744,830,464 B",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_amdahl_embedding",
+  "claim": "Inter-tensor parallelism is exhausted: going from four to eight workers buys 11.2 ms on the minimum (623.3 \u2192 612.1) and nothing on the median, because one tensor's own encode is 448.8\u2013468.1 ms of the 623.3 ms wall.",
+  "value": "448.8\u2013468.1 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": "bench/receipts/r21-pipeline-20261112T201500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r21_no_go_parity",
+  "claim": "R21 adds the pipeline, the concurrent candidate encode and the early-barrier hook to the Rust store only; WeftCodec and WeftFS-Go are unchanged and no Go parity is claimed.",
+  "value": "Rust-only",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-parallel-pipeline.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r21_court_not_in_aggregate",
+  "claim": "The R21 court is standalone: scripts/verify-all.sh was not run for this subphase and its 45/45 receipt remains the cited aggregate.",
+  "value": "No `verify-all` run for this subphase",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r22_shipped_wall",
+  "claim": "R22's shipped write is 592.6 ms least-contended (600.9 ms median) for the 101-tensor Qwen2.5-0.5B-Instruct subset at a byte-identical 282,106,049 B, which is G3 on both statistics and 1.78x the native control A = 332.0 ms.",
+  "value": "592.6 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_final_rung_not_reached",
+  "claim": "The final rung (<= 336 ms) is not reached: the write is durability-bound, not encode-bound.",
+  "value": "not reached",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r22_chunk_parallel_identity",
+  "claim": "Chunk-parallel ZSTD is byte-identical to the sequential encoder over every chunk-count boundary, 2,000 randomised cases, the fallback paths and every timed frame of the real 272 MB embedding.",
+  "value": "WeftCodec/tests/zstd_chunk_parallel.rs",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/zstd-chunk-parallel-20261112T231500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_level3_frame_saving",
+  "claim": "The level-3 frame of the 272,269,312 B embedding goes from 280.3 ms sequential to 135.7 ms at four threads, with the frame bytes unchanged.",
+  "value": "135.7 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/zstd-chunk-parallel-20261112T231500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_default_cpu_tokens",
+  "claim": "The shipped pipeline default is cpu_tokens = encode_threads - 1, measured 592.6/600.9 ms against 612.1/644.0 ms at one token per worker.",
+  "value": "default_cpu_tokens",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_default_zstd_threads",
+  "claim": "The shipped chunk-parallel ZSTD bound is min(available_parallelism, 4) threads, used only when the tensor's encode has the CPUs to itself.",
+  "value": "default_zstd_encode_threads",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_pythia_write",
+  "claim": "On pythia-70m step 0 the planned write goes from 12,204.4 ms sequential to 8,143.8 ms through the shipped pipeline at 163,964,176 B, and the exhaustive planner produces the same footprint.",
+  "value": "8,143.8 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-family-20261112T235800Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_pack_plane_third_rejection",
+  "claim": "The pack plane is rejected for the third time: 962.7 ms against 592.6 ms, although it halves publisher busy time and removes all 202 writeback files.",
+  "value": "962.7 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_minio_arm",
+  "claim": "Over a real MinIO server the planned writer publishes 282,132,555 B in 225 requests for a 33.53 % storage reduction against the native 101-request write.",
+  "value": "282,132,555",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/augmentation-minio-20261112T240000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_qwen3b_subset",
+  "claim": "Qwen2.5-3B-Instruct on a 635 MB subset writes 421,550,249 B in 1,319.7 ms with the chunk pool and 1,554.3 ms without, at a peak RSS of 1,980,292 KiB.",
+  "value": "421,550,249",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-family-20261112T211500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_courts_not_in_aggregate",
+  "claim": "The R22 courts are standalone: there is no verify-all aggregate for this subphase, and its 45/45 receipt remains the cited aggregate.",
+  "value": "no verify-all aggregate for this subphase",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_manifest",
+  "claim": "The performance-number manifest exists and is the generator's input.",
+  "value": "docs/perf-numbers.json",
+  "locations": [
+   "scripts/perf_numbers.py",
+   "docs/PERF-NUMBERS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_canonical_doc",
+  "claim": "README and STATUS point at the canonical generated number table.",
+  "value": "docs/PERF-NUMBERS.md",
+  "locations": [
+   "README.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_court_registered",
+  "claim": "The drift check is a registered court in the aggregate.",
+  "value": "perf_numbers",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_check_mode",
+  "claim": "The court runs the generator in check mode.",
+  "value": "--check",
+  "locations": [
+   "scripts/perf_numbers_court.sh"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "perf_numbers_sentinel",
+  "claim": "Generated regions are delimited by the generator's sentinels.",
+  "value": "BEGIN GENERATED:",
+  "locations": [
+   "docs/PERF-NUMBERS.md"
+  ],
+  "receipt": null,
   "kind": "present"
  }
 ]

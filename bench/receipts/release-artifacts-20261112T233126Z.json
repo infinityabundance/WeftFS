@@ -1,0 +1,82 @@
+{
+  "schema": "weft.release-artifacts.v1",
+  "release": "v1.4.0",
+  "stamp": "20261112T233126Z",
+  "recorded_at_utc": "2026-11-12T23:31:26Z",
+  "branch": "staging merged to main",
+  "tag": {
+    "name": "v1.4.0",
+    "annotated": true,
+    "target": "recorded in docs/STATUS.md immediately after the tag; see the R24 release entry"
+  },
+  "verification": {
+    "receipt": "bench/receipts/verify-20261112T223540Z.json",
+    "stamp": "20261112T223540Z",
+    "courts": 46,
+    "passed": 46,
+    "failed": 0,
+    "skipped": 0,
+    "result": "pass",
+    "revisions": {
+      "WeftFS": "0461132d4fc63ce458de6b388b38a8f27222d387",
+      "WeftCodec": "58db5aa440847d67182f6c46e503a1232d277183",
+      "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e",
+      "WeftFS-Go": "1fa3d32fc473acad811bfdae32fdc0f60ce4f78a"
+    }
+  },
+  "python": {
+    "package": "weftcodec",
+    "version": "1.4.0",
+    "built_in": "weft/python-court:1",
+    "command": "scripts/docker-court.sh python \"cd /work/python && python3 -m pip install --quiet 'setuptools>=68' wheel build twine && rm -rf dist && python3 -m build --no-isolation --sdist --wheel --outdir dist && python3 -m twine check dist/weftcodec-1.4.0*\"",
+    "twine_check": "PASSED for both files",
+    "wheel": {
+      "filename": "weftcodec-1.4.0-py3-none-any.whl",
+      "size_bytes": 115851,
+      "sha256": "9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928"
+    },
+    "sdist": {
+      "filename": "weftcodec-1.4.0.tar.gz",
+      "size_bytes": 156977,
+      "sha256": "cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295"
+    }
+  },
+  "crates": {
+    "weftcodec": {
+      "version": "1.4.0",
+      "dry_run": "pass",
+      "command": "scripts/docker-court.sh rust \"cd /work/WeftCodec && cargo publish --dry-run --allow-dirty\"",
+      "output": "Packaged 528 files, 8.8MiB (2.9MiB compressed); Verifying weftcodec v1.4.0; Finished dev profile; aborting upload due to dry run"
+    },
+    "weftfs": {
+      "version": "1.4.0",
+      "dry_run": "blocked",
+      "command": "scripts/docker-court.sh rust \"cd /work && cargo publish --dry-run --allow-dirty\"",
+      "error": "failed to select a version for the requirement `weftcodec = \"^1.4.0\"`: candidate versions found which didn't match: 1.3.0, 1.2.0, 1.1.0, ...",
+      "cause": "weftfs declares weftcodec = \"1.4.0\" and 1.4.0 is not yet on crates.io; packaging cannot resolve the dependency until weftcodec is published. The parent crate builds from the path dependency in every court.",
+      "required_order": "publish weftcodec 1.4.0 first, then re-run this dry run and publish weftfs 1.4.0"
+    }
+  },
+  "registry_publication": {
+    "performed": false,
+    "reason": "the operator performs registry steps; this run only built and dry-ran",
+    "pypi_token_present": false,
+    "pypi_token_path_checked": ".docker-cache/.pypi-token",
+    "crates_token_present": true,
+    "crates_token_path": "~/.cargo/credentials.toml ([registry] token, 57 bytes)",
+    "commands": [
+      "scripts/publish-crates.sh   # or: cd WeftCodec && cargo publish && cd .. && cargo publish",
+      "scripts/publish-pypi.sh     # requires .docker-cache/.pypi-token (absent in this run)"
+    ]
+  },
+  "containers": {
+    "published_in_this_run": false,
+    "note": "GHCR images are built by the per-repo tag workflows; this run did not tag, so none were built."
+  },
+  "not_claimed": [
+    "No PyPI upload: no token was present, so the 1.4.0 Python description was not rebuilt or uploaded either.",
+    "No crates.io upload: the token exists but registry publication is the operator's step.",
+    "No live AWS/Azure/GCS run; no physical power loss, GPU, or fleet claim.",
+    "The wheel and sdist are reproducible only from the same toolchain; no bit-reproducibility claim is made."
+  ]
+}

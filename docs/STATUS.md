@@ -1,27 +1,42 @@
-# Implementation status — 2026-11-11 (v1.3.0 release candidate)
+# Implementation status — 2026-11-12 (v1.4.0 released)
+
+<!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
+**At a glance (generated from receipts).** v1.4.0 is released. The cited
+aggregate is `bench/receipts/verify-20261112T223540Z.json` — **46/46**
+courts pass, 0 failed, 0 skipped — at WeftFS
+`0461132d4fc63ce458de6b388b38a8f27222d387`. The shipped compressed write is **592.6 ms**
+least-contended / 600.9 ms median at **282,106,049 B**
+(33.5 % below the native control). Rust all-targets
+**807** tests pass; FUSE **850** passed /
+0 failed / 2 ignored; the conformance manifest holds
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,046** claims are
+audited. Every number in this block is emitted by `scripts/perf_numbers.py`
+between `BEGIN GENERATED` sentinels and re-validated against its receipt by the
+`perf_numbers` court; the entries below this block are a chronological log of
+subphases and are quoted with the receipt and revision they were written at.
+<!-- END GENERATED:status-head -->
 
 This is the honest, evidence-backed state of the program. It distinguishes
-implemented, tested, ignored, and not done. **v1.2.0 is released**: tags are
-`WeftFS` `122d86e`, `WeftCodec` `d95fa78`, `WeftCodec-Go` `0db665e`,
-`WeftFS-Go` `6d58137`; the full note with every loss, including the published
-850 ms SLA miss, is [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md). The
-release-tree aggregate is `bench/receipts/verify-20261109T112958Z.json`
-(**37/37** courts `pass`, 0 failed, 0 skipped) at WeftFS `135a382`, WeftCodec
-`d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`. **v1.3.0 is a release
-candidate on `staging`**: its note is
-[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md), and the release-tree aggregate
-is recorded by the follow-up verification pass (no receipt is claimed yet).
-The v1.1.0-era state below is retained as history: tags were `WeftFS` `238d4e5`, `WeftCodec`
-`99cb87a`, `WeftCodec-Go` `a0a1ebf`, `WeftFS-Go` `dc7cfdb`, with note
+implemented, tested, ignored, and not done. Current claims are generated from
+receipts by `scripts/perf_numbers.py` into the block above and into
+[`docs/PERF-NUMBERS.md`](PERF-NUMBERS.md); a `perf_numbers` court fails closed
+when any generated number drifts from its receipt. Everything below the block
+is a chronological log of subphases, retained verbatim: each entry is a
+**historical quotation** written at the receipt and revision it names, not a
+statement about the current tree. The v1.4.0 note with every loss and every
+non-claim is [`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md); the previous notes
+are [`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
+[`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md) and
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). Both codec implementations cover
 every allocated mode 0–20; the independent Python reader covers every allocated
 mode 0–18 (modes 19 and 20 are rejected `UnsupportedMode`).
 
-**Subphase R4 (multi-writer) status, 2026-11-09:** the default writer level is
-still **MW1 — many producers, one committer**. The pre-R4 claim that MW2 and MW3
-are absent is now split: a bounded, opt-in **MW2** transaction protocol exists
-for the explicit transaction API on `local`/`object` (Rust and Go) and on
-`s3` (Rust, MinIO court); **MW3 is not implemented and not claimed.** The
+**Subphase R4 (multi-writer) status, 2026-11-09 (amended by R14d):** the
+default writer level is still **MW1 — many producers, one committer**. The pre-R4
+claim that MW2 and MW3 are absent is now split: a bounded, opt-in **MW2**
+transaction protocol exists for the explicit transaction API on
+`local`/`object`/`3fs`/`s3`/`azure` in Rust and on `local`/`object`/`azure` in
+Go (GCS refused `UnsupportedVersion`); **MW3 is not implemented and not claimed.** The
 normative contract is [`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md);
 the design, backend tradeoffs and every loss are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md) and
@@ -30,7 +45,9 @@ mutations and generic checkpoint publication remain MW1. The full R4 entry
 with measured tables is at the end of this document. The R4 aggregate is
 `bench/receipts/verify-20261109T165707Z.json` (**41/41** courts `pass`, 0
 failed, 0 skipped) at WeftFS `a3256af`; it now includes `tla`,
-`multiwriter`, and `multiwriter_failure`.
+`multiwriter`, and `multiwriter_failure`. Note that the MW2 throughput table
+was measured at `b0bcbc5e` / `f46b351f`, before R14d and the R17–R22 write
+work; it is not re-measured here.
 
 **Subphase R13 (restore scaling), 2026-11-11:** the R10 bottleneck is proven
 and fixed. One backend mutex held **0.41–0.65 of the restore wall** at four
@@ -297,8 +314,9 @@ Docker court).
 | `WeftFS-Go` | `80ddb5b` | independent Go store + FUSE, spec mirror |
 
 These are the `staging` heads the v1.3.0 release-tree aggregate ran against
-(`git rev-parse HEAD` in each repository; each repository has `staging` one
-commit ahead of `origin/staging` because the release candidate is unpushed).
+(`git rev-parse HEAD` in each repository; the aggregate was run while the
+release candidate was still unpushed, and `staging` has since been pushed and
+then advanced by the R14d work in progress).
 The aggregate is `bench/receipts/verify-20261111T182601Z.json` (**45/45** courts
 pass, 0 failed, 0 skipped). The heads at the start of the release-candidate
 pass were WeftFS `e77f0e5`, WeftCodec `67cea30`, WeftCodec-Go `5e047c3`,
@@ -8863,3 +8881,968 @@ now copy-then-verify so a full disk can no longer destroy the only copy.
   * `docs/RELEASE-v1.3.0.md` gained a "Release engineering notes" section with
     the tag moves, the aggregate delta and the PyPI block. No measured number
     or existing claim was changed.
+
+## Subphase R12c — persistent checkpoint sessions (2026-11-11)
+
+Plan: [`docs/PLAN-R12C.md`](PLAN-R12C.md) (seven items; this session covers
+subphase A and subphase B = item 1). Starting revision `d3db8aa`.
+
+### A — credibility and reproducibility gaps
+
+* The plan exists and labels each item with mechanism / acceptance / evidence /
+  not-claimed.
+* Fixed now: `python/README.md` claimed **"weftcodec 1.3.0 is published on
+  PyPI"**; the release artifact receipt says `published: false` (no token at
+  `.docker-cache/.pypi-token`). It now states the block, the wheel/sdist sha256,
+  and that `pip install weftcodec==1.2.0` is what PyPI serves today. The parent
+  README v1.3.0 artifacts bullet said the crates/PyPI/images "are cut by this
+  release's publishing step"; it now records the outcome (crates 1.3.0 live
+  with checksums, four GHCR index digests, PyPI blocked) from
+  `bench/receipts/release-artifacts-20261111T200115Z.json`.
+  `docs/containers.md` carried the same two stale sentences and was corrected.
+* Fixed now: the README verification and multi-writer headlines named a receipt
+  but no revision. They now name parent `3ab54c7` (three commits before the tag,
+  no codec/store/runtime change in the delta) and WeftFS `b0bcbc5e` /
+  WeftFS-Go `f46b351f`, and say that **no aggregate exists at the current
+  `staging` HEAD**.
+* Fixed now: the README marked the older per-release sections as historical, so
+  the v1.1.0 "PyPI remains unpublished" sentences and the v1.2.0 "the 1.3.0
+  upload rebuilds the description" sentence read as history, not as current
+  status.
+* Fixed now: `docs/PROGRAM.md` P8 described the conformance surface as it was
+  when the phase opened (295 entries, 288-file corpus, adapters 206/0/89 and
+  56/0/239, coverage modes 0–14, Python reader to mode 8). It now states 420
+  entries / aggregate `6287b817` / 413 identical shared files at `aa3abcad` /
+  Rust and Go 288/0/132 / Python 229/0/191 / coverage modes 0–20 / Python reader
+  0–18, and keeps the old numbers in a paragraph labelled historical.
+* Fixed now: this file's head called v1.3.0 a release candidate with "no receipt
+  claimed yet"; it now records the release, the 45/45 aggregate at `3ab54c7`,
+  and the absence of an aggregate at HEAD.
+* Verified already fixed by `81d2da4` and unchanged since: README engineering
+  rule 6 (MW1 default, MW2 opt-in via `--writer-mode optimistic` on the explicit
+  transaction API, MW3 not implemented); `WeftFS-Go/store/rebase.go`
+  `storeVersion = "1.3.0"` (line 28), matching `Cargo.toml` and the release.
+* Gates after the edits: `scripts/check-claims.sh` OK (927 entries), spec drift
+  OK (60/60).
+
+### B — persistent sessions inside the training-goodput court
+
+Full analysis and every loss:
+[`bench/RESULTS-training-goodput-session.md`](../bench/RESULTS-training-goodput-session.md).
+Receipt `bench/receipts/training-goodput-session-20261111T220500Z.json` at
+WeftFS `76f0981`, WeftCodec `d9234e5`, WeftCodec-Go `fe05240`, WeftFS-Go
+`146b517`; earlier runs `…T210500Z` (`7d5f5eb`) and `…T213500Z` (`7d0d19c`)
+are retained and are not the current number.
+
+The harness gained an **opt-in** `weft-session` configuration: one
+`CheckpointSession` per (store, run), every checkpoint submitted through
+`session.save`. The default `run` court is unchanged (still the five R12b
+configurations; a reduced default run was executed to confirm). New `sweep`
+subcommand and `bench/scripts/training_goodput_session_court.sh`.
+
+192 steps, 3 repetitions, 4/8/16/32 steps between checkpoints, same 169-entry
+4,989,309-byte fixture, same durability (528 backend fsyncs and 265 writes per
+save in **both** arms). Warm completion p50 (ms): **339.0 → 62.9** at 4 steps,
+**173.6 → 50.6** at 8, **119.9 → 47.7** at 16, **94.7 → 46.3** at 32. Loop wall
+17,615.8 → **4,476.3 ms** at 4 steps; training-thread pause p50 3.99 → **0.80
+ms**. Server-side publish p50 115.5 → 28.0 ms (4 steps): the win is the reused
+writable handle, not a faster encoder.
+
+Losses published: at 4 steps the clean step p50 rises 13 % (11.99 vs 10.61 ms,
+p95 +45 %) because more save work overlaps training; the first checkpoint is
+~2x slower (helper start); at 32 steps the loop wall is 4.3 % **worse**; a warm
+session holds the writer lock for up to `session_idle_secs`; `--resume final`
+verifies every checkpoint of the first repetition only.
+
+Exactness: 196/196 resumed states, 196/196 next-step loss bits, 172/172
+post-step states; identical loss trajectory and final state in every cell.
+SIGKILL through a session (`checkpoint_every=16`, 3 repetitions): after-ack and
+after-completion resume the new checkpoint (3/3 each); `before_ack_half`
+resumes the previous one (**3 old / 0 new**, 16 steps lost, 3/3 exact). All
+`verify --full` clean.
+
+Five python-court session tests pass, including two new ones: a warm session
+still refuses an independent writer with `Busy` and releases it on close, and
+`WEFT_CRASH_PHASE` through a session exposes old-or-new at `after_objects`,
+`after_commit_file` and `after_superblock_write`. The crash test recorded a real
+observation: a kill between the commit-file fsync and the superblock leaves the
+old complete state visible and `verify --full` reports
+`commit file for generation N exists above the highest published superblock
+generation N-1` — reported, not hidden; the test asserts it is the only problem
+in that phase.
+
+- 2026-11-11 (R12c item 2, operation-derived incremental index maintenance):
+  parent `staging` code `7d7e2af` (baseline evidence `036add1`); not pushed yet.
+  * `Store::index_attestation_for` no longer calls `StateIndex::build` on every
+    publish. New `src/index_incremental.rs` takes the previous head's index,
+    applies only the rows the committed ops changed, and records element-level
+    membership before each mutation; `index_chain::encode_delta_changed` writes
+    those rows with the unchanged WFX3 tags/patch rules. A unit test proves the
+    derived delta bytes equal `encode_delta`'s whole-state diff.
+  * Pre-images come from the pre-op state (single commit), the group undo
+    journal (`group_pre_relations` added), or the MW2 transaction base. Any
+    missing pre-image, unexplained row, generation gap or failed `Arc` unwrap
+    returns "rebuild": `maintenance_fallbacks`, a counted `StateIndex::build`,
+    and a full segment. `maintenance_updates` counts the fast path. The
+    in-memory chain is validated against the published commit record before
+    use (counts, chain kind/base/depth/root, recorded `candidates_root`); the
+    disk path still recomputes the candidates root. Trust, format and the
+    `weftfs.commit.v2` attestation are unchanged.
+  * Reader-merge bound is the existing writer bound: `index_chain_max_deltas`
+    deltas plus one full ancestor, **32 + 1 = 33** by default, hard reader cap
+    256 + 1. No new segment format; `weftfs compact` is unchanged.
+  * Baseline at `b69fa0e` (bench court, 3g/4cpu/pids 1024, bounded /tmp,
+    release, tmpfs, warm cache), history sweep with a constant 64-object live
+    set and one `set_xattr` commit per step: commit p50 0.198 / 0.201 /
+    0.199 ms at 1k / 10k / 100k generations; index tree 0.83 / 8.20 / 81.82 MB.
+    At 1,000 generations: 0.198 ms (64 live), 2.077 ms (1,000 live),
+    22.577 ms (10,000 live); `index_build` was 0.848 ms and 9.630 ms of those.
+  * Post-change, same fixture and sizes: p50 **0.110 ms / 0.112 ms / 0.112 ms**
+    at 1k / 10k / 100k — flat within 1.8 % while history grows 100x — and the
+    index bytes are identical in every cell. Live-state cells: 0.641 ms at
+    1,000 live (3.24x faster), **5.569 ms** at 10,000 live (4.05x), 0.353 ms
+    at 512 live (3.08x). Full-segment control 0.155 → 0.114 ms. A same-revision
+    control with `incremental_index_maintenance = false` reproduces the
+    baseline within 0.5 % (2.072 vs 2.077 ms), so the comparison is the change.
+    Cold first-query p50 is unchanged within noise; peak RSS fell
+    (64 live 16.2 -> 12.2 MiB, 10,000 live 167.2 -> 86.0 MiB).
+  * Still O(index) per commit and published as such: the attested
+    `candidates_root` (the trust contract) and the forced full segment every
+    33 commits; live-state cost is ~0.5 us/object (was ~2.2). Removing that
+    needs a Merkle row root (new attestation) or a larger merge bound.
+  * Correctness: `tests/index_incremental.rs` 3/3 — 10,000 randomized ops per
+    seed for seeds 1, 7, 2026 (create, attr update, unrelated metadata edit,
+    delete, rename, object relation, tag add/delete) with byte-exact WFX2
+    section equality against `StateIndex::build` every 500 ops and at the end,
+    query equality against the scan oracle, group commits, and damaged/absent/
+    orphan segment rejection; unit tests 5/5; `tests/index_chain.rs` gains a
+    self-consistent wrong-ancestor rejection. Rust all-targets 784 passed /
+    0 failed (at `8d324dc`; the `7d7e2af` message's 782 predates the last two
+    unit tests); FUSE 827 passed / 0 failed / 2 pre-existing ignored; Go store
+    `Index|Handoff` suite PASS (78.7 s).
+  * Cross-language is format compatibility only: Go resolves the Rust delta
+    chain and re-encodes it byte-identically, and a Rust store at this revision
+    verifies from Go (`verify --full`, `generation=6`). **No Go incremental
+    maintenance and no Go timing** are claimed.
+  * Found and **not fixed** (out of item scope): `expand_retained_index_chains`
+    applies `HARD_MAX_CHAIN_DELTAS` to one `visited` set shared by every
+    retained root, so index GC refuses once a store retains a few checkpoints —
+    `index GC skipped: cannot resolve a retained segment chain: LimitExceeded`.
+    The index tree then grows with commits; the bounded /tmp filled at
+    generation 80,785 (512 live) and 9,750 (10,000 live), both retained.
+    1,000,000 generations was not attempted for that reason (linear
+    ~0.4 KB/commit) and is not extrapolated.
+
+- 2026-11-11 (R12c item 2.1, index GC chain bound per retained root):
+  parent `staging` code `686bce5` + receipts `4c4f459`; WeftFS-Go `a7170f5`.
+  Full analysis: [`bench/RESULTS-incremental-index.md`](../bench/RESULTS-incremental-index.md),
+  "GC bound fix".
+  * Defect (found by item 2, fixed here):
+    `Store::expand_retained_index_chains` walked the head, every snapshot and
+    every checkpoint-carrying commit through **one** `visited` set and compared
+    that union against `HARD_MAX_CHAIN_DELTAS` (256). The bound is meant for one
+    chain walk, so a store retaining more than ~8 roots refused index GC
+    outright (`index GC skipped: cannot resolve a retained segment chain:
+    LimitExceeded: index segment chain exceeds the hard depth bound`), reclaimed
+    0 B, and grew the index tree with the commit count.
+  * Reproduction (retained failing receipt
+    `bench/receipts/index-gc-bound-20261111T194000Z-prefix-tail.json`, revision
+    `e1ab002`, fixed clock and content, 64 objects): 12 snapshots each pinned at
+    the writer's maximum 32-delta depth plus one forced checkpoint commit and
+    400 unretained tail commits — 14 retained roots, 801 commits, union of the
+    retained chains **404 segments**, index tree 369,010 B. GC: refused, 0
+    segments deleted, 0 B reclaimed. Eight snapshots already reproduce it
+    (`…T190100Z-prefix-8roots.json`, union **268 segments**).
+  * Fix: `src/store.rs` walks each retained root on its own path, memoising the
+    distance from a commit to its full ancestor so a shared commit is read once
+    and each root is still charged its own cumulative depth; Go
+    `expandRetainedChains` (`WeftFS-Go/store/index.go`) had the identical defect
+    and is fixed the same way with the same texts.
+  * Invariant, in the code comment and the results doc: for every retained root,
+    the walk reaches a full segment (or a commit with no WFX3 segment) within
+    `HARD_MAX_CHAIN_DELTAS` delta hops **from that root**; the union is never
+    the bound; sharing cannot hide an over-long chain; an over-long chain or a
+    cycle still refuses the whole pass with the same typed class and deletes
+    nothing.
+  * Before/after, identical fixture: 801 segments / 369,010 B → 397 segments /
+    **182,321 B** reclaimed, 404 segments / 186,689 B left, 0 problems,
+    `verify --full` clean, and all 12 snapshots still load their whole chain on
+    a fresh handle (`disk_loads >= 1`, `builds = 0`, answers = scan oracle).
+    Head-only control unchanged in both revisions: 199 segments / **87,891 B**.
+  * Sizes with GC at each checkpoint (bench court, default limits): 64 live at
+    100,000 generations publishes 8,754,798 B instead of 81,816,646 B (0.674x
+    data, 84,057 segments reclaimed); **512 live at 100,000 generations
+    completes with GC** (54,986,166 B / 102,983,199 B = 0.534x); a 64-live sweep
+    reaches **200,000 generations** with the post-GC index/data ratio flat at
+    0.673–0.676.
+  * 1,000,000 generations was attempted and still does not fit, for a reason
+    that is not this defect: ENOSPC at generation **169,701** with the allocated
+    breakdown at exactly 1,073,741,824 B, of which `commits/` is 695,152,640 B
+    for 169,702 files — **4,096 B of commit pages per generation**. One commit
+    file per generation is the history, so 1M needs ~4 GiB of `commits/` alone
+    in a 1 GiB `/tmp`. Reported as the measured limiter; no extrapolation and no
+    limit raised. The 512-live cell with GC only at 1k/10k/100k shows the same
+    effect (ENOSPC at 85,758; `indexes/` 628,711,424 B allocated).
+  * Tests: `tests/index_gc_bound.rs` 3/3 (many roots each with a long chain
+    reclaim and every held chain still loads; a forged 300-delta chain still
+    refuses and deletes nothing; the no-retention control reclaims exactly the
+    unnamed segments). The reproducing test fails on `e1ab002`'s `src/store.rs`
+    and passes on the fix. Go twins
+    `TestGcChainBoundIsPerRetainedRoot` (fails on the previous Go code) and
+    `TestOverLongRetainedChainStillRefusesIndexGc`. Item-2 oracle/adversarial
+    re-run unchanged: `index_incremental` 3/3, `index_chain` 8/8,
+    `index_persistence` 7/7, `index_equivalence` 1/1; commit p50 still 0.110 ms
+    at 1k/10k/100k.
+  * Gates at `4c4f459`: Rust 163 binaries / 787 passed / 0 failed / 0 ignored;
+    FUSE 830 passed / 0 failed / 2 pre-existing ignored; Go `gofmt`/`go vet`/
+    `CGO_ENABLED=0 go build` clean and `go test -race ./store` passing except the
+    pre-existing `TestAzureOptimisticTwoDisjointCommitters` (fails identically
+    on the unmodified tree, from the unverified R14d Azure-MW2 WIP). No
+    `verify-all` run (item 7).
+  * Not claimed: Go incremental index maintenance (still absent); flat index
+    footprint (the retained set is still one root per checkpoint and snapshot,
+    so it grows at 0.674x data); O(1) GC (it lists and reads every commit); any
+    wire-format change (none: WFX2/WFX3, `weftfs.commit.v2` and every attested
+    root are untouched).
+
+- 2026-11-12 (R12c item 3, DCP metadata serialisation cost): parent `staging`
+  code `4947ef2`; not pushed. Full analysis:
+  [`bench/RESULTS-dcp-metadata.md`](../bench/RESULTS-dcp-metadata.md).
+  * The R12b figure is confirmed, not assumed. `bench/scripts/dcp_metadata_court.sh`
+    (python court, real `torch.distributed.checkpoint` metadata from one genuine
+    save per size) measures the pure-Python encoder at **3.96 ms p50** for the
+    169-entry fixture (71,559 B), and the `adapter.metadata_serialize` probe
+    inside a real save reads 4.32-4.68 ms in the same session.
+  * Breakdown at 169 entries: tree construction 0.68 ms (17 %), `wcb.encode`
+    3.29 ms (83 %), memfd copy 0.008, sha256 0.03, and **zero Rust round trips**
+    (0 `CheckpointService._call` during the window). Inside the encoder the
+    cost is dispatch and per-byte `append`: 26,233 `isinstance` calls, 17,787
+    `bytearray.append`, 8,784 `varint.encode`, 847 key sorts per encode.
+  * Options measured on the same fixture (30 iterations): (a) reusable plan
+    **0.555 ms** warm (0.121 signature + 0.400 assembly), build 6.28 ms once;
+    (b) native floor — one `stat_file` round trip + client `struct.pack`
+    marshalling of the entry table — **0.443 ms**, i.e. 80 % of (a) *before any
+    Rust encoding, reply copy or service lookup*, so (b) is refuted without
+    being built; (c) generic fast encoder **1.63 ms** (2.0x). Chosen: (a) with
+    (c) as the fallback; the format stays defined once, by the oracle.
+  * Shipped: `weftcodec/wcb_fast.py` (generic canonical encoder, exact-type
+    dispatch, bounded key/varint caches, one join) and
+    `dcp.serialize_metadata_fast` + `MetadataPlan`/`MetadataPlanCache` in
+    `python/weftcodec/dcp.py`. `serialize_metadata` is unchanged and documented
+    as the reference oracle; `metadata_parts` is the single schema description.
+    `writer.stats["metadata_encode"]` reports mode + counters;
+    `WEFT_DCP_METADATA_ENCODING=reference` forces the oracle for an A/B.
+  * Safety: a plan is cached only after its assembled bytes equal the oracle's
+    bytes for the same object (`oracle_checks`/`oracle_mismatches`); every save
+    re-derives the signature from the current metadata before emitting any
+    fragment, so a changed entry set, dtype, shape, chunk layout, storage info,
+    offset or index (and a changed `MetadataIndex.index`, which torch compares
+    as `compare=False`) falls back, counted, and rebuilds. Tests: 5 seeds x 200
+    randomized metadata trees byte-identical cold and warm; a 12-case stale-plan
+    matrix; invalid metadata, out-of-range values and lowered limits raise the
+    same classes as the oracle; the 169-entry store-backed save writes the
+    oracle's bytes and restores exactly. `test_wcb_fast.py`: 5 seeds x 200 value
+    trees, boundary varints, unicode/bytes/empty containers, subclasses, a
+    duplicate-yielding mapping (same bytes, decoder rejects), and a cache-leak
+    test proving a cached key cannot bypass a lowered limit. Python suite
+    423 passed / 70 skipped / 0 failed in the python court at `4947ef2` (the
+    skips are the pre-existing guards; both new files pass in full).
+  * End to end on one revision, A/B by encoder only:
+    `checkpoint-latency-20261112T000500Z` (reference) vs `…T001500Z` (auto), same
+    fixture/court/config: `adapter.metadata_serialize` session 4.679 → **0.631
+    ms (-4.05)**; completion p50 40.03 → **34.58 ms**; client top-level 32.84 →
+    28.27; Rust top-level unchanged. Modes counted: before `{reference-forced:
+    21}`, after `{plan: 20, rebuilt: 1}` with 1 plan build, 1 oracle check, 0
+    mismatches — the fast path is taken and the oracle is never silently
+    substituted. Training-goodput session court (`…T003000Z` vs `…T004500Z`,
+    4/8/16/32-step sweep, 128 steps, 3 reps): `weft-session` warm p50 46.85 /
+    45.02 / 45.19 / 44.76 → 43.21 / 42.36 / 42.14 / 40.55 ms (mean **-3.39**);
+    exactness 136/136 in both.
+  * Losses: the first save of a shape pays build + oracle proof (6.28 ms + a
+    2.4 ms generic encode vs 4.06 ms reference, break-even at the second save),
+    visible as a 3.5-20.7 ms rise in `weft-session` cold p50 (n=3); one save per
+    process never amortises; `matches` is O(entries) (0.121 / 0.789 ms at
+    169 / 1024); 0.555 ms remains; 52,613 B cached at 169 entries against an
+    8 MiB / 4-plan bound; the fallback path is worse than before when the shape
+    changes every save; p95 stays bimodal at 1024 entries (GC).
+  * Not claimed: any format, wire or store change; Rust/Go involvement in
+    metadata encoding; Orbax (its encoder is untouched and unmeasured); 20 ms
+    completion; multi-rank, fleet, GPU or durability. No Rust native
+    encoder was written — option (b) is a measurement, not an implementation.
+
+## Subphase R17 (write-cost) — attribution and ablation (2026-11-12)
+
+**Status: executed; attribution and ablation only — no optimisation was
+performed in this subphase.** The deliverable is
+[`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md)
+and the six-phase plan [`docs/PLAN-R17-R22.md`](PLAN-R17-R22.md).
+
+- **Controls (additive, defaults unchanged).** `TensorPlanOptions::float_tensor`
+  (default `true`) and the existing `zstd19` gate are the two independent
+  controls; both gain a CLI flag (`--no-float-tensor`, `--no-zstd19`). The
+  default path is proven unchanged **at this revision**: the ablation runner's C
+  row and the unmodified contract court's C row have identical strategies,
+  per-tensor manifest sets, physical footprint and bytes written
+  (`default_c_matches_official_court: true`). `tests/float_tensor_ablation.rs`
+  additionally proves the exact encode counts (1/1 default, 1/0 and 0/1 for
+  each control, 0/0 for both) and that the chosen manifest bytes are unchanged
+  when the removed candidate was not selected. No frozen format, frame,
+  manifest, commit or index byte changed.
+- **Baseline at this revision** (`augmentation-local-20261112T041225Z`, one run
+  per row): A 364.5 ms / 424,439,296 B; B 2,892.1 / 424,784,917; C 24,459.1 /
+  282,283,011; D 2,910.4 / 424,856,058; E 24,174.7 / 282,354,152; N 5,504.4
+  (host-contended; earlier run 358.2). 101/101 exact restores in every row.
+- **Ablation matrix** (`write-cost-ablation-20261112T052203Z`, 7 interleaved
+  repetitions × 10 configurations, all checks pass; least-contended values):
+  C 24,229.2 ms / 282,283,011 B; C-noz19 3,849.9 / 282,283,011;
+  C-nom9 22,443.3 / 330,336,572; C-both 2,132.6 / 330,532,422;
+  B 2,840.2 / 424,784,917; B-group 2,139.3 / 424,608,542;
+  D 2,885.6 / 424,856,058; E 24,171.0 / 282,354,152.
+  C encodes 101 level-3, 18 level-19 and 101 mode-9 frames; `--no-zstd19`
+  leaves 0 level-19 encodes, `--no-float-tensor` leaves 0 mode-9 encodes, both
+  off leaves 0/0. **Level 19 is selected for zero tensors and saves zero bytes.**
+- **Ledger (C, 24,229.17 ms):** ZSTD-19 20,352.99 ms (84.00 %); mode 9
+  1,743.05 (7.19 %); blob publish 777.37 (3.21 %); commit/index 711.51
+  (2.94 %, of which index 343.47 and manifest+superblock 362.86);
+  ZSTD-3 436.78 (1.80 %); digest 66.33; source read 32.27; init 24.67;
+  other encode/plan 41.46; prepare unattributed 25.45; footprint walk 1.43;
+  **unattributed residual 15.86 ms (0.065 %)**.
+- **Mode 9 trade:** 1.74 s write and ~0.6–0.7 s extra cold restore for
+  48.05–48.25 MB (14.5–14.6 %), +~496 MB peak write RSS. It is the only
+  footprint-reducing candidate on this fixture.
+- **One-group-commit B:** commit/index 696.9 → 8.8 ms (-688.1 ms), wall
+  2,840.2 → 2,139.3 (-24.7 %), footprint -176,375 B, requests 911 → 611;
+  blob publish unchanged (1,948.5 → 1,943.5 ms). C-both (2,132.6 ms /
+  330.5 MB) matches B-group's wall while being 22.2 % smaller.
+- **BF16 stage profile** (`bf16-plane-profile-20261112T054210Z`, embedding +
+  8 × 8.7 MB MLP tensors, 5 reps, replica validated byte-for-byte against the
+  codec): embedding split 307.31 ms; Huffman 337.61 (histogram 57.76, lengths
+  0.023, codes 0.003, emission 266.55); hashes 27.07 + 17.84 + 27.06;
+  `encode_float_tensor` 1,163.80 ms; frame assembly 446.90 ms; ratio 0.663.
+- **Exactness and crash:** every configuration restored 101/101 tensors with
+  SHA-256 equality in every repetition; every Weft configuration's three-phase
+  process-fault proxy reopened old-or-new-whole (old 2 / new 1 / partial 0) with
+  a full verify and 101 exact tensors. The `after_commit_file` tail is the one
+  expected `verify` note, not a partial state.
+- **Host contention, disclosed:** the host ran an external CPU/I/O-heavy
+  process during the matrix, producing bimodal walls (2.8 s clean vs 26–43 s
+  stalled). Raw samples, median and p95 are published; the ledger uses the
+  least-contended repetition and records both walls. The store configurations'
+  minima agree with the one-run contract court within 0–2 %; A's raw copy is
+  more host-sensitive (326.4 vs 364.5 ms).
+- **Losses:** the medians and p95 are not intrinsic costs; level-19 is pure cost
+  on this fixture; mode 9 raises RSS by ~496 MB and slows restore; C-both is
+  faster than B only because it publishes fewer bytes; `fsync` is not a
+  separate phase; the stage profile is a harness replica, not codec-internal;
+  the store head is not reproducible because `/tensors` uses a random ObjectId
+  seed.
+- **Gates:** Rust `cargo test --all-targets` 165 suites / 788 passed / 0 failed
+  / 0 ignored; FUSE `--features fuse --all-targets` 165 / 831 passed / 0 failed
+  / 2 pre-existing ignored; claims and spec drift updated in the docs commit.
+  No `verify-all` run (not required for this subphase; its 45/45 receipt remains
+  the cited aggregate and predates R17).
+- **Not claimed:** no write-path optimisation, no format change, no Go parity
+  for the R17 harness, no fleet/cloud/cold-media/power-loss claim, no claim that
+  these proportions transfer to another corpus or backend.
+
+## Subphase R18 (write-cost) — two-stage planner: analyse, select, materialise (2026-11-12)
+
+**Status: implemented and measured.** The planned write no longer encodes every
+candidate and discards the losers. Deliverable:
+[`bench/RESULTS-planner-two-stage.md`](../bench/RESULTS-planner-two-stage.md).
+
+- **Change.** `src/two_stage.rs` adds the three stages. **Analyse** compresses a
+  bounded deterministic sample of whole codec chunks (4 at level 3, the first 2
+  of those at level 19) and predicts the mode-9 frame length **exactly** from a
+  full exponent histogram via the new WeftCodec function
+  `modes::float_tensor_encoded_len_from_histogram` (WeftCodec `0aa3881`;
+  `huffman::encoded_len[_from_weights]`, `modes::float_tensor_exponent_histogram`,
+  `modes::float_tensor_encoded_len`). **Select** encodes a candidate only when
+  its physical-size interval could change the winner or the mode-9 `1/64` gate;
+  level 19 is decided *after* level 3 is measured, against an incumbent built
+  only from measured or exact sizes, using the sampled 19/3 ratio applied to the
+  measured level-3 frame. **Materialise** checks every measured size against its
+  interval and re-plans exhaustively on a violation. `PlannerMode::{TwoStage
+  (default), Exhaustive}` + `--planner` on `write`/`plan`; the write path is
+  two-stage, `plan_tensor`/rebase stay exhaustive so every candidate's measured
+  size stays visible; a strategy hint keeps its historical path.
+- **Receipts.** `planner-two-stage-20261112T081151Z` (assembled, 15/15 checks),
+  `…-matrix-20261112T081151Z` (7 interleaved reps × 11 configurations, per-tensor
+  decision stream), three cross-family receipts (Qwen2.5-0.5B base, pythia-70m
+  step0/step8), `augmentation-local-20261112T070000Z` (contract court, identity
+  proof). Three aborted court invocations (`…T071300Z`, `…T073226Z`,
+  `…T075100Z`) are retained: the runner rejected its own family fixtures
+  (`pythia` has no `model.embed_tokens.weight`; a cross-family row asserted the
+  Qwen-only R3 strategy counts).
+- **Headline.** 7 interleaved repetitions, least-contended values: C two-stage
+  **4,117.8 ms / 282,283,011 B**; C-legacy exhaustive 24,175.8 / 282,283,011;
+  C-noz19 (exhaustive) 3,936.0 / 282,283,011; C-both 2,136.6 / 330,532,422;
+  B 2,848.0 / 424,784,917; B-group 2,144.3 / 424,608,542; D 2,892.0;
+  E 4,145.5 / 282,354,152; A 327.8; N 339.0. C is **5.87× faster** than the
+  exhaustive planner with an **identical footprint** and **0 of 101** strategy or
+  chosen-size changes; 101/101 exact restores and the three-phase crash proxy
+  old-or-new-whole in every Weft configuration.
+- **Decision diff.** Exhaustive → two-stage: level-3 encodes 101 → 51, level-19
+  18 → **0**, mode-9 101 → 35, chosen bytes 281,951,111 → identical, footprint
+  identical, 35/35 mode-9 predictions equal to their measured frames, 50
+  level-3 skip bounds and 18 level-19 skip bounds recorded, 0 interval
+  violations, 0 exhaustive fallbacks.
+- **Cross-family.** Qwen2.5-0.5B base: 0 changes, 0 bytes. pythia-70m step0 and
+  step8: 0 changes, 0 bytes, and **level 19 is encoded for 26 of 76 tensors
+  where it is genuinely smaller** (163,863,698 vs 173,186,380 B at step0). Level
+  19 was made **conditional**, not deleted: deleting it would have cost 5.4 % of
+  that family's footprint.
+- **The target was missed.** R18's stated expectation was `C ≤ ~3,850 ms`; the
+  measured 4,117.8 ms is **7.0 % above** it and 1.23× the G1 rung. Measured
+  cause: analysis costs **348.8 ms** (224.0 exact mode-9 histogram + 124.8 ZSTD
+  sampling), while the 66 skipped mode-9 encodes were **93,696 bytes** in total
+  (0.022 % of the fixture), so they were almost free. Two-stage C is therefore
+  182 ms *slower* than the C-noz19 ablation. The remaining wall is 1,790 ms of
+  mode-9 encode, 776 ms blob publish and 716 ms commit — R19 and R21 territory.
+- **Corrections to R17.** `bench/RESULTS-write-cost-ledger.md` gains a §12 that
+  corrects three derived statements: a predictor *is* needed to keep level 19 for
+  other corpora; two-stage C is 182 ms slower than C-noz19 rather than at its
+  level; and skipping the losing mode-9 encodes saves ~0 ms, not ~1.1 s.
+- **Gates.** WeftCodec `cargo test --all-targets` (82 unit tests + every
+  integration binary incl. the new `tests/float_tensor_len.rs` 5/5), 0 failed.
+  Rust `cargo test --all-targets` **795 passed / 0 failed / 0 ignored, 166
+  suites**; FUSE `cargo test --features fuse --all-targets` **838 passed / 0
+  failed / 2 pre-existing ignored, 166 suites**; Go planner tests unchanged and
+  passing at the pinned `WeftFS-Go` revision. Spec drift 60/60, conformance
+  manifest and coverage 420 entries OK, `check-claims.sh` 985 entries OK. No
+  `verify-all` run (not required for this subphase; its 45/45 receipt remains the
+  cited aggregate and predates R18).
+- **Not claimed.** No Go two-stage rule and no Go parity measurement (the
+  `WeftFS-Go` pointer is frozen here; Go reaches the same decisions by exhaustive
+  encoding and pays that cost); no power-loss, fleet, cloud or cold-media claim;
+  the level-3 sampler cannot describe a heterogeneous tensor (the 272 MB
+  embedding's interval degenerates and forces one safe extra encode); the 500 bps
+  interval floor is calibrated on four real families only; `plan_tensor` and
+  rebase remain exhaustive.
+
+## Subphase R19 (write-cost) — mode-9 encoder: byte-identical, 2.85x faster (2026-11-12)
+
+* **Parents.** `WeftFS` `c3f5e1a` (store wiring, bench, court scripts),
+  `WeftCodec` `1412227` (fast encoder; `dfc60f4`). Both pushed on `staging`.
+  No wire change: the frame, descriptor, canonical table, padding and every
+  content root are untouched.
+* **Where the time was.** R17's "frame assembly/other = 446.90 ms" was a
+  mis-attribution caused by measuring stages in isolation. A faithful
+  line-by-line replica of the pre-R19 encoder adds up to its wall (embedding:
+  1,185.63 ms replica sum vs 1,187.99 ms wall) and shows the real split:
+  generic plane split **705.8 ms**, Huffman emission **301.12 ms**, histogram
+  57.71, plane concatenation 13.96, `payload_hash` 17.59, body copy 13.82,
+  `encode_frame` copy + two CRC passes 46.62, `content_hash` 26.96. The
+  pre-R19 encoder also took **9,814 minor page faults** per embedding encode
+  because it held five ~272 MB mappings at once.
+* **What changed** (all in WeftCodec, mirrored by the store):
+  `split_bf16_planes` derives `(w >> 7)` and `((w >> 8) & 0x80) | (w & 0x7f)` over
+  eight-byte windows into pre-sized planes **and** returns the four-bank
+  exponent histogram from the same pass; `huffman::EncoderTable` packs
+  `code | length << 32` per symbol and `huffman::BitStream` flushes four bytes
+  at a time into a pre-sized slice (replacing `append_bits`, which is kept
+  verbatim as the test oracle); `encode_float_tensor` plans the exact frame
+  length, allocates **one** buffer, writes the descriptor and both planes into
+  it (`frame::encode_frame_with_body`), hashes the stored region in place and
+  appends the trailer CRC. `two_stage::Mode9Prediction` carries the analyser's
+  exact histogram and the store calls `encode_float_tensor_with_histogram`.
+* **Bounded parallel emission.** `FloatTensorEncodeOptions` splits the element
+  range, prefix-sums the exact per-partition bit lengths, emits into disjoint
+  byte ranges at per-partition bit offsets, spills one byte per partition into a
+  one-byte scratch slot and ORs the shared bytes serially. Byte-identical to
+  sequential at every thread count. Extra memory beyond the frame: one `u64`
+  and one `u8` per partition. Bounds 1 MiB minimum bitstream, 512 MiB maximum,
+  65,536 elements minimum per partition; the store defaults to
+  `min(available_parallelism, 4)` and `--`/`WEFT_AUG_ENCODE_THREADS` can force 1.
+* **Headline.** 7 interleaved repetitions, least-contended: **C 4,101.6 →
+  2,328.4 ms (−43.2 %)** and **E 4,156.4 → 2,363.2 ms (−43.1 %)**, footprint
+  **unchanged** (282,283,011 B and 282,354,152 B), 101/101 exact restores, same
+  strategies and chosen sizes (`two_stage_matches_exhaustive`,
+  `two_stage_storage_unchanged` true). A, C-nom9, C-both and D are within noise
+  of their before values, which is the control that the delta is the encoder.
+  CPU C 2,690 → 1,240 ms; peak RSS C 1,188,052 → 687,864 KiB (−42 %); cold
+  restore unchanged (1,432.0 → 1,432.7 ms). C/A = 12.44x → 7.06x.
+* **Encoder, store level.** The wall court's own phase profile (one
+  attribution repetition, `configs.C.attribution_rep.ledger`) gives the
+  in-place delta: **mode-9 encode 1,791.4 → 194.4 ms (9.2x)** and **analyse
+  346.7 → 181.7 ms (1.91x)**, the second because the analyser's histogram is
+  handed to the encoder and its kernel is now four-bank. Prepared total
+  3,323.4 → 1,559.4 ms.
+* **Encoder, codec level.** 9 tensors / 341,999,616 B, 7 reps: **262.28 →
+  748.37 MB/s (2.85x)** sequential and **1,524.81 MB/s (5.81x)** at four
+  emission threads.
+  Embedding 272,269,312 B: 1,044.2 (reference) / 1,188.0 (replica wall) →
+  363.87 ms, 177.24 ms at 4 threads, faults 9,814 → 644.
+* **Byte identity.** `WeftCodec/tests/mode9_encoder_identity.rs` 6/6: every
+  committed mode-9 vector re-encoded byte-exactly (shipped, reference,
+  histogram hand-off, 2/3/4/8 threads); the specialised splitter vs the generic
+  oracle over **every 16-bit word** and randomised planes; whole-frame
+  differential over 5 dtypes × 30 sizes × 5 thread counts including a
+  forced-parallel configuration with one element per partition; a
+  300,000-element plane at 1..8 threads. The court compares shipped vs
+  reference on 9 tensors × 7 reps, 0 mismatches. Conformance vectors and the
+  Rust↔Go cross gate are unchanged.
+* **Receipts.** `mode9-encoder-20261112T160000Z.json` (stage table, faults,
+  allocation probe), `r19-wall-before-20261112T150000Z.json`,
+  `r19-wall-after-20261112T140000Z.json`,
+  `augmentation-local-20261112T140000Z.json` / `…T150000Z.json` (R3 contract
+  court, after / before). Retained and **not** used: the first "official"
+  attempt `augmentation-local-20261112T131500Z.json` (host write latency ~4x
+  worse: A 6,275.9, C 17,950.7 ms) and the 1-rep/4-configuration probe
+  `r19-diag.json`. Courts: `bench/scripts/mode9_encoder_court.sh` (inside the
+  bench court), `bench/scripts/r19_wall_court.sh` (inside the bench court),
+  `scripts/augmentation_court.sh --local` (host orchestrator).
+* **Next bottleneck.** Publication is now 63.1 % of C's wall: blob publish
+  769.2 ms + commit 700.4 ms (index segment 337.8, manifest commit 356.9).
+  Encoding is 30.1 %. That is R20.
+* **Gates.** WeftCodec `cargo test --all-targets`: all suites pass. Rust
+  `cargo test --all-targets` and FUSE `cargo test --features fuse --all-targets`:
+  pass, with the two pre-existing ignored FUSE tests. Conformance: Rust and Go
+  adapters, all mode-9 vectors; cross gate Rust↔Go byte-identical.
+  `check-claims.sh`, spec drift, conformance manifest/coverage: pass. No
+  `verify-all` run for this subphase (not required); the 45/45 aggregate
+  receipt remains the cited one and predates R19.
+* **Not claimed.** No Go encoder change or Go performance claim (the Go codec
+  already emitted these exact bytes and the format did not move); no AVX2 split
+  kernel (measured headroom does not justify a second path); FP16/FP32/FP8 keep
+  the generic splitter; no inter-tensor parallelism (R21), no shared pool, no
+  power-loss, fleet, cloud or cold-media claim; one host, warm page cache.
+
+## Subphase R20 (write-cost) — one atomic publication per checkpoint (2026-11-12)
+
+* **Parents.** `WeftFS` `ad0ca3b` (ledger + deferred group durability + court).
+  `WeftCodec` unchanged. Pushed on `staging`. **No wire change**: frame,
+  manifest v1–v4, commit v1/v2, the WFX3 index and every conformance vector and
+  fixture are byte-identical; the change is *how many* commit records and index
+  segments a checkpoint writes, not what one contains.
+* **The mechanism (product, not harness).** `Store::begin_group` now also opens
+  a **deferred durability batch** (`Options::defer_group_blob_sync`, default
+  on). Inside the batch, `LocalBackend::publish_file` writes and renames each
+  blob and records `(file, directory)`; the barrier the commit path already
+  performed before the commit record (`flush_buffered_blobs`) then `fsync`s
+  **every recorded file** and **every touched directory once**
+  (`StorageBackend::begin_deferred_sync` / `end_deferred_sync`, timed as the new
+  nested `Phase::BackendSync`). Ordering is unchanged and enforced at the
+  barrier: bytes durable → commit record → head. Every published file still
+  gets its own data barrier; `commit_group` and `abort_group` both close the
+  batch. `write_checkpoint`, `write_checkpoint_parallel` and the checkpoint
+  service inherit it because they already publish through one group.
+* **Measurement surface.** `IndexStats` gains `write_bytes`; new
+  `Store::publication_ledger()` reports blob publications by kind (count and
+  bytes), duplicate hits, commit records, superblock slots, index segments and
+  — through `StorageBackend::durability_barriers()` — file data barriers and
+  directory barriers separately (`None` for a provider-ack backend, which never
+  claims `fsync`). Counted where each artifact is handed to the backend, so it
+  closes against `BackendStats`. It is diagnostic only: no format, commit,
+  recovery or receipt schema reads it, and no out-of-scope backend file needed
+  a change.
+* **Where the 202 blob publications go.** 186 `manifest_blobs` (one frame + one
+  tensor-descriptor manifest per object) carrying 281,977,361 B, plus 16
+  `object_blobs` (the 16 raw tensors' single 256-byte chunks) carrying 4,096 B.
+  The descriptor manifests are ~1 KiB each; the frames carry the data.
+* **Headline.** 7 interleaved repetitions, least-contended: **C 2,343.2 →
+  1,236.8 ms (−47.2 %)** and its footprint **282,283,011 → 282,106,049 B
+  (−176,962 B)**; 101/101 exact restores in every row and repetition; same
+  strategies and same blob bytes (`two_stage_matches_exhaustive`,
+  `two_stage_storage_unchanged`, `default_c_matches_official_court` all true).
+  Target C ≤ 1,600 ms **met**; **G2 (≤ 1,344 ms) met** on the least-contended
+  observation; C/A = 3.65x. Also measured (minima, this session):
+  **B 2,849.9 → 900.2 ms**, **B-percommit**, **D 957.5**, **E 1,257.1**. The
+  retained `…T133000Z` session measured the same minima within 1 % (C 1,225.4,
+  C-percommit 2,341.6) with clean medians; it is not cited because that
+  revision's tree is incomplete (see the final bullet).
+* **Split of the win.** One group commit: **−718.1 ms and −176,962 B**. One
+  deferred barrier: **−388.3 ms at identical bytes**. Blob publication was
+  fsync-bound, not byte-bound: 778.5 → 272.2 ms for 282 MB (362 → 1,036 MB/s)
+  plus a new 97.0 ms barrier (213 file + 161 directory syncs; 75.2 ms in the
+  retained session — how much of the 282 MB the page cache had already written
+  back). The control plane was 702.6 ms for 101 commits (342.5 index segments +
+  360.1 commit records/superblocks, 7.0 ms per commit) and is now 8.3 ms.
+  Footprint closure: −44,397 B fewer commit records + −132,565 B fewer index
+  segments = −176,962 B exactly.
+* **Options rejected, with their storage delta.** Packed blob plane at a
+  64 KiB / 1 MiB / 8 MiB member bound: **+265.3 / +246.9 / +455.3 ms** and
+  +14,651 / +16,956 / +95,794 bytes written, for −5,929 / −3,576 / +9,084 B of
+  footprint (0.001 %). It publishes 120–195 catalog segments for 170–204
+  members inside the commit's flush. Faster-and-larger and slower-and-larger
+  both lose to C; the pack plane stays available and is not the default.
+* **Crash and retention.** Three-phase process-fault proxy on **every** Weft
+  row (group rows crash inside the group commit via `WEFT_CRASH_GROUP=1`):
+  `after_objects` → old, `after_commit_file` → old, `after_superblock_write` →
+  new; 0 tensor mismatches and 0 missing in all 30 verdicts;
+  `crash_proxy_old_or_new: true`. The `after_commit_file` row keeps the
+  pre-existing benign note about an unreferenced commit tail. Product-path
+  evidence `bench/receipts/r20-checkpoint-verify-20261112T121955Z.log`:
+  `weftfs checkpoint write` (12 `model.layers.0.*` tensors, 12 shard objects,
+  29,824,768 element bytes) then **`verify --full` ok, 2 commits checked, 0
+  problems**, `checkpoint verify` 12 tensors, `checkpoint restore --topology 1`
+  29,826,096 B with SHA-256 `3a0f1570…` identical over two runs. Index GC, the
+  per-root index rule and retention are untouched: `index_persistence` 7/7,
+  `index_gc_bound` 3/3, `retention` 8/8, `gc_accounting` 3/3, `crash_proxy`
+  3/3, `bounded_recovery` 3/3, `parallel_checkpoint` 7/7,
+  `checkpoint_atomic`/`_packs`/`_restore_pipeline`/`_service`/`_streaming` all
+  pass, plus the new `tests/publication_batch.rs` 6/6.
+* **Receipts.** **Cited:** `bench/receipts/r20-publication-20261112T150000Z.json`
+  (+ `.log`) and `augmentation-local-20261112T150000Z.json` (contract court,
+  same revision and stamp). Retained and **not cited**:
+  `r20-publication-20261112T133000Z.json.zst` and its contract court — same 11/11
+  checks and the same minima within 1 %, but produced at `804fd38`, whose tree
+  is incomplete: the barrier split was then carried by two new `BackendStats`
+  fields whose zero-initialisers in `src/azure.rs`, `src/gcs.rs` and
+  `src/s3.rs` were never committed, so that revision does not build from a
+  clean checkout. The final design reports the split through
+  `StorageBackend::durability_barriers()` and touches no out-of-scope file.
+  Also retained: `r20-publication-20261112T120000Z.json.zst`
+  (11/11 checks but the packed rows' crash proxy reopened without the pack
+  plane — fixed; it is the receipt that found the harness bug), the matching
+  `augmentation-local-…T120000Z.json`, and three single-repetition probes
+  (`…T112000Z.json.zst`, `…T113000Z.json.zst`) whose `at_least_seven_reps` fails by construction
+  and whose timings are not cited. Also retained: the log of the **failed**
+  first attempt `r20-publication-20261112T105952Z.log` (no receipt produced),
+  where the restore of a packed row opened the store without its pack plane. Court:
+  `bench/scripts/r20_publication_court.sh` inside the bench court plus
+  `WEFT_R20_*` forwarding in `scripts/docker-court.sh`.
+* **Gates.** Rust `cargo test --all-targets`: **801 passed / 0 failed / 0
+  ignored, 168 suites**. FUSE `cargo test --features fuse --all-targets`:
+  **844 passed / 0 failed** (the two pre-existing ignored tests).
+  `check-claims.sh` 1020 entries OK, spec drift 60/60, conformance manifest and
+  coverage 420 entries OK. No `verify-all` run for this subphase; its 45/45
+  receipt remains the cited aggregate and predates R20. The R20 court is
+  standalone, like the R19 wall court: `verify-all` keeps the reduced
+  `augmentation_local` contract court and does not carry the 14-row
+  7-repetition matrix.
+* **Next bottleneck.** Encode 704.6 ms (57.0 %; ZSTD-3 286.6 + mode-9 192.8 +
+  analyse 184.4), blob publication 272.2 ms (22.0 %), barrier 97.0 ms (7.8 %),
+  digest 67.0 ms (5.4 %), source read + init 52.2 ms (4.2 %), commit + index
+  9.0 ms (0.7 %), residual 13.4 ms (1.1 %). R21 is the bounded parallel
+  pipeline.
+* **Not claimed.** No Go change or Go parity for the deferred barrier (the Go
+  store has its own group commit and is untouched here); no pack+deferred
+  combination (the packed plane refuses deferred sync, so that option is not
+  measured); no read-path improvement (cold restore median 1,604.6 → 1,511.5
+  ms, a difference that is host noise, not a read-path change); `RemoteObject`/S3/Azure/GCS durability is a provider ack and is
+  not affected; no media, power-loss, fleet, cloud or multi-writer claim; one
+  host, warm page cache; the `C-legacy`/`C-nom9` rows remain ~21.5 s controls
+  because the exhaustive planner encodes level-19 even when it selects nothing.
+
+## Subphase R21 (write-cost) — bounded parallel encode-and-publish pipeline (2026-11-12)
+
+**Status:** implemented, measured, tested. Rust store, harness and court on
+`staging`; WeftCodec and WeftFS-Go are unchanged and **no frame, manifest,
+commit, index or identity byte changed** — every row of the matrix publishes
+the same 282,106,049 B fixture, and the committed state is identical for
+1/2/4/8 workers (`tests/tensor_pipeline.rs`).
+
+* **What moved.** The planned writer went from **1,206.2 ms to 623.3 ms**
+  (−582.9 ms, −48.3 %) at a byte-identical footprint, 101/101 exact restores
+  and the same chosen representations. **G3 (≤ 672 ms) is met** on the
+  least-contended repetition *and* on the median (653.9 ms); the best measured
+  configuration (`--pipeline-cpu-tokens 3`) is 593.9 ms and the protocol row E
+  goes 1,259.5 → 663.0 ms. Restore is unchanged (1,406.0 vs 1,413.1 ms, host
+  noise); R21 is a write-path change with no read claim.
+* **The design.** `Store::encode_tensor_object` (planner + candidates + logical
+  root + content hash, publishing nothing) and
+  `Store::publish_encoded_tensor` (the chosen frame or raw chunk table plus the
+  descriptor manifest) split the prepare half into a pure CPU stage and a pure
+  I/O stage. `Store::prepare_tensor_group_pipelined` (`src/tensor_pipeline.rs`)
+  runs reader → N encoder workers → one publisher behind bounded queues with
+  **byte** reservations (`staging_bytes` 256 MiB, `worker_bytes` 1 GiB,
+  `encode_bytes` 256 MiB, `publish_bytes` 128 MiB), a CPU-token budget that
+  caps busy encoder threads, FIFO admission and oversize admission. A worker's
+  reservation is `3·n + 1 MiB` (decoded bytes + the frame being built + the
+  single frame `retain_candidate` keeps), so the state bound is
+  **1,744,830,464 B** and the measured peak is 921,388 KiB (54 % of the bound,
+  30 % of the court). Nothing is committed by the pipeline: the caller installs
+  the fragments inside its own group, so the control plane stays on the single
+  writer (one group commit, one head publication, one index segment).
+* **Concurrent candidates.** `TensorPlanOptions::parallel_candidates` encodes
+  level 3 and mode 9 on two threads for one tensor *only* when the R18 decision
+  stream already guarantees both run, and consumes them in the historical
+  order, so no representation decision or frame byte changes. The 272 MB
+  embedding's encode falls 529.4 → 448.8 ms at four workers (→ 412.8 ms with
+  three CPU tokens): `max(295.0, 121.6)` instead of `295.0 + 121.6`.
+* **Overlap is measured, not asserted.** Per-tensor stage intervals are
+  recorded by the owning thread; at four workers **90.1 % of encoder-thread
+  time overlapped publication** and **89.9 % of publication time was hidden
+  under encoding**. Even one worker overlaps (32.7 % / 57.7 %, wall 1,114.1 ms
+  vs 1,206.2 sequential) because the reader, the encoder and the publisher are
+  separate stages.
+* **Early barrier.** The publisher drains the open deferred batch's *file* list
+  every 8 MiB and a writeback thread `fsync`s those files outside the backend
+  lock (`take_pending_writeback_files` / `note_external_file_barriers`; no
+  `unsafe`, counters stay exact). 202 files, 9 passes, 502.3 ms of thread time:
+  the commit barrier falls **329.6 ms → 1.3 ms**. The batch stays open, the
+  commit path still `fsync`s every remaining file and every directory before
+  the commit record, and the pipeline joins the writeback thread before it
+  returns, so a drained file is durable or the write fails with nothing
+  committed. The ablation `sync0`/`nosync` (no early barrier) costs 892.2 ms:
+  the same writeback on the critical path.
+* **Scaling** (7 interleaved reps, min/median): 1 worker 1,114.1/1,124.1,
+  2 workers 986.8/1,016.0, 4 workers **623.3/653.9**, 8 workers 612.1/664.8.
+  Speedup 1→4 is 1.71× of an ideal 4×: at 2, 4 and 8 workers the encode wall
+  *equals the embedding's own encode* (448.8 ms), so inter-tensor parallelism is
+  exhausted and the largest tensor is the Amdahl cap exactly as R20 predicted.
+  Two workers is publisher-bound (a single publisher cannot publish 282 MB
+  faster than ~430 ms); eight buys nothing inside host noise.
+* **Determinism.** `tests/tensor_pipeline.rs` (6/6) requires an identical store
+  head, per-object manifest ids and content roots, and manifest blob bytes
+  across 1/2/4/8 workers, with `verify --full` on each store; candidate
+  parallelism off vs on for every tensor is also byte-identical. Court identity:
+  `default_c_matches_official_court`, `strategies_stable_across_reps` and
+  `two_stage_storage_unchanged` all true. Crash proxy `true` on every row
+  (three fault points, grouped rows). The court also writes a store through the
+  pipeline and runs the shipped CLI `verify --full`: ok, 0 problems.
+* **Losses, published.** Peak RSS 687 → 921 MiB (+34 %); CPU 1,180 → 1,320 ms
+  (+11.9 %); `nosync` 892.2 ms; two workers publisher-bound 986.8 ms; eight
+  workers no better than four; 8 MiB is the measured sync granularity (16 MiB
+  638.4, 32 MiB 676.9, 64 MiB 712.6, none 892.2); the default `cpu_tokens` is
+  `encode_threads`, not the measured optimum (`--pipeline-cpu-tokens 3` is
+  593.9 ms); `prepare_phases` for a pipeline row is the whole-pipeline delta
+  (the phase collector is thread-additive, so a phase total can exceed the
+  wall); `E-pipe4`'s footprint is 6 B above `E`'s (directory accounting for the
+  protocol's snapshot/context objects; every tensor object id, manifest id and
+  content blob is identical); `C-legacy` remains 21,652.9 ms as the
+  decision-diff control; single host, warm cache, local POSIX backend, no Go
+  parity and no power-loss, fleet, cloud or multi-writer claim.
+* **Receipts.** `bench/receipts/r21-pipeline-20261112T201500Z.json` (13 rows ×
+  7 reps, 11/11 checks, `result: pass`) and the same-session contract court
+  `augmentation-local-20261112T201500Z.json` (`result: pass`). Retained:
+  `r21-pipeline-20261112T193000Z.pre-encode-counts-fix.json` (all timing checks
+  passed; `ablation_encode_counts_exact` failed because the pipeline branch did
+  not fill `prepare_phases`), `r21-pipeline-20261112T190000Z.json` (the earlier
+  13-row matrix at `209858e`, C-pipe4 621.2 ms), and the two single-repetition
+  tuning probes `r21-pipeline-smoke3/4.json`. Analysis in
+  [`bench/RESULTS-parallel-pipeline.md`](../bench/RESULTS-parallel-pipeline.md).
+  Court: `bench/scripts/r21_pipeline_court.sh` inside the bench court plus
+  `WEFT_R21_*` forwarding in `scripts/docker-court.sh`.
+* **Gates.** Rust `cargo test --all-targets`: **807 passed / 0 failed / 0
+  ignored, 169 suites**. FUSE `cargo test --features fuse --all-targets`:
+  **850 passed / 0 failed** (the two pre-existing ignored tests).
+  `check-claims.sh` 1,030 entries OK, spec drift 60/60, conformance manifest and
+  coverage 420 entries OK. No `verify-all` run for this subphase; its 45/45
+  receipt remains the cited aggregate and predates R21. The R21 court is
+  standalone, like the R19/R20 courts: `verify-all` keeps the reduced
+  `augmentation_local` contract court and does not carry the 13-row
+  7-repetition matrix.
+* **Next bottleneck.** Of the 623.3 ms, **448.8–468.1 ms (72–75 %) is one
+  tensor's own encode** (the 272 MB embedding, repetition 1 at four and eight
+  workers), of which level 3 is ~295–337 ms and mode 9 ~122–227 ms (already
+  overlapped). Going from four to eight workers buys 11.2 ms on the minimum
+  (623.3 → 612.1) and nothing on the median, so inter-tensor parallelism is
+  exhausted. `weftcodec::modes::encode_zstd` with a codec chunk size emits one
+  independent ZSTD frame per chunk under the CHUNKED flag (4,155 frames for the
+  embedding), so R22 should parallelise the *chunk* encodes of one tensor — a
+  byte-identical change with ~3× headroom on level 3, which projects a ~430 ms
+  write (1.29× A) without touching a single representation decision. After
+  that: fuse `analyse` with the encodes that re-read the same bytes (keeping
+  the exact mode-9 prediction), and ship a measured CPU-token default.
+
+## Subphase R22 (write frontier) — chunk-parallel ZSTD, exact analyse, measured defaults (2026-11-12)
+
+**Headline.** The shipped write is **592.6 ms least-contended / 600.9 ms
+median** for the 101-tensor Qwen2.5-0.5B-Instruct subset (424,439,296 logical
+bytes) at **282,106,049 B**, byte-identical to R18-R21, with 101/101 exact
+restores and the crash proxy old-or-new-whole. That is **G3 (<= 672 ms) on both
+statistics, 1.78x the native control A = 332.0 ms**. The final rung (<= 336 ms)
+is **not reached**, and section 7 of the results document says exactly why: the
+write is now durability-bound, not encode-bound.
+
+* **22.1 chunk-parallel ZSTD - implemented, proved, and not the wall win.**
+  `weftcodec::modes::encode_zstd_with` + `ZstdEncodeOptions` encode a CHUNKED
+  frame's independent per-chunk frames on a bounded pool in ordered
+  byte-bounded batches, each worker reusing one zstd context. Measured on the
+  272,269,312 B embedding (64 KiB chunks, 4,155 chunks): level 3 **280.3 ->
+  189.0 (2 threads) -> 135.7 ms (4)** and level 19 **13,597.4 -> 3,667.1 ms (4)**
+  with **every timed frame byte-identical** (40 checks in the receipt; 2,800
+  boundary comparisons, 2,000 randomised cases and the fallback paths in
+  `WeftCodec/tests/zstd_chunk_parallel.rs`, 5/5). It does **not** move the frozen
+  fixture's wall: the pipeline is 552 ms of which publication is 452.5 ms and
+  the durability writeback 461.6 ms for 202 files. The plan's "~430 ms"
+  projection is **refuted** at this operating point and the refutation is the
+  recorded result.
+* **22.2 exact parallel analyse.** The analyse stage's only full-tensor pass is
+  the mode-9 exponent histogram (37.1 ms, 7.35 GB/s); it cannot be fused into an
+  encode because it decides whether that encode runs. It is now accumulated on
+  threads in whole-element windows and summed - exact, so the R18 bit-exact
+  mode-9 prediction is unchanged (`WeftCodec/tests/histogram_parallel.rs` 3/3,
+  `tests/two_stage_planner.rs` (7 tests) still green, court re-proof
+  `two_stage_matches_exhaustive` / `two_stage_storage_unchanged` both true). The
+  measured wall effect is **nil** (`an1` control 586.6/614.7 against 592.6/600.9)
+  and the dominant analyse cost turns out to be the **level-19 sample**
+  (156.9 ms against 31.6 ms with level 19 disabled).
+* **22.3 measured defaults, both shipped.** `default_cpu_tokens(n) = n - 1`
+  (592.6/600.9 at 3 tokens against 612.1/644.0 at 4; 1 and 2 tokens are
+  912.8/959.8 ms because the single publisher binds), and
+  `default_zstd_encode_threads() = min(available, 4)` with the rule that the
+  chunk pool is used **only when the tensor's encode has the CPUs to itself**
+  (no concurrent mode-9 candidate). The rule is what keeps the frozen fixture
+  neutral while pythia-70m is 1.50x and Qwen 3B 1.18x faster.
+* **22.4 the frontier** (25 rows x 7 interleaved reps, device control 3,200 MB/s
+  `clean`, 11/11 checks, receipt `r22-pareto-20261112T230000Z`): Pareto-optimal
+  set = **A** (332.0 ms / 424,439,296 B), **C-pipe4 shipped** (592.6 ms /
+  282,106,049 B), **C-pipe4-zpar4** (584.8 ms, same bytes, not adopted),
+  **t19off** (575.9 ms, same bytes, *not portable* - level 19 is where pythia is
+  won) and **tm9off** (593.6 ms at **330,355,860 B**, +17.1 %). Everything else
+  is dominated. Measured losses: the pack plane **third rejection** (962.7 ms;
+  publisher busy 391 -> 220 ms but sealing costs more), `znochunk` **3,518.1 ms**
+  (the two-stage sampler's unit *is* the chunk: 50 prediction violations, 50
+  exhaustive fallbacks, level 19 actually runs, for 2.4 KB), `leeway4`
+  **2,552.1 ms** for zero bytes, 16 KiB chunks 13 % worse, `sync16/32` equal to
+  8 MiB, 8 workers worse than 4 (648.7 against 592.6), and no statistic
+  separating the 576-612 ms cluster (the default's median moved 13 % between
+  sessions while its minimum moved 2.5 %).
+* **22.5 cross-family and MinIO.** Qwen2.5-0.5B-Instruct: C 1,217.6 -> pipeline
+  **628.4 ms**, 282,106,049 B (33.5 % below A = 346.6), 35 mode-9 / 50 zstd / 16
+  raw. pythia-70m step 0: 12,204.4 -> **8,143.8 ms**, 163,964,176 B (**41.8 %**
+  below A = 240.4), all 76 tensors zstd, and the exhaustive planner produces the
+  **same footprint** - level 19 still wins where it used to. pythia step 8:
+  12,176.8 -> 7,512.6 ms, 163,830,373 B. Qwen2.5-3B-Instruct (635 MB subset):
+  1,554.3 -> 1,319.7 ms at 421,550,249 B, peak RSS 1,980,292 KiB (63 % of the
+  court). MinIO (real server, one loopback process, tmpfs): A 842.9 ms / 101
+  writes; **C 1,275.4 ms / 225 writes / 282,132,555 B written / 33.53 %
+  reduction**; 8/8 checks. **Left open:** Qwen2.5-3B base, Qwen2.5-7B, and the
+  R22 *pipeline* over S3 (the S3 arm measures the planned writer).
+* **Gates.** Rust `cargo test --all-targets`: **807 passed / 0 failed / 0
+  ignored (170 binaries)**. FUSE `cargo test --features fuse --all-targets`:
+  **850 passed / 0 failed / 2 ignored**. WeftCodec `cargo test --all-targets`:
+  **290 passed / 0 failed / 0 ignored** (45 binaries, including
+  `zstd_chunk_parallel` 5/5 and `histogram_parallel` 3/3); Rust-Go cross gate
+  `all checks passed` (41 frames
+  each way, every mode fixture byte-identical); `verify --full` ok on a
+  chunk-parallel-written store; crash proxy old-or-new on every row. There is
+  no verify-all aggregate for this subphase: `verify_receipt_current` still
+  cites `verify-20261111T182601Z` (45/45).
+* **Environment, disclosed.** Between the clean runs the host's durability path
+  degraded from 1.28 GB/s to 125-180 MB/s and the native control A wrote the
+  424 MB fixture in **11,482.6 ms**; those attempts produced no cited row
+  (`r22-probe-20261112T163717Z` and the superseded pareto receipts are retained
+  as the record). The cited courts carry a `dd conv=fsync` device control and a
+  native-control band check, and the sweep's own 25-row matrix re-proves the
+  footprint on every row.
+* **Analysis**: [`bench/RESULTS-pareto.md`](../bench/RESULTS-pareto.md).
+  Courts: `bench/scripts/r22_pareto_court.sh`, `r22_family_court.sh`,
+  `r22_probe_court.sh` + `r22_probe.sh`; `WEFT_R22_*` forwarding in
+  `scripts/docker-court.sh`. The R22 courts are standalone, like R20/R21.
+
+- 2026-11-12 (R12c item 4, bounded checkpoint queue with admission control):
+  parent `staging` `1d71663`; full analysis
+  [`bench/RESULTS-checkpoint-queue.md`](../bench/RESULTS-checkpoint-queue.md),
+  receipts `checkpoint-queue-bound-after-20261112T043000Z.json`,
+  `checkpoint-queue-overload-baseline-20261112T020000Z.json`,
+  `checkpoint-queue-sweep-baseline-20261112T020000Z.json`.
+  * **The pre-change behaviour was measured, not assumed.** With two callers
+    that do not wait, a save raised
+    `ServiceError: InvalidArgument: a deferred checkpoint is already open on
+    this connection` and **which** save survived was decided by timing: 2 of 4
+    landed, 2 of 8 landed, and `save_checkpoint_async` grew the process from 2
+    to 19 threads because it creates a pool per call. A caller that waits
+    (the training harness) simply blocked: the maximum wait for the previous
+    save was 1,688.2 ms (`weft`) and 82.3 ms (`weft-session`) at a 1-step
+    interval. Nothing was ever silently lost, and `landed == store
+    checkpoints` in every run.
+  * **Shipped:** `CheckpointSession` admits saves under a documented bound —
+    `max_outstanding` (default **2**), a staged-byte budget (1 GiB), and
+    `admission_policy` `block` (default, 30 s ceiling) or `fail`. A refused
+    save publishes nothing and raises `QueueFull` naming every bound;
+    cancellation is only possible before a save starts (`SaveNotStarted`); a
+    closed or draining session raises `QueueClosed`. `CheckpointSession.close`
+    drains and reports `weft.checkpoint.queue.drain.v1`
+    (`no_silent_skips`, admitted/completed/failed/refused, queue high-water,
+    staged-byte high-water).
+  * **Measured bound sweep** (96 steps, 2 reps, 1 and 4-step intervals, same
+    169-entry fixture and court): at a 1-step interval the loop wall falls
+    **7,415.3 → 5,761.7 ms (−22.3 %)** at bound 2; 4 and 8 are within 2 % and
+    worse in the tail. Every cell: 0 refused, 0 failed, 0 cancelled,
+    `completed == submitted`, `outstanding 0`, `pending 0`,
+    `no_silent_skips` true, `resume_exact` equal to the requested
+    resumptions (97/97 and 25/25-style per cell). At a 4-step interval the loop
+    is save-bound and no bound helps.
+  * **Losses, published:** completion p95 gets *worse* than the serialized
+    baseline (47.7 → 71.5 ms at bound 1, 85.9 ms at bound 2) because more
+    saves are in flight; peak RSS rises 12–19 %; a deeper queue buys nothing;
+    the queue cannot make a save finish sooner. Tests:
+    `python/tests/test_checkpoint_queue.py` covers refusal, cancellation
+    before start, drain, and the writer fence; the first two court attempts
+    (bounded `/tmp` full; a `TypeError` on an empty clean-step sample) are
+    retained as `…T000000Z.tmpfs-full.log` and `…T001500Z.log`.
+  * Not claimed: multi-writer training, a queue across processes, GPU, fleet.
+
+- 2026-11-12 (R14d, Azure MW2 in Go — the failing test, its cause, and the fix):
+  WeftFS-Go `staging` `19615ea` (parent pin `46e8b98`); reproduction log
+  `bench/receipts/r14d-repro-20261112T230000Z.log`.
+  * **Reproduced** in the go court at WeftFS-Go `a7170f5`:
+    `--- FAIL: TestAzureOptimisticTwoDisjointCommitters (0.01s)` /
+    `azure_integration_test.go:406: verify: ok=false err=<nil>
+    problems=[{UnsupportedVersion recovery failed: UnsupportedVersion: the
+    superblock cache names generation 3 but the writer lock record attests
+    generation 1; this store was written by a pre-v3 writer after the lock
+    record was upgraded}]`. Only that test failed.
+  * **Cause.** Not the Azure client, not the fake, not the test. Go recovery
+    treated the writer `LOCK` record as the head authority on every path, and
+    only two call sites (`openWithStrategy`'s optimistic branch and
+    `reloadFromPlane`) wrapped the commit source in `headAttestHider`. `Verify`
+    and a read-only open passed the raw commit source, so an optimistic (MW2)
+    store whose `LOCK` still attested the single-writer init's generation 1 was
+    refused against its superblock generation 3. Rust already gates the same
+    check on `WriterMode::policy` inside `recover_inner_via`
+    (`src/recovery.rs:815-853`), which is why the Rust half passed its own
+    Azure suite.
+  * **Fix (`19615ea`).** `commitSource` gained `ReadRecord`;
+    `recoverWithStrategy` reads the `writers` policy record itself, skips the
+    attested-head reconciliation when the mode is `optimistic`, and fails closed
+    on a record that exists but cannot be decoded. `headAttestHider` and its two
+    call sites are gone, so there is exactly one authority decision for open,
+    reload and verify. Tests: the Azure two-committer test now also reopens
+    read-only and verifies (that path failed before the commit), and
+    `TestMalformedWritersPolicyFailsClosed` pins the fail-closed default.
+  * **Evidence.** gofmt/vet/`CGO_ENABLED=0` build clean; `go test -race
+    ./...` all packages pass in the fuse court (`store` 210.4 s, `cmd/weftfs`
+    40.8 s, `fusefs` 7.2 s). Rust's Azure suite was re-run unchanged:
+    `cargo test --test azure_backend` 22 passed / 0 failed, including
+    `two_optimistic_committers_publish_disjoint_files_on_azure`.
+  * **Submodule pointer.** The parent recorded `146b517` while the worktree was
+    two commits ahead; `46e8b98` moves the pin to `19615ea`, whose suite is
+    green. The earlier WIP commit message stays as written — history is not
+    rewritten — and this entry records the verification it did not have.
+
+- 2026-11-12 (R24, generated performance numbers; R14d re-verified at the pin):
+  parent `staging` `9a0118e`. Submodules unchanged.
+  * **Every current performance number is generated from a receipt.**
+    `scripts/perf_numbers.py` reads `docs/perf-numbers.json` and rewrites only
+    the text between `BEGIN GENERATED` / `END GENERATED` sentinels; 147 numbers
+    are pinned to a receipt path or to an arithmetic expression over other
+    pinned numbers, and `docs/PERF-NUMBERS.md` is the canonical table (value,
+    unit, receipt, stamp, revision). `--check` fails closed on a stale region, a
+    missing receipt, a declared stamp/revision that the receipt no longer
+    carries, a manifest number no block prints, or a sentinel with no manifest
+    block; the `perf_numbers` court runs it in `scripts/verify-all.sh` (46
+    courts from this commit). README, the STATUS head, PAPER, RFC and the
+    v1.4.0 note read from the generated regions. Operator directive 12 records
+    the rule.
+  * **Audit corrections** (each was a real stale or wrong number): the
+    independent per-tensor `zstd -19` baseline `1,535,945,154 B` appears in no
+    receipt — the sourced value is `1,528,909,007 B` (16.5 %, not 17 %); the R17
+    citation named `write-cost-ablation-20261112T050102Z`, whose C wall is
+    24,132.9 ms, while the quoted 24,229.2 ms is the `052203Z` receipt;
+    "peak RSS 939,256 KiB (34 % of the court)" is 29.9 % of 3 GiB; the 100-row
+    tile speed-up is 338.5×, not 337×.
+  * **Pareto terminology corrected.** The shipped default is **not** on the
+    fixture numerical frontier: the non-dominated set on (least-contended wall,
+    footprint) is computed from the receipt and is `A`, `C-pipe4-t19off`,
+    `C-pipe4-pack1m`; the portable/eligible set excludes the level-19-off row
+    and is `A`, `C-pipe4-sync16`, `C-pipe4-pack1m`. `C-pipe4` is dominated on the
+    point estimates and sits in a band the measurement cannot rank, so the
+    "Pareto-optimal"/"knee" wording is withdrawn. Generated by a `frontier`
+    block, not asserted by hand.
+  * **R14d is verified, not deferred.** The whole Go suite passes under `-race`
+    in the fuse court at the pinned WeftFS-Go `1fa3d32`: `cmd/weftfs` (40.9 s),
+    `fusefs` (7.2 s), `index`, `model`, `store` (134.0 s) all `ok`, 0 failures,
+    `go vet` clean, `CGO_ENABLED=0` build clean, and
+    `TestAzureOptimisticTwoDisjointCommitters` PASS. Receipt
+    `bench/receipts/r14d-go-suite-20261112T221649Z.json` (+ the two raw logs)
+    also records the honest limitation of the minimal `go` court: its `./...`
+    run fails the 17 `fusefs` mount tests because the image has no
+    `/bin/fusermount`; the `store` package itself passed there. R14d stays on
+    `staging`; no `r14d/azure-mw2` branch is needed.
+  * Not claimed: no new measurement, no wire change, no aggregate at this
+    commit yet — the v1.4.0 release run produces one.

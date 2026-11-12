@@ -1,0 +1,15 @@
+queue court sweep interval=1 config=weft
+sweep interval=1 config=weft rep=1/2
+Traceback (most recent call last):
+  File "/work/python/courts/checkpoint_queue.py", line 597, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/checkpoint_queue.py", line 593, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/checkpoint_queue.py", line 181, in run_sweep
+    cell = tg._sweep_cell(args, interval, config, work)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1836, in _sweep_cell
+    "  loop_wall=%.1fms step_p50=%.2fms completion_p50=%.1fms "
+TypeError: must be real number, not NoneType

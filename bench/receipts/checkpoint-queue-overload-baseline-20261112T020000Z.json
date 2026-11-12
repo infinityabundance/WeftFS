@@ -1,0 +1,587 @@
+{
+  "schema": "weft.checkpoint-queue.v1",
+  "section": "overload",
+  "phase": "baseline",
+  "stamp": "20261112T020000Z",
+  "generated_at_epoch": 1794453661.2630374,
+  "court": {
+    "image": "weft/python-court:1",
+    "image_id": "sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cap_drop": "ALL",
+    "no_new_privileges": true,
+    "tmpfs": "/tmp:rw,size=1g,nosuid,nodev",
+    "docker_server": "29.9.3",
+    "python": "3.12.16",
+    "weftfs_cli": "/work/.docker-cache/target-rust/release/weftfs",
+    "revision_weftfs": "de210a62c6fcf1e00d94e00cc215c3e36d1c386a",
+    "revision_weftcodec": "d9234e5322686afbbbe6fcca103da853928811aa",
+    "revision_weftfs_go": "a7170f556c918b71b5085e7e3d178ac1dfdc6faa",
+    "revision_weftcodec_go": "fe05240558a94abe530e3020c25b64ab2ad23a32"
+  },
+  "fixture": {
+    "seed": 20261110,
+    "entries": 169,
+    "logical_bytes": 4973360,
+    "largest_tensor_bytes": 147456,
+    "staging_bytes": 67108864,
+    "container_note": "the same 169-entry safetensors container the R11/R12b courts used; the receipt records the observed per-checkpoint bytes in every cell"
+  },
+  "overload": {
+    "fixture": {
+      "seed": 20261110,
+      "entries": 169,
+      "logical_bytes": 4973360,
+      "largest_tensor_bytes": 147456,
+      "staging_bytes": 67108864,
+      "container_note": "the same 169-entry safetensors container the R11/R12b courts used; the receipt records the observed per-checkpoint bytes in every cell"
+    },
+    "runs": [
+      {
+        "mode": "async-api",
+        "concurrent_submissions": 4,
+        "max_outstanding": null,
+        "admission_policy": null,
+        "wall_ms": 92.964,
+        "outcomes": [
+          {
+            "index": 0,
+            "checkpoint_id": "ckpt-00",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 1,
+            "checkpoint_id": "ckpt-01",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 2,
+            "checkpoint_id": "ckpt-02",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 3,
+            "checkpoint_id": "ckpt-03",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          }
+        ],
+        "landed": 2,
+        "raised": 2,
+        "raised_classes": {
+          "CheckpointException": 2
+        },
+        "raised_root_classes": {
+          "CheckpointException": 2
+        },
+        "raised_inner_classes": {
+          "ServiceError": 2
+        },
+        "raised_inner_messages": [
+          "InvalidArgument: a deferred checkpoint is already open on this connection"
+        ],
+        "raised_root_messages": [
+          "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     "
+        ],
+        "store_checkpoints": [
+          "ckpt-01",
+          "ckpt-02"
+        ],
+        "store_checkpoint_count": 2,
+        "landed_equals_store": true,
+        "threads_before": 1,
+        "threads_peak": 10,
+        "stats": {
+          "saves": 0,
+          "services_started": 3,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0
+        },
+        "drain": {},
+        "verify_full": {
+          "checked_capabilities": 0,
+          "checked_capability_envelopes": 0,
+          "checked_causal": 0,
+          "checked_chunks": 8,
+          "checked_commits": 3,
+          "checked_context_roots": 0,
+          "checked_manifests": 342,
+          "checked_objects": 342,
+          "checked_provenance": 0,
+          "checked_representations": 338,
+          "commit": "003dfce18a14a067216a7555762f8c7cb98adcc41c847603b77d1f87f62e42bd",
+          "full": true,
+          "generation": 3,
+          "ok": true,
+          "problems": [],
+          "rejected_generations": []
+        }
+      },
+      {
+        "mode": "session-save",
+        "concurrent_submissions": 4,
+        "max_outstanding": null,
+        "admission_policy": null,
+        "wall_ms": 87.056,
+        "outcomes": [
+          {
+            "index": 0,
+            "checkpoint_id": "ckpt-00",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 1,
+            "checkpoint_id": "ckpt-01",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 2,
+            "checkpoint_id": "ckpt-02",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 3,
+            "checkpoint_id": "ckpt-03",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          }
+        ],
+        "landed": 2,
+        "raised": 2,
+        "raised_classes": {
+          "CheckpointException": 2
+        },
+        "raised_root_classes": {
+          "CheckpointException": 2
+        },
+        "raised_inner_classes": {
+          "ServiceError": 2
+        },
+        "raised_inner_messages": [
+          "InvalidArgument: a deferred checkpoint is already open on this connection"
+        ],
+        "raised_root_messages": [
+          "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     "
+        ],
+        "store_checkpoints": [
+          "ckpt-00",
+          "ckpt-01"
+        ],
+        "store_checkpoint_count": 2,
+        "landed_equals_store": true,
+        "threads_before": 2,
+        "threads_peak": 7,
+        "stats": {
+          "saves": 4,
+          "services_started": 4,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0
+        },
+        "drain": {},
+        "verify_full": {
+          "checked_capabilities": 0,
+          "checked_capability_envelopes": 0,
+          "checked_causal": 0,
+          "checked_chunks": 8,
+          "checked_commits": 3,
+          "checked_context_roots": 0,
+          "checked_manifests": 342,
+          "checked_objects": 342,
+          "checked_provenance": 0,
+          "checked_representations": 338,
+          "commit": "eff7648cce1274f228fd4b0d02e884101317be1db2e5a5e0c978954c59b51139",
+          "full": true,
+          "generation": 3,
+          "ok": true,
+          "problems": [],
+          "rejected_generations": []
+        }
+      },
+      {
+        "mode": "async-api",
+        "concurrent_submissions": 8,
+        "max_outstanding": null,
+        "admission_policy": null,
+        "wall_ms": 116.657,
+        "outcomes": [
+          {
+            "index": 0,
+            "checkpoint_id": "ckpt-00",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 1,
+            "checkpoint_id": "ckpt-01",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 2,
+            "checkpoint_id": "ckpt-02",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 3,
+            "checkpoint_id": "ckpt-03",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 4,
+            "checkpoint_id": "ckpt-04",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 5,
+            "checkpoint_id": "ckpt-05",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 6,
+            "checkpoint_id": "ckpt-06",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 7,
+            "checkpoint_id": "ckpt-07",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          }
+        ],
+        "landed": 2,
+        "raised": 6,
+        "raised_classes": {
+          "CheckpointException": 6
+        },
+        "raised_root_classes": {
+          "CheckpointException": 6
+        },
+        "raised_inner_classes": {
+          "ServiceError": 6
+        },
+        "raised_inner_messages": [
+          "InvalidArgument: a deferred checkpoint is already open on this connection"
+        ],
+        "raised_root_messages": [
+          "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     "
+        ],
+        "store_checkpoints": [
+          "ckpt-03",
+          "ckpt-05"
+        ],
+        "store_checkpoint_count": 2,
+        "landed_equals_store": true,
+        "threads_before": 2,
+        "threads_peak": 19,
+        "stats": {
+          "saves": 0,
+          "services_started": 4,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0
+        },
+        "drain": {},
+        "verify_full": {
+          "checked_capabilities": 0,
+          "checked_capability_envelopes": 0,
+          "checked_causal": 0,
+          "checked_chunks": 8,
+          "checked_commits": 3,
+          "checked_context_roots": 0,
+          "checked_manifests": 342,
+          "checked_objects": 342,
+          "checked_provenance": 0,
+          "checked_representations": 338,
+          "commit": "7a0b82d103276ec98a754269b070437106a4cbba30ba0f5c68c0747c96da6864",
+          "full": true,
+          "generation": 3,
+          "ok": true,
+          "problems": [],
+          "rejected_generations": []
+        }
+      },
+      {
+        "mode": "session-save",
+        "concurrent_submissions": 8,
+        "max_outstanding": null,
+        "admission_policy": null,
+        "wall_ms": 184.092,
+        "outcomes": [
+          {
+            "index": 0,
+            "checkpoint_id": "ckpt-00",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 1,
+            "checkpoint_id": "ckpt-01",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 2,
+            "checkpoint_id": "ckpt-02",
+            "outcome": "landed",
+            "error_class": null
+          },
+          {
+            "index": 3,
+            "checkpoint_id": "ckpt-03",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 4,
+            "checkpoint_id": "ckpt-04",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 5,
+            "checkpoint_id": "ckpt-05",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 6,
+            "checkpoint_id": "ckpt-06",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          },
+          {
+            "index": 7,
+            "checkpoint_id": "ckpt-07",
+            "outcome": "raised",
+            "error_class": "CheckpointException",
+            "root_class": "CheckpointException",
+            "root_message": "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     ",
+            "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/dcp.py\", line 2191, in _execute\n    write_report = service.write_checkpoint(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 951, in write_checkpoint\n    response = self._call(opcode, bytes(body), fd=fd)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/work/python/weftcodec/service.py\", line 660, in _call\n    raise ServiceError(class_name, message, request_id=request_id)\nweftcodec.service.ServiceError: InvalidArgument: a deferred checkpoint is already open on this connection\n",
+            "dcp_error": false,
+            "inner_classes": [
+              "ServiceError"
+            ],
+            "inner_messages": [
+              "InvalidArgument: a deferred checkpoint is already open on this connection"
+            ]
+          }
+        ],
+        "landed": 2,
+        "raised": 6,
+        "raised_classes": {
+          "CheckpointException": 6
+        },
+        "raised_root_classes": {
+          "CheckpointException": 6
+        },
+        "raised_inner_classes": {
+          "ServiceError": 6
+        },
+        "raised_inner_messages": [
+          "InvalidArgument: a deferred checkpoint is already open on this connection"
+        ],
+        "raised_root_messages": [
+          "CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py\", line 242, in all_reduce\n    local_data = map_fun()\n                 ^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py\", line 90, in wrapper\n    result = func(*args, **kwargs)\n     "
+        ],
+        "store_checkpoints": [
+          "ckpt-00",
+          "ckpt-02"
+        ],
+        "store_checkpoint_count": 2,
+        "landed_equals_store": true,
+        "threads_before": 2,
+        "threads_peak": 11,
+        "stats": {
+          "saves": 8,
+          "services_started": 7,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0
+        },
+        "drain": {},
+        "verify_full": {
+          "checked_capabilities": 0,
+          "checked_capability_envelopes": 0,
+          "checked_causal": 0,
+          "checked_chunks": 8,
+          "checked_commits": 3,
+          "checked_context_roots": 0,
+          "checked_manifests": 342,
+          "checked_objects": 342,
+          "checked_provenance": 0,
+          "checked_representations": 338,
+          "commit": "5def6e9e5e6bf94d929778350fac529092949f6a2b6a2334efdea151047a9808",
+          "full": true,
+          "generation": 3,
+          "ok": true,
+          "problems": [],
+          "rejected_generations": []
+        }
+      }
+    ],
+    "queue_api_present": false
+  },
+  "command": "python/courts/checkpoint_queue.py overload --receipt bench/receipts/checkpoint-queue-overload-baseline-20261112T020000Z.json --stamp 20261112T020000Z --phase baseline --work-dir /tmp/queue-overload --weftfs-cli /work/.docker-cache/target-rust/release/weftfs --counts 4,8"
+}

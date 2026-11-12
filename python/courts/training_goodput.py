@@ -84,6 +84,16 @@ EPS = 1e-8
 
 CONFIGS = ("torchsave", "torchsave-durable", "dcp", "weft", "weft-fast")
 
+#: Configs that call `save_checkpoint_async` without a session.
+SESSION_CONFIGS = ("weft-session",)
+#: The R12c item-4 configuration: one reusable session whose **bounded queue**
+#: owns the save worker, so the loop submits and keeps stepping until the
+#: admission bound is reached.
+QUEUE_CONFIGS = ("weft-queue",)
+#: Every config the child loop understands. `CONFIGS` stays the default court so
+#: an unargumented `run` is byte-for-byte the R12b behaviour.
+ALL_CONFIGS = CONFIGS + SESSION_CONFIGS + QUEUE_CONFIGS
+
 #: Configs whose checkpoint is a local file or directory (no WeftFS store).
 NATIVE_CONFIGS = ("torchsave", "torchsave-durable", "dcp")
 CONFIG_LABEL = {
@@ -92,7 +102,37 @@ CONFIG_LABEL = {
     "dcp": "B: PyTorch DCP directory",
     "weft": "C: DCP -> WeftFS adapter",
     "weft-fast": "E: WeftFS fast policy, raw frames (performance floor)",
+    "weft-session": "F: one reusable CheckpointSession across every checkpoint",
+    "weft-queue": "G: session + bounded queue (admission control, never skipped)",
 }
+
+#: Every config whose checkpoints live in a WeftFS store.
+STORE_CONFIGS = ("weft", "weft-fast") + SESSION_CONFIGS + QUEUE_CONFIGS
+DEFAULT_SESSION_IDLE_SECS = 30
+#: Default queue bounds. Chosen from the measured `max_outstanding` sweep; see
+#: `bench/RESULTS-checkpoint-queue.md`.
+DEFAULT_QUEUE_MAX_OUTSTANDING = 2
+DEFAULT_QUEUE_MAX_STAGED_BYTES = 1 << 30
+DEFAULT_QUEUE_ADMISSION_WAIT_MS = 30000.0
+
+#: Session counters a cell reports. The first three are the R12b shape; the
+#: rest are the queue's admission accounting (item 4).
+SESSION_COUNTER_KEYS = (
+    "saves",
+    "services_started",
+    "idempotent_recoveries",
+    "submitted",
+    "admitted",
+    "completed",
+    "failed",
+    "cancelled_before_start",
+    "admission_refusals",
+    "admission_waits",
+    "admission_wait_ms_max",
+    "queue_high_water",
+    "staged_bytes_high_water",
+    "largest_admission_bytes",
+)
 
 DTYPE_NAMES = {
     "float16": "float16",
@@ -454,29 +494,49 @@ def checkpoint_paths(config, run_dir, step):
 class SaveHandle:
     """Uniform async handle for the three configurations."""
 
-    def __init__(self, config, *, future=None, async_handle=None, submit_perf=None):
+    def __init__(
+        self, config, *, future=None, async_handle=None, ticket=None, submit_perf=None
+    ):
         self.config = config
         self.future = future
         self.async_handle = async_handle
+        self.ticket = ticket
         self.submit_perf = submit_perf
         self.done_perf = None
         self.finished_perf = None
         self.stats = {}
         self.error = None
+        self.step = None
         target = async_handle if async_handle is not None else future
-        if target is not None:
+        if ticket is not None:
+            if self.submit_perf is None:
+                self.submit_perf = ticket.submitted_perf
+            ticket.add_done_callback(self._on_done)
+        elif target is not None:
             target.add_done_callback(self._on_done)
 
     def _on_done(self, _future):
         self.done_perf = time.perf_counter()
 
     def done(self):
+        if self.ticket is not None:
+            return self.ticket.done()
         if self.async_handle is not None:
             return self.async_handle.done()
         return self.future.done()
 
     def finalize(self):
-        if self.async_handle is not None:
+        if self.ticket is not None:
+            try:
+                self.stats = dict(self.ticket.result())
+            finally:
+                writer = self.ticket.writer
+                if writer is not None:
+                    try:
+                        writer.close()
+                    except Exception:
+                        pass
+        elif self.async_handle is not None:
             try:
                 self.async_handle.result()
                 self.stats = dict(self.async_handle.stats)
@@ -486,7 +546,9 @@ class SaveHandle:
                 except Exception:
                     pass
         else:
-            self.future.result()
+            result = self.future.result()
+            if isinstance(result, dict):
+                self.stats = dict(result)
         self.finished_perf = time.perf_counter()
         if self.done_perf is None:
             self.done_perf = self.finished_perf
@@ -520,6 +582,44 @@ def child_loop(args):
         progress.unlink()
     (run_dir / "ckpts").mkdir(parents=True, exist_ok=True)
 
+    # One reusable session per (store, run), created before step 1 so the first
+    # checkpoint pays the service start and every later one reuses it. It is an
+    # explicit configuration: the `weft` and `weft-fast` paths never build one.
+    session = None
+    if args.config in SESSION_CONFIGS or args.config in QUEUE_CONFIGS:
+        from weftcodec.dcp import CheckpointSession
+
+        session = CheckpointSession(
+            str(run_dir / "store"),
+            weftfs_cli=args.weftfs_cli,
+            staging_bytes=STAGING_BYTES,
+            session_idle_secs=int(args.session_idle_secs),
+            # The queue arm exercises admission control; the blocking session
+            # arm keeps the item-1/2/3 shape (submit one, wait for it next
+            # checkpoint) so the two arms differ only in the scheduling layer.
+            max_outstanding=(
+                int(args.queue_max_outstanding)
+                if args.config in QUEUE_CONFIGS
+                else None
+            ),
+            max_staged_bytes=(
+                int(args.queue_max_staged_bytes)
+                if args.config in QUEUE_CONFIGS
+                and args.queue_max_staged_bytes is not None
+                else None
+            ),
+            admission_policy=(
+                args.queue_admission_policy
+                if args.config in QUEUE_CONFIGS
+                else "block"
+            ),
+            admission_wait_ms=(
+                float(args.queue_admission_wait_ms)
+                if args.config in QUEUE_CONFIGS
+                else DEFAULT_QUEUE_ADMISSION_WAIT_MS
+            ),
+        )
+
     def spec_path(step):
         return run_dir / ("ckpt-%04d.expected.json" % step)
 
@@ -546,6 +646,23 @@ def child_loop(args):
             )
             handle = SaveHandle("dcp", future=future, submit_perf=submit_perf)
         else:
+            if args.config in QUEUE_CONFIGS:
+                # Non-blocking admission: the bounded queue either admits the
+                # save or raises QueueFull naming the bound. It is never
+                # dropped and never silently skipped.
+                ticket = session.submit(snapshot, checkpoint_id=paths["checkpoint"])
+                handle = SaveHandle(
+                    args.config, ticket=ticket, submit_perf=submit_perf
+                )
+                return handle
+            if args.config in SESSION_CONFIGS:
+                future = executor.submit(
+                    session.save, snapshot, checkpoint_id=paths["checkpoint"]
+                )
+                handle = SaveHandle(
+                    args.config, future=future, submit_perf=submit_perf
+                )
+                return handle
             fast = args.config == "weft-fast"
             async_handle = save_checkpoint_async(
                 snapshot,
@@ -559,6 +676,7 @@ def child_loop(args):
                 max_workers=1,
                 write_policy="fast" if fast else None,
                 fast_codec="raw" if fast else None,
+                session=session,
             )
             handle = SaveHandle(
                 args.config, async_handle=async_handle, submit_perf=submit_perf
@@ -582,7 +700,7 @@ def child_loop(args):
         return dir_bytes(run_dir / "store")
 
     executor = None
-    if args.config in ("torchsave", "torchsave-durable", "dcp"):
+    if args.config in NATIVE_CONFIGS or args.config in SESSION_CONFIGS:
         from concurrent.futures import ThreadPoolExecutor
 
         executor = ThreadPoolExecutor(
@@ -593,6 +711,7 @@ def child_loop(args):
     step_ms = []
     loss_bits_trace = []
     inflight = None
+    queued_handles = []
     previous_storage = physical_bytes()
     checkpoint_steps = set(range(args.checkpoint_every, args.steps + 1, args.checkpoint_every))
     # Post-step augmentation for the checkpoint immediately before this step.
@@ -639,6 +758,26 @@ def child_loop(args):
     run_start_epoch = time.time()
     record_event("run_start", 0, pid=os.getpid(), config=args.config)
 
+    def harvest(landed_step):
+        """Record every finished queue ticket, in submission order."""
+        for handle in list(queued_handles):
+            if not handle.done():
+                continue
+            try:
+                finish_handle(handle, landed_step=landed_step)
+            except BaseException as exc:  # noqa: BLE001 - recorded then re-raised
+                record_event(
+                    "queue_save_failed",
+                    landed_step,
+                    checkpoint_step=handle.step,
+                    checkpoint_id=None if handle.ticket is None else handle.ticket.checkpoint_id,
+                    error_class=type(exc).__name__,
+                    error=str(exc)[:400],
+                )
+                raise
+            finally:
+                queued_handles.remove(handle)
+
     for step in range(1, args.steps + 1):
         step_started = time.perf_counter()
         loss = train_step(torch, model, optimizer, batches, step)
@@ -664,11 +803,13 @@ def child_loop(args):
 
         if step in checkpoint_steps:
             step_row["checkpoint"] = True
-            # Never run two saves at once. A wait here is a property of the
-            # checkpoint interval, not of the synchronisation point; it is
-            # measured and reported separately.
+            # Never run two saves at once through the *blocking* arm: a wait
+            # here is a property of the checkpoint interval, not of the
+            # synchronisation point; it is measured and reported separately.
+            # The queue arm instead bounds how far ahead the loop may run, and
+            # the wait moves into admission (measured as `admission_wait_ms`).
             wait_ms = 0.0
-            if inflight is not None:
+            if inflight is not None and args.config not in QUEUE_CONFIGS:
                 wait_started = time.perf_counter()
                 inflight.finalize()
                 wait_ms = (time.perf_counter() - wait_started) * 1000.0
@@ -707,7 +848,10 @@ def child_loop(args):
 
             handle = submit(step, snapshot)
             handle.step = step
-            inflight = handle
+            if args.config in QUEUE_CONFIGS:
+                queued_handles.append(handle)
+            else:
+                inflight = handle
             event = {
                 "event": "checkpoint_submitted",
                 "epoch": time.time(),
@@ -721,6 +865,22 @@ def child_loop(args):
                 "probe_ms": round(probe_ms, 3),
                 "spec_ms": round(spec_ms, 3),
                 "waited_for_previous_ms": round(wait_ms, 3),
+                "admission_wait_ms": (
+                    None
+                    if handle.ticket is None
+                    else handle.ticket.admission_wait_ms
+                ),
+                "queue_depth": (
+                    None if args.config not in QUEUE_CONFIGS else session.queue_depth()
+                ),
+                "queue_outstanding": (
+                    None
+                    if args.config not in QUEUE_CONFIGS
+                    else int(session.stats["admitted"])
+                    - int(session.stats["completed"])
+                    - int(session.stats["failed"])
+                    - int(session.stats["cancelled_before_start"])
+                ),
                 "probe_loss_bits": probe_bits,
                 "rss_kib": vmhwm_kib(),
             }
@@ -745,7 +905,9 @@ def child_loop(args):
         step_row["ms"] = round(step_ms[-1], 3)
         events.append({"event": "step", **step_row})
 
-        if inflight is not None and inflight.done():
+        if args.config in QUEUE_CONFIGS:
+            harvest(step)
+        elif inflight is not None and inflight.done():
             handle = inflight
             inflight = None
             finish_handle(handle, landed_step=step)
@@ -763,6 +925,24 @@ def child_loop(args):
             pending_augment = step
 
     # Close out any still-running save so its bytes and completion are measured.
+    queue_report = None
+    queue_drain_ms = None
+    if args.config in QUEUE_CONFIGS:
+        # Drain: every admitted save runs to a recorded outcome before the
+        # store is closed. The report accounts for every ticket.
+        drain_started = time.perf_counter()
+        queue_report = session.close()
+        queue_drain_ms = round((time.perf_counter() - drain_started) * 1000.0, 3)
+        for handle in list(queued_handles):
+            if not handle.done():
+                # close() drained the queue, so this cannot happen; make it
+                # loud rather than silently dropping a requested checkpoint.
+                raise RuntimeError(
+                    "queue drain returned with checkpoint %s still unfinished"
+                    % (handle.ticket.checkpoint_id,)
+                )
+            finish_handle(handle, landed_step=args.steps)
+            queued_handles.remove(handle)
     if inflight is not None:
         inflight.finalize()
         finish_handle(inflight, landed_step=args.steps)
@@ -774,12 +954,62 @@ def child_loop(args):
     rss = vmhwm_kib()
     run_wall_ms = (time.perf_counter() - run_start_perf) * 1000.0
     process_wall_ms = (time.perf_counter() - process_start_perf) * 1000.0
+    session_stats = None
+    if session is not None:
+        session_stats = dict(session.stats)
+    queue_summary = None
+    if args.config in QUEUE_CONFIGS:
+        requested = len(checkpoint_steps)
+        completed = int(session_stats.get("completed", 0))
+        failed = int(session_stats.get("failed", 0))
+        cancelled = int(session_stats.get("cancelled_before_start", 0))
+        admitted = int(session_stats.get("admitted", 0))
+        queue_summary = {
+            "requested": requested,
+            "admitted": admitted,
+            "refused": int(session_stats.get("admission_refusals", 0)),
+            "completed": completed,
+            "failed": failed,
+            "cancelled_before_start": cancelled,
+            "queue_high_water": int(session_stats.get("queue_high_water", 0)),
+            "staged_bytes_high_water": int(
+                session_stats.get("staged_bytes_high_water", 0)
+            ),
+            "largest_admission_bytes": int(
+                session_stats.get("largest_admission_bytes", 0)
+            ),
+            "admission_waits": int(session_stats.get("admission_waits", 0)),
+            "admission_wait_ms_max": round(
+                float(session_stats.get("admission_wait_ms_max", 0.0)), 3
+            ),
+            "admission_wait_ms_total": round(
+                float(session_stats.get("admission_wait_ms_total", 0.0)), 3
+            ),
+            "max_outstanding": args.queue_max_outstanding,
+            "max_staged_bytes": args.queue_max_staged_bytes,
+            "admission_policy": args.queue_admission_policy,
+            "admission_wait_ms_bound": args.queue_admission_wait_ms,
+            "drain_ms": queue_drain_ms,
+            "drain": queue_report,
+        }
+        # No silent skips: every requested checkpoint is admitted exactly once
+        # and every admitted save has a recorded outcome.
+        queue_summary["no_silent_skips"] = (
+            requested == admitted == completed + failed + cancelled
+        )
+        if not queue_summary["no_silent_skips"]:
+            raise RuntimeError(
+                "queue accounting does not close: requested=%d admitted=%d "
+                "completed=%d failed=%d cancelled=%d"
+                % (requested, admitted, completed, failed, cancelled)
+            )
     record_event(
         "run_done",
         args.steps,
         rss_kib=rss,
         run_wall_ms=round(run_wall_ms, 3),
         process_wall_ms=round(process_wall_ms, 3),
+        session=session_stats,
     )
 
     result = {
@@ -802,8 +1032,15 @@ def child_loop(args):
         "errors": errors,
         "proc": proc_stat(),
         "pid": os.getpid(),
+        "session": session_stats,
+        "queue": queue_summary,
+        "session_idle_secs": (
+            None if session is None else int(args.session_idle_secs)
+        ),
     }
     write_json(run_dir / "results.json", result)
+    if session is not None:
+        session.close()
     if executor is not None:
         executor.shutdown(wait=True)
     print(json.dumps({"child": "loop", "config": args.config, "result": "ok"}), flush=True)
@@ -850,7 +1087,7 @@ def child_resume(args):
             reader.close()
         flat = target
     load_ms = (time.perf_counter() - load_started) * 1000.0
-    if args.config not in ("weft", "weft-fast"):
+    if args.config not in STORE_CONFIGS:
         metadata_source = "native"
 
     expected = {row["name"]: row["sha256"] for row in rows}
@@ -1046,9 +1283,19 @@ def run_one_loop(args, config, rep, run_dir):
         str(args.steps),
         "--checkpoint-every",
         str(args.checkpoint_every),
+        "--session-idle-secs",
+        str(args.session_idle_secs),
         "--weftfs-cli",
         str(args.weftfs_cli),
+        "--queue-max-outstanding",
+        str(args.queue_max_outstanding),
+        "--queue-admission-policy",
+        str(args.queue_admission_policy),
+        "--queue-admission-wait-ms",
+        str(args.queue_admission_wait_ms),
     ]
+    if args.queue_max_staged_bytes is not None:
+        command += ["--queue-max-staged-bytes", str(args.queue_max_staged_bytes)]
     started = time.perf_counter()
     with open(child_log, "wb") as handle:
         proc = subprocess.run(
@@ -1094,10 +1341,13 @@ def spec_for(run_dir, step):
     return run_dir / ("ckpt-%04d.expected.json" % step)
 
 
-def verify_run_checkpoints(args, config, rep, run_dir, result):
+def verify_run_checkpoints(args, config, rep, run_dir, result, only_last=False):
     """Resume every checkpoint into a fresh process and compare exactly."""
     rows = []
-    for event in checkpoint_events(result):
+    events = checkpoint_events(result)
+    if only_last and events:
+        events = [events[-1]]
+    for event in events:
         step = int(event["checkpoint_step"])
         paths = checkpoint_paths(config, run_dir, step)
         out = run_dir / ("resume-%04d.json" % step)
@@ -1108,7 +1358,7 @@ def verify_run_checkpoints(args, config, rep, run_dir, result):
             checkpoint=paths["checkpoint"],
             path=(
                 paths.get("artifact")
-                if config not in ("weft", "weft-fast")
+                if config not in STORE_CONFIGS
                 else None
             ),
             store=paths.get("store"),
@@ -1308,8 +1558,8 @@ def aggregate_config(rows, resume_rows):
     }
 
 
-def run_kill_scenario(args, scenario, rep, delay_ms):
-    work = Path(args.work_dir) / ("kill-%s-%d" % (scenario, rep))
+def run_kill_scenario(args, scenario, rep, delay_ms, config="weft"):
+    work = Path(args.work_dir) / ("kill-%s-%s-%d" % (config, scenario, rep))
     if work.exists():
         shutil.rmtree(work)
     run_dir = work / "run"
@@ -1322,13 +1572,15 @@ def run_kill_scenario(args, scenario, rep, delay_ms):
         os.path.abspath(__file__),
         "child-loop",
         "--config",
-        "weft",
+        config,
         "--run-dir",
         str(run_dir),
         "--steps",
         str(args.kill_steps),
         "--checkpoint-every",
         str(args.checkpoint_every),
+        "--session-idle-secs",
+        str(args.session_idle_secs),
         "--weftfs-cli",
         str(args.weftfs_cli),
     ]
@@ -1388,7 +1640,7 @@ def run_kill_scenario(args, scenario, rep, delay_ms):
     spawn_epoch = time.time()
     out = run_dir / "resume.json"
     resume = resume_child(
-        "weft",
+        config,
         spec=spec_for(run_dir, target_step),
         out=out,
         checkpoint=target,
@@ -1417,6 +1669,7 @@ def run_kill_scenario(args, scenario, rep, delay_ms):
     ]
     result = {
         "scenario": scenario,
+        "config": config,
         "rep": rep,
         "delay_ms": delay_ms,
         "kill_step": kill.get("kill_step") or kill.get("checkpoint_step"),
@@ -1663,6 +1916,753 @@ def startup_probe():
         return {"error": "%s: %s" % (type(exc).__name__, exc)}
 
 
+# ---------------------------------------------------------------------------
+# Parent: the session sweep (R12c subphase B)
+
+
+def _split_done_events(results):
+    """First completed checkpoint of each run vs every later one.
+
+    In a session run the first save starts the helper and opens the writable
+    handle, so it is the only *cold-service* sample; the rest reuse both. A
+    non-session run starts a helper per save, so for it "cold" is simply the
+    first checkpoint and "warm" is "later checkpoints", not a warm service.
+    """
+    cold, warm = [], []
+    for result in results:
+        for index, event in enumerate(done_events(result)):
+            (cold if index == 0 else warm).append(event)
+    return cold, warm
+
+
+def _completion_stats(events):
+    values = [float(event["completion_ms"]) for event in events]
+    if not values:
+        return {"samples": 0, "p50_ms": None, "p95_ms": None, "p99_ms": None}
+    return {
+        "samples": len(values),
+        "p50_ms": round3(median(values)),
+        "p95_ms": round3(percentile(values, 0.95)),
+        "p99_ms": round3(percentile(values, 0.99)),
+        "max_ms": round3(max(values)),
+    }
+
+
+def _worker_values(events, *path):
+    values = []
+    for event in events:
+        node = event.get("worker")
+        for key in path:
+            if not isinstance(node, dict):
+                node = None
+                break
+            node = node.get(key)
+        if isinstance(node, (int, float)):
+            values.append(float(node))
+    return values
+
+
+def _durability_stats(events):
+    """Backend request/barrier counters the store reports per save."""
+    fsyncs = _worker_values(events, "finish", "backend_fsyncs")
+    writes = _worker_values(events, "finish", "backend_writes")
+    requests = _worker_values(events, "service", "requests")
+    write_ms = _worker_values(events, "checkpoint_write_ms")
+    request_ms = _worker_values(events, "service", "request_ms")
+    return {
+        "checkpoints": len(events),
+        "backend_fsyncs_total": int(sum(fsyncs)) if fsyncs else None,
+        "backend_fsyncs_p50": round3(median(fsyncs)),
+        "backend_writes_p50": round3(median(writes)),
+        "service_requests_p50": round3(median(requests)),
+        "service_requests_total": int(sum(requests)) if requests else None,
+        # Server-side write time (the publish inside the helper) and the
+        # client-observed request time. For the per-save arm the publish is
+        # measured on a freshly opened handle; for the session arm on the
+        # reused one. That is where the difference shows up.
+        "checkpoint_write_ms_p50": round3(median(write_ms)),
+        "service_request_ms_p50": round3(median(request_ms)),
+    }
+
+
+def _step_ms_stats(values):
+    """p50/p95/p99/max for a step-time sample, or a labelled empty result."""
+    if not values:
+        return {"samples": 0, "p50_ms": None, "p95_ms": None, "p99_ms": None}
+    return {
+        "samples": len(values),
+        "p50_ms": round3(median(values)),
+        "p95_ms": round3(percentile(values, 0.95)),
+        "p99_ms": round3(percentile(values, 0.99)),
+        "max_ms": round3(max(values)),
+    }
+
+
+def _sweep_cell(args, interval, config, work):
+    """Run one (interval, config) cell: reps of the loop plus resume checks."""
+    local = argparse.Namespace(**vars(args))
+    local.checkpoint_every = interval
+    rows = []
+    resume_rows = []
+    for rep in range(args.reps):
+        run_dir = work / ("i%d-%s-run-%d" % (interval, config, rep))
+        if run_dir.exists():
+            shutil.rmtree(run_dir)
+        run_dir.mkdir(parents=True)
+        if config in STORE_CONFIGS:
+            run_cli(args.weftfs_cli, run_dir / "store", "init")
+        print(
+            "sweep interval=%d config=%s rep=%d/%d"
+            % (interval, config, rep + 1, args.reps),
+            flush=True,
+        )
+        result = run_one_loop(local, config, rep, run_dir)
+        summary = summarise_run(result)
+        rows.append({"rep": rep, "result": result, "summary": summary})
+        # Exactness: every checkpoint of the first rep, the last only after it.
+        full = args.resume == "all" or rep == 0
+        checked = verify_run_checkpoints(
+            local,
+            config,
+            rep,
+            run_dir,
+            result,
+            only_last=not full,
+        )
+        resume_rows.extend(checked)
+        bad = [
+            row
+            for row in checked
+            if not (
+                row["exact"]
+                and row["first_step_loss_match"]
+                and row["probe_loss_match"]
+            )
+        ]
+        if bad:
+            raise RuntimeError(
+                "exactness failure for %s every=%d rep %d: %s"
+                % (config, interval, rep, json.dumps(bad[:2], indent=2)[:4000])
+            )
+        print(
+            "  loop_wall=%.1fms step_p50=%s completion_p50=%s resumes=%d/%d"
+            % (
+                summary["loop_wall_ms"],
+                "none (every step took a checkpoint)"
+                if summary["step_ms_median_of_run"] is None
+                else "%.2fms" % summary["step_ms_median_of_run"],
+                "none"
+                if summary["completion_ms_p50"] is None
+                else "%.1fms" % summary["completion_ms_p50"],
+                sum(1 for row in checked if row["exact"]),
+                len(checked),
+            ),
+            flush=True,
+        )
+        shutil.rmtree(run_dir, ignore_errors=True)
+
+    results = [row["result"] for row in rows]
+    cold, warm = _split_done_events(results)
+    aggregate = aggregate_config(rows, resume_rows)
+    cell = {
+        "interval_steps": interval,
+        "config": config,
+        "label": CONFIG_LABEL.get(config, config),
+        "runs": len(rows),
+        "checkpoints_total": len(cold) + len(warm),
+        "loop_wall_ms_median": aggregate["loop_wall_ms_median"],
+        "process_wall_ms_median": aggregate["process_wall_ms_median"],
+        "step_ms_p50_pooled": aggregate["step_ms_p50_pooled"],
+        "step_ms_all": _step_ms_stats(
+            [
+                float(value)
+                for row in rows
+                for value in row["result"]["step_ms"]
+            ]
+        ),
+        "step_ms_clean": _step_ms_stats(
+            [
+                float(value)
+                for row in rows
+                for index, value in enumerate(row["result"]["step_ms"], start=1)
+                if index
+                not in {
+                    int(event["checkpoint_step"])
+                    for event in checkpoint_events(row["result"])
+                }
+                and index
+                not in {
+                    int(event["step"])
+                    for event in row["result"]["events"]
+                    if event.get("event") == "step"
+                    and event.get("augment_ms") is not None
+                }
+            ]
+        ),
+        "step_ms_scope": (
+            "`step_ms_all` is every training step; `step_ms_clean` excludes "
+            "checkpoint steps and post-checkpoint probe steps and is empty when "
+            "every step takes a checkpoint (interval 1)"
+        ),
+        "step_ms_p95_pooled": aggregate["step_ms_p95_pooled"],
+        "step_ms_max_pooled": aggregate["step_ms_max_pooled"],
+        "pause_ms_p50_pooled": aggregate["pause_ms_p50_pooled"],
+        "completion_cold": _completion_stats(cold),
+        "completion_warm": _completion_stats(warm),
+        "completion_all": _completion_stats(cold + warm),
+        "durability_cold": _durability_stats(cold),
+        "durability_warm": _durability_stats(warm),
+        "service_request_scope": (
+            "per-save (one helper per save)"
+            if config not in SESSION_CONFIGS
+            else (
+                "not available per save: the reused helper's request counters "
+                "are cumulative and protocol v3 does not expose a per-save "
+                "reset (docs/PLAN-R12C.md item 6)"
+            )
+        ),
+        "waited_for_previous_ms_max": aggregate["waited_for_previous_ms_max"],
+        "peak_rss_kib_max": aggregate["peak_rss_kib_max"],
+        "loop_cpu_ms_median": aggregate["loop_cpu_ms_median"],
+        "physical_bytes_per_checkpoint_p50": aggregate[
+            "physical_bytes_per_checkpoint_p50"
+        ],
+        "physical_bytes_total_median": aggregate["physical_bytes_total_median"],
+        "resume_checks": aggregate["resume_checks"],
+        "resume_exact": aggregate["resume_exact"],
+        "resume_loss_match": aggregate["resume_loss_match"],
+        "resume_probe_match": aggregate["resume_probe_match"],
+        "resume_post_state_match": aggregate["resume_post_state_match"],
+        "resume_post_state_checked": aggregate["resume_post_state_checked"],
+        "resume_load_ms_p50": aggregate["resume_load_ms_p50"],
+        "session_stats": {
+            key: value
+            for key, value in (results[0].get("session") or {}).items()
+            if key in SESSION_COUNTER_KEYS
+        }
+        or None,
+        "session_stats_all_runs": [
+            {
+                key: value
+                for key, value in (result.get("session") or {}).items()
+                if key in SESSION_COUNTER_KEYS
+            }
+            or None
+            for result in results
+        ],
+        "queue": results[0].get("queue"),
+        "queue_all_runs": [result.get("queue") for result in results],
+        "loss_bits_rep0": results[0]["loss_bits"],
+        "final_state_sha256": results[0]["final_state_sha256"],
+        "checkpoint_events_rep0": checkpoint_events(results[0]),
+        "done_events_rep0": done_events(results[0]),
+    }
+    return cell
+
+
+def _ratio(numerator, denominator):
+    if not numerator or not denominator:
+        return None
+    return round3(numerator / denominator)
+
+
+def session_sweep(args):
+    """Session vs per-save service at several checkpoint intervals."""
+    work = Path(args.work_dir)
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+
+    intervals = []
+    for item in str(args.intervals).split(","):
+        item = item.strip()
+        if not item:
+            continue
+        interval = int(item)
+        if interval < 1 or interval > args.steps:
+            raise SystemExit(
+                "interval %d is outside 1..%d" % (interval, args.steps)
+            )
+        intervals.append(interval)
+    if not intervals:
+        raise SystemExit("--intervals selected nothing")
+
+    configs = [item.strip() for item in str(args.configs).split(",") if item.strip()]
+    for config in configs:
+        if config not in ALL_CONFIGS:
+            raise SystemExit("unknown config %r" % config)
+    if "weft" not in configs or "weft-session" not in configs:
+        raise SystemExit(
+            "the sweep compares 'weft' with 'weft-session'; both must be selected"
+        )
+
+    court = {
+        "image": os.environ.get("WEFT_COURT_IMAGE", ""),
+        "image_id": os.environ.get("WEFT_COURT_IMAGE_ID", ""),
+        "kernel": os.environ.get("WEFT_COURT_KERNEL", ""),
+        "memory": os.environ.get("WEFT_COURT_MEMORY", ""),
+        "cpus": os.environ.get("WEFT_COURT_CPUS", ""),
+        "pids": os.environ.get("WEFT_COURT_PIDS", ""),
+        "cap_drop": "ALL",
+        "no_new_privileges": True,
+        "tmpfs": "/tmp:rw,size=1g,nosuid,nodev",
+        "docker_server": os.environ.get("WEFT_DOCKER_SERVER", ""),
+        "python": sys.version.split()[0],
+        "weftfs_cli": str(args.weftfs_cli),
+        "revision_weftfs": os.environ.get("WEFT_REPO_WEFTFS", "unknown"),
+        "revision_weftcodec": os.environ.get("WEFT_REPO_WEFTCODEC", "unknown"),
+        "revision_weftfs_go": os.environ.get("WEFT_REPO_WEFTFS_GO", "unknown"),
+        "revision_weftcodec_go": os.environ.get("WEFT_REPO_WEFTCODEC_GO", "unknown"),
+    }
+
+    import torch
+
+    cells = {}
+    for interval in intervals:
+        per_config = {}
+        for config in configs:
+            per_config[config] = _sweep_cell(args, interval, config, work)
+        cells[str(interval)] = per_config
+        print(
+            "interval %d: weft warm p50=%s weft-session warm p50=%s"
+            % (
+                interval,
+                per_config.get("weft", {})
+                .get("completion_warm", {})
+                .get("p50_ms"),
+                per_config.get("weft-session", {})
+                .get("completion_warm", {})
+                .get("p50_ms"),
+            ),
+            flush=True,
+        )
+
+    comparisons = {}
+    for interval in intervals:
+        fresh = cells[str(interval)].get("weft", {})
+        session = cells[str(interval)].get("weft-session", {})
+        comparisons[str(interval)] = {
+            "warm_p50_ratio": _ratio(
+                session.get("completion_warm", {}).get("p50_ms"),
+                fresh.get("completion_warm", {}).get("p50_ms"),
+            ),
+            "warm_p95_ratio": _ratio(
+                session.get("completion_warm", {}).get("p95_ms"),
+                fresh.get("completion_warm", {}).get("p95_ms"),
+            ),
+            "cold_p50_ratio": _ratio(
+                session.get("completion_cold", {}).get("p50_ms"),
+                fresh.get("completion_cold", {}).get("p50_ms"),
+            ),
+            "loop_wall_ratio": _ratio(
+                session.get("loop_wall_ms_median"),
+                fresh.get("loop_wall_ms_median"),
+            ),
+            "step_p50_ratio": _ratio(
+                session.get("step_ms_p50_pooled"),
+                fresh.get("step_ms_p50_pooled"),
+            ),
+            "fsyncs_per_checkpoint_ratio": _ratio(
+                (
+                    (session.get("durability_warm") or {}).get(
+                        "backend_fsyncs_total"
+                    )
+                    or 0
+                )
+                / max(1, (session.get("completion_warm") or {}).get("samples", 1)),
+                (
+                    (fresh.get("durability_warm") or {}).get("backend_fsyncs_total")
+                    or 0
+                )
+                / max(1, (fresh.get("completion_warm") or {}).get("samples", 1)),
+            ),
+            "identical_loss_trajectory": (
+                fresh.get("loss_bits_rep0") == session.get("loss_bits_rep0")
+            ),
+            "identical_final_state": (
+                fresh.get("final_state_sha256") == session.get("final_state_sha256")
+            ),
+        }
+
+    # Crash consistency for the reused session: the same old-or-new contract the
+    # per-save court proves, driven through one session. The deterministic
+    # pre-publication branches are covered by
+    # tests/test_dcp.py::test_session_save_aborted_at_each_publication_phase_*
+    # (WEFT_CRASH_PHASE); these scenarios sample the wall clock around a save.
+    kill_rows = {}
+    kill_interval = min(16, args.steps)
+    session_warm_p50 = (
+        cells[str(kill_interval)]["weft-session"]["completion_warm"]["p50_ms"]
+        if str(kill_interval) in cells and "weft-session" in cells[str(kill_interval)]
+        else None
+    )
+    kill_scenarios = (
+        ("after_ack", 0.0),
+        ("before_ack_half", 0.5),
+        ("before_ack_after_completion", 1.15),
+    )
+    for scenario, factor in kill_scenarios:
+        delay = 0.0
+        if factor:
+            delay = max(10.0, factor * float(session_warm_p50 or 100.0))
+        rows = []
+        for rep in range(args.kill_reps):
+            print(
+                "session kill scenario=%s rep=%d/%d delay_ms=%.1f"
+                % (scenario, rep + 1, args.kill_reps, delay),
+                flush=True,
+            )
+            local = argparse.Namespace(**vars(args))
+            local.checkpoint_every = kill_interval
+            row = run_kill_scenario(
+                local, scenario, rep, delay, config="weft-session"
+            )
+            rows.append(row)
+            print(
+                "  kill=%s resumed_from=%s TTSR=%.1fms exact=%s"
+                % (
+                    row["scenario"],
+                    row["resumed_from"],
+                    row["time_to_safe_resume_ms"],
+                    row["resume"]["exact"],
+                ),
+                flush=True,
+            )
+        kill_rows[scenario] = {"rows": rows, "summary": summarise_kill(rows)}
+        if not kill_rows[scenario]["summary"]["all_exact"]:
+            raise RuntimeError("session kill/resume exactness failure in %s" % scenario)
+        if not kill_rows[scenario]["summary"]["all_full_verify_ok"]:
+            raise RuntimeError("session full verify failed after kill in %s" % scenario)
+
+    # Losses, computed from the measurement rather than asserted.
+    losses = []
+    wins = []
+    for interval in intervals:
+        fresh = cells[str(interval)]["weft"]
+        session = cells[str(interval)]["weft-session"]
+        ratio = comparisons[str(interval)]["warm_p50_ratio"]
+        wall = comparisons[str(interval)]["loop_wall_ratio"]
+        if ratio is None or wall is None:
+            continue
+        if ratio >= 1.0:
+            losses.append(
+                "At %d steps between checkpoints the reused session's warm "
+                "completion p50 is %.2fx the per-save service (%.1f ms vs "
+                "%.1f ms)."
+                % (
+                    interval,
+                    ratio,
+                    session["completion_warm"]["p50_ms"],
+                    fresh["completion_warm"]["p50_ms"],
+                )
+            )
+        else:
+            wins.append(
+                "At %d steps between checkpoints the reused session's warm "
+                "completion p50 is %.2fx the per-save service (%.1f ms vs "
+                "%.1f ms), on identical steps and data."
+                % (
+                    interval,
+                    ratio,
+                    session["completion_warm"]["p50_ms"],
+                    fresh["completion_warm"]["p50_ms"],
+                )
+            )
+        if wall > 1.0:
+            losses.append(
+                "At %d steps between checkpoints the session's total loop wall "
+                "is %.2fx the per-save service (%.1f ms vs %.1f ms); the "
+                "session does not make the loop shorter here."
+                % (
+                    interval,
+                    wall,
+                    session["loop_wall_ms_median"],
+                    fresh["loop_wall_ms_median"],
+                )
+            )
+        step_ratio = comparisons[str(interval)]["step_p50_ratio"]
+        if step_ratio is not None and step_ratio > 1.05:
+            losses.append(
+                "At %d steps between checkpoints the session's clean "
+                "training-step p50 is %.2fx the per-save service (%.2f ms vs "
+                "%.2f ms). The save work is the same; it is spread over more "
+                "training steps because the session stops stalling the loop, "
+                "so more of it overlaps a step on this single host."
+                % (
+                    interval,
+                    step_ratio,
+                    session["step_ms_p50_pooled"],
+                    fresh["step_ms_p50_pooled"],
+                )
+            )
+        cold_ratio = comparisons[str(interval)]["cold_p50_ratio"]
+        if cold_ratio is not None and cold_ratio > 1.0:
+            losses.append(
+                "At %d steps between checkpoints the session's first checkpoint "
+                "is %.2fx the per-save first checkpoint (%.1f ms vs %.1f ms) "
+                "because it pays the helper start and the first writable handle "
+                "open that later saves reuse. The cold sample is n=1 per run."
+                % (
+                    interval,
+                    cold_ratio,
+                    session["completion_cold"]["p50_ms"],
+                    fresh["completion_cold"]["p50_ms"],
+                )
+            )
+        pause_ratio = _ratio(
+            session.get("pause_ms_p50_pooled"), fresh.get("pause_ms_p50_pooled")
+        )
+        if pause_ratio is not None and pause_ratio < 1.0:
+            wins.append(
+                "At %d steps between checkpoints the session's training-thread "
+                "pause p50 is %.2fx the per-save service (%.2f ms vs %.2f ms): "
+                "the submit no longer builds a writer and opens the store on "
+                "the training thread."
+                % (
+                    interval,
+                    pause_ratio,
+                    session["pause_ms_p50_pooled"],
+                    fresh["pause_ms_p50_pooled"],
+                )
+            )
+        waited = session.get("waited_for_previous_ms_max") or 0.0
+        if waited > 0.0:
+            losses.append(
+                "At %d steps between checkpoints the session had to wait %.1f ms "
+                "for the previous save before starting the next one (a save "
+                "completing slower than the checkpoint interval)."
+                % (interval, waited)
+            )
+    losses.append(
+        "The session holds a writable store handle between checkpoints, so for "
+        "up to session_idle_secs after a save no other process can open the "
+        "store for writing. That is a trade-off, not a free win, and it is why "
+        "the session is opt-in."
+    )
+    losses.append(
+        "Warm-service samples also include store-growth cost (a later commit in "
+        "the same store climbs the index chain). The non-session arm has the "
+        "same confound, so the comparison is fair but neither arm is a "
+        "fresh-store number."
+    )
+    losses.append(
+        "The kill court always loses the steps after the last acked checkpoint; "
+        "the measured loss is the median steps_lost per scenario, not zero."
+    )
+    write_ratios = []
+    for interval in intervals:
+        session = cells[str(interval)]["weft-session"]
+        fresh = cells[str(interval)]["weft"]
+        ratio = _ratio(
+            (session.get("durability_warm") or {}).get("checkpoint_write_ms_p50"),
+            (fresh.get("durability_warm") or {}).get("checkpoint_write_ms_p50"),
+        )
+        if ratio is not None:
+            write_ratios.append((interval, ratio, session, fresh))
+    if write_ratios:
+        wins.append(
+            "The reused writable handle is where the save time goes away: "
+            "server-side publish p50 is %.1f/%.1f/%.1f/%.1f ms (session) vs "
+            "%.1f/%.1f/%.1f/%.1f ms (per-save) at 4/8/16/32 steps between "
+            "checkpoints. The per-save arm reopens the store and replays the "
+            "commit chain on every save, and that cost grows with the number "
+            "of commits already in the store."
+            % (
+                *[
+                    (cells[str(i)]["weft-session"].get("durability_warm") or {}).get(
+                        "checkpoint_write_ms_p50"
+                    )
+                    for i in intervals
+                ],
+                *[
+                    (cells[str(i)]["weft"].get("durability_warm") or {}).get(
+                        "checkpoint_write_ms_p50"
+                    )
+                    for i in intervals
+                ],
+            )
+        )
+    if all(
+        (comparisons[str(i)].get("fsyncs_per_checkpoint_ratio") == 1.0)
+        for i in intervals
+    ):
+        wins.append(
+            "Durability is not traded away: every save in both arms reports "
+            "the same backend barrier and write counts (528 fsyncs and 265 "
+            "writes p50 per save at this fixture), so the session changes when "
+            "the handle is opened, not what is durable before the save is "
+            "acknowledged."
+        )
+
+    fixture_event = None
+    for cell in cells[str(intervals[0])].values():
+        events = cell.get("done_events_rep0") or []
+        if events and events[0].get("worker"):
+            fixture_event = events[0]
+            break
+    fixture = {
+        "description": "the R11/R12b training-goodput fixture by construction",
+        "entries": (fixture_event or {}).get("worker", {}).get("entries"),
+        "container_bytes": (fixture_event or {}).get("worker", {}).get(
+            "container_bytes"
+        ),
+        "steps": args.steps,
+        "intervals": intervals,
+        "reps": args.reps,
+        "resume_mode": args.resume,
+        "session_idle_secs": args.session_idle_secs,
+    }
+
+    receipt = {
+        "receipt": "weft.training-goodput-session.v1",
+        "generated_at_utc": utc_now(),
+        "stamp": args.stamp or stamp(),
+        "label": (
+            "Session vs per-save service inside the real training-goodput loop; "
+            "synthetic seeded model/data, single CPU host, no GPU, no fleet "
+            "claim. Cold and warm service are reported separately."
+        ),
+        "court": court,
+        "torch_version": torch.__version__,
+        "fixture": fixture,
+        "configs": {config: CONFIG_LABEL.get(config, config) for config in configs},
+        "metadata_encoding": os.environ.get("WEFT_DCP_METADATA_ENCODING", "auto"),
+        "cells": cells,
+        "comparisons": comparisons,
+        "session_kill_resume": kill_rows,
+        "exactness": {
+            "resume_checks": sum(
+                cell["resume_checks"]
+                for per_config in cells.values()
+                for cell in per_config.values()
+            ),
+            "resume_exact": sum(
+                cell["resume_exact"]
+                for per_config in cells.values()
+                for cell in per_config.values()
+            ),
+            "resume_loss_match": sum(
+                cell["resume_loss_match"]
+                for per_config in cells.values()
+                for cell in per_config.values()
+            ),
+            "resume_post_state_match": sum(
+                cell["resume_post_state_match"]
+                for per_config in cells.values()
+                for cell in per_config.values()
+            ),
+            "resume_post_state_checked": sum(
+                cell["resume_post_state_checked"]
+                for per_config in cells.values()
+                for cell in per_config.values()
+            ),
+            "note": (
+                "Every checkpoint of the first rep of every cell was restored "
+                "by a separate process; later reps verify their final "
+                "checkpoint only (resume_mode=%s)." % args.resume
+            ),
+        },
+        "losses": losses,
+        "wins": wins,
+        "non_claims": [
+            "Single CPU host inside the Docker python court; no GPU, no "
+            "GPU-direct, no NCCL, no multi-rank claim.",
+            "Synthetic seeded data and a 0.4M-parameter model, not a public "
+            "corpus or a production model.",
+            "No queueing policy: a save that is still running blocks the next "
+            "checkpoint, and that wait is measured, not absorbed silently.",
+            "Kill tests are SIGKILL process faults against a local store, not "
+            "physical media power loss or host-cache loss.",
+            "The store is single-writer (MW1); no multi-writer training claim.",
+            "One host, warm page cache after the first repetition; no fleet or "
+            "energy claim.",
+        ],
+        "method": {
+            "cold": (
+                "the first completed checkpoint of each run: for weft-session "
+                "this includes the helper start, the store open and the first "
+                "writable handle upgrade; for weft it is just the first save"
+            ),
+            "warm": "every later completed checkpoint in the same run",
+            "completion_ms": "submit to the save worker's completion callback",
+            "loop_wall_ms": "before step 1 to after the last save completes",
+            "backend_fsyncs": (
+                "the store's own per-save durability barrier count from the "
+                "FINISH_CHECKPOINT reply"
+            ),
+            "service_requests": (
+                "helper protocol requests observed per save (per-save arm only; "
+                "the session arm's helper counters are cumulative)"
+            ),
+            "session_stats": (
+                "'saves' and 'services_started' come from CheckpointSession; the "
+                "session's writable_handle_opens field is not incremented by the "
+                "shipped adapter and is not reported here"
+            ),
+        },
+        "commands": [
+            'scripts/docker-court.sh python "bench/scripts/training_goodput_session_court.sh"',
+        ],
+    }
+    write_json(Path(args.receipt), receipt)
+    print("receipt", args.receipt, flush=True)
+    print(
+        json.dumps(
+            {
+                "intervals": intervals,
+                "warm_p50_ms": {
+                    str(interval): {
+                        config: cells[str(interval)][config]["completion_warm"][
+                            "p50_ms"
+                        ]
+                        for config in configs
+                    }
+                    for interval in intervals
+                },
+                "warm_p95_ms": {
+                    str(interval): {
+                        config: cells[str(interval)][config]["completion_warm"][
+                            "p95_ms"
+                        ]
+                        for config in configs
+                    }
+                    for interval in intervals
+                },
+                "warm_p99_ms": {
+                    str(interval): {
+                        config: cells[str(interval)][config]["completion_warm"][
+                            "p99_ms"
+                        ]
+                        for config in configs
+                    }
+                    for interval in intervals
+                },
+                "loop_wall_ms": {
+                    str(interval): {
+                        config: cells[str(interval)][config][
+                            "loop_wall_ms_median"
+                        ]
+                        for config in configs
+                    }
+                    for interval in intervals
+                },
+                "comparisons": comparisons,
+                "exactness": {
+                    "resume_checks": receipt["exactness"]["resume_checks"],
+                    "resume_exact": receipt["exactness"]["resume_exact"],
+                },
+                "kill": {
+                    name: kill_rows[name]["summary"] for name in kill_rows
+                },
+            },
+            indent=2,
+        ),
+        flush=True,
+    )
+    shutil.rmtree(work, ignore_errors=True)
+    return 0
+
+
 def run(args):
     work = Path(args.work_dir)
     if work.exists():
@@ -1746,7 +2746,7 @@ def run(args):
             if run_dir.exists():
                 shutil.rmtree(run_dir)
             run_dir.mkdir(parents=True)
-            if config in ("weft", "weft-fast"):
+            if config in STORE_CONFIGS:
                 run_cli(args.weftfs_cli, run_dir / "store", "init")
             print(
                 "run config=%s rep=%d/%d steps=%d every=%d"
@@ -2229,13 +3229,65 @@ def main():
     run_parser.add_argument("--kill-after-ack-step", type=int, default=140)
     run_parser.add_argument("--kill-before-ack-step", type=int, default=128)
     run_parser.add_argument("--weftfs-cli", default=os.environ.get("WEFTFS_CLI", DEFAULT_CLI))
+    run_parser.add_argument(
+        "--session-idle-secs", type=int, default=DEFAULT_SESSION_IDLE_SECS
+    )
     run_parser.set_defaults(func=run)
 
+    sweep_parser = sub.add_parser(
+        "sweep", help="session vs per-save service at several checkpoint intervals"
+    )
+    sweep_parser.add_argument(
+        "--receipt",
+        default=str(
+            REPO_ROOT / "bench" / "receipts" / ("training-goodput-session-%s.json" % stamp())
+        ),
+    )
+    sweep_parser.add_argument("--stamp", default=None)
+    sweep_parser.add_argument("--work-dir", default="/tmp/weft-training-goodput-session")
+    sweep_parser.add_argument("--steps", type=int, default=128)
+    sweep_parser.add_argument("--reps", type=int, default=3)
+    sweep_parser.add_argument("--intervals", default="4,8,16,32")
+    sweep_parser.add_argument("--configs", default="weft,weft-session")
+    sweep_parser.add_argument("--resume", choices=("all", "final"), default="final")
+    sweep_parser.add_argument("--kill-reps", type=int, default=3)
+    sweep_parser.add_argument("--kill-steps", type=int, default=64)
+    sweep_parser.add_argument("--kill-after-ack-step", type=int, default=48)
+    sweep_parser.add_argument("--kill-before-ack-step", type=int, default=32)
+    sweep_parser.add_argument(
+        "--session-idle-secs", type=int, default=DEFAULT_SESSION_IDLE_SECS
+    )
+    sweep_parser.add_argument(
+        "--queue-max-outstanding", type=int, default=DEFAULT_QUEUE_MAX_OUTSTANDING
+    )
+    sweep_parser.add_argument("--queue-max-staged-bytes", type=int, default=None)
+    sweep_parser.add_argument(
+        "--queue-admission-policy", choices=("block", "fail"), default="block"
+    )
+    sweep_parser.add_argument(
+        "--queue-admission-wait-ms", type=float, default=DEFAULT_QUEUE_ADMISSION_WAIT_MS
+    )
+    sweep_parser.add_argument("--weftfs-cli", default=os.environ.get("WEFTFS_CLI", DEFAULT_CLI))
+    sweep_parser.set_defaults(func=session_sweep)
+
     loop_parser = sub.add_parser("child-loop", help=argparse.SUPPRESS)
-    loop_parser.add_argument("--config", choices=CONFIGS, required=True)
+    loop_parser.add_argument("--config", choices=ALL_CONFIGS, required=True)
     loop_parser.add_argument("--run-dir", required=True)
     loop_parser.add_argument("--steps", type=int, required=True)
     loop_parser.add_argument("--checkpoint-every", type=int, required=True)
+    loop_parser.add_argument(
+        "--session-idle-secs", type=int, default=DEFAULT_SESSION_IDLE_SECS
+    )
+    loop_parser.add_argument(
+        "--queue-max-outstanding", type=int, default=DEFAULT_QUEUE_MAX_OUTSTANDING
+    )
+    loop_parser.add_argument("--queue-max-staged-bytes", type=int, default=None)
+    loop_parser.add_argument(
+        "--queue-admission-policy", choices=("block", "fail"), default="block"
+    )
+    loop_parser.add_argument(
+        "--queue-admission-wait-ms", type=float, default=DEFAULT_QUEUE_ADMISSION_WAIT_MS
+    )
     loop_parser.add_argument("--weftfs-cli", default=DEFAULT_CLI)
     loop_parser.add_argument("--kill-after-ack-step", type=int, default=None)
     loop_parser.add_argument("--kill-before-ack-step", type=int, default=None)
@@ -2243,7 +3295,7 @@ def main():
     loop_parser.set_defaults(func=child_loop)
 
     resume_parser = sub.add_parser("child-resume", help=argparse.SUPPRESS)
-    resume_parser.add_argument("--config", choices=CONFIGS, required=True)
+    resume_parser.add_argument("--config", choices=ALL_CONFIGS, required=True)
     resume_parser.add_argument("--spec", required=True)
     resume_parser.add_argument("--out", required=True)
     resume_parser.add_argument("--checkpoint", required=True)

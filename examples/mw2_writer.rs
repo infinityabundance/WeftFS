@@ -1,10 +1,14 @@
 //! MW2 multi-writer court driver (subphase R4).
 //!
 //! Modes:
-//!   init   --store DIR [--fixed-timestamp-ns N]
+//!   init   --store DIR [--backend local|object|s3|azure] [--fixed-timestamp-ns N]
 //!   parity --store DIR --name NAME --content TEXT --seed SEED [--fixed-timestamp-ns N]
 //!   write  --store DIR --writer ID --count N --prefix P [--hot F] [--fixed-timestamp-ns N]
 //!   read   --store DIR --name NAME
+//!   verify --store DIR [--full]           full store verify, not a named-file check
+//!   head   --store DIR                    published head and superblock digest
+//!   stat   --store DIR --name NAME        presence and digest of one named file
+//!   hold   --store DIR --info FILE --marker FILE   stale-writer probe (Azure)
 //!
 //! `parity` prints one JSON object. `write` prints one JSON summary. No mode
 //! inspects a private field to declare success: every success is a completed
@@ -14,6 +18,9 @@ use std::collections::BTreeMap;
 use std::io::Write;
 use std::time::Instant;
 
+use sha2::{Digest, Sha256};
+
+use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, StorageBackend};
 use weftfs::identity::{self, Hash32};
 use weftfs::mw2::{TransactionOptions, WriterMode};
 use weftfs::state::{
@@ -38,52 +45,106 @@ fn backend(args: &[String]) -> String {
     arg(args, "--backend").unwrap_or_else(|| "local".to_owned())
 }
 
-fn open_driver(
-    path: &str,
-    mode: weftfs::OpenMode,
-    writer_mode: WriterMode,
-    now: i64,
-    backend: &str,
-) -> Store {
-    let opts = options(writer_mode, now);
-    match backend {
-        "s3" => {
-            let config = weftfs::s3::S3Config::from_env().expect("S3 config from environment");
-            Store::open_with_options_and_backend(
-                path,
-                mode,
-                opts,
-                weftfs::backend::BackendKind::S3 { config },
-            )
-            .expect("open s3 optimistic")
-        }
-        "object" => Store::open_with_options_and_backend(
-            path,
-            mode,
-            opts,
-            weftfs::backend::BackendKind::Object,
-        )
-        .expect("open object"),
-        _ => Store::open_with_options(path, mode, opts).expect("open local"),
+fn azure_container(args: &[String]) -> String {
+    arg(args, "--container")
+        .or_else(|| std::env::var("WEFT_AZURE_TEST_CONTAINER").ok())
+        .unwrap_or_default()
+}
+
+fn azure_config(args: &[String]) -> weftfs::azure::AzureConfig {
+    let key = std::env::var("WEFT_AZURE_KEY").unwrap_or_default();
+    weftfs::azure::AzureConfig {
+        endpoint: std::env::var("WEFT_AZURE_TEST_ENDPOINT").unwrap_or_default(),
+        container: azure_container(args),
+        account: std::env::var("WEFT_AZURE_ACCOUNT").unwrap_or_default(),
+        key: if key.is_empty() {
+            None
+        } else {
+            Some(key.clone())
+        },
+        sas_token: None,
+        anonymous: key.is_empty(),
+        lock_lease: std::time::Duration::from_secs(60),
+        request_timeout: std::time::Duration::from_secs(60),
     }
 }
 
-fn init_driver(path: &str, now: i64, backend: &str) {
-    let opts = options(WriterMode::Single, now);
-    match backend {
+fn backend_kind(args: &[String], name: &str) -> BackendKind {
+    match name {
         "s3" => {
             let config = weftfs::s3::S3Config::from_env().expect("S3 config from environment");
-            Store::init_with_backend(path, opts, weftfs::backend::BackendKind::S3 { config })
-                .expect("init s3");
+            BackendKind::S3 { config }
         }
-        "object" => {
-            Store::init_with_backend(path, opts, weftfs::backend::BackendKind::Object)
-                .expect("init object");
+        "object" => BackendKind::Object,
+        "azure" => {
+            let container = azure_container(args);
+            assert!(
+                !container.is_empty(),
+                "--container or WEFT_AZURE_TEST_CONTAINER is required for azure"
+            );
+            BackendKind::Azure {
+                config: azure_config(args),
+            }
         }
-        _ => {
-            Store::init(path, opts).expect("init local");
-        }
+        _ => BackendKind::Local,
     }
+}
+
+fn open_store(
+    args: &[String],
+    path: &str,
+    mode: OpenMode,
+    writer_mode: WriterMode,
+    now: i64,
+) -> Store {
+    let opts = options(writer_mode, now);
+    Store::open_with_options_and_backend(path, mode, opts, backend_kind(args, &backend(args)))
+        .expect("open store")
+}
+
+fn init_store(args: &[String], path: &str, now: i64) {
+    let opts = options(WriterMode::Single, now);
+    Store::init_with_backend(path, opts, backend_kind(args, &backend(args))).expect("init store");
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
+}
+
+/// The published head and the raw superblock digest, read from the plane (not
+/// from the store's cache), so a court can prove a refused publication changed
+/// nothing.
+fn read_superblock(args: &[String], path: &str) -> Option<(u64, Hash32, Vec<u8>)> {
+    let mut plane = backend_kind(args, &backend(args))
+        .open(std::path::Path::new(path))
+        .ok()?;
+    let image = plane.read_all(&BackendKey::superblock()).ok()?;
+    let slot = weftfs::format::decode_superblock(&image)
+        .ok()?
+        .into_iter()
+        .flatten()
+        .max_by_key(|slot| slot.generation)?;
+    Some((slot.generation, slot.commit, image))
+}
+
+fn open_driver(
+    path: &str,
+    mode: OpenMode,
+    writer_mode: WriterMode,
+    now: i64,
+    backend: &str,
+    args: &[String],
+) -> Store {
+    let opts = options(writer_mode, now);
+    Store::open_with_options_and_backend(path, mode, opts, backend_kind(args, backend))
+        .expect("open store")
+}
+
+fn init_driver(path: &str, now: i64, backend: &str, args: &[String]) {
+    let _ = backend;
+    init_store(args, path, now);
 }
 
 fn peak_rss_kib() -> u64 {
@@ -132,7 +193,7 @@ fn main() {
     let backend_name = backend(&args);
     match mode {
         "init" => {
-            init_driver(&store_path, now, &backend_name);
+            init_driver(&store_path, now, &backend_name, &args);
             println!("{{\"ok\":true}}");
         }
         "parity" => {
@@ -217,6 +278,7 @@ fn main() {
                 WriterMode::Optimistic,
                 now,
                 &backend_name,
+                &args,
             );
             let started = Instant::now();
             let mut latency_file =
@@ -349,6 +411,7 @@ fn main() {
                 WriterMode::Optimistic,
                 now,
                 &backend_name,
+                &args,
             );
             let lookup = store.transaction_outcome(&tx_id).expect("lookup");
             let (state, commit) = match lookup {
@@ -376,6 +439,7 @@ fn main() {
                 WriterMode::Single,
                 now,
                 &backend_name,
+                &args,
             );
             let mut mismatches = Vec::new();
             let mut checked = 0u64;
@@ -412,6 +476,7 @@ fn main() {
                 WriterMode::Single,
                 now,
                 &backend_name,
+                &args,
             );
             let id = store
                 .lookup(State::ROOT_ID, name.as_bytes())

@@ -2233,6 +2233,76 @@ impl StorageBackend for AzureBackend {
         ))
     }
 
+    /// MW2 head publication: one conditional write that both checks and
+    /// advances the head.
+    ///
+    /// The default trait implementation reads the image and then patches it
+    /// through [`Self::write_at`], which retries from a fresh read on a lost
+    /// ETag race. That retry would re-apply the patch to a head another
+    /// committer had already moved, which is exactly the silent overwrite MW2
+    /// forbids. Here the compare and the write share one ETag: a stale token is
+    /// `Busy` and the patch is never retried.
+    fn publish_head_conditional(
+        &mut self,
+        expected: crate::backend::HeadExpectation,
+        generation: u64,
+        commit: Hash32,
+        commit_len: u64,
+        timestamp_ns: i64,
+        slot_bytes: &[u8],
+    ) -> Result<()> {
+        let _ = (commit_len, timestamp_ns);
+        let key = Key::superblock();
+        let Some((image, etag)) = self.get_with_etag(&key)? else {
+            return Err(Error::not_found("superblock does not exist"));
+        };
+        if image.len() != SUPERBLOCK_BYTES {
+            return Err(Error::corrupt(format!(
+                "superblock is {} bytes, expected {SUPERBLOCK_BYTES}",
+                image.len()
+            )));
+        }
+        if slot_bytes.len() != crate::format::SLOT_BYTES {
+            return Err(Error::invalid_argument(format!(
+                "superblock slot is {} bytes, expected {}",
+                slot_bytes.len(),
+                crate::format::SLOT_BYTES
+            )));
+        }
+        let observed = crate::format::decode_superblock(&image)?
+            .into_iter()
+            .flatten()
+            .max_by_key(|slot| slot.generation);
+        let matches = match (&observed, expected.is_none()) {
+            (None, true) => true,
+            (Some(slot), false) => {
+                slot.generation == expected.generation && slot.commit == expected.commit
+            }
+            _ => false,
+        };
+        if !matches {
+            return Err(Error::busy(format!(
+                "head publication refused: expected generation {} commit {}, observed {}",
+                expected.generation,
+                expected.commit.to_hex(),
+                observed
+                    .as_ref()
+                    .map(|slot| format!("generation {}", slot.generation))
+                    .unwrap_or_else(|| "no head".to_owned())
+            )));
+        }
+        let mut updated = image;
+        let offset = usize::try_from((generation % 2) * crate::format::SLOT_BYTES as u64)
+            .map_err(|_| Error::limit_exceeded("superblock slot offset does not fit memory"))?;
+        updated[offset..offset + crate::format::SLOT_BYTES].copy_from_slice(slot_bytes);
+        match self.put_blob(&key, &updated, Some(&etag))? {
+            Some(_) => Ok(()),
+            None => Err(Error::busy(
+                "superblock changed since it was read; head publication refused",
+            )),
+        }
+    }
+
     fn put_atomic(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
         BlobPlane::put_if_absent(self, key, bytes)
     }

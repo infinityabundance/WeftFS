@@ -1,0 +1,102 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["A", "B", "B-percommit", "C", "C-percommit", "C-group", "C-pack64k", "C-pack1m", "C-pack8m", "C-legacy", "D", "E", "C-noz19", "C-nom9", "C-both"] reps=7 backend=local
+ablate: === rep 1/7 order=["A", "B", "B-percommit", "C", "C-percommit", "C-group", "C-pack64k", "C-pack1m", "C-pack8m", "C-legacy", "D", "E", "C-noz19", "C-nom9", "C-both"] ===
+ablate: rep 1 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 1 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 1 config B write
+--- write B (exit Some(0)) ---
+
+ablate: rep 1 config B restore
+--- restore B (exit Some(0)) ---
+
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_objects: exit -1
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_commit_file: exit -1
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_superblock_write: exit -1
+--- crash-check B (exit Some(0)) ---
+
+ablate: rep 1 config B-percommit write
+--- write B-percommit (exit Some(0)) ---
+
+ablate: rep 1 config B-percommit restore
+--- restore B-percommit (exit Some(0)) ---
+
+--- crash-check B-percommit (exit Some(0)) ---
+
+crash-write B-percommit after_objects: exit -1
+--- crash-check B-percommit (exit Some(0)) ---
+
+crash-write B-percommit after_commit_file: exit -1
+--- crash-check B-percommit (exit Some(0)) ---
+
+crash-write B-percommit after_superblock_write: exit -1
+--- crash-check B-percommit (exit Some(0)) ---
+
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-percommit write
+--- write C-percommit (exit Some(0)) ---
+
+ablate: rep 1 config C-percommit restore
+--- restore C-percommit (exit Some(0)) ---
+
+--- crash-check C-percommit (exit Some(0)) ---
+
+crash-write C-percommit after_objects: exit -1
+--- crash-check C-percommit (exit Some(0)) ---
+
+crash-write C-percommit after_commit_file: exit -1
+--- crash-check C-percommit (exit Some(0)) ---
+
+crash-write C-percommit after_superblock_write: exit -1
+--- crash-check C-percommit (exit Some(0)) ---
+
+ablate: rep 1 config C-group write
+--- write C-group (exit Some(0)) ---
+
+ablate: rep 1 config C-group restore
+--- restore C-group (exit Some(0)) ---
+
+--- crash-check C-group (exit Some(0)) ---
+
+crash-write C-group after_objects: exit -1
+--- crash-check C-group (exit Some(0)) ---
+
+crash-write C-group after_commit_file: exit -1
+--- crash-check C-group (exit Some(0)) ---
+
+crash-write C-group after_superblock_write: exit -1
+--- crash-check C-group (exit Some(0)) ---
+
+ablate: rep 1 config C-pack64k write
+--- write C-pack64k (exit Some(0)) ---
+
+ablate: rep 1 config C-pack64k restore
+--- restore C-pack64k (exit Some(1)) ---
+augmentation_bench: read `model.embed_tokens.weight`: NotFound: no such object
+

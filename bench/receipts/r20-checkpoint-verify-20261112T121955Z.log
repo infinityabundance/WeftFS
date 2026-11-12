@@ -1,0 +1,16 @@
+# R20 checkpoint path: weftfs checkpoint write (one group commit, deferred barrier)
+# revision: 53bad7c9c642ff222b92eb0d5aa5c1b7eab0025a
+# court: weft/bench-court:1 sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 kernel 7.3.3-1-cachyos memory 3g cpus 4 pids 1024
+# fixture: Qwen2.5-0.5B-Instruct.safetensors, tensors matching model.layers.0.*
+## init
+generation=1
+snapshot_root=11ae4f04c89b6e0ea1abb36d43308099a3d9f0c621e0907db9948017ae705580
+## checkpoint write
+tensors 12 shard_objects 12 element_bytes 29824768 manifest_root 2edee1583f08e4bd37773abc54caf8fb2dfa00cb62a43a036af0d9b94e6aa245 complete False
+## verify --full
+ok True full True generation 2 checked_commits 2 problems 0
+## checkpoint verify
+checkpoint qwen tensors_verified 12
+## checkpoint restore --topology 1
+file_bytes 29826096 file_sha256 3a0f1570ac94c5094583f16c66fead198c23020198a8bbf46c5d318d6c86d1f6 exact_source_file False
+# note: the checkpoint is filtered (12 of 290 tensors), so a complete source header cannot be reproduced; the tensor bytes are what the restore writes.

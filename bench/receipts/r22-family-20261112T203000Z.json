@@ -1,0 +1,144 @@
+{
+ "methodology": "bench/scripts/r22_family_court.sh inside the bench court (3 GiB / 4 cpus / 1024 pids); subset = embedding + up to 100 evenly spaced tensors; exactness checked by the restore row",
+ "result": "measured",
+ "role": "R22.5 cross-family write frontier: one repetition per (family, row), same fixture selection rule as the R21 court, local POSIX backend",
+ "rows": [
+  {
+   "bytes_written": 424439296,
+   "config": "A",
+   "cpu_ms": 90.0,
+   "family": "qwen0.5b-base",
+   "fixture_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+   "logical_bytes": null,
+   "peak_rss_kib": 270948,
+   "physical_footprint_bytes": null,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": null,
+   "restore": null,
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 319.521537,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 282196693,
+   "config": "C",
+   "cpu_ms": 1060.0,
+   "family": "qwen0.5b-base",
+   "fixture_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+   "logical_bytes": null,
+   "peak_rss_kib": 688276,
+   "physical_footprint_bytes": 282184187,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": null,
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 1336.60167,
+   "writeback_busy_ms": null
+  },
+  {
+   "bytes_written": 282196693,
+   "config": "C-pipe4",
+   "cpu_ms": 1250.0,
+   "family": "qwen0.5b-base",
+   "fixture_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+   "logical_bytes": null,
+   "peak_rss_kib": 984620,
+   "physical_footprint_bytes": 282184187,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": null,
+   "stages_ms": {
+    "encode_busy": 799.146021,
+    "encode_wall": 432.486239,
+    "pipeline_wall": 560.889119,
+    "publish_busy": 380.438816,
+    "publish_wall": 472.785911,
+    "reader": 46.150554
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 605.678545,
+   "writeback_busy_ms": 463.872478
+  },
+  {
+   "bytes_written": 282196693,
+   "config": "C-pipe4-zpar3",
+   "cpu_ms": 1320.0,
+   "family": "qwen0.5b-base",
+   "fixture_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+   "logical_bytes": null,
+   "peak_rss_kib": 1068736,
+   "physical_footprint_bytes": 282184187,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": null,
+   "stages_ms": {
+    "encode_busy": 837.644247,
+    "encode_wall": 366.79788,
+    "pipeline_wall": 609.3420659999999,
+    "publish_busy": 458.272154,
+    "publish_wall": 462.120001,
+    "reader": 46.870396
+   },
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 654.820957,
+   "writeback_busy_ms": 539.477741
+  },
+  {
+   "bytes_written": 282196693,
+   "config": "C-legacy",
+   "cpu_ms": 21820.0,
+   "family": "qwen0.5b-base",
+   "fixture_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+   "logical_bytes": null,
+   "peak_rss_kib": 892892,
+   "physical_footprint_bytes": 282184187,
+   "planner": {},
+   "prepare_breakdown": {},
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore": null,
+   "stages_ms": {},
+   "status": "measured",
+   "tensors": null,
+   "wall_ms": 22199.272362,
+   "writeback_busy_ms": null
+  },
+  {
+   "family": "pythia70m-step0",
+   "reason": "prepare failed inside the court",
+   "status": "open"
+  },
+  {
+   "family": "pythia70m-step8",
+   "reason": "prepare failed inside the court",
+   "status": "open"
+  }
+ ],
+ "schema": "weft.r22-family.v1",
+ "stamp": "20261112T203000Z"
+}

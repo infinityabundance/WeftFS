@@ -1,0 +1,61 @@
+{
+  "schema": "weft.r14d_go_suite.v1",
+  "stamp": "20261112T221649Z",
+  "result": "pass",
+  "question": "Does the Go suite pass at the pinned WeftFS-Go revision, including the R14d Azure MW2 test, so R14d can stay on staging?",
+  "revisions": {
+    "WeftFS": "a633e0f70b51b2f972889b5209746d891a22c593",
+    "WeftFS-Go": "1fa3d32fc473acad811bfdae32fdc0f60ce4f78a",
+    "WeftCodec": "58db5aa440847d67182f6c46e503a1232d277183",
+    "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e"
+  },
+  "court": {
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "memory": "3g",
+    "swap": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "nproc": "2048",
+    "kernel": "7.3.3-1-cachyos",
+    "tmpfs": "/tmp:1g, /mnt/weft-fuse:512m, /mnt/weft-bench:1g",
+    "device": "/dev/fuse",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "no_new_privileges": true
+  },
+  "commands": {
+    "whole_suite": "cargo build --release --features fuse --bin weftfs && cd WeftFS-Go && CGO_ENABLED=0 go build ./... && go vet ./... && WEFTFS_RUST_BIN=/work/.docker-cache/target-rust/release/weftfs go test -race ./... -count=1",
+    "azure_mw2": "cd WeftFS-Go && go test -race -count=1 -run 'TestAzureOptimisticTwoDisjointCommitters|TestMalformedWritersPolicyFailsClosed' -v ./store/"
+  },
+  "packages": {
+    "cmd/weftfs": {"result": "ok", "seconds": 40.901},
+    "fusefs": {"result": "ok", "seconds": 7.212},
+    "index": {"result": "ok", "seconds": 1.004},
+    "model": {"result": "ok", "seconds": 1.007},
+    "store": {"result": "ok", "seconds": 134.04}
+  },
+  "azure_test": {
+    "name": "TestAzureOptimisticTwoDisjointCommitters",
+    "result": "PASS",
+    "seconds": 0.07,
+    "court": "weft/go-court:1",
+    "regression_test": "TestMalformedWritersPolicyFailsClosed",
+    "regression_result": "PASS"
+  },
+  "go_court_limitation": {
+    "command": "scripts/docker-court.sh go \"cd /work/WeftFS-Go && go test -race -count=1 ./...\"",
+    "result": "fail",
+    "cause": "17 fusefs tests call mount(8), which execs /bin/fusermount; the minimal go court does not install it (\"stat /bin/fusermount: no such file or directory\"). The store package itself passed (ok 210.396s). This is an environment limit of that court, not a test failure, and the supported whole-suite court is the fuse court.",
+    "packages_that_passed_in_the_go_court": ["index", "model", "store"]
+  },
+  "raw_logs": [
+    "bench/receipts/r14d-go-suite-20261112T221649Z.log",
+    "bench/receipts/r14d-azure-mw2-20261112T221649Z.log"
+  ],
+  "conclusion": "R14d is verified at WeftFS-Go 1fa3d32 in the fuse court: the whole Go suite passes under -race with 0 failures, go vet is clean, the CGO-disabled build is clean, and TestAzureOptimisticTwoDisjointCommitters passes. R14d stays on staging; no r14d/azure-mw2 branch is required.",
+  "not_claimed": [
+    "No live Azure account was used; the Azure tests run against the in-process Azure double and the Azurite court, not Azure Blob Storage.",
+    "One host, one court; no fleet, cloud, or power-loss claim."
+  ]
+}

@@ -50,6 +50,7 @@ pub mod gcs;
 pub mod identity;
 pub(crate) mod index;
 pub(crate) mod index_chain;
+pub(crate) mod index_incremental;
 pub mod kv_capability;
 pub mod kv_prefix;
 pub mod load_attestation;
@@ -78,11 +79,13 @@ pub mod service_account;
 pub mod singleflight;
 pub mod state;
 pub mod store;
+pub mod tensor_pipeline;
 pub mod tensor_store;
 pub mod threefs;
 pub mod timeparse;
 pub mod training_ready;
 pub mod transcode;
+pub mod two_stage;
 pub mod wcb_util;
 pub mod writer_fence;
 pub mod writer_lock;
@@ -149,8 +152,8 @@ pub use singleflight::{
 };
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
-    AuthorizedRead, GcReport, LineageEntry, OpenMode, Options, ReadLayerStats, RepresentationMode,
-    SavedContext, SetAttr, StatFs, Store, VerifyReport,
+    AuthorizedRead, GcReport, LineageEntry, OpenMode, Options, PublicationLedger, ReadLayerStats,
+    RepresentationMode, SavedContext, SetAttr, StatFs, Store, VerifyReport,
 };
 pub use tensor_store::{
     FastCodec, ResolvedWritePolicy, StoredTensorMetadata, TensorIndependentPlan, TensorLayoutSpec,

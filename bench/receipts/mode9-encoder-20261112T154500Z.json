@@ -1,0 +1,646 @@
+{
+  "checks": {
+    "byte_identity_cases": 9,
+    "byte_identity_mismatches": 0,
+    "mean_shipped_ms": 0.0
+  },
+  "environment": {
+    "court": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024",
+    "simd_path": "avx2",
+    "weftcodec_revision": "14122275fa253b58b455e71077e2f30cc5f1a73d",
+    "weftfs_revision": "c3f5e1a5d9880d51b020b37705e7611eca72a575"
+  },
+  "fixture": {
+    "bytes": 988097824,
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+    "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+    "tensors_measured": 9
+  },
+  "generated_utc": "20261112T102527Z",
+  "label": "R19 mode-9 encoder",
+  "memory_probe": {
+    "bytes": 272269312,
+    "fresh_allocating_copy_ms": 22.759089,
+    "fresh_zeroed_page_faults": 556.0,
+    "fresh_zeroed_touch_every_page_ms": 12.343379,
+    "note": "fresh means a new mapping (the allocator cannot reuse the previous block because every probe buffer is held until it returns); recycled means the pages are already present, so only the memcpy remains",
+    "recycled_copy_ms": 21.915032,
+    "reps": 2
+  },
+  "method": {
+    "assembly_residual": "reference_encode - split - huffman - payload_hash - content_hash; it contains allocator first-touch, the body copy, the trailer CRC and the self-parse CRC inside encode_frame",
+    "byte_identity": "the shipped mode-9 frame is compared with the pre-R19 reference encoder on every tensor and repetition",
+    "replica": "stage timings are harness-local replicas; every measured tensor is checked byte-for-byte against the shipped codec (split planes, huffman stream, hand-assembled frame) before any number is recorded",
+    "statistic": "median of repetitions per tensor; totals are sums of the per-tensor medians"
+  },
+  "not_claimed": [
+    "single host, warm page cache",
+    "the stage split is a harness replication validated against the codec, not a codec-internal profile",
+    "BF16 tensors from one public checkpoint only"
+  ],
+  "schema": "weft.mode9_encoder_bench.v1",
+  "tensors": [
+    {
+      "after": {
+        "encode_ms": 346.848999,
+        "faults_minor": 644.0,
+        "fused_histogram_and_hash_ms": 79.42967900000001,
+        "mb_per_s": 784.9793794561305,
+        "residual_ms": 0.0,
+        "split_payload_ms": 286.27620199999996,
+        "threaded_encode_ms": 171.865454,
+        "threaded_mb_per_s": 1584.200347790662,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 1094.1113149999999,
+        "failed_stages": {
+          "assembly_residual_ms": 476.4901989999999,
+          "body_build_ms": 13.449684,
+          "content_hash_ms": 26.924486,
+          "crc32c_ms": 5.402378000000001,
+          "frame_encode_ms": 24.862164999999997,
+          "huffman_emit_ms": 288.011111,
+          "huffman_histogram_ms": 57.635291,
+          "payload_hash_ms": 17.479660000000003,
+          "split_planes_generic_ms": 346.05089,
+          "stored_build_ms": 14.351699
+        },
+        "faithful_replica": {
+          "body_build_ms": 13.903762,
+          "content_hash_ms": 26.781639,
+          "frame_encode_ms": 45.772960000000005,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 17.417945,
+          "split_payload_ms": 1112.507857,
+          "stored_build_ms": 13.802393,
+          "sum_ms": 1230.108924,
+          "wall_ms": 1232.514083
+        },
+        "faults_minor": 9303.0,
+        "mb_per_s": 248.84973609837866,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 136134656,
+      "fast_huffman_replica": {
+        "codes_ms": 0.003056,
+        "histogram_ms": 57.635291,
+        "lengths_ms": 0.023153,
+        "total_ms": 227.16608
+      },
+      "frame_bytes": 180547519,
+      "logical_bytes": 272269312,
+      "replica_huffman_faults_minor": 112.0,
+      "replica_split_faults_minor": 8609.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        151936,
+        896
+      ],
+      "split_payload_shipped_first_ms": 284.870731,
+      "split_payload_shipped_last_ms": 1112.507857,
+      "staged_split_payload_faults_minor": 7660.0,
+      "tensor": "model.embed_tokens.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 11.052498,
+        "faults_minor": 0.0,
+        "fused_histogram_and_hash_ms": 2.489859,
+        "mb_per_s": 788.6260644426266,
+        "residual_ms": 0.0,
+        "split_payload_ms": 8.87399,
+        "threaded_encode_ms": 5.696777,
+        "threaded_mb_per_s": 1530.0384761418607,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 32.458518,
+        "failed_stages": {
+          "assembly_residual_ms": 13.005302999999998,
+          "body_build_ms": 0.083015,
+          "content_hash_ms": 0.7758189999999999,
+          "crc32c_ms": 0.14262699999999998,
+          "frame_encode_ms": 0.607024,
+          "huffman_emit_ms": 8.655673,
+          "huffman_histogram_ms": 1.798819,
+          "payload_hash_ms": 0.48162,
+          "split_planes_generic_ms": 11.032681,
+          "stored_build_ms": 0.185126
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.436465,
+          "content_hash_ms": 0.7704390000000001,
+          "frame_encode_ms": 0.759288,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.480628,
+          "split_payload_ms": 34.555012000000005,
+          "stored_build_ms": 0.109384,
+          "sum_ms": 37.089836000000005,
+          "wall_ms": 37.107089
+        },
+        "faults_minor": 45.0,
+        "mb_per_s": 268.5362283022287,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.001403,
+        "histogram_ms": 1.798819,
+        "lengths_ms": 0.00544,
+        "total_ms": 7.163095
+      },
+      "frame_bytes": 5798340,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 0.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        896,
+        4864
+      ],
+      "split_payload_shipped_first_ms": 8.946354999999999,
+      "split_payload_shipped_last_ms": 34.555012000000005,
+      "staged_split_payload_faults_minor": 1114.0,
+      "tensor": "model.layers.0.mlp.down_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 11.041237,
+        "faults_minor": 905.0,
+        "fused_histogram_and_hash_ms": 2.492083,
+        "mb_per_s": 789.4303871930292,
+        "residual_ms": 0.0,
+        "split_payload_ms": 8.624714,
+        "threaded_encode_ms": 5.630624,
+        "threaded_mb_per_s": 1548.0145717419598,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 34.578435999999996,
+        "failed_stages": {
+          "assembly_residual_ms": 15.550746,
+          "body_build_ms": 0.072205,
+          "content_hash_ms": 0.794574,
+          "crc32c_ms": 0.14183500000000002,
+          "frame_encode_ms": 0.7565029999999999,
+          "huffman_emit_ms": 8.289008,
+          "huffman_histogram_ms": 1.875512,
+          "payload_hash_ms": 0.48092799999999997,
+          "split_planes_generic_ms": 10.800215999999999,
+          "stored_build_ms": 0.448888
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.44960900000000004,
+          "content_hash_ms": 0.801397,
+          "frame_encode_ms": 0.7543880000000001,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.49224,
+          "split_payload_ms": 35.179750000000006,
+          "stored_build_ms": 0.445722,
+          "sum_ms": 38.19109300000001,
+          "wall_ms": 38.217832
+        },
+        "faults_minor": 1388.0,
+        "mb_per_s": 252.072939331322,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.001903,
+        "histogram_ms": 1.875512,
+        "lengths_ms": 0.004759,
+        "total_ms": 6.951972
+      },
+      "frame_bytes": 5802340,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 251.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        4864,
+        896
+      ],
+      "split_payload_shipped_first_ms": 8.685328,
+      "split_payload_shipped_last_ms": 35.179750000000006,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.0.mlp.gate_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 10.907667,
+        "faults_minor": 900.0,
+        "fused_histogram_and_hash_ms": 2.504617,
+        "mb_per_s": 799.097368850736,
+        "residual_ms": 0.0,
+        "split_payload_ms": 8.625346,
+        "threaded_encode_ms": 5.901109,
+        "threaded_mb_per_s": 1477.05931207168,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 33.521072,
+        "failed_stages": {
+          "assembly_residual_ms": 14.620719999999999,
+          "body_build_ms": 0.071594,
+          "content_hash_ms": 0.796387,
+          "crc32c_ms": 0.14109300000000002,
+          "frame_encode_ms": 0.735032,
+          "huffman_emit_ms": 8.089135,
+          "huffman_histogram_ms": 1.819909,
+          "payload_hash_ms": 0.480477,
+          "split_planes_generic_ms": 10.766625,
+          "stored_build_ms": 0.44552200000000003
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.433449,
+          "content_hash_ms": 0.789544,
+          "frame_encode_ms": 0.739711,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.480027,
+          "split_payload_ms": 34.050361,
+          "stored_build_ms": 0.439,
+          "sum_ms": 36.93731900000001,
+          "wall_ms": 36.957117999999994
+        },
+        "faults_minor": 1398.0,
+        "mb_per_s": 260.02414242599406,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.002014,
+        "histogram_ms": 1.819909,
+        "lengths_ms": 0.004689,
+        "total_ms": 6.856863000000001
+      },
+      "frame_bytes": 5781631,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 256.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        4864,
+        896
+      ],
+      "split_payload_shipped_first_ms": 8.571164,
+      "split_payload_shipped_last_ms": 34.050361,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.0.mlp.up_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 11.130904000000001,
+        "faults_minor": 902.0,
+        "fused_histogram_and_hash_ms": 2.524574,
+        "mb_per_s": 783.0709886636341,
+        "residual_ms": 0.0,
+        "split_payload_ms": 8.774364,
+        "threaded_encode_ms": 5.636354,
+        "threaded_mb_per_s": 1546.4408374633674,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 34.860231999999996,
+        "failed_stages": {
+          "assembly_residual_ms": 15.702748999999997,
+          "body_build_ms": 0.071734,
+          "content_hash_ms": 0.801647,
+          "crc32c_ms": 0.141474,
+          "frame_encode_ms": 0.722739,
+          "huffman_emit_ms": 8.85805,
+          "huffman_histogram_ms": 1.797066,
+          "payload_hash_ms": 0.484134,
+          "split_planes_generic_ms": 10.769921,
+          "stored_build_ms": 0.422258
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.44320699999999996,
+          "content_hash_ms": 0.7911170000000001,
+          "frame_encode_ms": 0.7375269999999999,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.48138899999999996,
+          "split_payload_ms": 33.386681,
+          "stored_build_ms": 0.437357,
+          "sum_ms": 36.349483,
+          "wall_ms": 36.367427
+        },
+        "faults_minor": 1396.0,
+        "mb_per_s": 250.03528375829515,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.001653,
+        "histogram_ms": 1.797066,
+        "lengths_ms": 0.004809,
+        "total_ms": 7.101781
+      },
+      "frame_bytes": 5787655,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 255.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        896,
+        4864
+      ],
+      "split_payload_shipped_first_ms": 8.826872,
+      "split_payload_shipped_last_ms": 33.386681,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.1.mlp.down_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 11.231912,
+        "faults_minor": 904.0,
+        "fused_histogram_and_hash_ms": 2.492574,
+        "mb_per_s": 776.0288720210772,
+        "residual_ms": 0.0,
+        "split_payload_ms": 8.927268999999999,
+        "threaded_encode_ms": 5.63941,
+        "threaded_mb_per_s": 1545.6028201531722,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 33.194823,
+        "failed_stages": {
+          "assembly_residual_ms": 13.968042000000002,
+          "body_build_ms": 0.07209499999999999,
+          "content_hash_ms": 0.799042,
+          "crc32c_ms": 0.141374,
+          "frame_encode_ms": 0.741555,
+          "huffman_emit_ms": 9.483278,
+          "huffman_histogram_ms": 1.898936,
+          "payload_hash_ms": 0.481108,
+          "split_planes_generic_ms": 10.695972,
+          "stored_build_ms": 0.419584
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.43946,
+          "content_hash_ms": 0.78716,
+          "frame_encode_ms": 0.74983,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.48201,
+          "split_payload_ms": 34.956432,
+          "stored_build_ms": 0.429963,
+          "sum_ms": 37.52550000000001,
+          "wall_ms": 37.544565
+        },
+        "faults_minor": 1394.0,
+        "mb_per_s": 262.579740220335,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.001843,
+        "histogram_ms": 1.898936,
+        "lengths_ms": 0.004769,
+        "total_ms": 7.250659
+      },
+      "frame_bytes": 5793457,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 254.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        4864,
+        896
+      ],
+      "split_payload_shipped_first_ms": 8.958628,
+      "split_payload_shipped_last_ms": 34.956432,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.1.mlp.gate_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 11.123961,
+        "faults_minor": 900.0,
+        "fused_histogram_and_hash_ms": 2.485181,
+        "mb_per_s": 783.5597409951366,
+        "residual_ms": 0.0,
+        "split_payload_ms": 8.790614,
+        "threaded_encode_ms": 5.593305,
+        "threaded_mb_per_s": 1558.3430547770952,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 33.363097,
+        "failed_stages": {
+          "assembly_residual_ms": 14.220133000000002,
+          "body_build_ms": 0.071463,
+          "content_hash_ms": 0.788973,
+          "crc32c_ms": 0.141013,
+          "frame_encode_ms": 0.7299230000000001,
+          "huffman_emit_ms": 8.948519,
+          "huffman_histogram_ms": 1.786296,
+          "payload_hash_ms": 0.48285100000000003,
+          "split_planes_generic_ms": 10.743030000000001,
+          "stored_build_ms": 0.422108
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.427328,
+          "content_hash_ms": 0.792219,
+          "frame_encode_ms": 0.742306,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.48173900000000003,
+          "split_payload_ms": 34.611848,
+          "stored_build_ms": 0.433199,
+          "sum_ms": 37.499961,
+          "wall_ms": 37.516632
+        },
+        "faults_minor": 1400.0,
+        "mb_per_s": 261.25536247429307,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.001903,
+        "histogram_ms": 1.786296,
+        "lengths_ms": 0.005119,
+        "total_ms": 7.12811
+      },
+      "frame_bytes": 5779383,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 257.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        4864,
+        896
+      ],
+      "split_payload_shipped_first_ms": 8.843322,
+      "split_payload_shipped_last_ms": 34.611848,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.1.mlp.up_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 11.143418,
+        "faults_minor": 360.0,
+        "fused_histogram_and_hash_ms": 2.516009,
+        "mb_per_s": 782.1916040482373,
+        "residual_ms": 0.0,
+        "split_payload_ms": 9.265802,
+        "threaded_encode_ms": 5.62872,
+        "threaded_mb_per_s": 1548.5382111741212,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 33.952537,
+        "failed_stages": {
+          "assembly_residual_ms": 14.161173,
+          "body_build_ms": 0.071865,
+          "content_hash_ms": 0.814631,
+          "crc32c_ms": 0.142516,
+          "frame_encode_ms": 0.744981,
+          "huffman_emit_ms": 8.915577,
+          "huffman_histogram_ms": 1.79933,
+          "payload_hash_ms": 0.486548,
+          "split_planes_generic_ms": 11.254324,
+          "stored_build_ms": 0.426707
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.43944999999999995,
+          "content_hash_ms": 0.786218,
+          "frame_encode_ms": 0.757474,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.491738,
+          "split_payload_ms": 34.13588,
+          "stored_build_ms": 0.661485,
+          "sum_ms": 37.245306,
+          "wall_ms": 37.262267
+        },
+        "faults_minor": 612.0,
+        "mb_per_s": 256.71978503403153,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.001703,
+        "histogram_ms": 1.79933,
+        "lengths_ms": 0.004759,
+        "total_ms": 7.235861
+      },
+      "frame_bytes": 5832466,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 828.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        896,
+        4864
+      ],
+      "split_payload_shipped_first_ms": 9.111744,
+      "split_payload_shipped_last_ms": 34.13588,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.10.mlp.down_proj.weight"
+    },
+    {
+      "after": {
+        "encode_ms": 10.844149000000002,
+        "faults_minor": 357.0,
+        "fused_histogram_and_hash_ms": 2.520055,
+        "mb_per_s": 803.7779635820201,
+        "residual_ms": 0.0,
+        "split_payload_ms": 9.004394000000001,
+        "threaded_encode_ms": 5.547789,
+        "threaded_mb_per_s": 1571.1282458651547,
+        "threaded_threads": 4
+      },
+      "before": {
+        "encode_ms": 33.305449,
+        "failed_stages": {
+          "assembly_residual_ms": 13.493827000000001,
+          "body_build_ms": 0.071814,
+          "content_hash_ms": 0.80878,
+          "crc32c_ms": 0.141985,
+          "frame_encode_ms": 0.740984,
+          "huffman_emit_ms": 8.110093,
+          "huffman_histogram_ms": 1.809358,
+          "payload_hash_ms": 0.48315199999999997,
+          "split_planes_generic_ms": 11.476008,
+          "stored_build_ms": 0.436095
+        },
+        "faithful_replica": {
+          "body_build_ms": 0.441715,
+          "content_hash_ms": 0.780617,
+          "frame_encode_ms": 0.752395,
+          "gap_vs_encoder_ms": 0.0,
+          "payload_hash_ms": 0.488812,
+          "split_payload_ms": 34.208766000000004,
+          "stored_build_ms": 0.656776,
+          "sum_ms": 37.32975400000001,
+          "wall_ms": 37.358257
+        },
+        "faults_minor": 602.0,
+        "mb_per_s": 261.7075662303787,
+        "replica_validated": true
+      },
+      "byte_identical_to_reference": true,
+      "elements": 4358144,
+      "fast_huffman_replica": {
+        "codes_ms": 0.002074,
+        "histogram_ms": 1.809358,
+        "lengths_ms": 0.0052,
+        "total_ms": 7.0436819999999996
+      },
+      "frame_bytes": 5819053,
+      "logical_bytes": 8716288,
+      "replica_huffman_faults_minor": 0.0,
+      "replica_split_faults_minor": 831.0,
+      "replica_validated": true,
+      "reps": 7,
+      "shape": [
+        4864,
+        896
+      ],
+      "split_payload_shipped_first_ms": 8.861046,
+      "split_payload_shipped_last_ms": 34.208766000000004,
+      "staged_split_payload_faults_minor": 0.0,
+      "tensor": "model.layers.10.mlp.gate_proj.weight"
+    }
+  ],
+  "totals": {
+    "assembly_residual_ms": 0.0,
+    "body_build_ms": 0.0,
+    "content_hash_ms": 0.0,
+    "crc32c_ms": 0.0,
+    "frame_encode_ms": 0.0,
+    "huffman_emit_ms": 0.0,
+    "huffman_histogram_ms": 0.0,
+    "huffman_total_ms": 0.0,
+    "logical_bytes": 341999616.0,
+    "payload_hash_ms": 0.0,
+    "reference_encode_ms": 0.0,
+    "reference_mb_per_s": null,
+    "shipped_encode_ms": 0.0,
+    "shipped_mb_per_s": null,
+    "split_ms": 0.0,
+    "stored_build_ms": 0.0,
+    "threaded_encode_ms": 0.0,
+    "threaded_mb_per_s": null,
+    "threaded_threads": 4
+  }
+}

@@ -106,6 +106,17 @@ pub enum Phase {
     EncodeFloatTensor,
     /// The mode-14 semantic-candidate search (nested in [`Phase::Encode`]).
     EncodeSemantic,
+    /// The R18 analyse stage: bounded chunk sampling, the mode-9 exponent
+    /// histogram and the size prediction (nested in [`Phase::Encode`]).
+    Analyze,
+    /// The exact mode-9 prediction inside the analyse stage: the exponent
+    /// histogram plus the codec's frame-length computation (nested in
+    /// [`Phase::Analyze`]).
+    AnalyzeMode9,
+    /// The durability barrier of a deferred publication batch: syncing every
+    /// file and directory a group wrote (nested in [`Phase::ManifestCommit`],
+    /// because the commit path performs it before the commit record).
+    BackendSync,
 }
 
 impl Phase {
@@ -130,6 +141,9 @@ impl Phase {
             Phase::EncodeZstd19 => "encode_zstd19",
             Phase::EncodeFloatTensor => "encode_float_tensor",
             Phase::EncodeSemantic => "encode_semantic",
+            Phase::Analyze => "analyze",
+            Phase::AnalyzeMode9 => "analyze_mode9",
+            Phase::BackendSync => "backend_sync",
         }
     }
 
@@ -144,13 +158,16 @@ impl Phase {
             Phase::EncodeZstd
             | Phase::EncodeZstd19
             | Phase::EncodeFloatTensor
-            | Phase::EncodeSemantic => Some(Phase::Encode),
+            | Phase::EncodeSemantic
+            | Phase::Analyze => Some(Phase::Encode),
+            Phase::AnalyzeMode9 => Some(Phase::Analyze),
+            Phase::BackendSync => Some(Phase::ManifestCommit),
             _ => None,
         }
     }
 
     /// Every phase, in report order.
-    pub const ALL: [Phase; 18] = [
+    pub const ALL: [Phase; 21] = [
         Phase::SourceRead,
         Phase::Digest,
         Phase::Encode,
@@ -169,6 +186,9 @@ impl Phase {
         Phase::EncodeZstd19,
         Phase::EncodeFloatTensor,
         Phase::EncodeSemantic,
+        Phase::Analyze,
+        Phase::AnalyzeMode9,
+        Phase::BackendSync,
     ];
 }
 

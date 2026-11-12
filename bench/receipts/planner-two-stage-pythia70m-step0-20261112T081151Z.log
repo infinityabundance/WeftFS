@@ -1,0 +1,38 @@
+ablate: fixture /work/.docker-cache/real-corpus/pythia-70m-step0.safetensors bytes=281715176 sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e subset=76 tensors/281706496 bytes digest=9ca413e677ca8463589d8bd90280b287dd87c12b4c52798f4a2c004c421d2948
+ablate: configs=["C", "C-legacy"] reps=1 backend=local
+ablate: === rep 1/1 order=["C", "C-legacy"] ===
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_objects: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_commit_file: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_superblock_write: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+ablate: result=pass receipt=/work/bench/receipts/planner-two-stage-pythia70m-step0-20261112T081151Z.json

@@ -990,10 +990,17 @@ pub struct TensorPlanOptions {
     /// strategy hint. Mode 18 is frozen and readable; the gate is about
     /// selection, not the wire format.
     pub allow_experimental_modes: bool,
+    /// Offer the mode-9 `FLOAT_TENSOR` candidate. Additive R17 ablation
+    /// control with the historical default (`true`), so no production path
+    /// changes. When `false` the candidate is not built at all, so no mode-9
+    /// encode runs; an explicit `float-tensor` strategy hint still forces it.
+    pub float_tensor: bool,
     /// Offer a level-19 ZSTD candidate in addition to the level-3 one.
     /// Level 19 encoding is ~28.5 MiB/s measured; it is only offered by the
     /// `Planned` policy (never `Fast`/`Auto`-resolved-fast) and only when the
-    /// size threshold and the CPU budget below both hold.
+    /// size threshold and the CPU budget below both hold. Under the default
+    /// [`PlannerMode::TwoStage`] the offer is also gated by prediction: the
+    /// encode only runs when its size could still win.
     pub zstd19: bool,
     pub zstd19_min_bytes: u64,
     /// Refuse the level-19 candidate when its estimated encode time exceeds
@@ -1011,6 +1018,101 @@ pub struct TensorPlanOptions {
     pub zstd_patch_level: i32,
     pub zstd_patch_min_bytes: u64,
     pub zstd_patch_cpu_budget_ns: u64,
+    /// Which candidate set the planned writer encodes (R18). Default
+    /// `TwoStage`; `Exhaustive` reproduces the pre-R18 planner and is the
+    /// control the decision-diff court compares against.
+    pub planner: PlannerMode,
+    /// Threads the mode-9 encoder may use **inside one tensor** (R19). Bounded
+    /// by the codec's `parallel_max_bitstream_bytes` and never allowed to change
+    /// an emitted byte: it only splits the exponent-bitstream emission into
+    /// disjoint byte ranges. `1` keeps the encoder sequential. The default is
+    /// `min(available_parallelism, 4)`; the measured effect is in
+    /// `bench/RESULTS-mode9-encoder.md`.
+    pub tensor_encode_threads: usize,
+    /// Encode the level-3 ZSTD and mode-9 `FLOAT_TENSOR` candidates for **one
+    /// tensor** on two threads when both are certain to run (R21).
+    ///
+    /// This is a pure schedule change: both frames are produced from the same
+    /// immutable input slice by encoders that share nothing but the input, and
+    /// their results are fed through the existing decision code in the existing
+    /// order, so every chosen representation, frame byte, plan and violation
+    /// entry is unchanged. It only helps where one tensor's two candidate
+    /// encodes are the critical path (a 272 MB embedding is 295 ms of level-3
+    /// plus 122 ms of mode 9). Off by default; the pipelined group writer turns
+    /// it on above `candidate_parallel_min_bytes`.
+    pub parallel_candidates: bool,
+    /// Tensor length at which [`Self::parallel_candidates`] applies. Ignored
+    /// when `parallel_candidates` is false.
+    pub candidate_parallel_min_bytes: u64,
+    /// Threads a **chunked** level-3/level-19 ZSTD frame may use inside one
+    /// tensor (R22).
+    ///
+    /// A CHUNKED ZSTD frame is a concatenation of independent per-chunk frames,
+    /// so encoding them on several threads and concatenating in index order is
+    /// byte-identical by construction; this cannot change a frame byte, a chunk
+    /// entry, a hash or a chosen representation. Unlike
+    /// [`Self::tensor_encode_threads`] (mode 9) this is **not** counted by the
+    /// pipeline's CPU tokens: a token bounds an encode *worker*, and the
+    /// level-3 channel inside that worker is bounded here.
+    ///
+    /// The default is [`default_zstd_encode_threads`]. The pool is only used
+    /// when the tensor's encode has the CPUs to itself; measured per family in
+    /// `bench/RESULTS-pareto.md`: neutral on Qwen2.5-0.5B (where the embedding's
+    /// level-3 and mode-9 candidates already run concurrently), 1.18x on
+    /// Qwen2.5-3B and 1.65x on pythia-70m, whose planned encode is ZSTD-only.
+    pub zstd_encode_threads: usize,
+    /// Decoded bytes handed to the chunk-parallel ZSTD pool per ordered batch.
+    /// This, not the thread count, is the bound on the pool's transient memory.
+    pub zstd_encode_batch_bytes: u64,
+    /// Codec frame chunking for the level-3 / level-19 candidates (R22 sweep
+    /// dimension). [`ZstdFrameChunk::Derived`] is the shipped rule.
+    pub zstd_frame_chunk: ZstdFrameChunk,
+    /// Threads the analyse stage's exponent histogram may use inside one tensor
+    /// (R22.2). The histogram is integer counts, so the window split is exact:
+    /// the mode-9 size prediction is unchanged. Default
+    /// `min(available_parallelism, 4)`; only tensors at or above
+    /// [`ANALYSE_PARALLEL_MIN_BYTES`] use it.
+    pub analyse_threads: usize,
+    /// Slack, in bytes, added to the level-19 gate's lower bound before it is
+    /// compared with the measured incumbent (R22 sweep dimension).
+    ///
+    /// Positive values skip level 19 **earlier** (faster, potentially larger);
+    /// negative values encode it when it is within `-margin` bytes of the
+    /// incumbent (slower, potentially smaller). `0` is the R18 rule, which
+    /// skips iff `lower > incumbent`.
+    pub zstd19_gate_margin_bytes: i64,
+}
+
+/// How a ZSTD candidate frame is chunked (R22).
+///
+/// The codec chunk size decides the frame's chunk table. It never changes the
+/// decoded bytes or which logical tensor is stored; a different chunking is a
+/// different frame and therefore a different content root, which is why it is a
+/// sweep dimension and not a default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ZstdFrameChunk {
+    /// Derive from the store chunk size: `codec_chunk_size(store_chunk_size)`,
+    /// clamped to 4..64 KiB. The shipped rule.
+    Derived,
+    /// One frame for the whole tensor: no chunk table.
+    Unchunked,
+    /// An explicit codec chunk size, clamped to the codec's 4..64 KiB bounds.
+    Bytes(u64),
+}
+
+impl ZstdFrameChunk {
+    /// The codec chunk size to pass to `encode_zstd`, `None` for one frame.
+    pub fn resolve(self, store_chunk_size: u64) -> Option<usize> {
+        match self {
+            ZstdFrameChunk::Derived => {
+                Some(crate::representation::codec_chunk_size(store_chunk_size.max(1)) as usize)
+            }
+            ZstdFrameChunk::Unchunked => None,
+            ZstdFrameChunk::Bytes(size) => {
+                Some(crate::representation::codec_chunk_size(size) as usize)
+            }
+        }
+    }
 }
 
 impl Default for TensorPlanOptions {
@@ -1040,6 +1142,7 @@ impl Default for TensorPlanOptions {
             max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
             max_delta_bytes: DEFAULT_MAX_DELTA_BYTES,
             allow_experimental_modes: false,
+            float_tensor: true,
             zstd19: true,
             zstd19_min_bytes: 1024 * 1024,
             zstd19_cpu_budget_ns: 20_000_000_000,
@@ -1048,6 +1151,73 @@ impl Default for TensorPlanOptions {
             zstd_patch_level: 12,
             zstd_patch_min_bytes: 1024 * 1024,
             zstd_patch_cpu_budget_ns: 20_000_000_000,
+            planner: PlannerMode::TwoStage,
+            tensor_encode_threads: default_tensor_encode_threads(),
+            parallel_candidates: false,
+            candidate_parallel_min_bytes:
+                crate::tensor_pipeline::DEFAULT_CANDIDATE_PARALLEL_MIN_BYTES,
+            analyse_threads: default_tensor_encode_threads(),
+            zstd_encode_threads: default_zstd_encode_threads(),
+            zstd_encode_batch_bytes: DEFAULT_ZSTD_ENCODE_BATCH_BYTES,
+            zstd_frame_chunk: ZstdFrameChunk::Derived,
+            zstd19_gate_margin_bytes: 0,
+        }
+    }
+}
+
+/// Bounded default for intra-tensor mode-9 emission threads.
+///
+/// Four is the court's CPU count and the point where the measured curve
+/// flattens; the encoder additionally refuses to parallelise a bitstream larger
+/// than its in-flight bound, so this cannot introduce an unbounded allocation.
+pub fn default_tensor_encode_threads() -> usize {
+    std::thread::available_parallelism()
+        .map(|count| count.get())
+        .unwrap_or(1)
+        .clamp(1, 4)
+}
+
+/// Bounded default for intra-tensor chunk-parallel ZSTD threads (R22).
+///
+/// The available parallelism, clamped to `1..=4` — the same bound
+/// [`default_tensor_encode_threads`] uses. What decides whether the pool runs at
+/// all is not this number but the rule in the planned writer: the pool is used
+/// only when the encode has the CPUs to itself (no concurrent mode-9 candidate
+/// for the same tensor). With that rule the pool shortens the level-3 frame from
+/// 282.2 ms to 133.0 ms on the 272 MB Qwen embedding at four threads, is neutral
+/// on the frozen 0.5B fixture (where the embedding's candidates run
+/// concurrently), and is 1.18x/1.65x on Qwen 3B / pythia-70m. The encoder falls
+/// back to the sequential path below its own input threshold and whenever this
+/// is 1.
+pub fn default_zstd_encode_threads() -> usize {
+    std::thread::available_parallelism()
+        .map(|count| count.get())
+        .unwrap_or(1)
+        .clamp(1, 4)
+}
+
+/// Default ordered-batch bound for chunk-parallel ZSTD encoding (R22): the
+/// pool holds at most this many decoded chunk bytes plus their compressed
+/// frames at any instant.
+pub const DEFAULT_ZSTD_ENCODE_BATCH_BYTES: u64 = 32 * 1024 * 1024;
+
+/// Tensors at or above this length accumulate the analyse histogram on
+/// `analyse_threads` workers. Below it the pass is a few hundred microseconds
+/// and thread start-up costs more than it saves.
+pub const ANALYSE_PARALLEL_MIN_BYTES: usize = 8 * 1024 * 1024;
+
+impl TensorPlanOptions {
+    /// The codec-level chunk-parallel ZSTD bounds this plan asks for.
+    ///
+    /// `threads == 1` is the historical sequential encoder, so the option is
+    /// inert unless a caller raises it.
+    pub fn zstd_encode_options(&self) -> weftcodec::modes::ZstdEncodeOptions {
+        weftcodec::modes::ZstdEncodeOptions {
+            threads: self.zstd_encode_threads.max(1),
+            parallel_min_bytes: weftcodec::modes::ZstdEncodeOptions::default().parallel_min_bytes,
+            batch_decoded_bytes: usize::try_from(self.zstd_encode_batch_bytes)
+                .unwrap_or(usize::MAX)
+                .max(1),
         }
     }
 }
@@ -1246,6 +1416,122 @@ pub struct PreparedTensorObject {
     pub causal: Vec<Hash32>,
 }
 
+/// One encoded (but not yet published) tensor object (R21).
+///
+/// [`Store::encode_tensor_object`] returns this; [`Store::publish_encoded_tensor`]
+/// turns it into a [`PreparedTensorObject`]. Splitting the two halves is what
+/// lets a pipelined writer overlap CPU encoding with backend publication: every
+/// byte published second is already decided by the first, so the halves can run
+/// on different threads (and, in a multi-process design, in different
+/// processes).
+#[derive(Clone, Debug)]
+pub struct EncodedTensor {
+    /// ObjectId seed chosen by the caller (deterministic when supplied).
+    pub seed: [u8; 32],
+    pub dtype: TensorElementDtype,
+    pub shape: Vec<u64>,
+    pub layout: TensorLayoutSpec,
+    /// `LogicalTensorRoot` of the stored (canonicalised) tensor bytes.
+    pub logical_root: Hash32,
+    /// Canonical tensor length.
+    pub size: u64,
+    /// `H("weft/chunk/v1", logical_bytes)`.
+    pub content_root: Hash32,
+    /// Which representation was chosen.
+    pub kind: RepresentationKind,
+    /// Chosen representation strategy name.
+    pub strategy_name: String,
+    /// The chosen frame, for the codec and tensor kinds.
+    pub frame: Option<Vec<u8>>,
+    pub dependencies: Vec<Hash32>,
+    pub tensor: Option<TensorRepresentation>,
+    pub tile_shape: Option<Vec<u64>>,
+    /// Canonical tensor bytes, retained only when the `raw` representation was
+    /// chosen (its chunk table is built from them).
+    pub raw: Option<Vec<u8>>,
+    /// Causal parent version ids for the object record.
+    pub causal: Vec<Hash32>,
+    /// The planner decision that produced this object.
+    pub plan: TensorPlan,
+}
+
+impl EncodedTensor {
+    /// Bytes this fragment holds while it waits to be published. This is the
+    /// quantity the pipelined writer charges against its in-flight budget.
+    pub fn resident_bytes(&self) -> u64 {
+        let frame = self
+            .frame
+            .as_ref()
+            .map(|frame| frame.len() as u64)
+            .unwrap_or(0);
+        let raw = self.raw.as_ref().map(|raw| raw.len() as u64).unwrap_or(0);
+        frame.saturating_add(raw)
+    }
+}
+
+/// Which candidate set the planned writer encodes (R18).
+///
+/// `Exhaustive` is the historical behaviour: every offered candidate is
+/// encoded and the cheapest measured one is published. `TwoStage` analyses
+/// first and encodes only the candidates whose physical-size interval could
+/// still change the decision (see [`crate::two_stage`]); a candidate that cannot
+/// win is recorded in the plan with the bound that made the skip safe. The
+/// chosen representation is identical whenever the interval holds — the
+/// decision-diff court is the evidence for that claim, not this comment.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PlannerMode {
+    /// Analyse, then encode only the candidates that could still win.
+    #[default]
+    TwoStage,
+    /// Encode and measure every offered candidate (pre-R18 behaviour).
+    Exhaustive,
+}
+
+impl PlannerMode {
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "two-stage" | "twostage" | "default" => Ok(PlannerMode::TwoStage),
+            "exhaustive" | "legacy" => Ok(PlannerMode::Exhaustive),
+            other => Err(Error::invalid_argument(format!(
+                "unknown planner mode `{other}` (expected two-stage or exhaustive)"
+            ))),
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            PlannerMode::TwoStage => "two-stage",
+            PlannerMode::Exhaustive => "exhaustive",
+        }
+    }
+}
+
+/// One planned-write decision trace, attached to the returned plan.
+///
+/// This is the machine-readable decision stream: what was predicted, what was
+/// encoded, and the bound behind every skip. It is diagnostics only — nothing
+/// here is persisted or hashed.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PlannerTrace {
+    pub mode: PlannerMode,
+    pub analysis: crate::two_stage::Analysis,
+    pub decision: crate::two_stage::Decision,
+    /// Level-19 verdict, decided after level 3 was measured.
+    pub level19: Option<crate::two_stage::Level19Decision>,
+    /// The non-physical price terms the decisions were taken under.
+    pub fixed: crate::two_stage::FixedCosts,
+    /// Measured frame length of the level-3 encode, when it ran.
+    pub actual_zstd3: Option<u64>,
+    /// Measured frame length of the level-19 encode, when it ran.
+    pub actual_zstd19: Option<u64>,
+    /// Measured frame length of the mode-9 encode, when it ran.
+    pub actual_mode9: Option<u64>,
+    /// Predictions the actual sizes contradicted.
+    pub prediction_violations: Vec<String>,
+    /// Whether a violation forced this tensor back onto the exhaustive planner.
+    pub fallback_exhaustive: bool,
+}
+
 /// One priced planner candidate.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TensorPlanCandidate {
@@ -1276,6 +1562,9 @@ pub struct TensorPlan {
     pub runner_up_estimated_encode_ns: Option<u64>,
     pub runner_up_cost: Option<u128>,
     pub candidates: Vec<TensorPlanCandidate>,
+    /// R18 decision stream. `None` only for plans that never ran the two-stage
+    /// analysis (independent/rebase pricing).
+    pub planner: Option<PlannerTrace>,
 }
 
 /// The priced decision among standalone representations (rebase input).
@@ -1636,12 +1925,68 @@ impl Store {
         spec: &TensorWriteSpec,
         seed: &[u8; 32],
     ) -> Result<PreparedTensorObject> {
+        Ok(self
+            .prepare_tensor_object_with_spec_seeded_planned(
+                dtype, shape, bytes, layout, spec, seed,
+            )?
+            .0)
+    }
+
+    /// Benchmark-only variant of
+    /// [`Store::prepare_tensor_object_with_spec_seeded`] that also returns the
+    /// planner decision that produced the object.
+    ///
+    /// Additive R17 surface: it runs the **same** prepare (one encode per
+    /// candidate, the same seed and the same publication) and only copies the
+    /// already-priced candidate list into a [`TensorPlan`]. It never changes
+    /// the chosen strategy, the published bytes, or any frame/manifest byte.
+    pub fn prepare_tensor_object_with_spec_seeded_planned(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+    ) -> Result<(PreparedTensorObject, TensorPlan)> {
+        // R21: the prepare half is split into a pure encode (no publication)
+        // and a publication half, so the pipelined group writer can overlap
+        // encoding with publication. This function remains the sequential
+        // composition of exactly the same two halves.
+        let encoded = self.encode_tensor_object(dtype, shape, bytes, layout, spec, seed)?;
+        let plan = encoded.plan.clone();
+        let prepared = self.publish_encoded_tensor(encoded)?;
+        Ok((prepared, plan))
+    }
+
+    /// Encode one tensor object **without publishing anything** (R21).
+    ///
+    /// Runs the same planner, the same candidate encodes and the same
+    /// canonicalisation as [`Store::prepare_tensor_object_with_spec_seeded_planned`]
+    /// and returns the chosen representation's immutable bytes plus the plan.
+    /// Every byte the later publication writes is already fixed here, so the
+    /// encode half is pure: it takes `&self`, publishes nothing, and may run
+    /// concurrently with other encodes of the same store.
+    ///
+    /// The returned [`EncodedTensor`] holds the chosen frame (or, for the `raw`
+    /// representation, the canonical tensor bytes the chunk table is built
+    /// from), which is why the pipelined writer charges it against a byte
+    /// budget rather than a thread count.
+    pub fn encode_tensor_object(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+    ) -> Result<EncodedTensor> {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         // Row-major callers already hold the canonical bytes; borrowing avoids a
         // second full-tensor copy in the middle of the planner.
         let logical = layout.canonicalize_cow(dtype, shape, bytes)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, planner_trace) = self.prepare_candidates(
             dtype,
             shape,
             logical.as_ref(),
@@ -1658,8 +2003,10 @@ impl Store {
                     .is_some_and(TensorStrategy::is_experimental),
             spec.strategy_hint,
             true,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
+        let plan = plan_from_prepared(&prepared, chosen, planner_trace);
         let artifact = chosen
             .artifact
             .clone()
@@ -1668,29 +2015,84 @@ impl Store {
             Some(tensor) => tensor.logical_root,
             None => self.logical_root_for_bytes(dtype, shape, logical.as_ref(), None)?,
         };
-        let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(dtype, shape, logical.as_ref(), layout, &artifact)?;
+        let size = logical.len() as u64;
+        let content_root = crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+            identity::content_hash(logical.as_ref())
+        });
+        // The raw representation's chunk table is built from the canonical
+        // bytes, so only that representation has to keep them. Every other
+        // representation publishes a frame that already exists.
+        let raw = match artifact.kind {
+            RepresentationKind::Raw => Some(logical.into_owned()),
+            _ => None,
+        };
+        Ok(EncodedTensor {
+            seed: *seed,
+            dtype,
+            shape: shape.to_vec(),
+            layout: layout.clone(),
+            logical_root: root,
+            size,
+            content_root,
+            kind: artifact.kind,
+            strategy_name: artifact.strategy_name,
+            frame: artifact.frame,
+            dependencies: artifact.dependencies,
+            tensor: artifact.tensor,
+            tile_shape: artifact.tile_shape,
+            raw,
+            causal: spec.causal.clone(),
+            plan,
+        })
+    }
+
+    /// Publish the immutable blobs of one [`EncodedTensor`] and return the
+    /// prepared fragment the committer installs (R21).
+    ///
+    /// This is the only half that touches the backend, so a pipelined writer can
+    /// run every publication on one thread while encoders keep working. The
+    /// bytes are a pure function of the input, so publication is idempotent and
+    /// order-independent: two handles cannot disagree about the bytes behind a
+    /// hash.
+    pub fn publish_encoded_tensor(&self, encoded: EncodedTensor) -> Result<PreparedTensorObject> {
+        let artifact = PreparedArtifact {
+            kind: encoded.kind,
+            strategy_name: encoded.strategy_name.clone(),
+            frame: encoded.frame,
+            dependencies: encoded.dependencies.clone(),
+            tensor: encoded.tensor.clone(),
+            tile_shape: encoded.tile_shape.clone(),
+        };
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            encoded.dtype,
+            &encoded.shape,
+            encoded.size,
+            encoded.content_root,
+            &encoded.layout,
+            &artifact,
+            encoded.raw.as_deref(),
+        )?;
         let mut attrs = BTreeMap::new();
         apply_tensor_attrs(
             &mut attrs,
-            dtype,
-            shape,
-            root,
-            layout,
+            encoded.dtype,
+            &encoded.shape,
+            encoded.logical_root,
+            &encoded.layout,
             artifact.strategy_name.as_str(),
             artifact.tile_shape.as_deref(),
         )?;
         Ok(PreparedTensorObject {
-            seed: *seed,
+            seed: encoded.seed,
             manifest_id,
             content_root: content_hash,
             size,
-            logical_root: root,
+            logical_root: encoded.logical_root,
             attrs,
-            dtype: dtype.as_str().to_owned(),
-            shape: shape.to_vec(),
-            strategy: artifact.strategy_name.clone(),
-            causal: spec.causal.clone(),
+            dtype: encoded.dtype.as_str().to_owned(),
+            shape: encoded.shape,
+            strategy: encoded.strategy_name,
+            causal: encoded.causal,
         })
     }
 
@@ -1731,7 +2133,7 @@ impl Store {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         let logical = layout.canonicalize_cow(dtype, shape, bytes)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, planner_trace) = self.prepare_candidates(
             dtype,
             shape,
             logical.as_ref(),
@@ -1743,40 +2145,10 @@ impl Store {
             options.allow_experimental_modes,
             None,
             false,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, None)?;
-        let mut runner_up: Option<&PreparedCandidate> = None;
-        let mut applicable: Vec<&PreparedCandidate> = prepared
-            .iter()
-            .filter(|item| item.candidate.applicable)
-            .collect();
-        applicable.sort_by(|a, b| {
-            a.candidate
-                .cost
-                .cmp(&b.candidate.cost)
-                .then_with(|| a.candidate.strategy.cmp(&b.candidate.strategy))
-        });
-        for item in &applicable {
-            if item.candidate.strategy != chosen.candidate.strategy {
-                runner_up = Some(item);
-                break;
-            }
-        }
-        Ok(TensorPlan {
-            chosen: chosen.candidate.strategy,
-            chosen_physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
-            chosen_estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
-            chosen_estimated_encode_ns: chosen.candidate.estimated_encode_ns.unwrap_or(0),
-            chosen_cost: chosen.candidate.cost.unwrap_or(0),
-            runner_up: runner_up.map(|item| item.candidate.strategy),
-            runner_up_physical_bytes: runner_up.and_then(|item| item.candidate.physical_bytes),
-            runner_up_estimated_decode_ns: runner_up
-                .and_then(|item| item.candidate.estimated_decode_ns),
-            runner_up_estimated_encode_ns: runner_up
-                .and_then(|item| item.candidate.estimated_encode_ns),
-            runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
-            candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
-        })
+        Ok(plan_from_prepared(&prepared, chosen, planner_trace))
     }
 
     /// Price only the standalone representations of an existing tensor object.
@@ -1791,7 +2163,7 @@ impl Store {
     ) -> Result<TensorIndependentPlan> {
         let meta = self.tensor_metadata(id)?;
         let logical = self.read_object_uncounted(id)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, _planner_trace) = self.prepare_candidates(
             meta.dtype,
             &meta.shape,
             &logical,
@@ -1802,6 +2174,7 @@ impl Store {
             true,
             options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
             hint,
+            false,
             false,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
@@ -1859,7 +2232,7 @@ impl Store {
             ));
         }
         let logical = self.read_object_uncounted(id)?;
-        let prepared = self.prepare_candidates(
+        let (prepared, _planner_trace) = self.prepare_candidates(
             meta.dtype,
             &meta.shape,
             &logical,
@@ -1871,6 +2244,7 @@ impl Store {
             options.allow_experimental_modes || hint.is_some_and(TensorStrategy::is_experimental),
             hint,
             true,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, hint)?;
         let plan = TensorIndependentPlan {
@@ -1901,8 +2275,17 @@ impl Store {
             Some(tensor) => tensor.logical_root,
             None => self.logical_root_for_bytes(meta.dtype, &meta.shape, &logical, None)?,
         };
-        let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(meta.dtype, &meta.shape, &logical, &meta.layout, &artifact)?;
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            meta.dtype,
+            &meta.shape,
+            logical.len() as u64,
+            crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                identity::content_hash(&logical)
+            }),
+            &meta.layout,
+            &artifact,
+            Some(&logical),
+        )?;
         let mut attrs = old.attrs.clone();
         apply_tensor_attrs(
             &mut attrs,
@@ -1966,8 +2349,7 @@ impl Store {
         options: &TileDecodeOptions,
     ) -> Result<Vec<u8>> {
         let record = self.object_meta(authorized.object_id())?;
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2019,8 +2401,7 @@ impl Store {
         options: &TileDecodeOptions,
     ) -> Result<(Vec<u8>, TileDecodeStats)> {
         let record = self.object_meta(id)?;
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2084,8 +2465,7 @@ impl Store {
                 "engram updates require a file object",
             ));
         }
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         let rep = manifest
             .representation
             .as_ref()
@@ -2102,7 +2482,8 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("engram representation has no frame id"))?;
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let meta = weftcodec::engram::engram_metadata(&frame, &limits)?;
@@ -2202,9 +2583,13 @@ impl Store {
         let (manifest_id, content_hash, size) = self.store_tensor_artifact(
             tensor.dtype,
             &meta.table_shape,
-            &new_table,
+            new_table.len() as u64,
+            crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                identity::content_hash(&new_table)
+            }),
             &layout,
             &artifact,
+            Some(&new_table),
         )?;
         let mut attrs = BTreeMap::new();
         apply_tensor_attrs(
@@ -2257,8 +2642,7 @@ impl Store {
         options: &TileDecodeOptions,
     ) -> Result<(RegionRead, TileDecodeStats)> {
         let record = self.object_meta(id)?;
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
@@ -2308,7 +2692,8 @@ impl Store {
                 "tensor layout descriptor disagrees with the manifest dtype/shape",
             ));
         }
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected = match tensor.tensor_mode {
@@ -2350,15 +2735,18 @@ impl Store {
         let limits = Limits::default();
         let mut resolver = MapResolver::new();
         for dependency in &rep.dependencies {
-            let manifest =
-                self.read_manifest_keyed(*dependency)?;
+            let manifest = self.read_manifest_keyed(*dependency)?;
             let dep_rep = manifest
                 .representation
                 .ok_or_else(|| Error::corrupt("engram dependency has no representation"))?;
             let frame_id = dep_rep
                 .frame
                 .ok_or_else(|| Error::corrupt("engram dependency has no frame id"))?;
-            let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+            let frame_bytes = self.read_blob_verified_keyed(
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )?;
             let frame = Frame::parse(&frame_bytes, &limits)?;
             resolver.insert(frame.header.content_hash, frame_bytes);
         }
@@ -2381,7 +2769,8 @@ impl Store {
                 "tensor layout descriptor disagrees with the manifest dtype/shape",
             ));
         }
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         if frame.header.mode != Mode::EngramShard {
@@ -3173,8 +3562,7 @@ impl Store {
         &self,
         record: &ObjectRecord,
     ) -> Result<weftcodec::TensorShardedMeta> {
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         let rep = manifest
             .representation
             .as_ref()
@@ -3186,7 +3574,8 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         Ok(weftcodec::decode_shard_frame(&frame, &limits)?.meta)
@@ -3216,8 +3605,7 @@ impl Store {
                 "tensor metadata requires a file object",
             ));
         }
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 let tensor = rep
@@ -3319,7 +3707,7 @@ impl Store {
         let old = self.object_meta(id)?;
         let mut causal = spec.causal.clone();
         causal.push(old.version);
-        let prepared = self.prepare_candidates(
+        let (prepared, _planner_trace) = self.prepare_candidates(
             meta.dtype,
             &meta.shape,
             &logical,
@@ -3334,6 +3722,7 @@ impl Store {
                     .is_some_and(TensorStrategy::is_experimental),
             spec.strategy_hint,
             true,
+            false,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
         let artifact = chosen
@@ -3344,8 +3733,17 @@ impl Store {
             Some(tensor) => tensor.logical_root,
             None => self.logical_root_for_bytes(meta.dtype, &meta.shape, &logical, None)?,
         };
-        let (manifest_id, content_hash, size) =
-            self.store_tensor_artifact(meta.dtype, &meta.shape, &logical, &meta.layout, &artifact)?;
+        let (manifest_id, content_hash, size) = self.store_tensor_artifact(
+            meta.dtype,
+            &meta.shape,
+            logical.len() as u64,
+            crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                identity::content_hash(&logical)
+            }),
+            &meta.layout,
+            &artifact,
+            Some(&logical),
+        )?;
         let mut attrs = old.attrs.clone();
         apply_tensor_attrs(
             &mut attrs,
@@ -3382,10 +3780,16 @@ impl Store {
         allow_experimental: bool,
         hint: Option<TensorStrategy>,
         keep_artifacts: bool,
-    ) -> Result<Vec<PreparedCandidate>> {
+        fallback_exhaustive: bool,
+    ) -> Result<(Vec<PreparedCandidate>, Option<PlannerTrace>)> {
         let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Encode);
         let limits = Limits::default();
         let size = logical.len() as u64;
+        // R22: the chunk-parallel ZSTD bounds for this plan. `threads == 1` is
+        // the historical sequential encoder, and the codec falls back to it
+        // whenever the input is below its own parallel threshold, so this is
+        // inert until a caller raises `zstd_encode_threads`.
+        let zstd_options = options.zstd_encode_options();
         let mut out = Vec::new();
         // The additive quantized LogicalTensorRoot binds the mode-10 scale
         // plane, so a q8_0 tensor is only stored through mode 10. q4_0 store
@@ -3397,6 +3801,108 @@ impl Store {
             ));
         }
         let quantized = dtype == TensorElementDtype::Q8_0;
+
+        // ------------------------------------------------------------------
+        // Stage 1 + 2 (R18): analyse, then decide which candidates to encode.
+        // ------------------------------------------------------------------
+        //
+        // Applies to the auto-selected write path only: an explicit strategy
+        // hint, a pricing-only independent plan (rebase), or the `Fast` policy
+        // (which returned above) keep their historical behaviour. The four
+        // candidates the R17 ledger prices are covered: raw (exact size), ZSTD
+        // level 3 (sampled estimate), ZSTD level 19 (sampled ratio) and mode 9
+        // (bit-exact prediction). Every other candidate is prepared exactly as
+        // before, so this cannot change the decision among them.
+        let two_stage_active = options.planner == PlannerMode::TwoStage
+            && !independent_only
+            && hint.is_none()
+            && !quantized
+            && !options.write_policy.is_fast()
+            // The pricing-only entry points (`plan_tensor`, rebase) keep the
+            // exhaustive candidate set so a caller can inspect every measured
+            // size; the two-stage rule governs what a *write* encodes.
+            && keep_artifacts;
+        let mut trace: Option<PlannerTrace> = if two_stage_active {
+            // R22: sample whole chunks of the same size the frame will use, so a
+            // non-default frame chunking cannot make the sampled estimate
+            // describe a different unit than the encode.
+            let chunk_bytes = options
+                .zstd_frame_chunk
+                .resolve(self.options().chunk_size.max(1))
+                .map(|size| size as u64)
+                .unwrap_or_else(|| self.options().chunk_size.max(1));
+            let zstd19_offered = options.zstd19
+                && size >= options.zstd19_min_bytes
+                && crate::cost_model::estimate_encode_ns(
+                    crate::cost_model::EncodeClass::Zstd19,
+                    size,
+                ) <= options.zstd19_cpu_budget_ns;
+            let mode9_offered = options.float_tensor && float_tensor_dtype(dtype).is_some();
+            let decode_lambda = u128::from(options.lambda_ns);
+            let write_lambda = u128::from(options.effective_write_lambda());
+            let fixed_for = |class: crate::cost_model::CostClass,
+                             strategy: TensorStrategy,
+                             encode_class: crate::cost_model::EncodeClass|
+             -> u128 {
+                let decode = options.estimate_ns_at_pattern(class, strategy, size);
+                let encode = crate::cost_model::estimate_encode_ns(encode_class, size);
+                decode_lambda * u128::from(decode) + write_lambda * u128::from(encode)
+            };
+            let fixed = crate::two_stage::FixedCosts {
+                raw: fixed_for(
+                    crate::cost_model::CostClass::Raw,
+                    TensorStrategy::Raw,
+                    TensorStrategy::Raw.encode_class(),
+                ),
+                zstd3: fixed_for(
+                    crate::cost_model::CostClass::Zstd,
+                    TensorStrategy::Zstd,
+                    TensorStrategy::Zstd.encode_class(),
+                ),
+                zstd19: fixed_for(
+                    crate::cost_model::CostClass::Zstd,
+                    TensorStrategy::Zstd,
+                    crate::cost_model::EncodeClass::Zstd19,
+                ),
+                mode9: fixed_for(
+                    crate::cost_model::CostClass::FloatTensor,
+                    TensorStrategy::FloatTensor,
+                    TensorStrategy::FloatTensor.encode_class(),
+                ),
+            };
+            // R22.2: the analyse stage's only full-tensor pass is the mode-9
+            // exponent histogram, and it is a vector of integer counts, so it
+            // splits across `analyse_threads` workers with an exactly equal
+            // result (the codec proves the counts and the predicted length).
+            let analysis =
+                crate::phase_profile::timed(crate::phase_profile::Phase::Analyze, || {
+                    crate::two_stage::analyse_tensor_with(
+                        logical,
+                        chunk_bytes,
+                        zstd19_offered,
+                        float_tensor_dtype(dtype),
+                        shape,
+                        &limits,
+                        options.analyse_threads,
+                        ANALYSE_PARALLEL_MIN_BYTES,
+                    )
+                })?;
+            let decision = crate::two_stage::select_before_encodes(&analysis, mode9_offered, fixed);
+            Some(PlannerTrace {
+                mode: PlannerMode::TwoStage,
+                analysis,
+                decision,
+                level19: None,
+                fixed,
+                actual_zstd3: None,
+                actual_zstd19: None,
+                actual_mode9: None,
+                prediction_violations: Vec::new(),
+                fallback_exhaustive: false,
+            })
+        } else {
+            None
+        };
 
         // Critical-path fast path: build at most one linear-pass representation
         // and return without encoding a single planned candidate. Nothing here
@@ -3446,11 +3952,19 @@ impl Store {
             );
             if options.fast_codec == FastCodec::Zstd {
                 let level = options.fast_zstd_level.clamp(1, 3);
-                let codec_chunk =
-                    crate::representation::codec_chunk_size(self.options().chunk_size.max(1))
-                        as usize;
+                // R22: the frame chunking follows the same plan option as the
+                // planned candidates, so a fast row and a planned row agree.
+                let codec_chunk = options
+                    .zstd_frame_chunk
+                    .resolve(self.options().chunk_size.max(1));
                 match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                    weftcodec::modes::encode_zstd(logical, level, Some(codec_chunk), &limits)
+                    weftcodec::modes::encode_zstd_with(
+                        logical,
+                        level,
+                        codec_chunk,
+                        &limits,
+                        &zstd_options,
+                    )
                 }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
@@ -3494,7 +4008,7 @@ impl Store {
                     Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
                 }
             }
-            return Ok(out);
+            return Ok((out, None));
         }
 
         // Raw chunks (v2 kind:"raw").
@@ -3542,17 +4056,19 @@ impl Store {
                 }),
             };
             retain_candidate(&mut out, hint, keep_artifacts, raw_candidate);
-            return Ok(out);
+            return Ok((out, None));
         }
         if hint == Some(TensorStrategy::Zstd) && !quantized {
-            let codec_chunk =
-                crate::representation::codec_chunk_size(self.options().chunk_size.max(1)) as usize;
+            let codec_chunk = options
+                .zstd_frame_chunk
+                .resolve(self.options().chunk_size.max(1));
             match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                weftcodec::modes::encode_zstd(
+                weftcodec::modes::encode_zstd_with(
                     logical,
                     crate::representation::CODEC_ZSTD_LEVEL,
-                    Some(codec_chunk),
+                    codec_chunk,
                     &limits,
+                    &zstd_options,
                 )
             }) {
                 Ok(frame) => {
@@ -3596,7 +4112,7 @@ impl Store {
                 }
                 Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
             }
-            return Ok(out);
+            return Ok((out, None));
         }
 
         let raw_candidate = if quantized {
@@ -3643,24 +4159,177 @@ impl Store {
         retain_candidate(&mut out, hint, keep_artifacts, raw_candidate);
 
         // Zstandard frame.
-        let codec_chunk =
-            crate::representation::codec_chunk_size(self.options().chunk_size.max(1)) as usize;
+        let codec_chunk = options
+            .zstd_frame_chunk
+            .resolve(self.options().chunk_size.max(1));
+        // R18: level 3 is the measured incumbent, so it is encoded whenever its
+        // trusted lower bound could still beat the best exact candidate (or the
+        // prediction cannot decide the mode-9 1/64 gate). Otherwise the skip is
+        // recorded with the bound.
+        let encode_zstd3 = trace
+            .as_ref()
+            .map(|trace| trace.decision.need_zstd3)
+            .unwrap_or(true);
+        // ------------------------------------------------------------------
+        // R21: run the two expensive candidate encodes for one tensor on two
+        // threads when both are certain to run.
+        // ------------------------------------------------------------------
+        //
+        // The level-3 frame and the mode-9 frame are both functions of the same
+        // immutable `logical` slice and of nothing else. On a large tensor they
+        // are also the critical path (a 272 MB bf16 embedding measured 295.0 ms
+        // of level 3 against 121.6 ms of mode 9). Encoding them one after the
+        // other therefore charges their sum; encoding them concurrently charges
+        // their maximum, with **no** effect on what is emitted, because the
+        // results are consumed below in the historical order.
+        //
+        // The prefetch only happens when the decision stream already guarantees
+        // that both encodes run:
+        // * level 3 runs iff `need_zstd3` and the tensor is not q8_0;
+        // * mode 9 runs unless the R18 gate *failed* (a `Pass` or an
+        //   `Unresolved` gate both encode it and decide from the measured
+        //   sizes), and unless the candidate was disabled.
+        // A `Fail` gate or a disabled candidate keeps the sequential path, so a
+        // candidate that cannot win is still never encoded.
+        let mode9_prefetchable = !quantized
+            && matches!(
+                float_tensor_dtype(dtype),
+                Some(_) if options.float_tensor || hint == Some(TensorStrategy::FloatTensor)
+            )
+            && trace
+                .as_ref()
+                .map(|trace| trace.decision.mode9 != crate::two_stage::Mode9Gate::Fail)
+                .unwrap_or(true);
+        let run_concurrently = options.parallel_candidates
+            && size >= options.candidate_parallel_min_bytes
+            && encode_zstd3
+            && !quantized
+            && mode9_prefetchable;
+        // R22: when this tensor already runs two candidate encoders
+        // concurrently, the chunk pool inside the level-3 encode would be a
+        // third and fourth busy thread on a court that is already saturated —
+        // and it is the publisher that then pays. Measured on the frozen 0.5B
+        // fixture: the chunk pool is neutral-to-negative there (625.1 ms at two
+        // threads against 605.4 sequential, least-contended of 7 interleaved
+        // reps), while the same pool is 1.18x on Qwen 3B and 1.65x on pythia-70m
+        // where no mode-9 candidate competes. The rule is therefore "use the
+        // chunk pool when the encode has the CPUs to itself".
+        let zstd_options = if run_concurrently {
+            weftcodec::modes::ZstdEncodeOptions {
+                threads: 1,
+                ..zstd_options
+            }
+        } else {
+            zstd_options
+        };
+        let mut prefetched_zstd: Option<weftcodec::Result<Vec<u8>>> = None;
+        let mut prefetched_mode9: Option<weftcodec::Result<Vec<u8>>> = None;
+        if run_concurrently {
+            let float_dtype = float_tensor_dtype(dtype)
+                .ok_or_else(|| Error::invalid_argument("parallel candidates need a float dtype"))?;
+            let histogram = trace
+                .as_ref()
+                .and_then(|trace| trace.analysis.mode9.as_ref())
+                .map(|prediction| std::sync::Arc::clone(&prediction.exponent_histogram));
+            let encode_options = weftcodec::modes::FloatTensorEncodeOptions::with_threads(
+                options.tensor_encode_threads,
+            );
+            let panicked = std::thread::scope(|scope| {
+                let zstd = scope.spawn(|| {
+                    crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                        weftcodec::modes::encode_zstd_with(
+                            logical,
+                            crate::representation::CODEC_ZSTD_LEVEL,
+                            codec_chunk,
+                            &limits,
+                            &zstd_options,
+                        )
+                    })
+                });
+                let mode9 = scope.spawn(|| {
+                    crate::phase_profile::timed(
+                        crate::phase_profile::Phase::EncodeFloatTensor,
+                        || match &histogram {
+                            Some(histogram) => {
+                                weftcodec::modes::encode_float_tensor_with_histogram(
+                                    logical,
+                                    float_dtype,
+                                    shape,
+                                    &limits,
+                                    histogram,
+                                    encode_options,
+                                )
+                            }
+                            None => weftcodec::modes::encode_float_tensor_with(
+                                logical,
+                                float_dtype,
+                                shape,
+                                &limits,
+                                encode_options,
+                            ),
+                        },
+                    )
+                });
+                match (zstd.join(), mode9.join()) {
+                    (Ok(zstd), Ok(mode9)) => {
+                        prefetched_zstd = Some(zstd);
+                        prefetched_mode9 = Some(mode9);
+                        false
+                    }
+                    _ => true,
+                }
+            });
+            if panicked {
+                return Err(Error::corrupt(
+                    "a concurrent candidate encoder panicked; nothing was published",
+                ));
+            }
+        }
         if quantized {
             out.push(skipped(
                 TensorStrategy::Zstd,
                 "q8_0 identity requires the mode-10 scale plane".to_owned(),
             ));
+        } else if !encode_zstd3 {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                trace
+                    .as_ref()
+                    .and_then(|trace| trace.decision.zstd3_skip_bound.clone())
+                    .unwrap_or_else(|| {
+                        "level-3 ZSTD not encoded: the planner proved it cannot win".to_owned()
+                    }),
+            ));
         } else {
-            match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
-                weftcodec::modes::encode_zstd(
-                    logical,
-                    crate::representation::CODEC_ZSTD_LEVEL,
-                    Some(codec_chunk),
-                    &limits,
-                )
-            }) {
+            let encoded = match prefetched_zstd.take() {
+                Some(zstd) => zstd,
+                None => {
+                    crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd, || {
+                        weftcodec::modes::encode_zstd_with(
+                            logical,
+                            crate::representation::CODEC_ZSTD_LEVEL,
+                            codec_chunk,
+                            &limits,
+                            &zstd_options,
+                        )
+                    })
+                }
+            };
+            match encoded {
                 Ok(frame) => {
                     let physical = frame.len() as u64;
+                    if let Some(trace) = trace.as_mut() {
+                        trace.actual_zstd3 = Some(physical);
+                        if let Some(estimate) = &trace.analysis.zstd3 {
+                            if !estimate.contains(physical) {
+                                trace.prediction_violations.push(format!(
+                                    "level-3 actual {physical} B is outside the predicted interval {} (method {})",
+                                    estimate.interval(),
+                                    estimate.method
+                                ));
+                            }
+                        }
+                    }
                     let estimate = options.estimate_ns_at_pattern(
                         crate::cost_model::CostClass::Zstd,
                         TensorStrategy::Zstd,
@@ -3733,6 +4402,61 @@ impl Store {
         } else {
             let encode_ns =
                 crate::cost_model::estimate_encode_ns(crate::cost_model::EncodeClass::Zstd19, size);
+            // R18: level 19 is decided **after** level 3 is measured, against an
+            // incumbent built only from measured or exact sizes. Its own
+            // estimate is recomputed from the measured level-3 frame, so a
+            // heterogeneous tensor (whose sampled level-3 interval degenerates)
+            // does not turn the decision into "encode it to be safe".
+            let level19_decision = trace.as_mut().map(|trace| {
+                let measured_zstd3 = out
+                    .iter()
+                    .find(|item| {
+                        item.candidate.strategy == TensorStrategy::Zstd && item.candidate.applicable
+                    })
+                    .and_then(|item| item.candidate.physical_bytes);
+                let estimate = crate::two_stage::refine_level19(&trace.analysis, measured_zstd3);
+                let mut incumbent = crate::two_stage::Incumbent::priced(
+                    trace.analysis.raw_bytes,
+                    trace.fixed.raw,
+                    "raw",
+                );
+                if let Some(measured) = measured_zstd3 {
+                    let candidate = crate::two_stage::Incumbent::priced(
+                        measured,
+                        trace.fixed.zstd3,
+                        "measured zstd level 3",
+                    );
+                    if candidate.cost < incumbent.cost {
+                        incumbent = candidate;
+                    }
+                }
+                if let Some(prediction) = &trace.analysis.mode9 {
+                    // The exact mode-9 size is known whether or not its gate
+                    // passes. Including it can only make the incumbent smaller,
+                    // i.e. make a level-19 skip harder: conservative.
+                    let candidate = crate::two_stage::Incumbent::priced(
+                        prediction.exact_bytes,
+                        trace.fixed.mode9,
+                        "mode-9 float-tensor (exact)",
+                    );
+                    if candidate.cost < incumbent.cost {
+                        incumbent = candidate;
+                    }
+                }
+                let decision = crate::two_stage::select_level19_with_margin(
+                    estimate.as_ref(),
+                    trace.fixed.zstd19,
+                    incumbent,
+                    options.zstd19_gate_margin_bytes,
+                );
+                trace.analysis.zstd19 = decision.estimate.clone();
+                trace.level19 = Some(decision.clone());
+                decision
+            });
+            let encode_zstd19 = level19_decision
+                .as_ref()
+                .map(|decision| decision.encode)
+                .unwrap_or(true);
             if encode_ns > options.zstd19_cpu_budget_ns {
                 out.push(skipped(
                     TensorStrategy::Zstd,
@@ -3741,12 +4465,44 @@ impl Store {
                         options.zstd19_cpu_budget_ns
                     ),
                 ));
+            } else if !encode_zstd19 {
+                out.push(skipped(
+                    TensorStrategy::Zstd,
+                    level19_decision
+                        .as_ref()
+                        .and_then(|decision| decision.skip_bound.clone())
+                        .unwrap_or_else(|| {
+                            "level-19 ZSTD not encoded: the planner proved it cannot win".to_owned()
+                        }),
+                ));
             } else {
                 match crate::phase_profile::timed(crate::phase_profile::Phase::EncodeZstd19, || {
-                    weftcodec::modes::encode_zstd(logical, 19, Some(codec_chunk), &limits)
+                    weftcodec::modes::encode_zstd_with(
+                        logical,
+                        19,
+                        codec_chunk,
+                        &limits,
+                        &zstd_options,
+                    )
                 }) {
                     Ok(frame) => {
                         let physical = frame.len() as u64;
+                        if let Some(trace) = trace.as_mut() {
+                            trace.actual_zstd19 = Some(physical);
+                            if let Some(estimate) = trace
+                                .level19
+                                .as_ref()
+                                .and_then(|decision| decision.estimate.as_ref())
+                            {
+                                if !estimate.contains(physical) {
+                                    trace.prediction_violations.push(format!(
+                                        "level-19 actual {physical} B is outside the predicted interval {} (method {})",
+                                        estimate.interval(),
+                                        estimate.method
+                                    ));
+                                }
+                            }
+                        }
                         let estimate = options.estimate_ns_at_pattern(
                             crate::cost_model::CostClass::Zstd,
                             TensorStrategy::Zstd,
@@ -3801,81 +4557,182 @@ impl Store {
             })
             .and_then(|item| item.candidate.physical_bytes);
         match float_tensor_dtype(dtype) {
+            Some(_) if !options.float_tensor && hint != Some(TensorStrategy::FloatTensor) => {
+                out.push(skipped(
+                    TensorStrategy::FloatTensor,
+                    "mode 9 disabled (--no-float-tensor)".to_owned(),
+                ));
+            }
             Some(float_dtype) => {
-                match crate::phase_profile::timed(
-                    crate::phase_profile::Phase::EncodeFloatTensor,
-                    || weftcodec::modes::encode_float_tensor(logical, float_dtype, shape, &limits),
-                ) {
-                    Ok(frame) => {
-                        let physical = frame.len() as u64;
-                        let worthwhile = match zstd_physical {
-                            Some(zstd) => physical.saturating_mul(64) <= zstd.saturating_mul(63),
-                            None => true,
-                        };
-                        if !worthwhile {
-                            out.push(skipped(
+                // R18: with the exact prediction and a trusted level-3 interval the
+                // 1/64 rule is decided *before* the encode. `None` means the
+                // historical measured-after-encode rule.
+                let mode9_pre_decided: Option<bool> =
+                    trace.as_ref().map(|trace| match trace.decision.mode9 {
+                        crate::two_stage::Mode9Gate::Pass => true,
+                        crate::two_stage::Mode9Gate::Fail => false,
+                        crate::two_stage::Mode9Gate::Unresolved => trace
+                            .analysis
+                            .mode9
+                            .as_ref()
+                            .map(|prediction| {
+                                zstd_physical
+                                    .map(|zstd| {
+                                        prediction.exact_bytes.saturating_mul(64)
+                                            <= zstd.saturating_mul(63)
+                                    })
+                                    .unwrap_or(true)
+                            })
+                            .unwrap_or(true),
+                    });
+                let mode9_skip_detail: Option<String> = match (&trace, mode9_pre_decided) {
+                    (Some(trace), Some(false)) => trace.analysis.mode9.as_ref().map(|prediction| {
+                        let estimate = trace.analysis.zstd3.as_ref();
+                        match estimate {
+                            Some(estimate) => format!(
+                                "mode 9 not encoded: the exact predicted frame is {} B, which \
+                                     cannot reach 63/64 of the level-3 interval {} ({} B at the \
+                                     upper end), so the 1/64 rule fails",
+                                prediction.exact_bytes,
+                                estimate.interval(),
+                                estimate.upper.saturating_mul(63) / 64,
+                            ),
+                            None => format!(
+                                "mode 9 not encoded: the exact predicted frame is {} B and it \
+                                     cannot pass the 1/64 rule",
+                                prediction.exact_bytes
+                            ),
+                        }
+                    }),
+                    _ => None,
+                };
+                if let Some(detail) = mode9_skip_detail {
+                    out.push(skipped(TensorStrategy::FloatTensor, detail));
+                } else {
+                    // R19: the analyse stage already computed the exact
+                    // exponent histogram over this same slice, and the encoder
+                    // uses it instead of re-counting the tensor. The thread
+                    // bound only decides how the bitstream is emitted, never
+                    // which bytes are emitted.
+                    let histogram = trace
+                        .as_ref()
+                        .and_then(|trace| trace.analysis.mode9.as_ref())
+                        .map(|prediction| std::sync::Arc::clone(&prediction.exponent_histogram));
+                    let encode_options = weftcodec::modes::FloatTensorEncodeOptions::with_threads(
+                        options.tensor_encode_threads,
+                    );
+                    let encoded = match prefetched_mode9.take() {
+                        Some(mode9) => mode9,
+                        None => crate::phase_profile::timed(
+                            crate::phase_profile::Phase::EncodeFloatTensor,
+                            || match &histogram {
+                                Some(histogram) => {
+                                    weftcodec::modes::encode_float_tensor_with_histogram(
+                                        logical,
+                                        float_dtype,
+                                        shape,
+                                        &limits,
+                                        histogram,
+                                        encode_options,
+                                    )
+                                }
+                                None => weftcodec::modes::encode_float_tensor_with(
+                                    logical,
+                                    float_dtype,
+                                    shape,
+                                    &limits,
+                                    encode_options,
+                                ),
+                            },
+                        ),
+                    };
+                    match encoded {
+                        Ok(frame) => {
+                            let physical = frame.len() as u64;
+                            if let Some(trace) = trace.as_mut() {
+                                trace.actual_mode9 = Some(physical);
+                                if let Some(prediction) = &trace.analysis.mode9 {
+                                    if prediction.exact_bytes != physical {
+                                        trace.prediction_violations.push(format!(
+                                        "mode-9 actual {physical} B is not the exact predicted {} B",
+                                        prediction.exact_bytes
+                                    ));
+                                    }
+                                }
+                            }
+                            let worthwhile = match mode9_pre_decided {
+                                Some(decided) => decided,
+                                None => match zstd_physical {
+                                    Some(zstd) => {
+                                        physical.saturating_mul(64) <= zstd.saturating_mul(63)
+                                    }
+                                    None => true,
+                                },
+                            };
+                            if !worthwhile {
+                                out.push(skipped(
                                 TensorStrategy::FloatTensor,
                                 format!(
                                     "mode 9 saves less than 1/64 of the zstd frame                                      ({physical} vs {} bytes); not worth the decode cost",
                                     zstd_physical.unwrap_or(0)
                                 ),
                             ));
-                        } else {
-                            let estimate = options.estimate_ns_at_pattern(
-                                crate::cost_model::CostClass::FloatTensor,
-                                TensorStrategy::FloatTensor,
-                                size,
-                            );
-                            let root = self.logical_root_for_bytes(dtype, shape, logical, None)?;
-                            retain_candidate(
-                                &mut out,
-                                hint,
-                                keep_artifacts,
-                                PreparedCandidate {
-                                    candidate: TensorPlanCandidate {
-                                        strategy: TensorStrategy::FloatTensor,
-                                        applicable: true,
-                                        detail: format!(
-                                            "one mode-9 FLOAT_TENSOR frame ({})",
-                                            float_dtype.as_str()
-                                        ),
-                                        physical_bytes: Some(physical),
-                                        estimated_decode_ns: Some(estimate),
-                                        estimated_encode_ns: Some(
-                                            options.estimate_encode_ns(
+                            } else {
+                                let estimate = options.estimate_ns_at_pattern(
+                                    crate::cost_model::CostClass::FloatTensor,
+                                    TensorStrategy::FloatTensor,
+                                    size,
+                                );
+                                let root =
+                                    self.logical_root_for_bytes(dtype, shape, logical, None)?;
+                                retain_candidate(
+                                    &mut out,
+                                    hint,
+                                    keep_artifacts,
+                                    PreparedCandidate {
+                                        candidate: TensorPlanCandidate {
+                                            strategy: TensorStrategy::FloatTensor,
+                                            applicable: true,
+                                            detail: format!(
+                                                "one mode-9 FLOAT_TENSOR frame ({})",
+                                                float_dtype.as_str()
+                                            ),
+                                            physical_bytes: Some(physical),
+                                            estimated_decode_ns: Some(estimate),
+                                            estimated_encode_ns: Some(options.estimate_encode_ns(
                                                 TensorStrategy::FloatTensor,
                                                 size,
-                                            ),
-                                        ),
-                                        cost: Some(options.price_candidate(
-                                            physical,
-                                            estimate,
-                                            options.estimate_encode_ns(
-                                                TensorStrategy::FloatTensor,
-                                                size,
-                                            ),
-                                        )),
-                                        dependency: None,
-                                    },
-                                    artifact: Some(PreparedArtifact {
-                                        kind: RepresentationKind::Tensor,
-                                        strategy_name: "float-tensor".to_owned(),
-                                        frame: Some(frame),
-                                        dependencies: Vec::new(),
-                                        tensor: Some(TensorRepresentation {
-                                            tensor_mode: 9,
-                                            dtype,
-                                            shape: shape.to_vec(),
-                                            logical_root: root,
-                                            layout: layout.to_value(dtype, shape)?,
+                                            )),
+                                            cost: Some(options.price_candidate(
+                                                physical,
+                                                estimate,
+                                                options.estimate_encode_ns(
+                                                    TensorStrategy::FloatTensor,
+                                                    size,
+                                                ),
+                                            )),
+                                            dependency: None,
+                                        },
+                                        artifact: Some(PreparedArtifact {
+                                            kind: RepresentationKind::Tensor,
+                                            strategy_name: "float-tensor".to_owned(),
+                                            frame: Some(frame),
+                                            dependencies: Vec::new(),
+                                            tensor: Some(TensorRepresentation {
+                                                tensor_mode: 9,
+                                                dtype,
+                                                shape: shape.to_vec(),
+                                                logical_root: root,
+                                                layout: layout.to_value(dtype, shape)?,
+                                            }),
+                                            tile_shape: None,
                                         }),
-                                        tile_shape: None,
-                                    }),
-                                },
-                            );
+                                    },
+                                );
+                            }
                         }
+                        Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
                     }
-                    Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
                 }
             }
             None => out.push(skipped(
@@ -4623,7 +5480,36 @@ impl Store {
             }
         }
 
-        Ok(out)
+        // Stage 3: a prediction the actual bytes contradicted means the skip
+        // decisions taken from that interval are not trustworthy for this
+        // tensor, so the tensor is re-planned with the exhaustive planner
+        // (explicitly allowed, recorded, and deterministic). This is the only
+        // path that can publish a candidate chosen on measured bytes after a
+        // two-stage attempt.
+        if let Some(trace) = trace.as_mut() {
+            if !trace.prediction_violations.is_empty() && !fallback_exhaustive {
+                let mut exhaustive = options.clone();
+                exhaustive.planner = PlannerMode::Exhaustive;
+                let (prepared, _) = self.prepare_candidates(
+                    dtype,
+                    shape,
+                    logical,
+                    layout,
+                    causal,
+                    &exhaustive,
+                    tile_shape,
+                    independent_only,
+                    allow_experimental,
+                    hint,
+                    keep_artifacts,
+                    true,
+                )?;
+                trace.fallback_exhaustive = true;
+                return Ok((prepared, Some(trace.clone())));
+            }
+        }
+
+        Ok((out, trace))
     }
 
     fn prepare_mode10(
@@ -4933,8 +5819,7 @@ impl Store {
         if seen.contains(&manifest_id) {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
-        let manifest =
-            self.read_manifest_keyed(manifest_id)?;
+        let manifest = self.read_manifest_keyed(manifest_id)?;
         let Some(rep) = &manifest.representation else {
             return Ok(0);
         };
@@ -5099,16 +5984,17 @@ impl Store {
         &self,
         dtype: TensorElementDtype,
         shape: &[u64],
-        logical: &[u8],
+        size: u64,
+        content_hash: Hash32,
         layout: &TensorLayoutSpec,
         artifact: &PreparedArtifact,
+        raw: Option<&[u8]>,
     ) -> Result<(Hash32, Hash32, u64)> {
-        let content_hash = crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
-            identity::content_hash(logical)
-        });
-        let size = logical.len() as u64;
         let representation = match artifact.kind {
             RepresentationKind::Raw => {
+                let logical = raw.ok_or_else(|| {
+                    Error::corrupt("a raw tensor artifact was published without its bytes")
+                })?;
                 let manifest =
                     self.build_raw_manifest(logical, self.options().chunk_size, content_hash)?;
                 Representation {
@@ -5251,7 +6137,8 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match tensor.tensor_mode {
@@ -5851,8 +6738,7 @@ impl Store {
         if seen.contains(&dep_root) {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
-        let dep_manifest =
-            self.read_manifest_keyed(dep_root)?;
+        let dep_manifest = self.read_manifest_keyed(dep_root)?;
         seen.push(dep_root);
         let base_bytes = self.read_manifest_bytes_inner_gated(
             &dep_manifest,
@@ -5961,6 +6847,46 @@ impl Store {
             ));
         }
         Ok(chunk.bytes)
+    }
+}
+
+fn plan_from_prepared(
+    prepared: &[PreparedCandidate],
+    chosen: &PreparedCandidate,
+    planner: Option<PlannerTrace>,
+) -> TensorPlan {
+    let mut runner_up: Option<&PreparedCandidate> = None;
+    let mut applicable: Vec<&PreparedCandidate> = prepared
+        .iter()
+        .filter(|item| item.candidate.applicable)
+        .collect();
+    applicable.sort_by(|a, b| {
+        a.candidate
+            .cost
+            .cmp(&b.candidate.cost)
+            .then_with(|| a.candidate.strategy.cmp(&b.candidate.strategy))
+    });
+    for item in &applicable {
+        if item.candidate.strategy != chosen.candidate.strategy {
+            runner_up = Some(item);
+            break;
+        }
+    }
+    TensorPlan {
+        chosen: chosen.candidate.strategy,
+        chosen_physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
+        chosen_estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+        chosen_estimated_encode_ns: chosen.candidate.estimated_encode_ns.unwrap_or(0),
+        chosen_cost: chosen.candidate.cost.unwrap_or(0),
+        runner_up: runner_up.map(|item| item.candidate.strategy),
+        runner_up_physical_bytes: runner_up.and_then(|item| item.candidate.physical_bytes),
+        runner_up_estimated_decode_ns: runner_up
+            .and_then(|item| item.candidate.estimated_decode_ns),
+        runner_up_estimated_encode_ns: runner_up
+            .and_then(|item| item.candidate.estimated_encode_ns),
+        runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
+        candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
+        planner,
     }
 }
 

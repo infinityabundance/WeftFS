@@ -11,27 +11,31 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install dist/weftcodec-1.3.0-py3-none-any.whl
+pip install dist/weftcodec-1.4.0-py3-none-any.whl
 # with the optional dataset extra
-pip install "dist/weftcodec-1.3.0-py3-none-any.whl[torch]"
+pip install "dist/weftcodec-1.4.0-py3-none-any.whl[torch]"
 # with the optional JAX/Orbax adapter extra
-pip install "dist/weftcodec-1.3.0-py3-none-any.whl[orbax]"
+pip install "dist/weftcodec-1.4.0-py3-none-any.whl[orbax]"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-> **PyPI.** `weftcodec 1.3.0` is published on PyPI:
-> <https://pypi.org/project/weftcodec/1.3.0/> (uploaded by this release's
-> publishing step; the 1.2.0 artifacts remain available). The wheel and sdist
-> are built in the Docker court with `scripts/publish-pypi.sh`, and the same
-> artifacts are attached to the GitHub release. The published **1.2.0** long
-> description is stale — it still says PyPI is unpublished — and is superseded
-> by this one, not re-uploaded.
+> **PyPI.** PyPI serves **`weftcodec 1.2.0`**. This document is the long
+> description for **1.4.0**; the 1.4.0 wheel and sdist are built and
+> `twine check`-clean in `python/dist/` but are **not uploaded** because
+> `scripts/publish-pypi.sh` requires `.docker-cache/.pypi-token`, which does
+> not exist. `docs/RELEASE-v1.4.0.md` records the exact artifact names, sizes
+> and sha256 values. The 1.2.0 description PyPI still shows is older than this
+> text; it is superseded by this document on the next upload, not re-uploaded
+> on its own.
 >
 > ```sh
-> pip install weftcodec==1.3.0
+> pip install weftcodec==1.2.0     # what PyPI actually serves today
 > ```
+
+Install the 1.4.0 wheel from `python/dist/` (commands above) or from the GitHub
+release; `pip install weftcodec==1.4.0` fails until the upload is unblocked.
 
 ## Usage
 
