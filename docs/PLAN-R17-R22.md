@@ -1,6 +1,6 @@
 # Plan R17–R22 — compressed-write parity
 
-**Status:** R17, R18, R19, R20 and R21 executed; R22 planned. This plan is driven
+**Status:** R17-R22 **complete**. This plan is driven
 by the measured ledger in
 [`bench/RESULTS-write-cost-ledger.md`](../bench/RESULTS-write-cost-ledger.md),
 its R18 correction and the R20 publication ledger
@@ -178,14 +178,52 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
    [`bench/RESULTS-parallel-pipeline.md`](../bench/RESULTS-parallel-pipeline.md),
    receipt `r21-pipeline-20261112T201500Z`.
 
-### R22 — Pareto sweep
+### R22 — write frontier (done, 2026-11-12)
 
-1. Sweep the surviving candidates (mode 9 on/off, ZSTD-3 level, optional level
-   19) against the two boards; publish the Pareto front, not a single point.
-2. Re-run A/B/C/D/E at the chosen points; the ladder rung and footprint rung
-   are claimed only from same-session runs.
-3. **Gate:** full Rust/FUSE suites, claims, conformance, crash proxy; every
-   loss in the results document.
+1. **Done, and it refuted its own projection.** Chunk-parallel ZSTD is
+   implemented (`weftcodec::modes::encode_zstd_with`), proved byte-identical
+   (codec court 5/5; every timed frame in the receipt) and it cuts the 272 MB
+   embedding's level-3 frame from 280.3 ms to 135.7 ms at four threads — but the
+   frozen fixture's wall does not move, because **publication (452.5 ms) and the
+   durability writeback (461.6 ms for 202 files) are the binder**. The projected
+   ~430 ms write is recorded as refuted, with the stage measurements that refute
+   it.
+2. **Done: `analyse` parallelised exactly rather than fused.** The histogram is
+   integer counts, so whole-element windows summed across threads are
+   bit-identical; the R18 exact mode-9 prediction is unchanged and re-proved
+   (`histogram_parallel` 3/3 + the 74-case planner court +
+   `two_stage_matches_exhaustive`/`two_stage_storage_unchanged`). What could not
+   be fused is named: the histogram decides whether the encode it would be fused
+   into runs at all, and the dominant analyse cost is the level-19 *sample*
+   (156.9 ms), not the histogram (37.1 ms).
+3. **Done: measured defaults.** `cpu_tokens = encode_threads - 1` (592.6/600.9
+   against 612.1/644.0) and a chunk pool bounded to `min(available, 4)` threads
+   that runs only when the tensor's encode has the CPUs to itself.
+4. **Done: the Pareto sweep** — 25 rows x 7 interleaved repetitions, device
+   control, native-control band, Pareto set stated explicitly
+   (`r22-pareto-20261112T230000Z`), plus cross-family (0.5B base/instruct,
+   pythia step 0/8, Qwen 3B-Instruct) and MinIO arms.
+5. **Gate:** Rust 807/0/0, FUSE 850/0/2 ignored, claims, spec drift,
+   conformance manifest, cross gate, crash proxy — all met. Evidence
+   [`bench/RESULTS-pareto.md`](../bench/RESULTS-pareto.md).
+
+### What remains after R17-R22
+
+* **The final rung (<= 336 ms) is not reached** (592.6 ms, 1.78x A). The measured
+  limiter is the non-overlappable durable tail (282 MB written and `fsync`ed as
+  202 files in 461.6 ms against native's 424 MB in 332 ms) over a 288 ms CPU
+  floor. The single change most likely to close it: seal the pack plane and
+  publish its catalog **on the early-barrier thread**, so fewer, larger durable
+  objects do not pay a critical-path sealing cost (packs already halve publisher
+  busy time, 391 -> 220 ms, and remove all 202 writeback files).
+* A fusion of the two whole-tensor digest passes into the level-3 chunk loop
+  (~75 ms of CPU, ~19 ms of wall) with a fresh byte-identity obligation.
+* Go parity for chunk-parallel ZSTD, the parallel histogram and the R22
+  defaults; the R22 pipeline over S3; Qwen2.5-3B base and Qwen2.5-7B beyond the
+  635 MB subset measured here.
+* A quiet-host re-run of the 576-612 ms cluster: the host's demonstrated
+  variance (the same row's median moving 13 % between sessions) is currently
+  larger than every difference inside that band.
 
 ## 5. Current position
 

@@ -9626,3 +9626,88 @@ the same 282,106,049 B fixture, and the committed state is identical for
   write (1.29× A) without touching a single representation decision. After
   that: fuse `analyse` with the encodes that re-read the same bytes (keeping
   the exact mode-9 prediction), and ship a measured CPU-token default.
+
+## Subphase R22 (write frontier) — chunk-parallel ZSTD, exact analyse, measured defaults (2026-11-12)
+
+**Headline.** The shipped write is **592.6 ms least-contended / 600.9 ms
+median** for the 101-tensor Qwen2.5-0.5B-Instruct subset (424,439,296 logical
+bytes) at **282,106,049 B**, byte-identical to R18-R21, with 101/101 exact
+restores and the crash proxy old-or-new-whole. That is **G3 (<= 672 ms) on both
+statistics, 1.78x the native control A = 332.0 ms**. The final rung (<= 336 ms)
+is **not reached**, and section 7 of the results document says exactly why: the
+write is now durability-bound, not encode-bound.
+
+* **22.1 chunk-parallel ZSTD - implemented, proved, and not the wall win.**
+  `weftcodec::modes::encode_zstd_with` + `ZstdEncodeOptions` encode a CHUNKED
+  frame's independent per-chunk frames on a bounded pool in ordered
+  byte-bounded batches, each worker reusing one zstd context. Measured on the
+  272,269,312 B embedding (64 KiB chunks, 4,155 chunks): level 3 **280.3 ->
+  189.0 (2 threads) -> 135.7 ms (4)** and level 19 **13,597.4 -> 3,667.1 ms (4)**
+  with **every timed frame byte-identical** (40 checks in the receipt; about
+  2,600 boundary comparisons, 2,000 randomised cases and the fallback paths in
+  `WeftCodec/tests/zstd_chunk_parallel.rs`, 5/5). It does **not** move the frozen
+  fixture's wall: the pipeline is 552 ms of which publication is 452.5 ms and
+  the durability writeback 461.6 ms for 202 files. The plan's "~430 ms"
+  projection is **refuted** at this operating point and the refutation is the
+  recorded result.
+* **22.2 exact parallel analyse.** The analyse stage's only full-tensor pass is
+  the mode-9 exponent histogram (37.1 ms, 7.35 GB/s); it cannot be fused into an
+  encode because it decides whether that encode runs. It is now accumulated on
+  threads in whole-element windows and summed - exact, so the R18 bit-exact
+  mode-9 prediction is unchanged (`WeftCodec/tests/histogram_parallel.rs` 3/3,
+  `tests/two_stage_planner.rs` 74 cases still green, court re-proof
+  `two_stage_matches_exhaustive` / `two_stage_storage_unchanged` both true). The
+  measured wall effect is **nil** (`an1` control 586.6/614.7 against 592.6/600.9)
+  and the dominant analyse cost turns out to be the **level-19 sample**
+  (156.9 ms against 31.6 ms with level 19 disabled).
+* **22.3 measured defaults, both shipped.** `default_cpu_tokens(n) = n - 1`
+  (592.6/600.9 at 3 tokens against 612.1/644.0 at 4; 1 and 2 tokens are
+  912.8/959.8 ms because the single publisher binds), and
+  `default_zstd_encode_threads() = min(available, 4)` with the rule that the
+  chunk pool is used **only when the tensor's encode has the CPUs to itself**
+  (no concurrent mode-9 candidate). The rule is what keeps the frozen fixture
+  neutral while pythia-70m is 1.50x and Qwen 3B 1.18x faster.
+* **22.4 the frontier** (25 rows x 7 interleaved reps, device control 3,200 MB/s
+  `clean`, 11/11 checks, receipt `r22-pareto-20261112T230000Z`): Pareto-optimal
+  set = **A** (332.0 ms / 424,439,296 B), **C-pipe4 shipped** (592.6 ms /
+  282,106,049 B), **C-pipe4-zpar4** (584.8 ms, same bytes, not adopted),
+  **t19off** (575.9 ms, same bytes, *not portable* - level 19 is where pythia is
+  won) and **tm9off** (593.6 ms at **330,355,860 B**, +17.1 %). Everything else
+  is dominated. Measured losses: the pack plane **third rejection** (962.7 ms;
+  publisher busy 391 -> 220 ms but sealing costs more), `znochunk` **3,518.1 ms**
+  (the two-stage sampler's unit *is* the chunk: 50 prediction violations, 50
+  exhaustive fallbacks, level 19 actually runs, for 2.4 KB), `leeway4`
+  **2,552.1 ms** for zero bytes, 16 KiB chunks 13 % worse, `sync16/32` equal to
+  8 MiB, 8 workers worse than 4 (648.7 against 592.6), and no statistic
+  separating the 576-612 ms cluster (the default's median moved 13 % between
+  sessions while its minimum moved 2.5 %).
+* **22.5 cross-family and MinIO.** Qwen2.5-0.5B-Instruct: C 1,217.6 -> pipeline
+  **628.4 ms**, 282,106,049 B (33.5 % below A = 346.6), 35 mode-9 / 50 zstd / 16
+  raw. pythia-70m step 0: 12,204.4 -> **8,143.8 ms**, 163,964,176 B (**41.8 %**
+  below A = 240.4), all 76 tensors zstd, and the exhaustive planner produces the
+  **same footprint** - level 19 still wins where it used to. pythia step 8:
+  12,176.8 -> 7,512.6 ms, 163,830,373 B. Qwen2.5-3B-Instruct (635 MB subset):
+  1,554.3 -> 1,319.7 ms at 421,550,249 B, peak RSS 1,980,292 KiB (63 % of the
+  court). MinIO (real server, one loopback process, tmpfs): A 842.9 ms / 101
+  writes; **C 1,275.4 ms / 225 writes / 282,132,555 B written / 33.53 %
+  reduction**; 8/8 checks. **Left open:** Qwen2.5-3B base, Qwen2.5-7B, and the
+  R22 *pipeline* over S3 (the S3 arm measures the planned writer).
+* **Gates.** Rust `cargo test --all-targets`: **807 passed / 0 failed / 0
+  ignored (170 binaries)**. FUSE `cargo test --features fuse --all-targets`:
+  **850 passed / 0 failed / 2 ignored**. WeftCodec `zstd_chunk_parallel` 5/5 and
+  `histogram_parallel` 3/3; Rust-Go cross gate `all checks passed` (41 frames
+  each way, every mode fixture byte-identical); `verify --full` ok on a
+  chunk-parallel-written store; crash proxy old-or-new on every row. No
+  `verify-all` aggregate was run for this subphase, so
+  `verify_receipt_current` still cites `verify-20261111T182601Z` (45/45).
+* **Environment, disclosed.** Between the clean runs the host's durability path
+  degraded from 1.28 GB/s to 125-180 MB/s and the native control A wrote the
+  424 MB fixture in **11,482.6 ms**; those attempts produced no cited row
+  (`r22-probe-20261112T163717Z` and the superseded pareto receipts are retained
+  as the record). The cited courts carry a `dd conv=fsync` device control and a
+  native-control band check, and the sweep's own 25-row matrix re-proves the
+  footprint on every row.
+* **Analysis**: [`bench/RESULTS-pareto.md`](../bench/RESULTS-pareto.md).
+  Courts: `bench/scripts/r22_pareto_court.sh`, `r22_family_court.sh`,
+  `r22_probe_court.sh` + `r22_probe.sh`; `WEFT_R22_*` forwarding in
+  `scripts/docker-court.sh`. The R22 courts are standalone, like R20/R21.

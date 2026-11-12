@@ -258,6 +258,14 @@ R18's own published C figure was 4,117.8 ms at the same codec revision; the
 before run here reproduces it (4,101.6), so the pair is comparable across
 sessions and the after figure is not an artefact of a lucky host.
 
+**R22 note (added later; the numbers above are R19's and stand).** The mode-9
+encoder measured here is unchanged by R22 — its per-tensor cost, byte identity
+and frame bytes are the same. Two things around it moved: the pipeline wall
+(R21, then R22's defaults) and the analyse stage. The 2,328.4 ms C row above is
+the *sequential* planned writer at R19; the shipped write is now 592.6 ms
+(least-contended) at the same 282,106,049 B, and the mode-9 candidate is 229.4 ms
+of that write's summed CPU. See `bench/RESULTS-pareto.md`.
+
 ## 6a. The measured ledger at the R19 revision
 
 The wall court records the shipped phase profile for one attribution repetition

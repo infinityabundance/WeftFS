@@ -10875,8 +10875,8 @@
  },
  {
   "id": "r21_pipeline_g3",
-  "claim": "G3 (durable write wall ≤ 672 ms, 2x the native comparator) is met by the shipped pipeline: 623.3 ms least-contended and 653.9 ms median at 4 encode workers.",
-  "value": "G3 (≤ 672 ms) is met",
+  "claim": "G3 (durable write wall \u2264 672 ms, 2x the native comparator) is met by the shipped pipeline: 623.3 ms least-contended and 653.9 ms median at 4 encode workers.",
+  "value": "G3 (\u2264 672 ms) is met",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-parallel-pipeline.md"
@@ -10965,6 +10965,126 @@
   "id": "r21_court_not_in_aggregate",
   "claim": "The R21 court is standalone: scripts/verify-all.sh was not run for this subphase and its 45/45 receipt remains the cited aggregate.",
   "value": "No `verify-all` run for this subphase",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r22_shipped_wall",
+  "claim": "R22's shipped write is 592.6 ms least-contended (600.9 ms median) for the 101-tensor Qwen2.5-0.5B-Instruct subset at a byte-identical 282,106,049 B, which is G3 on both statistics and 1.78x the native control A = 332.0 ms.",
+  "value": "592.6 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_final_rung_not_reached",
+  "claim": "The final rung (<= 336 ms) is not reached: the write is durability-bound, not encode-bound.",
+  "value": "not reached",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "r22_chunk_parallel_identity",
+  "claim": "Chunk-parallel ZSTD is byte-identical to the sequential encoder over every chunk-count boundary, 2,000 randomised cases, the fallback paths and every timed frame of the real 272 MB embedding.",
+  "value": "WeftCodec/tests/zstd_chunk_parallel.rs",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/zstd-chunk-parallel-20261112T231500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_level3_frame_saving",
+  "claim": "The level-3 frame of the 272,269,312 B embedding goes from 280.3 ms sequential to 135.7 ms at four threads, with the frame bytes unchanged.",
+  "value": "135.7 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/zstd-chunk-parallel-20261112T231500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_default_cpu_tokens",
+  "claim": "The shipped pipeline default is cpu_tokens = encode_threads - 1, measured 592.6/600.9 ms against 612.1/644.0 ms at one token per worker.",
+  "value": "default_cpu_tokens",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_default_zstd_threads",
+  "claim": "The shipped chunk-parallel ZSTD bound is min(available_parallelism, 4) threads, used only when the tensor's encode has the CPUs to itself.",
+  "value": "default_zstd_encode_threads",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_pythia_write",
+  "claim": "On pythia-70m step 0 the planned write goes from 12,204.4 ms sequential to 8,143.8 ms through the shipped pipeline at 163,964,176 B, and the exhaustive planner produces the same footprint.",
+  "value": "8,143.8 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-family-20261112T235800Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_pack_plane_third_rejection",
+  "claim": "The pack plane is rejected for the third time: 962.7 ms against 592.6 ms, although it halves publisher busy time and removes all 202 writeback files.",
+  "value": "962.7 ms",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_minio_arm",
+  "claim": "Over a real MinIO server the planned writer publishes 282,132,555 B in 225 requests for a 33.53 % storage reduction against the native 101-request write.",
+  "value": "282,132,555",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/augmentation-minio-20261112T240000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_qwen3b_subset",
+  "claim": "Qwen2.5-3B-Instruct on a 635 MB subset writes 421,550,249 B in 1,319.7 ms with the chunk pool and 1,554.3 ms without, at a peak RSS of 1,980,292 KiB.",
+  "value": "421,550,249",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-pareto.md"
+  ],
+  "receipt": "bench/receipts/r22-family-20261112T211500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "r22_courts_not_in_aggregate",
+  "claim": "The R22 courts are standalone: no verify-all aggregate was run for this subphase, and its 45/45 receipt remains the cited aggregate.",
+  "value": "verify_receipt_current` still cites",
   "locations": [
    "docs/STATUS.md"
   ],

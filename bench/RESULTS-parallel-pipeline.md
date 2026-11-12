@@ -294,10 +294,17 @@ Both, and the numbers say which is which.
 R20's 184.4 ms of analyse is still inside `encode` and is *not* fused with the
 encode pass. R21 does not touch it: `analyse` is 182.6 ms in C and 202.5–243.5
 ms in the pipeline rows, where it is summed across threads that now run
-concurrently, so the number goes **up** while the wall goes down. Fusing it
-(the histogram is already computed by both the analyser and the encoder for
-BF16; R19 fused the count, not the pass) is R22 work, and it must keep the R18
-exact mode-9 prediction intact — which is why it was not attempted here.
+concurrently, so the number goes **up** while the wall goes down.
+
+**R22.2 answered this, and not by fusion.** The stage's only full-tensor pass is
+the mode-9 exponent histogram (37.1 ms for the 272 MB embedding, 7.35 GB/s) and
+it cannot move into an encode because it is what decides whether that encode
+runs. It is however exactly parallelisable: the counts are integers, so
+whole-element windows accumulated on threads and summed are bit-identical, and
+the R18 predicted length is unchanged. That is what ships; the measured wall
+effect is nil (the encode is not the bottleneck), and the level-19 *sample* — not
+the histogram — turns out to be the dominant analyse cost (156.9 ms against
+31.6 ms with level 19 disabled). See `bench/RESULTS-pareto.md` §2.
 
 ## 5. Determinism across worker counts
 
@@ -418,25 +425,31 @@ binaries, 850 passed, 2 ignored) and
 `bench/receipts/r21-tensor-pipeline-tests.log` (the 6-test determinism
 court).
 
-## 9. What R22 must do
+## 9. What R22 must do — and what it found (superseded)
 
-The wall is now 623.3 ms, of which **448.8 ms is one tensor's encode** (72 %).
-Inside it, level 3 is 295–337 ms and mode 9 is 122–227 ms (they already
-overlap). The single highest-value change is therefore **intra-tensor chunk
-parallelism of the level-3 encode**: `weftcodec::modes::encode_zstd` with a
-codec chunk size emits one independent ZSTD frame per chunk under the CHUNKED
+> **R22 supersedes this section.** Chunk parallelism of the level-3 encode was
+> implemented, proved byte-identical, and it **does** cut the frame from 280.3 ms
+> to 135.7 ms (2.07× at four threads) — but the projection below of "~430 ms"
+> was **refuted**: once the encode fell below publication, the write became
+> durability-bound (publication 452.5 ms, writeback 461.6 ms of a 552 ms
+> pipeline). The shipped defaults are `cpu_tokens = encode_threads − 1` and a
+> chunk pool that runs only when the tensor's encode has the CPUs to itself;
+> the frozen fixture's wall is **592.6 ms min / 600.9 ms median** at the same
+> 282,106,049 B. `analyse` was parallelised (exactly) rather than fused, and the
+> fusion that would matter is named but not approximated. Evidence:
+> [`bench/RESULTS-pareto.md`](RESULTS-pareto.md), receipt
+> `r22-pareto-20261112T230000Z`. The original text is kept below as the record of
+> what was projected.
+
+The wall was 623.3 ms, of which **448.8 ms is one tensor's encode** (72 %).
+Inside it, level 3 was 295–337 ms and mode 9 122–227 ms (they already overlap).
+The projected single highest-value change was **intra-tensor chunk parallelism
+of the level-3 encode**: one independent ZSTD frame per chunk under the CHUNKED
 flag (4,155 frames for the embedding), so compressing those chunks on a bounded
-pool is byte-identical by construction — it changes no frame, no chunk table
-and no identity, exactly like R19's parallel mode-9 emission. The measured
-headroom: 295 ms of level 3 at ~3 threads ≈ 100–120 ms, which would put the
-embedding's chain near 250 ms and the write near **430 ms** (1.29× A) without
-touching a single representation decision.
-
-After that, in order: (a) fuse `analyse` with the candidate encodes that already
-re-read the same bytes (must preserve the exact mode-9 prediction); (b) ship a
-measured CPU-token default instead of `encode_threads`; (c) a second publisher
-is *not* the answer — the backend mutex serialises publication and the publisher
-is only 409.6 ms of a 578.1 ms pipeline.
+pool is byte-identical by construction. The projected headroom was 295 ms of
+level 3 at ~3 threads ≈ 100–120 ms, "which would put the write near 430 ms
+(1.29× A)". The encode part was right; the wall part was wrong, because the
+durability path — not the encode — is what a 282 MB compressed write costs.
 
 ## 10. Reproduce
 
