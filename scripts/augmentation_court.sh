@@ -16,6 +16,13 @@
 # passes. It is recorded in the receipt. The full standalone run selects the
 # 272 MB embedding plus 100 evenly spaced tensors (424,439,296 logical bytes).
 #
+# `--reps N` (or WEFT_AUGMENTATION_REPS, default 7) runs every arm N times and
+# **interleaves** the arms, rotating the order by one position per repetition so
+# no arm always occupies the same slot. Every repetition's raw phase JSON is
+# published in the receipt and min/p50/p95/max is reported per mandatory metric.
+# `--configs A,C` (or WEFT_AUGMENTATION_CONFIGS) narrows the row list; the MinIO
+# arm uses it because the MinIO tmpfs holds six full stores poorly.
+#
 # Every container uses the same hard limits as `scripts/docker-court.sh`
 # (memory 3g == swap, pids 1024, cpus 4, bounded /tmp, no-new-privileges,
 # cap-drop=ALL). The MinIO data directory is a tmpfs, so this court proves
@@ -37,19 +44,32 @@ cd "$repo_root"
 mode="local"
 reduced="${WEFT_AUGMENTATION_REDUCED:-0}"
 keep_work="${WEFT_AUGMENTATION_KEEP_WORK:-0}"
+reps="${WEFT_AUGMENTATION_REPS:-7}"
+configs="${WEFT_AUGMENTATION_CONFIGS:-}"
 for arg in "$@"; do
   case "$arg" in
     --local) mode="local" ;;
     --minio) mode="minio" ;;
     --reduced) reduced=1 ;;
     --keep-work) keep_work=1 ;;
+    --reps=*) reps="${arg#--reps=}" ;;
+    --reps) echo "--reps needs a value (use --reps=N)" >&2; exit 64 ;;
+    --configs=*) configs="${arg#--configs=}" ;;
+    --configs) echo "--configs needs a value (use --configs=A,C)" >&2; exit 64 ;;
     -h|--help)
-      sed -n '2,30p' "$0"
+      sed -n '2,40p' "$0"
       exit 0
       ;;
     *) echo "unknown argument '$arg'" >&2; exit 64 ;;
   esac
 done
+case "$reps" in
+  ''|*[!0-9]*) echo "--reps must be a positive integer" >&2; exit 64 ;;
+esac
+[[ "$reps" -ge 1 ]] || { echo "--reps must be a positive integer" >&2; exit 64; }
+if [[ -z "$configs" ]]; then
+  configs="A,B,C,D,E,N"
+fi
 
 command -v docker >/dev/null 2>&1 || skip "no docker CLI on PATH"
 docker info >/dev/null 2>&1 || skip "no reachable docker daemon"
@@ -85,7 +105,7 @@ mkdir -p bench/receipts
 chmod a+rwX bench/receipts 2>/dev/null || true
 
 if [[ "$mode" == "local" ]]; then
-  echo "augmentation_court: local POSIX backend, label=$label, subset=max_others:$max_others include_embedding:$include_embedding" >&2
+  echo "augmentation_court: local POSIX backend, label=$label, subset=max_others:$max_others include_embedding:$include_embedding reps=$reps configs=$configs" >&2
   scripts/docker-court.sh bench \
     "cd /work && $trace_env cargo run --release --quiet --example augmentation_bench -- run \
        --fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors \
@@ -93,6 +113,7 @@ if [[ "$mode" == "local" ]]; then
        --out $receipt --log $log \
        --backend local --chunk-size 1048576 \
        --max-others $max_others --include-embedding $include_embedding \
+       --configs $configs --reps $reps \
        --with-native-app --passes 2 --label $label --seed weft-augmentation-r3 \
        --force"
 else
@@ -216,43 +237,53 @@ else
     fi
   }
 
-  echo "augmentation_court: MinIO $minio_release sha256=$actual_sha256 bucket_prefix=$bucket label=$label" >&2
-  echo "augmentation_court: the MinIO container is restarted between configurations; its tmpfs does not release deleted-but-open bytes until the process restarts, so a single container cannot hold six clean configurations. Write and restore for one configuration both happen before its restart." >&2
+  echo "augmentation_court: MinIO $minio_release sha256=$actual_sha256 bucket_prefix=$bucket label=$label reps=$reps configs=$configs" >&2
+  echo "augmentation_court: the MinIO container is restarted between cells; its tmpfs does not release deleted-but-open bytes until the process restarts, so one container cannot hold several clean configurations. Write and restore for one cell both happen before its restart." >&2
 
   run_harness prepare prepare \
     --fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors \
     --work "$work_container" \
     --max-others "$max_others" --include-embedding "$include_embedding"
 
-  for config in A B C D E N; do
-    lower="$(printf '%s' "$config" | tr '[:upper:]' '[:lower:]')"
-    cbucket="$bucket-$lower"
-    run_harness "$config-write" write \
-      --work "$work_container" --subset "$work_container/subset.json" \
-      --config "$config" --backend s3 --s3-bucket "$cbucket" \
-      --phase-out "$work_container/phases/$config-write.json" \
-      --chunk-size 1048576 --seed weft-augmentation-r3 --passes 2
-    run_harness "$config-restore" restore \
-      --work "$work_container" --subset "$work_container/subset.json" \
-      --config "$config" --backend s3 --s3-bucket "$cbucket" \
-      --phase-out "$work_container/phases/$config-restore.json" \
-      --chunk-size 1048576 --seed weft-augmentation-r3 --passes 2
-    echo "augmentation_court: restarting MinIO to reclaim the tmpfs before the next configuration" >&2
-    docker restart "$minio_name" >/dev/null
-    # Docker may publish a new ephemeral host port after a restart; re-read it.
-    host_port_line="$(docker port "$minio_name" 9000/tcp | head -1)"
-    host_port="${host_port_line##*:}"
-    if ! wait_minio "$host_port"; then
-      echo "augmentation_court: MinIO did not become ready after restart; logs follow" >&2
-      docker logs "$minio_name" >&2 || true
-      exit 1
-    fi
+  IFS=',' read -r -a config_list <<<"$configs"
+  for ((rep = 1; rep <= reps; rep++)); do
+    order=("${config_list[@]}")
+    rotation=$(( (rep - 1) % ${#config_list[@]} ))
+    # Rotate the interleaved order by one position per repetition.
+    order=("${order[@]:rotation}" "${order[@]:0:rotation}")
+    rep_container="$work_container/rep-$(printf '%02d' "$rep")"
+    mkdir -p "$work/phases" "$work/rep-$(printf '%02d' "$rep")/phases"
+    for config in "${order[@]}"; do
+      lower="$(printf '%s' "$config" | tr '[:upper:]' '[:lower:]')"
+      cbucket="$bucket-$lower"
+      run_harness "r$rep-$config-write" write \
+        --work "$rep_container" --subset "$work_container/subset.json" \
+        --config "$config" --backend s3 --s3-bucket "$cbucket" \
+        --phase-out "$rep_container/phases/$config-write.json" \
+        --chunk-size 1048576 --seed weft-augmentation-r3 --passes 2
+      run_harness "r$rep-$config-restore" restore \
+        --work "$rep_container" --subset "$work_container/subset.json" \
+        --config "$config" --backend s3 --s3-bucket "$cbucket" \
+        --phase-out "$rep_container/phases/$config-restore.json" \
+        --chunk-size 1048576 --seed weft-augmentation-r3 --passes 2
+      echo "augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell" >&2
+      docker restart "$minio_name" >/dev/null
+      # Docker may publish a new ephemeral host port after a restart; re-read it.
+      host_port_line="$(docker port "$minio_name" 9000/tcp | head -1)"
+      host_port="${host_port_line##*:}"
+      if ! wait_minio "$host_port"; then
+        echo "augmentation_court: MinIO did not become ready after restart; logs follow" >&2
+        docker logs "$minio_name" >&2 || true
+        exit 1
+      fi
+    done
   done
 
   run_harness assemble assemble \
     --work "$work_container" --out "$receipt" --log "$log" \
     --backend s3 --label "$label" \
     --max-others "$max_others" --include-embedding "$include_embedding" \
+    --configs "$configs" --reps "$reps" \
     --with-native-app --passes 2 --seed weft-augmentation-r3
 fi
 

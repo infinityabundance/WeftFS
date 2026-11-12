@@ -3016,85 +3016,278 @@ fn not_measured() -> Json {
     ])
 }
 
-fn assemble(args: &Args, entries: &BTreeMap<String, Json>, log_path: &Path) -> Json {
+/// The configurations this invocation runs. `--configs` selects an explicit
+/// list (the MinIO arm runs A and C there); otherwise the five contract rows
+/// plus the supplementary native control N run.
+fn requested_configs(args: &Args) -> Result<Vec<String>, String> {
+    let mut configs: Vec<String> = match &args.configs {
+        Some(text) => text
+            .split(',')
+            .map(str::trim)
+            .filter(|key| !key.is_empty())
+            .map(str::to_owned)
+            .collect(),
+        None => {
+            let mut list: Vec<String> = CONFIGS.iter().map(|c| (*c).to_owned()).collect();
+            if args.with_native_app {
+                list.push(NATIVE_APP.to_owned());
+            }
+            list
+        }
+    };
+    if configs.is_empty() {
+        return Err("--configs produced an empty list".to_owned());
+    }
+    for key in &configs {
+        if key != NATIVE_APP && !is_weftfs_config(key) {
+            return Err(format!("unknown configuration `{key}`"));
+        }
+        if key != NATIVE_APP {
+            ablation_flags(key)?;
+        }
+    }
+    // The supplementary control is a row of its own; keeping it last means the
+    // rotated interleaving still visits it exactly once per repetition.
+    Ok(std::mem::take(&mut configs))
+}
+
+/// Write wall of one `(rep, write, restore)` sample.
+fn sample_write_wall(sample: &Json) -> f64 {
+    let write = &sample["write"];
+    write["wall_ms"].as_f64().unwrap_or_else(|| {
+        write["init_ms"].as_f64().unwrap_or(0.0)
+            + write["source_read_ms"].as_f64().unwrap_or(0.0)
+            + write["write_ms"].as_f64().unwrap_or(0.0)
+            + write["protocol_ms"].as_f64().unwrap_or(0.0)
+    })
+}
+
+/// The index of the representative repetition: the least-contended (minimum
+/// wall) sample for `least`, otherwise the median-wall sample. The two are
+/// published side by side; neither is ever substituted for the other.
+fn representative_index(samples: &[Json], least: bool) -> Option<usize> {
+    if samples.is_empty() {
+        return None;
+    }
+    let mut order: Vec<usize> = (0..samples.len()).collect();
+    order.sort_by(|a, b| {
+        sample_write_wall(&samples[*a])
+            .partial_cmp(&sample_write_wall(&samples[*b]))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    if least {
+        order.first().copied()
+    } else {
+        order.get(order.len() / 2).copied()
+    }
+}
+
+/// The published statistics of one arm over all its repetitions.
+fn arm_stats(samples: &[Json]) -> Json {
+    let numbers = |path: &[&str]| -> Vec<f64> {
+        samples
+            .iter()
+            .filter_map(|sample| {
+                let mut value = sample;
+                for key in path {
+                    value = &value[*key];
+                }
+                value.as_f64()
+            })
+            .collect()
+    };
+    let cold = |field: &str| -> Vec<f64> {
+        samples
+            .iter()
+            .filter_map(|sample| sample["restore"]["cold"][field].as_f64())
+            .collect()
+    };
+    json!({
+        "reps": samples.len(),
+        "write_wall_ms": stat_block(&numbers(&["write", "wall_ms"])),
+        "write_cpu_ms": stat_block(&numbers(&["write", "cpu_user_sys_ms"])),
+        "write_peak_rss_kib": stat_block(&numbers(&["write", "peak_rss_kib"])),
+        "physical_bytes_written": stat_block(&numbers(&["write", "physical_bytes_written"])),
+        "physical_footprint_bytes": stat_block(&samples
+            .iter()
+            .map(|sample| {
+                sample["write"]["storage"]["physical_footprint_bytes"]
+                    .as_f64()
+                    .or_else(|| sample["write"]["physical_footprint_bytes"].as_f64())
+                    .unwrap_or(0.0)
+            })
+            .collect::<Vec<f64>>()),
+        "write_requests": stat_block(&samples
+            .iter()
+            .map(|sample| {
+                sample["write"]["backend_stats"]["writes"]
+                    .as_u64()
+                    .or_else(|| sample["write"]["native_writes"].as_u64())
+                    .map(|count| count + sample["write"]["metadata_objects"].as_u64().unwrap_or(0))
+                    .unwrap_or(0) as f64
+            })
+            .collect::<Vec<f64>>()),
+        "cold_restore_wall_ms": stat_block(&cold("wall_ms")),
+        "cold_restore_cpu_ms": stat_block(&cold("cpu_user_sys_ms")),
+        "cold_restore_peak_rss_kib": stat_block(&cold("peak_rss_kib")),
+        "cold_physical_bytes_read": stat_block(&samples
+            .iter()
+            .map(|sample| {
+                sample["restore"]["cold"]["backend_bytes_read"]
+                    .as_u64()
+                    .or_else(|| sample["restore"]["cold"]["bytes_read"].as_u64())
+                    .unwrap_or(0) as f64
+            })
+            .collect::<Vec<f64>>()),
+        "cold_read_requests": stat_block(&samples
+            .iter()
+            .map(|sample| {
+                sample["restore"]["cold"]["backend_read_requests"]
+                    .as_u64()
+                    .or_else(|| sample["restore"]["cold"]["requests"].as_u64())
+                    .unwrap_or(0) as f64
+            })
+            .collect::<Vec<f64>>()),
+    })
+}
+
+fn assemble(
+    args: &Args,
+    entries: &BTreeMap<String, Vec<Json>>,
+    log_path: &Path,
+    orders: &[Json],
+) -> Json {
+    let reps = args.reps.max(1);
     let mut configurations = serde_json::Map::new();
-    for (config, entry) in entries {
+    let mut least_contended: BTreeMap<String, Json> = BTreeMap::new();
+    for (config, samples) in entries {
+        let median = representative_index(samples, false)
+            .map(|index| samples[index].clone())
+            .unwrap_or_else(|| json!({ "write": Json::Null, "restore": Json::Null }));
+        let best = representative_index(samples, true)
+            .map(|index| samples[index].clone())
+            .unwrap_or_else(|| json!({ "write": Json::Null, "restore": Json::Null }));
+        let strategies: Vec<Json> = samples
+            .iter()
+            .map(|sample| sample["write"]["representations"].clone())
+            .collect();
+        let strategies_stable = strategies.windows(2).all(|pair| pair[0] == pair[1]);
+        let all_exact = samples.iter().all(|sample| {
+            sample["restore"]["exactness"]["match"].as_bool() == Some(true)
+                && sample["restore"]["exactness"]["mismatches"].as_u64() == Some(0)
+        });
         configurations.insert(
             config.clone(),
             json!({
-                "write": entry["write"],
-                "restore": entry["restore"],
-                "summary": summarise(entry),
+                "write": median["write"],
+                "restore": median["restore"],
+                "summary": summarise(&median),
+                "summary_least_contended": summarise(&best),
+                "stats": arm_stats(samples),
+                "reps": samples.len(),
+                "representative_rep": median["rep"],
+                "least_contended_rep": best["rep"],
+                "strategies_stable_across_reps": strategies_stable,
+                "all_restores_exact": all_exact,
+                "samples": samples,
+            }),
+        );
+        least_contended.insert(
+            config.clone(),
+            json!({
+                "write_wall_ms": sample_write_wall(&best),
+                "summary": summarise(&best),
+                "rep": best["rep"],
             }),
         );
     }
     let mut delta_map = serde_json::Map::new();
-    let base = entries
+    let base_present = entries
         .get("A")
-        .map(|entry| summarise(entry))
-        .ok_or_else(|| "missing configuration A".to_owned());
-    let base = match base {
-        Ok(value) => value,
-        Err(_) => json!(null),
-    };
-    if let Some(a) = entries.get("A") {
-        let base_summary = summarise(a);
-        for (config, entry) in entries {
+        .and_then(|samples| {
+            representative_index(samples, false).map(|index| summarise(&samples[index]))
+        })
+        .is_some();
+    if let Some(base_summary) = entries.get("A").and_then(|samples| {
+        representative_index(samples, false).map(|index| summarise(&samples[index]))
+    }) {
+        for (config, samples) in entries {
             if config == "A" {
                 continue;
             }
-            delta_map.insert(config.clone(), deltas(&base_summary, &summarise(entry)));
+            let summary = representative_index(samples, false)
+                .map(|index| summarise(&samples[index]))
+                .unwrap_or_else(|| json!(null));
+            delta_map.insert(config.clone(), deltas(&base_summary, &summary));
+        }
+    }
+    let mut least_delta_map = serde_json::Map::new();
+    if let Some(base_summary) = entries.get("A").and_then(|samples| {
+        representative_index(samples, true).map(|index| summarise(&samples[index]))
+    }) {
+        for (config, samples) in entries {
+            if config == "A" {
+                continue;
+            }
+            let summary = representative_index(samples, true)
+                .map(|index| summarise(&samples[index]))
+                .unwrap_or_else(|| json!(null));
+            least_delta_map.insert(config.clone(), deltas(&base_summary, &summary));
         }
     }
 
     let logicals: BTreeSet<u64> = entries
         .values()
-        .map(|entry| entry["write"]["logical_bytes"].as_u64().unwrap_or(0))
+        .flat_map(|samples| samples.iter())
+        .map(|sample| sample["write"]["logical_bytes"].as_u64().unwrap_or(0))
         .collect();
-    let all_exact = entries.values().all(|entry| {
-        entry["restore"]["exactness"]["match"]
-            .as_bool()
-            .unwrap_or(false)
-            && entry["restore"]["exactness"]["mismatches"]
-                .as_u64()
-                .unwrap_or(1)
-                == 0
+    let all_exact = entries.values().all(|samples| {
+        samples.iter().all(|sample| {
+            sample["restore"]["exactness"]["match"]
+                .as_bool()
+                .unwrap_or(false)
+                && sample["restore"]["exactness"]["mismatches"]
+                    .as_u64()
+                    .unwrap_or(1)
+                    == 0
+        })
     });
     let required = CONFIGS.iter().all(|config| entries.contains_key(*config));
     let protocol_ok = ["D", "E"].iter().all(|config| {
-        entries
-            .get(*config)
-            .map(|entry| {
-                entry["restore"]["protocol"]["context_resolved"]
+        entries.get(*config).map_or(false, |samples| {
+            samples.iter().all(|sample| {
+                sample["restore"]["protocol"]["context_resolved"]
                     .as_bool()
                     .unwrap_or(false)
-                    && entry["restore"]["protocol"]["provenance_verified"]
+                    && sample["restore"]["protocol"]["provenance_verified"]
                         .as_bool()
                         .unwrap_or(false)
             })
-            .unwrap_or(false)
+        })
     });
-    let n_exact = entries
-        .get(NATIVE_APP)
-        .map(|entry| {
-            entry["restore"]["exactness"]["match"]
+    let n_exact = entries.get(NATIVE_APP).map_or(true, |samples| {
+        samples.iter().all(|sample| {
+            sample["restore"]["exactness"]["match"]
                 .as_bool()
                 .unwrap_or(false)
         })
-        .unwrap_or(true);
-    let metrics_complete = entries.values().all(|entry| {
-        let write = &entry["write"];
-        let restore = &entry["restore"];
-        let footprint_present = write["storage"]["physical_footprint_bytes"].is_u64()
-            || write["physical_footprint_bytes"].is_u64();
-        let reads_present = restore["cold"]["backend_bytes_read"].is_u64()
-            || restore["cold"]["bytes_read"].is_u64();
-        write["physical_bytes_written"].is_u64()
-            && footprint_present
-            && restore["cold"]["wall_ms"].is_f64()
-            && restore["cold"]["peak_rss_kib"].is_u64()
-            && reads_present
     });
+    let metrics_complete = entries.values().all(|samples| {
+        samples.iter().all(|sample| {
+            let write = &sample["write"];
+            let restore = &sample["restore"];
+            let footprint_present = write["storage"]["physical_footprint_bytes"].is_u64()
+                || write["physical_footprint_bytes"].is_u64();
+            let reads_present = restore["cold"]["backend_bytes_read"].is_u64()
+                || restore["cold"]["bytes_read"].is_u64();
+            write["physical_bytes_written"].is_u64()
+                && footprint_present
+                && restore["cold"]["wall_ms"].is_f64()
+                && restore["cold"]["peak_rss_kib"].is_u64()
+                && reads_present
+        })
+    });
+    let repetitions_ok = entries.values().all(|samples| samples.len() == reps);
     let mut checks = serde_json::Map::new();
     checks.insert(
         "all_five_configurations_present".to_owned(),
@@ -3115,9 +3308,24 @@ fn assemble(args: &Args, entries: &BTreeMap<String, Json>, log_path: &Path) -> J
         json!(metrics_complete),
     );
     checks.insert("not_measured_declared".to_owned(), json!(true));
+    checks.insert("base_configuration_present".to_owned(), json!(base_present));
     checks.insert(
-        "base_configuration_present".to_owned(),
-        json!(base != json!(null)),
+        "repetitions_match_declared".to_owned(),
+        json!(repetitions_ok),
+    );
+    checks.insert(
+        "at_least_seven_reps".to_owned(),
+        json!(reps >= 7 && repetitions_ok),
+    );
+    checks.insert(
+        "strategies_stable_across_reps".to_owned(),
+        json!(entries.values().all(|samples| {
+            let strategies: Vec<&Json> = samples
+                .iter()
+                .map(|sample| &sample["write"]["representations"])
+                .collect();
+            strategies.windows(2).all(|pair| pair[0] == pair[1])
+        })),
     );
     let pass = checks
         .values()
@@ -3138,22 +3346,21 @@ fn assemble(args: &Args, entries: &BTreeMap<String, Json>, log_path: &Path) -> J
             "fixed_timestamp_ns": FIXED_TIMESTAMP_NS,
             "restore_passes": args.passes,
             "minio_restart_between_configurations": std::env::var("WEFT_AUG_MINIO_RESTART").is_ok(),
-            "configs": if args.with_native_app {
-                json!(["A", "B", "C", "D", "E", "N"])
-            } else {
-                json!(["A", "B", "C", "D", "E"])
-            },
-            "supplementary_native_app": args.with_native_app,
+            "reps": reps,
+            "configs": entries.keys().cloned().collect::<Vec<String>>(),
+            "supplementary_native_app": entries.contains_key(NATIVE_APP),
             "subset_rule": "embedding + evenly spaced N name-sorted non-embedding tensors",
             "max_others": args.max_others,
             "include_embedding": args.include_embedding,
+            "interleaving": "configuration order rotated by one position per repetition; every repetition runs every arm",
         },
         "environment": limit_label(),
         "subset": {
             "schema": "weft.augmentation.subset.v1",
-            "selection": entries.values().next().and_then(|e| e.get("subset_selection")).cloned(),
-            "tensor_count": entries.values().next().and_then(|e| e.get("subset_tensor_count")).cloned(),
+            "selection": entries.values().next().and_then(|samples| samples.first()).and_then(|e| e["write"].get("subset_selection")).cloned(),
+            "tensor_count": entries.values().next().and_then(|samples| samples.first()).and_then(|e| e["write"].get("subset_tensor_count")).cloned(),
         },
+        "orders": orders,
         "mandatory_metrics": [
             "durable_write_wall_ms", "logical_bytes", "physical_bytes_written",
             "physical_bytes_written_source", "physical_footprint_bytes",
@@ -3168,10 +3375,13 @@ fn assemble(args: &Args, entries: &BTreeMap<String, Json>, log_path: &Path) -> J
             "latency_reduction_pct": "100*(A.cold_restore_wall_ms - X.cold_restore_wall_ms)/A.cold_restore_wall_ms",
             "throughput_improvement_pct": "100*(X.logical_restore_bytes_per_s - A.logical_restore_bytes_per_s)/A.logical_restore_bytes_per_s; physical-byte throughput is reported separately",
             "storage_reduction_pct": "100*(A.physical_footprint_bytes - X.physical_footprint_bytes)/A.physical_footprint_bytes",
-            "augmentation_overhead_pct": "100*((X.write_wall_ms + X.cold_restore_wall_ms) - (A.write_wall_ms + A.cold_restore_wall_ms))/(A.write_wall_ms + A.cold_restore_wall_ms)"
+            "augmentation_overhead_pct": "100*((X.write_wall_ms + X.cold_restore_wall_ms) - (A.write_wall_ms + A.cold_restore_wall_ms))/(A.write_wall_ms + A.cold_restore_wall_ms)",
+            "write_multiplier": "X.write_wall_ms / A.write_wall_ms",
         },
         "configurations": configurations,
         "deltas_vs_A": delta_map,
+        "deltas_vs_A_least_contended": least_delta_map,
+        "least_contended": least_contended,
         "checks": checks,
         "not_measured": not_measured(),
         "raw_log": log_path.display().to_string(),
@@ -3182,6 +3392,9 @@ fn assemble(args: &Args, entries: &BTreeMap<String, Json>, log_path: &Path) -> J
             "physical_bytes_written": "backend counters for WeftFS (probe, LOCK, FORMAT, superblock, commits, manifests, chunks/frames, index segments) or harness PUT/file counters for A/N",
             "physical_footprint": "recursive file walk for local, object listing for S3",
             "logical_bytes": "exact source tensor payload bytes in the subset",
+            "reps": "every arm runs once per repetition and the arms are interleaved with a one-position rotation; the receipt publishes every repetition's raw phase JSON and the min/p50/p95/max of every mandatory metric",
+            "representative_rep": "`configurations.X.write`/`.restore`/`.summary` are the median-wall repetition; `summary_least_contended` and `deltas_vs_A_least_contended` use the minimum-wall repetition",
+            "default_note": "A/B/C/D/E/N in this receipt are the shipped defaults of their rows unless the key carries a `-suffix`; no row here requires a non-default flag to reproduce",
         },
     })
 }
@@ -3229,57 +3442,73 @@ fn assemble_cmd(args: &Args) -> Result<(), String> {
         .clone()
         .unwrap_or_else(|| out.with_extension("log"));
     let subset = load_subset(&work.join("subset.json"))?;
-    let mut configs: Vec<String> = CONFIGS.iter().map(|c| (*c).to_owned()).collect();
-    if args.with_native_app {
-        configs.push(NATIVE_APP.to_owned());
-    }
-    let mut entries: BTreeMap<String, Json> = BTreeMap::new();
+    let configs = requested_configs(args)?;
+    let reps = args.reps.max(1);
+    let mut entries: BTreeMap<String, Vec<Json>> = BTreeMap::new();
+    let mut orders: Vec<Json> = Vec::new();
     let mut log =
         File::create(&log_path).map_err(|err| format!("{}: {err}", log_path.display()))?;
     append_log(
         &mut log,
         &format!(
-            "augmentation: assembled from {} phases in {}",
+            "augmentation: assembled from {reps} repetition(s) x {} configurations in {}",
             configs.len(),
-            work.join("phases").display()
+            work.display()
         ),
     );
-    for config in &configs {
-        let write_path = work.join("phases").join(format!("{config}-write.json"));
-        let restore_path = work.join("phases").join(format!("{config}-restore.json"));
-        let write_bytes =
-            fs::read(&write_path).map_err(|err| format!("{}: {err}", write_path.display()))?;
-        let restore_bytes =
-            fs::read(&restore_path).map_err(|err| format!("{}: {err}", restore_path.display()))?;
-        let write: Json = serde_json::from_slice(&write_bytes)
-            .map_err(|err| format!("{}: {err}", write_path.display()))?;
-        let restore: Json = serde_json::from_slice(&restore_bytes)
-            .map_err(|err| format!("{}: {err}", restore_path.display()))?;
-        append_log(
-            &mut log,
-            &format!(
-                "augmentation: {config} write {:.1} ms / restore {:.1} ms / written {} / footprint {} / exact={}",
-                write["wall_ms"].as_f64().unwrap_or(0.0),
-                restore["cold"]["wall_ms"].as_f64().unwrap_or(0.0),
-                write["physical_bytes_written"].as_u64().unwrap_or(0),
-                write["storage"]["physical_footprint_bytes"]
-                    .as_u64()
-                    .or_else(|| write["physical_footprint_bytes"].as_u64())
-                    .unwrap_or(0),
-                restore["exactness"]["match"].as_bool().unwrap_or(false)
-            ),
-        );
-        let phase_log = work.join("phases").join(format!("{config}-write.log"));
-        if let Ok(text) = fs::read_to_string(phase_log) {
-            append_log(&mut log, &text);
+    for rep in 1..=reps {
+        let mut order = configs.clone();
+        let rotation = (rep - 1) % order.len();
+        order.rotate_left(rotation);
+        orders.push(json!({ "rep": rep, "order": order.clone() }));
+        // `run` and this assembler agree on the directory layout: one
+        // repetition directory per repetition, each with its own `phases`.
+        let phase_root = if reps == 1 {
+            work.join("phases")
+        } else {
+            work.join(format!("rep-{rep:02}")).join("phases")
+        };
+        for config in &order {
+            let write_path = phase_root.join(format!("{config}-write.json"));
+            let restore_path = phase_root.join(format!("{config}-restore.json"));
+            let write_bytes =
+                fs::read(&write_path).map_err(|err| format!("{}: {err}", write_path.display()))?;
+            let restore_bytes = fs::read(&restore_path)
+                .map_err(|err| format!("{}: {err}", restore_path.display()))?;
+            let write: Json = serde_json::from_slice(&write_bytes)
+                .map_err(|err| format!("{}: {err}", write_path.display()))?;
+            let restore: Json = serde_json::from_slice(&restore_bytes)
+                .map_err(|err| format!("{}: {err}", restore_path.display()))?;
+            append_log(
+                &mut log,
+                &format!(
+                    "augmentation: rep {rep} {config} write {:.1} ms / restore {:.1} ms / written {} / footprint {} / exact={}",
+                    write["wall_ms"].as_f64().unwrap_or(0.0),
+                    restore["cold"]["wall_ms"].as_f64().unwrap_or(0.0),
+                    write["physical_bytes_written"].as_u64().unwrap_or(0),
+                    write["storage"]["physical_footprint_bytes"]
+                        .as_u64()
+                        .or_else(|| write["physical_footprint_bytes"].as_u64())
+                        .unwrap_or(0),
+                    restore["exactness"]["match"].as_bool().unwrap_or(false)
+                ),
+            );
+            let phase_log = phase_root.join(format!("{config}-write.log"));
+            if let Ok(text) = fs::read_to_string(phase_log) {
+                append_log(&mut log, &text);
+            }
+            let phase_log = phase_root.join(format!("{config}-restore.log"));
+            if let Ok(text) = fs::read_to_string(phase_log) {
+                append_log(&mut log, &text);
+            }
+            entries.entry(config.clone()).or_default().push(json!({
+                "rep": rep,
+                "write": write,
+                "restore": restore,
+            }));
         }
-        let phase_log = work.join("phases").join(format!("{config}-restore.log"));
-        if let Ok(text) = fs::read_to_string(phase_log) {
-            append_log(&mut log, &text);
-        }
-        entries.insert(config.clone(), json!({"write": write, "restore": restore}));
     }
-    let mut receipt = assemble(args, &entries, &log_path);
+    let mut receipt = assemble(args, &entries, &log_path, &orders);
     attach_subset(&mut receipt, &subset, &configs);
     write_json_atomic(&out, &receipt)?;
     let result = receipt["result"].as_str().unwrap_or("fail");
@@ -3317,10 +3546,15 @@ fn stat_block(values: &[f64]) -> Json {
         let index = ((sorted.len() as f64 - 1.0) * q).round() as usize;
         sorted[index.min(sorted.len() - 1)]
     };
+    // `p50` and `median` use the same rank formula on purpose: for an even
+    // sample count the nearest-rank median is the p50, and publishing both
+    // names of one estimator is honest where averaging two middle samples and
+    // calling it both would not be.
     json!({
+        "min": sorted[0],
+        "p50": rank(0.5),
         "median": rank(0.5),
         "p95": rank(0.95),
-        "min": sorted[0],
         "max": sorted[sorted.len() - 1],
         "samples": values,
     })
@@ -4123,8 +4357,8 @@ fn ablate(args: &Args) -> Result<(), String> {
                         let violations = planner["prediction_violation_tensors"]
                             .as_u64()
                             .unwrap_or(0);
-                        let mode9_ok = mode9 == expected_mode9
-                            || (violations > 0 && mode9 > expected_mode9);
+                        let mode9_ok =
+                            mode9 == expected_mode9 || (violations > 0 && mode9 > expected_mode9);
                         zstd3 <= tensors && zstd19 == expected19 && mode9_ok
                     }
                     PlannerMode::Exhaustive => {
@@ -4358,53 +4592,89 @@ fn run(args: Args) -> Result<(), String> {
         ),
     );
 
-    let mut configs: Vec<String> = CONFIGS.iter().map(|c| (*c).to_owned()).collect();
-    if args.with_native_app {
-        configs.push(NATIVE_APP.to_owned());
-    }
+    let configs = requested_configs(&args)?;
+    let reps = args.reps.max(1);
+    append_log(
+        &mut log,
+        &format!(
+            "augmentation: configs={configs:?} reps={reps} interleaved with a one-position rotation per repetition"
+        ),
+    );
 
-    let mut entries: BTreeMap<String, Json> = BTreeMap::new();
+    let mut entries: BTreeMap<String, Vec<Json>> = BTreeMap::new();
+    let mut orders: Vec<Json> = Vec::new();
     let mut failure: Option<String> = None;
-    for config in &configs {
+    for rep in 1..=reps {
+        // Every repetition gets its own directory so the raw phase files of the
+        // seven repetitions are all retained, and the arms are interleaved so
+        // a host drift event cannot land on one arm only. The order rotates by
+        // one position per repetition, so no arm always occupies the same slot.
+        let rep_dir = work.join(format!("rep-{rep:02}"));
+        fs::create_dir_all(&rep_dir).map_err(|err| format!("{}: {err}", rep_dir.display()))?;
+        write_json_atomic(
+            &rep_dir.join("subset.json"),
+            &serde_json::to_value(&subset).map_err(|err| err.to_string())?,
+        )?;
+        let mut order = configs.clone();
+        let rotation = (rep - 1) % order.len();
+        order.rotate_left(rotation);
+        orders.push(json!({ "rep": rep, "order": order }));
         append_log(
             &mut log,
-            &format!("augmentation: === configuration {config} ==="),
+            &format!("augmentation: === rep {rep}/{reps} order={order:?} ==="),
         );
-        let write_result = run_child(&args, &work, "write", config, &[], &[], &mut log);
-        let write = match write_result {
-            Ok(value) => value,
-            Err(err) => {
-                failure = Some(err);
-                break;
-            }
-        };
-        let restore_result = run_child(&args, &work, "restore", config, &[], &[], &mut log);
-        let restore = match restore_result {
-            Ok(value) => value,
-            Err(err) => {
-                failure = Some(err);
-                break;
-            }
-        };
-        entries.insert(
-            config.clone(),
-            json!({
-                "write": write,
-                "restore": restore,
-            }),
-        );
-        if args.backend == "s3" {
-            if let Err(err) = run_child(&args, &work, "cleanup", config, &[], &[], &mut log) {
-                append_log(
-                    &mut log,
-                    &format!("augmentation: cleanup {config} failed: {err}"),
-                );
-            }
-        }
-        if let Err(err) = remove_config_dir(&args, config) {
+        for config in &order {
             append_log(
                 &mut log,
-                &format!("augmentation: cleanup local {config}: {err}"),
+                &format!("augmentation: rep {rep} configuration {config}"),
+            );
+            let write_result = run_child(&args, &rep_dir, "write", config, &[], &[], &mut log);
+            let write = match write_result {
+                Ok(value) => value,
+                Err(err) => {
+                    failure = Some(err);
+                    break;
+                }
+            };
+            let restore_result = run_child(&args, &rep_dir, "restore", config, &[], &[], &mut log);
+            let restore = match restore_result {
+                Ok(value) => value,
+                Err(err) => {
+                    failure = Some(err);
+                    break;
+                }
+            };
+            entries.entry(config.clone()).or_default().push(json!({
+                "rep": rep,
+                "write": write,
+                "restore": restore,
+            }));
+            if args.backend == "s3" {
+                if let Err(err) = run_child(&args, &rep_dir, "cleanup", config, &[], &[], &mut log)
+                {
+                    append_log(
+                        &mut log,
+                        &format!("augmentation: cleanup {config} failed: {err}"),
+                    );
+                }
+            }
+            let store_dir = config_store_path(&rep_dir, config);
+            if store_dir.exists() {
+                if let Err(err) = fs::remove_dir_all(&store_dir) {
+                    append_log(
+                        &mut log,
+                        &format!("augmentation: cleanup local {config}: {err}"),
+                    );
+                }
+            }
+        }
+        if failure.is_some() {
+            break;
+        }
+        if let Err(err) = fs::remove_dir_all(&rep_dir) {
+            append_log(
+                &mut log,
+                &format!("augmentation: cleanup {rep_dir:?}: {err}"),
             );
         }
     }
@@ -4425,7 +4695,7 @@ fn run(args: Args) -> Result<(), String> {
             "raw_log": log_path.display().to_string(),
         })
     } else {
-        assemble(&args, &entries, &log_path)
+        assemble(&args, &entries, &log_path, &orders)
     };
     attach_subset(&mut receipt, &subset, &configs);
     write_json_atomic(&out, &receipt)?;
