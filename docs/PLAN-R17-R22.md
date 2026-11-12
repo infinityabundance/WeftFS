@@ -191,7 +191,7 @@ tree/code construction is free; "frame assembly" 447 ms for the embedding.
 2. **Done: `analyse` parallelised exactly rather than fused.** The histogram is
    integer counts, so whole-element windows summed across threads are
    bit-identical; the R18 exact mode-9 prediction is unchanged and re-proved
-   (`histogram_parallel` 3/3 + the 74-case planner court +
+   (`histogram_parallel` 3/3 + the planner court `two_stage_planner` 7/7 +
    `two_stage_matches_exhaustive`/`two_stage_storage_unchanged`). What could not
    be fused is named: the histogram decides whether the encode it would be fused
    into runs at all, and the dominant analyse cost is the level-19 *sample*

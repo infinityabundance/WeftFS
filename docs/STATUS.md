@@ -9643,8 +9643,8 @@ write is now durability-bound, not encode-bound.
   byte-bounded batches, each worker reusing one zstd context. Measured on the
   272,269,312 B embedding (64 KiB chunks, 4,155 chunks): level 3 **280.3 ->
   189.0 (2 threads) -> 135.7 ms (4)** and level 19 **13,597.4 -> 3,667.1 ms (4)**
-  with **every timed frame byte-identical** (40 checks in the receipt; about
-  2,600 boundary comparisons, 2,000 randomised cases and the fallback paths in
+  with **every timed frame byte-identical** (40 checks in the receipt; 2,800
+  boundary comparisons, 2,000 randomised cases and the fallback paths in
   `WeftCodec/tests/zstd_chunk_parallel.rs`, 5/5). It does **not** move the frozen
   fixture's wall: the pipeline is 552 ms of which publication is 452.5 ms and
   the durability writeback 461.6 ms for 202 files. The plan's "~430 ms"
@@ -9655,7 +9655,7 @@ write is now durability-bound, not encode-bound.
   encode because it decides whether that encode runs. It is now accumulated on
   threads in whole-element windows and summed - exact, so the R18 bit-exact
   mode-9 prediction is unchanged (`WeftCodec/tests/histogram_parallel.rs` 3/3,
-  `tests/two_stage_planner.rs` 74 cases still green, court re-proof
+  `tests/two_stage_planner.rs` (7 tests) still green, court re-proof
   `two_stage_matches_exhaustive` / `two_stage_storage_unchanged` both true). The
   measured wall effect is **nil** (`an1` control 586.6/614.7 against 592.6/600.9)
   and the dominant analyse cost turns out to be the **level-19 sample**

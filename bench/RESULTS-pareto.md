@@ -53,7 +53,7 @@ exactly that on a bounded pool:
 
 | Where | What it proves | Result |
 |---|---|---|
-| `WeftCodec/tests/zstd_chunk_parallel.rs` | every chunk-count boundary: for 4 KiB and 64 KiB chunks, `{k·chunk−1, k·chunk, k·chunk+1}` for `k = 0..=6` plus 7 awkward lengths, at levels **3 and 19**, with **1/2/3/4/8 threads** and **five batch bounds** (one chunk, two, four, sixteen, the default) — ≈ 2,600 whole-frame comparisons, each also re-parsed and decoded and compared chunk entry by chunk entry | **5/5 tests pass; 0 mismatches** |
+| `WeftCodec/tests/zstd_chunk_parallel.rs` | every chunk-count boundary: for 4 KiB and 64 KiB chunks, `{k·chunk−1, k·chunk, k·chunk+1}` for `k = 0..=6` plus 7 awkward lengths, at levels **3 and 19**, with **1/2/3/4/8 threads** and **five batch bounds** (one chunk, two, four, sixteen, the default) — 2,800 whole-frame comparisons (2 chunk sizes × 2 levels × 5 thread counts × 5 batch bounds × 28 lengths), each also re-parsed and decoded and compared chunk entry by chunk entry | **5/5 tests pass; 0 mismatches** |
 | same file | 2,000 randomised frames (incompressible, 2/16/64/255-symbol, random length/chunk/level/threads/batch) | 0 mismatches |
 | same file | all-zero, all-`0xFF`, all-`A` payloads past a chunk boundary; 3-byte partial element; empty input; the sequential fallbacks (below threshold, one thread, no chunking) | 0 mismatches; a zero batch bound is refused `Malformed` |
 | `bench/receipts/zstd-chunk-parallel-20261112T231500Z.json` | the **real** 272,269,312 B Qwen2.5-0.5B-Instruct embedding at 64 KiB chunks (4,155 chunks): every timed frame (40 of them) compared with the sequential frame | `all_frames_byte_identical: true` |
@@ -121,8 +121,8 @@ does that, the store uses it above 8 MiB, and
 single-pass counts for every dtype, thread count and window bound, (b) the
 **R18 bit-exact predicted length is unchanged**, and (c) the prediction still
 equals the real frame length the encoder emits. The R18 decision court
-(`tests/two_stage_planner.rs`, all 74 cases) is part of the 807-test rust run and
-still passes; `two_stage_matches_exhaustive: true` and
+(`tests/two_stage_planner.rs`, 7 tests) is part of the 807-test rust run and still
+passes; `two_stage_matches_exhaustive: true` and
 `two_stage_storage_unchanged: true` re-prove it at court level.
 
 **What it bought: nothing measurable at the wall, and that is expected.** The
