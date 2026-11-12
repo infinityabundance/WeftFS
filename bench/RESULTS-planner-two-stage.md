@@ -1,5 +1,11 @@
 # R18 — two-stage planned write: analyse, select, materialise
 
+> **Superseded on the wall, not on the decisions.** R19 (mode-9 encoder)
+> measures the same planner at **2,328.4 ms** with the identical footprint and
+> the identical decision stream; see
+> [`RESULTS-mode9-encoder.md`](RESULTS-mode9-encoder.md). The numbers below are
+> the R18 record at the R18 revision and are left unchanged.
+
 **Status: implemented and measured.** The planned write no longer encodes every
 candidate and discards the losers. On the frozen fixture it is **24,175.8 →
 4,117.8 ms** (least-contended of 7 interleaved repetitions) with the footprint
