@@ -246,6 +246,15 @@ or rebuilds exactly as before), the index-GC per-root rule is untouched, and
 `tests/retention.rs` (8) and `tests/gc_accounting.rs` (3) all pass. No index
 attestation and no format was changed.
 
+Explicit product-path evidence, `bench/receipts/r20-checkpoint-verify-20261112T121955Z.log`
+(WeftFS `53bad7c`, bench court): `weftfs checkpoint write` of the 12
+`model.layers.0.*` tensors (12 shard objects, 29,824,768 element bytes, manifest
+root `2edee158…`) followed by **`verify --full`: ok, full, 2 commits checked, 0
+problems**; `checkpoint verify` reports 12 tensors verified; `checkpoint
+restore --topology 1` writes 29,826,096 bytes with SHA-256 `3a0f1570…`, identical
+across two independent runs. This is a functional gate on the checkpoint path,
+not a timing claim.
+
 ## 7. Host contention, losses, and non-claims
 
 * The host is shared. The distribution is bimodal: `C-group` has a 15,332.9 ms

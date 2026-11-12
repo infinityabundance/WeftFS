@@ -9454,7 +9454,12 @@ candidate and discards the losers. Deliverable:
   `after_objects` → old, `after_commit_file` → old, `after_superblock_write` →
   new; 0 tensor mismatches and 0 missing in all 30 verdicts;
   `crash_proxy_old_or_new: true`. The `after_commit_file` row keeps the
-  pre-existing benign note about an unreferenced commit tail. Index GC, the
+  pre-existing benign note about an unreferenced commit tail. Product-path
+  evidence `bench/receipts/r20-checkpoint-verify-20261112T121955Z.log`:
+  `weftfs checkpoint write` (12 `model.layers.0.*` tensors, 12 shard objects,
+  29,824,768 element bytes) then **`verify --full` ok, 2 commits checked, 0
+  problems**, `checkpoint verify` 12 tensors, `checkpoint restore --topology 1`
+  29,826,096 B with SHA-256 `3a0f1570…` identical over two runs. Index GC, the
   per-root index rule and retention are untouched: `index_persistence` 7/7,
   `index_gc_bound` 3/3, `retention` 8/8, `gc_accounting` 3/3, `crash_proxy`
   3/3, `bounded_recovery` 3/3, `parallel_checkpoint` 7/7,
