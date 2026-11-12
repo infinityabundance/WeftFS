@@ -198,6 +198,22 @@ shipped planned write. Receipt
 | `tiles.write_ratio` | 3.25 | x | Tiled write cost as a multiple of the one-frame write | `bench/receipts/float-tiled-20261107T042955Z.json` | 20261107T042955Z | — |
 <!-- END GENERATED:perf-catalog-storage -->
 
+## Multi-writer (MW2) throughput
+
+Measured at WeftFS `b0bcbc5e` / WeftFS-Go `f46b351f`, **before** the R17–R22
+write work; the numbers are not re-measured and are published as a scaling
+loss (efficiency falls with N). Receipt
+`bench/receipts/bench-multiwriter-20261109T150423Z.json`.
+
+<!-- BEGIN GENERATED:perf-catalog-multiwriter (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `mw.n1_tx_s` | 4,000 | tx/s | MW2 local throughput at N=1, disjoint | `bench/receipts/bench-multiwriter-20261109T150423Z.json` | 20261109T150423Z | b0bcbc5e4ded |
+| `mw.n32_tx_s` | 638 | tx/s | MW2 local throughput at N=32, disjoint | `bench/receipts/bench-multiwriter-20261109T150423Z.json` | 20261109T150423Z | b0bcbc5e4ded |
+| `mw.n32_efficiency` | 0.0050 | ratio | MW2 scaling efficiency at N=32 | `bench/receipts/bench-multiwriter-20261109T150423Z.json` | 20261109T150423Z | b0bcbc5e4ded |
+| `mw.minio_n4_tx_s` | 212.8 | tx/s | MW2 MinIO throughput at N=4 | `bench/receipts/bench-multiwriter-20261109T150423Z.json` | 20261109T150423Z | b0bcbc5e4ded |
+<!-- END GENERATED:perf-catalog-multiwriter -->
+
 ## Verification, conformance and claims counts
 
 <!-- BEGIN GENERATED:perf-catalog-verification (scripts/perf_numbers.py) -->
