@@ -392,6 +392,13 @@ true` — the exhaustive control and the two-stage planner produce the **same
 | `scripts/check-claims.sh` / spec drift / conformance | 1,030 claims OK / 60/60 / manifest + coverage 420 OK |
 | `scripts/verify-all.sh` | **not run** (see §7) |
 
+Raw gate logs (revision `63705c1`, the code tree is the same at `96ee802`)
+are committed beside the receipts: `bench/receipts/r21-rust-tests.log`
+(169 binaries, 807 passed), `bench/receipts/r21-fuse-tests.log` (169
+binaries, 850 passed, 2 ignored) and
+`bench/receipts/r21-tensor-pipeline-tests.log` (the 6-test determinism
+court).
+
 ## 9. What R22 must do
 
 The wall is now 623.3 ms, of which **448.8 ms is one tensor's encode** (72 %).
