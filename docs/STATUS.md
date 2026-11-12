@@ -9614,9 +9614,12 @@ the same 282,106,049 B fixture, and the committed state is identical for
   standalone, like the R19/R20 courts: `verify-all` keeps the reduced
   `augmentation_local` contract court and does not carry the 13-row
   7-repetition matrix.
-* **Next bottleneck.** Of the 623.3 ms, **448.8 ms (72 %) is one tensor's
-  encode**, of which level 3 is ~295–337 ms and mode 9 ~122–227 ms (already
-  overlapped). `weftcodec::modes::encode_zstd` with a codec chunk size emits one
+* **Next bottleneck.** Of the 623.3 ms, **448.8–468.1 ms (72–75 %) is one
+  tensor's own encode** (the 272 MB embedding, repetition 1 at four and eight
+  workers), of which level 3 is ~295–337 ms and mode 9 ~122–227 ms (already
+  overlapped). Going from four to eight workers buys 11.2 ms on the minimum
+  (623.3 → 612.1) and nothing on the median, so inter-tensor parallelism is
+  exhausted. `weftcodec::modes::encode_zstd` with a codec chunk size emits one
   independent ZSTD frame per chunk under the CHUNKED flag (4,155 frames for the
   embedding), so R22 should parallelise the *chunk* encodes of one tensor — a
   byte-identical change with ~3× headroom on level 3, which projects a ~430 ms

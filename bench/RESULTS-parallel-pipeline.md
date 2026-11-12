@@ -136,7 +136,7 @@ Measured at the default configuration (least-contended repetition):
 | worker | 1,073,741,824 | 872,251,392 |
 | encode queue | 268,435,456 | 180,547,519 |
 | publisher | 134,217,728 | 180,547,519 |
-| **peak RSS** | — | **943,335,424 B (921,388 KiB)** |
+| **peak RSS** | — | **921,388 KiB (900 MiB)** |
 
 Three oversize admissions happened and are counted, not hidden
 (`oversize_staging: 1`, `oversize_publish: 1`): the 272 MB embedding is bigger
@@ -239,22 +239,41 @@ and the medians/p95 are published unchanged.
 
 ### 4.1 Amdahl — what the parallelism can and cannot buy
 
+The stage columns are the least-contended repetition; the two per-tensor
+columns are repetition 1 (the harness emits per-tensor rows for one
+repetition only), so read them as one tensor's own chain from a *different
+repetition of the same configuration*, not as a decomposition of the 623.3 ms.
+
 | | 1 worker | 2 | 4 | 8 |
 |---|---:|---:|---:|---:|
-| wall (min) | 1,114.1 | 986.8 | 623.3 | 612.1 |
-| encode wall | 767.8 | 528.5 | 448.8 | 432.5 |
-| embedding encode | 529.4 | — | 448.8 | 432.5 |
-| everything else (100 tensors) | 241.7 | — | 371.5 | 378.3 |
+| wall (least-contended) | 1,114.1 | 986.8 | 623.3 | 612.1 |
+| encode wall (least-contended) | 767.8 | 528.5 | 448.8 | 432.5 |
+| encode busy, all tensors | 767.7 | 651.7 | 820.3 | 778.3 |
+| embedding encode (rep 1) | 529.4 | 398.2 | 448.8 | 468.1 |
+| the other 100 tensors (rep 1) | 241.7 | 257.2 | 371.5 | 506.4 |
 
-The encode wall **equals the embedding's own encode** at 2, 4 and 8 workers:
-inter-tensor parallelism is exhausted, and the largest tensor is the Amdahl
-cap exactly as R20 predicted. Speedup from 1 to 4 workers is 1.71× of an ideal
-4× (43 % efficiency); the remaining 2.3× is not available to this design
-because 448.8 ms of the encode wall is one tensor. The two levers that do
-work are the ones measured: **intra-tensor candidate parallelism** (embedding
-encode 529.4 → 448.8 ms at 4 workers, → 412.8 ms with three CPU tokens) and
-**three CPU tokens instead of four** (wall 623.3 → 593.9 ms, −4.7 %, because
-the publisher, the early-barrier thread and the kernel's flushers need a core).
+Three things follow, and only the first is a win.
+
+1. **The wall stops responding.** 4 → 8 workers buys 11.2 ms on the minimum
+   (623.3 → 612.1) and nothing on the median (653.9 → 664.8). Adding workers
+   is exhausted.
+2. **One tensor is 72–75 % of the wall.** The embedding's own encode is
+   448.8–468.1 ms in repetition 1 at 4 and 8 workers, against a 623.3 ms wall.
+   Speedup 1 → 4 is 1.71× of an ideal 4× (43 % efficiency), and the missing
+   2.3× is not available to a design that must encode that tensor before it can
+   publish it.
+3. **Two workers is the special case, not a trend.** The embedding encodes
+   *fastest* at two workers (398.2 ms) because with `cpu_tokens = 2` it holds
+   both tokens and nothing else competes for a CPU; at four and eight it shares
+   the machine with 371–506 ms of other encode work and slows to 448.8/468.1.
+   The wall still improves from 986.8 to 623.3 ms because the other work then
+   overlaps it — which is the whole point of the pipeline.
+
+The two levers that did work are the ones measured: **intra-tensor candidate
+parallelism** (529.4 → 448.8 ms for the embedding at 4 workers, → 412.8 ms
+with three CPU tokens) and **three CPU tokens instead of four** (wall 623.3 →
+593.9 ms, −4.7 %, because the publisher, the early-barrier thread and the
+kernel's flushers need a core).
 
 ### 4.2 Intra-tensor vs inter-tensor: which binds
 

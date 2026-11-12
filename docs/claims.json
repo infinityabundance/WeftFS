@@ -10941,8 +10941,8 @@
  },
  {
   "id": "r21_amdahl_embedding",
-  "claim": "Inter-tensor parallelism is exhausted at the largest tensor: at 2, 4 and 8 workers the encode wall equals the 272 MB embedding's own 448.8 ms encode.",
-  "value": "448.8 ms",
+  "claim": "Inter-tensor parallelism is exhausted: going from four to eight workers buys 11.2 ms on the minimum (623.3 \u2192 612.1) and nothing on the median, because one tensor's own encode is 448.8\u2013468.1 ms of the 623.3 ms wall.",
+  "value": "448.8\u2013468.1 ms",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-parallel-pipeline.md"
