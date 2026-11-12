@@ -941,15 +941,6 @@ pub struct BackendStats {
     /// file or a directory). Local and object backends count them; a remote
     /// backend whose durability is a provider acknowledgement reports 0.
     pub fsyncs: u64,
-    /// The subset of [`BackendStats::fsyncs`] that synced file data.
-    ///
-    /// Split out so a publication ledger can say whether a write is bound by
-    /// data barriers or directory barriers. `fsync_file + fsync_dir` equals
-    /// `fsyncs` for every backend that reports both.
-    pub fsync_file: u64,
-    /// The subset of [`BackendStats::fsyncs`] that synced a directory, which
-    /// is what makes a `rename(2)` durable.
-    pub fsync_dir: u64,
 }
 
 impl BackendStats {
@@ -972,8 +963,6 @@ impl BackendStats {
                 .rename_fallbacks
                 .saturating_sub(earlier.rename_fallbacks),
             fsyncs: self.fsyncs.saturating_sub(earlier.fsyncs),
-            fsync_file: self.fsync_file.saturating_sub(earlier.fsync_file),
-            fsync_dir: self.fsync_dir.saturating_sub(earlier.fsync_dir),
         }
     }
 
@@ -993,8 +982,6 @@ impl BackendStats {
                 .saturating_add(other.rename_publications),
             rename_fallbacks: self.rename_fallbacks.saturating_add(other.rename_fallbacks),
             fsyncs: self.fsyncs.saturating_add(other.fsyncs),
-            fsync_file: self.fsync_file.saturating_add(other.fsync_file),
-            fsync_dir: self.fsync_dir.saturating_add(other.fsync_dir),
         }
     }
 }
@@ -1026,8 +1013,6 @@ impl AtomicStats {
             rename_publications: self.rename_publications.load(Ordering::Relaxed),
             rename_fallbacks: self.rename_fallbacks.load(Ordering::Relaxed),
             fsyncs: self.fsyncs.load(Ordering::Relaxed),
-            fsync_file: self.fsync_file.load(Ordering::Relaxed),
-            fsync_dir: self.fsync_dir.load(Ordering::Relaxed),
         }
     }
 }
@@ -1266,6 +1251,18 @@ pub trait StorageBackend: Send {
 
     /// Remove stale staging files older than `grace_secs`.
     fn clean_stale_tmp(&mut self, grace_secs: u64) -> Result<()>;
+
+    /// Durability barriers this backend has issued, split by kind:
+    /// `(file data barriers, directory barriers)`.
+    ///
+    /// `fsync_file + fsync_dir` equals [`crate::backend::BackendStats::fsyncs`]
+    /// for a backend that reports it. The split exists so a publication ledger
+    /// can say whether a write is bound by data or by directory barriers; a
+    /// remote backend whose durability is a provider acknowledgement reports
+    /// `None` and is never described as issuing `fsync`.
+    fn durability_barriers(&self) -> Option<(u64, u64)> {
+        None
+    }
 
     /// Flush buffered blob publications.
     ///
@@ -1857,6 +1854,13 @@ impl StorageBackend for LocalBackend {
         crate::phase_profile::timed(crate::phase_profile::Phase::BackendSync, || {
             self.sync_pending()
         })
+    }
+
+    fn durability_barriers(&self) -> Option<(u64, u64)> {
+        Some((
+            self.stats.fsync_file.load(Ordering::Relaxed),
+            self.stats.fsync_dir.load(Ordering::Relaxed),
+        ))
     }
 
     fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {

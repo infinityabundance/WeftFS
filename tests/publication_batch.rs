@@ -89,6 +89,12 @@ fn ledger_delta(before: &PublicationLedger, after: &PublicationLedger) -> Public
         superblock_writes: after.superblock_writes - before.superblock_writes,
         index_segments: after.index_segments - before.index_segments,
         index_bytes: after.index_bytes - before.index_bytes,
+        file_barriers: after
+            .file_barriers
+            .map(|value| value - before.file_barriers.unwrap_or(0)),
+        dir_barriers: after
+            .dir_barriers
+            .map(|value| value - before.dir_barriers.unwrap_or(0)),
     }
 }
 
@@ -137,8 +143,12 @@ fn the_deferred_batch_skips_no_file_barrier_and_closes_before_the_commit() {
             + ledger.manifest_blobs
             + ledger.commit_records
             + ledger.index_segments;
-        let file_barriers = stats.fsync_file - stats_before.fsync_file;
-        let dir_barriers = stats.fsync_dir - stats_before.fsync_dir;
+        let file_barriers = ledger
+            .file_barriers
+            .expect("the local backend reports its barrier split");
+        let dir_barriers = ledger
+            .dir_barriers
+            .expect("the local backend reports its barrier split");
 
         assert_eq!(
             file_barriers, files,
@@ -238,11 +248,15 @@ fn an_aborted_group_publishes_nothing() {
     store
         .create_file(root, b"after-abort", b"x", 0o644, 0, 0, BTreeMap::new())
         .unwrap();
-    let stats = store.backend_stats();
     let ledger = ledger_delta(&ledger_before, &store.publication_ledger());
     let files =
         ledger.object_blobs + ledger.manifest_blobs + ledger.commit_records + ledger.index_segments;
-    assert_eq!(stats.fsync_file - stats_before.fsync_file, files);
+    assert_eq!(
+        ledger.file_barriers.expect("barrier split"),
+        files,
+        "every published file must be synced exactly once after an abort"
+    );
+    let _ = stats_before;
     assert!(store
         .verify(true)
         .unwrap()

@@ -768,6 +768,11 @@ pub struct PublicationLedger {
     /// Advisory index segments and their bytes.
     pub index_segments: u64,
     pub index_bytes: u64,
+    /// Durability barriers by kind, when the backend reports them:
+    /// `(file data barriers, directory barriers)`. `None` for a backend whose
+    /// durability is a provider acknowledgement.
+    pub file_barriers: Option<u64>,
+    pub dir_barriers: Option<u64>,
 }
 
 /// Atomic counters behind [`PublicationLedger`].
@@ -784,7 +789,12 @@ struct PublicationCounters {
 }
 
 impl PublicationCounters {
-    fn snapshot(&self, index_segments: u64, index_bytes: u64) -> PublicationLedger {
+    fn snapshot(
+        &self,
+        index_segments: u64,
+        index_bytes: u64,
+        barriers: Option<(u64, u64)>,
+    ) -> PublicationLedger {
         use std::sync::atomic::Ordering::Relaxed;
         PublicationLedger {
             object_blobs: self.object_blobs.load(Relaxed),
@@ -797,6 +807,8 @@ impl PublicationCounters {
             superblock_writes: self.superblock_writes.load(Relaxed),
             index_segments,
             index_bytes,
+            file_barriers: barriers.map(|(file, _)| file),
+            dir_barriers: barriers.map(|(_, dir)| dir),
         }
     }
 }
@@ -2825,7 +2837,11 @@ impl Store {
     /// directory walk, and so a batching change is judged on measured counts.
     pub fn publication_ledger(&self) -> PublicationLedger {
         let index = self.index_stats();
-        self.publication.snapshot(index.writes, index.write_bytes)
+        let barriers = self
+            .with_backend(|backend| Ok(backend.durability_barriers()))
+            .unwrap_or(None);
+        self.publication
+            .snapshot(index.writes, index.write_bytes, barriers)
     }
 
     /// Reset advisory index diagnostics (tests and benchmarks only).

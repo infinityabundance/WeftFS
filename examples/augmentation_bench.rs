@@ -2295,8 +2295,6 @@ fn stats_json(stats: &BackendStats) -> Json {
         "rename_publications": stats.rename_publications,
         "rename_fallbacks": stats.rename_fallbacks,
         "fsyncs": stats.fsyncs,
-        "fsync_file": stats.fsync_file,
-        "fsync_dir": stats.fsync_dir,
     })
 }
 
@@ -2337,7 +2335,12 @@ fn publication_ledger_json(
         "duplicate_blobs": ledger.duplicate_blobs,
         "backend_writes": stats.writes,
         "backend_bytes_written": stats.bytes_written,
-        "fsyncs": { "total": stats.fsyncs, "file": stats.fsync_file, "dir": stats.fsync_dir },
+        "fsyncs": {
+            "total": stats.fsyncs,
+            "file": ledger.file_barriers,
+            "dir": ledger.dir_barriers,
+            "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+        },
         "accounted_blob_and_control_bytes": accounted_bytes,
         "unaccounted_bytes": stats.bytes_written.saturating_sub(accounted_bytes),
         "pack": pack.map(|pack| json!({
