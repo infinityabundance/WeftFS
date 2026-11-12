@@ -217,6 +217,10 @@ shipped planned write. Receipt
 | `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
 | `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
 | `tests.rust_codec_passed` | 290 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `artifacts.wheel_bytes` | 115,851 | B | wheel size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
+| `artifacts.wheel_sha` | 9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928 | text | wheel sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
+| `artifacts.sdist_bytes` | 156,977 | B | sdist size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
+| `artifacts.sdist_sha` | cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295 | text | sdist sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Historical quotations

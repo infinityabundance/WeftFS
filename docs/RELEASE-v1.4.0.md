@@ -331,7 +331,31 @@ holds **1,046** entries and `scripts/check-claims.sh` passes.
 ## Artifacts
 
 <!-- BEGIN GENERATED:release-artifacts (scripts/perf_numbers.py) -->
-ARTIFACTS_PENDING
+Release artifacts and registry state are recorded in
+`bench/receipts/release-artifacts-20261112T233126Z.json`. Built in the python court
+and checked with `twine check`:
+
+| file | size | sha256 |
+|---|---:|---|
+| `weftcodec-1.4.0-py3-none-any.whl` | 115,851 B | `9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928` |
+| `weftcodec-1.4.0.tar.gz` | 156,977 B | `cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295` |
+
+`cargo publish --dry-run` **passes** for `weftcodec 1.4.0` (528 files packaged,
+package verified). It **cannot pass** for `weftfs 1.4.0` until `weftcodec 1.4.0`
+is on crates.io: the dependency requirement `weftcodec = "^1.4.0"` has no
+candidate there yet, and the exact error is recorded in the receipt. Publish
+`weftcodec` first, then re-run the `weftfs` dry run.
+
+**Nothing was uploaded.** No PyPI token was present (`.docker-cache/.pypi-token`
+is absent), so the 1.4.0 Python package and its description were not published;
+a crates.io token does exist in `~/.cargo/credentials.toml`, and the registry
+commands are `scripts/publish-crates.sh` and `scripts/publish-pypi.sh`.
+GHCR images are built by the per-repo tag workflows and were not part of this run.
+
+The tag is annotated and created at the release commit after this inventory was
+written; the tag and merge SHAs are recorded in the R24 release entry of
+[`docs/STATUS.md`](STATUS.md), because a file cannot contain the hash of the
+commit that contains it.
 <!-- END GENERATED:release-artifacts -->
 
 ## Where to read next

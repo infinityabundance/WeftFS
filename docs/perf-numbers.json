@@ -1909,6 +1909,58 @@
    "stamp": "20261112T202816Z",
    "revision_path": "environment.revisions.WeftFS",
    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+  },
+  {
+   "key": "artifacts.wheel_bytes",
+   "label": "wheel size",
+   "unit": "B",
+   "format": "int",
+   "path": "python.wheel.size_bytes",
+   "group": "verification",
+   "receipt": "bench/receipts/release-artifacts-20261112T233126Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261112T233126Z",
+   "digest_path": "verification.receipt",
+   "digest": "bench/receipts/verify-20261112T223540Z.json"
+  },
+  {
+   "key": "artifacts.wheel_sha",
+   "label": "wheel sha256",
+   "unit": "text",
+   "format": "text",
+   "path": "python.wheel.sha256",
+   "group": "verification",
+   "receipt": "bench/receipts/release-artifacts-20261112T233126Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261112T233126Z",
+   "digest_path": "verification.receipt",
+   "digest": "bench/receipts/verify-20261112T223540Z.json"
+  },
+  {
+   "key": "artifacts.sdist_bytes",
+   "label": "sdist size",
+   "unit": "B",
+   "format": "int",
+   "path": "python.sdist.size_bytes",
+   "group": "verification",
+   "receipt": "bench/receipts/release-artifacts-20261112T233126Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261112T233126Z",
+   "digest_path": "verification.receipt",
+   "digest": "bench/receipts/verify-20261112T223540Z.json"
+  },
+  {
+   "key": "artifacts.sdist_sha",
+   "label": "sdist sha256",
+   "unit": "text",
+   "format": "text",
+   "path": "python.sdist.sha256",
+   "group": "verification",
+   "receipt": "bench/receipts/release-artifacts-20261112T233126Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261112T233126Z",
+   "digest_path": "verification.receipt",
+   "digest": "bench/receipts/verify-20261112T223540Z.json"
   }
  ],
  "blocks": [
@@ -2860,7 +2912,79 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "ARTIFACTS_PENDING"
+     "template": "Release artifacts and registry state are recorded in"
+    },
+    {
+     "template": "`bench/receipts/release-artifacts-20261112T233126Z.json`. Built in the python court"
+    },
+    {
+     "template": "and checked with `twine check`:"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "| file | size | sha256 |"
+    },
+    {
+     "template": "|---|---:|---|"
+    },
+    {
+     "template": "| `weftcodec-1.4.0-py3-none-any.whl` | {{artifacts.wheel_bytes}} B | `{{artifacts.wheel_sha}}` |"
+    },
+    {
+     "template": "| `weftcodec-1.4.0.tar.gz` | {{artifacts.sdist_bytes}} B | `{{artifacts.sdist_sha}}` |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "`cargo publish --dry-run` **passes** for `weftcodec 1.4.0` (528 files packaged,"
+    },
+    {
+     "template": "package verified). It **cannot pass** for `weftfs 1.4.0` until `weftcodec 1.4.0`"
+    },
+    {
+     "template": "is on crates.io: the dependency requirement `weftcodec = \"^1.4.0\"` has no"
+    },
+    {
+     "template": "candidate there yet, and the exact error is recorded in the receipt. Publish"
+    },
+    {
+     "template": "`weftcodec` first, then re-run the `weftfs` dry run."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**Nothing was uploaded.** No PyPI token was present (`.docker-cache/.pypi-token`"
+    },
+    {
+     "template": "is absent), so the 1.4.0 Python package and its description were not published;"
+    },
+    {
+     "template": "a crates.io token does exist in `~/.cargo/credentials.toml`, and the registry"
+    },
+    {
+     "template": "commands are `scripts/publish-crates.sh` and `scripts/publish-pypi.sh`."
+    },
+    {
+     "template": "GHCR images are built by the per-repo tag workflows and were not part of this run."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "The tag is annotated and created at the release commit after this inventory was"
+    },
+    {
+     "template": "written; the tag and merge SHAs are recorded in the R24 release entry of"
+    },
+    {
+     "template": "[`docs/STATUS.md`](STATUS.md), because a file cannot contain the hash of the"
+    },
+    {
+     "template": "commit that contains it."
     }
    ]
   },
