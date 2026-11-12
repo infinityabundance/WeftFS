@@ -9477,7 +9477,10 @@ candidate and discards the losers. Deliverable:
   **844 passed / 0 failed** (the two pre-existing ignored tests).
   `check-claims.sh` 1000 entries OK, spec drift 60/60, conformance manifest and
   coverage 420 entries OK. No `verify-all` run for this subphase; its 45/45
-  receipt remains the cited aggregate and predates R20.
+  receipt remains the cited aggregate and predates R20. The R20 court is
+  standalone, like the R19 wall court: `verify-all` keeps the reduced
+  `augmentation_local` contract court and does not carry the 14-row
+  7-repetition matrix.
 * **Next bottleneck.** Encode 703.2 ms (57.4 %; ZSTD-3 280.0 + mode-9 191.1 +
   analyse 191.6), blob publication 286.0 ms (23.3 %), barrier 75.2 ms (6.1 %),
   digest 66.1 ms (5.4 %), source read + init 51.7 ms (4.2 %), commit + index

@@ -913,3 +913,33 @@ are untested against the real service. Evidence: `docs/STATUS.md` R23 and
 * The tiled region decoder now names the tile in a decode error
   (`tile N (offset …)`).
 * Store format, manifest schemas, commit protocol, and GC roots are unchanged.
+
+### R20 addendum — one atomic publication per checkpoint
+
+* `Store::begin_group` also opens a **deferred durability batch**
+  (`Options::defer_group_blob_sync`, default on). Inside a batch,
+  `LocalBackend::publish_file` writes and renames each blob and records its
+  file and directory; `StorageBackend::end_deferred_sync` — invoked from
+  `flush_buffered_blobs`, which the commit path already called **before** the
+  commit record — `fsync`s every recorded file and every touched directory
+  once. Ordering is therefore still bytes durable → commit record → head, and
+  every published file keeps its own data barrier. `commit_group` and
+  `abort_group` both close the batch; a backend that cannot defer (packs,
+  split, object stores, 3FS/USRBIO) keeps its eager path and says so.
+* `Store::publication_ledger()` reports blob publications by kind (count and
+  bytes), duplicate hits, commit records, superblock slots and advisory index
+  segments, and `BackendStats` splits `fsyncs` into `fsync_file`/`fsync_dir`.
+  Diagnostic only: no format, commit, recovery or receipt schema reads it.
+* One checkpoint now writes **one** commit record and **one** attested index
+  segment instead of one per tensor. `weftfs.commit.v2`'s attestation fields,
+  the WFX3 segment layout and the index-GC per-root rule are unchanged; a
+  reader loads or rebuilds exactly as before, and `verify` still ignores
+  segments. The store fixture and every frozen manifest are byte-identical.
+* Measured on the augmentation C row: 2,341.6 → 1,225.4 ms and 282,283,011 →
+  282,106,049 B, with the packed blob plane rejected (slower and larger).
+  Evidence `bench/RESULTS-publication-tax.md`, receipt
+  `r20-publication-20261112T133000Z.json`.
+* Residual: the batch is POSIX-local only; a provider-ack backend's durability
+  is unchanged; the barrier is one more `fsync` per file at a different time,
+  not fewer; a crash before the barrier leaves unreferenced blobs (GC
+  reclaims them).
