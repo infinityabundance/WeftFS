@@ -1020,7 +1020,7 @@ fn plan_json(plan: &weftfs::tensor_store::TensorPlan) -> Json {
                 && candidate.physical_bytes == Some(plan.chosen_physical_bytes)
                 && candidate.cost == Some(plan.chosen_cost);
             let zstd_level = if candidate.strategy == TensorStrategy::Zstd {
-                if candidate.detail.contains("level-19") {
+                if candidate.detail.contains("level-19") || candidate.detail.contains("zstd-19") {
                     Some(19)
                 } else if candidate.detail.contains("level-1 ") {
                     Some(1)

@@ -301,8 +301,17 @@ because D/E publish protocol commits after the tensor writes.
   is a protocol+ZSTD-3 result, not a mode-9/zstd-19 result.
 - **RSS:** C peaks at 1,188,240 KiB (~1.13 GiB, 37.8 % of the 3 GiB court);
   no run approached the limit. Mode 9 accounts for ~496 MB of C's RSS.
+- **Per-phase CPU is not instrumented.** The CPU column is the whole write
+  child's user+sys time. Each tensor is encoded on one thread, so a candidate's
+  measured wall is an upper bound on its CPU, not a separate CPU measurement.
+- **Allocator counters are not exposed** by the standard allocator; peak RSS is
+  the memory evidence, reported per configuration and per repetition.
 - **The per-tensor detail is repetition 1 only.** Later repetitions publish
   aggregate wall/CPU/RSS/footprint and strategy counts, not another 101 rows.
+  In the cited receipt, skipped level-19 candidates are labelled
+  `zstd_level: 3` in the per-tensor rows; they are `selected: false` and the
+  authoritative encode counts come from the phase collector (`encode_counts`).
+  The label was corrected after the run.
 - **Single host, warm caches, tmpfs-free local filesystem.** No media,
   power-loss, fleet, cloud, or multi-host claim.
 - **The stage profile is a replica**, validated byte-for-byte against the codec
