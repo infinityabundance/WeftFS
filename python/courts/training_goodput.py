@@ -86,9 +86,13 @@ CONFIGS = ("torchsave", "torchsave-durable", "dcp", "weft", "weft-fast")
 
 #: Configs that call `save_checkpoint_async` without a session.
 SESSION_CONFIGS = ("weft-session",)
+#: The R12c item-4 configuration: one reusable session whose **bounded queue**
+#: owns the save worker, so the loop submits and keeps stepping until the
+#: admission bound is reached.
+QUEUE_CONFIGS = ("weft-queue",)
 #: Every config the child loop understands. `CONFIGS` stays the default court so
 #: an unargumented `run` is byte-for-byte the R12b behaviour.
-ALL_CONFIGS = CONFIGS + SESSION_CONFIGS
+ALL_CONFIGS = CONFIGS + SESSION_CONFIGS + QUEUE_CONFIGS
 
 #: Configs whose checkpoint is a local file or directory (no WeftFS store).
 NATIVE_CONFIGS = ("torchsave", "torchsave-durable", "dcp")
@@ -99,11 +103,36 @@ CONFIG_LABEL = {
     "weft": "C: DCP -> WeftFS adapter",
     "weft-fast": "E: WeftFS fast policy, raw frames (performance floor)",
     "weft-session": "F: one reusable CheckpointSession across every checkpoint",
+    "weft-queue": "G: session + bounded queue (admission control, never skipped)",
 }
 
 #: Every config whose checkpoints live in a WeftFS store.
-STORE_CONFIGS = ("weft", "weft-fast") + SESSION_CONFIGS
+STORE_CONFIGS = ("weft", "weft-fast") + SESSION_CONFIGS + QUEUE_CONFIGS
 DEFAULT_SESSION_IDLE_SECS = 30
+#: Default queue bounds. Chosen from the measured `max_outstanding` sweep; see
+#: `bench/RESULTS-checkpoint-queue.md`.
+DEFAULT_QUEUE_MAX_OUTSTANDING = 2
+DEFAULT_QUEUE_MAX_STAGED_BYTES = 1 << 30
+DEFAULT_QUEUE_ADMISSION_WAIT_MS = 30000.0
+
+#: Session counters a cell reports. The first three are the R12b shape; the
+#: rest are the queue's admission accounting (item 4).
+SESSION_COUNTER_KEYS = (
+    "saves",
+    "services_started",
+    "idempotent_recoveries",
+    "submitted",
+    "admitted",
+    "completed",
+    "failed",
+    "cancelled_before_start",
+    "admission_refusals",
+    "admission_waits",
+    "admission_wait_ms_max",
+    "queue_high_water",
+    "staged_bytes_high_water",
+    "largest_admission_bytes",
+)
 
 DTYPE_NAMES = {
     "float16": "float16",
@@ -465,29 +494,49 @@ def checkpoint_paths(config, run_dir, step):
 class SaveHandle:
     """Uniform async handle for the three configurations."""
 
-    def __init__(self, config, *, future=None, async_handle=None, submit_perf=None):
+    def __init__(
+        self, config, *, future=None, async_handle=None, ticket=None, submit_perf=None
+    ):
         self.config = config
         self.future = future
         self.async_handle = async_handle
+        self.ticket = ticket
         self.submit_perf = submit_perf
         self.done_perf = None
         self.finished_perf = None
         self.stats = {}
         self.error = None
+        self.step = None
         target = async_handle if async_handle is not None else future
-        if target is not None:
+        if ticket is not None:
+            if self.submit_perf is None:
+                self.submit_perf = ticket.submitted_perf
+            ticket.add_done_callback(self._on_done)
+        elif target is not None:
             target.add_done_callback(self._on_done)
 
     def _on_done(self, _future):
         self.done_perf = time.perf_counter()
 
     def done(self):
+        if self.ticket is not None:
+            return self.ticket.done()
         if self.async_handle is not None:
             return self.async_handle.done()
         return self.future.done()
 
     def finalize(self):
-        if self.async_handle is not None:
+        if self.ticket is not None:
+            try:
+                self.stats = dict(self.ticket.result())
+            finally:
+                writer = self.ticket.writer
+                if writer is not None:
+                    try:
+                        writer.close()
+                    except Exception:
+                        pass
+        elif self.async_handle is not None:
             try:
                 self.async_handle.result()
                 self.stats = dict(self.async_handle.stats)
@@ -537,7 +586,7 @@ def child_loop(args):
     # checkpoint pays the service start and every later one reuses it. It is an
     # explicit configuration: the `weft` and `weft-fast` paths never build one.
     session = None
-    if args.config in SESSION_CONFIGS:
+    if args.config in SESSION_CONFIGS or args.config in QUEUE_CONFIGS:
         from weftcodec.dcp import CheckpointSession
 
         session = CheckpointSession(
@@ -545,6 +594,30 @@ def child_loop(args):
             weftfs_cli=args.weftfs_cli,
             staging_bytes=STAGING_BYTES,
             session_idle_secs=int(args.session_idle_secs),
+            # The queue arm exercises admission control; the blocking session
+            # arm keeps the item-1/2/3 shape (submit one, wait for it next
+            # checkpoint) so the two arms differ only in the scheduling layer.
+            max_outstanding=(
+                int(args.queue_max_outstanding)
+                if args.config in QUEUE_CONFIGS
+                else None
+            ),
+            max_staged_bytes=(
+                int(args.queue_max_staged_bytes)
+                if args.config in QUEUE_CONFIGS
+                and args.queue_max_staged_bytes is not None
+                else None
+            ),
+            admission_policy=(
+                args.queue_admission_policy
+                if args.config in QUEUE_CONFIGS
+                else "block"
+            ),
+            admission_wait_ms=(
+                float(args.queue_admission_wait_ms)
+                if args.config in QUEUE_CONFIGS
+                else DEFAULT_QUEUE_ADMISSION_WAIT_MS
+            ),
         )
 
     def spec_path(step):
@@ -573,6 +646,15 @@ def child_loop(args):
             )
             handle = SaveHandle("dcp", future=future, submit_perf=submit_perf)
         else:
+            if args.config in QUEUE_CONFIGS:
+                # Non-blocking admission: the bounded queue either admits the
+                # save or raises QueueFull naming the bound. It is never
+                # dropped and never silently skipped.
+                ticket = session.submit(snapshot, checkpoint_id=paths["checkpoint"])
+                handle = SaveHandle(
+                    args.config, ticket=ticket, submit_perf=submit_perf
+                )
+                return handle
             if args.config in SESSION_CONFIGS:
                 future = executor.submit(
                     session.save, snapshot, checkpoint_id=paths["checkpoint"]
@@ -629,6 +711,7 @@ def child_loop(args):
     step_ms = []
     loss_bits_trace = []
     inflight = None
+    queued_handles = []
     previous_storage = physical_bytes()
     checkpoint_steps = set(range(args.checkpoint_every, args.steps + 1, args.checkpoint_every))
     # Post-step augmentation for the checkpoint immediately before this step.
@@ -675,6 +758,26 @@ def child_loop(args):
     run_start_epoch = time.time()
     record_event("run_start", 0, pid=os.getpid(), config=args.config)
 
+    def harvest(landed_step):
+        """Record every finished queue ticket, in submission order."""
+        for handle in list(queued_handles):
+            if not handle.done():
+                continue
+            try:
+                finish_handle(handle, landed_step=landed_step)
+            except BaseException as exc:  # noqa: BLE001 - recorded then re-raised
+                record_event(
+                    "queue_save_failed",
+                    landed_step,
+                    checkpoint_step=handle.step,
+                    checkpoint_id=None if handle.ticket is None else handle.ticket.checkpoint_id,
+                    error_class=type(exc).__name__,
+                    error=str(exc)[:400],
+                )
+                raise
+            finally:
+                queued_handles.remove(handle)
+
     for step in range(1, args.steps + 1):
         step_started = time.perf_counter()
         loss = train_step(torch, model, optimizer, batches, step)
@@ -700,11 +803,13 @@ def child_loop(args):
 
         if step in checkpoint_steps:
             step_row["checkpoint"] = True
-            # Never run two saves at once. A wait here is a property of the
-            # checkpoint interval, not of the synchronisation point; it is
-            # measured and reported separately.
+            # Never run two saves at once through the *blocking* arm: a wait
+            # here is a property of the checkpoint interval, not of the
+            # synchronisation point; it is measured and reported separately.
+            # The queue arm instead bounds how far ahead the loop may run, and
+            # the wait moves into admission (measured as `admission_wait_ms`).
             wait_ms = 0.0
-            if inflight is not None:
+            if inflight is not None and args.config not in QUEUE_CONFIGS:
                 wait_started = time.perf_counter()
                 inflight.finalize()
                 wait_ms = (time.perf_counter() - wait_started) * 1000.0
@@ -743,7 +848,10 @@ def child_loop(args):
 
             handle = submit(step, snapshot)
             handle.step = step
-            inflight = handle
+            if args.config in QUEUE_CONFIGS:
+                queued_handles.append(handle)
+            else:
+                inflight = handle
             event = {
                 "event": "checkpoint_submitted",
                 "epoch": time.time(),
@@ -757,6 +865,22 @@ def child_loop(args):
                 "probe_ms": round(probe_ms, 3),
                 "spec_ms": round(spec_ms, 3),
                 "waited_for_previous_ms": round(wait_ms, 3),
+                "admission_wait_ms": (
+                    None
+                    if handle.ticket is None
+                    else handle.ticket.admission_wait_ms
+                ),
+                "queue_depth": (
+                    None if args.config not in QUEUE_CONFIGS else session.queue_depth()
+                ),
+                "queue_outstanding": (
+                    None
+                    if args.config not in QUEUE_CONFIGS
+                    else int(session.stats["admitted"])
+                    - int(session.stats["completed"])
+                    - int(session.stats["failed"])
+                    - int(session.stats["cancelled_before_start"])
+                ),
                 "probe_loss_bits": probe_bits,
                 "rss_kib": vmhwm_kib(),
             }
@@ -781,7 +905,9 @@ def child_loop(args):
         step_row["ms"] = round(step_ms[-1], 3)
         events.append({"event": "step", **step_row})
 
-        if inflight is not None and inflight.done():
+        if args.config in QUEUE_CONFIGS:
+            harvest(step)
+        elif inflight is not None and inflight.done():
             handle = inflight
             inflight = None
             finish_handle(handle, landed_step=step)
@@ -799,6 +925,24 @@ def child_loop(args):
             pending_augment = step
 
     # Close out any still-running save so its bytes and completion are measured.
+    queue_report = None
+    queue_drain_ms = None
+    if args.config in QUEUE_CONFIGS:
+        # Drain: every admitted save runs to a recorded outcome before the
+        # store is closed. The report accounts for every ticket.
+        drain_started = time.perf_counter()
+        queue_report = session.close()
+        queue_drain_ms = round((time.perf_counter() - drain_started) * 1000.0, 3)
+        for handle in list(queued_handles):
+            if not handle.done():
+                # close() drained the queue, so this cannot happen; make it
+                # loud rather than silently dropping a requested checkpoint.
+                raise RuntimeError(
+                    "queue drain returned with checkpoint %s still unfinished"
+                    % (handle.ticket.checkpoint_id,)
+                )
+            finish_handle(handle, landed_step=args.steps)
+            queued_handles.remove(handle)
     if inflight is not None:
         inflight.finalize()
         finish_handle(inflight, landed_step=args.steps)
@@ -813,6 +957,52 @@ def child_loop(args):
     session_stats = None
     if session is not None:
         session_stats = dict(session.stats)
+    queue_summary = None
+    if args.config in QUEUE_CONFIGS:
+        requested = len(checkpoint_steps)
+        completed = int(session_stats.get("completed", 0))
+        failed = int(session_stats.get("failed", 0))
+        cancelled = int(session_stats.get("cancelled_before_start", 0))
+        admitted = int(session_stats.get("admitted", 0))
+        queue_summary = {
+            "requested": requested,
+            "admitted": admitted,
+            "refused": int(session_stats.get("admission_refusals", 0)),
+            "completed": completed,
+            "failed": failed,
+            "cancelled_before_start": cancelled,
+            "queue_high_water": int(session_stats.get("queue_high_water", 0)),
+            "staged_bytes_high_water": int(
+                session_stats.get("staged_bytes_high_water", 0)
+            ),
+            "largest_admission_bytes": int(
+                session_stats.get("largest_admission_bytes", 0)
+            ),
+            "admission_waits": int(session_stats.get("admission_waits", 0)),
+            "admission_wait_ms_max": round(
+                float(session_stats.get("admission_wait_ms_max", 0.0)), 3
+            ),
+            "admission_wait_ms_total": round(
+                float(session_stats.get("admission_wait_ms_total", 0.0)), 3
+            ),
+            "max_outstanding": args.queue_max_outstanding,
+            "max_staged_bytes": args.queue_max_staged_bytes,
+            "admission_policy": args.queue_admission_policy,
+            "admission_wait_ms_bound": args.queue_admission_wait_ms,
+            "drain_ms": queue_drain_ms,
+            "drain": queue_report,
+        }
+        # No silent skips: every requested checkpoint is admitted exactly once
+        # and every admitted save has a recorded outcome.
+        queue_summary["no_silent_skips"] = (
+            requested == admitted == completed + failed + cancelled
+        )
+        if not queue_summary["no_silent_skips"]:
+            raise RuntimeError(
+                "queue accounting does not close: requested=%d admitted=%d "
+                "completed=%d failed=%d cancelled=%d"
+                % (requested, admitted, completed, failed, cancelled)
+            )
     record_event(
         "run_done",
         args.steps,
@@ -843,6 +1033,7 @@ def child_loop(args):
         "proc": proc_stat(),
         "pid": os.getpid(),
         "session": session_stats,
+        "queue": queue_summary,
         "session_idle_secs": (
             None if session is None else int(args.session_idle_secs)
         ),
@@ -1096,7 +1287,15 @@ def run_one_loop(args, config, rep, run_dir):
         str(args.session_idle_secs),
         "--weftfs-cli",
         str(args.weftfs_cli),
+        "--queue-max-outstanding",
+        str(args.queue_max_outstanding),
+        "--queue-admission-policy",
+        str(args.queue_admission_policy),
+        "--queue-admission-wait-ms",
+        str(args.queue_admission_wait_ms),
     ]
+    if args.queue_max_staged_bytes is not None:
+        command += ["--queue-max-staged-bytes", str(args.queue_max_staged_bytes)]
     started = time.perf_counter()
     with open(child_log, "wb") as handle:
         proc = subprocess.run(
@@ -1939,18 +2138,20 @@ def _sweep_cell(args, interval, config, work):
         "session_stats": {
             key: value
             for key, value in (results[0].get("session") or {}).items()
-            if key in ("saves", "services_started", "idempotent_recoveries")
+            if key in SESSION_COUNTER_KEYS
         }
         or None,
         "session_stats_all_runs": [
             {
                 key: value
                 for key, value in (result.get("session") or {}).items()
-                if key in ("saves", "services_started", "idempotent_recoveries")
+                if key in SESSION_COUNTER_KEYS
             }
             or None
             for result in results
         ],
+        "queue": results[0].get("queue"),
+        "queue_all_runs": [result.get("queue") for result in results],
         "loss_bits_rep0": results[0]["loss_bits"],
         "final_state_sha256": results[0]["final_state_sha256"],
         "checkpoint_events_rep0": checkpoint_events(results[0]),
@@ -3056,6 +3257,16 @@ def main():
     sweep_parser.add_argument(
         "--session-idle-secs", type=int, default=DEFAULT_SESSION_IDLE_SECS
     )
+    sweep_parser.add_argument(
+        "--queue-max-outstanding", type=int, default=DEFAULT_QUEUE_MAX_OUTSTANDING
+    )
+    sweep_parser.add_argument("--queue-max-staged-bytes", type=int, default=None)
+    sweep_parser.add_argument(
+        "--queue-admission-policy", choices=("block", "fail"), default="block"
+    )
+    sweep_parser.add_argument(
+        "--queue-admission-wait-ms", type=float, default=DEFAULT_QUEUE_ADMISSION_WAIT_MS
+    )
     sweep_parser.add_argument("--weftfs-cli", default=os.environ.get("WEFTFS_CLI", DEFAULT_CLI))
     sweep_parser.set_defaults(func=session_sweep)
 
@@ -3066,6 +3277,16 @@ def main():
     loop_parser.add_argument("--checkpoint-every", type=int, required=True)
     loop_parser.add_argument(
         "--session-idle-secs", type=int, default=DEFAULT_SESSION_IDLE_SECS
+    )
+    loop_parser.add_argument(
+        "--queue-max-outstanding", type=int, default=DEFAULT_QUEUE_MAX_OUTSTANDING
+    )
+    loop_parser.add_argument("--queue-max-staged-bytes", type=int, default=None)
+    loop_parser.add_argument(
+        "--queue-admission-policy", choices=("block", "fail"), default="block"
+    )
+    loop_parser.add_argument(
+        "--queue-admission-wait-ms", type=float, default=DEFAULT_QUEUE_ADMISSION_WAIT_MS
     )
     loop_parser.add_argument("--weftfs-cli", default=DEFAULT_CLI)
     loop_parser.add_argument("--kill-after-ack-step", type=int, default=None)

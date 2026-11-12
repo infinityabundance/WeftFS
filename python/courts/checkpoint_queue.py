@@ -587,6 +587,7 @@ def run_bound(args):
                 flush=True,
             )
             cell = tg._sweep_cell(local, interval, "weft-queue", work)
+            annotate_cell(cell)
             rows.append(
                 {
                     "max_outstanding": bound,
@@ -595,6 +596,8 @@ def run_bound(args):
                     "completion_warm": cell.get("completion_warm"),
                     "step_ms_p50_pooled": cell.get("step_ms_p50_pooled"),
                     "step_ms_p95_pooled": cell.get("step_ms_p95_pooled"),
+                    "step_ms_all": cell.get("step_ms_all"),
+                    "step_ms_clean": cell.get("step_ms_clean"),
                     "pause_ms_p50_pooled": cell.get("pause_ms_p50_pooled"),
                     "peak_rss_kib_max": cell.get("peak_rss_kib_max"),
                     "loop_cpu_ms_median": cell.get("loop_cpu_ms_median"),

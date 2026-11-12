@@ -36,6 +36,8 @@ unless ``--import`` is requested.
 from __future__ import annotations
 
 import ctypes
+import atexit
+import collections
 import importlib
 import io
 import json
@@ -70,6 +72,7 @@ from .service import (
 __all__ = [
     "AsyncSaveHandle",
     "CheckpointSession",
+    "CheckpointTicket",
     "DCP_METADATA_NAME",
     "DCP_METADATA_SCHEMA",
     "DcpError",
@@ -77,8 +80,11 @@ __all__ = [
     "InvalidCheckpointId",
     "InvalidMetadata",
     "MetadataMissing",
+    "QueueClosed",
+    "QueueFull",
     "RestoredEntry",
     "SaveFailed",
+    "SaveNotStarted",
     "StagingLimitExceeded",
     "StoreCommandError",
     "StoreUnavailable",
@@ -99,6 +105,16 @@ DCP_METADATA_SCHEMA = "weft.dcp.metadata.v1"
 DCP_METADATA_NAME = "dcp.metadata"
 DEFAULT_STAGING_BYTES = 256 * 1024 * 1024
 DEFAULT_TIMEOUT_SECONDS = 1800.0
+
+# Checkpoint queue bounds (R12c item 4). `MAX_OUTSTANDING` is chosen from the
+# measured `max_outstanding` sweep (1/2/4/8 at a 1- and 4-step interval): 2 is as
+# fast as 4 or 8 within noise at a 1-step interval, strictly faster than 1, and
+# buys less measured completion latency and peak RSS than a deeper queue. See
+# bench/RESULTS-checkpoint-queue.md.
+DEFAULT_QUEUE_MAX_OUTSTANDING = 2
+DEFAULT_QUEUE_MAX_STAGED_BYTES = 1 << 30
+DEFAULT_QUEUE_ADMISSION_WAIT_MS = 30000.0
+QUEUE_ADMISSION_POLICIES = ("block", "fail")
 DEFAULT_CLI = "/work/.docker-cache/target-rust/release/weftfs"
 
 #: torch dtype spelling -> (canonical WEFT-TENSOR dtype, safetensors spelling,
@@ -173,6 +189,51 @@ class TorchRequired(DcpError):
 
 class SaveFailed(DcpError):
     """A save did not produce a usable checkpoint."""
+
+
+class QueueFull(DcpError):
+    """A durable save was refused admission; nothing was published.
+
+    Raised by :meth:`CheckpointSession.submit` (and therefore by
+    :meth:`CheckpointSession.save`) when the documented queue bound is
+    reached and either ``admission_policy="fail"`` or the bounded waiting
+    time expired. The message names every bound the policy applied, so a
+    refusal is actionable and never silent.
+    """
+
+    def __init__(
+        self,
+        message,
+        *,
+        max_outstanding,
+        outstanding,
+        max_staged_bytes=None,
+        staged_bytes=0,
+        requested_bytes=0,
+        byte_budget=None,
+        waited_ms=0.0,
+    ):
+        super().__init__(message)
+        self.max_outstanding = max_outstanding
+        self.outstanding = outstanding
+        self.max_staged_bytes = max_staged_bytes
+        self.staged_bytes = staged_bytes
+        self.requested_bytes = requested_bytes
+        self.byte_budget = byte_budget
+        self.waited_ms = waited_ms
+
+
+class QueueClosed(DcpError):
+    """A save was submitted to a session that is closed or draining."""
+
+
+class SaveNotStarted(DcpError):
+    """An admitted save was cancelled before it started; it published nothing.
+
+    The queue's only cancellation point is "before a save starts", because a
+    save that has begun publishing cannot be abandoned safely. A save that was
+    cancelled here wrote no blob and no commit.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -2302,6 +2363,236 @@ class WeftStorageWriter(_StorageWriterBase):
             )
 
 
+def _estimate_state_bytes(state_dict, *, depth=4):
+    """Estimate the logical bytes a save will stage, without copying anything.
+
+    Returns ``(bytes, unpriced)``. Tensors contribute ``numel * element_size``;
+    raw byte objects contribute their length; containers are walked to
+    ``depth``. This is an admission estimate (logical bytes), not a claim about
+    resident memory: the live cost of a queued save is the caller's own
+    snapshot plus, once it starts, one container.
+    """
+    total = 0
+    unpriced = 0
+
+    def visit(node, level):
+        nonlocal total, unpriced
+        if isinstance(node, (bytes, bytearray, memoryview)):
+            total += len(node)
+            return
+        numel = getattr(node, "numel", None)
+        if callable(numel):
+            try:
+                element = getattr(node, "element_size", None)
+                total += int(numel()) * int(element() if callable(element) else 1)
+                return
+            except Exception:  # noqa: BLE001 - fall through to structural walk
+                pass
+        if level >= depth:
+            unpriced += 1
+            return
+        if isinstance(node, dict):
+            for value in node.values():
+                visit(value, level + 1)
+            return
+        if isinstance(node, (list, tuple)):
+            for value in node:
+                visit(value, level + 1)
+            return
+        unpriced += 1
+
+    visit(state_dict, 0)
+    return total, unpriced
+
+
+class _QueuedSave:
+    """One admitted save waiting for the session's single worker."""
+
+    __slots__ = ("ticket", "state_dict", "checkpoint_id", "kwargs")
+
+    def __init__(self, ticket, state_dict, checkpoint_id, kwargs):
+        self.ticket = ticket
+        self.state_dict = state_dict
+        self.checkpoint_id = checkpoint_id
+        self.kwargs = kwargs
+
+
+class CheckpointTicket:
+    """One queue submission: its order, its wait and its outcome.
+
+    A ticket is created only when a save is **admitted**; a refused save raises
+    :class:`QueueFull` instead and gets no ticket. ``status`` moves
+    ``queued`` -> ``started`` -> ``completed``/``failed``, or ``queued`` ->
+    ``cancelled_before_start``. The status of a finished ticket is final, and
+    the session's drain report is built from these objects, so no admitted save
+    can go missing without its ticket saying so.
+    """
+
+    QUEUED = "queued"
+    STARTED = "started"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled_before_start"
+
+    __slots__ = (
+        "index",
+        "checkpoint_id",
+        "estimate_bytes",
+        "submitted_perf",
+        "admission_wait_ms",
+        "started_perf",
+        "done_perf",
+        "status",
+        "error",
+        "stats",
+        "writer",
+        "_owner",
+        "_lock",
+        "_done",
+        "_callbacks",
+    )
+
+    def __init__(
+        self,
+        *,
+        index,
+        checkpoint_id,
+        estimate_bytes,
+        submitted_perf,
+        admission_wait_ms,
+        owner,
+    ):
+        self.index = int(index)
+        self.checkpoint_id = checkpoint_id
+        self.estimate_bytes = int(estimate_bytes)
+        self.submitted_perf = submitted_perf
+        self.admission_wait_ms = round(float(admission_wait_ms), 3)
+        self.started_perf = None
+        self.done_perf = None
+        self.status = self.QUEUED
+        self.error = None
+        self.stats = {}
+        self.writer = None
+        self._owner = owner
+        self._lock = threading.Lock()
+        self._done = threading.Event()
+        self._callbacks = []
+
+    # -- worker transitions -------------------------------------------------
+
+    def _mark_started(self, writer, started_perf):
+        """Called by the worker under the queue lock, so cancel() cannot race."""
+        self.writer = writer
+        self.started_perf = started_perf
+        self.status = self.STARTED
+
+    def _mark_completed(self, stats):
+        with self._lock:
+            self.stats = dict(stats or {})
+            self.done_perf = time.perf_counter()
+            self.status = self.COMPLETED
+        self._publish()
+
+    def _mark_failed(self, error):
+        with self._lock:
+            self.error = error
+            if self.writer is not None:
+                try:
+                    self.stats = dict(self.writer.stats)
+                except Exception:  # noqa: BLE001 - diagnostics only
+                    self.stats = {}
+            self.done_perf = time.perf_counter()
+            self.status = self.FAILED
+        self._publish()
+
+    def _mark_cancelled(self, error):
+        """Called by the queue under its own lock, before the worker pops it."""
+        with self._lock:
+            if self.status != self.QUEUED:
+                return False
+            self.error = error
+            self.done_perf = time.perf_counter()
+            self.status = self.CANCELLED
+        self._publish()
+        return True
+
+    def _publish(self):
+        self._done.set()
+        for callback in list(self._callbacks):
+            try:
+                callback(self)
+            except Exception:  # noqa: BLE001 - a callback never breaks a save
+                pass
+
+    # -- caller interface ---------------------------------------------------
+
+    def done(self):
+        return self._done.is_set()
+
+    def started(self):
+        return self.started_perf is not None
+
+    def add_done_callback(self, callback):
+        self._callbacks.append(callback)
+        if self._done.is_set():
+            try:
+                callback(self)
+            except Exception:  # noqa: BLE001
+                pass
+        return None
+
+    def completion_ms(self):
+        if self.done_perf is None:
+            return None
+        return (self.done_perf - self.submitted_perf) * 1000.0
+
+    def queue_wait_ms(self):
+        if self.started_perf is None:
+            return None
+        return (self.started_perf - self.submitted_perf) * 1000.0 - self.admission_wait_ms
+
+    def cancel(self):
+        """Cancel a save that has not started. False once it is running."""
+        return self._owner.cancel_ticket(self)
+
+    def wait(self, timeout=None):
+        return self.result(timeout=timeout)
+
+    def result(self, timeout=None):
+        """Wait for the save; re-raise its error, or return its stats."""
+        if not self._done.wait(timeout):
+            raise TimeoutError(
+                "checkpoint %r (queue ticket %d) did not finish within %rs; the "
+                "session still owns it, and close() will report its outcome"
+                % (self.checkpoint_id, self.index, timeout)
+            )
+        if self.status == self.COMPLETED:
+            return self.stats
+        if self.status == self.CANCELLED:
+            error = self.error or SaveNotStarted(
+                "checkpoint %r was cancelled before it started"
+                % (self.checkpoint_id,)
+            )
+            raise error
+        raise self.error if self.error is not None else SaveFailed(
+            "checkpoint %r failed without a recorded error" % (self.checkpoint_id,)
+        )
+
+    def summary(self):
+        return {
+            "index": self.index,
+            "checkpoint_id": self.checkpoint_id,
+            "status": self.status,
+            "estimate_bytes": self.estimate_bytes,
+            "admission_wait_ms": self.admission_wait_ms,
+            "completion_ms": (
+                None if self.completion_ms() is None else round(self.completion_ms(), 3)
+            ),
+            "error_class": None if self.error is None else type(self.error).__name__,
+            "error": None if self.error is None else str(self.error)[:400],
+        }
+
+
 class CheckpointSession:
     """One long-lived checkpoint service shared by many saves.
 
@@ -2310,6 +2601,27 @@ class CheckpointSession:
     once per checkpoint. The existing API stays exactly as it was: a
     ``WeftStorageWriter`` built without a session still creates and closes its
     own helper.
+
+    Queue and admission control
+    ---------------------------
+
+    Saves go through **one persistent worker** owned by the session and reused
+    across checkpoints; the worker drains a FIFO queue in submission order.
+    One worker is the maximum that can publish: a second concurrent
+    ``prepare`` on the shared helper is refused by the store, and the store is
+    single-writer, so a pool would only add failures.
+
+    Admission is bounded and never silent. A save is admitted while fewer than
+    ``max_outstanding`` saves are outstanding and the staged-byte budget
+    allows it (see :meth:`byte_budget`); otherwise the caller either waits up
+    to ``admission_wait_ms`` or is refused immediately, by policy
+    (``admission_policy`` ``"block"`` or ``"fail"``). A refusal raises
+    :class:`QueueFull` naming the bound and publishes nothing. A requested
+    durable checkpoint is therefore never dropped: it is admitted, or it is a
+    typed error the caller must handle. ``max_outstanding=None`` disables the
+    count bound (``max_staged_bytes=None`` disables the byte bound); an
+    unbounded queue is explicitly the caller's choice and is reported in
+    :attr:`stats` as such.
 
     Ownership and safety
     --------------------
@@ -2322,14 +2634,18 @@ class CheckpointSession:
     * A stale fence is never replaced silently. The service returns the typed
       ``Busy``/``Unauthorized`` error and the caller must reopen; the session
       does not retry a write that the store refused.
-    * The session is not usable across ``fork()``: ``service()`` refuses in a
-      child process, because a child shares the inherited descriptor but not
-      the parent's request stream.
+    * The session is not usable across ``fork()``: ``service()`` and
+      ``submit()`` refuse in a child process, because a child shares the
+      inherited descriptor but not the parent's request stream (and does not
+      share the worker thread at all).
     * An identical retry is idempotent. If a write raises a transport failure
       and the checkpoint then exists with the same container SHA-256, the
       session reports that checkpoint instead of publishing a second
       generation. The container is retained (bounded by ``staging_bytes``) for
       exactly that comparison; a refusal by the store is never masked.
+    * The queue is a scheduling layer only. An admitted save still runs the
+      writer's full atomic prepare/finish publication, so the crash and
+      fencing invariants are the store's, not the queue's.
     """
 
     def __init__(
@@ -2342,6 +2658,10 @@ class CheckpointSession:
         session_idle_secs=30,
         max_tensor_bytes=None,
         extra_args=(),
+        max_outstanding=DEFAULT_QUEUE_MAX_OUTSTANDING,
+        max_staged_bytes=DEFAULT_QUEUE_MAX_STAGED_BYTES,
+        admission_policy="block",
+        admission_wait_ms=DEFAULT_QUEUE_ADMISSION_WAIT_MS,
     ):
         staging_bytes = int(staging_bytes)
         if staging_bytes <= 0:
@@ -2349,9 +2669,29 @@ class CheckpointSession:
         session_idle_secs = int(session_idle_secs)
         if session_idle_secs < 0:
             raise ValueError("session_idle_secs must be non-negative")
+        if max_outstanding is not None:
+            max_outstanding = int(max_outstanding)
+            if max_outstanding < 1:
+                raise ValueError("max_outstanding must be at least 1 (or None)")
+        if max_staged_bytes is not None:
+            max_staged_bytes = int(max_staged_bytes)
+            if max_staged_bytes <= 0:
+                raise ValueError("max_staged_bytes must be positive (or None)")
+        if admission_policy not in QUEUE_ADMISSION_POLICIES:
+            raise ValueError(
+                "admission_policy=%r is not one of %s"
+                % (admission_policy, ", ".join(QUEUE_ADMISSION_POLICIES))
+            )
+        admission_wait_ms = float(admission_wait_ms)
+        if admission_wait_ms < 0:
+            raise ValueError("admission_wait_ms must be non-negative")
         self.store_root = Path(store_root)
         self.staging_bytes = staging_bytes
         self.session_idle_secs = session_idle_secs
+        self.max_outstanding = max_outstanding
+        self.max_staged_bytes = max_staged_bytes
+        self.admission_policy = admission_policy
+        self.admission_wait_ms = admission_wait_ms
         self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
         self._store.requires_store()
         self._cli = _default_cli(weftfs_cli)
@@ -2359,55 +2699,228 @@ class CheckpointSession:
         self._max_tensor_bytes = max_tensor_bytes
         self._extra_args = tuple(str(arg) for arg in extra_args)
         self._service = None
+        self._service_lock = threading.Lock()
+        self._service_gone = False
+        self._close_report = None
         self._closed = False
         self._pid = os.getpid()
+        # The queue: one worker, one lock, FIFO order. `_outstanding` counts
+        # admitted-but-unfinished saves (queued + in flight).
+        self._cond = threading.Condition()
+        self._worker = None
+        self._atexit_registered = False
+        self._pending = collections.deque()
+        self._stopping = False
+        self._tickets = []
+        self._next_index = 0
+        self._outstanding = 0
+        self._staged_bytes = 0
+        self._largest_admitted = 0
+        self._in_flight = None
         self.stats = {
             "saves": 0,
             "services_started": 0,
             "idempotent_recoveries": 0,
             "writable_handle_opens": 0,
+            "submitted": 0,
+            "admitted": 0,
+            "completed": 0,
+            "failed": 0,
+            "cancelled_before_start": 0,
+            "admission_refusals": 0,
+            "admission_waits": 0,
+            "admission_wait_ms_total": 0.0,
+            "admission_wait_ms_max": 0.0,
+            "queue_high_water": 0,
+            "staged_bytes_high_water": 0,
+            "largest_admission_bytes": 0,
+            "unpriced_admissions": 0,
         }
 
     # -- lifecycle ----------------------------------------------------------
 
     def service(self):
-        """The shared helper, started on first use."""
-        if self._closed:
+        """The shared helper, started on first use.
+
+        Stays usable while a drain is in progress, so a save that is already
+        running can finish after ``close()`` has stopped new submissions.
+        """
+        if self._service_gone:
             raise StoreUnavailable("checkpoint session is closed")
         if os.getpid() != self._pid:
             raise ServiceUnavailable(
                 "checkpoint session was created in pid %d; pid %d must create "
                 "its own" % (self._pid, os.getpid())
             )
-        if self._service is None:
-            options = {}
-            if self._max_tensor_bytes is not None:
-                options["max_tensor_bytes"] = int(self._max_tensor_bytes)
-            self._service = CheckpointService(
-                self.store_root,
-                cli=self._cli,
-                timeout=self._timeout,
-                session_idle_secs=self.session_idle_secs,
-                extra_args=self._extra_args,
-                **options,
-            )
-            self.stats["services_started"] += 1
-        return self._service
+        with self._service_lock:
+            if self._service is None:
+                options = {}
+                if self._max_tensor_bytes is not None:
+                    options["max_tensor_bytes"] = int(self._max_tensor_bytes)
+                self._service = CheckpointService(
+                    self.store_root,
+                    cli=self._cli,
+                    timeout=self._timeout,
+                    session_idle_secs=self.session_idle_secs,
+                    extra_args=self._extra_args,
+                    **options,
+                )
+                self.stats["services_started"] += 1
+            return self._service
 
     @property
     def service_pid(self):
         return None if self._service is None else self._service.pid
 
-    def close(self):
-        """Drain and stop the helper. Idempotent."""
-        if self._closed:
-            return
-        self._closed = True
-        if self._service is not None:
+    def close(self, *, wait=True, timeout=300.0):
+        """Stop the queue and the helper; return a drain report.
+
+        ``wait=True`` (the default) drains: every admitted save runs and the
+        report says how each one ended. ``wait=False`` refuses to *start* the
+        saves still queued (they are marked ``cancelled_before_start`` and
+        publish nothing) but still waits for the save already in flight,
+        because abandoning a started publication is not safe. Either way the
+        report accounts for every admitted ticket, so no admitted save can
+        disappear. Idempotent: a second call returns the same report.
+
+        ``timeout`` bounds the wait for the worker. A timed-out drain is
+        reported (``timed_out`` true, plus the unfinished tickets) and the
+        helper is left running for the save that is still working; it exits
+        when the interpreter closes its socket.
+        """
+        timeout = float(timeout)
+        if os.getpid() != self._pid:
+            # In a forked child the worker thread and the parent's socket do not
+            # exist. Release nothing and claim nothing.
+            self._closed = True
+            self._stopping = True
+            self._service = None
+            self._worker = None
+            return {
+                "schema": "weft.checkpoint.queue.drain.v1",
+                "forked_child": True,
+                "admitted": 0,
+                "completed": 0,
+                "failed": 0,
+                "cancelled_before_start": 0,
+                "unfinished": 0,
+                "no_silent_skips": True,
+                "stats": dict(self.stats),
+                "tickets": [],
+            }
+        with self._cond:
+            if self._close_report is not None:
+                return self._close_report
+            self._closed = True
+            self._stopping = True
+            if not wait:
+                for entry in list(self._pending):
+                    self._cancel_locked(
+                        entry,
+                        SaveNotStarted(
+                            "session closed with this checkpoint still queued; "
+                            "it never started and published nothing"
+                        ),
+                    )
+                self._pending.clear()
+            self._cond.notify_all()
+            worker = self._worker
+        if worker is not None:
+            worker.join(timeout)
+        timed_out = worker is not None and worker.is_alive()
+        if not timed_out and self._service is not None:
             try:
                 self._service.close()
             finally:
                 self._service = None
+                self._service_gone = True
+        report = self.drain_report(timed_out=timed_out)
+        with self._cond:
+            self._close_report = report
+        if self._atexit_registered:
+            try:
+                atexit.unregister(self._atexit_close)
+            except Exception:  # noqa: BLE001 - best effort
+                pass
+            self._atexit_registered = False
+        return report
+
+    def _atexit_close(self):
+        """Drain at interpreter exit so an admitted save is never abandoned."""
+        try:
+            self.close(wait=True, timeout=60.0)
+        except Exception:  # noqa: BLE001 - nothing useful can be raised here
+            pass
+
+    def drain_report(self, *, timed_out=False):
+        """The outcome of every admitted ticket, plus the counters."""
+        with self._cond:
+            tickets = [ticket.summary() for ticket in self._tickets]
+            outstanding = self._outstanding
+            pending = len(self._pending)
+        counted = {
+            status: sum(1 for ticket in tickets if ticket["status"] == status)
+            for status in (
+                CheckpointTicket.QUEUED,
+                CheckpointTicket.STARTED,
+                CheckpointTicket.COMPLETED,
+                CheckpointTicket.FAILED,
+                CheckpointTicket.CANCELLED,
+            )
+        }
+        return {
+            "schema": "weft.checkpoint.queue.drain.v1",
+            "timed_out": bool(timed_out),
+            "admitted": len(tickets),
+            "completed": counted[CheckpointTicket.COMPLETED],
+            "failed": counted[CheckpointTicket.FAILED],
+            "cancelled_before_start": counted[CheckpointTicket.CANCELLED],
+            "unfinished": counted[CheckpointTicket.QUEUED]
+            + counted[CheckpointTicket.STARTED],
+            "outstanding": outstanding,
+            "pending": pending,
+            "no_silent_skips": (
+                len(tickets)
+                == counted[CheckpointTicket.COMPLETED]
+                + counted[CheckpointTicket.FAILED]
+                + counted[CheckpointTicket.CANCELLED]
+            ),
+            "stats": dict(self.stats),
+            "tickets": tickets,
+        }
+
+    def cancel_ticket(self, ticket):
+        """Cancel one queued (not yet started) ticket."""
+        with self._cond:
+            for entry in self._pending:
+                if entry.ticket is ticket:
+                    return self._cancel_locked(
+                        entry,
+                        SaveNotStarted(
+                            "checkpoint %r was cancelled before it started; it "
+                            "published nothing" % (ticket.checkpoint_id,)
+                        ),
+                    )
+            return False
+
+    def _cancel_locked(self, entry, error):
+        """Mark a queued save cancelled and release its admission slot.
+
+        Caller holds ``self._cond``. The worker pops and marks a save started
+        under the same lock, so a ticket is never both cancelled and run.
+        """
+        ticket = entry.ticket
+        if not ticket._mark_cancelled(error):
+            return False
+        try:
+            self._pending.remove(entry)
+        except ValueError:
+            pass
+        self._outstanding -= 1
+        self._staged_bytes -= ticket.estimate_bytes
+        self.stats["cancelled_before_start"] += 1
+        self._cond.notify_all()
+        return True
 
     def __enter__(self):
         return self
@@ -2435,8 +2948,114 @@ class CheckpointSession:
         kwargs["retain_container"] = True
         return WeftStorageWriter(checkpoint_id, store_root=self.store_root, **kwargs)
 
+    def queue_depth(self):
+        """Saves queued but not yet started."""
+        with self._cond:
+            return len(self._pending)
+
+    def byte_budget(self, requested_bytes=0):
+        """The staged-byte budget this session applies to an admission.
+
+        The bound is ``max(max_staged_bytes, largest already-admitted save,
+        the save being admitted)``. That rule keeps the byte bound a real
+        memory-protection limit while never deadlocking a workload whose
+        checkpoints are larger than ``max_staged_bytes``: such a workload
+        degenerates to one outstanding save instead of being refused forever.
+        """
+        if self.max_staged_bytes is None:
+            return None
+        with self._cond:
+            return max(self.max_staged_bytes, self._largest_admitted, int(requested_bytes))
+
+    def submit(self, state_dict, *, checkpoint_id, **kwargs):
+        """Admit one durable save and return its :class:`CheckpointTicket`.
+
+        The save runs on the session's single worker in submission order, so an
+        earlier admitted save is never overtaken by a later one and the store's
+        visible history stays monotonic. Nothing is published here; the ticket
+        reports the outcome.
+
+        Raises :class:`QueueFull` when the bound is reached (by policy or after
+        ``admission_wait_ms``), and :class:`QueueClosed` when the session is
+        closed or draining. Both are typed, both publish nothing, and both are
+        counted in :attr:`stats`.
+        """
+        _require_torch("checkpoint session submit")
+        estimate_bytes, unpriced = _estimate_state_bytes(state_dict)
+        submitted_perf = time.perf_counter()
+        wait_started = submitted_perf
+        with self._cond:
+            self._check_submittable_locked()
+            self.stats["submitted"] += 1
+            deadline = wait_started + (
+                self.admission_wait_ms / 1000.0 if self.admission_policy == "block" else 0.0
+            )
+            while self._saturated_locked(estimate_bytes):
+                remaining = deadline - time.perf_counter()
+                if remaining <= 0:
+                    waited_ms = (time.perf_counter() - wait_started) * 1000.0
+                    self.stats["admission_refusals"] += 1
+                    raise self._queue_full_locked(
+                        checkpoint_id, estimate_bytes, waited_ms
+                    )
+                self._cond.wait(remaining)
+                self._check_submittable_locked()
+            waited_ms = (time.perf_counter() - wait_started) * 1000.0
+            self._outstanding += 1
+            self._staged_bytes += estimate_bytes
+            self._largest_admitted = max(self._largest_admitted, estimate_bytes)
+            self._next_index += 1
+            ticket = CheckpointTicket(
+                index=self._next_index,
+                checkpoint_id=checkpoint_id,
+                estimate_bytes=estimate_bytes,
+                submitted_perf=submitted_perf,
+                admission_wait_ms=waited_ms,
+                owner=self,
+            )
+            self._tickets.append(ticket)
+            self._pending.append(
+                _QueuedSave(
+                    ticket,
+                    state_dict,
+                    checkpoint_id,
+                    dict(kwargs),
+                )
+            )
+            self.stats["admitted"] += 1
+            self.stats["largest_admission_bytes"] = self._largest_admitted
+            self.stats["queue_high_water"] = max(
+                self.stats["queue_high_water"], self._outstanding
+            )
+            self.stats["staged_bytes_high_water"] = max(
+                self.stats["staged_bytes_high_water"], self._staged_bytes
+            )
+            if unpriced:
+                self.stats["unpriced_admissions"] += 1
+            if waited_ms > 0.0:
+                self.stats["admission_waits"] += 1
+                self.stats["admission_wait_ms_total"] += waited_ms
+                self.stats["admission_wait_ms_max"] = max(
+                    self.stats["admission_wait_ms_max"], waited_ms
+                )
+            if self._worker is None:
+                # Daemon so an abandoned idle worker can never keep the
+                # interpreter alive; the atexit hook drains the queue first, so
+                # an orderly exit still runs every admitted save.
+                self._worker = threading.Thread(
+                    target=self._worker_loop,
+                    name="weft-checkpoint-queue",
+                    daemon=True,
+                )
+                self._worker.start()
+                if not self._atexit_registered:
+                    atexit.register(self._atexit_close)
+                    self._atexit_registered = True
+            self._cond.notify_all()
+        return ticket
+
     def save(self, state_dict, *, checkpoint_id, **kwargs):
-        """Synchronous save through the shared helper.
+        """Synchronous save through the shared worker and queue.
 
         Returns the writer's stats payload. Exactness, staging bounds and the
         DCP metadata contract are unchanged: this only reuses the transport.
@@ -2448,35 +3067,135 @@ class CheckpointSession:
         generation, so one ``(checkpoint_id, container)`` pair never produces
         two checkpoints.
         """
-        _require_torch("checkpoint session save")
+        return self.submit(state_dict, checkpoint_id=checkpoint_id, **kwargs).result()
+
+    # -- admission ---------------------------------------------------------
+
+    def _check_submittable_locked(self):
+        if self._closed or self._stopping:
+            raise QueueClosed(
+                "checkpoint session at %s is closed; the save was not admitted "
+                "and nothing was published" % (self.store_root,)
+            )
+        if os.getpid() != self._pid:
+            raise ServiceUnavailable(
+                "checkpoint session was created in pid %d; pid %d must create "
+                "its own (the queue worker is a thread and does not survive "
+                "fork())" % (self._pid, os.getpid())
+            )
+
+    def _saturated_locked(self, requested_bytes):
+        if self.max_outstanding is not None and self._outstanding >= self.max_outstanding:
+            return True
+        budget = (
+            None
+            if self.max_staged_bytes is None
+            else max(self.max_staged_bytes, self._largest_admitted, requested_bytes)
+        )
+        return budget is not None and self._staged_bytes + requested_bytes > budget
+
+    def _queue_full_locked(self, checkpoint_id, requested_bytes, waited_ms):
+        budget = (
+            None
+            if self.max_staged_bytes is None
+            else max(self.max_staged_bytes, self._largest_admitted, requested_bytes)
+        )
+        message = (
+            "checkpoint %r was refused admission after waiting %0.1f ms: "
+            "%d of %s saves outstanding (max_outstanding=%s), %d of %s staged "
+            "bytes (max_staged_bytes=%s, budget=%s, this save=%d); nothing was "
+            "published and the store is unchanged"
+            % (
+                checkpoint_id,
+                waited_ms,
+                self._outstanding,
+                "unbounded" if self.max_outstanding is None else self.max_outstanding,
+                self.max_outstanding,
+                self._staged_bytes,
+                "unbounded" if self.max_staged_bytes is None else self.max_staged_bytes,
+                self.max_staged_bytes,
+                budget,
+                requested_bytes,
+            )
+        )
+        return QueueFull(
+            message,
+            max_outstanding=self.max_outstanding,
+            outstanding=self._outstanding,
+            max_staged_bytes=self.max_staged_bytes,
+            staged_bytes=self._staged_bytes,
+            requested_bytes=requested_bytes,
+            byte_budget=budget,
+            waited_ms=waited_ms,
+        )
+
+    # -- worker ------------------------------------------------------------
+
+    def _worker_loop(self):
+        while True:
+            with self._cond:
+                while not self._pending and not self._stopping:
+                    self._cond.wait()
+                if not self._pending:
+                    return
+                entry = self._pending.popleft()
+                started_perf = time.perf_counter()
+                writer = self.writer(entry.checkpoint_id, **entry.kwargs)
+                entry.ticket._mark_started(writer, started_perf)
+                self._in_flight = entry.ticket
+            try:
+                stats = self._run_save(entry)
+                entry.ticket._mark_completed(stats)
+                with self._cond:
+                    self.stats["completed"] += 1
+            except BaseException as exc:  # noqa: BLE001 - always reported
+                entry.ticket._mark_failed(exc)
+                with self._cond:
+                    self.stats["failed"] += 1
+            finally:
+                with self._cond:
+                    self._in_flight = None
+                    self._outstanding -= 1
+                    self._staged_bytes -= entry.ticket.estimate_bytes
+                    self._cond.notify_all()
+
+    def _run_save(self, entry):
+        """The historical save body, run on the worker in queue order."""
         import torch.distributed.checkpoint as dcp
 
-        self.stats["saves"] += 1
-        attempt = 0
-        while True:
-            writer = self.writer(checkpoint_id, **kwargs)
-            try:
-                dcp.save(state_dict, storage_writer=writer, no_dist=True)
-            except ServiceUnavailable as exc:
-                if attempt >= 1:
-                    raise
-                outcome = self._classify_lost_write(writer)
-                attempt += 1
-                if outcome == "published":
-                    raise SaveFailed(
-                        "checkpoint %r was published but the save did not finish "
-                        "(its source SHA-256 matches the bytes written, so it is "
-                        "a complete store artifact without DCP metadata); the "
-                        "session did not publish a second generation: %s"
-                        % (getattr(writer, "last_container_name", None), exc)
-                    ) from exc
-                if outcome != "absent":
-                    raise
-                self.stats["idempotent_recoveries"] += 1
-                continue
-            finally:
-                writer.close()
-            return writer.stats
+        writer = entry.ticket.writer
+        with self._cond:
+            self.stats["saves"] += 1
+        try:
+            attempt = 0
+            while True:
+                try:
+                    dcp.save(entry.state_dict, storage_writer=writer, no_dist=True)
+                except ServiceUnavailable as exc:
+                    if attempt >= 1:
+                        raise
+                    outcome = self._classify_lost_write(writer)
+                    attempt += 1
+                    if outcome == "published":
+                        raise SaveFailed(
+                            "checkpoint %r was published but the save did not "
+                            "finish (its source SHA-256 matches the bytes "
+                            "written, so it is a complete store artifact without "
+                            "DCP metadata); the session did not publish a second "
+                            "generation: %s"
+                            % (getattr(writer, "last_container_name", None), exc)
+                        ) from exc
+                    if outcome != "absent":
+                        raise
+                    with self._cond:
+                        self.stats["idempotent_recoveries"] += 1
+                    continue
+                return writer.stats
+        finally:
+            # Releases the retained container and, if a prepare is still open,
+            # aborts it so the helper carries no pending state into the next
+            # queued save. Nothing is published by an abort.
+            writer.close()
 
     def _classify_lost_write(self, writer):
         """Say whether the allocated name was published, or is still absent.
