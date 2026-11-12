@@ -90,11 +90,12 @@ short. In the cited 7-rep court the shipped pipeline's stages are:
 | pipeline wall | 551.8 ms | + init/commit/tail = 592.6 ms |
 
 So **the encode is no longer the binder**: publication plus durability is
-452–462 ms of a 552 ms pipeline, and `C-pipe4-zpar4` shows the same shape with a
-*smaller* encode wall (392.2 ms) and a *larger* total. The projection is
-**refuted at this operating point**, and the negative result is the finding:
-there is no wall win to claim on the frozen fixture, only an encode-stage win
-that the durability path hides.
+452–462 ms of a 552 ms pipeline, and the row that shortens the encode furthest
+(`C-pipe4-zpar4`, encode wall 392.2 ms against the default's 410.6 ms) lands at
+584.8 ms against 592.6 ms — 18 ms of encode wall buys 8 ms of wall, i.e. inside
+the spread. The projection is **refuted at this operating point**, and the
+negative result is the finding: there is no wall win to claim on the frozen
+fixture, only an encode-stage win that the durability path hides.
 
 **Where the win does become a wall win** is where the planned encode is
 ZSTD-only, i.e. where there is no mode-9 candidate competing for the CPUs (§6):
