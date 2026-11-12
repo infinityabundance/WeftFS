@@ -45,6 +45,7 @@ use weftcodec::Limits;
 use weftfs::auth::Principal;
 use weftfs::backend::{BackendKind, BackendStats, Key, KeyKind, StorageBackend};
 use weftfs::identity::{self, Hash32};
+use weftfs::phase_profile::{self, Phase, PhaseSnapshot};
 use weftfs::provenance::{
     Determinism, ProvenanceEnvironment, ProvenancePrincipal, ProvenanceRecord,
 };
@@ -380,6 +381,17 @@ struct Args {
     passes: usize,
     force: bool,
     label: String,
+    /// Instrument the shipped phase collector for this child. Off by default
+    /// so the contract court's wall numbers are uninstrumented.
+    phase_profile: bool,
+    /// Emit one row per tensor (plan candidates, per-phase encode wall,
+    /// publication latency and durable operations).
+    per_tensor_detail: bool,
+    /// Repetitions for the `ablate` orchestrator.
+    reps: usize,
+    /// Comma-separated configuration keys for `ablate` (e.g.
+    /// `A,B-group,C,C-noz19`).
+    configs: Option<String>,
 }
 
 impl Default for Args {
@@ -404,6 +416,10 @@ impl Default for Args {
             passes: 2,
             force: false,
             label: "full".to_owned(),
+            phase_profile: false,
+            per_tensor_detail: false,
+            reps: 7,
+            configs: None,
         }
     }
 }
@@ -449,6 +465,14 @@ fn parse_args() -> Result<Args, String> {
             }
             "--force" => args.force = true,
             "--label" => args.label = value("--label")?,
+            "--phase-profile" => args.phase_profile = true,
+            "--per-tensor-detail" => args.per_tensor_detail = true,
+            "--reps" => {
+                args.reps = value("--reps")?
+                    .parse()
+                    .map_err(|_| "--reps must be an integer".to_owned())?
+            }
+            "--configs" => args.configs = Some(value("--configs")?),
             other => return Err(format!("unknown flag `{other}`")),
         }
     }
@@ -864,8 +888,9 @@ fn write_native_app_s3(
 // WeftFS write (B/C/D/E)
 // ---------------------------------------------------------------------------
 
-fn representation_spec(config: &str) -> TensorWriteSpec {
-    let planned = matches!(config, "C" | "E");
+fn representation_spec(config: &str, ablate_zstd19: bool, ablate_float: bool) -> TensorWriteSpec {
+    let base = config_base(config);
+    let planned = matches!(base, "C" | "E");
     if planned {
         TensorWriteSpec {
             strategy_hint: None,
@@ -873,6 +898,8 @@ fn representation_spec(config: &str) -> TensorWriteSpec {
             plan: TensorPlanOptions {
                 write_policy: WritePolicy::Planned,
                 semantic_search: false,
+                zstd19: !ablate_zstd19,
+                float_tensor: !ablate_float,
                 ..TensorPlanOptions::default()
             },
             tile_shape: None,
@@ -895,8 +922,120 @@ fn representation_spec(config: &str) -> TensorWriteSpec {
     }
 }
 
+/// The base configuration of an ablation key: `C-noz19` -> `C`.
+fn config_base(key: &str) -> &str {
+    key.split('-').next().unwrap_or(key)
+}
+
+/// The ablation suffix of a configuration key (`""` for the contract rows).
+fn config_suffix(key: &str) -> &str {
+    key.split_once('-').map(|(_, suffix)| suffix).unwrap_or("")
+}
+
+/// A configuration key that this harness can write or restore.
+fn is_weftfs_config(key: &str) -> bool {
+    CONFIGS.contains(&config_base(key))
+}
+
+/// Parse an ablation key into (ablate zstd-19, ablate mode 9, one group commit).
+fn ablation_flags(key: &str) -> Result<(bool, bool, bool), String> {
+    let base = config_base(key);
+    match config_suffix(key) {
+        "" => Ok((false, false, false)),
+        "group" if base == "B" => Ok((false, false, true)),
+        "noz19" if matches!(base, "C" | "E") => Ok((true, false, false)),
+        "nom9" if matches!(base, "C" | "E") => Ok((false, true, false)),
+        "both" if matches!(base, "C" | "E") => Ok((true, true, false)),
+        suffix => Err(format!(
+            "configuration `{key}` has unknown ablation suffix `{suffix}`"
+        )),
+    }
+}
+
 fn uses_protocol(config: &str) -> bool {
-    matches!(config, "D" | "E")
+    matches!(config_base(config), "D" | "E")
+}
+
+/// Accumulate one per-tensor phase delta into a named `(count, total_ns)` map.
+fn add_phase_totals(acc: &mut BTreeMap<&'static str, (u64, u128)>, delta: &PhaseSnapshot) {
+    for (name, totals) in &delta.phases {
+        let entry = acc.entry(*name).or_insert((0, 0));
+        entry.0 = entry.0.saturating_add(totals.count);
+        entry.1 = entry.1.saturating_add(totals.total_ns);
+    }
+}
+
+fn phase_totals_json(acc: &BTreeMap<&'static str, (u64, u128)>) -> Json {
+    let mut out = serde_json::Map::new();
+    for (name, (count, total_ns)) in acc {
+        if *count == 0 {
+            continue;
+        }
+        out.insert(
+            (*name).to_owned(),
+            json!({ "count": count, "total_ms": *total_ns as f64 / 1_000_000.0 }),
+        );
+    }
+    Json::Object(out)
+}
+
+fn phase_ms(delta: &PhaseSnapshot, phase: Phase) -> f64 {
+    delta
+        .phases
+        .get(phase.as_str())
+        .map(|totals| totals.total_ns as f64 / 1_000_000.0)
+        .unwrap_or(0.0)
+}
+
+fn phase_count(delta: &PhaseSnapshot, phase: Phase) -> u64 {
+    delta
+        .phases
+        .get(phase.as_str())
+        .map(|totals| totals.count)
+        .unwrap_or(0)
+}
+
+/// One planner decision as a per-tensor receipt row.
+fn plan_json(plan: &weftfs::tensor_store::TensorPlan) -> Json {
+    let chosen = plan.chosen;
+    let candidates: Vec<Json> = plan
+        .candidates
+        .iter()
+        .map(|candidate| {
+            let selected = candidate.applicable
+                && candidate.strategy == chosen
+                && candidate.physical_bytes == Some(plan.chosen_physical_bytes)
+                && candidate.cost == Some(plan.chosen_cost);
+            let zstd_level = if candidate.strategy == TensorStrategy::Zstd {
+                if candidate.detail.contains("level-19") {
+                    Some(19)
+                } else if candidate.detail.contains("level-1 ") {
+                    Some(1)
+                } else {
+                    Some(3)
+                }
+            } else {
+                None
+            };
+            json!({
+                "strategy": candidate.strategy.as_str(),
+                "zstd_level": zstd_level,
+                "applicable": candidate.applicable,
+                "selected": selected,
+                "physical_bytes": candidate.physical_bytes,
+                "estimated_decode_ns": candidate.estimated_decode_ns,
+                "estimated_encode_ns": candidate.estimated_encode_ns,
+                "detail": candidate.detail,
+            })
+        })
+        .collect();
+    json!({
+        "chosen": plan.chosen.as_str(),
+        "chosen_physical_bytes": plan.chosen_physical_bytes,
+        "runner_up": plan.runner_up.map(|strategy| strategy.as_str()),
+        "runner_up_physical_bytes": plan.runner_up_physical_bytes,
+        "candidates": candidates,
+    })
 }
 
 fn write_weftfs(
@@ -905,6 +1044,7 @@ fn write_weftfs(
     subset: &Subset,
     file: &SafetensorsFile,
 ) -> Result<Json, String> {
+    let (ablate_zstd19, ablate_float, group_commit) = ablation_flags(config)?;
     let work = args.work.clone().unwrap();
     let store_path = config_store_path(&work, config);
     if store_path.exists() {
@@ -914,6 +1054,10 @@ fn write_weftfs(
         ));
     }
     let kind = backend_kind(args)?;
+    let profiling = args.phase_profile;
+    if profiling {
+        phase_profile::begin();
+    }
     let init_started = Instant::now();
     let mut store = Store::init_with_backend(&store_path, options(args.chunk_size), kind)
         .map_err(|err| format!("init store: {err}"))?;
@@ -925,14 +1069,20 @@ fn write_weftfs(
 
     let seed_base = base_seed(&args.seed);
     let layout = TensorLayoutSpec::row_major();
-    let mut ids: Vec<Hash32> = Vec::with_capacity(subset.tensors.len());
     let mut output_contents: BTreeSet<Hash32> = BTreeSet::new();
+    let mut ids: Vec<Hash32> = Vec::with_capacity(subset.tensors.len());
     let mut representations: BTreeMap<String, u64> = BTreeMap::new();
     let mut source_read_ms = 0f64;
-    let mut write_ms = 0f64;
+    let mut prepare_ms = 0f64;
+    let mut commit_ms = 0f64;
     let mut samples: Vec<Duration> = Vec::with_capacity(subset.tensors.len());
     let mut id_by_name: BTreeMap<String, String> = BTreeMap::new();
     let mut content_by_name: BTreeMap<String, String> = BTreeMap::new();
+    let mut prepare_phases: BTreeMap<&'static str, (u64, u128)> = BTreeMap::new();
+    let mut commit_phases: BTreeMap<&'static str, (u64, u128)> = BTreeMap::new();
+    let mut details: Vec<Json> = Vec::new();
+    // Group mode stages every prepared object and publishes one commit.
+    let mut staged: Vec<(String, weftfs::tensor_store::PreparedTensorObject, usize)> = Vec::new();
 
     for sel in &subset.tensors {
         let tensor = file
@@ -946,49 +1096,163 @@ fn write_weftfs(
             .map_err(|err| format!("read `{}`: {err}", sel.name))?;
         source_read_ms += read_started.elapsed().as_secs_f64() * 1000.0;
 
-        let started = Instant::now();
         let stats_before = store.backend_stats();
-        let spec = representation_spec(config);
+        let snap_before = profiling.then(phase_profile::snapshot);
+        let started = Instant::now();
+        let spec = representation_spec(config, ablate_zstd19, ablate_float);
         let seed = object_seed(&seed_base, config, &sel.name);
-        let mut prepared = store
-            .prepare_tensor_object_with_spec_seeded(
+        let (mut prepared, plan) = store
+            .prepare_tensor_object_with_spec_seeded_planned(
                 &sel.dtype, &sel.shape, &bytes, &layout, &spec, &seed,
             )
             .map_err(|err| format!("prepare `{}`: {err}", sel.name))?;
+        let prepare_elapsed = started.elapsed();
+        prepare_ms += prepare_elapsed.as_secs_f64() * 1000.0;
+        let snap_after_prepare = profiling.then(phase_profile::snapshot);
+        let prepare_delta = match (&snap_before, &snap_after_prepare) {
+            (Some(before), Some(after)) => {
+                let delta = after.since(before);
+                add_phase_totals(&mut prepare_phases, &delta);
+                Some(delta)
+            }
+            _ => None,
+        };
         if uses_protocol(config) {
             prepared.attrs.insert(
                 PROJECT_ATTR.to_owned(),
                 WcbValue::Str(PROJECT_VALUE.to_owned()),
             );
         }
-        let id = store
-            .commit_prepared_tensor_object(tensors_dir, sel.name.as_bytes(), &prepared, 0o644)
-            .map_err(|err| format!("commit `{}`: {err}", sel.name))?;
-        write_ms += started.elapsed().as_secs_f64() * 1000.0;
-        samples.push(started.elapsed());
-        if std::env::var("WEFT_AUG_TRACE").is_ok() {
-            let stats_after = store.backend_stats();
-            eprintln!(
-                "trace {config} {} logical={} strategy={} written_delta={} written_total={}",
-                sel.name,
-                bytes.len(),
-                prepared.strategy,
-                stats_after.bytes_written - stats_before.bytes_written,
-                stats_after.bytes_written
-            );
+        let detail_index = details.len();
+        let mut detail = json!({
+            "name": sel.name,
+            "dtype": sel.dtype,
+            "shape": sel.shape,
+            "logical_bytes": sel.bytes,
+            "prepare_ms": prepare_elapsed.as_secs_f64() * 1000.0,
+            "plan": plan_json(&plan),
+        });
+        if let Some(delta) = &prepare_delta {
+            let encode_total = phase_ms(delta, Phase::Encode);
+            let zstd = phase_ms(delta, Phase::EncodeZstd);
+            let zstd19 = phase_ms(delta, Phase::EncodeZstd19);
+            let float = phase_ms(delta, Phase::EncodeFloatTensor);
+            detail["prepare_phase_ms"] = json!({
+                "encode": encode_total,
+                "encode_zstd_level3": zstd,
+                "encode_zstd_level19": zstd19,
+                "encode_float_tensor": float,
+                "encode_other": (encode_total - zstd - zstd19 - float).max(0.0),
+                "digest": phase_ms(delta, Phase::Digest),
+                "blob_publish": phase_ms(delta, Phase::BlobPublish),
+            });
+            detail["prepare_phase_counts"] = json!({
+                "encode_zstd_level3": phase_count(delta, Phase::EncodeZstd),
+                "encode_zstd_level19": phase_count(delta, Phase::EncodeZstd19),
+                "encode_float_tensor": phase_count(delta, Phase::EncodeFloatTensor),
+            });
+            detail["prepare_phase_ns"] = delta.to_json();
         }
 
-        ids.push(id);
-        // The store's `ObjectRecord.content` for a file is the manifest id
-        // (see `commit_created_file`); the provenance API checks exactly that
-        // field. `prepared.content_root` is the logical-byte hash and is not
-        // the same value.
-        output_contents.insert(prepared.manifest_id);
-        *representations
-            .entry(prepared.strategy.clone())
-            .or_insert(0) += 1;
-        id_by_name.insert(sel.name.clone(), id.to_hex());
-        content_by_name.insert(sel.name.clone(), prepared.manifest_id.to_hex());
+        if group_commit {
+            staged.push((sel.name.clone(), prepared, detail_index));
+            details.push(detail);
+        } else {
+            let stats_before_commit = store.backend_stats();
+            let snap_before_commit = profiling.then(phase_profile::snapshot);
+            let commit_started = Instant::now();
+            let id = store
+                .commit_prepared_tensor_object(tensors_dir, sel.name.as_bytes(), &prepared, 0o644)
+                .map_err(|err| format!("commit `{}`: {err}", sel.name))?;
+            let commit_elapsed = commit_started.elapsed();
+            commit_ms += commit_elapsed.as_secs_f64() * 1000.0;
+            let stats_after = store.backend_stats();
+            if profiling {
+                if let Some(before) = &snap_before_commit {
+                    let delta = phase_profile::snapshot().since(before);
+                    add_phase_totals(&mut commit_phases, &delta);
+                    detail["commit_phase_ms"] = delta.to_json();
+                }
+            }
+            detail["commit_ms"] = json!(commit_elapsed.as_secs_f64() * 1000.0);
+            detail["publication_writes"] = json!(stats_after
+                .writes
+                .saturating_sub(stats_before_commit.writes));
+            detail["publication_bytes"] = json!(stats_after
+                .bytes_written
+                .saturating_sub(stats_before_commit.bytes_written));
+            detail["durable_operations_total"] = json!(stats_after.writes);
+            samples.push(prepare_elapsed + commit_elapsed);
+            details.push(detail);
+            ids.push(id);
+            id_by_name.insert(sel.name.clone(), id.to_hex());
+            output_contents.insert(prepared.manifest_id);
+            *representations
+                .entry(prepared.strategy.clone())
+                .or_insert(0) += 1;
+            content_by_name.insert(sel.name.clone(), prepared.manifest_id.to_hex());
+            if std::env::var("WEFT_AUG_TRACE").is_ok() {
+                eprintln!(
+                    "trace {config} {} logical={} strategy={} written_delta={} written_total={}",
+                    sel.name,
+                    bytes.len(),
+                    prepared.strategy,
+                    stats_after
+                        .bytes_written
+                        .saturating_sub(stats_before.bytes_written),
+                    stats_after.bytes_written
+                );
+            }
+        }
+    }
+
+    if group_commit {
+        let group_started = Instant::now();
+        let ((group_ids, per_commit), _group_hash) = store
+            .group(|s| {
+                let mut ids: Vec<Hash32> = Vec::with_capacity(staged.len());
+                let mut per_commit: Vec<(Duration, u64, u64)> = Vec::with_capacity(staged.len());
+                for (name, prepared, _) in &staged {
+                    let before = s.backend_stats();
+                    let started = Instant::now();
+                    let id = s.commit_prepared_tensor_object(
+                        tensors_dir,
+                        name.as_bytes(),
+                        prepared,
+                        0o644,
+                    )?;
+                    let elapsed = started.elapsed();
+                    let after = s.backend_stats();
+                    ids.push(id);
+                    per_commit.push((
+                        elapsed,
+                        after.writes.saturating_sub(before.writes),
+                        after.bytes_written.saturating_sub(before.bytes_written),
+                    ));
+                }
+                Ok((ids, per_commit))
+            })
+            .map_err(|err| format!("group commit: {err}"))?;
+        commit_ms = group_started.elapsed().as_secs_f64() * 1000.0;
+        ids = group_ids;
+        for (index, ((name, prepared, detail_index), id)) in
+            staged.iter().zip(ids.iter()).enumerate()
+        {
+            let (elapsed, writes, bytes) = per_commit[index];
+            details[*detail_index]["commit_ms"] = json!(elapsed.as_secs_f64() * 1000.0);
+            details[*detail_index]["publication_writes"] = json!(writes);
+            details[*detail_index]["publication_bytes"] = json!(bytes);
+            samples.push(Duration::from_secs_f64(
+                details[*detail_index]["prepare_ms"].as_f64().unwrap_or(0.0) / 1000.0
+                    + elapsed.as_secs_f64(),
+            ));
+            id_by_name.insert(name.clone(), id.to_hex());
+            output_contents.insert(prepared.manifest_id);
+            *representations
+                .entry(prepared.strategy.clone())
+                .or_insert(0) += 1;
+            content_by_name.insert(name.clone(), prepared.manifest_id.to_hex());
+        }
     }
 
     let stats_after_write = store.backend_stats();
@@ -1064,6 +1328,7 @@ fn write_weftfs(
         });
     }
 
+    let footprint_started = Instant::now();
     let footprint = if args.backend == "s3" {
         let config = s3_config(args)?;
         let (bytes, objects) = s3_footprint(&config, &store_kinds(), true)?;
@@ -1080,18 +1345,33 @@ fn write_weftfs(
             "footprint_source": "recursive file walk of the store directory (du source)",
         })
     };
+    let footprint_ms = footprint_started.elapsed().as_secs_f64() * 1000.0;
+
+    let whole_phases = if profiling {
+        phase_profile::finish().to_json()
+    } else {
+        Json::Null
+    };
 
     Ok(json!({
         "schema": "weft.augmentation.phase.v1",
         "phase": "write",
         "config": config,
+        "ablation": {
+            "zstd19_disabled": ablate_zstd19,
+            "float_tensor_disabled": ablate_float,
+            "group_commit": group_commit,
+        },
         "backend": args.backend,
         "logical_bytes": subset.logical_bytes,
         "tensor_count": subset.tensors.len(),
         "init_ms": init_ms,
         "source_read_ms": source_read_ms,
-        "write_ms": write_ms,
+        "prepare_ms": prepare_ms,
+        "commit_ms": commit_ms,
+        "write_ms": prepare_ms + commit_ms,
         "protocol_ms": protocol_ms,
+        "footprint_ms": footprint_ms,
         "per_tensor_write": latency_summary(&samples),
         "backend_stats": stats_json(&stats_after_write),
         "physical_bytes_written": stats_after_write.bytes_written,
@@ -1103,6 +1383,10 @@ fn write_weftfs(
         "storage": footprint,
         "object_ids": id_by_name,
         "output_contents": content_by_name,
+        "prepare_phases": phase_totals_json(&prepare_phases),
+        "commit_phases": phase_totals_json(&commit_phases),
+        "phases": whole_phases,
+        "per_tensor": if args.per_tensor_detail { Json::Array(details) } else { Json::Null },
     }))
 }
 
@@ -1708,9 +1992,16 @@ fn append_log(log: &mut File, text: &str) {
     let _ = log.flush();
 }
 
-fn run_child(args: &Args, phase: &str, config: &str, log: &mut File) -> Result<Json, String> {
+fn run_child(
+    args: &Args,
+    work: &Path,
+    phase: &str,
+    config: &str,
+    extra: &[String],
+    envs: &[(&str, &str)],
+    log: &mut File,
+) -> Result<Json, String> {
     let exe = std::env::current_exe().map_err(|err| format!("current_exe: {err}"))?;
-    let work = args.work.clone().unwrap();
     let phase_dir = work.join("phases");
     fs::create_dir_all(&phase_dir).map_err(|err| format!("{}: {err}", phase_dir.display()))?;
     let phase_out = phase_dir.join(format!("{config}-{phase}.json"));
@@ -1721,7 +2012,7 @@ fn run_child(args: &Args, phase: &str, config: &str, log: &mut File) -> Result<J
     command
         .arg(phase)
         .arg("--work")
-        .arg(&work)
+        .arg(work)
         .arg("--subset")
         .arg(&subset)
         .arg("--config")
@@ -1736,6 +2027,12 @@ fn run_child(args: &Args, phase: &str, config: &str, log: &mut File) -> Result<J
         .arg(&args.seed)
         .arg("--passes")
         .arg(args.passes.to_string());
+    for value in extra {
+        command.arg(value);
+    }
+    for (name, value) in envs {
+        command.env(name, value);
+    }
     // One bucket per configuration so no configuration can observe or reclaim
     // another's objects, and so the MinIO tmpfs is bounded one run at a time.
     if let Some(bucket) = &args.s3_bucket {
@@ -2176,6 +2473,591 @@ fn assemble_cmd(args: &Args) -> Result<(), String> {
     Ok(())
 }
 
+const DEFAULT_ABLATION_CONFIGS: &str = "A,B,C,D,E,N,B-group,C-noz19,C-nom9,C-both";
+
+/// Pinned C row from the R3 receipt (`augmentation-local-20261109T134132Z`).
+/// The R17 controls must leave the default configuration byte-identical.
+const R3_C_PHYSICAL_FOOTPRINT: u64 = 284_139_539;
+const R3_C_STRATEGIES: [(&str, u64); 3] = [("float-tensor", 35), ("zstd", 50), ("raw", 16)];
+
+fn stat_block(values: &[f64]) -> Json {
+    if values.is_empty() {
+        return Json::Null;
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let rank = |q: f64| -> f64 {
+        let index = ((sorted.len() as f64 - 1.0) * q).round() as usize;
+        sorted[index.min(sorted.len() - 1)]
+    };
+    json!({
+        "median": rank(0.5),
+        "p95": rank(0.95),
+        "min": sorted[0],
+        "max": sorted[sorted.len() - 1],
+        "samples": values,
+    })
+}
+
+fn extra_args(phase_profile: bool, detail: bool) -> Vec<String> {
+    let mut extra: Vec<String> = Vec::new();
+    if phase_profile {
+        extra.push("--phase-profile".to_owned());
+    }
+    if detail {
+        extra.push("--per-tensor-detail".to_owned());
+    }
+    extra
+}
+
+/// One crash-proxy write. Returns the child status; a successful crash write
+/// is a harness failure, because the store was supposed to abort.
+fn crash_write(
+    args: &Args,
+    work: &Path,
+    config: &str,
+    phase: &str,
+    log: &mut File,
+) -> Result<i32, String> {
+    let exe = std::env::current_exe().map_err(|err| format!("current_exe: {err}"))?;
+    let child_log = work
+        .join("phases")
+        .join(format!("{config}-crash-{phase}.log"));
+    fs::create_dir_all(child_log.parent().unwrap()).map_err(|err| err.to_string())?;
+    let out = File::create(&child_log).map_err(|err| err.to_string())?;
+    let err_out = out.try_clone().map_err(|err| err.to_string())?;
+    let status = Command::new(exe)
+        .arg("crash-write")
+        .arg("--work")
+        .arg(work)
+        .arg("--config")
+        .arg(config)
+        .arg("--backend")
+        .arg(&args.backend)
+        .env("WEFT_CRASH_PHASE", phase)
+        .stdout(Stdio::from(out))
+        .stderr(Stdio::from(err_out))
+        .status()
+        .map_err(|err| format!("spawn crash-write {phase}: {err}"))?;
+    let code = status.code().unwrap_or(-1);
+    append_log(log, &format!("crash-write {config} {phase}: exit {code}"));
+    Ok(code)
+}
+
+/// Three process-fault crash phases on one written store. Every phase must
+/// leave either the whole old generation or the whole new one.
+fn crash_proxy(
+    args: &Args,
+    work: &Path,
+    config: &str,
+    baseline_generation: u64,
+    log: &mut File,
+) -> Result<Json, String> {
+    if args.backend != "local" {
+        return Ok(json!({
+            "status": "skipped",
+            "reason": "the crash proxy is local-only",
+        }));
+    }
+    let phases = [
+        "after_objects",
+        "after_commit_file",
+        "after_superblock_write",
+    ];
+    let mut rows: Vec<Json> = Vec::new();
+    let mut old = 0u64;
+    let mut new = 0u64;
+    let mut partial = 0u64;
+    let mut visible_before = baseline_generation;
+    for phase in phases {
+        let code = crash_write(args, work, config, phase, log)?;
+        if code == 0 {
+            return Err(format!(
+                "crash-write {config} {phase} exited 0; the store was expected to abort"
+            ));
+        }
+        let check = run_child(args, work, "crash-check", config, &[], &[], log)?;
+        let generation = check["generation"].as_u64().unwrap_or(u64::MAX);
+        let expected_new = phase == "after_superblock_write";
+        let state = if generation == visible_before {
+            "old"
+        } else if generation > visible_before {
+            "new"
+        } else {
+            "partial"
+        };
+        match state {
+            "old" => old += 1,
+            "new" => new += 1,
+            _ => partial += 1,
+        }
+        // An abort after the commit record but before the superblock leaves an
+        // unreferenced commit tail. `verify` reports exactly that as a problem
+        // by design; it is still the whole old state, and recovery ignores the
+        // tail. Every other problem is a failure.
+        let problems: Vec<String> = check["problems"]
+            .as_array()
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(|item| item.as_str().map(str::to_owned))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let orphan_tail_only = !problems.is_empty()
+            && problems.iter().all(|problem| {
+                problem.starts_with("commit file for generation ")
+                    && problem.contains("exists above the highest published superblock")
+            });
+        let verify_consistent = problems.is_empty() || (state == "old" && orphan_tail_only);
+        let exact = check["tensor_mismatches"].as_u64() == Some(0)
+            && check["tensor_missing"].as_u64() == Some(0);
+        let expected_ok = if expected_new {
+            state == "new"
+        } else {
+            state == "old"
+        };
+        rows.push(json!({
+            "phase": phase,
+            "exit_code": code,
+            "generation_before": visible_before,
+            "generation_after": generation,
+            "state": state,
+            "expected": if expected_new { "new" } else { "old" },
+            "expected_ok": expected_ok,
+            "verify_ok": check["verify_ok"],
+            "verify_problems": check["verify_problems"],
+            "problems": problems,
+            "verify_consistent": verify_consistent,
+            "tensor_mismatches": check["tensor_mismatches"],
+            "tensor_missing": check["tensor_missing"],
+            "exact": exact,
+        }));
+        visible_before = generation;
+    }
+    Ok(json!({
+        "status": "measured",
+        "baseline_generation": baseline_generation,
+        "old": old,
+        "new": new,
+        "partial": partial,
+        "ok": partial == 0
+            && rows.iter().all(|row| {
+                row["expected_ok"].as_bool() == Some(true)
+                    && row["verify_consistent"].as_bool() == Some(true)
+                    && row["exact"].as_bool() == Some(true)
+            }),
+        "phases": rows,
+    }))
+}
+
+/// Account for the entire measured write wall of one profiled run.
+fn build_ledger(write: &Json) -> Json {
+    let number = |value: &Json| value.as_f64().unwrap_or(0.0);
+    let wall = number(&write["wall_ms"]);
+    let init = number(&write["init_ms"]);
+    let source = number(&write["source_read_ms"]);
+    let prepare = number(&write["prepare_ms"]);
+    let commit = number(&write["commit_ms"]);
+    let protocol = number(&write["protocol_ms"]);
+    let footprint = number(&write["footprint_ms"]);
+    let prepare_phase = |name: &str| number(&write["prepare_phases"][name]["total_ms"]);
+    let commit_phase = |name: &str| number(&write["commit_phases"][name]["total_ms"]);
+    let encode = prepare_phase("encode");
+    let zstd3 = prepare_phase("encode_zstd");
+    let zstd19 = prepare_phase("encode_zstd19");
+    let mode9 = prepare_phase("encode_float_tensor");
+    let encode_other = (encode - zstd3 - zstd19 - mode9).max(0.0);
+    let prepare_digest = prepare_phase("digest");
+    let prepare_publish = prepare_phase("blob_publish");
+    let prepare_residual = (prepare - encode - prepare_digest - prepare_publish).max(0.0);
+    let index = commit_phase("index_segment");
+    let manifest_commit = commit_phase("manifest_commit");
+    let commit_digest = commit_phase("digest");
+    let commit_publish = commit_phase("blob_publish");
+    let metadata = commit_phase("metadata_commit");
+    let commit_residual =
+        (commit - index - manifest_commit - commit_digest - commit_publish - metadata).max(0.0);
+    let accounted = init + source + prepare + commit + protocol + footprint;
+    json!({
+        "wall_ms": wall,
+        "init_ms": init,
+        "source_read_ms": source,
+        "prepare_ms": prepare,
+        "prepare_breakdown": {
+            "encode_total_ms": encode,
+            "encode_zstd_level3_ms": zstd3,
+            "encode_zstd_level19_ms": zstd19,
+            "encode_mode9_float_tensor_ms": mode9,
+            "encode_other_planning_and_raw_ms": encode_other,
+            "digest_ms": prepare_digest,
+            "blob_publish_ms": prepare_publish,
+            "prepare_unattributed_ms": prepare_residual,
+        },
+        "commit_ms": commit,
+        "commit_breakdown": {
+            "index_segment_ms": index,
+            "manifest_commit_ms": manifest_commit,
+            "digest_ms": commit_digest,
+            "blob_publish_ms": commit_publish,
+            "metadata_commit_ms": metadata,
+            "commit_unattributed_ms": commit_residual,
+        },
+        "protocol_ms": protocol,
+        "footprint_walk_ms": footprint,
+        "accounted_ms": accounted,
+        "unattributed_residual_ms": (wall - accounted).max(0.0),
+        "unattributed_residual_share_of_wall": if wall > 0.0 {
+            (wall - accounted).max(0.0) / wall
+        } else {
+            0.0
+        },
+        "encode_counts": {
+            "zstd_level3": write["prepare_phases"]["encode_zstd"]["count"],
+            "zstd_level19": write["prepare_phases"]["encode_zstd19"]["count"],
+            "mode9_float_tensor": write["prepare_phases"]["encode_float_tensor"]["count"],
+        },
+        "next_instrumentation": "fsync is inside BlobPublish/ManifestCommit on the local backend; a separate BackendSync phase would move it out of those two and shrink the residual further. The store footprint walk is now measured separately.",
+    })
+}
+
+fn ablate(args: &Args) -> Result<(), String> {
+    let fixture = args
+        .fixture
+        .clone()
+        .ok_or_else(|| "--fixture is required".to_owned())?;
+    let work = args
+        .work
+        .clone()
+        .ok_or_else(|| "--work is required".to_owned())?;
+    let out = args
+        .out
+        .clone()
+        .ok_or_else(|| "--out is required".to_owned())?;
+    let log_path = args
+        .log
+        .clone()
+        .unwrap_or_else(|| out.with_extension("log"));
+    if work.exists() {
+        if !args.force {
+            return Err(format!(
+                "{} already exists; pass --force to replace it",
+                work.display()
+            ));
+        }
+        fs::remove_dir_all(&work).map_err(|err| format!("{}: {err}", work.display()))?;
+    }
+    fs::create_dir_all(&work).map_err(|err| format!("{}: {err}", work.display()))?;
+    let mut log =
+        File::create(&log_path).map_err(|err| format!("{}: {err}", log_path.display()))?;
+
+    let file =
+        SafetensorsFile::parse(&fixture).map_err(|err| format!("{}: {err}", fixture.display()))?;
+    let actual = hex::encode(file.sha256);
+    if actual != FIXTURE_SHA256 {
+        return Err(format!(
+            "fixture SHA-256 mismatch: expected {FIXTURE_SHA256}, got {actual}"
+        ));
+    }
+    let subset = select_subset(&file, args.include_embedding, args.max_others)?;
+    let keys: Vec<String> = args
+        .configs
+        .as_deref()
+        .unwrap_or(DEFAULT_ABLATION_CONFIGS)
+        .split(',')
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+        .map(str::to_owned)
+        .collect();
+    if keys.is_empty() {
+        return Err("--configs produced an empty list".to_owned());
+    }
+    for key in &keys {
+        if key != NATIVE_APP && !is_weftfs_config(key) {
+            return Err(format!("unknown configuration `{key}`"));
+        }
+        if key != NATIVE_APP {
+            ablation_flags(key)?;
+        }
+    }
+    let reps = args.reps.max(1);
+    append_log(
+        &mut log,
+        &format!(
+            "ablate: fixture {} bytes={} sha256={} subset={} tensors/{} bytes digest={}",
+            fixture.display(),
+            file.file_bytes,
+            actual,
+            subset.tensors.len(),
+            subset.logical_bytes,
+            subset.subset_digest
+        ),
+    );
+    append_log(
+        &mut log,
+        &format!(
+            "ablate: configs={keys:?} reps={reps} backend={}",
+            args.backend
+        ),
+    );
+
+    let mut rows: BTreeMap<String, Vec<Json>> = BTreeMap::new();
+    let mut orders: Vec<Json> = Vec::new();
+    let mut detail_rep: BTreeMap<String, Json> = BTreeMap::new();
+    for rep in 1..=reps {
+        let rep_dir = work.join(format!("rep-{rep:02}"));
+        fs::create_dir_all(&rep_dir).map_err(|err| format!("{}: {err}", rep_dir.display()))?;
+        write_json_atomic(
+            &rep_dir.join("subset.json"),
+            &serde_json::to_value(&subset).map_err(|err| err.to_string())?,
+        )?;
+        let mut order = keys.clone();
+        let rotation = (rep - 1) % order.len();
+        order.rotate_left(rotation);
+        orders.push(json!({ "rep": rep, "order": order }));
+        append_log(
+            &mut log,
+            &format!("ablate: === rep {rep}/{reps} order={order:?} ==="),
+        );
+        for key in &order {
+            if !is_weftfs_config(key) {
+                // The native rows are not part of the ablation matrix; skip.
+                continue;
+            }
+            append_log(&mut log, &format!("ablate: rep {rep} config {key} write"));
+            let write = run_child(
+                args,
+                &rep_dir,
+                "write",
+                key,
+                &extra_args(true, rep == 1),
+                &[],
+                &mut log,
+            )?;
+            append_log(&mut log, &format!("ablate: rep {rep} config {key} restore"));
+            let restore = run_child(args, &rep_dir, "restore", key, &[], &[], &mut log)?;
+            let crash = if rep == 1 {
+                Some(crash_proxy(
+                    args,
+                    &rep_dir,
+                    key,
+                    write["generation"].as_u64().unwrap_or(0),
+                    &mut log,
+                )?)
+            } else {
+                None
+            };
+            if rep == 1 {
+                detail_rep.insert(
+                    key.clone(),
+                    json!({
+                        "write": write.clone(),
+                        "restore": restore.clone(),
+                        "crash": crash.clone(),
+                    }),
+                );
+            }
+            let exact = restore["exactness"]["mismatches"].as_u64() == Some(0)
+                && restore["exactness"]["match"].as_bool() == Some(true);
+            let row = json!({
+                "rep": rep,
+                "wall_ms": write["wall_ms"],
+                "cpu_ms": write["cpu_user_sys_ms"],
+                "peak_rss_kib": write["peak_rss_kib"],
+                "init_ms": write["init_ms"],
+                "source_read_ms": write["source_read_ms"],
+                "prepare_ms": write["prepare_ms"],
+                "commit_ms": write["commit_ms"],
+                "protocol_ms": write["protocol_ms"],
+                "physical_footprint_bytes": write["storage"]["physical_footprint_bytes"],
+                "physical_footprint_objects": write["storage"]["physical_footprint_objects"],
+                "physical_bytes_written": write["physical_bytes_written"],
+                "write_requests": write["backend_stats"]["writes"],
+                "representations": write["representations"],
+                "store_head": write["store_head"],
+                "generation": write["generation"],
+                "ablation": write["ablation"],
+                "encode_counts": build_ledger(&write)["encode_counts"].clone(),
+                "restore": {
+                    "wall_ms": restore["cold"]["wall_ms"],
+                    "bytes_read": restore["cold"]["backend_bytes_read"],
+                    "requests": restore["cold"]["backend_read_requests"],
+                    "cpu_ms": restore["cold"]["cpu_user_sys_ms"],
+                    "peak_rss_kib": restore["cold"]["peak_rss_kib"],
+                    "tensors_verified": restore["exactness"]["tensors_verified"],
+                    "mismatches": restore["exactness"]["mismatches"],
+                    "exact": exact,
+                },
+                "crash": crash,
+            });
+            rows.entry(key.clone()).or_default().push(row);
+            // Reclaim the ~0.3-0.4 GB store before the next configuration.
+            let store_dir = config_store_path(&rep_dir, key);
+            if let Err(err) = fs::remove_dir_all(&store_dir) {
+                append_log(&mut log, &format!("ablate: cleanup {key}: {err}"));
+            }
+        }
+        if let Err(err) = fs::remove_dir_all(&rep_dir) {
+            append_log(&mut log, &format!("ablate: cleanup {rep_dir:?}: {err}"));
+        }
+    }
+
+    let mut configs_receipt: BTreeMap<String, Json> = BTreeMap::new();
+    for (key, samples) in &rows {
+        let walls: Vec<f64> = samples
+            .iter()
+            .filter_map(|row| row["wall_ms"].as_f64())
+            .collect();
+        let cpus: Vec<f64> = samples
+            .iter()
+            .filter_map(|row| row["cpu_ms"].as_f64())
+            .collect();
+        let rss: Vec<f64> = samples
+            .iter()
+            .filter_map(|row| row["peak_rss_kib"].as_f64())
+            .collect();
+        let footprints: Vec<f64> = samples
+            .iter()
+            .filter_map(|row| row["physical_footprint_bytes"].as_f64())
+            .collect();
+        let restores: Vec<f64> = samples
+            .iter()
+            .filter_map(|row| row["restore"]["wall_ms"].as_f64())
+            .collect();
+        let strategies: Vec<Json> = samples
+            .iter()
+            .map(|row| row["representations"].clone())
+            .collect();
+        let stable = strategies.windows(2).all(|pair| pair[0] == pair[1]);
+        let all_exact = samples
+            .iter()
+            .all(|row| row["restore"]["exact"].as_bool() == Some(true));
+        let mut receipt = json!({
+            "base": config_base(key),
+            "suffix": config_suffix(key),
+            "reps": samples.len(),
+            "wall_ms": stat_block(&walls),
+            "cpu_ms": stat_block(&cpus),
+            "peak_rss_kib": stat_block(&rss),
+            "physical_footprint_bytes": stat_block(&footprints),
+            "cold_restore_wall_ms": stat_block(&restores),
+            "representations": strategies.first().cloned().unwrap_or(Json::Null),
+            "strategies_stable_across_reps": stable,
+            "all_restores_exact": all_exact,
+            "samples": samples,
+        });
+        if let Some(detail) = detail_rep.get(key) {
+            let write = &detail["write"];
+            receipt["attribution_rep"] = json!({
+                "phases": write["phases"],
+                "prepare_phases": write["prepare_phases"],
+                "commit_phases": write["commit_phases"],
+                "ledger": build_ledger(write),
+                "crash": detail["crash"],
+                "per_tensor": write["per_tensor"],
+            });
+        }
+        configs_receipt.insert(key.clone(), receipt);
+    }
+
+    let c_row = configs_receipt.get("C").cloned().unwrap_or(Json::Null);
+    let c_strategies_ok = R3_C_STRATEGIES
+        .iter()
+        .all(|(name, expected)| c_row["representations"][name].as_u64() == Some(*expected));
+    let c_footprint_ok = c_row["physical_footprint_bytes"]["median"].as_f64()
+        == Some(R3_C_PHYSICAL_FOOTPRINT as f64);
+    let zstd19_eligible = subset.tensors.iter().any(|sel| sel.bytes >= 1 << 20);
+    let ablation_counts_ok = ["C", "C-noz19", "C-nom9", "C-both"].iter().all(|key| {
+        let counts = &configs_receipt[*key]["attribution_rep"]["ledger"]["encode_counts"];
+        let zstd19 = counts["zstd_level19"].as_u64().unwrap_or(0);
+        let mode9 = counts["mode9_float_tensor"].as_u64().unwrap_or(0);
+        let disabled_zstd19 = key.contains("noz19") || key.contains("both");
+        let disabled_mode9 = key.contains("nom9") || key.contains("both");
+        let zstd19_ok = if disabled_zstd19 {
+            zstd19 == 0
+        } else {
+            !zstd19_eligible || zstd19 > 0
+        };
+        let mode9_ok = if disabled_mode9 {
+            mode9 == 0
+        } else {
+            mode9 > 0
+        };
+        zstd19_ok && mode9_ok
+    });
+    let crash_ok = configs_receipt
+        .iter()
+        .all(|(_, entry)| entry["attribution_rep"]["crash"]["ok"].as_bool() == Some(true));
+    let all_exact = configs_receipt
+        .iter()
+        .all(|(_, entry)| entry["all_restores_exact"].as_bool() == Some(true));
+    let reps_ok = configs_receipt
+        .iter()
+        .all(|(_, entry)| entry["reps"].as_u64().unwrap_or(0) >= 7);
+    let checks = json!({
+        "all_configs_present": configs_receipt.len() == rows.len(),
+        "at_least_seven_reps": reps_ok,
+        "all_restores_exact": all_exact,
+        "strategies_stable_across_reps": configs_receipt.iter().all(|(_, entry)| entry["strategies_stable_across_reps"].as_bool() == Some(true)),
+        "default_c_row_matches_r3_strategies": c_strategies_ok,
+        "default_c_row_matches_r3_footprint": c_footprint_ok,
+        "ablation_encode_counts_exact": ablation_counts_ok,
+        "crash_proxy_old_or_new": crash_ok,
+    });
+    let result = if checks
+        .as_object()
+        .map(|map| map.values().all(|value| value.as_bool() == Some(true)))
+        .unwrap_or(false)
+    {
+        "pass"
+    } else {
+        "fail"
+    };
+    let receipt = json!({
+        "schema": "weft.write_cost_ablation.v1",
+        "generated_utc": utc_stamp(),
+        "result": result,
+        "contract": "bench/CONTRACTS-augmentation.md",
+        "methodology": {
+            "reps": reps,
+            "interleaving": "the configuration order is rotated by one position per repetition so no configuration always occupies the same slot",
+            "repetition_profiles": "every timed repetition enables the shipped phase collector; the attribution rep is repetition 1 and additionally emits per-tensor rows",
+            "wall_source": "write child VmHWM/wall around the whole write phase, excluding the whole-fixture SHA-256 gate",
+            "baseline_note": "the comparator is the same backend without the WeftFS layer (A); the reference FUSE filesystem is not a comparator",
+        },
+        "environment": limit_label(),
+        "fixture": {
+            "path": fixture.display().to_string(),
+            "bytes": file.file_bytes,
+            "sha256": actual,
+        },
+        "subset": {
+            "tensor_count": subset.tensors.len(),
+            "logical_bytes": subset.logical_bytes,
+            "subset_digest": subset.subset_digest,
+            "include_embedding": subset.include_embedding,
+            "other_tensors": subset.other_tensors,
+            "selection": subset.selection,
+        },
+        "orders": orders,
+        "configs": configs_receipt,
+        "checks": checks,
+        "not_measured": not_measured(),
+    });
+    write_json_atomic(&out, &receipt)?;
+    append_log(
+        &mut log,
+        &format!("ablate: result={result} receipt={}", out.display()),
+    );
+    if result != "pass" {
+        return Err(format!(
+            "ablation checks failed; receipt at {}",
+            out.display()
+        ));
+    }
+    Ok(())
+}
+
 fn run(args: Args) -> Result<(), String> {
     let fixture = args
         .fixture
@@ -2270,7 +3152,7 @@ fn run(args: Args) -> Result<(), String> {
             &mut log,
             &format!("augmentation: === configuration {config} ==="),
         );
-        let write_result = run_child(&args, "write", config, &mut log);
+        let write_result = run_child(&args, &work, "write", config, &[], &[], &mut log);
         let write = match write_result {
             Ok(value) => value,
             Err(err) => {
@@ -2278,7 +3160,7 @@ fn run(args: Args) -> Result<(), String> {
                 break;
             }
         };
-        let restore_result = run_child(&args, "restore", config, &mut log);
+        let restore_result = run_child(&args, &work, "restore", config, &[], &[], &mut log);
         let restore = match restore_result {
             Ok(value) => value,
             Err(err) => {
@@ -2294,7 +3176,7 @@ fn run(args: Args) -> Result<(), String> {
             }),
         );
         if args.backend == "s3" {
-            if let Err(err) = run_child(&args, "cleanup", config, &mut log) {
+            if let Err(err) = run_child(&args, &work, "cleanup", config, &[], &[], &mut log) {
                 append_log(
                     &mut log,
                     &format!("augmentation: cleanup {config} failed: {err}"),
@@ -2448,7 +3330,7 @@ fn main() {
                         write_native_app_local(&dir, &file, &subset)?
                     }
                 }
-                other if CONFIGS.contains(&other) => write_weftfs(&args, other, &subset, &file)?,
+                other if is_weftfs_config(other) => write_weftfs(&args, other, &subset, &file)?,
                 other => return Err(format!("unknown configuration `{other}`")),
             };
             let wall_ms = started.elapsed().as_secs_f64() * 1000.0;
@@ -2489,7 +3371,7 @@ fn main() {
                         restore_native_local(&args, &config, &subset)?
                     }
                 }
-                other if CONFIGS.contains(&other) => {
+                other if is_weftfs_config(other) => {
                     let write_path = args
                         .work
                         .clone()
@@ -2515,8 +3397,82 @@ fn main() {
             }
         }
         "assemble" => assemble_cmd(&args),
+        "ablate" => ablate(&args),
+        "crash-write" => (|| {
+            let config = args
+                .config
+                .clone()
+                .ok_or_else(|| "--config is required".to_owned())?;
+            let work = args
+                .work
+                .clone()
+                .ok_or_else(|| "--work is required".to_owned())?;
+            let path = config_store_path(&work, &config);
+            let mut store = Store::open(&path, OpenMode::ReadWrite)
+                .map_err(|err| format!("open {}: {err}", path.display()))?;
+            let root = store.resolve_path("/").map_err(|err| err.to_string())?;
+            let phase = std::env::var("WEFT_CRASH_PHASE").unwrap_or_default();
+            store
+                .create_file(
+                    root,
+                    format!("crash-{phase}").as_bytes(),
+                    b"crash-probe\n",
+                    0o644,
+                    0,
+                    0,
+                    BTreeMap::new(),
+                )
+                .map_err(|err| format!("crash write: {err}"))?;
+            // Reaching here means WEFT_CRASH_PHASE did not match a crash point.
+            Ok(())
+        })(),
+        "crash-check" => (|| {
+            let config = args
+                .config
+                .clone()
+                .ok_or_else(|| "--config is required".to_owned())?;
+            let work = args
+                .work
+                .clone()
+                .ok_or_else(|| "--work is required".to_owned())?;
+            let subset = load_subset(&args.subset.clone().ok_or("--subset is required")?)?;
+            let path = config_store_path(&work, &config);
+            let store = Store::open(&path, OpenMode::ReadOnly)
+                .map_err(|err| format!("open {}: {err}", path.display()))?;
+            let report = store.verify(true).map_err(|err| err.to_string())?;
+            let mut mismatches = 0u64;
+            let mut missing = 0u64;
+            for sel in &subset.tensors {
+                let object_path = format!("/tensors/{}", sel.name);
+                match store.resolve_path(&object_path) {
+                    Ok(id) => match store.read_object(id) {
+                        Ok(bytes) => {
+                            if sha256_hex(&bytes) != sel.sha256 {
+                                mismatches += 1;
+                            }
+                        }
+                        Err(_) => mismatches += 1,
+                    },
+                    Err(_) => missing += 1,
+                }
+            }
+            let value = json!({
+                "generation": store.generation(),
+                "verify_ok": report.ok,
+                "verify_problems": report.problems.len(),
+                "problems": report
+                    .problems
+                    .iter()
+                    .map(|problem| problem.detail.clone())
+                    .collect::<Vec<String>>(),
+                "tensor_mismatches": mismatches,
+                "tensor_missing": missing,
+            });
+            write_json_atomic(&args.phase_out.ok_or("--phase-out is required")?, &value)?;
+            Ok(())
+        })(),
         other => Err(format!(
-            "unknown subcommand `{other}` (expected run|prepare|write|restore|cleanup|assemble)"
+            "unknown subcommand `{other}` (expected run|prepare|write|restore|cleanup|assemble|ablate|crash-write|crash-check)"
         )),
     };
     if let Err(err) = result {

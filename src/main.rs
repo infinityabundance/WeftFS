@@ -421,6 +421,10 @@ enum Command {
         /// Do not offer the ZSTD level-19 candidate.
         #[arg(long = "no-zstd19")]
         no_zstd19: bool,
+        /// Do not offer the mode-9 `FLOAT_TENSOR` candidate. Additive R17
+        /// ablation control; the default offers it.
+        #[arg(long = "no-float-tensor")]
+        no_float_tensor: bool,
         /// CPU budget for the level-19 candidate (estimated encode ns).
         #[arg(long = "zstd19-cpu-budget-ns", default_value_t = 20_000_000_000)]
         zstd19_cpu_budget_ns: u64,
@@ -510,6 +514,10 @@ enum Command {
         /// Do not offer the ZSTD level-19 candidate.
         #[arg(long = "no-zstd19")]
         no_zstd19: bool,
+        /// Do not offer the mode-9 `FLOAT_TENSOR` candidate. Additive R17
+        /// ablation control; the default offers it.
+        #[arg(long = "no-float-tensor")]
+        no_float_tensor: bool,
         /// CPU budget for the level-19 candidate (estimated encode ns).
         #[arg(long = "zstd19-cpu-budget-ns", default_value_t = 20_000_000_000)]
         zstd19_cpu_budget_ns: u64,
@@ -2314,6 +2322,7 @@ fn run(cli: Cli) -> Result<()> {
             lambda_write_ns,
             allow_experimental_modes,
             no_zstd19,
+            no_float_tensor,
             zstd19_cpu_budget_ns,
             no_zstd_patch,
             zstd_patch_level,
@@ -2351,6 +2360,7 @@ fn run(cli: Cli) -> Result<()> {
                         lambda_write_ns: lambda_write_ns.unwrap_or(lambda_ns),
                         lambda_write_ns_set: lambda_write_ns.is_some(),
                         allow_experimental_modes,
+                        float_tensor: !no_float_tensor,
                         zstd19: !no_zstd19,
                         zstd19_cpu_budget_ns,
                         zstd_patch: !no_zstd_patch,
@@ -2419,6 +2429,7 @@ fn run(cli: Cli) -> Result<()> {
             lambda_write_ns,
             allow_experimental_modes,
             no_zstd19,
+            no_float_tensor,
             zstd19_cpu_budget_ns,
             no_zstd_patch,
             zstd_patch_level,
@@ -2446,6 +2457,7 @@ fn run(cli: Cli) -> Result<()> {
                 lambda_write_ns: lambda_write_ns.unwrap_or(lambda_ns),
                 lambda_write_ns_set: lambda_write_ns.is_some(),
                 allow_experimental_modes,
+                float_tensor: !no_float_tensor,
                 zstd19: !no_zstd19,
                 zstd19_cpu_budget_ns,
                 zstd_patch: !no_zstd_patch,

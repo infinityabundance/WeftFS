@@ -990,6 +990,11 @@ pub struct TensorPlanOptions {
     /// strategy hint. Mode 18 is frozen and readable; the gate is about
     /// selection, not the wire format.
     pub allow_experimental_modes: bool,
+    /// Offer the mode-9 `FLOAT_TENSOR` candidate. Additive R17 ablation
+    /// control with the historical default (`true`), so no production path
+    /// changes. When `false` the candidate is not built at all, so no mode-9
+    /// encode runs; an explicit `float-tensor` strategy hint still forces it.
+    pub float_tensor: bool,
     /// Offer a level-19 ZSTD candidate in addition to the level-3 one.
     /// Level 19 encoding is ~28.5 MiB/s measured; it is only offered by the
     /// `Planned` policy (never `Fast`/`Auto`-resolved-fast) and only when the
@@ -1040,6 +1045,7 @@ impl Default for TensorPlanOptions {
             max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
             max_delta_bytes: DEFAULT_MAX_DELTA_BYTES,
             allow_experimental_modes: false,
+            float_tensor: true,
             zstd19: true,
             zstd19_min_bytes: 1024 * 1024,
             zstd19_cpu_budget_ns: 20_000_000_000,
@@ -1636,6 +1642,30 @@ impl Store {
         spec: &TensorWriteSpec,
         seed: &[u8; 32],
     ) -> Result<PreparedTensorObject> {
+        Ok(self
+            .prepare_tensor_object_with_spec_seeded_planned(
+                dtype, shape, bytes, layout, spec, seed,
+            )?
+            .0)
+    }
+
+    /// Benchmark-only variant of
+    /// [`Store::prepare_tensor_object_with_spec_seeded`] that also returns the
+    /// planner decision that produced the object.
+    ///
+    /// Additive R17 surface: it runs the **same** prepare (one encode per
+    /// candidate, the same seed and the same publication) and only copies the
+    /// already-priced candidate list into a [`TensorPlan`]. It never changes
+    /// the chosen strategy, the published bytes, or any frame/manifest byte.
+    pub fn prepare_tensor_object_with_spec_seeded_planned(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        bytes: &[u8],
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+    ) -> Result<(PreparedTensorObject, TensorPlan)> {
         let dtype = TensorElementDtype::parse(dtype)?;
         layout.validate(dtype, shape)?;
         // Row-major callers already hold the canonical bytes; borrowing avoids a
@@ -1660,6 +1690,7 @@ impl Store {
             true,
         )?;
         let chosen = self.choose_candidate(&prepared, spec.strategy_hint)?;
+        let plan = plan_from_prepared(&prepared, chosen);
         let artifact = chosen
             .artifact
             .clone()
@@ -1680,18 +1711,21 @@ impl Store {
             artifact.strategy_name.as_str(),
             artifact.tile_shape.as_deref(),
         )?;
-        Ok(PreparedTensorObject {
-            seed: *seed,
-            manifest_id,
-            content_root: content_hash,
-            size,
-            logical_root: root,
-            attrs,
-            dtype: dtype.as_str().to_owned(),
-            shape: shape.to_vec(),
-            strategy: artifact.strategy_name.clone(),
-            causal: spec.causal.clone(),
-        })
+        Ok((
+            PreparedTensorObject {
+                seed: *seed,
+                manifest_id,
+                content_root: content_hash,
+                size,
+                logical_root: root,
+                attrs,
+                dtype: dtype.as_str().to_owned(),
+                shape: shape.to_vec(),
+                strategy: artifact.strategy_name.clone(),
+                causal: spec.causal.clone(),
+            },
+            plan,
+        ))
     }
 
     /// Publish the state ops for one prepared tensor object.
@@ -1745,38 +1779,7 @@ impl Store {
             false,
         )?;
         let chosen = self.choose_candidate(&prepared, None)?;
-        let mut runner_up: Option<&PreparedCandidate> = None;
-        let mut applicable: Vec<&PreparedCandidate> = prepared
-            .iter()
-            .filter(|item| item.candidate.applicable)
-            .collect();
-        applicable.sort_by(|a, b| {
-            a.candidate
-                .cost
-                .cmp(&b.candidate.cost)
-                .then_with(|| a.candidate.strategy.cmp(&b.candidate.strategy))
-        });
-        for item in &applicable {
-            if item.candidate.strategy != chosen.candidate.strategy {
-                runner_up = Some(item);
-                break;
-            }
-        }
-        Ok(TensorPlan {
-            chosen: chosen.candidate.strategy,
-            chosen_physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
-            chosen_estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
-            chosen_estimated_encode_ns: chosen.candidate.estimated_encode_ns.unwrap_or(0),
-            chosen_cost: chosen.candidate.cost.unwrap_or(0),
-            runner_up: runner_up.map(|item| item.candidate.strategy),
-            runner_up_physical_bytes: runner_up.and_then(|item| item.candidate.physical_bytes),
-            runner_up_estimated_decode_ns: runner_up
-                .and_then(|item| item.candidate.estimated_decode_ns),
-            runner_up_estimated_encode_ns: runner_up
-                .and_then(|item| item.candidate.estimated_encode_ns),
-            runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
-            candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
-        })
+        Ok(plan_from_prepared(&prepared, chosen))
     }
 
     /// Price only the standalone representations of an existing tensor object.
@@ -1966,8 +1969,7 @@ impl Store {
         options: &TileDecodeOptions,
     ) -> Result<Vec<u8>> {
         let record = self.object_meta(authorized.object_id())?;
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2019,8 +2021,7 @@ impl Store {
         options: &TileDecodeOptions,
     ) -> Result<(Vec<u8>, TileDecodeStats)> {
         let record = self.object_meta(id)?;
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if manifest.size != record.size {
             return Err(Error::corrupt("object size disagrees with manifest"));
         }
@@ -2084,8 +2085,7 @@ impl Store {
                 "engram updates require a file object",
             ));
         }
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         let rep = manifest
             .representation
             .as_ref()
@@ -2102,7 +2102,8 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("engram representation has no frame id"))?;
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let meta = weftcodec::engram::engram_metadata(&frame, &limits)?;
@@ -2257,8 +2258,7 @@ impl Store {
         options: &TileDecodeOptions,
     ) -> Result<(RegionRead, TileDecodeStats)> {
         let record = self.object_meta(id)?;
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 if let Some(tensor) = &rep.tensor {
@@ -2308,7 +2308,8 @@ impl Store {
                 "tensor layout descriptor disagrees with the manifest dtype/shape",
             ));
         }
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected = match tensor.tensor_mode {
@@ -2350,15 +2351,18 @@ impl Store {
         let limits = Limits::default();
         let mut resolver = MapResolver::new();
         for dependency in &rep.dependencies {
-            let manifest =
-                self.read_manifest_keyed(*dependency)?;
+            let manifest = self.read_manifest_keyed(*dependency)?;
             let dep_rep = manifest
                 .representation
                 .ok_or_else(|| Error::corrupt("engram dependency has no representation"))?;
             let frame_id = dep_rep
                 .frame
                 .ok_or_else(|| Error::corrupt("engram dependency has no frame id"))?;
-            let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+            let frame_bytes = self.read_blob_verified_keyed(
+                BlobKind::Manifest,
+                frame_id,
+                identity::MANIFEST_DOMAIN,
+            )?;
             let frame = Frame::parse(&frame_bytes, &limits)?;
             resolver.insert(frame.header.content_hash, frame_bytes);
         }
@@ -2381,7 +2385,8 @@ impl Store {
                 "tensor layout descriptor disagrees with the manifest dtype/shape",
             ));
         }
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         if frame.header.mode != Mode::EngramShard {
@@ -3173,8 +3178,7 @@ impl Store {
         &self,
         record: &ObjectRecord,
     ) -> Result<weftcodec::TensorShardedMeta> {
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         let rep = manifest
             .representation
             .as_ref()
@@ -3186,7 +3190,8 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         Ok(weftcodec::decode_shard_frame(&frame, &limits)?.meta)
@@ -3216,8 +3221,7 @@ impl Store {
                 "tensor metadata requires a file object",
             ));
         }
-        let manifest =
-            self.read_manifest_keyed(record.content)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
         if let Some(rep) = &manifest.representation {
             if rep.kind == RepresentationKind::Tensor {
                 let tensor = rep
@@ -3801,6 +3805,12 @@ impl Store {
             })
             .and_then(|item| item.candidate.physical_bytes);
         match float_tensor_dtype(dtype) {
+            Some(_) if !options.float_tensor && hint != Some(TensorStrategy::FloatTensor) => {
+                out.push(skipped(
+                    TensorStrategy::FloatTensor,
+                    "mode 9 disabled (--no-float-tensor)".to_owned(),
+                ));
+            }
             Some(float_dtype) => {
                 match crate::phase_profile::timed(
                     crate::phase_profile::Phase::EncodeFloatTensor,
@@ -4933,8 +4943,7 @@ impl Store {
         if seen.contains(&manifest_id) {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
-        let manifest =
-            self.read_manifest_keyed(manifest_id)?;
+        let manifest = self.read_manifest_keyed(manifest_id)?;
         let Some(rep) = &manifest.representation else {
             return Ok(0);
         };
@@ -5251,7 +5260,8 @@ impl Store {
         let frame_id = rep
             .frame
             .ok_or_else(|| Error::corrupt("tensor representation has no frame id"))?;
-        let frame_bytes = self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
+        let frame_bytes =
+            self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
         let frame = Frame::parse(&frame_bytes, &limits)?;
         let expected_mode = match tensor.tensor_mode {
@@ -5851,8 +5861,7 @@ impl Store {
         if seen.contains(&dep_root) {
             return Err(Error::corrupt("tensor representation dependency cycle"));
         }
-        let dep_manifest =
-            self.read_manifest_keyed(dep_root)?;
+        let dep_manifest = self.read_manifest_keyed(dep_root)?;
         seen.push(dep_root);
         let base_bytes = self.read_manifest_bytes_inner_gated(
             &dep_manifest,
@@ -5961,6 +5970,41 @@ impl Store {
             ));
         }
         Ok(chunk.bytes)
+    }
+}
+
+fn plan_from_prepared(prepared: &[PreparedCandidate], chosen: &PreparedCandidate) -> TensorPlan {
+    let mut runner_up: Option<&PreparedCandidate> = None;
+    let mut applicable: Vec<&PreparedCandidate> = prepared
+        .iter()
+        .filter(|item| item.candidate.applicable)
+        .collect();
+    applicable.sort_by(|a, b| {
+        a.candidate
+            .cost
+            .cmp(&b.candidate.cost)
+            .then_with(|| a.candidate.strategy.cmp(&b.candidate.strategy))
+    });
+    for item in &applicable {
+        if item.candidate.strategy != chosen.candidate.strategy {
+            runner_up = Some(item);
+            break;
+        }
+    }
+    TensorPlan {
+        chosen: chosen.candidate.strategy,
+        chosen_physical_bytes: chosen.candidate.physical_bytes.unwrap_or(0),
+        chosen_estimated_decode_ns: chosen.candidate.estimated_decode_ns.unwrap_or(0),
+        chosen_estimated_encode_ns: chosen.candidate.estimated_encode_ns.unwrap_or(0),
+        chosen_cost: chosen.candidate.cost.unwrap_or(0),
+        runner_up: runner_up.map(|item| item.candidate.strategy),
+        runner_up_physical_bytes: runner_up.and_then(|item| item.candidate.physical_bytes),
+        runner_up_estimated_decode_ns: runner_up
+            .and_then(|item| item.candidate.estimated_decode_ns),
+        runner_up_estimated_encode_ns: runner_up
+            .and_then(|item| item.candidate.estimated_encode_ns),
+        runner_up_cost: runner_up.and_then(|item| item.candidate.cost),
+        candidates: prepared.iter().map(|item| item.candidate.clone()).collect(),
     }
 }
 
