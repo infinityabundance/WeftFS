@@ -57,7 +57,11 @@ fn azure_config(args: &[String]) -> weftfs::azure::AzureConfig {
         endpoint: std::env::var("WEFT_AZURE_TEST_ENDPOINT").unwrap_or_default(),
         container: azure_container(args),
         account: std::env::var("WEFT_AZURE_ACCOUNT").unwrap_or_default(),
-        key: if key.is_empty() { None } else { Some(key) },
+        key: if key.is_empty() {
+            None
+        } else {
+            Some(key.clone())
+        },
         sas_token: None,
         anonymous: key.is_empty(),
         lock_lease: std::time::Duration::from_secs(60),
@@ -113,10 +117,10 @@ fn sha256_hex(bytes: &[u8]) -> String {
 /// from the store's cache), so a court can prove a refused publication changed
 /// nothing.
 fn read_superblock(args: &[String], path: &str) -> Option<(u64, Hash32, Vec<u8>)> {
-    let mut backend = backend_kind(args, &backend(args))
+    let mut plane = backend_kind(args, &backend(args))
         .open(std::path::Path::new(path))
         .ok()?;
-    let image = backend.read_all(&BackendKey::superblock()).ok()?;
+    let image = plane.read_all(&BackendKey::superblock()).ok()?;
     let slot = weftfs::format::decode_superblock(&image)
         .ok()?
         .into_iter()
@@ -134,8 +138,7 @@ fn open_driver(
     args: &[String],
 ) -> Store {
     let opts = options(writer_mode, now);
-    let _ = backend;
-    Store::open_with_options_and_backend(path, mode, opts, backend_kind(args, &backend(args)))
+    Store::open_with_options_and_backend(path, mode, opts, backend_kind(args, backend))
         .expect("open store")
 }
 
@@ -190,7 +193,7 @@ fn main() {
     let backend_name = backend(&args);
     match mode {
         "init" => {
-            init_driver(&store_path, now, &backend_name);
+            init_driver(&store_path, now, &backend_name, &args);
             println!("{{\"ok\":true}}");
         }
         "parity" => {
@@ -275,6 +278,7 @@ fn main() {
                 WriterMode::Optimistic,
                 now,
                 &backend_name,
+                &args,
             );
             let started = Instant::now();
             let mut latency_file =
@@ -407,6 +411,7 @@ fn main() {
                 WriterMode::Optimistic,
                 now,
                 &backend_name,
+                &args,
             );
             let lookup = store.transaction_outcome(&tx_id).expect("lookup");
             let (state, commit) = match lookup {
@@ -434,6 +439,7 @@ fn main() {
                 WriterMode::Single,
                 now,
                 &backend_name,
+                &args,
             );
             let mut mismatches = Vec::new();
             let mut checked = 0u64;
@@ -470,6 +476,7 @@ fn main() {
                 WriterMode::Single,
                 now,
                 &backend_name,
+                &args,
             );
             let id = store
                 .lookup(State::ROOT_ID, name.as_bytes())
