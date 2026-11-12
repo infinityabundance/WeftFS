@@ -384,13 +384,18 @@ fn run(args: &Args) -> Result<(), String> {
     let others: Vec<usize> = (0..file.tensors.len())
         .filter(|&index| file.tensors[index].name != EMBEDDING)
         .collect();
+    // Pick the largest real tensors, not the first eight by header order: the
+    // header groups the layernorm vectors together, and a sample of 1,792-byte
+    // tensors would not exercise the encoder.
+    let mut others = others;
+    others.sort_by(|a, b| {
+        file.tensors[*b]
+            .byte_len()
+            .cmp(&file.tensors[*a].byte_len())
+    });
     let take = args.others.min(others.len());
     for slot in 0..take {
-        let index = if take == 0 {
-            0
-        } else {
-            slot * others.len() / take
-        };
+        let index = if take == 0 { 0 } else { slot };
         chosen.push(others[index]);
     }
 
