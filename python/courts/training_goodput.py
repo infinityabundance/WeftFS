@@ -1846,12 +1846,15 @@ def _sweep_cell(args, interval, config, work):
                 % (config, interval, rep, json.dumps(bad[:2], indent=2)[:4000])
             )
         print(
-            "  loop_wall=%.1fms step_p50=%.2fms completion_p50=%.1fms "
-            "resumes=%d/%d"
+            "  loop_wall=%.1fms step_p50=%s completion_p50=%s resumes=%d/%d"
             % (
                 summary["loop_wall_ms"],
-                summary["step_ms_median_of_run"],
-                summary["completion_ms_p50"],
+                "none (every step took a checkpoint)"
+                if summary["step_ms_median_of_run"] is None
+                else "%.2fms" % summary["step_ms_median_of_run"],
+                "none"
+                if summary["completion_ms_p50"] is None
+                else "%.1fms" % summary["completion_ms_p50"],
                 sum(1 for row in checked if row["exact"]),
                 len(checked),
             ),
