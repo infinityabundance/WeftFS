@@ -342,9 +342,10 @@ because D/E publish protocol commits after the tensor writes.
    publication are the remaining levers.
 5. **R22 (Pareto sweep):** with level 19 removed, the Pareto front on this
    fixture is approximately `C-both` (2.13 s / 330.5 MB), `C-noz19`
-   (3.85 s / 282.3 MB), and the ladder target `A` (0.33 s / 424.4 MB). The
-   first ladder rung (≤3,360 ms) is already met by `C-noz19`; the final
-   (≤336 ms) is not reachable with a 330 MB write on this backend.
+   (3.85 s / 282.3 MB), and the ladder target `A` (0.33 s / 424.4 MB).
+   `C-noz19` is 1.15× the first rung (≤3,360 ms), so G1 still needs ~0.5 s from
+   R20/R21; the final rung (≤336 ms) is not reachable with a 330 MB write on
+   this backend.
 
 ## 12. Not claimed
 

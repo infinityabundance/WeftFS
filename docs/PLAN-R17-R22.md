@@ -82,8 +82,9 @@ already at G2's wall with a 22.2 % footprint win over B.
 3. Keep the exactness contract: the same object identity, the same chosen
    bytes, the same restore.
 4. **Gate:** C-noz19-like wall and footprint, 101/101 exact, crash old-or-new.
-5. Expected: C at ~3.85 s / 282.3 MB → **G1 met** (3.85 s is within 3.36 s only
-   after R21 or a further ~0.5 s reduction; report honestly either way).
+5. Expected: C at ~3.85 s / 282.3 MB, which is **1.15× the G1 rung** (3.36 s);
+   G1 needs a further ~0.5 s from R21 or R20, and that is stated rather than
+   rounded away.
 
 ### R19 — BF16 mode-9 encoder
 
