@@ -113,6 +113,10 @@ pub enum Phase {
     /// histogram plus the codec's frame-length computation (nested in
     /// [`Phase::Analyze`]).
     AnalyzeMode9,
+    /// The durability barrier of a deferred publication batch: syncing every
+    /// file and directory a group wrote (nested in [`Phase::ManifestCommit`],
+    /// because the commit path performs it before the commit record).
+    BackendSync,
 }
 
 impl Phase {
@@ -139,6 +143,7 @@ impl Phase {
             Phase::EncodeSemantic => "encode_semantic",
             Phase::Analyze => "analyze",
             Phase::AnalyzeMode9 => "analyze_mode9",
+            Phase::BackendSync => "backend_sync",
         }
     }
 
@@ -156,12 +161,13 @@ impl Phase {
             | Phase::EncodeSemantic
             | Phase::Analyze => Some(Phase::Encode),
             Phase::AnalyzeMode9 => Some(Phase::Analyze),
+            Phase::BackendSync => Some(Phase::ManifestCommit),
             _ => None,
         }
     }
 
     /// Every phase, in report order.
-    pub const ALL: [Phase; 20] = [
+    pub const ALL: [Phase; 21] = [
         Phase::SourceRead,
         Phase::Digest,
         Phase::Encode,
@@ -182,6 +188,7 @@ impl Phase {
         Phase::EncodeSemantic,
         Phase::Analyze,
         Phase::AnalyzeMode9,
+        Phase::BackendSync,
     ];
 }
 

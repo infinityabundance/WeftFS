@@ -543,13 +543,33 @@ fn s3_config(args: &Args) -> Result<S3Config, String> {
 }
 
 fn backend_kind(args: &Args) -> Result<BackendKind, String> {
-    match args.backend.as_str() {
-        "local" => Ok(BackendKind::Local),
-        "s3" => Ok(BackendKind::S3 {
+    backend_kind_publication(args, publication_default())
+}
+
+/// The backend for a row, including its packed blob plane when the row packs.
+fn backend_kind_publication(args: &Args, publication: Publication) -> Result<BackendKind, String> {
+    let base = match args.backend.as_str() {
+        "local" => BackendKind::Local,
+        "s3" => BackendKind::S3 {
             config: s3_config(args)?,
-        }),
-        other => Err(format!("unknown backend `{other}` (expected local|s3)")),
-    }
+        },
+        other => return Err(format!("unknown backend `{other}` (expected local|s3)")),
+    };
+    let Some(threshold) = publication.pack_threshold() else {
+        return Ok(base);
+    };
+    // One pack target must be at least the member threshold; 16 MiB is the
+    // shipped target, raised only when a swept threshold is larger.
+    let pack_target_bytes = (16 * 1024 * 1024).max(threshold);
+    BackendKind::packed(
+        base,
+        weftfs::packs::PackOptions {
+            pack_target_bytes,
+            member_threshold_bytes: threshold,
+            ..weftfs::packs::PackOptions::default()
+        },
+    )
+    .map_err(|err| format!("packed blob plane: {err}"))
 }
 
 fn config_store_path(work: &Path, config: &str) -> PathBuf {
@@ -995,62 +1015,52 @@ fn is_weft_store_config(key: &str) -> bool {
 /// default rows (`C`, `E`) run the shipped two-stage planner.
 fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
     let base = config_base(key);
-    let default = ConfigFlags {
+    let mut flags = ConfigFlags {
         ablate_zstd19: false,
         ablate_float: false,
         publication: publication_default(),
         planner: PlannerMode::TwoStage,
     };
-    match config_suffix(key) {
-        "" => Ok(default),
-        // R20 rows: the same planner and candidate set, a different
-        // publication strategy.
-        "percommit" => Ok(ConfigFlags {
-            publication: Publication::PerCommit,
-            ..default
-        }),
-        "group" => Ok(ConfigFlags {
-            publication: Publication::Group,
-            ..default
-        }),
-        "atomic" => Ok(ConfigFlags {
-            publication: Publication::Atomic,
-            ..default
-        }),
-        suffix if suffix.starts_with("pack") => Ok(ConfigFlags {
-            publication: Publication::Packed(pack_threshold(suffix)?),
-            ..default
-        }),
-        // The R17/R19 ablation rows keep their historical per-commit
-        // publication so their published numbers stay reproducible.
-        "legacy" if matches!(base, "C" | "E") => Ok(ConfigFlags {
-            publication: Publication::PerCommit,
-            planner: PlannerMode::Exhaustive,
-            ..default
-        }),
-        "noz19" if matches!(base, "C" | "E") => Ok(ConfigFlags {
-            publication: Publication::PerCommit,
-            ablate_zstd19: true,
-            planner: PlannerMode::Exhaustive,
-            ..default
-        }),
-        "nom9" if matches!(base, "C" | "E") => Ok(ConfigFlags {
-            publication: Publication::PerCommit,
-            ablate_float: true,
-            planner: PlannerMode::Exhaustive,
-            ..default
-        }),
-        "both" if matches!(base, "C" | "E") => Ok(ConfigFlags {
-            publication: Publication::PerCommit,
-            ablate_zstd19: true,
-            ablate_float: true,
-            planner: PlannerMode::Exhaustive,
-            ..default
-        }),
-        suffix => Err(format!(
-            "configuration `{key}` has unknown ablation suffix `{suffix}`"
-        )),
+    // Suffixes compose with `-`: `noz19-percommit` is the R17 attribution row
+    // with the historical per-commit publication, `pack1m-group` is a packed
+    // blob plane without the deferred barrier.
+    for part in config_suffix(key)
+        .split('-')
+        .filter(|part| !part.is_empty())
+    {
+        match part {
+            // R18 decision-diff control: the exhaustive planner, same
+            // publication as the default row, so the only difference is the
+            // planner and the storage comparison stays exact.
+            "legacy" if matches!(base, "C" | "E") => flags.planner = PlannerMode::Exhaustive,
+            "noz19" if matches!(base, "C" | "E") => {
+                flags.planner = PlannerMode::Exhaustive;
+                flags.ablate_zstd19 = true;
+            }
+            "nom9" if matches!(base, "C" | "E") => {
+                flags.planner = PlannerMode::Exhaustive;
+                flags.ablate_float = true;
+            }
+            "both" if matches!(base, "C" | "E") => {
+                flags.planner = PlannerMode::Exhaustive;
+                flags.ablate_zstd19 = true;
+                flags.ablate_float = true;
+            }
+            // R20 publication rows.
+            "percommit" => flags.publication = Publication::PerCommit,
+            "group" => flags.publication = Publication::Group,
+            "atomic" => flags.publication = Publication::Atomic,
+            part if part.starts_with("pack") => {
+                flags.publication = Publication::Packed(pack_threshold(part)?)
+            }
+            part => {
+                return Err(format!(
+                    "configuration `{key}` has unknown ablation suffix `{part}`"
+                ))
+            }
+        }
     }
+    Ok(flags)
 }
 
 /// How a WeftFS row publishes its state ops and its blobs.
@@ -1292,21 +1302,7 @@ fn write_weftfs(
             store_path.display()
         ));
     }
-    let mut kind = backend_kind(args)?;
-    if let Some(threshold) = publication.pack_threshold() {
-        // One pack target must be at least the member threshold; 16 MiB is the
-        // shipped target, raised only when a swept threshold is larger.
-        let pack_target_bytes = (16 * 1024 * 1024).max(threshold);
-        kind = BackendKind::packed(
-            kind,
-            weftfs::packs::PackOptions {
-                pack_target_bytes,
-                member_threshold_bytes: threshold,
-                ..weftfs::packs::PackOptions::default()
-            },
-        )
-        .map_err(|err| format!("packed blob plane: {err}"))?;
-    }
+    let mut kind = backend_kind_publication(args, publication)?;
     let profiling = args.phase_profile;
     if profiling {
         phase_profile::begin();
@@ -1519,9 +1515,18 @@ fn write_weftfs(
                 after.bytes_written.saturating_sub(before.bytes_written),
             ));
         }
+        // The publication itself (commit record, head, index segment and the
+        // deferred durability barrier) is attributed here, once, so the ledger
+        // keeps a per-category breakdown for a grouped row.
+        let snap_before_publish = profiling.then(phase_profile::snapshot);
         store
             .commit_group()
             .map_err(|err| format!("group commit: {err}"))?;
+        if profiling {
+            if let Some(before) = &snap_before_publish {
+                add_phase_totals(&mut commit_phases, &phase_profile::snapshot().since(before));
+            }
+        }
         commit_ms = group_started.elapsed().as_secs_f64() * 1000.0;
         ids = group_ids;
         for (index, ((name, prepared, detail_index), id)) in
@@ -1751,7 +1756,7 @@ fn restore_weftfs(
         );
     }
 
-    let kind = backend_kind(args)?;
+    let kind = backend_kind_publication(args, ablation_flags(config)?.publication)?;
     let started = Instant::now();
     let store = Store::open_with_backend(&store_path, OpenMode::ReadOnly, kind)
         .map_err(|err| format!("open store: {err}"))?;
@@ -2843,7 +2848,8 @@ fn assemble_cmd(args: &Args) -> Result<(), String> {
 }
 
 /** The R17/R18 configuration matrix. */
-const DEFAULT_ABLATION_CONFIGS: &str = "A,B,C,C-legacy,D,E,N,B-group,C-noz19,C-nom9,C-both";
+const DEFAULT_ABLATION_CONFIGS: &str =
+    "A,B,C,C-percommit,C-legacy,D,E,N,B-group,C-noz19,C-nom9,C-both";
 
 /// Pinned C row from the R3 receipt (`augmentation-local-20261109T134132Z`).
 /// Strategy counts must stay identical across revisions; the physical footprint
@@ -3065,6 +3071,10 @@ fn build_ledger(write: &Json) -> Json {
     let prepare_residual = (prepare - encode - prepare_digest - prepare_publish).max(0.0);
     let index = commit_phase("index_segment");
     let manifest_commit = commit_phase("manifest_commit");
+    // The deferred durability barrier runs *inside* the commit publication and
+    // before the commit record, so it is nested in `manifest_commit` and is
+    // reported separately rather than subtracted again.
+    let backend_sync = commit_phase("backend_sync");
     let commit_digest = commit_phase("digest");
     let commit_publish = commit_phase("blob_publish");
     let metadata = commit_phase("metadata_commit");
@@ -3091,6 +3101,7 @@ fn build_ledger(write: &Json) -> Json {
         "commit_breakdown": {
             "index_segment_ms": index,
             "manifest_commit_ms": manifest_commit,
+            "durability_barrier_nested_in_manifest_commit_ms": backend_sync,
             "digest_ms": commit_digest,
             "blob_publish_ms": commit_publish,
             "metadata_commit_ms": metadata,
@@ -4141,7 +4152,8 @@ fn main() {
                 .clone()
                 .ok_or_else(|| "--work is required".to_owned())?;
             let path = config_store_path(&work, &config);
-            let mut store = Store::open(&path, OpenMode::ReadWrite)
+            let kind = backend_kind_publication(&args, ablation_flags(&config)?.publication)?;
+            let mut store = Store::open_with_backend(&path, OpenMode::ReadWrite, kind)
                 .map_err(|err| format!("open {}: {err}", path.display()))?;
             let root = store.resolve_path("/").map_err(|err| err.to_string())?;
             let phase = std::env::var("WEFT_CRASH_PHASE").unwrap_or_default();
@@ -4187,7 +4199,12 @@ fn main() {
                 .ok_or_else(|| "--work is required".to_owned())?;
             let subset = load_subset(&args.subset.clone().ok_or("--subset is required")?)?;
             let path = config_store_path(&work, &config);
-            let store = Store::open(&path, OpenMode::ReadOnly)
+            // The reader must use the same blob plane the row wrote with: a
+            // packed store opened as a flat local store cannot resolve any
+            // packed member, so recovery would reject the newest generation and
+            // the crash verdict would be about the harness, not the store.
+            let kind = backend_kind_publication(&args, ablation_flags(&config)?.publication)?;
+            let store = Store::open_with_backend(&path, OpenMode::ReadOnly, kind)
                 .map_err(|err| format!("open {}: {err}", path.display()))?;
             let report = store.verify(true).map_err(|err| err.to_string())?;
             let mut mismatches = 0u64;

@@ -1800,6 +1800,30 @@ impl LocalBackend {
         Ok(())
     }
 
+    /// Sync every file and directory a deferred durability batch recorded.
+    ///
+    /// Each file gets its own data barrier (the batch changes *when*, never
+    /// *whether*, a byte is durable) and each touched directory gets one
+    /// directory barrier so the `rename(2)` entries are durable too. Files are
+    /// synced first, so no directory entry can become durable before its data.
+    fn sync_pending(&mut self) -> Result<()> {
+        let (files, dirs) = self.pending_sync.take();
+        for path in &files {
+            let file = File::open(path)
+                .map_err(|err| Error::io(format!("cannot open {}: {err}", path.display())))?;
+            file.sync_all()
+                .map_err(|err| Error::io(format!("cannot fsync {}: {err}", path.display())))?;
+            self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+            self.stats.fsync_file.fetch_add(1, Ordering::Relaxed);
+        }
+        for dir in &dirs {
+            fsync_dir(dir)?;
+            self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
+            self.stats.fsync_dir.fetch_add(1, Ordering::Relaxed);
+        }
+        Ok(())
+    }
+
     fn tmp_path(&self, prefix: &str) -> PathBuf {
         self.root.join("tmp").join(format!(
             "{prefix}-{}-{}",
@@ -1830,24 +1854,9 @@ impl StorageBackend for LocalBackend {
         if !self.pending_sync.active && self.pending_sync.files.is_empty() {
             return Ok(());
         }
-        let (files, dirs) = self.pending_sync.take();
-        // Every file is still synced individually: the batch changes *when*,
-        // not *whether*, a byte is durable. Syncing the files first means the
-        // directory entries below can only become durable after their data.
-        for path in &files {
-            let file = File::open(path)
-                .map_err(|err| Error::io(format!("cannot open {}: {err}", path.display())))?;
-            file.sync_all()
-                .map_err(|err| Error::io(format!("cannot fsync {}: {err}", path.display())))?;
-            self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
-            self.stats.fsync_file.fetch_add(1, Ordering::Relaxed);
-        }
-        for dir in &dirs {
-            fsync_dir(dir)?;
-            self.stats.fsyncs.fetch_add(1, Ordering::Relaxed);
-            self.stats.fsync_dir.fetch_add(1, Ordering::Relaxed);
-        }
-        Ok(())
+        crate::phase_profile::timed(crate::phase_profile::Phase::BackendSync, || {
+            self.sync_pending()
+        })
     }
 
     fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {
