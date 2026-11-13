@@ -172,5 +172,16 @@ if [[ ! -s "$receipt" ]]; then
   exit 1
 fi
 
+# The measurement crate and the store it writes run as uid 0 inside the court.
+# Remove the scratch tree here (as root) unless the operator asks to keep it:
+# a host-side `rm` cannot delete root-owned files, and the space phase writes
+# hundreds of megabytes of regenerable store blobs. Every number the run
+# produced is already in the receipt.
+if [[ "${WEFT_EKBLOOM_KEEP_WORK:-0}" != "1" ]]; then
+  rm -rf "$work"
+else
+  echo "ekbloom_court: kept work dir $work (WEFT_EKBLOOM_KEEP_WORK=1)"
+fi
+
 echo "ekbloom_court: receipt=$receipt"
 echo "ekbloom_court: log=$log"
