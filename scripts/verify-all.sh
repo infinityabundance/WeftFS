@@ -262,7 +262,7 @@ run_orchestrated_court augmentation_local augmentation_court \
 # `context_advantage_court: skip <reason>` and exits 78; the aggregate records a
 # skip, never a pass. The court's `claim_holds` is reported in the receipt and is
 # deliberately independent of its measurement validity.
-run_orchestrated_court context_advantage context_advantage \
+run_orchestrated_court context_advantage context_advantage_court \
   env WEFT_CONTEXT_ADVANTAGE_STAMP="$stamp" \
   bash scripts/context_advantage_court.sh --reduced
 
