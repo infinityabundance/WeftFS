@@ -255,13 +255,14 @@ decode-threads limiter R10 recorded.
 
 | Receipt | What it is |
 |---|---|
-| [`mode9-stream-20261113T112517Z.json`](receipts/mode9-stream-20261113T112517Z.json) | **cited.** Streaming mode-9 vs one-shot on two real tensors, 3 repetitions each, frames compared byte-for-byte. |
+| [`mode9-stream-20261113T113138Z.json`](receipts/mode9-stream-20261113T113138Z.json) | **cited.** Streaming mode-9 vs one-shot on two real tensors, 3 repetitions each, frames compared byte-for-byte. |
 | [`scale-7b-20261113T104950Z.json`](receipts/scale-7b-20261113T104950Z.json) | **cited.** Planned 8-way checkpoint write of all 339 tensors at 3 GiB, with `verify --full`. |
 | [`scale-7b-20261113T105331Z.json`](receipts/scale-7b-20261113T105331Z.json) | **cited.** The same checkpoint through the bounded whole-tensor writer (`ingest --stream`). |
 | [`scale-7b-20261113T105851Z.json`](receipts/scale-7b-20261113T105851Z.json) | **cited.** Fast-raw packed write, catalog accounting, and restores at 1/4/8 workers. |
 | [`scale-7b-20261113T110624Z.json`](receipts/scale-7b-20261113T110624Z.json) | **cited.** Fast-raw flat write and `verify --full`; its head is the packed run's head. |
 | [`scale-7b-20261110T213731Z.json`](receipts/scale-7b-20261110T213731Z.json) | **cited as the starting point only.** Pre-X04: per-tensor planned ingest exit 137, packed +51.16 % bytes, 148,694 segment publishes. Its code revision predates R18–R22, so its timings are not compared per stage. |
-| `mode9-stream-20261113T112342Z`, `…T112350Z` | **Retained failures.** Court-script bugs: a doubled `/work` prefix and a `chmod` on a host-owned directory. Both wrote measurements; neither is cited. |
+| `mode9-stream-20261113T112342Z`, `…T112350Z` | **Retained failures: court-script bugs.** A doubled `/work` prefix and a `chmod` on a host-owned directory. Both wrote measurements; neither is cited. |
+| `mode9-stream-20261113T112517Z`, `…T112913Z` | **Retained: superseded.** They lack the court revision fields, so the receipt cannot be pinned; the measurements are the same kind and are not cited. |
 
 ## 8. Reproduce
 
