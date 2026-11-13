@@ -170,6 +170,10 @@ jobs:
     #   scripts/docker-court.sh go "cd WeftFS-Go && gofmt -l . && go vet ./... && CGO_ENABLED=0 go build ./... && go test -race ./store/... ./model/... ./index/... ./cmd/..."
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # WeftCodec-Go and WeftFS-Go are git submodules; without this the
+          # matrix working directories are empty.
+          submodules: recursive
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: ${{ matrix.project }}/go.mod
