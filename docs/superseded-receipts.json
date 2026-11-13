@@ -1,0 +1,44 @@
+[
+ {
+  "receipt": "bench/receipts/index-chain-20261110T050010Z.json",
+  "superseded_by": "bench/receipts/index-chain-20261110T071008Z.json",
+  "reason": "Same court measured at the row-level delta iteration; the element-level encoder supersedes it (97.1 MB -> 3.34 MB of index for the same 1,250 commits).",
+  "declared_in": "bench/RESULTS-index-amplification.md"
+ },
+ {
+  "receipt": "bench/receipts/index-chain-20261110T045441Z.json",
+  "superseded_by": "bench/receipts/index-chain-20261110T071008Z.json",
+  "reason": "First row-level run of the same court; superseded twice (row-level, then element-level).",
+  "declared_in": "bench/RESULTS-index-amplification.md"
+ },
+ {
+  "receipt": "bench/receipts/parent-graph-20261108T192017Z.json",
+  "superseded_by": "bench/receipts/parent-graph-20261108T232016Z.json",
+  "reason": "S13 priced restore from decode rows alone, which over-predicted the chain by 24.2 % and under-predicted the all-independent floor by 73.7 %; S13b adds the measured per-version restore overhead.",
+  "declared_in": "bench/RESULTS-parent-graph.md"
+ },
+ {
+  "receipt": "bench/receipts/trajectory-20261107T220652Z.json",
+  "superseded_by": "bench/receipts/trajectory-20261108T083234Z.json",
+  "reason": "GC byte counters were wrong: deleted_bytes added advisory index segments to data blobs (3,466,466,150 B reported against a 0 B data delta). Size, restore, exactness and depth fields are unaffected; the corrected counters are in the post-fix receipt.",
+  "declared_in": "bench/RESULTS-gc-accounting.md"
+ },
+ {
+  "receipt": "bench/receipts/verify-20261109T112958Z.json",
+  "superseded_by": "bench/receipts/verify-20261113T033408Z.json",
+  "reason": "Earlier full-verification aggregate (v1.2.0 release tree, 37/37), retained as history; the current aggregate is the 47/47 receipt.",
+  "declared_in": "README.md"
+ },
+ {
+  "receipt": "bench/receipts/verify-20261111T182601Z.json",
+  "superseded_by": "bench/receipts/verify-20261113T033408Z.json",
+  "reason": "Earlier full-verification aggregate (v1.3.0 release tree, 45/45), retained as history; the current aggregate is the 47/47 receipt.",
+  "declared_in": "README.md"
+ },
+ {
+  "receipt": "bench/receipts/verify-20261112T223540Z.json",
+  "superseded_by": "bench/receipts/verify-20261113T033408Z.json",
+  "reason": "Earlier full-verification aggregate (v1.4.0 tree, 46/46), retained as history; the current aggregate is the 47/47 receipt.",
+  "declared_in": "README.md"
+ }
+]
