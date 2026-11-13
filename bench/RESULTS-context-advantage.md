@@ -1,4 +1,4 @@
-# Context Advantage Court — results (R26)
+# Context Advantage Court — results (R26, extended by R27)
 
 One mature backend, with and without the WeftFS context plane, holding the
 hardware, durability, workload, caching policy, concurrency and the available
@@ -6,12 +6,12 @@ optimizations constant. Frozen contract:
 [`bench/CONTRACTS-context-advantage.md`](CONTRACTS-context-advantage.md),
 committed before the court produced any measurement.
 
-Receipt: `bench/receipts/context-advantage-20261113T061410Z.json` (R27, stamp
-`20261113T061410Z`), superseding the R26 receipt
-`context-advantage-20261113T054528Z.json`; both are retained. The reduced
-three-repetition configuration the aggregate court runs is
-`context-advantage-20261113T061527Z.json`. Every number below is generated from
-the current receipt by `scripts/perf_numbers.py`.
+Receipt: `bench/receipts/context-advantage-20261113T061907Z.json` (R27, stamp
+`20261113T061907Z`, WeftFS `20e66147a7f8`), superseding the R26 receipt
+`context-advantage-20261113T054528Z.json`; both are retained, and §12 lists the
+runs that are not cited. The reduced three-repetition configuration the
+aggregate court runs is `context-advantage-20261113T061953Z.json`. Every number
+below is generated from the current receipt by `scripts/perf_numbers.py`.
 
 ---
 
@@ -36,9 +36,9 @@ This is the most important part of the session, so it comes first.
 **M wins on the fast path.** A plain zstd-3 blob with an in-memory index and a
 SHA-256 check is materially faster than a mode-19 scoped read, and it reads
 about half the bytes the raw floor does — but it is not free: it too is slower
-than the raw floor, for the same reason (see §6). R27 narrowed the gap from
-6.51× to 5.84× of N by removing duplicated decode work in W's own read path;
-what is left is the payload codec, and M pays that too.
+than the raw floor, for the same reason (see §6). R27 narrowed W's gap to N by
+removing duplicated decode work in W's own read path (§6.2 compares the two
+receipts); what is left is the payload codec, and M pays that too.
 
 **M ties on the happy path.** All three arms returned every compatible page
 byte-exactly, every repetition. There is no correctness advantage to the
@@ -313,7 +313,7 @@ another, so the rows add up.
 | **named total** | **29.44** | **183.64** |
 | unnamed residual | 0.96 | 4.37 |
 
-W's whole authorization preamble — object record, descriptor, capability, POSIX — is **0.59 µs** per read. The instrumented ledger runs **154.20 µs** per read above N's, and **0.89×** the uninstrumented W p50 is one phase: the payload decode.
+W's whole authorization preamble — object record, descriptor, capability, POSIX — is **0.59 µs** per read. The instrumented ledger runs **154.20 µs** per read above N's, and **0.89×** the uninstrumented W p50 is a single phase: the payload decode.
 <!-- END GENERATED:context-advantage-ledger -->
 
 The ledger is instrumented, and the profiler is not free: it takes a global lock

@@ -10121,10 +10121,10 @@ write is now durability-bound, not encode-bound.
   justified, and published the floor that remains. **The declared tolerance is
   unchanged and the gate still fails.**
   * Evidence for every number below: receipt
-    `bench/receipts/context-advantage-20261113T061410Z.json` (stamp
-    `20261113T061410Z`, WeftFS `86c403bb91d660470dfdc6377059c8ac9b9105cb`),
+    `bench/receipts/context-advantage-20261113T061907Z.json` (stamp
+    `20261113T061907Z`, WeftFS `20e66147a7f8ee6fcdc233a94b367359f415262e`),
     label `full`, 7 interleaved reps; reduced three-rep receipt
-    `...T061527Z` for the aggregate court. Analysis
+    `...T061953Z` for the aggregate court. Analysis
     `bench/RESULTS-context-advantage.md`; every number in that file is emitted
     from this receipt by `scripts/perf_numbers.py`.
   * **Instrumentation, benchmark-only.** `src/phase_profile.rs` gained sixteen
@@ -10139,19 +10139,20 @@ write is now durability-bound, not encode-bound.
     mode-19 decode into byte planes, reconstructed-page hash, descriptor parse
     and descriptor identity.
   * **The ledger (W, µs per read, medians of seven interleaved reps).** Payload
-    decode dominates at 149.6; object blob hash 9.6, whole-content verification
+    decode dominates at 151.7; object blob hash 9.6, whole-content verification
     9.6, object I/O 2.2, manifest I/O 1.6, path resolution 1.1, manifest decode
     0.9, frame parse 0.9, compare 0.9, and the **whole authorization preamble
-    0.6** (record 0.2, descriptor 0.1, capability 0.1, POSIX 0.05). N's entire
-    read is 29.5 µs with the same hash and I/O rows. The instrumented wall is
-    181.4 µs against the headline p50 of 169.5 µs; the ~12 µs difference is the
-    profiler's own global-lock-per-section cost, stated in the results.
+    0.59** (record 0.23, descriptor 0.16, capability 0.14, POSIX 0.05). N's
+    entire read is 29.4 µs with the same hash and I/O rows. The instrumented
+    wall is 183.6 µs against the headline p50 of 169.7 µs; the ~14 µs
+    difference is the profiler's own global-lock-per-section cost, stated in the
+    results.
   * **Cause found and fixed: the same immutable descriptor was decoded twice per
     read.** The stored descriptor was hex-decoded, WCB-decoded, re-encoded and
     hashed on every read (9.2 µs), and the same capability envelope was decoded
     twice — once for the tenant/namespace/root grants, again inside
     `authorize_read` (~5 µs each). Before this session the authorization
-    preamble was ~19 µs of the 187.8 µs; it is now 0.6 µs.
+    preamble was ~19 µs of the 187.8 µs in the R26 measurement; it is now 0.59 µs.
     * `KvReadCache` (`src/kv_capability.rs`, field on `Store`) keeps the
       validated descriptor and its id, keyed by the object record's
       `(id, content, version)`, bounded at 4,096 entries and **dropped whenever
@@ -10172,10 +10173,10 @@ write is now durability-bound, not encode-bound.
       commit fencing the cache, and a rewrite authorised only by its own
       descriptor.
   * Measurement validity **pass**, **`claim_holds: false`**.
-    * Fast path: W p50 **169.5 µs** vs N **28.9 µs** = **5.87×** (was 6.51×),
-      p95 **226.4 µs** vs **31.3 µs** = **7.22×** (was 7.91×), bytes
+    * Fast path: W p50 **169.7 µs** vs N **28.9 µs** = **5.84×** (was 6.51×),
+      p95 **232.3 µs** vs **31.3 µs** = **7.03×** (was 7.91×), bytes
       **0.431×**. C1 and C2 still fail; the tolerance was not widened. W is now
-      **1.64×** M on the same path.
+      **1.63×** M on the same path.
     * Safety unchanged: W accepted 0 of 56 probes, returned 0 bytes, read
       **0 backend bytes**; M accepted 0 but read 766,026 B over 48 requests; N
       accepted 48 and returned the wrong payload 48 times.
