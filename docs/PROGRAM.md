@@ -67,15 +67,28 @@ executable subphases are written `EKB-E1` … `EKB-E6` and `EKB-X22` in
 **2026-11-13 — reprioritised at operator request.** The EKBLOOM trials move to
 the front of the executable backlog. No other item is dropped, merged away or
 silently postponed: the ordering of §A–§E here and of F0–F9 below is unchanged,
-and no format, court, receipt or claim changes. Nothing is implemented and
-nothing is measured. The plan names the EKBLOOM revision it was written against
-(`infinityabundance/EKBLOOM` `8275a41b72c17abdc55bf74b82f319876e587ba0`, crate
-`ekbloom` 0.7.3), the falsifiable gate and declared axis for each subphase, the
-court and receipt pattern for each, and the null result that retires the
-experiment. EKBLOOM remains a space-for-speed experiment that enters the
-representation portfolio only if it wins a declared axis (rule 14); it is not a
-prerequisite for anything, and no court here compares it with a mature
-filesystem (rule 13).
+and no format, court, receipt or claim changes. At that point nothing was
+implemented and nothing was measured. The plan names the EKBLOOM revision it
+was written against (`infinityabundance/EKBLOOM`
+`8275a41b72c17abdc55bf74b82f319876e587ba0`, crate `ekbloom` 0.7.3), the
+falsifiable gate and declared axis for each subphase, the court and receipt
+pattern for each, and the null result that retires the experiment. EKBLOOM
+remained a space-for-speed experiment that enters the representation portfolio
+only if it wins a declared axis (rule 14); it is not a prerequisite for
+anything, and no court here compares it with a mature filesystem (rule 13).
+
+**2026-11-13 — executed and retired.** The trial is complete: `EKB-E1`
+(boundary, exactness, resource bound) **passed**; `EKB-E2` (space) and
+`EKB-E3` (bounded random access) were **lost**, so `docs/EKBLOOM-PLAN.md` §8.2
+retires the line: no payload mode, no planner slot, no `ekbloom` dependency.
+`EKB-E4`/`EKB-E5` were not run (the retirement condition was met first) and
+remain unmeasured; `EKB-E6` and the Go/vector work were not attempted. Receipts
+`bench/receipts/ekbloom-20261113T081205Z.json`,
+`bench/receipts/ekbloom-space-20261113T081552Z.json` and
+`bench/receipts/ekbloom-read-20261113T083231Z.json`; the full method, every
+loss, the confirmed §4.0 prediction and the reproduction commands are in
+[`bench/RESULTS-ekbloom.md`](../bench/RESULTS-ekbloom.md). No shipped code,
+format, court or receipt count changed.
 
 ## Implementation order (each stage ends with tests and a receipt)
 

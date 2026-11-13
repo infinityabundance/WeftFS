@@ -1,8 +1,13 @@
 # EKBLOOM plan — E1–E6 / X22 moved to the front of the executable backlog
 
-**Status:** plan only. Nothing is implemented, nothing is measured, no
-performance number is claimed for WeftFS. Written 2026-11-13 at operator
-request.
+**Status: retired (2026-11-13).** `EKB-E1` passed; `EKB-E2` (space) and
+`EKB-E3` (bounded random access) were lost; under §8.2 the line retires — no
+payload mode, no planner slot, no `ekbloom` dependency. `EKB-E4`/`EKB-E5` were
+not run (the retirement condition was met first) and remain unmeasured;
+`EKB-E6` and the Go/vector work were not attempted. Results:
+[`bench/RESULTS-ekbloom.md`](../bench/RESULTS-ekbloom.md). The plan was written
+2026-11-13 at operator request; the gate text below is retained as written and
+was not re-scoped after any receipt.
 
 **Read against:** `github.com/infinityabundance/EKBLOOM`, default branch `main`,
 commit `8275a41b72c17abdc55bf74b82f319876e587ba0` ("Release 0.7.3:
@@ -656,3 +661,16 @@ version **before** the next measurement, never after a receipt exists.
      §8.2, **E2 and E3 are both lost, so the experiment retires**: no payload
      mode, no planner slot, no dependency. E4/E5/E6 are not run; `EKB-X22` owns
      `bench/RESULTS-ekbloom.md`, `docs/claims.json` and the retirement record.
+
+   * **2026-11-13 — `EKB-X22` executed; per-gate outcome finalised.**
+     `EKB-E1` **pass** (`bench/receipts/ekbloom-20261113T081205Z.json`);
+     `EKB-E2` **loss** (`bench/receipts/ekbloom-space-20261113T081552Z.json`);
+     `EKB-E3` **loss** (`bench/receipts/ekbloom-read-20261113T083231Z.json`);
+     `EKB-E4` **not run**; `EKB-E5` **not run**; `EKB-E6` **not attempted**.
+     `EKB-E4` and `EKB-E5` were skipped by the retirement rule in §8.2, not
+     evaluated and not failed; they remain unmeasured and no receipt exists for
+     them. The verdict, every loss and the confirmed §4.0 prediction are
+     published in [`bench/RESULTS-ekbloom.md`](../bench/RESULTS-ekbloom.md); the
+     retirement claims are in `docs/claims.json`, and the shipped dependency
+     graph was verified to contain no `ekbloom` (`cargo tree -e normal`). No
+     shipped code, format, court or receipt count changed.
