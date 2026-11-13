@@ -310,8 +310,8 @@ another, so the rows add up.
 | frame parse + checksum | — | 0.87 |
 | payload decode | — | 151.68 |
 | exactness compare | 0.85 | 0.90 |
-| **named total** | **29.44** | **183.64** |
-| unnamed residual | 0.96 | 4.37 |
+| **instrumented wall** | **29.44** | **183.64** |
+| unnamed residual (wall minus the rows, per repetition) | 0.96 | 4.37 |
 
 W's whole authorization preamble — object record, descriptor, capability, POSIX — is **0.59 µs** per read. The instrumented ledger runs **154.20 µs** per read above N's, and **0.89×** the uninstrumented W p50 is a single phase: the payload decode.
 <!-- END GENERATED:context-advantage-ledger -->
@@ -319,8 +319,11 @@ W's whole authorization preamble — object record, descriptor, capability, POSI
 The ledger is instrumented, and the profiler is not free: it takes a global lock
 and pushes a sample per section. That is why the instrumented wall is above the
 headline p50, and why a row of a few tenths of a microsecond is an upper bound
-that is mostly the profiler itself. The two numbers that matter are far larger
-than that noise: the payload decode, and the two hash passes every arm pays.
+that is mostly the profiler itself. Each row is an independent median, and the
+residual is the median of (wall minus the rows) inside each repetition, so the
+table is internally consistent without pretending the medians add exactly. The
+two numbers that matter are far larger than that noise: the payload decode, and
+the two hash passes every arm pays.
 
 **The finding is not what R26 assumed.** The *authorization* preamble — object
 record, descriptor decode and identity, capability envelope, grants, POSIX — is
