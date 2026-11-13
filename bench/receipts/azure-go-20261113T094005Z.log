@@ -1,0 +1,45 @@
++ exec docker run --rm --init --name weft-go-court-3005345 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3f9f327144bd9e636afce788bd1a5100148ddcd5 -e WEFT_REPO_WEFTFS_GO=7f55d11a7a66a5c6e542e345d06539d801281a4c -e WEFT_REPO_WEFTCODEC=75f08634824d3f6fe1561a1c523e97f390e85391 -e WEFT_REPO_WEFTCODEC_GO=9812d158bf41be85f73ca667f9e2439661d7db2e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_AZURE_TEST_ENDPOINT=http://weft-azure-azurite-3004017:10000/devstoreaccount1 -e WEFT_AZURE_TEST_CONTAINER=weft-az-20261113t094005z -e WEFT_AZURE_ACCOUNT=devstoreaccount1 -e WEFT_AZURE_KEY=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw== -e WEFT_AZURE_LOCK_LEASE_SECS=60 -e WEFT_AZURE_FENCE_LEASE_SECS=3 -e WEFT_AZURE_RECEIPT=bench/receipts/azure-20261113T094005Z.json -e WEFT_AZURE_TESTS_LOG=bench/receipts/azure-20261113T094005Z.tests.log -e WEFT_AZURE_FENCING_LOG=bench/receipts/azure-20261113T094005Z.fencing.log -e WEFT_AZURE_STAMP=20261113T094005Z -e 'WEFT_AZURE_SERVER_LABEL=Azurite Blob' -e WEFT_AZURE_SERVER_VERSION=3.35.0 -e WEFT_AZURE_SERVER_DIGEST=mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37 --network weft-azure-net-3004017 weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftFS-Go && gofmt -l ./store ./cmd && go test -count=1 -run '\''TestAzure|TestDecodeBase64'\'' ./store -v'
+=== RUN   TestAzureStoreRoundTripOnDouble
+    azure_integration_test.go:93: Azure double counters (writer): requests=122 reads=15 range_reads=0 bytes_read=57239 writes=34 bytes_written=103226 conflicts=0 fences=8 heads=4
+--- PASS: TestAzureStoreRoundTripOnDouble (0.01s)
+=== RUN   TestAzureBlobPlaneCreateOnceRangesAndListing
+--- PASS: TestAzureBlobPlaneCreateOnceRangesAndListing (0.00s)
+=== RUN   TestAzureEndpointThatIgnoresIfNoneMatchIsRefused
+--- PASS: TestAzureEndpointThatIgnoresIfNoneMatchIsRefused (0.00s)
+=== RUN   TestAzureEndpointThatIgnoresIfMatchIsRefused
+--- PASS: TestAzureEndpointThatIgnoresIfMatchIsRefused (0.00s)
+=== RUN   TestAzureLiteralETagEndpointIsNegotiated
+--- PASS: TestAzureLiteralETagEndpointIsNegotiated (0.00s)
+=== RUN   TestAzureWrongKeyIsUnauthorized
+--- PASS: TestAzureWrongKeyIsUnauthorized (0.00s)
+=== RUN   TestAzureOptimisticTwoDisjointCommitters
+--- PASS: TestAzureOptimisticTwoDisjointCommitters (0.01s)
+=== RUN   TestAzureSingleWriterRefusesAnOptimisticStore
+--- PASS: TestAzureSingleWriterRefusesAnOptimisticStore (0.00s)
+=== RUN   TestAzurePlaneStaleHeadIsBusyAndChangesNothing
+--- PASS: TestAzurePlaneStaleHeadIsBusyAndChangesNothing (0.00s)
+=== RUN   TestAzureLiveStoreRoundTrip
+    azure_integration_test.go:647: host-local Azure counters (Writer, live emulator): requests=123 reads=15 bytes_read=57239 writes=34 bytes_written=103226 conflicts=0 fences=8
+--- PASS: TestAzureLiveStoreRoundTrip (0.25s)
+=== RUN   TestAzureLiveConditionalCreateAndCAS
+--- PASS: TestAzureLiveConditionalCreateAndCAS (0.01s)
+=== RUN   TestAzureStringToSignIsExact
+--- PASS: TestAzureStringToSignIsExact (0.00s)
+=== RUN   TestAzureStringToSignOmitsEmptyContentLength
+--- PASS: TestAzureStringToSignOmitsEmptyContentLength (0.00s)
+=== RUN   TestAzureCanonicalQueryAndResource
+--- PASS: TestAzureCanonicalQueryAndResource (0.00s)
+=== RUN   TestAzurePathEncoding
+--- PASS: TestAzurePathEncoding (0.00s)
+=== RUN   TestDecodeBase64AnyIsStrict
+--- PASS: TestDecodeBase64AnyIsStrict (0.00s)
+=== RUN   TestAzureResolveRejectsAmbiguousCredentials
+--- PASS: TestAzureResolveRejectsAmbiguousCredentials (0.00s)
+=== RUN   TestAzureConfigValidation
+--- PASS: TestAzureConfigValidation (0.00s)
+=== RUN   TestAzureDevKeyDecodes
+--- PASS: TestAzureDevKeyDecodes (0.00s)
+=== RUN   TestAzureCrossLanguageHandoff
+--- PASS: TestAzureCrossLanguageHandoff (0.33s)
+PASS
+ok  	github.com/infinityabundance/WeftFS-Go/store	0.622s
