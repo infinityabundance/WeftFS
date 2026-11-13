@@ -543,6 +543,34 @@ fn weight_table() -> Vec<f32> {
     out
 }
 
+/// A stable 64-bit discriminator over every provenance dimension. It is used
+/// only by the fixture generator: two scopes produce *different* element bytes,
+/// exactly as two adapters or two tokenizers would produce different KV state.
+fn scope_tag(scope: &Scope) -> u64 {
+    let mut h = 0xcbf2_9ce4_8422_2325u64;
+    let mut eat = |bytes: &[u8]| {
+        for byte in bytes {
+            h ^= u64::from(*byte);
+            h = h.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    };
+    eat(&scope.model_root);
+    match scope.adapter {
+        Some(adapter) => eat(&adapter),
+        None => eat(b"no-adapter"),
+    }
+    eat(scope.tokenizer_scheme.as_bytes());
+    eat(&scope.tokenizer_vocab.to_le_bytes());
+    eat(&scope.head_count.to_le_bytes());
+    eat(&scope.head_dim.to_le_bytes());
+    eat(scope.positional.as_bytes());
+    eat(scope.dtype.as_bytes());
+    eat(&scope.page_rows.to_le_bytes());
+    eat(&scope.layer_count.to_le_bytes());
+    eat(&scope.salt);
+    h
+}
+
 /// The reference kernel. It *computes* the page element bytes: the fixture was
 /// produced by this function, so "recompute" regenerates real bytes rather than
 /// sleeping. It is a scalar kernel, not an optimized prefill; see the contract.
@@ -550,15 +578,19 @@ fn weight_table() -> Vec<f32> {
 /// Each element is a reduction over `CONTEXT` products of a token value and a
 /// weight, with the weight index driven by a per-element hash so the result is
 /// not periodic in the page geometry: the payload is high-entropy in the way a
-/// real KV page is, and does not flatter either arm's codec.
-fn recompute_page(prefix: usize, layer: usize) -> Vec<u8> {
+/// real KV page is. The reduction is seeded by the scope, so two provenance
+/// scopes produce different element bytes and "accepted but wrong" is
+/// observable, as it would be in production.
+fn recompute_page(scope: &Scope, prefix: usize, layer: usize) -> Vec<u8> {
     let tokens = token_values(prefix, layer);
     let weights = weight_table();
     let mask = CONTEXT - 1;
+    let tag = scope_tag(scope);
     let mut out = Vec::with_capacity(PAGE_BYTES);
     for row in 0..PAGE_ROWS as usize {
         for element in 0..HEAD_ELEMS as usize {
             let mut h = 0x9E37_79B9_7F4A_7C15u64
+                ^ tag
                 ^ (element as u64).wrapping_mul(0xD1B5_4A32_D192_ED03)
                 ^ ((row as u64) << 17)
                 ^ ((layer as u64) << 37)
@@ -1134,6 +1166,7 @@ fn measure_a(
     arm: Arm,
     store: &Store,
     pages: &[(usize, usize, Vec<u8>)],
+    variant_pages: &[Vec<(usize, usize, Vec<u8>)>],
     scope: &Scope,
     variants: &[Scope],
     index: &MIndex,
@@ -1188,7 +1221,11 @@ fn measure_a(
         principals.insert(scope.label.clone(), capability(roots)?);
         for variant in variants {
             let mut variant_roots = Vec::new();
-            for (prefix, layer, bytes) in pages {
+            let slot = variants
+                .iter()
+                .position(|candidate| candidate.label == variant.label)
+                .ok_or_else(|| "variant slot missing".to_owned())?;
+            for (prefix, layer, bytes) in &variant_pages[slot] {
                 let frame = weftcodec::kv_prov::encode_kv_prov_page(
                     &page_input(variant, *prefix, *layer),
                     bytes,
@@ -1256,13 +1293,15 @@ fn measure_a(
     // ---- Cross-scope probes.
     for (slot, variant) in variants.iter().enumerate() {
         let variant_principal = principals.get(&variant.label).cloned();
-        for (prefix, layer, expected) in pages {
+        for (prefix, layer, expected) in &variant_pages[slot] {
+            let prefix = *prefix;
+            let layer = *layer;
             let before = store.backend_stats();
             let started = Instant::now();
             let mut tally = std::mem::take(&mut out.probes[slot].1);
             match arm {
                 Arm::N => {
-                    let path = format!("/kv/{}", n_name(variant, *prefix, *layer));
+                    let path = format!("/kv/{}", n_name(variant, prefix, layer));
                     match resolve(store, &path) {
                         None => {
                             tally.denied += 1;
@@ -1281,7 +1320,7 @@ fn measure_a(
                 }
                 Arm::M => {
                     let (returned, exact, _validated) =
-                        m_read(store, index, variant, *prefix, *layer, expected, false)?;
+                        m_read(store, index, variant, prefix, layer, expected, false)?;
                     if returned == 0 {
                         tally.denied += 1;
                     } else {
@@ -1293,7 +1332,7 @@ fn measure_a(
                     }
                 }
                 Arm::W => {
-                    let path = format!("/kv/{}", kv_name(*prefix, *layer));
+                    let path = format!("/kv/{}", kv_name(prefix, layer));
                     match resolve(store, &path) {
                         None => tally.denied += 1,
                         Some(id) => {
@@ -1362,7 +1401,7 @@ fn measure_a(
     // ---- Recompute baseline: re-run the kernel that produced the page.
     for _ in 0..3 {
         let started = Instant::now();
-        let bytes = recompute_page(pages[0].0, pages[0].1);
+        let bytes = recompute_page(scope, pages[0].0, pages[0].1);
         out.recompute.push(started.elapsed());
         if bytes != pages[0].2 {
             out.recompute_exact = false;
@@ -2017,7 +2056,18 @@ fn run_arm(args: &Args) -> Result<(), String> {
     let variants = variant_scopes();
     let pages: Vec<(usize, usize, Vec<u8>)> = positions()
         .into_iter()
-        .map(|(prefix, layer)| (prefix, layer, recompute_page(prefix, layer)))
+        .map(|(prefix, layer)| (prefix, layer, recompute_page(&scope, prefix, layer)))
+        .collect();
+    // What each variant request *would* expect. Only S0's pages are stored, so a
+    // cross-scope acceptance is a page whose bytes differ from the request's.
+    let variant_pages: Vec<Vec<(usize, usize, Vec<u8>)>> = variants
+        .iter()
+        .map(|variant| {
+            positions()
+                .into_iter()
+                .map(|(prefix, layer)| (prefix, layer, recompute_page(variant, prefix, layer)))
+                .collect()
+        })
         .collect();
 
     let cpu_before = cpu_ms();
@@ -2046,7 +2096,16 @@ fn run_arm(args: &Args) -> Result<(), String> {
         "note": index.note,
     });
     let rounds = if args.reduced { 4 } else { 8 };
-    let mut measurement = measure_a(arm, &store, &pages, &scope, &variants, &index, rounds)?;
+    let mut measurement = measure_a(
+        arm,
+        &store,
+        &pages,
+        &variant_pages,
+        &scope,
+        &variants,
+        &index,
+        rounds,
+    )?;
     measurement.open_ms = open_ms;
     measurement.index_load = index_load;
     drop(store);
