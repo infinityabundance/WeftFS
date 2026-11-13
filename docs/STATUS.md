@@ -10521,3 +10521,78 @@ E1/E2, version 2 §9 for E3), and the plan is
   `L >= len` rule excludes rank-1 tensors from the larger region classes; the
   gate uses the pooled p95 and is unaffected, and the receipt records the
   arithmetic.
+
+## Subphase X11/X12/N06/N12/T009 — release CI and truthful release/artifact status (2026-11-13)
+
+The audit that opened this subphase described the programme as if v1.3.0 were the
+latest release and PyPI were unpublished. Both were stale. This entry records
+what was observed, what was added, and what remains unverifiable from the
+development host.
+
+* **Ground truth, observed before any edit.** `git tag` lists `v1.4.2` in the
+  parent and in all three subprojects; `gh release list` shows a `v1.4.2`
+  release (not draft, not prerelease) in all four repositories, and the WeftFS
+  release assets carry the same two digests as the PyPI files. The PyPI JSON API
+  reports `info.version` `1.4.2` with 1.2.0, 1.4.0, 1.4.1 and 1.4.2 present and
+  none yanked; crates.io reports `weftcodec` and `weftfs` `1.4.2`, none yanked.
+  The live long description is the R25 replacement text: it names no version, no
+  artifact file and no digest, and makes no statement about its own upload.
+* **Added `.github/workflows/ci.yml`.** The program had only the tag-driven
+  `containers.yml`. The new workflow runs the cheap deterministic gates on
+  `pull_request`, on pushes to `main`/`staging`, and on dispatch: rustfmt,
+  clippy, the store and codec Rust suites, the Go gates for both subprojects, and
+  the host-only documentation and conformance guards. A TLA job is
+  dispatch-only. Top-level `permissions: contents: read`, no secrets, no
+  `pull_request_target`, `concurrency` with cancellation, and a
+  `timeout-minutes` on every job. Every action is pinned to a commit SHA
+  resolved from the action's own repository on 2026-11-13, with the tag in a
+  trailing comment.
+* **The workflow is unrun, and says so.** GitHub Actions cannot be executed from
+  this host. The file states that it has never had a run; the YAML was parsed
+  and every `run:` script path was checked to exist. No CI result is claimed.
+* **Two gates are non-blocking on purpose.** At this tree rustfmt reports open
+  drift across a set of files that includes `src/store.rs`, and clippy reports a
+  large warning backlog plus one deny-by-default lint error in
+  `tests/packs.rs` (an expression with a multiplied-by-zero operand). Neither is
+  rewritten here: mass reformatting and mass lint fixes are unrelated to this
+  subphase and would obscure review. Both jobs carry a `TODO` naming the current
+  counts and run with `continue-on-error`, so the drift is visible without
+  blocking a merge.
+* **FUSE stays in the courts.** `cargo test --features fuse` and
+  `WeftFS-Go/fusefs` need `/dev/fuse` and `fusermount`; the Go court image has
+  neither. The PR jobs therefore run the store, model, index and `cmd` packages,
+  and the FUSE suites remain in `scripts/verify-all.sh`.
+* **Every command was run in this session.** The Rust store suite, the WeftCodec
+  suite, both Go gates and the six host guards passed in the rust and go courts
+  or on the host (the guards are host-only because the court images lack `jq`
+  and a Python interpreter). The exact commands, the observed results and the
+  counts are in the workflow comments and `$GITHUB_STEP_SUMMARY` text, and in
+  the subphase report. No command is cited that was not run.
+* **N06 placeholders: none remain.** A tree-wide markdown search for
+  `PLACEHOLDER` finds nothing in `docs/RELEASE-v1.4.0.md`,
+  `docs/RELEASE-v1.4.1.md` or `docs/RELEASE-v1.4.2.md`; the verification and
+  artifact sections of those notes are filled from receipts. Nothing was
+  invented to fill a section.
+* **N12/X12 corrections, added as dated lines rather than rewrites.** The
+  README gains a dated "how to read this page" note after the generated
+  current-result block: the current shipped write names its receipt, stamp and
+  revision; the larger ratios in the release sections are labelled historical
+  self-improvements from the bounded pipeline at their own receipt and revision;
+  release-vs-staging position is stated for all four repositories; and the
+  observed registry state is stated. The `RELEASE-v1.4.2` note gains a dated
+  post-upload section recording the live digests and the live long description;
+  its earlier "not uploaded / 404" sentences are retained as written, because
+  they were true at that note's stamp. The `RELEASE-v1.4.0` note gains a dated
+  line recording that its "the 1.4.1 upload replaces it" prediction resolved
+  only partly. No generated region and no receipt was edited.
+* **What could not be verified.** GHCR package versions: the packages API
+  returns HTTP 403 without `read:packages`, so no image digest is confirmed or
+  contradicted here; the digests quoted in the release note remain that
+  session's observation. GitHub Actions execution: unrun. Nothing else was taken
+  on trust: versions, checksums, yanked flags, release assets and tag commits
+  were read from the registries or `gh` in this session.
+* **Residual.** `containers.yml` still references actions by mutable major tag;
+  it is the publishing path and was deliberately not retargeted here. The
+  rustfmt and clippy backlogs remain open, as does the deny-by-default lint in
+  `tests/packs.rs`. `scripts/check-commit-identity.sh` does not exist in this
+  tree, so the guards job does not invoke it.
