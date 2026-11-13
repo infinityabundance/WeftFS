@@ -4473,16 +4473,25 @@
      "template": "embedding's level-3 frame, but publication and the durability barrier are the"
     },
     {
-     "template": "binder at this operating point. The shipped write is **{{write.r22.min_ms}} ms**"
+     "template": "binder at this operating point. The **frontier row `C-pipe4`** is **{{write.r22.min_ms}} ms**"
     },
     {
-     "template": "least-contended / {{write.r22.med_ms}} ms median (G3, {{write.ratio}}\u00d7 A) at"
+     "template": "least-contended / {{write.r22.med_ms}} ms median ({{write.ratio}}\u00d7 A) at"
     },
     {
-     "template": "{{write.r22.footprint_b}} B. The final rung (\u2264 336 ms) is **not reached**; \u00a77 states"
+     "template": "{{write.r22.footprint_b}} B, but it drives"
     },
     {
-     "template": "the measured limiter and the single change most likely to close it."
+     "template": "`Store::prepare_tensor_group_pipelined`, which **no shipped CLI verb reaches**."
+    },
+    {
+     "template": "The shipped sequential planned writer re-measures at {{ladder.r25_ms}} ms in the R25"
+    },
+    {
+     "template": "contract court (`augmentation-local-20261113T004000Z.json`). The final rung"
+    },
+    {
+     "template": "(\u2264 336 ms) is **not reached**; \u00a77 states the measured limiter."
     }
    ]
   },
@@ -4729,7 +4738,7 @@
     ],
     "verdicts": {
      "A": "native anchor: fastest, largest",
-     "C-pipe4": "shipped default: inside the measurement band, dominated on the point estimates",
+     "C-pipe4": "frontier row (store API, not a shipped CLI default): inside the measurement band, dominated on the point estimates",
      "C-pipe4-zpar4": "inside the band; not adopted (pool policy)",
      "C-pipe4-t19off": "numerical frontier; not policy-eligible (disables the level-19 gate)",
      "C-pipe4-gate4": "inside the band",
@@ -4757,7 +4766,8 @@
     "stamp_path": "generated_utc",
     "stamp": "20261112T202816Z",
     "revision_path": "environment.revisions.WeftFS",
-    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4"
+    "revision": "ccc6d695b1140005a023b0787a0130337b3611e4",
+    "notes": {}
    }
   },
   {

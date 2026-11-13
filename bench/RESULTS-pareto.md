@@ -6,14 +6,26 @@ byte changed: every planned row in the frontier court publishes
 `default_c_matches_official_court: true` re-proves the shipped C row against the
 R3 contract court in the same session.
 
+> **Correction (R25, 2026-11-13).** This document called `C-pipe4` the "shipped
+> default". It is not: the row drives
+> `Store::prepare_tensor_group_pipelined`, which no shipped CLI verb reaches.
+> The shipped default is the sequential planned writer, re-measured at 974.1 ms
+> (2.98× A) in `augmentation-local-20261113T004000Z.json` (stamp
+> 20261113T004503Z, revision `0a01606e2654`). The R22 rows below
+> are a **store-API frontier**, not the product default; "shipped" in this
+> historical document means "the best store-API composition at R22".
+
 <!-- BEGIN GENERATED:pareto-headline (scripts/perf_numbers.py) -->
 **Headline.** Chunk-parallel ZSTD is implemented, proved byte-identical, and
 **does not move the frozen fixture's write wall** — it cuts the 272 MB
 embedding's level-3 frame, but publication and the durability barrier are the
-binder at this operating point. The shipped write is **592.6 ms**
-least-contended / 600.9 ms median (G3, 1.78× A) at
-282,106,049 B. The final rung (≤ 336 ms) is **not reached**; §7 states
-the measured limiter and the single change most likely to close it.
+binder at this operating point. The **frontier row `C-pipe4`** is **592.6 ms**
+least-contended / 600.9 ms median (1.78× A) at
+282,106,049 B, but it drives
+`Store::prepare_tensor_group_pipelined`, which **no shipped CLI verb reaches**.
+The shipped sequential planned writer re-measures at 974.1 ms in the R25
+contract court (`augmentation-local-20261113T004000Z.json`). The final rung
+(≤ 336 ms) is **not reached**; §7 states the measured limiter.
 <!-- END GENERATED:pareto-headline -->
 
 Chunk-parallel ZSTD is implemented and proved byte-identical; it cuts the
@@ -259,7 +271,7 @@ Pareto-optimal unless it is non-dominated in one of the two sets above.
 | config | min ms | median ms | p95 ms | footprint B | CPU ms | RSS KiB | restore ms | verdict |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | `A` | 332.0 | 339.7 | 6,882.5 | 424,439,296 | 100 | 270,532 | 347.7 | native anchor: fastest, largest |
-| `C-pipe4` | 592.6 | 600.9 | 13,578.4 | 282,106,049 | 1,150 | 939,256 | 1,401.7 | shipped default: inside the measurement band, dominated on the point estimates |
+| `C-pipe4` | 592.6 | 600.9 | 13,578.4 | 282,106,049 | 1,150 | 939,256 | 1,401.7 | frontier row (store API, not a shipped CLI default): inside the measurement band, dominated on the point estimates |
 | `C-pipe4-zpar4` | 584.8 | 618.5 | 12,195.4 | 282,106,049 | 1,150 | 926,240 | 1,412.7 | inside the band; not adopted (pool policy) |
 | `C-pipe4-t19off` | 575.9 | 593.7 | 11,458.2 | 282,106,049 | 1,060 | 1,019,624 | 1,415.0 | numerical frontier; not policy-eligible (disables the level-19 gate) |
 | `C-pipe4-gate4` | 586.3 | 594.9 | 11,146.5 | 282,106,049 | 1,150 | 938,848 | 1,409.2 | inside the band |
@@ -349,15 +361,15 @@ per-tensor write with no WeftFS layer.
 | family | row | wall ms | CPU ms | footprint B | strategies | restore ms | exact |
 |---|---|---:|---:|---:|---|---:|---|
 | Qwen2.5-0.5B-Instruct (A = 346.6) | C (sequential) | 1,217.6 | 1,140 | 282,106,049 | 35 m9 / 50 zstd / 16 raw | 1,435.2 | ✅ |
-| | **C-pipe4 (shipped)** | **628.4** | 1,170 | 282,106,049 | same | 1,430.1 | ✅ |
+| | **C-pipe4 (frontier)** | **628.4** | 1,170 | 282,106,049 | same | 1,430.1 | ✅ |
 | | C-pipe4-zpar3 | 626.0 | 1,310 | 282,106,049 | same | 1,456.9 | ✅ |
 | | C-legacy (exhaustive) | 6,703.0 | 21,850 | 282,106,049 | same | 1,422.2 | ✅ |
 | pythia-70m step 0 (A = 240.4) | C (sequential) | 12,204.4 | 25,560 | 163,964,176 | **76 zstd** | 709.1 | ✅ |
-| | **C-pipe4 (shipped)** | **8,143.8** | 29,760 | 163,964,176 | same | 706.9 | ✅ |
+| | **C-pipe4 (frontier)** | **8,143.8** | 29,760 | 163,964,176 | same | 706.9 | ✅ |
 | | C-pipe4-zpar3 | 7,190.0 | 25,760 | 163,964,176 | same | 695.0 | ✅ |
 | | C-legacy | 12,228.8 | 25,580 | 163,964,176 | same | 696.0 | ✅ |
 | pythia-70m step 8 (A = 238.8) | C (sequential) | 12,176.8 | 25,490 | 163,830,373 | 76 zstd | 700.5 | ✅ |
-| | **C-pipe4 (shipped)** | **7,512.6** | 27,330 | 163,830,373 | same | 695.7 | ✅ |
+| | **C-pipe4 (frontier)** | **7,512.6** | 27,330 | 163,830,373 | same | 695.7 | ✅ |
 | | C-pipe4-zpar3 | 7,143.0 | 25,790 | 163,830,373 | same | 701.8 | ✅ |
 | | C-legacy | 12,247.4 | 25,510 | 163,830,373 | same | 711.5 | ✅ |
 | Qwen2.5-3B-Instruct (A = 471.2, receipt `211500Z`) | C-pipe4 | 1,554.3 | 2,090 | 421,550,249 | 13 m9 / 12 zstd | 2,153.6 | ✅ |
