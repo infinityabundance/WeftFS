@@ -1084,20 +1084,34 @@ fn read_page(
     match arm {
         Arm::N => {
             let path = format!("/kv/{}", n_name(scope, prefix, layer));
-            let id = resolve(store, &path).ok_or_else(|| format!("N: `{path}` missing"))?;
+            let id = {
+                let _resolve =
+                    weftfs::phase_profile::scope(weftfs::phase_profile::Phase::ReadResolve);
+                resolve(store, &path)
+            }
+            .ok_or_else(|| format!("N: `{path}` missing"))?;
             let bytes = store.read_object(id).map_err(|err| err.to_string())?;
-            let exact = bytes == expected;
+            let exact = weftfs::phase_profile::timed(weftfs::phase_profile::Phase::Compare, || {
+                bytes == expected
+            });
             Ok((bytes.len(), exact))
         }
         Arm::M => Err("M reads go through the index, not read_page".to_owned()),
         Arm::W => {
             let path = format!("/kv/{}", kv_name(prefix, layer));
-            let id = resolve(store, &path).ok_or_else(|| format!("W: `{path}` missing"))?;
+            let id = {
+                let _resolve =
+                    weftfs::phase_profile::scope(weftfs::phase_profile::Phase::ReadResolve);
+                resolve(store, &path)
+            }
+            .ok_or_else(|| format!("W: `{path}` missing"))?;
             let principal = principal.ok_or_else(|| "W: no principal".to_owned())?;
             let page = store
                 .read_kv_prov_page(id, principal, NOW_NS)
                 .map_err(|err| err.to_string())?;
-            let exact = page.bytes == expected;
+            let exact = weftfs::phase_profile::timed(weftfs::phase_profile::Phase::Compare, || {
+                page.bytes == expected
+            });
             Ok((page.bytes.len(), exact))
         }
     }
@@ -1160,6 +1174,7 @@ struct MeasurementA {
     recompute_exact: bool,
     open_ms: f64,
     index_load: Json,
+    base_principal: Option<Principal>,
 }
 
 fn measure_a(
@@ -1188,6 +1203,7 @@ fn measure_a(
         recompute_exact: true,
         open_ms: 0.0,
         index_load: Json::Null,
+        base_principal: None,
     };
 
     // ---- W setup: the descriptor id the caller expects per scope/position.
@@ -1257,6 +1273,7 @@ fn measure_a(
 
     // ---- Compatible reuse (the happy path).
     let principal = principals.get(&scope.label).cloned();
+    out.base_principal = principal.clone();
     for _ in 0..rounds {
         for (prefix, layer, expected) in pages {
             let before = store.backend_stats();
@@ -1429,32 +1446,159 @@ fn measure_a(
         .map_err(|err| err.to_string())?;
         let mut decode19 = Vec::new();
         let mut decode12 = Vec::new();
+        let mut planes_only = Vec::new();
+        let mut page_hash = Vec::new();
+        let mut descriptor_parse = Vec::new();
+        let mut descriptor_root = Vec::new();
         for _ in 0..8 {
             let parsed =
                 weftcodec::frame::Frame::parse(&frame19, &limits).map_err(|err| err.to_string())?;
             let started = Instant::now();
-            weftcodec::kv_prov::decode_kv_prov_page(&parsed, &limits)
+            let decoded = weftcodec::kv_prov::decode_kv_prov_page(&parsed, &limits)
                 .map_err(|err| err.to_string())?;
             decode19.push(started.elapsed());
+            let started = Instant::now();
+            let metadata = weftcodec::kv_prov::kv_prov_metadata(&parsed, &limits)
+                .map_err(|err| err.to_string())?;
+            descriptor_parse.push(started.elapsed());
+            let started = Instant::now();
+            let recomputed = metadata.root(&limits).map_err(|err| err.to_string())?;
+            descriptor_root.push(started.elapsed());
+            if recomputed != decoded.root {
+                return Err("decode diagnostic: descriptor root mismatch".to_owned());
+            }
             let parsed =
                 weftcodec::frame::Frame::parse(&frame12, &limits).map_err(|err| err.to_string())?;
             let started = Instant::now();
             weftcodec::kv_cache::decode_kv_page(&parsed, &limits).map_err(|err| err.to_string())?;
             decode12.push(started.elapsed());
+            // Split the mode-19 decode: the payload decode (byte planes plus
+            // the word join) against the reconstructed-page hash. The body is
+            // `LE32 descriptor length || descriptor || payload`.
+            let body = parsed.body;
+            let descriptor_len = u32::from_le_bytes([body[0], body[1], body[2], body[3]]) as usize;
+            let payload = &body[4 + descriptor_len..];
+            let started = Instant::now();
+            let bytes = weftcodec::kv_cache::decode_planes(
+                decoded.descriptor.page.dtype,
+                payload,
+                decoded.descriptor.page.page_bytes,
+            )
+            .map_err(|err| err.to_string())?;
+            planes_only.push(started.elapsed());
+            let started = Instant::now();
+            let root = weftcodec::hash::hash_domain("weft/chunk/v1", &bytes);
+            page_hash.push(started.elapsed());
+            if root != decoded.descriptor.payload_hash {
+                return Err("decode diagnostic: payload hash mismatch".to_owned());
+            }
         }
         out.diagnostics.insert(
             "decode_only".to_owned(),
             json!({
                 "mode19": latency_summary(&decode19),
                 "mode12": latency_summary(&decode12),
+                "mode19_planes_only": latency_summary(&planes_only),
+                "mode19_page_hash_only": latency_summary(&page_hash),
+                "mode19_descriptor_parse": latency_summary(&descriptor_parse),
+                "mode19_descriptor_root": latency_summary(&descriptor_root),
                 "mode19_frame_bytes": frame19.len(),
                 "mode12_frame_bytes": frame12.len(),
-                "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O",
+                "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash and the descriptor identity from each other",
             }),
         );
     }
 
     Ok(out)
+}
+
+/// Instrumented attribution pass over the fast path.
+///
+/// This is **not** the headline number: enabling the profiler takes a global
+/// lock per section, and the wall it reports includes that. It exists so the
+/// ledger is measured rather than guessed. `residual_us` is every cost no phase
+/// names (allocations, the second object-record lookup, access counters, call
+/// overhead).
+fn measure_ledger(
+    arm: Arm,
+    store: &Store,
+    pages: &[(usize, usize, Vec<u8>)],
+    scope: &Scope,
+    principal: Option<&Principal>,
+    index: &MIndex,
+    rounds: usize,
+) -> Result<Json, String> {
+    use weftfs::phase_profile::{self, Phase};
+
+    phase_profile::begin();
+    let started = Instant::now();
+    let mut exact = 0u64;
+    let mut total = 0u64;
+    let mut backend_bytes = 0u64;
+    let mut requests = 0u64;
+    for _ in 0..rounds {
+        for (prefix, layer, expected) in pages {
+            let before = store.backend_stats();
+            let (bytes, is_exact) = match arm {
+                Arm::M => {
+                    let (returned, exact, _validated) =
+                        m_read(store, index, scope, *prefix, *layer, expected, false)?;
+                    (returned, exact)
+                }
+                _ => read_page(arm, store, scope, *prefix, *layer, expected, principal)?,
+            };
+            let after = store.backend_stats();
+            backend_bytes += after.bytes_read.saturating_sub(before.bytes_read);
+            requests +=
+                (after.reads + after.range_reads).saturating_sub(before.reads + before.range_reads);
+            total += 1;
+            if is_exact && bytes == expected.len() {
+                exact += 1;
+            }
+        }
+    }
+    let wall = started.elapsed();
+    let snapshot = phase_profile::finish();
+
+    let reads = total.max(1) as f64;
+    let mut phases = JsonMap::new();
+    let mut sum_ns: u128 = 0;
+    for phase in Phase::ALL {
+        let Some(totals) = snapshot.phases.get(phase.as_str()) else {
+            continue;
+        };
+        if totals.count == 0 {
+            continue;
+        }
+        sum_ns += totals.total_ns;
+        phases.insert(
+            phase.as_str().to_owned(),
+            json!({
+                "sections": totals.count,
+                "total_ms": totals.total_ns as f64 / 1_000_000.0,
+                "us_per_read": totals.total_ns as f64 / 1_000.0 / reads,
+                "p50_us": totals.percentile_ns(0.50) as f64 / 1_000.0,
+                "p95_us": totals.percentile_ns(0.95) as f64 / 1_000.0,
+            }),
+        );
+    }
+    let wall_ns = wall.as_nanos();
+    let residual_ns = wall_ns.saturating_sub(sum_ns);
+    Ok(json!({
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "reads": total,
+        "exact": exact,
+        "wall_ms": wall.as_secs_f64() * 1000.0,
+        "us_per_read": wall_ns as f64 / 1_000.0 / reads,
+        "backend_bytes": backend_bytes,
+        "requests": requests,
+        "phases": phases,
+        "sum_phases_ms": sum_ns as f64 / 1_000_000.0,
+        "sum_phases_us_per_read": sum_ns as f64 / 1_000.0 / reads,
+        "residual_ms": residual_ns as f64 / 1_000_000.0,
+        "residual_us_per_read": residual_ns as f64 / 1_000.0 / reads,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+    }))
 }
 
 /// The metadata-loss probe: the arm's own metadata database is gone.
@@ -1758,21 +1902,20 @@ fn expected_output_digest(
     sha256_hex(&buffer)
 }
 
-fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
-    let root = work.join("store-b");
-    let store = open_readonly(&root)?;
-
-    let mut samples = Vec::new();
+/// One dependency-aware recovery pass, exactly as the contract demands it.
+///
+/// Factored out so the instrumented attribution pass runs the *same* work on
+/// the same store: `samples` receives one duration per output, and the return
+/// value is `(outputs, logical_bytes, buffer, demanded_subset)`.
+fn recovery_pass(
+    arm: Arm,
+    store: &Store,
+    samples: &mut Vec<Duration>,
+) -> Result<(u64, u64, Vec<u8>, Vec<u8>), String> {
     let mut outputs = 0u64;
     let mut logical = 0u64;
     let mut buffer = Vec::new();
-    // The bytes of the *demanded* output set, in contract order, for every arm.
-    // N materializes more than the contract demands; its demanded subset is
-    // still comparable byte for byte.
     let mut demanded: Vec<u8> = Vec::new();
-    let before = store.backend_stats();
-    let started = Instant::now();
-
     match arm {
         Arm::N => {
             for index in 0..TENSORS {
@@ -1906,9 +2049,62 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
             outputs += 1;
         }
     }
+    Ok((outputs, logical, buffer, demanded))
+}
+
+fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
+    let root = work.join("store-b");
+    let store = open_readonly(&root)?;
+
+    let mut samples = Vec::new();
+    let before = store.backend_stats();
+    let started = Instant::now();
+
+    let (outputs, logical, buffer, demanded) = recovery_pass(arm, &store, &mut samples)?;
 
     let wall = started.elapsed();
     let after = store.backend_stats();
+
+    // Instrumented attribution of the same recovery on the same store. This is a
+    // second pass over warm data, so it is labelled and is never the headline
+    // number; it exists so the byte and wall gap can be attributed.
+    let ledger = {
+        use weftfs::phase_profile::{self, Phase};
+        phase_profile::begin();
+        let ledger_started = Instant::now();
+        let mut ignored = Vec::new();
+        let (ledger_outputs, ledger_logical, _, _) = recovery_pass(arm, &store, &mut ignored)?;
+        let ledger_wall = ledger_started.elapsed();
+        let snapshot = phase_profile::finish();
+        let mut phases = JsonMap::new();
+        for phase in Phase::ALL {
+            let Some(totals) = snapshot.phases.get(phase.as_str()) else {
+                continue;
+            };
+            if totals.count == 0 {
+                continue;
+            }
+            phases.insert(
+                phase.as_str().to_owned(),
+                json!({
+                    "sections": totals.count,
+                    "total_ms": totals.total_ns as f64 / 1_000_000.0,
+                    "p50_us": totals.percentile_ns(0.50) as f64 / 1_000.0,
+                    "p95_us": totals.percentile_ns(0.95) as f64 / 1_000.0,
+                }),
+            );
+        }
+        json!({
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": ledger_outputs,
+            "logical_bytes": ledger_logical,
+            "wall_ms": ledger_wall.as_secs_f64() * 1000.0,
+            "phases": phases,
+            "sum_phases_ms": snapshot.total_ms(),
+            "residual_ms": ledger_wall.as_secs_f64() * 1000.0 - snapshot.total_ms(),
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+        })
+    };
     let digest = match arm {
         Arm::N => sha256_hex(&demanded),
         _ => sha256_hex(&buffer),
@@ -1957,6 +2153,7 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
             .saturating_sub(before.reads + before.range_reads),
         "latency": latency_summary(&samples),
         "causal_closure": closure,
+        "ledger": ledger,
     });
 
     // Missing dependency: remove one activation the derived artifact needs.
@@ -2108,6 +2305,15 @@ fn run_arm(args: &Args) -> Result<(), String> {
     )?;
     measurement.open_ms = open_ms;
     measurement.index_load = index_load;
+    let ledger = measure_ledger(
+        arm,
+        &store,
+        &pages,
+        &scope,
+        measurement.base_principal.as_ref(),
+        &index,
+        8,
+    )?;
     drop(store);
 
     // Metadata loss: physically remove the application metadata, then re-read
@@ -2211,6 +2417,7 @@ fn run_arm(args: &Args) -> Result<(), String> {
             "recovery": recovery_report,
             "missing_dependency": missing_dependency,
         },
+        "fast_path_ledger": ledger,
         "rss_kib": peak_rss_kib(),
         "cpu_ms": cpu_ms() - cpu_before,
         "expected_digest": expected_digest,
@@ -2573,6 +2780,104 @@ fn assemble(args: &Args) -> Result<(), String> {
                     .map(str::to_owned)
             })
             .collect();
+
+        // ---- Fast-path ledger: median `us_per_read` per named phase, plus the
+        // instrumented wall and the unnamed residual. A phase absent from every
+        // repetition is absent from the row, never zero-filled.
+        let fast_ledger = {
+            let walls: Vec<f64> = rows
+                .iter()
+                .filter_map(|row| pick(row, &["fast_path_ledger", "us_per_read"]))
+                .collect();
+            let residuals: Vec<f64> = rows
+                .iter()
+                .filter_map(|row| pick(row, &["fast_path_ledger", "residual_us_per_read"]))
+                .collect();
+            let mut phases = JsonMap::new();
+            let phase_names: BTreeSet<String> = rows
+                .iter()
+                .filter_map(|row| row.get("fast_path_ledger")?.get("phases")?.as_object())
+                .flat_map(|map| map.keys().cloned().collect::<Vec<String>>())
+                .collect();
+            for name in phase_names {
+                let values: Vec<f64> = rows
+                    .iter()
+                    .filter_map(|row| {
+                        pick(row, &["fast_path_ledger", "phases", &name, "us_per_read"])
+                    })
+                    .collect();
+                phases.insert(name, spread(&values));
+            }
+            json!({
+                "instrumented_us_per_read": spread(&walls),
+                "residual_us_per_read": spread(&residuals),
+                "phases_us_per_read": Json::Object(phases),
+                "reads_per_rep": rows
+                    .iter()
+                    .filter_map(|row| pick(row, &["fast_path_ledger", "reads"]))
+                    .collect::<Vec<f64>>()
+                    .first()
+                    .copied()
+                    .unwrap_or(0.0),
+            })
+        };
+
+        // ---- Recovery ledger: the same phases over the whole recovery pass.
+        let recovery_ledger = {
+            let walls: Vec<f64> = rows
+                .iter()
+                .filter_map(|row| pick(row, &["b", "recovery", "ledger", "wall_ms"]))
+                .collect();
+            let residuals: Vec<f64> = rows
+                .iter()
+                .filter_map(|row| pick(row, &["b", "recovery", "ledger", "residual_ms"]))
+                .collect();
+            let mut phases = JsonMap::new();
+            let phase_names: BTreeSet<String> = rows
+                .iter()
+                .filter_map(|row| {
+                    row.get("b")?
+                        .get("recovery")?
+                        .get("ledger")?
+                        .get("phases")?
+                        .as_object()
+                })
+                .flat_map(|map| map.keys().cloned().collect::<Vec<String>>())
+                .collect();
+            for name in phase_names {
+                let values: Vec<f64> = rows
+                    .iter()
+                    .filter_map(|row| {
+                        pick(
+                            row,
+                            &["b", "recovery", "ledger", "phases", &name, "total_ms"],
+                        )
+                    })
+                    .collect();
+                let sections: Vec<f64> = rows
+                    .iter()
+                    .filter_map(|row| {
+                        pick(
+                            row,
+                            &["b", "recovery", "ledger", "phases", &name, "sections"],
+                        )
+                    })
+                    .collect();
+                phases.insert(
+                    name,
+                    json!({
+                        "total_ms": spread(&values),
+                        "sections": spread(&sections),
+                    }),
+                );
+            }
+            json!({
+                "instrumented_wall_ms": spread(&walls),
+                "residual_ms": spread(&residuals),
+                "phases": Json::Object(phases),
+                "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+            })
+        };
         let missing: Vec<&Json> = rows
             .iter()
             .filter_map(|row| row.get("b").and_then(|b| b.get("missing_dependency")))
@@ -2593,6 +2898,8 @@ fn assemble(args: &Args) -> Result<(), String> {
             "recovery_digests": recovery_digests,
             "missing_dependency": missing,
             "causal_closure": closures,
+            "fast_path_ledger": fast_ledger,
+            "recovery_ledger": recovery_ledger,
         });
         arms.insert(arm.to_owned(), row);
     }

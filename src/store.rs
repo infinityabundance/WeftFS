@@ -20,6 +20,7 @@ use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
 use crate::auth::Principal;
+use crate::context::CapabilityContext;
 use crate::backend::{
     BackendKind, BackendStats, Capabilities, HeadExpectation, Key, KeyKind, StorageBackend,
 };
@@ -39,6 +40,7 @@ use crate::index_chain::{IndexChain, SegmentKind};
 use crate::object_cache::{
     CacheKey, ObjectCache, ObjectCacheOptions, ObjectCacheStats, MAX_CACHE_ENTRIES,
 };
+use crate::phase_profile::{self, Phase};
 use crate::quota::{
     normalize_policy, QuotaBudget, QuotaCounters, QuotaPolicyRecord, QuotaPrincipal, QuotaRecord,
     QuotaState, QuotaUsageOp, QUOTA_MAGIC, QUOTA_POLICY_MAGIC,
@@ -917,6 +919,11 @@ pub struct Store {
     /// cache is advisory: every hit is a table that was fully validated (root,
     /// lengths, base cross-checks) before insertion.
     overlay_tables: Mutex<OverlayTableCache>,
+    /// Derived decode results for the KV read fast path: the validated
+    /// descriptor of an object record, and the decoded capability of a verified
+    /// envelope. Both are pure functions of content-addressed inputs; no
+    /// authorization decision is retained. See [`crate::kv_capability::KvReadCache`].
+    kv_read_cache: Mutex<crate::kv_capability::KvReadCache>,
     /// Opt-in instrumentation of the backend mutex (subphase R13). Off unless
     /// a court harness enables it; never consulted by a commit, receipt, or
     /// format decision.
@@ -1170,6 +1177,7 @@ impl Store {
             content_index: Mutex::new(None),
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
+            kv_read_cache: Mutex::new(crate::kv_capability::KvReadCache::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
             read_pool,
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
@@ -1371,6 +1379,7 @@ impl Store {
             content_index: Mutex::new(None),
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
+            kv_read_cache: Mutex::new(crate::kv_capability::KvReadCache::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
             read_pool,
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
@@ -1654,7 +1663,12 @@ impl Store {
             BlobKind::Object => Key::object(hash),
             BlobKind::Manifest => Key::manifest(hash),
         };
+        let (io_phase, hash_phase) = match kind {
+            BlobKind::Object => (Phase::BlobIoObject, Phase::BlobHashObject),
+            BlobKind::Manifest => (Phase::BlobIoManifest, Phase::BlobHashManifest),
+        };
         let (bytes, io_ns) = {
+            let _io = phase_profile::scope(io_phase);
             let started = Instant::now();
             // A batching blob plane keeps a member it just published in its own
             // open pack (or its deferred list) until the catalog names it. That
@@ -1686,7 +1700,7 @@ impl Store {
             self.lock_probe.note_io(io_ns);
         }
         self.note_probe_bytes(bytes.len() as u64);
-        let actual = identity::h(domain, &bytes);
+        let actual = phase_profile::timed(hash_phase, || identity::h(domain, &bytes));
         if actual != hash {
             return Err(Error::corrupt(format!(
                 "blob {} fails its hash check (expected {hash}, got {actual})",
@@ -1701,6 +1715,7 @@ impl Store {
     pub(crate) fn read_manifest_keyed(&self, id: Hash32) -> Result<Manifest> {
         let bytes =
             self.read_blob_verified_keyed(BlobKind::Manifest, id, identity::MANIFEST_DOMAIN)?;
+        let _decode = phase_profile::scope(Phase::ManifestDecode);
         let value = crate::wcb_util::decode(&bytes)?;
         Manifest::from_wcb(&value)
     }
@@ -1714,6 +1729,12 @@ impl Store {
     }
 
     /// Capability evidence from the writable open, if any.
+    /// The handle's KV fast-path decode cache (crate-internal; the caches hold
+    /// decode results only and are fenced by the head generation).
+    pub(crate) fn kv_read_cache(&self) -> &Mutex<crate::kv_capability::KvReadCache> {
+        &self.kv_read_cache
+    }
+
     pub fn plane_probes(&self) -> Option<&crate::planes::PlaneProbes> {
         self.plane_probes.as_ref()
     }
@@ -3182,7 +3203,36 @@ impl Store {
         principal: &Principal,
         now_ns: i64,
     ) -> Result<AuthorizedRead> {
-        if let Some(capability) = crate::context::principal_capability(principal)? {
+        let capability = crate::context::principal_capability(principal)?;
+        self.authorize_read_in_with_capability(state, id, principal, now_ns, capability.as_ref())
+    }
+
+    /// [`Store::authorize_read`] with a capability the caller already decoded.
+    ///
+    /// The ordering is identical to [`Store::authorize_read_in`]: the envelope's
+    /// validity window is checked before the object lookup, then the POSIX mode
+    /// and the `weft.acl.read` ACL. Passing an already-decoded context only
+    /// avoids decoding the same immutable envelope twice; every check still runs.
+    pub fn authorize_read_with_capability(
+        &self,
+        id: Hash32,
+        principal: &Principal,
+        now_ns: i64,
+        capability: Option<&CapabilityContext>,
+    ) -> Result<AuthorizedRead> {
+        self.authorize_read_in_with_capability(&self.state, id, principal, now_ns, capability)
+    }
+
+    /// The shared body of the two authorization entry points.
+    pub fn authorize_read_in_with_capability(
+        &self,
+        state: &State,
+        id: Hash32,
+        principal: &Principal,
+        now_ns: i64,
+        capability: Option<&CapabilityContext>,
+    ) -> Result<AuthorizedRead> {
+        if let Some(capability) = capability {
             capability.check_valid_at(now_ns)?;
         }
         let record = state
@@ -3918,12 +3968,14 @@ impl Store {
                 checked_usize(offset.saturating_sub(chunk_start), "chunk-local read start")?;
             let local_end =
                 checked_usize((end - chunk_start).min(chunk.len), "chunk-local read end")?;
+            let _assemble = phase_profile::scope(Phase::Assemble);
             out.extend_from_slice(&bytes[local_start..local_end]);
         }
         if out.len() as u64 != end - offset {
             return Err(Error::corrupt("assembled range length mismatch"));
         }
         if verify_whole && offset == 0 && end == size {
+            let _verify = phase_profile::scope(Phase::ContentVerify);
             if identity == ContentIdentity::MerkleV3 {
                 let root = identity::merkle_root_from_chunks(
                     chunks.iter().map(|chunk| (chunk.len, chunk.hash)),

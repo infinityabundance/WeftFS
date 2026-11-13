@@ -117,6 +117,40 @@ pub enum Phase {
     /// file and directory a group wrote (nested in [`Phase::ManifestCommit`],
     /// because the commit path performs it before the commit record).
     BackendSync,
+
+    // ---- read path (disjoint leaves; none nests inside another) ----------
+    /// Resolving a path to an object id.
+    ReadResolve,
+    /// Fetching the object record a KV read authorizes against.
+    AuthState,
+    /// Decoding the stored capability descriptor and deriving its id.
+    AuthDescriptor,
+    /// Decoding the capability envelope, checking its validity window, and
+    /// evaluating the tenant, namespace and root grants.
+    AuthCapability,
+    /// POSIX mode / ACL authorization.
+    AuthPosix,
+    /// Backend read of an immutable manifest blob (I/O only).
+    BlobIoManifest,
+    /// Hash check of a manifest blob against its key (verification only).
+    BlobHashManifest,
+    /// WCB decode of manifest bytes into a `Manifest`.
+    ManifestDecode,
+    /// Backend read of an immutable object blob (I/O only).
+    BlobIoObject,
+    /// Hash check of an object blob against its key (verification only).
+    BlobHashObject,
+    /// Copying chunk bytes into the caller's buffer.
+    Assemble,
+    /// Whole-content digest (or Merkle root) over the assembled file bytes.
+    ContentVerify,
+    /// Frame header parse and trailing frame checksum.
+    FrameParse,
+    /// Mode-12/mode-19 payload decode: byte planes, word join, page hash and
+    /// descriptor root.
+    PageDecode,
+    /// Exactness comparison of a returned page with the expected bytes.
+    Compare,
 }
 
 impl Phase {
@@ -144,6 +178,21 @@ impl Phase {
             Phase::Analyze => "analyze",
             Phase::AnalyzeMode9 => "analyze_mode9",
             Phase::BackendSync => "backend_sync",
+            Phase::ReadResolve => "read_resolve",
+            Phase::AuthState => "auth_state",
+            Phase::AuthDescriptor => "auth_descriptor",
+            Phase::AuthCapability => "auth_capability",
+            Phase::AuthPosix => "auth_posix",
+            Phase::BlobIoManifest => "blob_io_manifest",
+            Phase::BlobHashManifest => "blob_hash_manifest",
+            Phase::ManifestDecode => "manifest_decode",
+            Phase::BlobIoObject => "blob_io_object",
+            Phase::BlobHashObject => "blob_hash_object",
+            Phase::Assemble => "assemble",
+            Phase::ContentVerify => "content_verify",
+            Phase::FrameParse => "frame_parse",
+            Phase::PageDecode => "page_decode",
+            Phase::Compare => "compare",
         }
     }
 
@@ -167,7 +216,7 @@ impl Phase {
     }
 
     /// Every phase, in report order.
-    pub const ALL: [Phase; 21] = [
+    pub const ALL: [Phase; 36] = [
         Phase::SourceRead,
         Phase::Digest,
         Phase::Encode,
@@ -189,6 +238,21 @@ impl Phase {
         Phase::Analyze,
         Phase::AnalyzeMode9,
         Phase::BackendSync,
+        Phase::ReadResolve,
+        Phase::AuthState,
+        Phase::AuthDescriptor,
+        Phase::AuthCapability,
+        Phase::AuthPosix,
+        Phase::BlobIoManifest,
+        Phase::BlobHashManifest,
+        Phase::ManifestDecode,
+        Phase::BlobIoObject,
+        Phase::BlobHashObject,
+        Phase::Assemble,
+        Phase::ContentVerify,
+        Phase::FrameParse,
+        Phase::PageDecode,
+        Phase::Compare,
     ];
 }
 

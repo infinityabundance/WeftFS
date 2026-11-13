@@ -35,6 +35,7 @@ use crate::auth::Principal;
 use crate::context::CapabilityContext;
 use crate::error::{Error, Result};
 use crate::identity::Hash32;
+use crate::phase_profile::{self, Phase};
 use crate::state::ObjectRecord;
 use crate::store::Store;
 
@@ -69,6 +70,65 @@ pub const KV_DENIED: &str = "kv page is not available to this principal";
 
 fn denied() -> Error {
     Error::new(crate::error::Class::Unauthorized, KV_DENIED)
+}
+
+/// Maximum descriptors retained per store handle.
+pub const MAX_KV_DESCRIPTOR_CACHE: usize = 4_096;
+/// Maximum decoded capability envelopes retained per store handle.
+pub const MAX_KV_CAPABILITY_CACHE: usize = 1_024;
+
+/// One decoded capability envelope, kept beside the envelope it came from.
+///
+/// The envelope is retained so a cache hit can be *proved* to belong to the
+/// principal's envelope; the ids below are a lookup hint, never the proof.
+struct CachedCapability {
+    envelope: weftcodec::capability::CapabilityEnvelope,
+    context: std::sync::Arc<CapabilityContext>,
+}
+
+/// Bounded caches of derived decode results for the KV read fast path.
+///
+/// Both caches hold **decode results only**, never an authorization decision:
+///
+/// * `descriptors` maps a stored object's `(id, content root, record version)`
+///   to a descriptor whose identity was checked against its canonical bytes when
+///   it was inserted. Those three values are fields of the object record, so a
+///   hit cannot describe a different record, and the whole map is dropped
+///   whenever the store's head generation changes.
+/// * `capabilities` maps a *verified* envelope's `(envelope_id, blob_id)` to the
+///   decoded `CapabilityContext`. A hit is only used when the cached envelope is
+///   equal to the principal's envelope, so a forged id pair cannot serve another
+///   grant's scope.
+///
+/// Every read still evaluates the validity window, the tenant, the namespace
+/// grant, the root grant and the POSIX/ACL rules, in that order, against the
+/// cached decode. Revoking a grant, expiring an envelope or changing an object
+/// record therefore changes the answer on the very next read.
+#[derive(Default)]
+pub struct KvReadCache {
+    generation: u64,
+    descriptors: std::collections::HashMap<(Hash32, Hash32, Hash32), (StoredKvDescriptor, Hash32)>,
+    capabilities: std::collections::HashMap<(Hash32, Hash32), CachedCapability>,
+}
+
+impl KvReadCache {
+    /// Drop every descriptor decoded under a different head generation.
+    fn fence(&mut self, generation: u64) {
+        if self.generation != generation {
+            self.descriptors.clear();
+            self.generation = generation;
+        }
+    }
+
+    /// Number of retained descriptors (diagnostics and tests).
+    pub fn descriptor_entries(&self) -> usize {
+        self.descriptors.len()
+    }
+
+    /// Number of retained capability decodes (diagnostics and tests).
+    pub fn capability_entries(&self) -> usize {
+        self.capabilities.len()
+    }
 }
 
 /// A KV page's capability descriptor.
@@ -661,6 +721,108 @@ impl Store {
         descriptor_of(&record)
     }
 
+    /// The validated descriptor of `record`, and its id.
+    ///
+    /// The decode is a pure function of the object record, so the result is
+    /// retained in the head-fenced [`KvReadCache`]. A hit is only ever a
+    /// descriptor that was checked against its own canonical bytes and recorded id
+    /// when it was inserted; a record created by any later write has a different
+    /// `(id, content, version)` triple, and every entry is dropped when the head
+    /// generation changes.
+    fn kv_descriptor_of(&self, record: &ObjectRecord) -> Result<(StoredKvDescriptor, Hash32)> {
+        let key = (record.id, record.content, record.version);
+        {
+            let mut cache = self
+                .kv_read_cache()
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            cache.fence(self.generation());
+            if let Some(hit) = cache.descriptors.get(&key) {
+                return Ok(hit.clone());
+            }
+        }
+        let descriptor = descriptor_of_any(record)?;
+        let descriptor_id = descriptor.descriptor_id()?;
+        let mut cache = self
+            .kv_read_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        cache.fence(self.generation());
+        if cache.descriptors.len() >= MAX_KV_DESCRIPTOR_CACHE {
+            cache.descriptors.clear();
+        }
+        cache
+            .descriptors
+            .insert(key, (descriptor.clone(), descriptor_id));
+        Ok((descriptor, descriptor_id))
+    }
+
+    /// The decoded capability carried by `principal`'s verified envelope.
+    ///
+    /// `None` means the principal carries no envelope. A cached decode is only
+    /// reused when it was produced from an envelope equal to this one, so the
+    /// entry cannot answer for a different grant. Nothing about *authorization*
+    /// is cached: every caller still evaluates the validity window and the
+    /// grants on the returned context.
+    fn kv_capability_of(
+        &self,
+        principal: &Principal,
+    ) -> Result<Option<std::sync::Arc<CapabilityContext>>> {
+        let Some(verified) = principal.envelope() else {
+            return Ok(None);
+        };
+        let key = (verified.envelope_id, verified.blob_id);
+        {
+            let cache = self
+                .kv_read_cache()
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(hit) = cache.capabilities.get(&key) {
+                if hit.envelope == verified.envelope {
+                    return Ok(Some(std::sync::Arc::clone(&hit.context)));
+                }
+            }
+        }
+        let context = std::sync::Arc::new(CapabilityContext::from_envelope(&verified.envelope)?);
+        let mut cache = self
+            .kv_read_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if cache.capabilities.len() >= MAX_KV_CAPABILITY_CACHE {
+            cache.capabilities.clear();
+        }
+        cache.capabilities.insert(
+            key,
+            CachedCapability {
+                envelope: verified.envelope.clone(),
+                context: std::sync::Arc::clone(&context),
+            },
+        );
+        Ok(Some(context))
+    }
+
+    /// Retained descriptor decodes in this handle's read cache.
+    ///
+    /// The cache is fenced before it is reported, so the count is always the
+    /// number of entries valid at the current head generation: a stale entry is
+    /// dropped rather than counted.
+    pub fn kv_read_cache_descriptors(&self) -> usize {
+        let mut cache = self
+            .kv_read_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        cache.fence(self.generation());
+        cache.descriptor_entries()
+    }
+
+    /// Retained capability decodes in this handle's read cache (diagnostics).
+    pub fn kv_read_cache_capabilities(&self) -> usize {
+        self.kv_read_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .capability_entries()
+    }
+
     /// The provenance-bound descriptor of a stored mode-19 page.
     pub fn kv_prov_descriptor(&self, id: Hash32) -> Result<KvProvDescriptor> {
         let record = self.object_meta(id)?;
@@ -685,19 +847,20 @@ impl Store {
         principal: &Principal,
         now_ns: i64,
     ) -> Result<(StoredKvDescriptor, Vec<u8>)> {
-        let Ok(record) = self.object_meta(id) else {
+        let Ok(record) = ({
+            let _state = phase_profile::scope(Phase::AuthState);
+            self.object_meta(id)
+        }) else {
             return Err(denied());
         };
-        let Ok(descriptor) = descriptor_of_any(&record) else {
+        let Ok((descriptor, descriptor_id)) = ({
+            let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+            self.kv_descriptor_of(&record)
+        }) else {
             return Err(denied());
         };
-        let Ok(descriptor_id) = descriptor.descriptor_id() else {
-            return Err(denied());
-        };
-        let Some(verified) = principal.envelope() else {
-            return Err(denied());
-        };
-        let Ok(capability) = CapabilityContext::from_envelope(&verified.envelope) else {
+        let capability_phase = phase_profile::scope(Phase::AuthCapability);
+        let Ok(Some(capability)) = self.kv_capability_of(principal) else {
             return Err(denied());
         };
         if capability.check_valid_at(now_ns).is_err() {
@@ -709,7 +872,11 @@ impl Store {
         {
             return Err(denied());
         }
-        let Ok(authorized) = self.authorize_read(id, principal, now_ns) else {
+        drop(capability_phase);
+        let Ok(authorized) = ({
+            let _posix = phase_profile::scope(Phase::AuthPosix);
+            self.authorize_read_with_capability(id, principal, now_ns, Some(capability.as_ref()))
+        }) else {
             return Err(denied());
         };
         let Ok(bytes) = self.read_object_authorized(&authorized) else {
@@ -786,8 +953,12 @@ impl Store {
             ));
         };
         let limits = Limits::default();
-        let frame = Frame::parse(&bytes, &limits).map_err(Error::from)?;
-        let decoded = kv_prov::decode_kv_prov_page(&frame, &limits).map_err(Error::from)?;
+        let frame = phase_profile::timed(Phase::FrameParse, || Frame::parse(&bytes, &limits))
+            .map_err(Error::from)?;
+        let decoded = phase_profile::timed(Phase::PageDecode, || {
+            kv_prov::decode_kv_prov_page(&frame, &limits)
+        })
+        .map_err(Error::from)?;
         let from_frame = KvProvDescriptor {
             tenant: descriptor.tenant.clone(),
             model: decoded.descriptor.page.model.clone(),
