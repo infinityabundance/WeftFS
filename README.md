@@ -861,19 +861,20 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
 Published on GHCR, anonymously pullable:
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftcodec:v1.3.0
-docker pull ghcr.io/infinityabundance/weftcodec-go:v1.3.0
-docker pull ghcr.io/infinityabundance/weftfs:v1.3.0
-docker pull ghcr.io/infinityabundance/weftfs-go:v1.3.0
+docker pull ghcr.io/infinityabundance/weftcodec:v1.4.0
+docker pull ghcr.io/infinityabundance/weftcodec-go:v1.4.0
+docker pull ghcr.io/infinityabundance/weftfs:v1.4.0
+docker pull ghcr.io/infinityabundance/weftfs-go:v1.4.0
 ```
 
-`latest` is also published. **The v1.4.0 images are not published in this
-release run**; `v1.3.0` is what GHCR serves today and the commands above name
-it deliberately. The v1.2.0 images remain pullable, and the v1.3.0 images are
-published: `weftfs` `sha256:07c70fd7…`, `weftcodec`
-`sha256:0b8cc85f…`, `weftcodec-go` `sha256:ad627083…`, `weftfs-go`
-`sha256:396cb94b…` (image-index digests read live, recorded in
-`bench/receipts/release-artifacts-20261111T200115Z.json`; a rebuild is not
+`latest` is also published. The v1.4.0 images are published and anonymously
+pullable, so the commands above name them; the v1.4.1 images are produced by the
+tag workflows when the `v1.4.1` tag is pushed. The v1.3.0 and v1.2.0 images
+remain pullable. Published v1.4.0 image-index digests: `weftfs`
+`sha256:f516c999…`, `weftcodec` `sha256:89246fe7…`, `weftcodec-go`
+`sha256:bd44215d…`, `weftfs-go` `sha256:be61d573…` (read live with
+`docker manifest inspect`, recorded in
+`bench/receipts/release-artifacts-20261113T011500Z.json`; a rebuild is not
 bit-reproducible). FUSE mounts require `--device /dev/fuse
 --cap-add SYS_ADMIN`; codec and store-only commands do not. See
 [`docs/containers.md`](docs/containers.md).

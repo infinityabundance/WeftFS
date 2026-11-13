@@ -20,29 +20,29 @@ image on a `v*` tag or manual dispatch.
 | `ghcr.io/infinityabundance/weftfs` | `weftfs` (Rust) | store + FUSE CLI |
 | `ghcr.io/infinityabundance/weftfs-go` | `weftfs` (Go) | store + FUSE CLI |
 
-Tags: `v1.3.0` and `latest` (release workflow). The v1.2.0 images remain
-published, and the four `v1.3.0` images are published; their image-index
-digests are recorded in
-`bench/receipts/release-artifacts-20261111T200115Z.json`. Images are
-built from the program home commit and the pinned submodule commits. **The
-v1.4.0 images are not published in the v1.4.0 release run** (`staging` is
-1.4.0; publication is the coordinator's registry step), so every command below
-names `v1.3.0`, which is what GHCR serves.
+Tags: `v1.4.0` and `latest` (release workflow). The four `v1.4.0` images are
+published and anonymously pullable; the `v1.3.0` and `v1.2.0` images remain
+published. Image-index digests and the registry state observed on 2026-11-13
+are recorded in `bench/receipts/release-artifacts-20261113T011500Z.json`.
+Images are built from the program home commit and the pinned submodule commits.
+**This tree is 1.4.1**; the `v1.4.1` images are produced by the tag workflows
+when the tag is pushed. The commands below name `v1.4.0`, which is what GHCR
+serves until then.
 
 ## Pull and run
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftfs-go:v1.3.0
-docker run --rm ghcr.io/infinityabundance/weftcodec:v1.3.0 --help
+docker pull ghcr.io/infinityabundance/weftfs-go:v1.4.0
+docker run --rm ghcr.io/infinityabundance/weftcodec:v1.4.0 --help
 
 # Store operations need a writable volume:
 docker run --rm -v "$PWD/store:/store" \
-  ghcr.io/infinityabundance/weftfs:v1.3.0 --store /store init
+  ghcr.io/infinityabundance/weftfs:v1.4.0 --store /store init
 
 # Mounting a FUSE view requires the device and capability:
 docker run --rm -it --device /dev/fuse --cap-add SYS_ADMIN \
   -v "$PWD/store:/store" -v "$PWD/mnt:/mnt" \
-  ghcr.io/infinityabundance/weftfs:v1.3.0 mount --store /store --mountpoint /mnt --foreground
+  ghcr.io/infinityabundance/weftfs:v1.4.0 mount --store /store --mountpoint /mnt --foreground
 ```
 
 Use `--cap-add SYS_ADMIN` only for mounts; codec/store-only operations do not
@@ -64,18 +64,21 @@ the workflow attempts to set visibility to public.
 The same release publishes the libraries on crates.io:
 
 ```toml
-weftcodec = "1.3.0"
-weftfs = "1.3.0"
+weftcodec = "1.4.0"
+weftfs = "1.4.0"
 ```
 
 `weftcodec` is the codec/framing library and CLI; `weftfs` is the store plus
-FUSE frontend (the `fuse` feature enables mounting). The v1.2.0 crates remain
-published, and crates.io serves `weftcodec 1.3.0` and `weftfs 1.3.0`; the live
-checksums are recorded in
-`bench/receipts/release-artifacts-20261111T200115Z.json`. **The tree is 1.4.0**
-(`Cargo.toml`, `WeftCodec/Cargo.toml`) but the 1.4.0 crates are built and
-dry-run-checked only; the `cargo add` versions above stay at 1.3.0 so they work
-as written until the coordinator runs `scripts/publish-crates.sh` for 1.4.0.
+FUSE frontend (the `fuse` feature enables mounting). crates.io serves
+`weftcodec 1.4.0` (checksum
+`7f24d38382f7894903cc04763493530b48a5cc13d8e4b66fa08e0f82ea756882`) and
+`weftfs 1.4.0` (checksum
+`d94ff6e7803a7ae7af807c5b4fa162b60f1002fa1b3388e086a63562a4d06be0`); the live
+state is recorded in `bench/receipts/release-artifacts-20261113T011500Z.json`.
+**The tree is 1.4.1** (`Cargo.toml`, `WeftCodec/Cargo.toml`); the 1.4.1 crates
+are built and dry-run-checked, and `scripts/publish-crates.sh` publishes them
+in order (weftcodec first). The versions above stay at 1.4.0 so they work as
+written until that step runs.
 See `docs/RELEASE-v1.4.0.md`, `docs/RELEASE-v1.3.0.md`, the previous
 `docs/RELEASE-v1.2.0.md`,
 `docs/RELEASE-v1.1.0.md`,
