@@ -222,6 +222,18 @@ run_orchestrated_court() {
 # environment without Python >= 3.8 skips with a printed reason (exit 78).
 run_orchestrated_court perf_numbers perf_numbers bash scripts/perf_numbers_court.sh
 
+# X06/X07/X08/N08/N09 resource courts: the one stage budget, the active-handle
+# cap, packed-plane races (Rust scenarios plus Rust<->Go handoff), the restore
+# cost profile and the cross-stage stress court. The aggregate uses the
+# reduced configuration (2 repetitions, restore sizes 1 and 10); the cited
+# receipts `restore-budget|handle-cap|packed-races|restore-cost|stage-budget-
+# 20261113T125506Z.json` are the full run. A host without Docker, or one missing
+# a court image, prints exactly one `resource_courts: skip <reason>` line and
+# exits 78; the aggregate records a skip, never a pass.
+run_orchestrated_court resource_courts resource_courts \
+  env WEFT_RESOURCE_REPS=2 WEFT_COST_REPS=2 WEFT_COST_SIZES=1,10 \
+  bash scripts/resource_courts.sh --reduced
+
 # The wheel long description is `python/README.md`, baked in at build time. It
 # must not assert which version a registry serves, whether this artifact was
 # uploaded, or a digest of itself: that sentence is false on upload and makes

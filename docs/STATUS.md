@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,116** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,130** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10967,3 +10967,48 @@ because its image has no git, which is why the bundle gate also runs on the
 host. `git status --porcelain` does not list ignored files, so a receipt moved
 under an ignore pattern would escape `package-receipts.sh` (no such pattern
 exists today).
+
+## 2026-11-13 — X06/X07/X08/N08/N09: one budget, one handle cap, packed races, restore cost
+
+Parent `staging` `4d55d74` (code+receipts) plus this docs commit; WeftFS-Go
+`d2fd5dd`. Not pushed. Receipts: `restore-budget`, `handle-cap`, `packed-races`,
+`restore-cost`, `stage-budget`, all stamp `20261113T125506Z` at revision
+`5b49da3f`, all checks pass. `scripts/resource_courts.sh` is registered in
+`scripts/verify-all.sh` as `resource_courts` (reduced: 2 reps, sizes 1 and 10;
+environment-only skip path).
+
+* **X06** `src/stage_budget.rs`: one admission object (FIFO tickets, worker cap,
+  in-flight byte budget, oversize-single, RAII release, per-request and
+  budget-wide cancellation). The restore admits one group per tensor covering
+  its tensor worker, shard workers and tile workers; widths are clamped
+  deterministically (shards first) and `effective_widths()` is the pure
+  function behind them. `RestorePipelineOptions` gains `budget`/`cancel`/`stage`;
+  `::budgeted(budget)` is the measured default (2 shard workers,
+  `max(1, cap/2)` tensor workers). Tests `tests/restore_budget.rs` 8/8.
+* **X07** `ReadHandlePool` caps simultaneously active handles
+  (`MAX_ACTIVE_HANDLES = 64`, RAII lease, `0` = pre-X07 control), reported as
+  `observed_max_active_handles`/`cap_waits`. Go had the same unbounded path;
+  `WeftFS-Go/store/read_pool.go` gains the same cap with
+  `SetReadPoolActiveCap`/`Options.ReadPoolActive`. Tests
+  `tests/handle_cap.rs` 6/6 and `store/read_pool_active_test.go`.
+* **X08** `tests/packed_races.rs` states the discovery invariant and runs five
+  scenarios (racing seal/catalog/commit with readers and same-handle
+  read-backs; aborted group; real `abort()` mid-seal; GC with readers and a
+  writer; cancelled reader), each ending `verify --full` clean.
+  `store/packed_races_test.go` adds both cross-language directions. No product
+  defect found; two court defects (a flat handle cannot read a packed store; a
+  reader must snapshot the published list before it opens) are recorded.
+* **N08** new `tensor_decode`/`logical_root` phases; a whole-tensor read no
+  longer copies the decoded buffer (`WEFT_TENSOR_READ_COPY=1` control) and the
+  report SHA-256 moved to the decode worker (`WEFT_RESTORE_WRITER_SHA=1`
+  control). Both are measured as **not** wins at 100 x 1 MiB (268.4 / 268.0 /
+  268.1 ms) and are published as such. The dominant term is the mode-9 decode;
+  a single 64 MiB tensor restores 657.7 ms at 1 shard worker vs 381.4 ms at 2
+  (1.72x), which is why the budgeted default uses shard parallelism.
+  `examples/restore_cost_court.rs`; `bench/RESULTS-resource-courts.md`.
+* **N09** `TensorPipelineOptions::budget` charges encode workers and worker
+  bytes to the same `StageBudget`. Stress arms at caps 1/2/4/8, an oversize
+  tensor, twelve cancellation rounds, a maintenance thread and concurrent
+  read+write; high-water marks never exceed the cap, nothing is lost, no stage
+  is starved. Overlap is 1.02x sequential at cap 4 and 0.88x at cap 8 — reported
+  as a mixed result, not a win. `docs/STAGE-BUDGET.md`.

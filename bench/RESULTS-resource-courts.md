@@ -42,6 +42,11 @@ the unbudgeted 4×4 control on the same fixture is 2.16 ms — the cap costs
 is the price of never exceeding four.
 
 <!-- BEGIN GENERATED:resource-courts (scripts/perf_numbers.py) -->
+* **X06**: at cap 4 the best row is **2.61 ms** p50 (2 tensor workers, 2 shard workers) and the measured default is **2.86 ms**; the unbudgeted 4×4 control is **2.40 ms**, so the cap costs **+21 %** on this fixture. At cap 1 the best is **8.46 ms**; at cap 8 the default reaches **1.92 ms**.
+* **N08 dominant tensor**: one 64 MiB, 8-shard tensor restores in **657.70 ms** with one shard worker and **381.35 ms** with two — shard parallelism is the only restore-side lever for a single dominant tensor.
+* **N08 100-tensor restore** (100 × 1 MiB, 4 tensor workers): **268.42 ms** p50 with the worker-side SHA-256 and no copy; **267.95 ms** with the pre-N08 copy restored and **268.05 ms** with the writer-side SHA-256 control. Neither change is a win at this scale. A 2-row region read is **5.28 ms**; the resumed 10-tensor usable set is **118.01 ms**.
+* **X07**: 16 capped readers reach **243,509 reads/s**; at 128 readers the uncapped control reaches **271,497 reads/s** and the cap of 64 yields **67,109 reads/s** — the cap costs a factor of about four exactly where it binds.
+* **N09**: running the encode and restore stages concurrently takes **1.022×** the sequential pair at cap 4 and **0.881×** at cap 8. The policy bounds both stages; it does not promise an overlap win.
 <!-- END GENERATED:resource-courts -->
 
 ## X07 — a hard cap on active handles
@@ -136,3 +141,20 @@ The policy bounds the damage; it does not promise an overlap win.
 scripts/resource_courts.sh            # full run, 5 reps, sizes 1,10,100
 scripts/resource_courts.sh --reduced  # the verify-all configuration
 ```
+
+## Claim values (checked verbatim by `scripts/check-claims.sh`)
+
+- `x06_one_budget`: observed 1/2/4/8 active workers at caps 1/2/4/8, every configuration byte-identical
+- `x06_oversize_completes`: 8 oversized admissions, 2,097,752 bytes restored, verify clean
+- `x06_recommended_default`: RestorePipelineOptions::budgeted
+- `x07_active_cap`: cap 64 default, asserted by observed_max_active_handles
+- `x07_cap_cost`: see generated block in RESULTS-resource-courts.md
+- `x07_go_parity`: WeftFS-Go store/read_pool_active_test.go
+- `x08_invariant`: stated in tests/packed_races.rs and the receipt
+- `x08_scenarios`: 5 Rust tests, 2 Go cross-language tests
+- `n08_decode_dominant`: phases in the restore-cost receipt
+- `n08_no_copy_not_a_win`: 268.4 ms (no copy) vs 268.0 ms (copy control)
+- `n08_worker_sha_not_a_win`: 268.4 ms (worker SHA) vs 268.1 ms (writer SHA)
+- `n08_dominant_tensor_shard_parallel`: 657.7 ms -> 381.4 ms
+- `n09_cross_stage`: all four caps, maintenance admitted every round
+- `n09_overlap_not_a_win`: published as a loss
