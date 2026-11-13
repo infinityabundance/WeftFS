@@ -1,0 +1,22 @@
+CHECK rows_complete pass rows per arm [("N", 3), ("M", 3), ("W", 3)], expected 3
+CHECK interleaved_orders pass distinct orders 3; slot->arms {1: ["M", "N", "W"], 2: ["M", "N", "W"], 3: ["M", "N", "W"]}
+CHECK compatible_reuse_exact_every_arm pass N 32/32 M 32/32 W 32/32 (min across reps)
+CHECK n_probe_is_live pass N accepted 48 probes (min across reps); a zero would make the probe vacuous
+CHECK w_zero_incompatible_accepted pass W accepted 0 across every rep (max)
+CHECK w_zero_bytes_on_denial pass W returned 0 logical bytes on probes (max)
+CHECK m_incompatible_accepted pass M (governing arm, full value validation) accepted 0 (max)
+CHECK refusal_emits_nothing_N pass N logical bytes returned on probes: 3145728
+CHECK refusal_emits_nothing_M pass M logical bytes returned on probes: 0
+CHECK refusal_emits_nothing_W pass W logical bytes returned on probes: 0
+CHECK recovery_outputs_exact_every_arm pass expected digest Some("2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"); all arms matched in every rep: true
+CHECK w_causal_closure_verified pass W resolved the derived artifact's two declared parents to live objects
+CHECK missing_dependency_fails_closed pass every arm refused after one activation was removed
+CHECK w_recovery_loads_the_manifest_once pass W checkpoint manifest loads per recovery pass: 1 (max across reps)
+CHECK recompute_regenerates_the_page pass the measured recompute kernel reproduced the stored page bytes
+GATE f1_w_rejects_cross_scope holds W accepted 0 and returned 0 bytes
+GATE f2_probe_is_live holds N accepted 48 (min)
+GATE f3_baseline_does_not_tie holds M accepted 0 incompatible and reused 0 after metadata loss; a tie here refutes the claim
+GATE f4_recovery_does_not_materialize_more holds W materialized 270336 B, M 270336 B for the identical output set
+GATE c1_fast_path_p50 fails W p50 174.2 us vs N 29.2 us = 5.96x (declared <= 2x)
+GATE c2_fast_path_p95 fails W p95 242.5 us vs N 33.8 us = 7.18x (declared <= 2.5x)
+GATE c3_fast_path_bytes holds W 28313 B/request vs N 65699 B/request = 0.43x (declared <= 1.1x)
