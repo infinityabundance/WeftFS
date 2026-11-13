@@ -414,10 +414,10 @@ loss (efficiency falls with N). Receipt
 | `artifacts.wheel_sha` | 9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928 | text | wheel sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_bytes` | 156,977 | B | sdist size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_sha` | cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295 | text | sdist sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
-| `build.wheel_sha` | 74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
-| `build.wheel_bytes` | 115,540 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
-| `build.sdist_sha` | 9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
-| `build.sdist_bytes` | 156,293 | B | sdist size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.wheel_sha` | 92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.wheel_bytes` | 115,889 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.sdist_sha` | 773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.sdist_bytes` | 156,971 | B | sdist size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.pypi.wheel_sha` | 41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.pypi.wheel_bytes` | 115,851 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.pypi.sdist_sha` | 2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
