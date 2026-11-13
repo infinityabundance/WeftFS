@@ -1,0 +1,382 @@
+{
+  "checks": {
+    "failed": 0,
+    "ok": true,
+    "passed": 30,
+    "rows": [
+      {
+        "check": "control.concurrency1.unbounded",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap0.concurrency1.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "control.concurrency4.unbounded",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap0.concurrency4.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "control.concurrency16.unbounded",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap0.concurrency16.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "control.concurrency64.unbounded",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap0.concurrency64.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "control.concurrency128.unbounded",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap0.concurrency128.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency1.within_cap",
+        "detail": "1 <= 8",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency1.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency4.within_cap",
+        "detail": "4 <= 8",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency4.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency16.within_cap",
+        "detail": "8 <= 8",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency16.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency64.within_cap",
+        "detail": "8 <= 8",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency64.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency128.within_cap",
+        "detail": "8 <= 8",
+        "ok": true
+      },
+      {
+        "check": "cap8.concurrency128.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency1.within_cap",
+        "detail": "8 <= 64",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency1.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency4.within_cap",
+        "detail": "8 <= 64",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency4.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency16.within_cap",
+        "detail": "9 <= 64",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency16.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency64.within_cap",
+        "detail": "27 <= 64",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency64.exact",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency128.within_cap",
+        "detail": "47 <= 64",
+        "ok": true
+      },
+      {
+        "check": "cap64.concurrency128.exact",
+        "detail": "",
+        "ok": true
+      }
+    ],
+    "total": 30
+  },
+  "command": "scripts/resource_courts.sh",
+  "data": {
+    "arms": [
+      {
+        "cap": 0,
+        "cap_waits": 0,
+        "concurrency": 1,
+        "max_in_flight": 1,
+        "mib_per_s": 2063.2578346026494,
+        "mismatches": 0,
+        "observed_max_active_handles": 0,
+        "reads": 40,
+        "reads_per_s": 33012.12535364239,
+        "wall_ms": 1.211676
+      },
+      {
+        "cap": 0,
+        "cap_waits": 0,
+        "concurrency": 4,
+        "max_in_flight": 4,
+        "mib_per_s": 7562.734775647692,
+        "mismatches": 0,
+        "observed_max_active_handles": 0,
+        "reads": 160,
+        "reads_per_s": 121003.75641036307,
+        "wall_ms": 1.3222729999999998
+      },
+      {
+        "cap": 0,
+        "cap_waits": 0,
+        "concurrency": 16,
+        "max_in_flight": 16,
+        "mib_per_s": 22368.1870696221,
+        "mismatches": 0,
+        "observed_max_active_handles": 0,
+        "reads": 640,
+        "reads_per_s": 357890.9931139536,
+        "wall_ms": 1.788254
+      },
+      {
+        "cap": 0,
+        "cap_waits": 0,
+        "concurrency": 64,
+        "max_in_flight": 49,
+        "mib_per_s": 16226.063134191874,
+        "mismatches": 0,
+        "observed_max_active_handles": 0,
+        "reads": 2560,
+        "reads_per_s": 259617.01014707,
+        "wall_ms": 9.860679000000001
+      },
+      {
+        "cap": 0,
+        "cap_waits": 0,
+        "concurrency": 128,
+        "max_in_flight": 117,
+        "mib_per_s": 16586.209727646143,
+        "mismatches": 0,
+        "observed_max_active_handles": 0,
+        "reads": 5120,
+        "reads_per_s": 265379.3556423383,
+        "wall_ms": 19.293136
+      },
+      {
+        "cap": 8,
+        "cap_waits": 0,
+        "concurrency": 1,
+        "max_in_flight": 117,
+        "mib_per_s": 2224.672328012807,
+        "mismatches": 0,
+        "observed_max_active_handles": 1,
+        "reads": 40,
+        "reads_per_s": 35594.757248204915,
+        "wall_ms": 1.123761
+      },
+      {
+        "cap": 8,
+        "cap_waits": 0,
+        "concurrency": 4,
+        "max_in_flight": 117,
+        "mib_per_s": 8774.462103536896,
+        "mismatches": 0,
+        "observed_max_active_handles": 4,
+        "reads": 160,
+        "reads_per_s": 140391.39365659034,
+        "wall_ms": 1.139671
+      },
+      {
+        "cap": 8,
+        "cap_waits": 20,
+        "concurrency": 16,
+        "max_in_flight": 117,
+        "mib_per_s": 17290.0747190579,
+        "mismatches": 0,
+        "observed_max_active_handles": 8,
+        "reads": 640,
+        "reads_per_s": 276641.1955049264,
+        "wall_ms": 2.313466
+      },
+      {
+        "cap": 8,
+        "cap_waits": 91,
+        "concurrency": 64,
+        "max_in_flight": 117,
+        "mib_per_s": 3689.1666790407467,
+        "mismatches": 0,
+        "observed_max_active_handles": 8,
+        "reads": 2560,
+        "reads_per_s": 59026.66686465195,
+        "wall_ms": 43.370228
+      },
+      {
+        "cap": 8,
+        "cap_waits": 876,
+        "concurrency": 128,
+        "max_in_flight": 117,
+        "mib_per_s": 21114.307582675712,
+        "mismatches": 0,
+        "observed_max_active_handles": 8,
+        "reads": 5120,
+        "reads_per_s": 337828.9213228114,
+        "wall_ms": 15.1556
+      },
+      {
+        "cap": 64,
+        "cap_waits": 876,
+        "concurrency": 1,
+        "max_in_flight": 117,
+        "mib_per_s": 2220.9686088296826,
+        "mismatches": 0,
+        "observed_max_active_handles": 8,
+        "reads": 40,
+        "reads_per_s": 35535.49774127492,
+        "wall_ms": 1.125635
+      },
+      {
+        "cap": 64,
+        "cap_waits": 876,
+        "concurrency": 4,
+        "max_in_flight": 117,
+        "mib_per_s": 8055.933960675763,
+        "mismatches": 0,
+        "observed_max_active_handles": 8,
+        "reads": 160,
+        "reads_per_s": 128894.94337081221,
+        "wall_ms": 1.2413210000000001
+      },
+      {
+        "cap": 64,
+        "cap_waits": 876,
+        "concurrency": 16,
+        "max_in_flight": 117,
+        "mib_per_s": 16463.933900598175,
+        "mismatches": 0,
+        "observed_max_active_handles": 9,
+        "reads": 640,
+        "reads_per_s": 263422.9424095708,
+        "wall_ms": 2.4295530000000003
+      },
+      {
+        "cap": 64,
+        "cap_waits": 876,
+        "concurrency": 64,
+        "max_in_flight": 117,
+        "mib_per_s": 20111.172045169187,
+        "mismatches": 0,
+        "observed_max_active_handles": 27,
+        "reads": 2560,
+        "reads_per_s": 321778.752722707,
+        "wall_ms": 7.955777
+      },
+      {
+        "cap": 64,
+        "cap_waits": 876,
+        "concurrency": 128,
+        "max_in_flight": 117,
+        "mib_per_s": 4069.804886431586,
+        "mismatches": 0,
+        "observed_max_active_handles": 47,
+        "reads": 5120,
+        "reads_per_s": 65116.87818290538,
+        "wall_ms": 78.627848
+      }
+    ],
+    "default_cap": 64,
+    "gate": "X07",
+    "note": "cap 0 is the pre-X07 control arm; it is labelled as such in every receipt",
+    "object_bytes": 65536,
+    "objects": 64,
+    "peak_rss_kib": 29088,
+    "reads_per_thread": 40,
+    "schema": "weft.handle_cap.v1"
+  },
+  "environment": {
+    "cost_reps": 5,
+    "cost_sizes": "1,10,100",
+    "court": "scripts/docker-court.sh (rust | bench | fuse)",
+    "docker_server": "29.9.3",
+    "generated_utc": "20261113T221332Z",
+    "host_kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": 1024,
+      "tmpfs": "1g"
+    },
+    "reduced": false,
+    "resource_reps": 5,
+    "revisions": {
+      "WeftFS": "a6ac2b2855f8030ef59f4f3bb463707a509c42fd",
+      "WeftFS-Go": "9257ee6b13156ec666248be8fe9193b4f5d6840e"
+    }
+  },
+  "gate": "X07",
+  "go_parity": {
+    "note": "WeftFS-Go store/read_pool_active_test.go proves the unbounded control arm and the cap; it is run by the X08 court step because it lives in the fuse court."
+  },
+  "result": "pass",
+  "schema": "weft.handle_cap.receipt.v1",
+  "stamp": "20261113T221332Z"
+}

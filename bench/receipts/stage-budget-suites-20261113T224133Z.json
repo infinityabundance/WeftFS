@@ -1,0 +1,42 @@
+{
+  "command": "scripts/stage_budget_suites.sh",
+  "court": {
+    "docker_server": "29.9.3",
+    "host_kernel": "7.3.3-1-cachyos",
+    "kinds": [
+      "rust",
+      "fuse"
+    ],
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": 1024,
+      "tmpfs": "1g"
+    },
+    "revision_weftfs": "a6ab12eb667b9d77c6b61a5958c10ac367282469",
+    "revision_weftfs_go": "9257ee6b13156ec666248be8fe9193b4f5d6840e"
+  },
+  "fuse": {
+    "exit_code": 0,
+    "failed": 0,
+    "ignored": 2,
+    "log": "bench/receipts/stage-budget-suites-20261113T224133Z.fuse.log",
+    "passed": 905,
+    "suites": 182
+  },
+  "ignored_note": "The two FUSE #[ignore]s are pre-existing and environment-blocked: permissions_with_allow_other needs CAP_SETUID, which the court drops; concurrent_readers_and_one_writer_see_whole_versions hits a documented kernel 7.3 + fuser 0.15.1 direct-I/O EIO. Neither is filtered by this run.",
+  "result": "pass",
+  "revision": "a6ab12eb667b9d77c6b61a5958c10ac367282469",
+  "rust": {
+    "exit_code": 0,
+    "failed": 0,
+    "ignored": 0,
+    "log": "bench/receipts/stage-budget-suites-20261113T224133Z.rust.log",
+    "passed": 862,
+    "suites": 182
+  },
+  "schema": "weft.stage_budget_suites.receipt.v1",
+  "stamp": "20261113T224133Z"
+}

@@ -1,14 +1,18 @@
 # X06 / X07 / X08 / N08 / N09 — one budget, one handle cap, packed races, restore cost
 
-Receipts (revision `5b49da3fe44d20ec83ea244213c1bda91576ccc2`, stamp `20261113T125506Z`):
+Receipts (revision `a6ab12eb667b9d77c6b61a5958c10ac367282469`, stamp `20261113T225001Z`):
 
 | gate | receipt | result |
 |---|---|---|
-| X06 restore budget | `bench/receipts/restore-budget-20261113T125506Z.json` | 12/12 checks |
-| X07 active-handle cap | `bench/receipts/handle-cap-20261113T125506Z.json` | 30/30 checks |
-| X08 packed races | `bench/receipts/packed-races-20261113T125506Z.json` | 4/4 checks (5 Rust scenarios, 2 cross-language) |
-| N08 restore cost | `bench/receipts/restore-cost-20261113T125506Z.json` | 13/13 checks |
-| N09 stage budget | `bench/receipts/stage-budget-20261113T125506Z.json` | 12/12 checks |
+| X06 restore budget | `bench/receipts/restore-budget-20261113T225001Z.json` | 12/12 checks |
+| X07 active-handle cap | `bench/receipts/handle-cap-20261113T225001Z.json` | 30/30 checks |
+| X08 packed races | `bench/receipts/packed-races-20261113T225001Z.json` | 4/4 checks (5 Rust scenarios, 2 cross-language) |
+| N08 restore cost | `bench/receipts/restore-cost-20261113T225001Z.json` | 13/13 checks |
+| N09 stage budget | `bench/receipts/stage-budget-20261113T225001Z.json` | 12/12 checks |
+
+The earlier run at revision `5b49da3f`, stamp `20261113T125506Z`, is retained
+beside these; it predates the X31 admission fix. The X31 comparison and its
+receipts are in `bench/RESULTS-stage-budget-fix.md`.
 
 All five run in `scripts/resource_courts.sh` through `scripts/docker-court.sh` at the unchanged hard limits (3 GiB / 3 GiB swap / 1024 pids / 4 cpus).
 
@@ -35,18 +39,13 @@ constructing one budget and passing it to both.
 
 Where it is worse than before: with a budget, a single-worker restore still
 holds one worker slot, and a `threads × shard_threads × tile_threads` request
-that used to oversubscribe is now clamped. X06 measures that clamp: at cap 4 the
-best budgeted row is 2.61 ms p50 and the recommended default is 2.86 ms, while
-the unbudgeted 4×4 control on the same fixture is 2.16 ms — the cap costs
-**+21 %** on this 1.5 MB fixture because the control is allowed 16 threads. That
-is the price of never exceeding four.
+that used to oversubscribe is now clamped. X06 measures that clamp; the
+generated block below carries the figures. The cost is structural: the cap, not
+the machine, decides the width, while the unbudgeted 4×4 control is allowed
+sixteen threads on four CPUs. That is the price of never exceeding the cap, not
+a like-for-like comparison at the same width.
 
 <!-- BEGIN GENERATED:resource-courts (scripts/perf_numbers.py) -->
-* **X06**: at cap 4 the best row is **2.61 ms** p50 (2 tensor workers, 2 shard workers) and the measured default is **2.86 ms**; the unbudgeted 4×4 control is **2.40 ms**, so the cap costs **+21 %** on this fixture. At cap 1 the best is **8.46 ms**; at cap 8 the default reaches **1.92 ms**.
-* **N08 dominant tensor**: one 64 MiB, 8-shard tensor restores in **657.70 ms** with one shard worker and **381.35 ms** with two — shard parallelism is the only restore-side lever for a single dominant tensor.
-* **N08 100-tensor restore** (100 × 1 MiB, 4 tensor workers): **268.42 ms** p50 with the worker-side SHA-256 and no copy; **267.95 ms** with the pre-N08 copy restored and **268.05 ms** with the writer-side SHA-256 control. Neither change is a win at this scale. A 2-row region read is **5.28 ms**; the resumed 10-tensor usable set is **118.01 ms**.
-* **X07**: 16 capped readers reach **243,509 reads/s**; at 128 readers the uncapped control reaches **271,497 reads/s** and the cap of 64 yields **67,109 reads/s** — the cap costs a factor of about four exactly where it binds.
-* **N09**: running the encode and restore stages concurrently takes **1.022×** the sequential pair at cap 4 and **0.881×** at cap 8. The policy bounds both stages; it does not promise an overlap win.
 <!-- END GENERATED:resource-courts -->
 
 ## X07 — a hard cap on active handles
@@ -130,10 +129,11 @@ cap, the oversize restore completes, every cancellation either finishes or
 returns `Cancelled` with the full cap available afterwards, and maintenance is
 granted every round.
 
-Where it is worse: overlapping the two stages is not always faster. At cap 4 the
-concurrent run takes 1.02× the sequential pair and at cap 8 it takes 0.88×; the
-sign flips with the cap because the two stages contend for the same four CPUs.
-The policy bounds the damage; it does not promise an overlap win.
+Where it is worse: overlapping the two stages has no stable win. The
+generated block below carries the measured ratio; it is noise-dominated at this
+scale and two runs of the same arm on this host disagreed on its sign at cap 4.
+The two stages contend for the same four CPUs, so the policy bounds the damage
+and does not promise an overlap win.
 
 ## Reproduce
 
@@ -153,8 +153,10 @@ scripts/resource_courts.sh --reduced  # the verify-all configuration
 - `x08_invariant`: stated in tests/packed_races.rs and the receipt
 - `x08_scenarios`: 5 Rust tests, 2 Go cross-language tests
 - `n08_decode_dominant`: phases in the restore-cost receipt
-- `n08_no_copy_not_a_win`: 268.4 ms (no copy) vs 268.0 ms (copy control)
-- `n08_worker_sha_not_a_win`: 268.4 ms (worker SHA) vs 268.1 ms (writer SHA)
-- `n08_dominant_tensor_shard_parallel`: 657.7 ms -> 381.4 ms
+- `n08_no_copy_not_a_win`: see the generated N08 row in RESULTS-resource-courts.md
+- `n08_worker_sha_not_a_win`: see the generated N08 row in RESULTS-resource-courts.md
+- `n08_dominant_tensor_shard_parallel`: see the generated N08 dominant-tensor row
 - `n09_cross_stage`: all four caps, maintenance admitted every round
-- `n09_overlap_not_a_win`: published as a loss
+- `n09_overlap_not_a_win`: published as a mixed, noise-dominated result
+- `x31_contract`: the normative contract in docs/STAGE-BUDGET.md
+- `x31_repetitions`: the repetition counts in docs/STATUS.md and RESULTS-stage-budget-fix.md

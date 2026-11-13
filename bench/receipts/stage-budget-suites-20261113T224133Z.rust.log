@@ -1,0 +1,2477 @@
++ exec docker run --rm --init --name weft-rust-court-1856602 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=a6ab12eb667b9d77c6b61a5958c10ac367282469 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && timeout 2400 cargo test --all-targets'
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2303:9
+     |
+2303 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2375:13
+     |
+2375 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 15 warnings (run `cargo fix --lib -p weftfs` to apply 13 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5816:8
+     |
+5816 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5823:8
+     |
+5823 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5840:7
+     |
+5840 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5842:4
+     |
+5842 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5875:4
+     |
+5875 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+   Compiling weftfs v1.4.2 (/work)
+warning: `weftfs` (lib test) generated 15 warnings (15 duplicates)
+warning: variable does not need to be mutable
+    --> examples/augmentation_bench.rs:1745:9
+     |
+1745 |     let mut kind = backend_kind_publication(args, publication)?;
+     |         ----^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `backend_kind` is never used
+   --> examples/augmentation_bench.rs:634:4
+    |
+634 | fn backend_kind(args: &Args) -> Result<BackendKind, String> {
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `config_dir` is never used
+    --> examples/augmentation_bench.rs:2975:4
+     |
+2975 | fn config_dir(args: &Args, config: &str) -> PathBuf {
+     |    ^^^^^^^^^^
+
+warning: function `remove_config_dir` is never used
+    --> examples/augmentation_bench.rs:2979:4
+     |
+2979 | fn remove_config_dir(args: &Args, config: &str) -> Result<(), String> {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: `weftfs` (example "augmentation_bench" test) generated 4 warnings (run `cargo fix --example "augmentation_bench" -p weftfs --tests` to apply 1 suggestion)
+warning: unused variable: `layout`
+   --> tests/streamed_plan_identity.rs:261:9
+    |
+261 |     let layout = TensorLayoutSpec::row_major();
+    |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_layout`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "streamed_plan_identity") generated 1 warning (run `cargo fix --test "streamed_plan_identity" -p weftfs` to apply 1 suggestion)
+warning: unused import: `std::time::SystemTime`
+  --> tests/publication_batch.rs:19:5
+   |
+19 | use std::time::SystemTime;
+   |     ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "publication_batch") generated 1 warning (run `cargo fix --test "publication_batch" -p weftfs` to apply 1 suggestion)
+warning: unused doc comment
+   --> examples/mode9_encoder_bench.rs:458:1
+    |
+458 | / /// Stage-by-stage replica of the **pre-R19** encoder, faithful to its
+459 | | /// allocation and drop order, used to prove the stage table adds up to the
+460 | | /// shipped wall. Returns the frame and the per-stage milliseconds.
+461 | | ///
+462 | | /// `[split_payload, stored_build, payload_hash, body_build, frame_encode,
+463 | | /// content_hash]`
+    | |_-----------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `shipped_total`
+    --> examples/mode9_encoder_bench.rs:1031:9
+     |
+1031 |     let shipped_total = total(&|row| row["shipped_encode_ms"].as_f64().unwrap_or(0.0));
+     |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_shipped_total`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `threaded_total`
+    --> examples/mode9_encoder_bench.rs:1032:9
+     |
+1032 |     let threaded_total = total(&|row| row["threaded_encode_ms"].as_f64().unwrap_or(0.0));
+     |         ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_threaded_total`
+
+warning: unused variable: `reference_total`
+    --> examples/mode9_encoder_bench.rs:1033:9
+     |
+1033 |     let reference_total = total(&|row| row["reference_encode_ms"].as_f64().unwrap_or(0.0));
+     |         ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_reference_total`
+
+warning: unused variable: `replica_total`
+    --> examples/mode9_encoder_bench.rs:1034:9
+     |
+1034 |     let replica_total =
+     |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_replica_total`
+
+warning: function `mean` is never used
+   --> examples/mode9_encoder_bench.rs:326:4
+    |
+326 | fn mean(values: &[f64]) -> f64 {
+    |    ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "mode9_encoder_bench" test) generated 6 warnings (run `cargo fix --example "mode9_encoder_bench" -p weftfs --tests` to apply 4 suggestions)
+warning: field `fds` is never read
+   --> tests/checkpoint_service.rs:242:5
+    |
+238 | struct Response {
+    |        -------- field in this struct
+...
+242 |     fds: Vec<OwnedFd>,
+    |     ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "checkpoint_service") generated 1 warning
+warning: unused import: `OpenMode`
+  --> examples/compression_candidates.rs:32:21
+   |
+32 | use weftfs::store::{OpenMode, Options, Store};
+   |                     ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> examples/compression_candidates.rs:206:13
+    |
+206 |         let mut measure = |options: &TensorPlanOptions, causal: &[Hash32]| {
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "compression_candidates" test) generated 2 warnings (run `cargo fix --example "compression_candidates" -p weftfs --tests` to apply 2 suggestions)
+warning: field `root` is never read
+   --> examples/index_chain_bench.rs:123:5
+    |
+122 | struct Built {
+    |        ----- field in this struct
+123 |     root: PathBuf,
+    |     ^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "index_chain_bench" test) generated 1 warning
+warning: unused variable: `left`
+   --> tests/branching.rs:213:9
+    |
+213 |     let left = store.snapshot_create("left").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_left`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `right`
+   --> tests/branching.rs:215:9
+    |
+215 |     let right = store.snapshot_create("right").unwrap();
+    |         ^^^^^ help: if this is intentional, prefix it with an underscore: `_right`
+
+warning: `weftfs` (test "branching") generated 2 warnings (run `cargo fix --test "branching" -p weftfs` to apply 2 suggestions)
+warning: `weftfs` (bin "weftfs" test) generated 5 warnings (5 duplicates)
+warning: unused import: `HeadExpectation`
+  --> examples/mw2_writer.rs:37:36
+   |
+37 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, KeyKind, StorageBackend};
+   |                                    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `StorageBackend`
+  --> examples/mw2_writer.rs:37:81
+   |
+37 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, KeyKind, StorageBackend};
+   |                                                                                 ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> examples/mw2_writer.rs:142:9
+    |
+142 |     let mut plane = backend_kind(args, &backend(args))
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `open_store` is never used
+   --> examples/mw2_writer.rs:115:4
+    |
+115 | fn open_store(
+    |    ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "mw2_writer" test) generated 4 warnings (run `cargo fix --example "mw2_writer" -p weftfs --tests` to apply 2 suggestions)
+warning: field `root` is never read
+  --> tests/kv_capability.rs:81:5
+   |
+79 | struct Fixture {
+   |        ------- field in this struct
+80 |     store: Store,
+81 |     root: Hash32,
+   |     ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "kv_capability") generated 1 warning
+warning: field `guard` is never read
+  --> tests/restore_budget.rs:92:5
+   |
+91 | struct Fixture {
+   |        ------- field in this struct
+92 |     guard: tempfile::TempDir,
+   |     ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "restore_budget") generated 1 warning
+warning: function `read_u32` is never used
+   --> tests/index_persistence.rs:679:4
+    |
+679 | fn read_u32(bytes: &[u8], pos: &mut usize) -> u32 {
+    |    ^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "index_persistence") generated 1 warning
+warning: variable does not need to be mutable
+   --> tests/mode18_store.rs:102:9
+    |
+102 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/mode18_store.rs:136:9
+    |
+136 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: `weftfs` (test "mode18_store") generated 2 warnings (run `cargo fix --test "mode18_store" -p weftfs` to apply 2 suggestions)
+warning: unused variable: `retained_after_gc`
+   --> examples/overlay_bench.rs:447:9
+    |
+447 |     let retained_after_gc = store
+    |         ^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_retained_after_gc`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "overlay_bench" test) generated 1 warning (run `cargo fix --example "overlay_bench" -p weftfs --tests` to apply 1 suggestion)
+warning: variable does not need to be mutable
+   --> tests/planner_float.rs:173:16
+    |
+173 |     let (path, mut store) = temp_store("cost-model");
+    |                ----^^^^^
+    |                |
+    |                help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "planner_float") generated 1 warning (run `cargo fix --test "planner_float" -p weftfs` to apply 1 suggestion)
+warning: variable does not need to be mutable
+  --> tests/float_tiled_store.rs:85:9
+   |
+85 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+   |         ----^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `root`
+  --> tests/float_tiled_store.rs:86:9
+   |
+86 |     let root = store.resolve_path("/").unwrap();
+   |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> tests/float_tiled_store.rs:152:9
+    |
+152 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> tests/float_tiled_store.rs:226:9
+    |
+226 |     let mut store = Store::init(dir.path(), opts()).unwrap();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `root`
+   --> tests/float_tiled_store.rs:227:9
+    |
+227 |     let root = store.resolve_path("/").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+
+warning: unused variable: `root`
+   --> tests/float_tiled_store.rs:258:9
+    |
+258 |     let root = store.resolve_path("/").unwrap();
+    |         ^^^^ help: if this is intentional, prefix it with an underscore: `_root`
+
+warning: `weftfs` (test "float_tiled_store") generated 6 warnings (run `cargo fix --test "float_tiled_store" -p weftfs` to apply 6 suggestions)
+warning: variable does not need to be mutable
+   --> examples/azure_court.rs:335:9
+    |
+335 |     let mut observe = |etags: &mut Vec<String>| {
+    |         ----^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "azure_court" test) generated 1 warning (run `cargo fix --example "azure_court" -p weftfs --tests` to apply 1 suggestion)
+warning: unused import: `AtomicUsize`
+  --> examples/resource_courts.rs:18:48
+   |
+18 | use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+   |                                                ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Hash32`
+  --> examples/resource_courts.rs:31:21
+   |
+31 | use weftfs::{Error, Hash32, Result};
+   |                     ^^^^^^
+
+warning: value assigned to `workers` is never read
+   --> examples/resource_courts.rs:259:31
+    |
+259 |             let mut workers = 0usize;
+    |                               ^^^^^^ this value is reassigned later and never used
+...
+270 |             workers = budget.stats().observed_max_active_workers;
+    |             ---------------------------------------------------- `workers` is overwritten here before the previous value is read
+    |
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "resource_courts" test) generated 3 warnings (run `cargo fix --example "resource_courts" -p weftfs --tests` to apply 2 suggestions)
+warning: function `tensor_payloads` is never used
+   --> examples/trajectory_court.rs:135:4
+    |
+135 | fn tensor_payloads(
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (example "trajectory_court" test) generated 1 warning
+warning: unused variable: `tensors_dir`
+   --> tests/tensor_pipeline.rs:383:9
+    |
+383 |     let tensors_dir = store
+    |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_tensors_dir`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (test "tensor_pipeline") generated 1 warning (run `cargo fix --test "tensor_pipeline" -p weftfs` to apply 1 suggestion)
+    Finished `test` profile [optimized + debuginfo] target(s) in 2m 24s
+     Running unittests src/lib.rs (.docker-cache/target-rust/debug/deps/weftfs-4c00b2a3443e54ef)
+
+running 141 tests
+test access::tests::consume_removes_the_counter ... ok
+test access::tests::journal_round_trips_and_ignores_torn_tails ... ok
+test access::tests::snapshot_round_trips_and_rejects_corruption ... ok
+test azure::tests::canonical_query_sorts_and_encodes ... ok
+test azure::tests::config_debug_never_reveals_credentials ... ok
+test azure::tests::container_names_follow_the_service_rules ... ok
+test azure::tests::credentials_must_be_exclusive ... ok
+test azure::tests::rfc1123_dates_are_formatted_for_the_documented_epoch ... ok
+test access::tests::pure_consumption_is_persisted_across_reopen ... ok
+test azure::tests::shared_key_string_to_sign_has_the_documented_field_order ... ok
+test azure::tests::strip_etag_quotes_is_exact ... ok
+test azure::tests::xml_listing_blocks_are_extracted_before_their_names ... ok
+test b64::tests::a_two_hundred_and_fifty_six_bit_key_round_trips ... ok
+test b64::tests::malformed_inputs_are_rejected ... ok
+test b64::tests::standard_round_trips_the_rfc_vectors ... ok
+test b64::tests::url_safe_is_unpadded_and_decodable ... ok
+test checkpoint_service::tests::cursor_rejects_trailing_and_truncated ... ok
+test checkpoint_service::tests::error_body_has_class_then_message ... ok
+test checkpoint_service::tests::frame_round_trip_layout ... ok
+test calibration::tests::digest_detects_a_modified_row ... ok
+test cost_model::tests::declared_matches_the_historical_linear_model ... ok
+test cost_model::tests::encode_table_is_shaped_and_ordered ... ok
+test cost_model::tests::estimates_are_monotonic_and_saturating ... ok
+test calibration::tests::record_round_trips_through_json ... ok
+test cost_model::tests::every_measured_fixed_term_is_positive ... ok
+test cost_model::tests::measured_is_not_the_declared_table ... ok
+test cost_model::tests::restore_overhead_is_measured_and_monotonic ... ok
+test gcs::json::tests::parses_a_listing_page_with_escapes ... ok
+test gcs::json::tests::parses_numeric_generation_without_rounding ... ok
+test gcs::json::tests::parses_object_metadata ... ok
+test gcs::json::tests::rejects_malformed_and_deep_input ... ok
+test gcs::tests::bucket_validation_rejects_bad_names ... ok
+test gcs::tests::config_debug_never_reveals_the_token ... ok
+test gcs::tests::listing_helper_is_shared_with_the_logical_layout ... ok
+test gcs::tests::percent_encoding_keeps_one_path_segment ... ok
+test gcs::tests::precondition_parameters_are_the_gcs_spelling ... ok
+test gcs::tests::lock_record_round_trips_and_legacy_reads_as_fence_zero ... ok
+test gcs::tests::upload_reply_generation_is_parsed_without_rounding ... ok
+test index_chain::tests::a_full_segment_round_trips ... ok
+test index_chain::tests::a_short_value_target_edge_at_the_tail_round_trips ... ok
+test index_incremental::tests::entries_do_not_touch_rows ... ok
+test index_incremental::tests::a_deleted_object_leaves_no_rows ... ok
+test index_incremental::tests::a_pure_attribute_edit_moves_exactly_one_row ... ok
+test index_incremental::tests::removing_one_of_two_identical_tag_edges_keeps_the_tag ... ok
+test load_attestation::tests::status_parsing_is_exact ... ok
+test mw2::tests::transaction_id_is_strict ... ok
+test mw2::tests::transaction_record_round_trips ... ok
+test mw2::tests::writer_mode_record_round_trips ... ok
+test object_cache::tests::a_new_version_removes_the_old_version ... ok
+test index_incremental::tests::the_derived_delta_equals_the_full_diff_delta ... ok
+test object_cache::tests::a_score_tie_with_zero_value_evicts_the_larger_entry ... ok
+test object_cache::tests::disabled_by_default ... ok
+test object_cache::tests::eviction_is_deterministic_and_prefers_cheap_entries ... ok
+test object_cache::tests::pinned_entry_is_never_evicted_and_admission_is_refused ... ok
+test object_cache::tests::shrinking_the_bound_evicts_down_to_it ... ok
+test packs::tests::entry_round_trip_is_canonical ... ok
+test packs::tests::options_reject_a_member_larger_than_a_pack ... ok
+test packs::tests::root_rejects_a_mismatched_segment_count ... ok
+test packs::tests::segment_index_stays_in_range ... ok
+test packs::tests::segment_rejects_a_flipped_digest ... ok
+test packs::tests::segment_rejects_unordered_entries ... ok
+test phase_profile::tests::begin_records_and_finish_clears ... ok
+test phase_profile::tests::diff_attributes_only_new_sections ... ok
+test phase_profile::tests::disabled_by_default_and_off_for_the_program ... ok
+test phase_profile::tests::samples_are_bounded_and_percentiles_are_sane ... ok
+test plan_graph::tests::an_sla_claim_without_a_measured_overhead_is_refused ... ok
+test plan_graph::tests::brute_force_can_prefer_a_non_adjacent_parent ... ok
+test plan_graph::tests::brute_force_limit_is_typed ... ok
+test plan_graph::tests::depth_bound_is_enforced ... ok
+test plan_graph::tests::determinism_is_total ... ok
+test plan_graph::tests::dp_matches_bruteforce_on_a_chain_or_restart_optimum ... ok
+test plan_graph::tests::graph_shape_is_validated ... ok
+test plan_graph::tests::incompatible_parent_is_rejected ... ok
+test plan_graph::tests::objective_is_bytes_with_zero_lambda ... ok
+test plan_graph::tests::lambda_prefers_restart ... ok
+test plan_graph::tests::restore_overhead_is_charged_once_per_version ... ok
+test plan_graph::tests::sla_refusal_is_typed_and_does_not_degrade ... ok
+test plan_graph::tests::supported_depth_matches_the_frozen_reader_bound ... ok
+test plan_graph::tests::storage_budget_refusal ... ok
+test plan_graph::tests::the_sla_uses_the_corrected_restore_not_the_raw_decode_rows ... ok
+test receipt_bundle::tests::manifest_round_trips_and_sorts ... ok
+test receipt_bundle::tests::rejects_unsorted_manifest ... ok
+test restore_pipeline::tests::releasing_a_turn_unblocks_the_next_index ... ok
+test retention::tests::durable_requires_zero_lifetime_and_others_reject_zero ... ok
+test retention::tests::identity_is_not_part_of_the_artifact ... ok
+test retention::tests::pointer_round_trips_and_rejects_bad_shapes ... ok
+test retention::tests::record_round_trips_and_hashes_canonically ... ok
+test s3::tests::a_fresh_backend_defaults_to_the_as_returned_form ... ok
+test s3::tests::if_match_forms_encode_etags ... ok
+test s3::tests::lock_record_round_trips_and_parses_legacy_v1 ... ok
+test s3::tests::released_tombstone_records_are_content_addressed ... ok
+test s3::tests::sigv4_encoding_and_dates_are_canonical ... ok
+test s3::tests::xml_values_decode_minio_escapes ... ok
+test retention::tests::signature_covers_the_record_without_its_signature_key ... ok
+test safetensors::tests::ingest_bounds_fail_closed ... ok
+test safetensors::tests::range_reads_are_exact_and_bounded ... ok
+test safetensors::tests::sha256_of_streamed_digests_still_matches_the_file ... ok
+test safetensors::tests::streamed_digests_match_one_shot ... ok
+test service_account::tests::biguint_bytes_and_ordering_round_trip ... ok
+test service_account::tests::der_reader_is_strict ... ok
+test safetensors::tests::streamed_shards_match_shard_bytes ... ok
+test service_account::tests::fixed_width_helpers_are_masked_not_branched ... ok
+test service_account::tests::montgomery_ct_matches_the_reference_multiplication ... ok
+test service_account::tests::montgomery_multiplication_matches_schoolbook ... ok
+test service_account::tests::n0inv_is_the_negated_inverse ... ok
+test service_account::tests::pem_extraction_accepts_wrapping_and_rejects_garbage ... ok
+test service_account::tests::pow2_mod_matches_known_values ... ok
+test singleflight::tests::byte_bound_degrades_an_oversized_request ... ok
+test service_account::tests::ladder_matches_square_and_multiply ... ok
+test restore_pipeline::tests::a_waiting_worker_does_not_hold_the_queue_lock ... ok
+test singleflight::tests::disabled_runs_every_call_independently ... ok
+test restore_pipeline::tests::the_budget_admission_turn_follows_input_order ... ok
+test singleflight::tests::distinct_keys_are_not_coalesced ... ok
+test singleflight::tests::concurrent_identical_calls_run_once ... ok
+test singleflight::tests::entry_and_byte_bounds_degrade_instead_of_queueing ... ok
+test singleflight::tests::panicking_operation_publishes_an_error ... ok
+test stage_budget::tests::a_dropped_waiter_is_not_admitted_and_holds_nothing ... ok
+test stage_budget::tests::a_panicking_holder_releases_its_reservation ... ok
+test stage_budget::tests::a_panicking_oversize_holder_releases_exclusivity ... ok
+test stage_budget::tests::a_zero_policy_is_rejected ... ok
+test singleflight::tests::errors_reach_every_waiter ... ok
+test stage_budget::tests::cancellation_releases_the_ticket_and_returns_cancelled ... ok
+test stage_budget::tests::a_byte_request_larger_than_the_budget_runs_alone_and_completes ... ok
+test stage_budget::tests::cancelling_waiters_behind_the_head_does_not_stall_the_queue ... ok
+test stage_budget::tests::releasing_workers_keeps_the_byte_reservation ... ok
+test stage_budget::tests::the_declared_default_comes_from_available_parallelism ... ok
+test stage_budget::tests::an_oversize_request_drains_existing_holders_without_being_overtaken ... ok
+test stage_budget::tests::fifo_serves_the_earliest_waiter_first ... ok
+test timeparse::tests::invalid_forms_are_rejected ... ok
+test timeparse::tests::rfc3339_epoch_and_offsets ... ok
+test timeparse::tests::unix_nanoseconds_round_trip ... ok
+test writer_fence::tests::fenced_record_round_trips ... ok
+test writer_fence::tests::legacy_tombstone_still_parses ... ok
+test writer_fence::tests::legacy_v1_record_reads_as_fence_zero ... ok
+test writer_fence::tests::legacy_v2_record_reads_with_an_unknown_length ... ok
+test writer_fence::tests::malformed_records_are_rejected ... ok
+test writer_fence::tests::schemas_do_not_parse_across_backends ... ok
+test writer_fence::tests::tombstone_round_trips_and_names_its_predecessor ... ok
+test stage_budget::tests::two_oversize_requests_are_serialised ... ok
+test stage_budget::tests::the_worker_cap_is_never_exceeded_and_oversized_groups_are_clamped ... ok
+test singleflight::tests::cancelling_waiter_does_not_cancel_the_leader ... ok
+
+test result: ok. 141 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+     Running unittests src/bin/weft-receipt-bundle.rs (.docker-cache/target-rust/debug/deps/weft_receipt_bundle-9dc1cb3247c898e1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (.docker-cache/target-rust/debug/deps/weftfs-779927a8d434014a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/attested_load.rs (.docker-cache/target-rust/debug/deps/attested_load-b20419a481644109)
+
+running 10 tests
+test a_record_with_the_wrong_totals_is_rejected_on_decode ... ok
+test a_region_load_does_not_claim_the_whole_tensor_root ... ok
+test a_trust_set_is_enforced ... ok
+test a_signed_attestation_round_trips_and_reverifies ... ok
+test an_unloaded_tensor_is_reported_and_never_counted ... ok
+test an_unverified_entry_without_a_reason_is_rejected ... ok
+test an_unsigned_record_decodes_and_is_refused_when_a_signature_is_required ... ok
+test restore_reads_back_the_same_bytes_the_attestation_recorded ... ok
+test tampering_with_a_recorded_range_breaks_the_signature ... ok
+test tampering_with_the_store_fails_the_replay ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/azure_backend.rs (.docker-cache/target-rust/debug/deps/azure_backend-bc0b5bdc0153013f)
+
+running 22 tests
+test a_hash32_key_path_is_addressed_verbatim ... ok
+test a_missing_blob_is_not_found_and_transport_errors_are_io ... ok
+test a_wrong_account_key_is_unauthorized ... ok
+test a_stale_etag_accepted_by_the_service_is_refused ... ok
+test create_once_and_compare_and_swap_are_exact ... ok
+test conditional_head_publication_is_one_exact_cas ... ok
+test live_a_tampered_sas_is_rejected ... ok
+test live_anonymous_is_refused_on_a_private_container ... ok
+test live_conditional_create_and_cas_are_exact ... ok
+test live_listing_and_ranges_are_exact ... ok
+test live_lock_is_released_with_a_conditional_tombstone ... ok
+test live_read_only_sas_refuses_a_writable_open ... ok
+test live_sas_authorizes_blob_data_but_not_container_properties ... ok
+test live_sas_token_authenticates_and_preserves_the_store ... ok
+test live_store_round_trips_and_reopens ... ok
+test sas_and_anonymous_credentials_are_exclusive_forms ... ok
+test listing_returns_only_the_requested_prefix ... ok
+test a_literal_dequoted_endpoint_is_negotiated ... ok
+test a_single_mode_writable_open_refuses_an_optimistic_azure_store ... ok
+test the_writer_lock_is_released_with_a_conditional_tombstone ... ok
+test two_optimistic_committers_publish_disjoint_files_on_azure ... ok
+test store_round_trips_on_azure_with_independent_signature_checks ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.63s
+
+     Running tests/azure_fencing.rs (.docker-cache/target-rust/debug/deps/azure_fencing-9f9db62c53493752)
+
+running 9 tests
+test child_fenced_writer_after_fence ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test child_fenced_writer ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test renewal_keeps_the_writer_valid ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/backend.rs (.docker-cache/target-rust/debug/deps/backend-e43ebe521e9b9699)
+
+running 4 tests
+test capabilities_fail_closed ... ok
+test object_backend_exercises_store_extensions ... ok
+test same_fixture_over_local_and_object_is_byte_identical ... ok
+test crash_proxy_over_object_backend_yields_old_or_new ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+
+     Running tests/bounded_recovery.rs (.docker-cache/target-rust/debug/deps/bounded_recovery-b286b4af4b41456a)
+
+running 3 tests
+test superblock_slot_corruption_falls_back_to_the_other_slot ... ok
+test replay_is_idempotent_without_corruption ... ok
+test every_generation_corruption_recovers_the_previous_whole_state ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/branching.rs (.docker-cache/target-rust/debug/deps/branching-d761696f346e508e)
+
+running 9 tests
+test context_branch_pins_the_fork_and_records_lineage ... ok
+test merge_conflicting_path_fails_closed_and_names_the_path ... ok
+test go_reads_and_verifies_a_rust_branch ... ok
+test merge_disjoint_branches_unions_paths ... ok
+test merge_identical_path_content_dedupes_cleanly ... ok
+test merge_refuses_to_overwrite_the_live_head ... ok
+test cli_context_branch_mounts_and_lists_lineage ... ok
+test snapshot_branch_pins_the_source_and_later_writes_do_not_move_it ... ok
+test cli_branch_and_merge_surface ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/calibration.rs (.docker-cache/target-rust/debug/deps/calibration-90fa9638fa4f43af)
+
+running 8 tests
+test digest_is_over_the_canonical_document_not_the_file_whitespace ... ok
+test malformed_documents_fail_closed ... ok
+test oversized_documents_are_refused_before_parsing ... ok
+test install_is_ignored_by_store_replay_and_verify ... ok
+test record_round_trips_through_a_file ... ok
+test planner_uses_the_calibration_rows ... ok
+test default_behaviour_is_unchanged_without_a_calibration ... ok
+test rebase_prices_a_delta_chain_with_the_calibration_rows ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+
+     Running tests/capability_envelope.rs (.docker-cache/target-rust/debug/deps/capability_envelope-83f7205dc5a5e210)
+
+running 6 tests
+test reject_matrix_is_typed_and_stable ... ok
+test revoked_or_expired_envelope_cannot_be_attached_or_used ... ok
+test relation_selector_requires_the_envelope_predicate_grant ... ok
+test envelope_narrows_posix_and_intersects_explicit_capability ... ok
+test workspace_grant_alone_does_not_authorize_an_unrelated_root ... ok
+test envelope_round_trip_and_store_attachment ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/capability_isolation.rs (.docker-cache/target-rust/debug/deps/capability_isolation-8e2d02545da48ece)
+
+running 4 tests
+test revoked_or_expired_envelope_fails_closed_without_hash_revival ... ok
+test deduplicated_shared_content_does_not_leak_tenant_b ... ok
+test tenant_a_cannot_resolve_stat_or_enumerate_tenant_b ... ok
+test work_units_and_budgets_are_independent_of_the_other_tenant ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/capability_nondisclosure.rs (.docker-cache/target-rust/debug/deps/capability_nondisclosure-90d2da8485aef8bb)
+
+running 2 tests
+test authorized_views_are_identical_despite_different_hidden_content ... ok
+test work_budget_failures_do_not_disclose_unauthorized_state ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/checkpoint_atomic.rs (.docker-cache/target-rust/debug/deps/checkpoint_atomic-76520d66c5265106)
+
+running 6 tests
+test atomic_checkpoint_child ... ok
+
+running 1 test
+
+running 1 test
+test atomic_publication_costs_one_generation_and_the_old_shape_two ... ok
+test atomic_checkpoint_child ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+test a_prepare_that_is_never_finished_publishes_nothing ... ok
+
+running 1 test
+test atomic_checkpoint_child ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+test finish_publishes_the_tensor_state_and_the_metadata_together ... ok
+test deferring_the_commit_changes_no_bytes ... ok
+
+running 1 test
+test a_crash_during_the_final_publication_is_old_or_new_whole ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.41s
+
+     Running tests/checkpoint_manifest_reuse.rs (.docker-cache/target-rust/debug/deps/checkpoint_manifest_reuse-3ac6675abfe5d717)
+
+running 6 tests
+test a_manifest_for_another_checkpoint_is_refused ... ok
+test a_pinned_manifest_matches_the_unpinned_one ... ok
+test reuse_covers_regions_and_topologies ... ok
+test reuse_reads_the_manifest_once ... ok
+test reuse_returns_exactly_what_the_per_call_path_returns ... ok
+test verification_is_not_weakened_by_reuse ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/checkpoint_packs.rs (.docker-cache/target-rust/debug/deps/checkpoint_packs-713532e7ffe926ff)
+
+running 5 tests
+test cold_read_of_a_packed_member_costs_more_requests ... ok
+test pack_catalog_bound_falls_back_to_flat_and_still_commits ... ok
+test packed_and_flat_checkpoints_publish_the_same_identity ... ok
+test concurrent_packed_prepare_seals_the_whole_catalog ... ok
+test packed_checkpoint_crash_proxy_yields_old_or_new ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.36s
+
+     Running tests/checkpoint_restore_pipeline.rs (.docker-cache/target-rust/debug/deps/checkpoint_restore_pipeline-e9a2ba5cfdde5f45)
+
+running 4 tests
+test pipelined_restore_is_bounded_and_reports_the_bound ... ok
+test pipelined_single_tensor_and_region_match_the_sequential_path ... ok
+test pipelined_restore_is_byte_identical_at_every_worker_count ... ok
+test pipelined_restore_of_a_tiled_checkpoint_matches_sequential ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/checkpoint_service.rs (.docker-cache/target-rust/debug/deps/checkpoint_service-e39901c2f3b2b98d)
+
+running 9 tests
+test oversized_frame_terminates_the_service_nonzero ... ok
+test service_lists_shows_and_restores_into_a_caller_memfd ... ok
+test idle_zero_releases_the_writer_lock_between_publications ... ok
+test session_reuses_one_writable_handle ... ok
+test topology_restore_reports_a_verified_topology_root ... ok
+test typed_errors_keep_the_service_alive ... ok
+test unknown_opcode_is_refused_and_the_service_exits_nonzero ... ok
+test write_checkpoint_from_a_memfd_matches_the_cli_oracle ... ok
+test restore_never_mutates_the_store ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/checkpoint_streaming.rs (.docker-cache/target-rust/debug/deps/checkpoint_streaming-5930ba4f5696e527)
+
+running 3 tests
+test ingest_bound_refuses_without_publishing ... ok
+test streaming_shard_reads_match_shard_bytes_and_manifest_roots ... ok
+test streaming_ingest_publishes_the_one_shot_identity ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/checkpoint_tiles.rs (.docker-cache/target-rust/debug/deps/checkpoint_tiles-cc9dab8f606fe1df)
+
+running 3 tests
+test tiled_checkpoint_rejects_a_non_dividing_tile_shape ... ok
+test tiled_checkpoint_requires_a_tile_shape ... ok
+test tiled_checkpoint_restores_exactly_and_reads_only_intersecting_tiles ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/checkpoint_topology.rs (.docker-cache/target-rust/debug/deps/checkpoint_topology-ef2d9c664605d2f4)
+
+running 10 tests
+test corrupt_shard_fails_closed ... ok
+test manifest_logical_root_mismatch_fails_closed ... ok
+test non_divisible_split_is_rejected_without_publishing ... ok
+test missing_shard_fails_closed_naming_tensor_and_shard ... ok
+test partial_region_reads_only_intersecting_shards ... ok
+test partial_restore_of_a_two_tensor_container_rebuilds_the_header ... ok
+test single_tensor_restore_of_a_one_tensor_checkpoint_is_byte_exact ... ok
+test cli_checkpoint_restore_is_read_only_unless_imported ... ok
+test cli_checkpoint_write_restore_verify ... ok
+test topology_matrix_reproduces_the_original_container ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/cli.rs (.docker-cache/target-rust/debug/deps/cli-65234ffeeb5914ca)
+
+running 8 tests
+test cli_conformance_store_needs_no_store_flag ... ok
+test cli_conformance_store_fixture_is_deterministic ... ok
+test cli_errors_print_normative_class ... ok
+test cli_rejects_unknown_representation_and_bad_min_bytes ... ok
+test cli_codec_auto_representation_is_opt_in_and_exact ... ok
+test require_one_ambiguity_lists_every_competing_object_id ... ok
+test cli_context_causal_capability_end_to_end ... ok
+test cli_verbs_and_query_json_contract ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/conformance_checkpoint.rs (.docker-cache/target-rust/debug/deps/conformance_checkpoint-7949242e4235bba1)
+
+running 1 test
+test checkpoint_identity_vectors ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/context.rs (.docker-cache/target-rust/debug/deps/context-004edb353d656cad)
+
+running 12 tests
+test capability_hash_participates_in_context_root_identity ... ok
+test bytes_only_version_is_byte_identical_and_causal_exact_changes_it ... ok
+test duplicate_names_require_explicit_replacement ... ok
+test effective_budget_is_component_wise_minimum ... ok
+test corrupted_context_record_fails_closed ... ok
+test golden_causal_vectors_match_both_languages ... ok
+test identity_mode_rejects_bad_mode_text ... ok
+test capability_denials_do_not_leak_and_budgets_fail_closed ... ok
+test snapshot_pinning_never_follows_the_live_head ... ok
+test materialization_mismatch_leaves_no_output ... ok
+test context_create_resolve_materialize_zero_one_n ... ok
+test transitive_closure_and_cycle_termination ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/crash_proxy.rs (.docker-cache/target-rust/debug/deps/crash_proxy-0a07f3a178f7aebb)
+
+running 3 tests
+test crash_after_superblock_publish_yields_new_state ... ok
+test crash_never_leaves_a_partial_file ... ok
+test crash_before_commit_file_keeps_old_state ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.68s
+
+     Running tests/distributed_semantics.rs (.docker-cache/target-rust/debug/deps/distributed_semantics-a35e0ce3fc5743fd)
+
+running 12 tests
+test distributed_group_crash_child ... ok
+test concurrent_readers_see_exact_pinned_bytes_while_a_writer_publishes ... ok
+test content_hash_knowledge_does_not_authorize_retrieval ... ok
+test gc_race_keeps_snapshot_reader_checkpoint_and_provenance_exact ... ok
+test retry_after_objects_crash_reaches_the_uninterrupted_head ... ok
+test single_writer_interlock_is_exclusive_and_reopens_cleanly ... ok
+test stale_reader_does_not_observe_a_newer_generation_until_it_reopens ... ok
+test stale_reader_on_a_split_store_does_not_observe_a_newer_generation ... ok
+test unreachable_endpoint_fails_closed_without_partial_bytes ... ok
+test retry_after_published_crash_does_not_create_a_second_state ... ok
+test retry_after_commit_file_crash_has_one_visible_state ... ok
+test crash_at_every_publication_transition_yields_old_or_new_whole_state ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.42s
+
+     Running tests/engram_store.rs (.docker-cache/target-rust/debug/deps/engram_store-be6cd347837646d9)
+
+running 1 test
+test engram_store_round_trip_region_and_incremental_update ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/extent_cow.rs (.docker-cache/target-rust/debug/deps/extent_cow-e65f017786a6814a)
+
+running 6 tests
+test identical_bytes_add_no_blob ... ok
+test overwrite_one_chunk_reuses_the_other_chunks_verbatim ... ok
+test zero_length_write_is_a_no_op ... ok
+test chunk_size_comes_from_the_manifest ... ok
+test crash_proxy_on_range_write_is_old_or_new_whole ... ok
+test randomised_range_writes_match_an_in_memory_model ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.73s
+
+     Running tests/fast_open.rs (.docker-cache/target-rust/debug/deps/fast_open-2dbf3ce78fefd655)
+
+running 3 tests
+test corrupted_chains_fall_back_to_the_authoritative_full_recovery ... ok
+test fast_open_matches_full_replay_and_reads_a_bounded_window ... ok
+test open_stops_at_the_nearest_checkpoint_and_falls_back_when_it_is_corrupt ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.02s
+
+     Running tests/float_tensor_ablation.rs (.docker-cache/target-rust/debug/deps/float_tensor_ablation-d3bac311ec134972)
+
+running 1 test
+test ablation_controls_remove_exactly_one_candidate_and_leave_defaults_alone ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+     Running tests/float_tiled_store.rs (.docker-cache/target-rust/debug/deps/float_tiled_store-5d6d5b3e5a69b393)
+
+running 5 tests
+test mode17_planner_offers_it_and_bytes_only_prefers_mode9 ... ok
+test checkpoint_float_tiled_shards_restore_exactly ... ok
+test mode17_round_trips_and_reads_regions ... ok
+test default_plan_equals_explicit_whole_pattern ... ok
+test access_pattern_region_selects_float_tiled_and_whole_selects_mode9 ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+
+     Running tests/fuse_concurrency.rs (.docker-cache/target-rust/debug/deps/fuse_concurrency-f5abf6502b6751b1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_context_mount.rs (.docker-cache/target-rust/debug/deps/fuse_context_mount-fa947e25757aab3a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_crash.rs (.docker-cache/target-rust/debug/deps/fuse_crash-1bb83724043b75c1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_posix.rs (.docker-cache/target-rust/debug/deps/fuse_posix-809056594c3d8c72)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_verb_matrix.rs (.docker-cache/target-rust/debug/deps/fuse_verb_matrix-f9a54eecf1666dd2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_verify_load.rs (.docker-cache/target-rust/debug/deps/fuse_verify_load-429f2c4cb4ca947c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuse_writeback.rs (.docker-cache/target-rust/debug/deps/fuse_writeback-3c7c2115a5eb9cce)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gc_accounting.rs (.docker-cache/target-rust/debug/deps/gc_accounting-4bb9ca57b3f9763d)
+
+running 3 tests
+test dry_run_reports_no_deleted_bytes ... ok
+test data_counter_equals_the_measured_tree_delta ... ok
+test pinned_snapshot_reclaims_no_data_and_reports_zero ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/gcs_backend.rs (.docker-cache/target-rust/debug/deps/gcs_backend-763f55d6882c844d)
+
+running 15 tests
+test configuration_refuses_an_ambiguous_credential ... ok
+test anonymous_emulator_mode_sends_no_authorization_header ... ok
+test listing_round_trips_the_normative_layout ... ok
+test create_once_succeeds_is_idempotent_and_rejects_different_bytes ... ok
+test control_create_is_create_once_and_delete_is_reported ... ok
+test missing_object_is_not_found_everywhere ... ok
+test matched_generation_succeeds_and_a_stale_generation_is_busy ... ok
+test probe_refuses_an_endpoint_that_accepts_a_stale_generation ... ok
+test range_reads_are_exact_and_end_of_object_is_not_an_error ... ok
+test resumable_upload_carries_the_payload_above_the_simple_bound ... ok
+test probe_records_create_once_matching_and_stale_rejection ... ok
+test transport_failure_stays_io_and_is_not_reported_as_corruption ... ok
+test store_refuses_a_stale_accepting_endpoint_before_publishing ... ok
+test generation_is_confirmed_by_read_back_when_the_upload_reply_omits_it ... ok
+test store_round_trip_is_byte_identical_to_local_and_reopens ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.82s
+
+     Running tests/gcs_fencing.rs (.docker-cache/target-rust/debug/deps/gcs_fencing-4378fcfdcb31838e)
+
+running 9 tests
+test child_fenced_writer_after_fence ... ok
+test child_fenced_writer ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/group_commit.rs (.docker-cache/target-rust/debug/deps/group_commit-25fb887b0ccb2b5e)
+
+running 11 tests
+
+running 1 test
+
+running 1 test
+test abort_group_restores_pre_group_state_exactly ... ok
+test begin_and_commit_group_across_calls_publishes_one_commit ... ok
+test empty_commit_group_publishes_nothing ... ok
+test group_crash_helper ... ok
+test failed_group_publishes_nothing_and_restores_state ... ok
+test nested_group_is_invalid_argument_and_store_stays_usable ... ok
+test read_only_store_refuses_group ... ok
+test reads_inside_the_group_see_staged_writes ... ok
+test one_group_of_100_creates_matches_100_single_creates ... ok
+test crash_after_group_publish_yields_the_whole_new_generation ... ok
+
+running 1 test
+test crash_before_group_publish_keeps_the_old_generation ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+
+     Running tests/handle_cap.rs (.docker-cache/target-rust/debug/deps/handle_cap-ce4df9aeaea483d7)
+
+running 6 tests
+test a_mutation_still_invalidates_capped_handles ... ok
+test a_packed_writer_still_reads_its_own_buffered_members_under_cap_one ... ok
+test a_zero_cap_is_the_unbounded_control ... ok
+test many_readers_under_a_tiny_cap_make_progress ... ok
+test active_handles_never_exceed_the_cap ... ok
+test a_panicking_reader_releases_its_slot ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+
+     Running tests/index_chain.rs (.docker-cache/target-rust/debug/deps/index_chain-2c80017e9594f6e6)
+
+running 8 tests
+test a_forged_chain_root_is_rejected ... ok
+test a_partial_chain_is_rejected_and_rebuilt ... ok
+test a_self_consistent_but_wrong_ancestor_is_rejected ... ok
+test the_chain_depth_bound_and_byte_budget_are_enforced ... ok
+test compaction_writes_a_full_segment_and_gc_drops_the_chain ... ok
+test a_chain_load_answers_exactly_like_a_full_segment_store ... ok
+test a_snapshot_pins_its_old_chain_across_gc ... ok
+test the_writer_chain_cache_answers_like_a_cold_oracle ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/index_equivalence.rs (.docker-cache/target-rust/debug/deps/index_equivalence-c1ce46f8245f8c7b)
+
+running 1 test
+test indexed_matches_scan_across_random_states ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.19s
+
+     Running tests/index_gc_bound.rs (.docker-cache/target-rust/debug/deps/index_gc_bound-6f4d926f0c87402c)
+
+running 3 tests
+test a_single_over_long_chain_still_refuses_and_deletes_nothing ... ok
+test a_chain_without_retention_reclaims_exactly_the_unnamed_segments ... ok
+test many_retained_roots_each_with_a_long_chain_are_reclaimed ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.42s
+
+     Running tests/index_incremental.rs (.docker-cache/target-rust/debug/deps/index_incremental-044c3a43e201e5bd)
+
+running 3 tests
+test group_commits_are_maintained_incrementally ... ok
+test a_stale_or_damaged_segment_is_rejected_and_rebuilt ... ok
+test randomized_sequences_match_the_full_rebuild_oracle ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.76s
+
+     Running tests/index_persistence.rs (.docker-cache/target-rust/debug/deps/index_persistence-85c549ba8a1bc7e3)
+
+running 7 tests
+test forged_self_consistent_subset_is_rejected_by_the_commit_attestation ... ok
+test persisted_index_loads_on_reopen_without_rebuild ... ok
+test read_only_open_never_writes_or_creates_indexes ... ok
+test reopen_after_new_commit_uses_the_new_head_index ... ok
+test corrupt_index_rebuilds_and_results_are_unchanged ... ok
+test persisted_index_matches_scan_matrix_across_views ... ok
+test gc_removes_only_unreachable_indexes ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/kv_capability.rs (.docker-cache/target-rust/debug/deps/kv_capability-61422928d027a915)
+
+running 13 tests
+test a_foreign_tenant_grant_is_denied ... ok
+test a_grant_without_the_tenant_namespace_is_denied ... ok
+test a_grant_that_does_not_name_the_descriptor_is_denied ... ok
+test a_content_hash_is_not_a_credential ... ok
+test absence_and_denial_are_indistinguishable ... ok
+test a_tampered_descriptor_fails_closed_before_bytes ... ok
+test a_revoked_envelope_cannot_be_loaded ... ok
+test a_page_is_not_readable_without_the_posix_bit_even_with_a_grant ... ok
+test an_absent_envelope_is_denied ... ok
+test an_expired_grant_is_denied_with_the_same_text ... ok
+test authorized_reader_gets_exact_bytes ... ok
+test descriptor_disagreement_after_authorization_is_corrupt ... ok
+test the_stored_blob_is_a_canonical_envelope ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/kv_fast_path_cache.rs (.docker-cache/target-rust/debug/deps/kv_fast_path_cache-27c8e74d95dd7b8f)
+
+running 6 tests
+test a_forged_envelope_identity_cannot_borrow_another_grants_decode ... ok
+test a_second_grant_cannot_borrow_the_first_grants_decode ... ok
+test a_write_fences_the_descriptor_cache ... ok
+test a_rewritten_object_is_authorised_by_its_own_descriptor ... ok
+test an_expired_grant_is_refused_on_every_read ... ok
+test descriptor_decode_is_cached_across_reads ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/kv_prefix.rs (.docker-cache/target-rust/debug/deps/kv_prefix-2b02a12136b978aa)
+
+running 12 tests
+test decision_reuses_only_when_it_is_cheaper_and_records_both_estimates ... ok
+test every_compatibility_field_fails_closed_to_recompute ... ok
+test gc_keeps_live_prefix_pages_and_respects_pins ... ok
+test get_requires_a_matching_capability_and_is_non_disclosing ... ok
+test full_verify_passes_after_put_parent_extension_and_gc ... ok
+test parent_chain_shares_page_objects_and_stores_only_new_pages ... ok
+test prefixes_survive_reopen_and_are_reusable ... ok
+test shipped_prefill_document_matches_the_baked_model ... ok
+test token_chain_binds_the_exact_sequence ... ok
+test put_publishes_one_commit_and_rejects_bad_payloads ... ok
+test record_round_trips_canonically_and_rejects_unknown_keys ... ok
+test replacing_a_prefix_is_a_new_record_and_pinned_is_refused ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/kv_provenance.rs (.docker-cache/target-rust/debug/deps/kv_provenance-25a07d2a95cbceef)
+
+running 6 tests
+test forgery_is_rejected ... ok
+test collision_two_adapter_roots_are_two_identities ... ok
+test adapter_set_is_canonical ... ok
+test salt_makes_identical_pages_unlinkable_by_root ... ok
+test cli_prov_write_matches_the_store_api ... ok
+test store_scope_is_the_provenance_descriptor_id ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/load_receipt.rs (.docker-cache/target-rust/debug/deps/load_receipt-40c810a35ae5d11c)
+
+running 3 tests
+test tampered_receipt_is_rejected ... ok
+test corrupted_tile_is_refused_and_named ... ok
+test lazy_and_full_receipts_agree_on_a_healthy_store ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/lock_probe.rs (.docker-cache/target-rust/debug/deps/lock_probe-84c9956284b9ba5e)
+
+running 5 tests
+test control_state_access_still_records_a_state_mutex_hold ... ok
+test disabled_probe_records_nothing ... ok
+test reopen_read_only_never_writes_probe_state ... ok
+test probe_does_not_change_bytes_or_state ... ok
+test immutable_read_time_cannot_exceed_wall_on_one_thread ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+     Running tests/merkle_identity.rs (.docker-cache/target-rust/debug/deps/merkle_identity-f0c67bf1f429aab5)
+
+running 7 tests
+test manifest_path_is_content_address_keyed ... ok
+test reopen_gc_and_verify_preserve_merkle_files ... ok
+test tampered_chunk_blob_fails_range_read_and_verify_naming_the_index ... ok
+test root_is_deterministic_and_chunk_size_is_part_of_the_identity ... ok
+test tampered_manifest_chunk_hash_is_a_root_mismatch ... ok
+test edge_sizes_have_the_specified_roots ... ok
+test four_kib_overwrite_of_128_mib_does_not_read_the_whole_file ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/mode18_store.rs (.docker-cache/target-rust/debug/deps/mode18_store-ab7a620a7850edf9)
+
+running 5 tests
+test bytes_only_default_never_picks_mode18 ... ok
+test mode18_is_gated_off_by_default_and_selectable_by_name ... ok
+test mode18_round_trips_reads_regions_and_verifies ... ok
+test mode18_stream_count_changes_representation_identity ... ok
+test cost_model_prices_mode18_from_its_own_measured_row ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+
+     Running tests/multiwriter.rs (.docker-cache/target-rust/debug/deps/multiwriter-b357ed4ca5bbf52d)
+
+running 12 tests
+test an_ambiguous_outcome_is_resolved_by_the_op_digest ... ok
+test a_quota_race_at_the_limit_rejects_the_loser ... ok
+test an_authorization_change_that_wins_the_race_denies_publication ... ok
+test optimistic_open_creates_the_policy_and_single_open_refuses_it ... ok
+test gc_racing_a_prepared_transaction_retains_its_manifest ... ok
+test a_lost_publication_race_does_not_pollute_the_retry_state ... ok
+test disjoint_transactions_both_commit_and_rebase ... ok
+test replaying_the_same_transaction_id_is_idempotent ... ok
+test the_seeded_transaction_id_and_policy_are_inspectable ... ok
+test same_name_create_is_a_typed_conflict ... ok
+test transaction_ids_are_not_reused_for_a_different_op_set ... ok
+test same_object_update_without_observing_the_winner_is_rejected ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/object_cache.rs (.docker-cache/target-rust/debug/deps/object_cache-06bb5449d36f0c15)
+
+running 10 tests
+test a_token_cannot_read_a_different_content_root ... ok
+test authorization_is_checked_before_the_lookup ... ok
+test a_new_version_misses_and_removes_the_old_entry ... ok
+test counters_and_clear_are_honest ... ok
+test cache_is_disabled_by_default ... ok
+test a_pinned_object_survives_eviction_and_an_unpinned_one_does_not ... ok
+test eviction_prefers_the_lowest_cost_avoided_per_byte ... ok
+test hits_are_exact_and_counted ... ok
+test tensor_reads_use_the_cache_and_keep_exactness ... ok
+test single_flight_shares_a_miss_but_the_cache_alone_does_not ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+     Running tests/overlay_compact.rs (.docker-cache/target-rust/debug/deps/overlay_compact-a8e57f9a44168132)
+
+running 8 tests
+test compaction_of_a_non_overlay_object_is_refused_and_publishes_nothing ... ok
+test compaction_preserves_bytes_and_the_content_root ... ok
+test a_snapshot_pinned_before_compaction_still_reads_its_version ... ok
+test corruption_is_detected_before_any_publication ... ok
+test gc_after_compaction_without_a_snapshot_collects_the_old_layers ... ok
+test the_cli_compact_verb_reports_the_unchanged_root ... ok
+test compaction_clears_the_configured_writer_bounds ... ok
+test compaction_is_old_or_new_under_the_crash_proxy ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+     Running tests/overlay_fixture.rs (.docker-cache/target-rust/debug/deps/overlay_fixture-613d3caa972e1d17)
+
+running 1 test
+test rust_reads_the_committed_overlay_fixture_exactly ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/overlay_format.rs (.docker-cache/target-rust/debug/deps/overlay_format-fbd4d23a88d6c3ca)
+
+running 6 tests
+test overlay_struct_validation_is_enforced_before_encoding ... ok
+test overlay_extent_rejects_bad_grids_and_bounds ... ok
+test v1_v2_v3_encoding_is_unchanged ... ok
+test v4_accepts_adjacent_non_overlapping_extents ... ok
+test v4_overlay_round_trips_without_a_top_level_chunk_table ... ok
+test v4_parser_rejects_malformed_maps_and_values ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/overlay_read.rs (.docker-cache/target-rust/debug/deps/overlay_read-645f3472ecc043fb)
+
+running 9 tests
+test adjacent_non_overlapping_extents_in_one_layer_are_exact ... ok
+test nested_overlays_resolve_in_order_and_keep_old_versions_readable ... ok
+test overlay_fails_closed_for_broken_base_chains_and_accounting ... ok
+test overlay_format_rejects_are_typed_before_any_chunk_is_read ... ok
+test range_reads_fetch_only_intersecting_chunks ... ok
+test v4_overlay_round_trips_exact_bytes_and_full_read_verifies ... ok
+test gc_retains_overlay_base_chains_and_collects_unreferenced_chunks ... ok
+test verify_resolves_overlay_chains_and_reports_corruption ... ok
+test overlay_chain_depth_is_bounded ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/overlay_write.rs (.docker-cache/target-rust/debug/deps/overlay_write-f53a0ebabcd1c8dc)
+
+running 13 tests
+test collapse_and_insert_are_refused_for_an_overlay_object ... ok
+test adjacent_writes_coalesce_without_growing_the_chain ... ok
+test append_and_truncate_grow_publish_exact_layers ... ok
+test aligned_and_misaligned_overwrites_are_exact_and_match_the_canonical_root ... ok
+test overlapping_ranges_in_one_call_are_last_writer_wins ... ok
+test gc_collects_an_unreferenced_overlay_layer ... ok
+test rewriting_identical_bytes_publishes_nothing ... ok
+test snapshots_and_gc_retain_every_overlay_layer ... ok
+test the_configured_byte_bound_refuses_and_names_compaction ... ok
+test zero_range_publishes_an_overlay_layer_and_is_bounded ... ok
+test the_configured_depth_bound_refuses_and_names_compaction ... ok
+test the_manifest_extent_limit_forces_a_new_layer ... ok
+test crash_proxy_over_overlay_publication_yields_old_or_new ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+
+     Running tests/packed_races.rs (.docker-cache/target-rust/debug/deps/packed_races-f127d84ce4eb1aff)
+
+running 5 tests
+generation=1
+snapshot_root=f5c58e0e75b3ead86abea15e8e500c902748507fe0fdc421b6e0488065d9424a
+a4354a8aeaeb8f2f1fd647a485fd043b635bc7dfcad4c5d7ebbd8a4b62395058
+test an_aborted_group_publishes_no_pack_and_no_catalog_entry ... ok
+test a_cancelled_reader_leaves_the_packed_store_intact ... ok
+test gc_concurrent_with_readers_and_a_writer_keeps_every_live_root ... ok
+test racing_seal_catalog_and_commit_never_expose_a_torn_member ... ok
+generation=1
+snapshot_root=77565c8f2fcd5889b9a36b2ae70c1744329b7450d5f0b9418f368bfaa210ed82
+a4354a8aeaeb8f2f1fd647a485fd043b635bc7dfcad4c5d7ebbd8a4b62395058
+test a_process_crash_mid_seal_leaves_old_or_new_whole_state ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+     Running tests/packs.rs (.docker-cache/target-rust/debug/deps/packs-cbe6b20ee792db35)
+
+running 15 tests
+test backend_kind_refuses_packing_a_weak_plane ... ok
+test digest_mismatch_fails_closed ... ok
+test catalog_bound_falls_back_to_flat ... ok
+test missing_catalog_fails_closed ... ok
+test gc_reclaims_a_pack_only_when_every_member_is_gone ... ok
+test deterministic_layout_for_a_fixed_pack_size ... ok
+test large_blobs_bypass_packing_and_remain_flat ... ok
+test packed_plane_refuses_a_plane_without_range_reads ... ok
+test missing_segment_fails_closed ... ok
+test packed_reads_are_byte_identical_and_ranges_are_narrow ... ok
+test store_round_trip_verify_and_gc_on_a_packed_plane ... ok
+test truncated_pack_fails_closed ... ok
+test packing_does_not_change_state_or_identity ... ok
+test the_catalog_is_published_once_per_flush_and_ends_identical ... ok
+test pack_crash_proxy_yields_old_or_new ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+
+     Running tests/parallel_checkpoint.rs (.docker-cache/target-rust/debug/deps/parallel_checkpoint-73c52a26a5c4a76a)
+
+running 7 tests
+test blob_worker_can_publish_blobs_but_not_control_state ... ok
+test a_refused_prepare_publishes_nothing_and_gc_reclaims_orphans ... ok
+test duplicate_checkpoint_name_fails_closed ... ok
+test rank_and_byte_bounds_are_enforced ... ok
+test parallel_and_sequential_publish_identical_state ... ok
+test every_rank_count_publishes_the_same_head ... ok
+test a_killed_process_mid_prepare_leaves_no_publication ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s
+
+     Running tests/parallel_read.rs (.docker-cache/target-rust/debug/deps/parallel_read-5ccddff4ca524246)
+
+running 9 tests
+test empty_input_is_a_no_op ... ok
+test corrupted_object_fails_closed_and_deterministically ... ok
+test error_policy_is_lowest_failing_index ... ok
+test non_tensor_object_reports_the_same_error_on_every_thread_count ... ok
+test thread_count_never_changes_bytes_or_order ... ok
+test tight_bound_and_oversized_mix_terminates ... ok
+test determinism_across_twenty_repeats_at_four_threads ... ok
+test inflight_bound_holds_and_is_observable ... ok
+test oversized_task_runs_alone ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests/parent_graph.rs (.docker-cache/target-rust/debug/deps/parent_graph-0daeaf55d13a0f89)
+
+running 6 tests
+test determinism_is_byte_stable ... ok
+test dp_matches_the_oracle_when_chain_or_restart_is_optimal ... ok
+test the_oracle_can_prefer_a_non_adjacent_parent ... ok
+test sla_refusal_is_typed_and_does_not_degrade ... ok
+test store_round_trip_keeps_every_chosen_root ... ok
+test depth_bound_holds_for_every_solver ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests/parent_graph_restore_floor.rs (.docker-cache/target-rust/debug/deps/parent_graph_restore_floor-ea8fa9bcbf83d286)
+
+running 6 tests
+test an_sla_that_only_fits_without_the_overhead_is_refused ... ok
+test a_missing_overhead_model_cannot_claim_an_sla_and_writes_nothing ... ok
+test graph_prediction_includes_the_measured_overhead ... ok
+test the_same_graph_and_options_always_give_the_same_plan ... ok
+test baked_overhead_matches_the_measured_receipt ... ok
+test a_corrected_plan_round_trips_with_unchanged_roots ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parent_graph_sla.rs (.docker-cache/target-rust/debug/deps/parent_graph_sla-503e13139c68b58c)
+
+running 7 tests
+test each_representation_is_priced_by_its_own_measured_row ... ok
+test a_model_without_a_margin_cannot_claim_an_sla ... ok
+test the_baked_hop_rows_are_the_measured_chain_union ... ok
+test an_sla_that_only_fits_without_the_margin_is_refused ... ok
+test the_same_graph_and_options_always_give_the_same_plan ... ok
+test the_baked_sla_margin_is_derived_from_the_measured_receipts ... ok
+test graph_edges_use_the_hop_rows_and_a_plan_round_trips_unchanged ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/planes.rs (.docker-cache/target-rust/debug/deps/planes-8bdd0949f99b30b9)
+
+running 14 tests
+test local_blobs_s3_commits_match_the_single_backend_store ... ok
+test nested_splits_are_refused ... ok
+test object_planes_are_probed_and_declare_conditional_head ... ok
+test local_planes_are_probed_on_a_writable_open ... ok
+test commit_plane_without_conditional_update_is_refused ... ok
+test s3_blobs_local_commits_match_the_single_backend_store ... ok
+test s3_split_crash_proxy_yields_old_or_new ... ok
+test plane_keys_route_to_the_named_plane ... ok
+test split_refuses_a_blob_plane_without_atomic_publish ... ok
+test split_refuses_a_commit_plane_without_conditional_update ... ok
+test split_publication_uses_one_head_compare_and_swap ... ok
+test split_report_lists_planes_in_store_info ... ok
+test split_local_planes_match_the_single_backend_store ... ok
+test split_crash_proxy_yields_old_or_new ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s
+
+     Running tests/planner_float.rs (.docker-cache/target-rust/debug/deps/planner_float-5e8752a3ecdace75)
+
+running 4 tests
+test planner_does_not_select_float_tensor_for_random_data ... ok
+test planner_selects_float_tensor_for_weight_like_bf16 ... ok
+test rebase_rewrites_a_hot_delta_and_is_idempotent ... ok
+test measured_cost_model_is_used_and_lambda_can_flip_the_choice ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.95s
+
+     Running tests/planner_sparse.rs (.docker-cache/target-rust/debug/deps/planner_sparse-98638bcb488d8205)
+
+running 3 tests
+test cost_model_has_a_sparse_delta_row ... ok
+test dense_change_keeps_mode11_and_is_readable ... ok
+test sparse_change_selects_mode16_and_reads_back_exactly ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running tests/planner_v2.rs (.docker-cache/target-rust/debug/deps/planner_v2-b34e64385026523b)
+
+running 7 tests
+test a_bytes_cheap_but_expensive_to_build_representation_is_priced ... ok
+test a_refusal_names_the_best_achievable_bound ... ok
+test an_sla_is_accepted_only_when_the_uncertainty_bound_fits ... ok
+test retention_is_reported_and_weighted_explicitly ... ok
+test the_write_lambda_defaults_to_the_read_lambda ... ok
+test the_default_solver_uses_the_exact_oracle_when_it_is_cheap ... ok
+test uncertainty_accumulates_along_a_chain_and_the_plan_is_deterministic ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/planner_write_cost.rs (.docker-cache/target-rust/debug/deps/planner_write_cost-934bc2f124276892)
+
+running 8 tests
+test mode18_fixed_term_is_a_positive_measured_lower_bound ... ok
+test tile_intersection_counts_whole_tiles ... ok
+test root_object_exists_is_reachable_from_the_store_documented_api ... ok
+test mode18_is_not_auto_selected_even_with_a_tile_shape ... ok
+test explicit_write_lambda_is_honoured_and_zero_write_lambda_is_the_old_objective ... ok
+test zstd19_candidate_is_gated_by_size_budget_and_policy ... ok
+test zstd_patch_round_trips_exactly_against_a_causal_base ... ok
+test write_term_prevents_a_single_read_selecting_the_tiled_form ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.92s
+
+     Running tests/provenance.rs (.docker-cache/target-rust/debug/deps/provenance-69f3f4ba5f95df51)
+
+running 19 tests
+test cost_components_are_summed_for_work_actually_incurred ... ok
+test cost_driven_choice_between_fetch_decode_and_recompute ... ok
+test input_and_output_order_do_not_change_the_identity ... ok
+test no_eligible_strategy_names_every_reason ... ok
+test output_content_mismatch_is_rejected_without_writing ... ok
+test params_are_bounded ... ok
+test closure_rejects_cycles_and_terminates ... ok
+test closure_walks_transitively_and_respects_the_depth_bound ... ok
+test recompute_requires_every_input_to_be_available ... ok
+test recompute_requires_exact_determinism ... ok
+test record_round_trips_byte_for_byte ... ok
+test tie_break_is_cost_then_fetch_decode_recompute_then_name ... ok
+test unsorted_and_duplicate_inputs_are_rejected ... ok
+test provenance_survives_reopen ... ok
+test provenance_relation_is_attached_atomically_to_every_output ... ok
+test gc_retains_provenance_and_inputs_until_the_output_is_deleted ... ok
+test verify_full_catches_a_tampered_record ... ok
+test verify_full_catches_a_record_that_no_longer_matches_the_object ... ok
+test verify_full_rejects_a_malformed_relation_target ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/publication_batch.rs (.docker-cache/target-rust/debug/deps/publication_batch-84bf4d4dbf46d880)
+
+running 6 tests
+test mtime_and_generation_are_monotonic_across_grouped_publications ... ok
+test an_aborted_group_publishes_nothing ... ok
+test one_group_is_one_commit_one_head_and_one_index_segment ... ok
+test deferred_and_eager_publish_the_same_logical_state ... ok
+test a_reopened_store_loads_the_grouped_state_and_its_index_without_a_rebuild ... ok
+test the_deferred_batch_skips_no_file_barrier_and_closes_before_the_commit ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/quota.rs (.docker-cache/target-rust/debug/deps/quota-a29dc8006363d0d8)
+
+running 12 tests
+test cli_quota_denial_is_non_disclosing ... ok
+test cli_quota_budget_applies_only_to_the_configured_principal ... ok
+test cli_quota_show_defaults_to_the_caller ... ok
+test mismatched_record_fails_closed_until_rebuild ... ok
+test quota_arguments_parse_and_reject_ambiguity ... ok
+test quota_record_round_trips_canonically ... ok
+test reused_content_costs_only_the_new_object_record ... ok
+test tenant_budget_is_attributed_by_the_reserved_attribute ... ok
+test usage_survives_reopen_and_still_denies ... ok
+test over_budget_write_is_refused_and_nothing_is_published ... ok
+test group_commit_denial_rolls_back_the_whole_group ... ok
+test cli_quota_show_is_limited_to_the_callers_principal ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/quota_usage_op.rs (.docker-cache/target-rust/debug/deps/quota_usage_op-c8ea5943070811d5)
+
+running 9 tests
+test migrated_record_that_disagrees_with_committed_usage_fails_closed ... ok
+test tenant_and_usage_op_bytes_are_canonical ... ok
+test tampered_usage_assertion_is_corrupt_on_replay ... ok
+test budget_denial_in_a_group_is_atomic_and_charges_nothing ... ok
+test tenant_usage_is_committed_and_replayed ... ok
+test legacy_record_is_imported_once_and_preserved ... ok
+test usage_is_a_committed_op_and_the_quota_file_is_policy_only ... ok
+test usage_is_derived_when_the_head_has_no_assertion ... ok
+test usage_survives_reopen_without_a_per_commit_file_write ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/range_write.rs (.docker-cache/target-rust/debug/deps/range_write-bd6bed9b2cc6722c)
+
+running 6 tests
+test empty_range_list_publishes_nothing ... ok
+test overlapping_ranges_apply_in_call_order ... ok
+test a_stale_manifest_cache_is_ignored_not_trusted ... ok
+test a_current_manifest_cache_is_equivalent_to_a_fresh_read ... ok
+test one_multi_range_write_publishes_one_commit ... ok
+test ranges_match_sequential_writes_byte_for_byte ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/read_pool.rs (.docker-cache/target-rust/debug/deps/read_pool-6f9956e6aa25086a)
+
+running 8 tests
+test a_flipped_chunk_fails_closed ... ok
+test a_mutation_invalidates_pooled_handles_and_new_content_is_visible ... ok
+test a_flipped_manifest_fails_closed ... ok
+test a_packed_write_reads_back_the_members_it_has_not_yet_catalogued ... ok
+test pooled_reads_are_counted_in_backend_stats ... ok
+test immutable_reads_do_not_take_the_state_mutex ... ok
+test a_pooled_handle_survives_concurrent_reads_without_mixing_bytes ... ok
+test concurrent_readers_and_a_writer_never_see_a_torn_blob ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/recovery.rs (.docker-cache/target-rust/debug/deps/recovery-1a16bdd4292f9cf1)
+
+running 11 tests
+test both_slots_zero_fails_closed ... ok
+test commit_crc_flip_falls_back ... ok
+test corrupted_superblock_slot_falls_back_to_the_other_slot ... ok
+test publication_crash_tail_above_superblock_is_not_visible ... ok
+test missing_chunk_falls_back_and_verify_reports_it ... ok
+test corrupt_manifest_falls_back_and_full_verify_reports ... ok
+test checkpoint_survives_reopen_and_corrupt_checkpoint_is_ignored ... ok
+test rejected_generations_are_never_deleted ... ok
+test truncated_commit_file_falls_back ... ok
+test verify_reports_healthy_store_as_ok ... ok
+test writer_after_rejected_generation_does_not_overwrite_it ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+     Running tests/recovery_first.rs (.docker-cache/target-rust/debug/deps/recovery_first-eb6ee386af54cbe1)
+
+running 3 tests
+test unknown_required_tensor_is_a_typed_error ... ok
+test required_set_is_first_and_the_container_is_exact ... ok
+test verified_cache_is_reused_and_revalidated ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/representation.rs (.docker-cache/target-rust/debug/deps/representation-116e1689eb01a4bd)
+
+running 9 tests
+test codec_auto_falls_back_to_a_legal_v2_raw_manifest ... ok
+test codec_auto_round_trips_compressible_data_and_decodes_only_intersecting_chunks ... ok
+test chunk_decode_counter_observes_only_the_calling_thread ... ok
+test codec_store_reopens_and_raw_mode_preserves_v1_reads ... ok
+test dependency_depth_bound_is_enforced ... ok
+test raw_mode_writes_the_frozen_v1_manifest_layout ... ok
+test gc_retains_codec_dependencies_of_a_live_dependent ... ok
+test missing_dependency_fails_closed_and_verify_reports_it ... ok
+test delta_uses_a_causal_base_and_beats_an_independent_zstd_frame ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/restore_budget.rs (.docker-cache/target-rust/debug/deps/restore_budget-707188cbf804c972)
+
+running 8 tests
+test a_cancelled_waiter_releases_its_reservation_and_the_next_request_proceeds ... ok
+test a_pre_cancelled_restore_returns_cancelled_and_writes_nothing ... ok
+test a_single_worker_budgeted_restore_still_charges_the_budget ... ok
+test effective_widths_are_a_pure_function_of_the_request_and_policy ... ok
+test a_tensor_larger_than_the_whole_budget_runs_alone_and_completes ... ok
+test a_panicking_worker_releases_its_budget_reservation ... ok
+test concurrent_mutation_does_not_break_the_budget ... ok
+test every_width_configuration_is_byte_identical_and_within_the_cap ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+
+     Running tests/restore_pipeline.rs (.docker-cache/target-rust/debug/deps/restore_pipeline-c936d50cddd43d74)
+
+running 14 tests
+test declaration_errors_do_not_stall_later_reservations ... ok
+test empty_input_writes_nothing ... ok
+test first_error_is_lowest_index_and_writing_stops ... ok
+test authorized_restore_matches_the_id_restore ... ok
+test corrupted_tensor_fails_closed_with_a_deterministic_prefix ... ok
+test oversized_between_normal_tasks_terminates_and_orders ... ok
+test oversized_tasks_run_one_at_a_time_without_deadlock ... ok
+test order_is_preserved_under_skewed_decode_times ... ok
+test restore_pipeline_crash_helper ... ok
+test byte_identical_output_for_1_2_4_threads ... ok
+test writer_failure_keeps_only_the_successful_prefix ... ok
+test restore_does_not_mutate_the_store ... ok
+
+running 1 test
+test staging_bound_is_observed_and_enforced ... ok
+test kill_mid_write_leaves_only_a_truncated_destination ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+
+     Running tests/retention.rs (.docker-cache/target-rust/debug/deps/retention-b80d815886f2adc3)
+
+running 8 tests
+test a_forged_binding_blob_is_rejected ... ok
+test binding_never_changes_artifact_identity ... ok
+test a_live_binding_retains_unreachable_bytes ... ok
+test durable_requires_a_pin_or_snapshot_root ... ok
+test rebinding_is_append_only_and_epoch_fenced ... ok
+test expired_volatile_is_ordered_before_expired_ephemeral ... ok
+test signed_bindings_are_checked_and_trust_is_store_policy ... ok
+test class_aware_gc_never_reclaims_a_reachable_blob ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/s3_backend.rs (.docker-cache/target-rust/debug/deps/s3_backend-c1b321e8ca9912fc)
+
+running 6 tests
+test gc_over_s3_deletes_only_unreachable_objects ... ok
+test crash_proxy_over_s3_yields_old_or_new ... ok
+test capabilities_and_conditional_put_absent_or_idempotent ... ok
+test local_and_s3_artifacts_are_byte_identical ... ok
+test store_round_trip_over_s3 ... ok
+test writer_lock_and_lost_conditional_head_update ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/s3_fencing.rs (.docker-cache/target-rust/debug/deps/s3_fencing-2c51040fc6fd7f32)
+
+running 11 tests
+test a_replaced_lock_record_makes_the_stale_publication_fail_412 ... ok
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test renewal_keeps_the_writer_valid ... ok
+test two_writers_racing_on_release_leave_one_valid_lock ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/service_account.rs (.docker-cache/target-rust/debug/deps/service_account-789302ed9be537e1)
+
+running 14 tests
+test an_inconsistent_key_is_refused ... ok
+test assertion_for_an_empty_scope_is_refused ... ok
+test encrypted_and_non_rsa_keys_are_refused_by_name ... ok
+test assertion_has_the_standard_header_and_claim_shape ... ok
+test a_short_lived_token_uses_half_its_lifetime_as_the_window ... ok
+test malformed_input_never_echoes_key_material ... ok
+test non_service_account_credentials_are_refused_by_name ... ok
+test gcs_backend_sends_the_service_account_bearer_token ... ok
+test gcs_config_refuses_two_credential_forms_and_loads_one_key_file ... ok
+test debug_output_redacts_the_key_assertion_and_token ... ok
+test rfc7515_rs256_vector_signs_to_the_published_bytes ... ok
+test pkcs8_and_pkcs1_encodings_are_the_same_key ... ok
+test provider_refusals_are_typed_and_do_not_echo_the_assertion ... ok
+test token_is_cached_and_refreshed_inside_a_bounded_window ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/shared_mounts.rs (.docker-cache/target-rust/debug/deps/shared_mounts-fd4348748b9282ec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/signed_bundle.rs (.docker-cache/target-rust/debug/deps/signed_bundle-e690a42dcdac9d91)
+
+running 11 tests
+test manifest_paths_reject_traversal ... ok
+test non_canonical_manifest_is_rejected ... ok
+test manifest_is_deterministic_across_directory_scans ... ok
+test missing_signature_fails_when_a_key_is_required ... ok
+test signature_from_bundle_verifies_self_contained ... ok
+test sign_verify_round_trip ... ok
+test tampered_file_breaks_file_check_and_signature ... ok
+test unlisted_payload_file_is_rejected ... ok
+test wrong_key_is_rejected ... ok
+test unsigned_bundle_fails_with_public_key_and_says_so_without ... ok
+test provenance_show_resolves_bundle_manifest_and_snapshot ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/singleflight.rs (.docker-cache/target-rust/debug/deps/singleflight-aafb6cf532b82145)
+
+running 9 tests
+test a_pre_cancelled_token_declines_to_start ... ok
+test byte_bound_degrades_instead_of_reserving_without_limit ... ok
+test a_cancelled_read_leaves_the_store_usable ... ok
+test a_decode_error_reaches_every_waiter ... ok
+test concurrent_identical_reads_decode_once ... ok
+test single_flight_is_off_by_default ... ok
+test distinct_objects_are_not_coalesced ... ok
+test entry_bound_degrades_to_independent_reads ... ok
+test a_cancelled_waiter_does_not_cancel_the_leader ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+
+     Running tests/store_core.rs (.docker-cache/target-rust/debug/deps/store_core-f82c2782d34736b2)
+
+running 11 tests
+test empty_files_and_range_reads ... ok
+test init_create_reopen_roundtrip ... ok
+test gc_mark_sweep_removes_only_unreachable_blobs ... ok
+test authorization_filters_results_counts_and_evidence ... ok
+test relations_cycles_tags_one_hop_and_cardinality ... ok
+test overwrite_range_truncate_and_snapshot_reads ... ok
+test setattr_and_symlink_metadata ... ok
+test single_writer_lock_and_read_only_open ... ok
+test rename_hardlink_unlink_snapshot_and_gc_retention ... ok
+test snapshots_are_stable_and_selectors_follow_the_pin ... ok
+test conformance_fixture_is_deterministic_and_small ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/store_extensions.rs (.docker-cache/target-rust/debug/deps/store_extensions-36748fee251bce7b)
+
+running 11 tests
+test nlink_and_statfs_counters_derive_from_state ... ok
+test contexts_are_snapshot_scoped_and_round_trip_through_replay ... ok
+test gc_retains_pinned_content_and_sweeps_it_after_unpin ... ok
+test open_handle_pins_keep_unlinked_content_readable ... ok
+test orphan_object_records_left_by_a_crash_are_removed_by_gc_apply ... ok
+test file_range_zero_collapse_and_insert ... ok
+test rename_hardlink_identity_and_exchange ... ok
+test rmdir_removes_empty_directories_and_rejects_non_empty ... ok
+test saved_contexts_are_relations_with_canonical_selector_hex ... ok
+test rename_replaces_files_and_empty_directories_atomically ... ok
+test xattrs_are_stored_per_spec_and_survive_reopen ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/streamed_plan_identity.rs (.docker-cache/target-rust/debug/deps/streamed_plan_identity-1e0d6dc952f93e15)
+
+running 2 tests
+test the_streamed_writer_refuses_requests_it_cannot_reproduce ... ok
+test streamed_and_slice_planned_writes_are_byte_identical ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.78s
+
+     Running tests/streaming.rs (.docker-cache/target-rust/debug/deps/streaming-b761347c17b32c15)
+
+running 7 tests
+test append_zero_bytes_is_a_no_op ... ok
+test codec_auto_streaming_large_uses_v2_raw_manifest ... ok
+test streaming_and_buffered_create_records_match ... ok
+test streaming_create_boundary_sizes ... ok
+test streaming_create_error_commits_nothing ... ok
+test streaming_append_is_exact_and_one_generation_per_call ... ok
+test streaming_create_512mib_is_bounded_memory_and_exact ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s
+
+     Running tests/tensor_pipeline.rs (.docker-cache/target-rust/debug/deps/tensor_pipeline-53bc1765f09780ac)
+
+running 6 tests
+test a_strategy_hint_still_forces_that_representation ... ok
+test a_failing_reader_publishes_nothing_and_names_the_tensor ... ok
+test an_oversize_tensor_is_admitted_alone ... ok
+test the_byte_reservations_are_never_exceeded ... ok
+test candidate_parallelism_does_not_change_a_single_byte ... ok
+test every_worker_count_publishes_the_same_bytes ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
+
+     Running tests/tensor_store.rs (.docker-cache/target-rust/debug/deps/tensor_store-25d4e9260b3c73f5)
+
+running 12 tests
+test canonicalize_cow_borrows_row_major_and_owns_other_layouts ... ok
+test byte_rewrite_of_a_tensor_object_drops_tensor_identity ... ok
+test planner_bytes_only_chooses_raw_for_incompressible_tensors ... ok
+test missing_dependency_fails_closed_gc_retains_it_and_verify_names_it ... ok
+test planner_delta_bound_skips_delta_and_patch_candidates ... ok
+test mode10_round_trips_exact_bytes_across_layouts ... ok
+test planner_offers_mode15_only_when_a_tile_shape_is_supplied ... ok
+test planner_bytes_only_chooses_the_smallest_delta_for_a_near_duplicate_pair ... ok
+test tensor_layout_encoding_is_canonical_and_attributes_are_recorded ... ok
+test planner_latency_weight_switches_to_the_faster_representation ... ok
+test mode11_round_trips_exact_bytes_and_stable_root_across_layouts ... ok
+test semantic_planner_chooses_semantic_delta_only_for_a_matching_root ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests/threefs.rs (.docker-cache/target-rust/debug/deps/threefs-53b60a70881fa958)
+
+running 13 tests
+test store_round_trip_over_usrbio_is_byte_identical_to_local ... ok
+test usrbio_batch_reads_are_exact_and_batched ... ok
+test usrbio_read_into_takes_the_direct_path_inside_the_region ... ok
+test posix_capabilities_are_declared_not_measured_text ... ok
+test usrbio_rejects_unbounded_configuration ... ok
+test usrbio_reports_a_prep_failure_without_leaking_a_registration ... ok
+test usrbio_require_mount_refuses_a_non_3fs_path ... ok
+test usrbio_status_reports_that_the_mount_is_not_3fs ... ok
+test usrbio_survives_partial_completion ... ok
+test usrbio_truncates_at_end_of_object_and_rejects_a_past_end_offset ... ok
+test usrbio_refuses_when_the_library_is_absent ... ok
+test unsafe_is_confined_to_the_threefs_ffi_module ... ok
+test posix_transport_is_byte_identical_to_local ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/tiled_parallel.rs (.docker-cache/target-rust/debug/deps/tiled_parallel-4a2c797143bbdc09)
+
+running 8 tests
+test auto_tile_derivation_errors_when_nothing_fits ... ok
+test auto_tile_derivation_divides_both_extents ... ok
+test inflight_bound_is_respected ... ok
+test corrupted_tile_fails_closed_identically_at_every_thread_count ... ok
+test full_object_decode_is_identical_at_1_2_and_4_threads ... ok
+test auto_tile_planner_is_deterministic_and_records_the_shape ... ok
+test region_reads_decode_only_intersecting_tiles_at_every_thread_count ... ok
+test repeated_parallel_decode_is_deterministic ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/training_ready.rs (.docker-cache/target-rust/debug/deps/training_ready-e51ddbee1f2392cb)
+
+running 10 tests
+test budget_below_actual_is_refused_before_writing ... ok
+test check_mode_writes_nothing ... ok
+test causal_cycle_terminates ... ok
+test missing_capability_grant_is_unauthorized ... ok
+test corrupted_logical_tensor_root_is_refused ... ok
+test missing_causal_parent_is_named_and_refused ... ok
+test second_run_into_existing_directory_is_refused ... ok
+test tampered_chunk_blob_is_refused_and_creates_no_output ... ok
+test cli_check_materialize_and_verify_out ... ok
+test happy_path_materializes_and_verifies_a_checkpoint ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/transcode.rs (.docker-cache/target-rust/debug/deps/transcode-b839d11ed98dee7a)
+
+running 7 tests
+test transcode_dry_run_and_budgets_write_nothing ... ok
+test fast_save_never_produces_a_planned_strategy_and_restores_exactly ... ok
+test provenance_round_trips_as_a_canonical_record ... ok
+test write_policy_auto_resolves_from_the_caller_declaration ... ok
+test transcode_only_rewrites_fast_sources ... ok
+test transcode_republishes_the_same_object_id_and_keeps_the_old_version ... ok
+test causal_checkpoint_links_matching_tensors ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/two_stage_planner.rs (.docker-cache/target-rust/debug/deps/two_stage_planner-181e91ccb846a8d4)
+
+running 7 tests
+test level19_rule_skips_only_when_the_bound_is_safe ... ok
+test dtype_without_a_mode9_layout_never_predicts_mode9 ... ok
+test sample_indices_are_deterministic_and_cover_the_ends ... ok
+test real_fixture_skips_level19_or_records_the_bound ... ok
+test mode9_prediction_is_exact_and_the_gate_is_decided_before_encoding ... ok
+test every_skipped_candidate_really_could_not_win ... ok
+test two_stage_and_exhaustive_choose_the_same_representation ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.58s
+
+     Running tests/writer_fencing.rs (.docker-cache/target-rust/debug/deps/writer_fencing-01bbf870c9615c8f)
+
+running 4 tests
+test local_writer_lock_still_excludes_a_second_handle ... ok
+test local_writer_refuses_to_publish_after_its_lock_file_is_removed ... ok
+test local_writer_refuses_to_publish_under_a_replaced_lock ... ok
+test object_writer_refuses_to_publish_under_a_replaced_lock ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/writer_lock.rs (.docker-cache/target-rust/debug/deps/writer_lock-5611b31cd2a87e1d)
+
+running 9 tests
+test a_second_live_writer_is_still_refused ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running unittests examples/attested_load.rs (.docker-cache/target-rust/debug/examples/attested_load-d40d32d35fc98591)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/augmentation_bench.rs (.docker-cache/target-rust/debug/examples/augmentation_bench-8342711fe96dbe6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/azure_court.rs (.docker-cache/target-rust/debug/examples/azure_court-13ef7622036bcfe1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/backend_bench.rs (.docker-cache/target-rust/debug/examples/backend_bench-d08be24826632e83)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_ai_corpus.rs (.docker-cache/target-rust/debug/examples/bench_ai_corpus-e3643852f3c8b204)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_codec.rs (.docker-cache/target-rust/debug/examples/bench_codec-d6bee30905ab14d8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_codec_ext.rs (.docker-cache/target-rust/debug/examples/bench_codec_ext-b722bd6718d8b3e6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_external_manifest.rs (.docker-cache/target-rust/debug/examples/bench_external_manifest-08a7596f9fb22d08)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_fs_receipt.rs (.docker-cache/target-rust/debug/examples/bench_fs_receipt-14de9c9be990e82c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_parallel_checkpoint.rs (.docker-cache/target-rust/debug/examples/bench_parallel_checkpoint-c7fc2ac07c8de16b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_quota_branch.rs (.docker-cache/target-rust/debug/examples/bench_quota_branch-5e457ee9728c600b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_s3_backend.rs (.docker-cache/target-rust/debug/examples/bench_s3_backend-c9803b3e771e80df)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_store.rs (.docker-cache/target-rust/debug/examples/bench_store-16115ade47968f71)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bench_tensor_tiles.rs (.docker-cache/target-rust/debug/examples/bench_tensor_tiles-0e98d318e983092d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/bf16_plane_profile.rs (.docker-cache/target-rust/debug/examples/bf16_plane_profile-a27ec87a2c8d2c59)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/cache_bench.rs (.docker-cache/target-rust/debug/examples/cache_bench-be8d4865927712ea)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/calibrate_decode.rs (.docker-cache/target-rust/debug/examples/calibrate_decode-072aef3113cfa89a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/calibrate_restore.rs (.docker-cache/target-rust/debug/examples/calibrate_restore-390f43b2d7f65de0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/capability_bench.rs (.docker-cache/target-rust/debug/examples/capability_bench-5466e46296fd0008)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/codec_cycle_probe.rs (.docker-cache/target-rust/debug/examples/codec_cycle_probe-5ad63fbf9d8c7f38)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/compression_candidates.rs (.docker-cache/target-rust/debug/examples/compression_candidates-cab6d20813b1716c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/context_advantage_court.rs (.docker-cache/target-rust/debug/examples/context_advantage_court-538d368fd45d320d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/context_mount_corpus.rs (.docker-cache/target-rust/debug/examples/context_mount_corpus-8b0868e55e6bc798)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/decode_regions_bench.rs (.docker-cache/target-rust/debug/examples/decode_regions_bench-6fc5fcfa3007bde1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/distributed_court.rs (.docker-cache/target-rust/debug/examples/distributed_court-b1f78b0842a18eff)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/engram_court.rs (.docker-cache/target-rust/debug/examples/engram_court-128c47cc39493c73)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/extent_cow_bench.rs (.docker-cache/target-rust/debug/examples/extent_cow_bench-da63b1cdcedcff98)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/family_lifecycle.rs (.docker-cache/target-rust/debug/examples/family_lifecycle-cebb3e652f91ad13)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/fleet_coldstart.rs (.docker-cache/target-rust/debug/examples/fleet_coldstart-63846302b812b8b0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gcs_auth_probe.rs (.docker-cache/target-rust/debug/examples/gcs_auth_probe-f0fb879696eec0e7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gcs_court.rs (.docker-cache/target-rust/debug/examples/gcs_court-bc31f202e7022770)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gen_checkpoint_vector.rs (.docker-cache/target-rust/debug/examples/gen_checkpoint_vector-4b28cc02f1eb3b58)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gen_engram_store.rs (.docker-cache/target-rust/debug/examples/gen_engram_store-7c32b5480a0bc721)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/gen_overlay_fixture.rs (.docker-cache/target-rust/debug/examples/gen_overlay_fixture-0c41e453642d807a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/group_commit_bench.rs (.docker-cache/target-rust/debug/examples/group_commit_bench-6d2396c04dad472d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_aged_bench.rs (.docker-cache/target-rust/debug/examples/index_aged_bench-5665a4d22585a057)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_bench.rs (.docker-cache/target-rust/debug/examples/index_bench-e392af7f3b676a16)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_chain_bench.rs (.docker-cache/target-rust/debug/examples/index_chain_bench-f85af4ed0b517687)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_gc_bound.rs (.docker-cache/target-rust/debug/examples/index_gc_bound-848f29961dacd9d9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_incremental_bench.rs (.docker-cache/target-rust/debug/examples/index_incremental_bench-cb30b15766be9cbe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/index_persist_bench.rs (.docker-cache/target-rust/debug/examples/index_persist_bench-e09c5f8537253e8d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/kv_capability_bench.rs (.docker-cache/target-rust/debug/examples/kv_capability_bench-929e4624a5f52992)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/kv_prefix_bench.rs (.docker-cache/target-rust/debug/examples/kv_prefix_bench-bb13ce9b28c52a2c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/kv_provenance_bench.rs (.docker-cache/target-rust/debug/examples/kv_provenance_bench-e40145d0edb40c08)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/lock_probe.rs (.docker-cache/target-rust/debug/examples/lock_probe-c24dc36f20897bf8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/merkle_identity_bench.rs (.docker-cache/target-rust/debug/examples/merkle_identity_bench-a17424d2b4c083ae)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/mode18_bench.rs (.docker-cache/target-rust/debug/examples/mode18_bench-bb8ae39acd998a03)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/mode9_encoder_bench.rs (.docker-cache/target-rust/debug/examples/mode9_encoder_bench-ce60ca75a385c23a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/mode9_stream_bench.rs (.docker-cache/target-rust/debug/examples/mode9_stream_bench-e703d2692fb4b207)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/mw2_writer.rs (.docker-cache/target-rust/debug/examples/mw2_writer-a9709c593d8d155f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/open_bench.rs (.docker-cache/target-rust/debug/examples/open_bench-22165ab2f3f79317)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/overlay_bench.rs (.docker-cache/target-rust/debug/examples/overlay_bench-5373b8e0750fedf0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/packs_bench.rs (.docker-cache/target-rust/debug/examples/packs_bench-7a74fa48226b3f80)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/parent_graph_court.rs (.docker-cache/target-rust/debug/examples/parent_graph_court-ea6f1cca201ae129)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/planes_bench.rs (.docker-cache/target-rust/debug/examples/planes_bench-c89fc0d640817146)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/provenance_bench.rs (.docker-cache/target-rust/debug/examples/provenance_bench-6abea798d589522a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/real_model_bench.rs (.docker-cache/target-rust/debug/examples/real_model_bench-2c4ef0fc394850c7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/representation_bench.rs (.docker-cache/target-rust/debug/examples/representation_bench-4fba298ad78e8eed)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/resource_courts.rs (.docker-cache/target-rust/debug/examples/resource_courts-711b81ba54dcbbdb)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/restore_cost_court.rs (.docker-cache/target-rust/debug/examples/restore_cost_court-6473ba10bfa57035)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/retention_court.rs (.docker-cache/target-rust/debug/examples/retention_court-480b5b2d381d6ccd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/retention_probe.rs (.docker-cache/target-rust/debug/examples/retention_probe-909c9dc8f3857eb8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/rsa_timing.rs (.docker-cache/target-rust/debug/examples/rsa_timing-1c493c90958918c4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/s3_compat_matrix.rs (.docker-cache/target-rust/debug/examples/s3_compat_matrix-56acb0f766213d2e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/s3_court_bucket.rs (.docker-cache/target-rust/debug/examples/s3_court_bucket-dd1758d3b4bd57df)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/scale_7b.rs (.docker-cache/target-rust/debug/examples/scale_7b-4160cdc20f147dbc)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/state_manifest_bound.rs (.docker-cache/target-rust/debug/examples/state_manifest_bound-054dead18b3ef0df)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/streaming_bench.rs (.docker-cache/target-rust/debug/examples/streaming_bench-272d59f2748c1af4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/tensor_planner_bench.rs (.docker-cache/target-rust/debug/examples/tensor_planner_bench-b01d82e63b1545f6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/threefs_bench.rs (.docker-cache/target-rust/debug/examples/threefs_bench-2cf385dd835fdd6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/trajectory_court.rs (.docker-cache/target-rust/debug/examples/trajectory_court-b58b76e61fa6e3ea)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/transport_court.rs (.docker-cache/target-rust/debug/examples/transport_court-d905923483f7b57f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/write_policy_bench.rs (.docker-cache/target-rust/debug/examples/write_policy_bench-351afaf583ba2232)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests examples/zstd_chunk_bench.rs (.docker-cache/target-rust/debug/examples/zstd_chunk_bench-6bd57873e7b834d3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

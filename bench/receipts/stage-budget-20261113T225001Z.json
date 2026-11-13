@@ -1,0 +1,629 @@
+{
+  "checks": {
+    "failed": 0,
+    "ok": true,
+    "passed": 12,
+    "rows": [
+      {
+        "check": "cap1.observed_max_active_within_cap",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap1.both_stages_admitted",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap2.observed_max_active_within_cap",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap2.both_stages_admitted",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap4.observed_max_active_within_cap",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap4.both_stages_admitted",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.observed_max_active_within_cap",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.both_stages_admitted",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cancellation.released_after",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cancellation.cancelled_observed",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "oversize.completed",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "fairness.maintenance_admissions",
+        "detail": "",
+        "ok": true
+      }
+    ],
+    "total": 12
+  },
+  "command": "scripts/resource_courts.sh",
+  "data": {
+    "arms": {
+      "cap1": {
+        "budget": {
+          "cancelled_waiters": 0,
+          "clamped_worker_requests": 0,
+          "granted": [
+            [
+              "encode",
+              16
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              16
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ],
+          "max_active_workers": 1,
+          "max_inflight_bytes": 33554432,
+          "observed_max_active_workers": 1,
+          "observed_max_inflight_bytes": 2097152,
+          "observed_max_waiters": 4,
+          "oversized_admissions": 0,
+          "wait_ns": 66535933,
+          "waited": [
+            [
+              "encode",
+              14
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              15
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ]
+        },
+        "concurrent": {
+          "encode": {
+            "encode_busy_ms": 3.0385,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 9.115482,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 9.130068999999999
+          },
+          "restore_bytes": 2097752,
+          "wall_ms": 25.85365
+        },
+        "concurrent_over_sequential": 0.9885251680829066,
+        "no_starvation": true,
+        "policy": {
+          "max_active_workers": 1,
+          "max_inflight_bytes": 33554432
+        },
+        "sequential": {
+          "encode": {
+            "encode_busy_ms": 3.314417,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 3.524928,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 3.542201
+          },
+          "encode_ms": 3.574751,
+          "restore_ms": 22.579009
+        }
+      },
+      "cap2": {
+        "budget": {
+          "cancelled_waiters": 0,
+          "clamped_worker_requests": 0,
+          "granted": [
+            [
+              "encode",
+              16
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              16
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ],
+          "max_active_workers": 2,
+          "max_inflight_bytes": 33554432,
+          "observed_max_active_workers": 2,
+          "observed_max_inflight_bytes": 3932160,
+          "observed_max_waiters": 4,
+          "oversized_admissions": 0,
+          "wait_ns": 39009992,
+          "waited": [
+            [
+              "encode",
+              12
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              15
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ]
+        },
+        "concurrent": {
+          "encode": {
+            "encode_busy_ms": 3.274942,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 6.0924309999999995,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 6.107849
+          },
+          "restore_bytes": 2097752,
+          "wall_ms": 15.947162
+        },
+        "concurrent_over_sequential": 1.022228156545277,
+        "no_starvation": true,
+        "policy": {
+          "max_active_workers": 2,
+          "max_inflight_bytes": 33554432
+        },
+        "sequential": {
+          "encode": {
+            "encode_busy_ms": 3.227572,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 1.8804290000000001,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 1.895948
+          },
+          "encode_ms": 1.930382,
+          "restore_ms": 13.670012
+        }
+      },
+      "cap4": {
+        "budget": {
+          "cancelled_waiters": 0,
+          "clamped_worker_requests": 0,
+          "granted": [
+            [
+              "encode",
+              16
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              16
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ],
+          "max_active_workers": 4,
+          "max_inflight_bytes": 33554432,
+          "observed_max_active_workers": 4,
+          "observed_max_inflight_bytes": 5505024,
+          "observed_max_waiters": 4,
+          "oversized_admissions": 0,
+          "wait_ns": 14635196,
+          "waited": [
+            [
+              "encode",
+              5
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              14
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ]
+        },
+        "concurrent": {
+          "encode": {
+            "encode_busy_ms": 3.112459,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 2.959594,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 2.977116
+          },
+          "restore_bytes": 2097752,
+          "wall_ms": 7.713466
+        },
+        "concurrent_over_sequential": 0.93551702051767,
+        "no_starvation": true,
+        "policy": {
+          "max_active_workers": 4,
+          "max_inflight_bytes": 33554432
+        },
+        "sequential": {
+          "encode": {
+            "encode_busy_ms": 3.586102,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 1.5385609999999998,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 1.552267
+          },
+          "encode_ms": 1.572154,
+          "restore_ms": 6.672983
+        }
+      },
+      "cap8": {
+        "budget": {
+          "cancelled_waiters": 0,
+          "clamped_worker_requests": 0,
+          "granted": [
+            [
+              "encode",
+              16
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              16
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ],
+          "max_active_workers": 8,
+          "max_inflight_bytes": 33554432,
+          "observed_max_active_workers": 8,
+          "observed_max_inflight_bytes": 6553600,
+          "observed_max_waiters": 4,
+          "oversized_admissions": 0,
+          "wait_ns": 5756758,
+          "waited": [
+            [
+              "encode",
+              5
+            ],
+            [
+              "codec",
+              0
+            ],
+            [
+              "io",
+              0
+            ],
+            [
+              "restore",
+              5
+            ],
+            [
+              "maintenance",
+              0
+            ]
+          ]
+        },
+        "concurrent": {
+          "encode": {
+            "encode_busy_ms": 3.271445,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 2.881097,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 2.89391
+          },
+          "restore_bytes": 2097752,
+          "wall_ms": 5.085962
+        },
+        "concurrent_over_sequential": 0.8582961967541446,
+        "no_starvation": true,
+        "policy": {
+          "max_active_workers": 8,
+          "max_inflight_bytes": 33554432
+        },
+        "sequential": {
+          "encode": {
+            "encode_busy_ms": 3.29021,
+            "observed_max_worker_bytes": 5505024,
+            "pipeline_wall_ms": 1.432434,
+            "roots": [
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "5ce1976d28760bf336ffec86b135e634d4a2ab419090f6bf5735287e2521a515",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "b120519ffc80296a3be3d72c2ecee7f0ade8073d46f0d3be8c790a843673efdc",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "a972b9932674c129be7b3f5b3fef18255a4a58f1536dd8b697fa8d98c0640fc7",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843",
+              "2baf532a012b46b759912a9048730f1919bc3e33461894435b1da4cc4d90b843"
+            ],
+            "tensors": 8,
+            "wall_ms": 1.4461089999999999
+          },
+          "encode_ms": 1.469302,
+          "restore_ms": 4.456347
+        }
+      }
+    },
+    "cancellation_storm": {
+      "budget": {
+        "cancelled_waiters": 48,
+        "clamped_worker_requests": 0,
+        "granted": [
+          [
+            "encode",
+            0
+          ],
+          [
+            "codec",
+            0
+          ],
+          [
+            "io",
+            0
+          ],
+          [
+            "restore",
+            48
+          ],
+          [
+            "maintenance",
+            0
+          ]
+        ],
+        "max_active_workers": 4,
+        "max_inflight_bytes": 16777216,
+        "observed_max_active_workers": 4,
+        "observed_max_inflight_bytes": 2097152,
+        "observed_max_waiters": 1,
+        "oversized_admissions": 0,
+        "wait_ns": 0,
+        "waited": [
+          [
+            "encode",
+            0
+          ],
+          [
+            "codec",
+            0
+          ],
+          [
+            "io",
+            0
+          ],
+          [
+            "restore",
+            48
+          ],
+          [
+            "maintenance",
+            0
+          ]
+        ]
+      },
+      "cancelled": 6,
+      "completed": 6,
+      "released_after": true,
+      "rounds": 12
+    },
+    "fairness": {
+      "granted": [
+        [
+          "encode",
+          0
+        ],
+        [
+          "codec",
+          0
+        ],
+        [
+          "io",
+          0
+        ],
+        [
+          "restore",
+          24
+        ],
+        [
+          "maintenance",
+          18
+        ]
+      ],
+      "maintenance_admissions": 18,
+      "observed_max_active_workers": 2,
+      "policy": {
+        "max_active_workers": 2,
+        "max_inflight_bytes": 8388608
+      },
+      "restore_ms": 42.068562
+    },
+    "gate": "N09",
+    "note": "the encode stage is the shipped TensorPipelineOptions encoder behind the shipped admission; the concurrent arm prepares fragments only (no commit), then the store is verified",
+    "oversize": {
+      "budget_bytes": 65536,
+      "bytes": 2097752,
+      "observed_max_inflight_bytes": 0,
+      "oversized_admissions": 8,
+      "wall_ms": 22.463243000000002
+    },
+    "peak_rss_kib": 44956,
+    "policy_default": {
+      "max_active_workers": 4,
+      "max_inflight_bytes": 536870912,
+      "rule": "max_active_workers = available_parallelism; max_inflight_bytes = 512 MiB"
+    },
+    "schema": "weft.stage_budget.v1"
+  },
+  "environment": {
+    "cost_reps": 5,
+    "cost_sizes": "1,10,100",
+    "court": "scripts/docker-court.sh (rust | bench | fuse)",
+    "docker_server": "29.9.3",
+    "generated_utc": "20261113T225001Z",
+    "host_kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": 1024,
+      "tmpfs": "1g"
+    },
+    "reduced": false,
+    "resource_reps": 5,
+    "revisions": {
+      "WeftFS": "a6ab12eb667b9d77c6b61a5958c10ac367282469",
+      "WeftFS-Go": "9257ee6b13156ec666248be8fe9193b4f5d6840e"
+    }
+  },
+  "gate": "N09",
+  "result": "pass",
+  "schema": "weft.stage_budget.receipt.v1",
+  "stamp": "20261113T225001Z"
+}

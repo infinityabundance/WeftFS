@@ -11032,3 +11032,90 @@ environment-only skip path).
   read+write; high-water marks never exceed the cap, nothing is lost, no stage
   is starved. Overlap is 1.02x sequential at cap 4 and 0.88x at cap 8 — reported
   as a mixed result, not a win. `docs/STAGE-BUDGET.md`.
+
+## 2026-11-13 — X31: oversize admission, cancelled tickets and the ordered-pipeline deadlock
+
+Parent `staging` `a6ac2b2` (stage budget) and `a6ab12e` (ordered pipeline) plus
+this evidence commit. Not pushed. The primitive is **unreleased**: `4d55d74` is
+not on `main` (`v1.4.2` predates it), so no published signature or format
+changed and there is no compatibility burden.
+
+**Defects.** An independent session reported two broken tests at `0a7beb7`.
+Both were product defects, and reproducing them found two more:
+
+1. **Oversize did not run alone.** An oversize grant stored `bytes: 0`, so the
+   byte test passed for every later request and they were admitted beside it.
+   The test asserting isolation failed; the module doc claimed a property the
+   code did not implement.
+2. **The reservation test required its own deadlock.** It joined a waiter whose
+   bytes were held until after the join. `release_workers()` was correct; the
+   test asserted the opposite of the contract.
+3. **A cancelled non-head waiter left a FIFO hole.** `abandon` advanced the
+   cursor only for a head cancellation. A cancelled middle ticket was
+   forgotten, the cursor later pointed at a ticket nobody owned, and every
+   later request waited forever. Reproduced with a public-API test at `0a7beb7`:
+   `worker did not finish in 5s: FIFO hole`.
+4. **Oversize exclusivity deadlocked the ordered restore pipeline.** Once
+   defect 1 was fixed, `tests/restore_budget.rs` hung intermittently: the
+   pipeline reserved staging space in input order but called `admit` in worker
+   order, so a later-index oversize grant could hold the budget while the writer
+   waited forever for an earlier index blocked in admission. Committed hang log:
+   `bench/receipts/stage-budget-prefix-pipeline-hang-20261113T221305Z.log`.
+
+**Contract** (now normative in `docs/STAGE-BUDGET.md`). An oversize request is
+granted only into a completely idle budget (`active_workers == 0` and
+`inflight_bytes == 0`), claims no byte budget (so the published high-water mark
+still respects the bound), and holds an `exclusive` flag until its `Admission`
+is dropped, including during unwinding. Strict FIFO prevents starvation by a
+stream of small requests. The byte reservation belongs to the request:
+`release_workers()` reduces only the worker count. Abandoned tickets are
+recorded and skipped when the cursor reaches them. The liveness argument is
+stated as two invariants (every blocker is granted at a strictly smaller ticket
+and is not waiting in `admit`; nobody waits while holding capacity it could
+release), so the wait-for graph is acyclic; cancellation strictly shrinks the
+queue and `cancel_all()` releases everything. There is deliberately no
+admission timeout.
+
+**Fix.** `src/stage_budget.rs`: `exclusive` lifetime, oversize idle grant, an
+`abandoned` ticket set with cursor skipping, and the doc contract. There is no
+API break; `Admission` remains the sole release path and `release_workers()`
+keeps its meaning. `src/restore_pipeline.rs`: `Queue::next_to_admit` is a
+second input-order turn, held only across the `admit` call (never across the
+queue mutex), so the budget FIFO is the writer's cursor order; a waiting worker
+does not hold the lock, and an aborted pipeline releases waiters. Three unit
+tests pin the turn. `tests/restore_budget.rs`: the cancelled-waiter test now
+waits until the second worker has entered `admit` (it was already racy before
+this work: it failed in a pre-fix repetition run recorded by the retained
+failing suite receipt `bench/receipts/stage-budget-suites-20261113T221717Z.json`).
+
+**Proof.** `scripts/stage_budget_court.sh` repeats the module at thread caps 8,
+2 and 1 and the ordered-pipeline suite at cap 4, every run through `timeout
+120`; a hang is a recorded 124. Receipt
+`bench/receipts/stage-budget-fix-20261113T224055Z.json` at `a6ab12e`:
+
+<!-- BEGIN GENERATED:stage-budget-fix-status (scripts/perf_numbers.py) -->
+<!-- END GENERATED:stage-budget-fix-status -->
+
+Full suites at the same revision are recorded in
+`bench/receipts/stage-budget-suites-20261113T224133Z.json` and published in
+`bench/RESULTS-stage-budget-fix.md`; the Rust suite has no ignored tests, and
+the two FUSE `#[ignore]`s are pre-existing environment blocks (CAP_SETUID and a
+kernel+fuser direct-I/O EIO), not filters added here.
+
+**Numbers.** The resource courts were re-recorded at the same revision
+(`bench/receipts/restore-budget-20261113T225001Z.json` and the four beside it,
+all checks pass) and the old/new comparison is
+`bench/receipts/stage-budget-delta-20261113T225001Z.json`. The unbudgeted X06
+control arm — which never calls `admit` and does not use the ordered pipeline —
+moved by more than any budgeted row, so no delta in this court is attributable
+to the patch; the generated figures and the full reading are in
+`bench/RESULTS-stage-budget-fix.md`. The generated numbers in
+`bench/RESULTS-resource-courts.md` were regenerated, and the hand-written `+21 %`
+in its generated region is now a computed ratio. The first passing repetition
+receipt (`…-20261113T221305Z.json`, before defect 4 was found) is retained and
+superseded.
+
+**Not claimed.** One host and warm cache; the deltas are not a latency claim. No
+Go equivalent exists: `WeftFS-Go` has no stage-admission primitive (quota
+admission is a per-commit byte budget). Physical power loss, fleet and cloud
+remain unclaimed.

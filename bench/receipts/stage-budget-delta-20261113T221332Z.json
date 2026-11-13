@@ -1,0 +1,68 @@
+{
+  "control_arm_executes_changed_code": false,
+  "new": {
+    "restore-budget": "bench/receipts/restore-budget-20261113T221332Z.json",
+    "revision": "a6ac2b2855f8030ef59f4f3bb463707a509c42fd",
+    "stage-budget": "bench/receipts/stage-budget-20261113T221332Z.json",
+    "stamp": "20261113T221332Z"
+  },
+  "note": "The changed code is reached only by oversize admissions, cancelled waiters and release_workers(). The X06 control arm (control_no_budget) never calls StageBudget::admit, so its delta is noise; every other row here is a non-oversize arm whose only new work is one boolean test and one empty-set lookup per grant.",
+  "old": {
+    "restore-budget": "bench/receipts/restore-budget-20261113T125506Z.json",
+    "revision": "5b49da3fe44d20ec83ea244213c1bda91576ccc2",
+    "stage-budget": "bench/receipts/stage-budget-20261113T125506Z.json",
+    "stamp": "20261113T125506Z"
+  },
+  "rows": [
+    {
+      "delta_pct": 1.9624429110578148,
+      "key": "budget.x06.cap1_best_ms",
+      "new": 8.629417,
+      "old": 8.463329,
+      "receipt_kind": "restore-budget"
+    },
+    {
+      "delta_pct": 0.3645907280601623,
+      "key": "budget.x06.cap4_best_ms",
+      "new": 2.622594,
+      "old": 2.613067,
+      "receipt_kind": "restore-budget"
+    },
+    {
+      "delta_pct": 1.4450676183044986,
+      "key": "budget.x06.cap4_recommended_ms",
+      "new": 2.9032289999999996,
+      "old": 2.861873,
+      "receipt_kind": "restore-budget"
+    },
+    {
+      "delta_pct": 11.807105375841589,
+      "key": "budget.x06.cap8_recommended_ms",
+      "new": 2.143719,
+      "old": 1.917337,
+      "receipt_kind": "restore-budget"
+    },
+    {
+      "delta_pct": -12.22705876419336,
+      "key": "budget.x06.control_4x4_ms",
+      "new": 2.1057580000000002,
+      "old": 2.3990970000000003,
+      "receipt_kind": "restore-budget"
+    },
+    {
+      "delta_pct": -8.467645102722061,
+      "key": "budget.n09.cap4_over_seq",
+      "new": 0.9358973882846542,
+      "old": 1.022477122253616,
+      "receipt_kind": "stage-budget"
+    },
+    {
+      "delta_pct": 1.218038321275746,
+      "key": "budget.n09.cap8_over_seq",
+      "new": 0.891576201424098,
+      "old": 0.8808471456383592,
+      "receipt_kind": "stage-budget"
+    }
+  ],
+  "schema": "weft.stage_budget_fix.delta.v1"
+}

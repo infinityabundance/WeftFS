@@ -11909,7 +11909,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-budget-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-budget-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11919,7 +11919,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-budget-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-budget-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11929,7 +11929,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-budget-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-budget-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11939,7 +11939,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/handle-cap-20261113T125506Z.json",
+  "receipt": "bench/receipts/handle-cap-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11949,7 +11949,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/handle-cap-20261113T125506Z.json",
+  "receipt": "bench/receipts/handle-cap-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11959,7 +11959,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/packed-races-20261113T125506Z.json",
+  "receipt": "bench/receipts/packed-races-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11969,7 +11969,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/packed-races-20261113T125506Z.json",
+  "receipt": "bench/receipts/packed-races-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11979,7 +11979,7 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/packed-races-20261113T125506Z.json",
+  "receipt": "bench/receipts/packed-races-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -11989,37 +11989,37 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-cost-20261113T225001Z.json",
   "kind": "present"
  },
  {
   "id": "n08_no_copy_not_a_win",
-  "claim": "Removing the whole-tensor read copy is not measurable at 100 x 1 MiB and is not claimed as a win.",
-  "value": "268.4 ms (no copy) vs 268.0 ms (copy control)",
+  "claim": "The N08 no-copy and worker-side-SHA changes are measured as not-a-win at 100 x 1 MiB; the figures are generated in RESULTS-resource-courts.md.",
+  "value": "see the generated N08 row in RESULTS-resource-courts.md",
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-cost-20261113T225001Z.json",
   "kind": "present"
  },
  {
   "id": "n08_worker_sha_not_a_win",
-  "claim": "Moving the report SHA-256 from the ordered writer to the decode worker is not measurable at four workers and is not claimed as a win.",
-  "value": "268.4 ms (worker SHA) vs 268.1 ms (writer SHA)",
+  "claim": "The N08 no-copy and worker-side-SHA changes are measured as not-a-win at 100 x 1 MiB; the figures are generated in RESULTS-resource-courts.md.",
+  "value": "see the generated N08 row in RESULTS-resource-courts.md",
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-cost-20261113T225001Z.json",
   "kind": "present"
  },
  {
   "id": "n08_dominant_tensor_shard_parallel",
-  "claim": "A single 64 MiB tensor restores 1.72x faster with two shard workers than with one.",
-  "value": "657.7 ms -> 381.4 ms",
+  "claim": "Shard parallelism is the only restore-side lever for a single dominant tensor; the measured pair is generated in RESULTS-resource-courts.md.",
+  "value": "see the generated N08 dominant-tensor row",
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
+  "receipt": "bench/receipts/restore-cost-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -12029,17 +12029,17 @@
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/stage-budget-20261113T125506Z.json",
+  "receipt": "bench/receipts/stage-budget-20261113T225001Z.json",
   "kind": "present"
  },
  {
   "id": "n09_overlap_not_a_win",
-  "claim": "Overlapping encode and restore is not uniformly faster: 1.02x sequential at cap 4 and 0.88x at cap 8.",
-  "value": "published as a loss",
+  "claim": "Overlapping encode and restore has no stable win at this scale: the measured concurrent/sequential ratio is noise-dominated and changed sign between runs at cap 4.",
+  "value": "published as a mixed, noise-dominated result",
   "locations": [
    "bench/RESULTS-resource-courts.md"
   ],
-  "receipt": "bench/receipts/stage-budget-20261113T125506Z.json",
+  "receipt": "bench/receipts/stage-budget-20261113T225001Z.json",
   "kind": "present"
  },
  {
@@ -12141,6 +12141,66 @@
    "bench/RESULTS-dcp-metadata.md"
   ],
   "receipt": "bench/receipts/dcp-latency-20261113T214500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x31_oversize_exclusive",
+  "claim": "An oversize stage-budget request is admitted only into an idle budget and holds the budget exclusively until its Admission is dropped.",
+  "value": "The grant sets an `exclusive` flag",
+  "locations": [
+   "docs/STAGE-BUDGET.md"
+  ],
+  "receipt": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x31_reservation_lifetime",
+  "claim": "The byte reservation belongs to the request: release_workers() releases workers only, and the bytes are released by the Admission on drop.",
+  "value": "the bytes remain charged until the request's `Admission` is dropped",
+  "locations": [
+   "docs/STAGE-BUDGET.md"
+  ],
+  "receipt": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x31_abandoned_tickets",
+  "claim": "A cancelled waiter that is not at the head records its ticket as abandoned, and the FIFO cursor skips it, so cancellation leaves no hole.",
+  "value": "abandoned so the cursor skips the hole when it arrives",
+  "locations": [
+   "docs/STAGE-BUDGET.md"
+  ],
+  "receipt": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x31_pipeline_input_order",
+  "claim": "The ordered restore pipeline acquires the shared budget in input order, so the budget's FIFO is the writer's cursor order.",
+  "value": "acquires the shared budget in input order",
+  "locations": [
+   "bench/RESULTS-stage-budget-fix.md"
+  ],
+  "receipt": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x31_no_deadlock",
+  "claim": "A cancelled non-head waiter no longer stalls the queue; the pre-fix reproduction failed with a recorded FIFO hole, and the fixed suite repeats with no timeouts.",
+  "value": "worker did not finish in 5s: FIFO hole",
+  "locations": [
+   "bench/RESULTS-stage-budget-fix.md"
+  ],
+  "receipt": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x31_repetitions",
+  "claim": "The stage-budget repetition court records a hang as a timeout rather than a pass.",
+  "value": "a hang is exit 124, recorded, never a pass",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
   "kind": "present"
  }
 ]
