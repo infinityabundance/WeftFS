@@ -222,6 +222,15 @@ run_orchestrated_court() {
 # environment without Python >= 3.8 skips with a printed reason (exit 78).
 run_orchestrated_court perf_numbers perf_numbers bash scripts/perf_numbers_court.sh
 
+# The wheel long description is `python/README.md`, baked in at build time. It
+# must not assert which version a registry serves, whether this artifact was
+# uploaded, or a digest of itself: that sentence is false on upload and makes
+# every rebuild differ. It must keep the stable replacement (unpinned install
+# command, PyPI project URL, crates.io crate URL). Host-only and fast; a host
+# without Python >= 3.8 skips with a printed reason (exit 78).
+run_orchestrated_court long_description long_description \
+  bash scripts/check_long_description_court.sh
+
 # R16 independent S3 implementation: a Ceph RGW sidecar, the existing S3 backend
 # suite against it, the eight-behaviour compatibility matrix against RGW and
 # MinIO, and a side-by-side comparison.

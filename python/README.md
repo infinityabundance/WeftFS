@@ -11,26 +11,24 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install weftcodec==1.4.0
+pip install weftcodec
 # with the optional dataset extra
-pip install "weftcodec[torch]==1.4.0"
+pip install "weftcodec[torch]"
 # with the optional JAX/Orbax adapter extra
-pip install "weftcodec[orbax]==1.4.0"
+pip install "weftcodec[orbax]"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-<!-- BEGIN GENERATED:python-readme-current (scripts/perf_numbers.py) -->
-**Published.** PyPI serves `weftcodec 1.4.0` (wheel sha256
-`41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6`, 115,851 B; sdist sha256
-`2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0`, 156,858 B), so `pip install weftcodec==1.4.0`
-works. The 1.4.1 wheel and sdist are rebuilt from this tree in the python
-court and `twine check`-clean; their hashes are recorded in
-`bench/receipts/release-artifacts-20261113T032500Z.json` and
-`docs/RELEASE-v1.4.1.md`, not here, because this file is the wheel's long
-description and a wheel cannot contain its own digest.
-<!-- END GENERATED:python-readme-current -->
+`weftcodec` is published on PyPI as
+[`weftcodec`](https://pypi.org/project/weftcodec/) and on crates.io as
+[`weftcodec`](https://crates.io/crates/weftcodec), with
+[`weftfs`](https://crates.io/crates/weftfs) for the filesystem. This file is
+baked into the wheel as its long description, so it names no version and no
+digest: the current version, file names, sizes and SHA-256 values are on those
+project pages and, for every release, in the `docs/RELEASE-v*.md` notes in the
+[source repository](https://github.com/infinityabundance/WeftFS/tree/main/docs).
 
 ## Usage
 
