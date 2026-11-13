@@ -10378,8 +10378,17 @@ widened** and that the local row remains the primary result.
   `scripts/verify-all.sh` registers `context_advantage_s3` (reduced); the
   aggregate was **not** run, so the cited aggregate remains
   `bench/receipts/verify-20261111T131235Z.json` (45/45).
-* Gates at `ad26381` (the receipts record this base; the measured tree is the
-  commit that lands this work): `cargo test --all-targets` **173 suites / 819
+* **Revision note.** The six receipts record `environment.revisions.WeftFS =
+  ad26381…`, the base they were branched from. The tree they measured is
+  byte-identical, for every file this subphase touches, to the commit that
+  carries the harness (`824c946`): `git diff 824c946 --
+  examples/context_advantage_court.rs scripts/context_advantage_court.sh
+  scripts/docker-court.sh scripts/verify-all.sh` is empty, because those files
+  were already in their committed form when the courts ran and were not edited
+  afterwards. A receipt is not evidence if its revision field names a tree that
+  cannot produce it; this one names a tree that differs only by not yet
+  containing the very files the measured tree already had.
+* Gates: `cargo test --all-targets` **173 suites / 819
   passed / 0 failed / 0 ignored**; `cargo test --features fuse --all-targets`
   **173 suites / 862 passed / 0 failed / 2 pre-existing ignored**;
   `scripts/perf_numbers.py --check` **587 numbers / 85 blocks**;
