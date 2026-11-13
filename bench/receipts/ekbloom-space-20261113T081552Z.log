@@ -1,0 +1,240 @@
+== ekbloom court ==
+phase: space
+stamp: 20261113T081552Z
+kernel: Linux 257dc8c69872 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/rust-court:1 (sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb)
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+revisions: weftfs=f64287c95475fc87c592e232c0a3abd8c3dc1be3 weftfs_go=7f55d11a7a66a5c6e542e345d06539d801281a4c weftcodec=75f08634824d3f6fe1561a1c523e97f390e85391 weftcodec_go=9812d158bf41be85f73ca667f9e2439661d7db2e
+rustc: rustc 1.99.1 (58cf8f9c3 2026-10-13)
+cargo: cargo 1.99.1 (5f94df478 2026-08-27)
+ekbloom: version=0.7.3 lock_checksum=1c56ae95137ee95cdd8a3c26006aec3281752b23c150a5243152e2370e965da4
+== build (cargo build --release --locked) ==
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2249:9
+     |
+2249 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2354:13
+     |
+2354 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 14 warnings (run `cargo fix --lib -p weftfs` to apply 12 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+harness sha256: 7a3999fb215b4a19c074a62ef11916cfd938b280a4ca781b1e420985f80f6505
+== run ==
+corpus: arm=base file=.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors bytes=988097824 sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342 header_sha256=a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14 tensors=290
+corpus: arm=instruct file=.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe header_sha256=a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14 tensors=290
+space: arm=base objects=49 (contract §3.2 shape-class rule)
+  [1/49] model.embed_tokens.weight logical=272269312 body=210902688 planned=180623816 verdict=loss
+  [2/49] model.layers.0.input_layernorm.weight logical=1792 body=2088 planned=1525 verdict=loss
+  [3/49] model.layers.0.mlp.down_proj.weight logical=8716288 body=6773664 planned=5797721 verdict=loss
+  [4/49] model.layers.0.mlp.gate_proj.weight logical=8716288 body=6794760 planned=5803386 verdict=loss
+  [5/49] model.layers.0.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [6/49] model.layers.0.self_attn.k_proj.weight logical=229376 body=182520 planned=157253 verdict=loss
+  [7/49] model.layers.0.self_attn.o_proj.weight logical=1605632 body=1255640 planned=1078014 verdict=loss
+  [8/49] model.layers.11.mlp.down_proj.weight logical=8716288 body=6807864 planned=5831621 verdict=loss
+  [9/49] model.layers.11.mlp.gate_proj.weight logical=8716288 body=6794072 planned=5812104 verdict=loss
+  [10/49] model.layers.11.post_attention_layernorm.weight logical=1792 body=2032 planned=1459 verdict=loss
+  [11/49] model.layers.11.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [12/49] model.layers.11.self_attn.k_proj.weight logical=229376 body=182560 planned=157296 verdict=loss
+  [13/49] model.layers.11.self_attn.o_proj.weight logical=1605632 body=1261952 planned=1087549 verdict=loss
+  [14/49] model.layers.14.mlp.down_proj.weight logical=8716288 body=6809104 planned=5825918 verdict=loss
+  [15/49] model.layers.14.mlp.gate_proj.weight logical=8716288 body=6794968 planned=5815450 verdict=loss
+  [16/49] model.layers.14.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [17/49] model.layers.14.self_attn.k_proj.weight logical=229376 body=180464 planned=154351 verdict=loss
+  [18/49] model.layers.14.self_attn.o_proj.weight logical=1605632 body=1260944 planned=1081738 verdict=loss
+  [19/49] model.layers.14.self_attn.q_proj.bias logical=1792 body=2088 planned=1651 verdict=loss
+  [20/49] model.layers.17.mlp.down_proj.weight logical=8716288 body=6777968 planned=5798419 verdict=loss
+  [21/49] model.layers.17.mlp.gate_proj.weight logical=8716288 body=6798472 planned=5807714 verdict=loss
+  [22/49] model.layers.17.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [23/49] model.layers.17.self_attn.k_proj.weight logical=229376 body=180472 planned=154429 verdict=loss
+  [24/49] model.layers.17.self_attn.o_proj.weight logical=1605632 body=1254040 planned=1073136 verdict=loss
+  [25/49] model.layers.18.input_layernorm.weight logical=1792 body=1864 planned=1326 verdict=loss
+  [26/49] model.layers.2.mlp.down_proj.weight logical=8716288 body=6771048 planned=5794068 verdict=loss
+  [27/49] model.layers.2.mlp.gate_proj.weight logical=8716288 body=6797120 planned=5785588 verdict=loss
+  [28/49] model.layers.2.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [29/49] model.layers.2.self_attn.k_proj.weight logical=229376 body=180312 planned=154453 verdict=loss
+  [30/49] model.layers.2.self_attn.o_proj.weight logical=1605632 body=1253168 planned=1076015 verdict=loss
+  [31/49] model.layers.20.post_attention_layernorm.weight logical=1792 body=1888 planned=1327 verdict=loss
+  [32/49] model.layers.22.mlp.down_proj.weight logical=8716288 body=6781336 planned=5786302 verdict=loss
+  [33/49] model.layers.22.mlp.gate_proj.weight logical=8716288 body=6778696 planned=5788490 verdict=loss
+  [34/49] model.layers.22.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [35/49] model.layers.22.self_attn.k_proj.weight logical=229376 body=180784 planned=155305 verdict=loss
+  [36/49] model.layers.22.self_attn.o_proj.weight logical=1605632 body=1251760 planned=1068509 verdict=loss
+  [37/49] model.layers.23.self_attn.q_proj.bias logical=1792 body=2088 planned=1652 verdict=loss
+  [38/49] model.layers.4.mlp.down_proj.weight logical=8716288 body=6783872 planned=5807541 verdict=loss
+  [39/49] model.layers.4.mlp.gate_proj.weight logical=8716288 body=6800344 planned=5806724 verdict=loss
+  [40/49] model.layers.4.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [41/49] model.layers.4.self_attn.k_proj.weight logical=229376 body=180472 planned=154503 verdict=loss
+  [42/49] model.layers.4.self_attn.o_proj.weight logical=1605632 body=1257408 planned=1079070 verdict=loss
+  [43/49] model.layers.6.input_layernorm.weight logical=1792 body=1912 planned=1357 verdict=loss
+  [44/49] model.layers.7.mlp.down_proj.weight logical=8716288 body=6790576 planned=5812413 verdict=loss
+  [45/49] model.layers.7.mlp.gate_proj.weight logical=8716288 body=6791632 planned=5799793 verdict=loss
+  [46/49] model.layers.7.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [47/49] model.layers.7.self_attn.k_proj.weight logical=229376 body=180648 planned=154801 verdict=loss
+  [48/49] model.layers.7.self_attn.o_proj.weight logical=1605632 body=1258280 planned=1078474 verdict=loss
+  [49/49] model.layers.9.post_attention_layernorm.weight logical=1792 body=2000 planned=1457 verdict=loss
+  ladder base root body=552 ok=true
+  ladder base sparse(1024) body=672 ok=true
+  ladder base dense(1024) body=1840 ok=true
+  ladder base full body=1720 ok=true
+  ladder base bloom4 body=533504 ok=true
+  ladder base bloom8 body=795648 ok=true
+  ladder base bloom16 body=1319944 ok=true
+  ladder base regional(4,4096) body=2168 ok=true
+  ladder base path4 body=1552 ok=true
+  ladder base max-speed body=2832 ok=true
+space: arm=instruct objects=49 (contract §3.2 shape-class rule)
+  [1/49] model.embed_tokens.weight logical=272269312 body=211069808 planned=180547519 verdict=loss
+  [2/49] model.layers.0.input_layernorm.weight logical=1792 body=2088 planned=1510 verdict=loss
+  [3/49] model.layers.0.mlp.down_proj.weight logical=8716288 body=6779552 planned=5798340 verdict=loss
+  [4/49] model.layers.0.mlp.gate_proj.weight logical=8716288 body=6800896 planned=5802340 verdict=loss
+  [5/49] model.layers.0.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [6/49] model.layers.0.self_attn.k_proj.weight logical=229376 body=182736 planned=157223 verdict=loss
+  [7/49] model.layers.0.self_attn.o_proj.weight logical=1605632 body=1258616 planned=1079236 verdict=loss
+  [8/49] model.layers.11.mlp.down_proj.weight logical=8716288 body=6813184 planned=5831858 verdict=loss
+  [9/49] model.layers.11.mlp.gate_proj.weight logical=8716288 body=6798992 planned=5811899 verdict=loss
+  [10/49] model.layers.11.post_attention_layernorm.weight logical=1792 body=2032 planned=1459 verdict=loss
+  [11/49] model.layers.11.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [12/49] model.layers.11.self_attn.k_proj.weight logical=229376 body=182688 planned=157256 verdict=loss
+  [13/49] model.layers.11.self_attn.o_proj.weight logical=1605632 body=1263016 planned=1087424 verdict=loss
+  [14/49] model.layers.14.mlp.down_proj.weight logical=8716288 body=6814464 planned=5826744 verdict=loss
+  [15/49] model.layers.14.mlp.gate_proj.weight logical=8716288 body=6800816 planned=5815539 verdict=loss
+  [16/49] model.layers.14.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [17/49] model.layers.14.self_attn.k_proj.weight logical=229376 body=180640 planned=154318 verdict=loss
+  [18/49] model.layers.14.self_attn.o_proj.weight logical=1605632 body=1262120 planned=1082132 verdict=loss
+  [19/49] model.layers.14.self_attn.q_proj.bias logical=1792 body=2088 planned=1648 verdict=loss
+  [20/49] model.layers.17.mlp.down_proj.weight logical=8716288 body=6783616 planned=5799486 verdict=loss
+  [21/49] model.layers.17.mlp.gate_proj.weight logical=8716288 body=6804224 planned=5807302 verdict=loss
+  [22/49] model.layers.17.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [23/49] model.layers.17.self_attn.k_proj.weight logical=229376 body=180480 planned=154329 verdict=loss
+  [24/49] model.layers.17.self_attn.o_proj.weight logical=1605632 body=1255224 planned=1073393 verdict=loss
+  [25/49] model.layers.18.input_layernorm.weight logical=1792 body=1864 planned=1320 verdict=loss
+  [26/49] model.layers.2.mlp.down_proj.weight logical=8716288 body=6776432 planned=5793075 verdict=loss
+  [27/49] model.layers.2.mlp.gate_proj.weight logical=8716288 body=6803448 planned=5787414 verdict=loss
+  [28/49] model.layers.2.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [29/49] model.layers.2.self_attn.k_proj.weight logical=229376 body=180544 planned=154475 verdict=loss
+  [30/49] model.layers.2.self_attn.o_proj.weight logical=1605632 body=1254712 planned=1076084 verdict=loss
+  [31/49] model.layers.20.post_attention_layernorm.weight logical=1792 body=1896 planned=1330 verdict=loss
+  [32/49] model.layers.22.mlp.down_proj.weight logical=8716288 body=6786560 planned=5785901 verdict=loss
+  [33/49] model.layers.22.mlp.gate_proj.weight logical=8716288 body=6783784 planned=5787619 verdict=loss
+  [34/49] model.layers.22.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [35/49] model.layers.22.self_attn.k_proj.weight logical=229376 body=180872 planned=155241 verdict=loss
+  [36/49] model.layers.22.self_attn.o_proj.weight logical=1605632 body=1252712 planned=1068233 verdict=loss
+  [37/49] model.layers.23.self_attn.q_proj.bias logical=1792 body=2088 planned=1653 verdict=loss
+  [38/49] model.layers.4.mlp.down_proj.weight logical=8716288 body=6789344 planned=5806237 verdict=loss
+  [39/49] model.layers.4.mlp.gate_proj.weight logical=8716288 body=6806144 planned=5805856 verdict=loss
+  [40/49] model.layers.4.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [41/49] model.layers.4.self_attn.k_proj.weight logical=229376 body=180680 planned=154493 verdict=loss
+  [42/49] model.layers.4.self_attn.o_proj.weight logical=1605632 body=1258688 planned=1079295 verdict=loss
+  [43/49] model.layers.6.input_layernorm.weight logical=1792 body=1912 planned=1354 verdict=loss
+  [44/49] model.layers.7.mlp.down_proj.weight logical=8716288 body=6796624 planned=5813865 verdict=loss
+  [45/49] model.layers.7.mlp.gate_proj.weight logical=8716288 body=6798176 planned=5799745 verdict=loss
+  [46/49] model.layers.7.self_attn.k_proj.bias logical=256 body=552 planned=256 verdict=loss
+  [47/49] model.layers.7.self_attn.k_proj.weight logical=229376 body=180888 planned=154763 verdict=loss
+  [48/49] model.layers.7.self_attn.o_proj.weight logical=1605632 body=1259416 planned=1078943 verdict=loss
+  [49/49] model.layers.9.post_attention_layernorm.weight logical=1792 body=2000 planned=1465 verdict=loss
+  ladder instruct root body=552 ok=true
+  ladder instruct sparse(1024) body=672 ok=true
+  ladder instruct dense(1024) body=1840 ok=true
+  ladder instruct full body=1720 ok=true
+  ladder instruct bloom4 body=533504 ok=true
+  ladder instruct bloom8 body=795648 ok=true
+  ladder instruct bloom16 body=1319944 ok=true
+  ladder instruct regional(4,4096) body=2168 ok=true
+  ladder instruct path4 body=1552 ok=true
+  ladder instruct max-speed body=2832 ok=true
+receipt: bench/receipts/ekbloom-space-20261113T081552Z.json
+verdict: loss
+ekbloom_court: receipt=bench/receipts/ekbloom-space-20261113T081552Z.json
+ekbloom_court: log=bench/receipts/ekbloom-space-20261113T081552Z.log

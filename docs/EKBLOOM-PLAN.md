@@ -623,3 +623,16 @@ version **before** the next measurement, never after a receipt exists.
    the neighbouring courts because its containers are SHA-256-verified in the
    tree. If the operator wants a different declared corpus, it must be fixed in
    the contract before E2.
+
+   ---
+
+   ## 10. Status log (append-only)
+
+   * **2026-11-13 — EKB-E1 and EKB-E2 executed.** E1 (boundary) **passed** and E2
+     (space) was **lost**, which confirms the pre-registered prediction in §4.0.1.
+     Evidence: `bench/receipts/ekbloom-20261113T081205Z.json` (boundary, revision
+     `bc75d63`) and `bench/receipts/ekbloom-space-20261113T081552Z.json` (space,
+     revision `f64287c`), each with its `.log` beside it. The numbers live in the
+     receipts and are deliberately not restated here (rule 12). E3–E6 and X22
+     remain open; §8.2 retires the experiment only when **both** E2 and E3 are
+     lost, so an E2 loss ends the space axis and nothing else.
