@@ -16,6 +16,24 @@ court; the entries below this block are a chronological log of subphases, quoted
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
 
+## 2026-11-13 (T012/N13 aged-store index court, X02 DCP completion, X03 guards)
+
+<!-- BEGIN GENERATED:status-t012 (scripts/perf_numbers.py) -->
+<!-- END GENERATED:status-t012 -->
+
+
+
+Not claimed: a 1M live-object cell (checkpoint state manifests exceed the
+codec's default WCB item bound above ~50k objects, measured; the target attempt
+also OOM-killed the 3 GiB court); Go reading a 1M-generation store (the store
+is ~8.4 GB and is not retained inside the 1 GiB court `/tmp`, and Go's open
+path at 1M commits is unmeasured); physical power loss; a DCP completion under
+20 ms. Provenance: `bench/RESULTS-incremental-index.md` (aged section),
+`bench/RESULTS-dcp-metadata.md` (X02 section), and the per-cell receipts named
+there.
+
+
+
 This is the honest, evidence-backed state of the program. It distinguishes
 implemented, tested, ignored, and not done. Current claims are generated from
 receipts by `scripts/perf_numbers.py` into the block above and into

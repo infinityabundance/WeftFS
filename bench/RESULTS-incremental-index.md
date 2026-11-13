@@ -566,3 +566,57 @@ Maintenance rules (`src/index_incremental.rs`):
 * `self.index_cache` is not populated by the writer (the head's index lives in
   the attested writer cache); a query on a writing handle after a commit loads
   the persisted chain once per head, as the cold-read numbers show.
+
+
+## Aged-store court (T012 / N13), measured 2026-11-13
+
+Court: `scripts/index_aged_court.sh` around `examples/index_aged_bench.rs`; one
+store per cell, one process, default bench court limits. `gens` grows history
+with 64 live objects; `live` grows the state and runs 200-300 measured commits.
+Receipts: one `bench/receipts/index-aged-<stamp>.json` per cell; retained
+failures `index-aged-20261113T193825Z.failure.log` (1M live objects, OOM-killed)
+and `index-aged-20261113T213345Z.failure.log` (50k live objects, first refused
+commit at generation 229).
+
+<!-- BEGIN GENERATED:aged-index-table (scripts/perf_numbers.py) -->
+<!-- END GENERATED:aged-index-table -->
+
+Correctness at every passing cell: the persisted index's ordered answers equal
+the scan oracle for relation, tag, attr-eq and has-attr selectors; the writer's
+maintained WFX2 sections equal a full `StateIndex::build`; a reopen with
+`indexes/` renamed away rebuilds and still matches; GC with a snapshot pin
+retains every segment a retained root names (missing = 0) and reclaims the
+rest; a forged head segment (one tag row removed, otherwise valid) is refused
+by the commit's candidate root and rebuilt to exact answers. Cross-language:
+`WeftFS-Go/store/index_aged_handoff_test.go` opens the Rust-written 10k-live,
+10k-generation and 100k-generation stores, loads the Rust segment
+(`DiskLoads>0`, `Builds==0`) and reproduces the Rust CLI's **ordered** answers
+and Go's scan oracle (PASS, 3.19 s).
+
+Three defects were found and fixed at the root, not re-framed:
+
+1. `State::apply_ops` cloned the whole state per commit, so replay and group
+   commits were O(state). A journal of the touched slots replaced it (10k live
+   objects: cold open 642 -> 210 ms on the same fixture).
+2. The WFX3 reader required `edgeCount * 32` remaining bytes for a relation
+   row; a value target is one kind byte plus its payload, so any segment whose
+   last relation row held such an edge was refused and rebuilt on every reopen
+   (`compact_index` produced one). The bound is now the true one-byte minimum
+   with a capped initial capacity, in Rust and Go.
+3. GC and the retained-root diagnostic materialised every commit to find
+   checkpoint roots; at 1,000,000 generations that vector OOM-killed the court.
+   `recovery::for_each_commit_via` streams the scan and retains only the
+   checkpoint rows.
+
+The 1,000,000 **live-object** cell is not reachable in the 3 GiB court, and the
+reason is measured: a checkpoint state manifest is a canonical WCB value
+encoded with the codec's default 1,000,000-item bound, and
+`examples/state_manifest_bound.rs` reports 50,000 objects encoding (2.4 MB per
+10k) while 100,000 objects alone already exceed the bound. With entries and
+relations the first checkpoint is refused at 50,000 live objects. A
+100,000-object store therefore cannot checkpoint at all
+(`checkpoints = 0` above); the target 1M attempt additionally exceeded 3 GiB
+during seeding. This is a limit, not an index defect: correctness is unchanged
+(the index rebuilds), but bounded open and checkpoint roots are unavailable. A
+sharded or separately-bounded state manifest is the fix and is not implemented
+here.

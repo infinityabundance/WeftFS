@@ -415,6 +415,10 @@ pub struct GcReport {
     /// measurement without ever being conflated again.
     pub deleted_total_bytes: u64,
     pub retained: u64,
+    /// Commit records carrying a checkpoint state manifest, i.e. the roots that
+    /// bound a cold open's replay. Counted by the same streaming scan GC uses,
+    /// so a court can say whether a cell's cold open used one.
+    pub checkpoints_retained: u64,
     /// Physical pack objects reclaimed because every member had been deleted
     /// (subphase R11). Zero for a plane without packs.
     pub reclaimed_packs: u64,
@@ -8615,14 +8619,17 @@ impl Store {
         retained_indexes.extend(self.state.snapshots.values().copied());
         {
             let mut found = Vec::new();
+            let mut checkpoints = 0u64;
             self.with_backend(|backend| {
                 recovery::for_each_commit_via(backend, u64::MAX, |commit| {
                     if commit.commit.checkpoint.is_some() {
                         found.push(commit.hash);
+                        checkpoints += 1;
                     }
                     Ok(())
                 })
             })?;
+            report.checkpoints_retained = checkpoints;
             retained_indexes.extend(found);
         }
         match self.expand_retained_index_chains(&mut retained_indexes) {

@@ -503,115 +503,142 @@ fn run() -> serde_json::Value {
     let (head_kind, head_depth) = store.index_head_chain().expect("head chain");
     let index_bytes = dir_bytes(&root.join("indexes"));
     let data = data_bytes(&root);
+    // A checkpoint state manifest is encoded with the codec's default WCB
+    // limits, so a large live state may not be able to write one at all. The
+    // court records what actually exists instead of assuming it.
+    let checkpoint_names = store.list_checkpoints().unwrap_or_default();
 
-    // Oracle equality of the writer's maintained sections against a full build.
-    let sections_match = match (
-        store.head_index_sections_for_test(),
-        store.rebuilt_index_sections_for_test(),
-    ) {
-        (Ok(maintained), Ok(rebuilt)) => Some(maintained == rebuilt),
-        _ => None,
-    };
+    // A cell whose measured commit was refused (for example a checkpoint state
+    // manifest above the codec's WCB item bound) is published as a failure, not
+    // as a panic: the receipt carries the typed error and the post-measure
+    // steps are recorded as skipped.
+    let mut sections_match = None;
+    let mut snapshot_ms = 0.0f64;
+    let mut snapshot = weftfs::identity::Hash32::ZERO;
+    let mut retained_before: Vec<weftfs::identity::Hash32> = Vec::new();
+    let mut retained_exists_before = 0usize;
+    let mut gc_ms = 0.0f64;
+    let mut deleted_indexes = 0usize;
+    let mut deleted_index_bytes = 0u64;
+    let mut retained_after_gc: Vec<weftfs::identity::Hash32> = Vec::new();
+    let mut retained_missing = 0usize;
+    let mut gc_problems: Vec<String> = Vec::new();
+    let mut gc_checkpoints = 0u64;
+    let mut index_files_after_gc = 0u64;
+    let mut cold_persisted = json!({"skipped": "the measured commit failed"});
+    let mut cold_rebuilt = json!({"skipped": "the measured commit failed"});
+    let mut forgery = json!({"skipped": "the measured commit failed"});
 
-    // GC with a snapshot pin: every segment a retained root names must survive.
-    let (snapshot_ms, snapshot) = timed(|| store.snapshot_create("aged-pin").expect("snapshot"));
-    let retained_before = store.retained_index_segment_ids().expect("retained ids");
-    let retained_exists_before = retained_before
-        .iter()
-        .filter(|id| index_path(&root, **id).exists())
-        .count();
-    let (gc_ms, gc_report) = timed(|| store.gc(true).expect("gc"));
-    let deleted_indexes = gc_report.deleted_indexes.clone();
-    let deleted_index_bytes = gc_report.deleted_index_bytes;
-    let retained_after_gc = store
-        .retained_index_segment_ids()
-        .expect("retained ids after");
-    let retained_missing = retained_after_gc
-        .iter()
-        .filter(|id| !index_path(&root, **id).exists())
-        .count();
-    let deleted_problems = gc_report.problems.clone();
-    let index_files_after_gc = file_count(&root.join("indexes"));
-    drop(store);
-
-    // Cold reopen: with the persisted segments, then with them renamed away.
-    let cold_persisted = cold_series(&root, &selectors, &principal, opens);
-    let indexes = root.join("indexes");
-    let hidden = root.join("indexes.hidden");
-    fs::rename(&indexes, &hidden).expect("hide index segments");
-    let cold_rebuilt = cold_series(&root, &selectors, &principal, opens);
-    fs::rename(&hidden, &indexes).expect("restore index segments");
-
-    // Forged head segment: one tag row removed, everything else valid. The
-    // commit attestation is the only refutation; a reader that trusted the
-    // file would lose four objects per hundred for `tag("alpha")`.
-    let forgery = if skip_forge {
-        json!({"skipped": true})
-    } else {
-        let mut store = Store::open(&root, OpenMode::ReadWrite).expect("writable reopen");
-        let (compact_ms, compacted) = timed(|| store.compact_index());
-        let compact_ok = compacted.is_ok();
-        let pre_path = index_path(&root, store.head());
-        let pre_forged = fs::read(&pre_path).unwrap_or_default();
-        // Does the freshly published full segment decode at all? This is the
-        // regression check for the relation-edge bound: before the fix every
-        // compacted segment carrying a value-target relation was rebuild-only.
-        let compact_probe = {
-            let limits = weftcodec::Limits::default();
-            let probe = Store::open(&root, OpenMode::ReadOnly).expect("probe open");
-            probe.reset_index_stats();
-            let query = selector::parse("select tag(\"alpha\")").expect("probe selector");
-            let _ = probe.resolve(&query, None, &principal, &limits);
-            let stats = probe.index_stats();
-            json!({
-                "loads": stats.disk_loads,
-                "builds": stats.builds,
-                "rejects": stats.rejects,
-                "notes": stats.notes,
-            })
+    if !failed {
+        sections_match = match (
+            store.head_index_sections_for_test(),
+            store.rebuilt_index_sections_for_test(),
+        ) {
+            (Ok(maintained), Ok(rebuilt)) => Some(maintained == rebuilt),
+            _ => None,
         };
-        let forged = store.forge_head_index_remove_tag_for_test("alpha");
-        let forged_head = store.head().to_hex();
-        let forged_path = index_path(&root, store.head());
-        let forged_bytes = fs::read(&forged_path).unwrap_or_default();
-        let forged_magic = forged_bytes.get(0..4).map(|b| b.to_vec());
-        // The first section count sits immediately after the 113-byte WFX3
-        // header. Recording both sides makes a misaligned re-encode visible
-        // instead of inferred from the reader's error string.
-        let count_at = |bytes: &[u8]| -> Option<u32> {
-            bytes
-                .get(113..117)
-                .and_then(|b| b.try_into().ok())
-                .map(u32::from_le_bytes)
-        };
-        let pre_count = count_at(&pre_forged);
-        let post_count = count_at(&forged_bytes);
-        if env_string("WEFT_AGED_DEBUG_SEGMENT", "0") == "1" {
-            let _ = fs::copy(&pre_path, "/work/.docker-cache/aged-forge-debug.bin");
-        }
+
+        // GC with a snapshot pin: every segment a retained root names must survive.
+        let (ms, pinned) = timed(|| store.snapshot_create("aged-pin").expect("snapshot"));
+        snapshot_ms = ms;
+        snapshot = pinned;
+        retained_before = store.retained_index_segment_ids().expect("retained ids");
+        retained_exists_before = retained_before
+            .iter()
+            .filter(|id| index_path(&root, **id).exists())
+            .count();
+        let (ms, report) = timed(|| store.gc(true).expect("gc"));
+        gc_ms = ms;
+        deleted_indexes = report.deleted_indexes.len();
+        deleted_index_bytes = report.deleted_index_bytes;
+        retained_after_gc = store
+            .retained_index_segment_ids()
+            .expect("retained ids after");
+        retained_missing = retained_after_gc
+            .iter()
+            .filter(|id| !index_path(&root, **id).exists())
+            .count();
+        gc_problems = report.problems.clone();
+        gc_checkpoints = report.checkpoints_retained;
+        index_files_after_gc = file_count(&root.join("indexes"));
+        drop(report);
         drop(store);
-        if !compact_ok {
-            json!({"compact_ms": compact_ms, "error": "compact_index failed"})
-        } else if let Err(err) = forged {
-            json!({"compact_ms": compact_ms, "error": err.to_string()})
+
+        // Cold reopen: with the persisted segments, then with them renamed away.
+        cold_persisted = cold_series(&root, &selectors, &principal, opens);
+        let indexes = root.join("indexes");
+        let hidden = root.join("indexes.hidden");
+        fs::rename(&indexes, &hidden).expect("hide index segments");
+        cold_rebuilt = cold_series(&root, &selectors, &principal, opens);
+        fs::rename(&hidden, &indexes).expect("restore index segments");
+
+        // Forged head segment: one tag row removed, everything else valid. The
+        // commit attestation is the only refutation; a reader that trusted the
+        // file would lose a quarter of the tag matches.
+        if skip_forge {
+            forgery = json!({"skipped": true});
         } else {
-            let sample = cold_open(&root, &selectors, &principal);
-            json!({
-                "compact_ms": compact_ms,
-                "head": forged_head,
-                "forged_len": forged_bytes.len(),
-                "forged_magic": forged_magic,
-                "pre_len": pre_forged.len(),
-                "pre_first_section_count": pre_count,
-                "post_first_section_count": post_count,
-                "compact_probe": compact_probe,
-                "open_ms": sample["open_ms"],
-                "oracle_match": sample["oracle_match"],
-                "tag_matched": sample["queries"]["tag"]["matched"],
-                "index_stats": sample["index_stats"],
-            })
+            let mut store = Store::open(&root, OpenMode::ReadWrite).expect("writable reopen");
+            let (compact_ms, compacted) = timed(|| store.compact_index());
+            let compact_ok = compacted.is_ok();
+            let pre_path = index_path(&root, store.head());
+            let pre_forged = fs::read(&pre_path).unwrap_or_default();
+            // Does the freshly published full segment decode at all? This is the
+            // regression check for the relation-edge bound: before the fix every
+            // compacted segment carrying a value-target relation was rebuild-only.
+            let compact_probe = {
+                let limits = weftcodec::Limits::default();
+                let probe = Store::open(&root, OpenMode::ReadOnly).expect("probe open");
+                probe.reset_index_stats();
+                let query = selector::parse("select tag(\"alpha\")").expect("probe selector");
+                let _ = probe.resolve(&query, None, &principal, &limits);
+                let stats = probe.index_stats();
+                json!({
+                    "loads": stats.disk_loads,
+                    "builds": stats.builds,
+                    "rejects": stats.rejects,
+                    "notes": stats.notes,
+                })
+            };
+            let forged = store.forge_head_index_remove_tag_for_test("alpha");
+            let forged_head = store.head().to_hex();
+            let forged_path = index_path(&root, store.head());
+            let forged_bytes = fs::read(&forged_path).unwrap_or_default();
+            let forged_magic = forged_bytes.get(0..4).map(|b| b.to_vec());
+            let count_at = |bytes: &[u8]| -> Option<u32> {
+                bytes
+                    .get(113..117)
+                    .and_then(|b| b.try_into().ok())
+                    .map(u32::from_le_bytes)
+            };
+            let pre_count = count_at(&pre_forged);
+            let post_count = count_at(&forged_bytes);
+            drop(store);
+            forgery = if !compact_ok {
+                json!({"compact_ms": compact_ms, "error": "compact_index failed"})
+            } else if let Err(err) = forged {
+                json!({"compact_ms": compact_ms, "error": err.to_string()})
+            } else {
+                let sample = cold_open(&root, &selectors, &principal);
+                json!({
+                    "compact_ms": compact_ms,
+                    "head": forged_head,
+                    "forged_len": forged_bytes.len(),
+                    "forged_magic": forged_magic,
+                    "pre_len": pre_forged.len(),
+                    "pre_first_section_count": pre_count,
+                    "post_first_section_count": post_count,
+                    "compact_probe": compact_probe,
+                    "open_ms": sample["open_ms"],
+                    "oracle_match": sample["oracle_match"],
+                    "tag_matched": sample["queries"]["tag"]["matched"],
+                    "index_stats": sample["index_stats"],
+                })
+            };
         }
-    };
+    } else {
+        drop(store);
+    }
 
     json!({
         "mode": mode,
@@ -651,6 +678,7 @@ fn run() -> serde_json::Value {
             "index_bytes_per_live_object": if live == 0 { 0 } else { (index_bytes / live) as u64 },
         },
         "generation_after_measure": measured_generation,
+        "named_checkpoints": checkpoint_names.len(),
         "head_segment": head_kind,
         "head_chain_depth": head_depth,
         "index_stats": {
@@ -673,11 +701,12 @@ fn run() -> serde_json::Value {
             "retained_present_before": retained_exists_before,
             "retained_after": retained_after_gc.len(),
             "retained_missing_after": retained_missing,
-            "deleted_indexes": deleted_indexes.len(),
+            "deleted_indexes": deleted_indexes,
             "deleted_index_bytes": deleted_index_bytes,
             "index_files_after": index_files_after_gc,
+            "checkpoint_manifests": gc_checkpoints,
             "ms": gc_ms,
-            "problems": deleted_problems,
+            "problems": gc_problems,
         },
         "cold_persisted": cold_persisted,
         "cold_rebuilt": cold_rebuilt,

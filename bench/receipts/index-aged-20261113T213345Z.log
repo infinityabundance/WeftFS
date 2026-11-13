@@ -1,0 +1,132 @@
+command: index_aged_bench live-50k
+mode="live" target=50000 live=50000 generations=300
+publish p50=47.233 p95=55.269 p99=61.906 ms | bytes/update p50=1135 mean=338647
+index=90081674 data=8388890 commit=45778920 allocated=547168256 index_files=255
+cold_persisted: open p50=Null p95=Null | oracle_match=null loads=Null builds=Null rejects=Null
+cold_rebuilt: open p50=Null p95=Null | oracle_match=null loads=Null builds=Null rejects=Null
+gc: retained=0 missing_after=0 deleted=0 deleted_bytes=0 ms=0.000 problems=[]
+oracle sections_equal_rebuild=Null forged={"skipped":"the measured commit failed"}
+peak_rss_kib=403036
+
+{
+  "cell_label": "state: 50k live objects, 300 measured commits (crosses a checkpoint)",
+  "control_variables": {
+    "WEFT_AGED_GENS": "300",
+    "WEFT_AGED_LIVE": "50000",
+    "WEFT_AGED_MODE": "live",
+    "WEFT_AGED_OPENS": "unknown",
+    "WEFT_AGED_SEED_BATCH": "unknown",
+    "WEFT_AGED_SKIP_FORGE": "unknown",
+    "WEFT_AGED_TARGET": "50000"
+  },
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory_limit": "3g",
+    "pids": "1024",
+    "storage": "tmpfs",
+    "tmpfs": "unknown"
+  },
+  "generated_unix_secs": 1794605645,
+  "generated_utc": "20261113T213345Z",
+  "label": "synthetic fixture, one store per cell, one process, single host; `gens` grows history with a constant live set, `live` grows state. A scratch root is declared in the cell, never assumed to be tmpfs.",
+  "method": {
+    "bytes_per_update": "head index segment file + commit file, from fs metadata after each commit",
+    "cold_persisted": "a fresh read-only handle per sample; first indexed resolve per selector, compared with resolve_scan",
+    "cold_rebuilt": "the same, with `indexes/` renamed away so every answer must be rebuilt from replayed state",
+    "forged_segment": "one valid full segment with the tag row removed replaces the head; the commit attestation must refute it",
+    "gc": "snapshot pin taken at the target, then gc(apply=true); retained roots come from the store's own traversal",
+    "publish": "each measured step is one `set_xattr` commit; statistics are the last WEFT_AGED_WINDOW commits"
+  },
+  "package_version": "1.4.2",
+  "profile": "release",
+  "reduced_from": "",
+  "reduced_reason": "",
+  "revision": "37c17c4014be66328b13e3db5f79d406e98d29f6",
+  "run": {
+    "bytes_per_update": {
+      "mean": 338646.81,
+      "p50": 1135.0,
+      "p95": 1136.0
+    },
+    "cell": {
+      "live_objects": 50000,
+      "measured_generations": 300,
+      "target": 50000
+    },
+    "cold_persisted": {
+      "skipped": "the measured commit failed"
+    },
+    "cold_rebuilt": {
+      "skipped": "the measured commit failed"
+    },
+    "commit_wall_ms": 10919.735973,
+    "declared_scratch_bytes": 0,
+    "failed": true,
+    "failure": {
+      "class": "LimitExceeded",
+      "generation": 229,
+      "message": "LimitExceeded: LimitExceeded: WCB item count 1000001 exceeds limit 1000000"
+    },
+    "footprint": {
+      "commit_bytes": 45778920,
+      "commit_files": 255,
+      "data_bytes": 8388890,
+      "index_allocated_bytes": 90976256,
+      "index_bytes": 90081674,
+      "index_bytes_per_live_object": 1801,
+      "index_files": 255,
+      "index_ppm_of_data": 10738211,
+      "total_allocated_bytes": 547168256
+    },
+    "forged_segment": {
+      "skipped": "the measured commit failed"
+    },
+    "gc": {
+      "checkpoint_manifests": 0,
+      "deleted_index_bytes": 0,
+      "deleted_indexes": 0,
+      "index_files_after": 0,
+      "ms": 0.0,
+      "problems": [],
+      "retained_after": 0,
+      "retained_before": 0,
+      "retained_missing_after": 0,
+      "retained_present_before": 0,
+      "snapshot": "0000000000000000000000000000000000000000000000000000000000000000",
+      "snapshot_ms": 0.0
+    },
+    "generation_after_measure": 255,
+    "head_chain_depth": 22,
+    "head_segment": "delta",
+    "index_stats": {
+      "builds": 1,
+      "loads": 0,
+      "maintenance_fallbacks": 0,
+      "maintenance_updates": 254,
+      "notes": [],
+      "rejects": 0,
+      "write_errors": 0,
+      "writes": 255
+    },
+    "mode": "live",
+    "named_checkpoints": 0,
+    "oracle": {
+      "maintained_sections_equal_rebuild": null
+    },
+    "peak_rss_kib": 403036,
+    "publish": {
+      "mean": 46.797292414999994,
+      "p50": 47.23289,
+      "p95": 55.2691,
+      "p99": 61.905803,
+      "window": 200
+    },
+    "root": "/tmp/aged-live-50k",
+    "seed_ms": 3210.755865,
+    "seeded_generation": 14
+  },
+  "schema": "weftfs.aged-index-court.v1"
+}

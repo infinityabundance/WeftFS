@@ -317,6 +317,21 @@ run_orchestrated_court conformance_bundle conformance_bundle \
 run_orchestrated_court conformance_python conformance_python \
   env WEFT_STAMP="$stamp" bash scripts/conformance_python_court.sh
 
+# Aged-store advisory-index court (T012/N13): reduced cells only (10k
+# generations, 10k live objects with one checkpoint). Full cells 100k/1M are
+# run by hand and cited in bench/RESULTS-incremental-index.md; the 1M
+# live-object cell is not reachable (checkpoint state manifest item bound).
+run_orchestrated_court index_aged index_aged \
+  env WEFT_STAMP="$stamp" bash scripts/index_aged_court.sh
+emit_receipt index_aged "bench/receipts/index-aged-court-${stamp}.json"
+
+# DCP checkpoint completion: seven interleaved repetitions of the shipped
+# metadata plan against the forced oracle encoder, plus the kill-after-ack
+# durability control, on the R11 169-entry fixture.
+run_court python "dcp_completion" \
+  "cd /work && WEFT_DCPCOMPLETION_STAMP=$stamp WEFT_DCPCOMPLETION_REPS=7 bench/scripts/dcp_completion_court.sh"
+emit_receipt dcp_completion "bench/receipts/dcp-latency-${stamp}.json"
+
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
 run_court rust "context_cross_rust_gen" \

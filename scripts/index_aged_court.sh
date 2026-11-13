@@ -123,6 +123,7 @@ WEFT_AGED_LABEL='$label' cargo run --release --locked --example index_aged_bench
     tail -5 "$log" || true
     cleanup_root "$root"
     rm -f "$log"
+    failures=$((failures + 1))
     return 1
   fi
   cleanup_root "$root"
@@ -142,6 +143,13 @@ run = d["run"]
 problems = []
 if run.get("failure") is not None:
     problems.append("the store refused a measured commit: %r" % (run.get("failure"),))
+    print(json.dumps({"ok": False, "problems": problems,
+                      "publish": run.get("publish", {}),
+                      "peak_rss_kib": run.get("peak_rss_kib"),
+                      "index_bytes": run.get("footprint", {}).get("index_bytes"),
+                      "data_bytes": run.get("footprint", {}).get("data_bytes"),
+                      "checkpoint_manifests": run.get("gc", {}).get("checkpoint_manifests")}))
+    raise SystemExit(0)
 oracle = run.get("oracle", {}).get("maintained_sections_equal_rebuild")
 if oracle is not True:
     problems.append("maintained sections vs rebuild = %r" % (oracle,))
@@ -174,7 +182,8 @@ print(json.dumps({"ok": not problems, "problems": problems,
                   "publish": run.get("publish", {}),
                   "peak_rss_kib": run.get("peak_rss_kib"),
                   "index_bytes": run.get("footprint", {}).get("index_bytes"),
-                  "data_bytes": run.get("footprint", {}).get("data_bytes")}))
+                  "data_bytes": run.get("footprint", {}).get("data_bytes"),
+                  "checkpoint_manifests": run.get("gc", {}).get("checkpoint_manifests")}))
 PY
 )"
   if [[ "$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["ok"])' "$verdict")" != "True" ]]; then
@@ -199,14 +208,27 @@ run_cell_with_reduction() {
   else
     reduced_mode="gens"; reduced_live="$live"; reduced_gens="$reduced"
   fi
+  # An explicit reduced target is an operator choice after a target cell could
+  # not run (memory, not disk). The receipt names both the target and the reason.
+  if [[ -n "${WEFT_AGED_REDUCED_TO:-}" ]]; then
+    reduced="$WEFT_AGED_REDUCED_TO"
+    if [[ "$mode" == "live" ]]; then reduced_live="$reduced"; else reduced_gens="$reduced"; fi
+    WEFT_REDUCED_FROM="$target" \
+      WEFT_REDUCED_REASON="operator-selected reduced configuration after the target cell could not run; see the retained failure log" \
+      run_cell "$name-reduced" "$reduced_mode" "$reduced" "$reduced_live" "$reduced_gens" \
+      "$(python3 -c "print(int($estimate * $reduced // $target))") " \
+      "reduced configuration: $label (target $target)" || true
+    return 0
+  fi
   run_cell "$name" "$mode" "$target" "$live" "$gens" "$estimate" "$label" || rc=$?
   if (( rc == 75 )); then
     echo "index_aged_court: cell $name cannot run at target on this host; running reduced target $reduced (labelled)"
     WEFT_REDUCED_FROM="$target" WEFT_REDUCED_REASON="declared scratch estimate ${estimate} B exceeds free space" \
       run_cell "$name-reduced" "$reduced_mode" "$reduced" "$reduced_live" "$reduced_gens" \
-      "$(python3 -c "print(int($estimate * $reduced // $target))")" \
+      "$(python3 -c "print(int($estimate * $reduced // $target))") " \
       "reduced configuration: $label (target $target could not fit)" || true
   fi
+  return 0
 }
 
 gens_estimate() { python3 -c "print(int($1 * 6144) + 8192 * 1024)"; }
@@ -219,8 +241,10 @@ if wants_cell gens-10k; then
     "history: 10k generations, 64 live objects"
 fi
 if wants_cell live-10k; then
-  run_cell_with_reduction live-10k live 10000 10000 200 "$(live_estimate 10000)" 2000 \
-    "state: 10k live objects, 200 measured commits"
+  # 300 measured commits cross the 256-generation checkpoint boundary, so the
+  # cold-open and GC numbers include a real checkpoint state manifest.
+  run_cell_with_reduction live-10k live 10000 10000 300 "$(live_estimate 10000)" 2000 \
+    "state: 10k live objects, 300 measured commits (crosses a checkpoint)"
 fi
 
 if [[ "$config" == "full" ]] || [[ -n "$explicit_cells" ]]; then
@@ -232,9 +256,14 @@ if [[ "$config" == "full" ]] || [[ -n "$explicit_cells" ]]; then
     run_cell_with_reduction gens-1m gens 1000000 64 1000000 "$(gens_estimate 1000000)" 200000 \
       "history: 1M generations, 64 live objects"
   fi
+  if wants_cell live-50k; then
+    run_cell_with_reduction live-50k live 50000 50000 300 "$(live_estimate 50000)" 20000 \
+      "state: 50k live objects, 300 measured commits (crosses a checkpoint)"
+  fi
   if wants_cell live-100k; then
     run_cell_with_reduction live-100k live 100000 100000 200 "$(live_estimate 100000)" 20000 \
-      "state: 100k live objects, 200 measured commits"
+      "state: 100k live objects, 200 measured commits (no checkpoint: the state \
+manifest cannot encode at this size)"
   fi
   if wants_cell live-1m; then
     run_cell_with_reduction live-1m live 1000000 1000000 200 "$(live_estimate 1000000)" 250000 \
@@ -244,7 +273,7 @@ fi
 
 # ---- summary -------------------------------------------------------------
 summary_stamp="$(stamp)"
-summary="$receipts/index-aged-court-$summary_stamp.json"
+summary="$receipts/index-aged-court-${WEFT_STAMP:-$summary_stamp}.json"
 python3 - "$summary" "$summary_stamp" "$config" "${summary_rows[@]}" <<'PY'
 import json, sys
 path, stamp, config = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -261,6 +290,7 @@ for raw in sys.argv[4:]:
         "publish_p50_ms": row.get("publish", {}).get("p50"),
         "peak_rss_kib": row.get("peak_rss_kib"),
         "index_bytes": row.get("index_bytes"), "data_bytes": row.get("data_bytes"),
+        "checkpoint_manifests": row.get("checkpoint_manifests"),
     })
 doc = {
     "schema": "weftfs.aged-index-court.v1",

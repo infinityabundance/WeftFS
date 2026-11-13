@@ -1,0 +1,224 @@
+command: unknown
+mode="gens" target=100000 live=64 generations=100000
+publish p50=0.098 p95=0.109 p99=0.129 ms | bytes/update p50=1090 mean=1634
+index=83732350 data=13542317 commit=80252013 allocated=458153984 index_files=6631
+cold_persisted: open p50=Number(2.651711) p95=Number(2.651711) | oracle_match=true loads=Array [Number(1)] builds=Array [Number(0)] rejects=Array [Number(0)]
+cold_rebuilt: open p50=Number(2.411293) p95=Number(2.411293) | oracle_match=true loads=Array [Number(0)] builds=Array [Number(1)] rejects=Array [Number(0)]
+gc: retained=6631 missing_after=0 deleted=93373 deleted_bytes=74730153 ms=5349.372 problems=[]
+oracle sections_equal_rebuild=Bool(true) forged={"skipped":true}
+peak_rss_kib=369340
+
+{
+  "cell_label": "unknown",
+  "control_variables": {
+    "WEFT_AGED_GENS": "unknown",
+    "WEFT_AGED_LIVE": "64",
+    "WEFT_AGED_MODE": "gens",
+    "WEFT_AGED_OPENS": "1",
+    "WEFT_AGED_SEED_BATCH": "unknown",
+    "WEFT_AGED_SKIP_FORGE": "1",
+    "WEFT_AGED_TARGET": "100000"
+  },
+  "environment": {
+    "court_image": "weft/fuse-court:1",
+    "court_image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory_limit": "3g",
+    "pids": "1024",
+    "storage": "unknown",
+    "tmpfs": "unknown"
+  },
+  "generated_unix_secs": 1794605407,
+  "generated_utc": "cross-gen100k",
+  "label": "synthetic fixture, one store per cell, one process, single host; `gens` grows history with a constant live set, `live` grows state. A scratch root is declared in the cell, never assumed to be tmpfs.",
+  "method": {
+    "bytes_per_update": "head index segment file + commit file, from fs metadata after each commit",
+    "cold_persisted": "a fresh read-only handle per sample; first indexed resolve per selector, compared with resolve_scan",
+    "cold_rebuilt": "the same, with `indexes/` renamed away so every answer must be rebuilt from replayed state",
+    "forged_segment": "one valid full segment with the tag row removed replaces the head; the commit attestation must refute it",
+    "gc": "snapshot pin taken at the target, then gc(apply=true); retained roots come from the store's own traversal",
+    "publish": "each measured step is one `set_xattr` commit; statistics are the last WEFT_AGED_WINDOW commits"
+  },
+  "package_version": "1.4.2",
+  "profile": "release",
+  "reduced_from": null,
+  "reduced_reason": null,
+  "revision": "37c17c4014be66328b13e3db5f79d406e98d29f6",
+  "run": {
+    "bytes_per_update": {
+      "mean": 1633.84,
+      "p50": 1090.0,
+      "p95": 1091.0
+    },
+    "cell": {
+      "live_objects": 64,
+      "measured_generations": 100000,
+      "target": 100000
+    },
+    "cold_persisted": {
+      "first_query": {
+        "attr_eq": {
+          "p50": 0.020578,
+          "p95": 0.020578,
+          "samples_ms": [
+            0.020578
+          ]
+        },
+        "has_attr": {
+          "p50": 0.03228,
+          "p95": 0.03228,
+          "samples_ms": [
+            0.03228
+          ]
+        },
+        "relation": {
+          "p50": 0.26896,
+          "p95": 0.26896,
+          "samples_ms": [
+            0.26896
+          ]
+        },
+        "tag": {
+          "p50": 0.0162,
+          "p95": 0.0162,
+          "samples_ms": [
+            0.0162
+          ]
+        }
+      },
+      "index_stats": {
+        "builds": [
+          0
+        ],
+        "loads": [
+          1
+        ],
+        "rejects": [
+          0
+        ]
+      },
+      "open": {
+        "p50": 2.651711,
+        "p95": 2.651711,
+        "samples_ms": [
+          2.651711
+        ]
+      },
+      "oracle_match": true
+    },
+    "cold_rebuilt": {
+      "first_query": {
+        "attr_eq": {
+          "p50": 0.017312,
+          "p95": 0.017312,
+          "samples_ms": [
+            0.017312
+          ]
+        },
+        "has_attr": {
+          "p50": 0.03242,
+          "p95": 0.03242,
+          "samples_ms": [
+            0.03242
+          ]
+        },
+        "relation": {
+          "p50": 0.074799,
+          "p95": 0.074799,
+          "samples_ms": [
+            0.074799
+          ]
+        },
+        "tag": {
+          "p50": 0.014216000000000001,
+          "p95": 0.014216000000000001,
+          "samples_ms": [
+            0.014216000000000001
+          ]
+        }
+      },
+      "index_stats": {
+        "builds": [
+          1
+        ],
+        "loads": [
+          0
+        ],
+        "rejects": [
+          0
+        ]
+      },
+      "open": {
+        "p50": 2.411293,
+        "p95": 2.411293,
+        "samples_ms": [
+          2.411293
+        ]
+      },
+      "oracle_match": true
+    },
+    "commit_wall_ms": 10304.547486000001,
+    "declared_scratch_bytes": 0,
+    "failed": false,
+    "failure": null,
+    "footprint": {
+      "commit_bytes": 80252013,
+      "commit_files": 100004,
+      "data_bytes": 13542317,
+      "index_allocated_bytes": 33566720,
+      "index_bytes": 83732350,
+      "index_bytes_per_live_object": 1308317,
+      "index_files": 6631,
+      "index_ppm_of_data": 6183015,
+      "total_allocated_bytes": 458153984
+    },
+    "forged_segment": {
+      "skipped": true
+    },
+    "gc": {
+      "checkpoint_manifests": 390,
+      "deleted_index_bytes": 74730153,
+      "deleted_indexes": 93373,
+      "index_files_after": 6631,
+      "ms": 5349.372181,
+      "problems": [],
+      "retained_after": 6631,
+      "retained_before": 6631,
+      "retained_missing_after": 0,
+      "retained_present_before": 6631,
+      "snapshot": "ae9ccec4957c6b122a8911878a40af72a47b1ca634e62aa77738ff2a0cfb331e",
+      "snapshot_ms": 0.229516
+    },
+    "generation_after_measure": 100003,
+    "head_chain_depth": 11,
+    "head_segment": "delta",
+    "index_stats": {
+      "builds": 1,
+      "loads": 0,
+      "maintenance_fallbacks": 0,
+      "maintenance_updates": 100002,
+      "notes": [],
+      "rejects": 0,
+      "write_errors": 0,
+      "writes": 100003
+    },
+    "mode": "gens",
+    "named_checkpoints": 0,
+    "oracle": {
+      "maintained_sections_equal_rebuild": true
+    },
+    "peak_rss_kib": 369340,
+    "publish": {
+      "mean": 0.09994908499999998,
+      "p50": 0.097962,
+      "p95": 0.10859200000000001,
+      "p99": 0.12877,
+      "window": 200
+    },
+    "root": "/tmp/cross-gen100k",
+    "seed_ms": 3.261975,
+    "seeded_generation": 2
+  },
+  "schema": "weftfs.aged-index-court.v1"
+}

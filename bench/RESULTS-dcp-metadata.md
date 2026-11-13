@@ -366,3 +366,27 @@ same session (committed with this change), so the baseline receipt has no
 `path` block and its `alternatives` key is absent. Re-running the current
 script at `11230b3` reproduces the `shipped`/`sections` numbers and reports
 `path.available: false`.
+
+
+## X02: DCP checkpoint completion, interleaved arms (measured 2026-11-13)
+
+`python/courts/dcp_completion.py` (court `bench/scripts/dcp_completion_court.sh`)
+runs the same 169-entry R11 fixture as the R12c court through one
+`CheckpointSession`, alternating the oracle encoder (`reference`) and the
+shipped metadata plan (`auto`) save by save for seven repetitions. Receipt
+`bench/receipts/dcp-latency-20261113T214500Z.json`, log beside it. Durability
+control in the same receipt: a save is acknowledged, the helper process is
+SIGKILLed, and the checkpoint is verified by a new process (169/169 tensors).
+
+<!-- BEGIN GENERATED:x02-dcp-table (scripts/perf_numbers.py) -->
+<!-- END GENERATED:x02-dcp-table -->
+
+**The 20 ms target is not reached.** The metadata encoder is no longer the
+problem: the plan removes about 4 ms of the reference arm's completion. The
+dominant term is the tensor write handoff inside `client.write_request`
+(about 26 ms of 40.6), of which about 15 ms is Rust work (zstd encode 5.9 ms,
+digest 3.0, blob publish 2.0, index segment 2.9, manifest commit 0.5) and the
+rest is the client's safetensors staging plus the memfd/socket round trip.
+`metadata_commit` (the deferred final publication) is 3.6 ms and the DCP
+framework's own plan/drain is about 6 ms. Closing the gap needs a different
+tensor handoff and a parallel encoder; an encoder tweak cannot reach it.
