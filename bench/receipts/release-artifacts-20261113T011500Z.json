@@ -1,0 +1,85 @@
+{
+ "schema": "weft.release_artifacts.v1",
+ "generated_utc": "20261113T011500Z",
+ "label": "v1.4.1 release artifacts and the live registry state observed on 2026-11-13",
+ "revisions": {
+  "WeftFS": "610ce131598b687132595595c9e1b6d94414eb9d",
+  "WeftCodec": "5104fa081e4e5a5f68e39fb88a42d5fe3b3f9d59",
+  "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e",
+  "WeftFS-Go": "725229dbd32dc97c1bcb0246632f3705a6dea1dc"
+ },
+ "environment": {
+  "court": "weft/python-court:1 and weft/rust-court:1",
+  "limits": "memory 3g == swap, 4 cpus, pids 1024, bounded /tmp, no-new-privileges, cap-drop=ALL",
+  "host_builds": "none; the wheel, sdist and cargo dry runs ran in the courts"
+ },
+ "not_claimed": [
+  "no live Azure, AWS or GCS account was exercised",
+  "no physical power loss, host page-cache loss, RAPL energy, GPU, fleet or multi-node claim",
+  "the 1.4.1 PyPI upload depends on a token being available; if it is absent the exact blocker is recorded here"
+ ],
+ "python_141": {
+  "wheel": {
+   "name": "weftcodec-1.4.1-py3-none-any.whl",
+   "size_bytes": 115540,
+   "sha256": "74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176"
+  },
+  "sdist": {
+   "name": "weftcodec-1.4.1.tar.gz",
+   "size_bytes": 156293,
+   "sha256": "9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0"
+  },
+  "twine_check": "PASSED for both artifacts",
+  "source": "scripts/pypi-publish-inner.sh --dry-run in the python court, 2026-11-13T01:16Z",
+  "court_tests": "437 passed, 70 skipped in the python court",
+  "long_description_source": "python/README.md (read at build time; a wheel cannot contain its own digest)"
+ },
+ "python_140_live": {
+  "wheel": {
+   "name": "weftcodec-1.4.0-py3-none-any.whl",
+   "size_bytes": 115851,
+   "sha256": "41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6",
+   "uploaded": "2026-11-12T23:50:07Z"
+  },
+  "sdist": {
+   "name": "weftcodec-1.4.0.tar.gz",
+   "size_bytes": 156858,
+   "sha256": "2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0",
+   "uploaded": "2026-11-12T23:50:08Z"
+  },
+  "source": "https://pypi.org/pypi/weftcodec/json",
+  "fetched_utc": "2026-11-13T01:05Z",
+  "note": "The live long description is still the pre-R25 text that said PyPI served 1.2.0; the 1.4.1 upload replaces it. The description is read from python/README.md at build time, so a wheel cannot contain its own digest."
+ },
+ "crates_140_live": {
+  "weftcodec": {
+   "version": "1.4.0",
+   "checksum": "7f24d38382f7894903cc04763493530b48a5cc13d8e4b66fa08e0f82ea756882",
+   "crate_size_bytes": 3020501,
+   "published": "2026-11-12T23:38:28Z"
+  },
+  "weftfs": {
+   "version": "1.4.0",
+   "checksum": "d94ff6e7803a7ae7af807c5b4fa162b60f1002fa1b3388e086a63562a4d06be0",
+   "crate_size_bytes": 1845872,
+   "published": "2026-11-12T23:38:47Z"
+  },
+  "source": "https://crates.io/api/v1/crates/{weftcodec,weftfs}",
+  "fetched_utc": "2026-11-13T01:08Z"
+ },
+ "crates_141": {
+  "weftcodec_dry_run": "pass: 528 files packaged, 2.9 MiB compressed, package verified (rust court)",
+  "weftfs_dry_run": "blocked: weftcodec 1.4.1 is not in the crates.io index until the real publish; scripts/publish-crates.sh publishes weftcodec first, waits, then publishes weftfs",
+  "published": null
+ },
+ "ghcr_141": null,
+ "ghcr_140_live": {
+  "weftfs": "sha256:f516c999abed91e319544fd472ce5d74360e43fa3462ae15ff83eed8d38d165e",
+  "weftcodec": "sha256:89246fe7ff4b68dc86f33e686ac142f8c42f5acb916f209bf7a8e96ad7336c83",
+  "weftcodec_go": "sha256:bd44215d8aa652ec1cb7fcb59d9198a1f81a369122adcd51a2651c0fc76213c4",
+  "weftfs_go": "sha256:be61d573abb77e49b958c7194ab2bbf6a7109ccfc6b7d450da8b6f8ff06a46fe",
+  "source": "docker manifest inspect ghcr.io/infinityabundance/<image>:v1.4.0",
+  "fetched_utc": "2026-11-13T01:45Z",
+  "note": "image-index digests of the published v1.4.0 tags; a rebuild is not bit-reproducible"
+ }
+}

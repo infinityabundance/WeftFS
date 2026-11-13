@@ -2,10 +2,10 @@
 # Inner half of `scripts/publish-pypi.sh`: runs INSIDE the python court.
 #
 # Builds sdist + wheel from `python/`, checks both with `twine check`, and
-# uploads them to PyPI. The token is read from
-# /work/.docker-cache/.pypi-token into a shell variable, handed to twine via
-# TWINE_PASSWORD (never argv), and never echoed. The host script removes the
-# file on exit, including on failure.
+# uploads them to PyPI. The token path is `$WEFT_PYPI_TOKEN_FILE` (the host
+# stages a private copy there and deletes only that copy), falling back to the
+# historical `/work/.docker-cache/.pypi-token`. The token is read into a shell
+# variable, handed to twine via TWINE_PASSWORD (never argv), and never echoed.
 #
 #   bash scripts/pypi-publish-inner.sh [--dry-run]
 set -Eeuo pipefail
@@ -17,7 +17,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   dry_run=1
 fi
 
-token_file=/work/.docker-cache/.pypi-token
+token_file="${WEFT_PYPI_TOKEN_FILE:-/work/.docker-cache/.pypi-token}"
 version="$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)"
 if [[ -z "$version" ]]; then
   echo "pypi-publish: cannot read the version from pyproject.toml" >&2

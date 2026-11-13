@@ -1,6 +1,17 @@
 # Comparative performance results — v1 (2026-11-03)
 
-**Status:** measured, single-host, court-bounded. This document reports scoped
+Originally written before `AGENTS.md` rule 13. **This document is provenance
+and is excluded from every performance claim.** It is retained because it
+records what was executed and because deleting a measured court would destroy
+evidence. The ext4/XFS rows and the Rust/Go reference-filesystem `fio` rows in
+§1–§3 are **not** an augmentation result: the reference filesystem is not a
+performance contender and must not be compared with a mature filesystem. The
+current, valid comparison is one backend with and without the WeftFS protocol +
+codec (arms A/N/B/C/D/E) in
+[`CONTRACTS-augmentation.md`](CONTRACTS-augmentation.md) and
+[`RESULTS-augmentation.md`](RESULTS-augmentation.md).
+
+**Status:** measured, single-host, court-bounded, retained as provenance. This document reports scoped
 facts from four new courts: an external SQLite context/query baseline, a
 matched Rust/Go WeftCodec court, a guest cold-cache concurrent `fio` court with
 ext4/XFS baselines, and an energy/counter probe. It does **not** declare a

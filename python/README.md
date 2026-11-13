@@ -11,31 +11,27 @@ conformance vectors.
 ## Install
 
 ```sh
-pip install dist/weftcodec-1.4.0-py3-none-any.whl
+pip install weftcodec==1.4.0
 # with the optional dataset extra
-pip install "dist/weftcodec-1.4.0-py3-none-any.whl[torch]"
+pip install "weftcodec[torch]==1.4.0"
 # with the optional JAX/Orbax adapter extra
-pip install "dist/weftcodec-1.4.0-py3-none-any.whl[orbax]"
+pip install "weftcodec[orbax]==1.4.0"
 ```
 
 Dependencies: `blake3`, `zstandard`. `torch`, `jax`, and `orbax-checkpoint`
 are optional and are only imported by their adapter modules.
 
-> **PyPI.** PyPI serves **`weftcodec 1.2.0`**. This document is the long
-> description for **1.4.0**; the 1.4.0 wheel and sdist are built and
-> `twine check`-clean in `python/dist/` but are **not uploaded** because
-> `scripts/publish-pypi.sh` requires `.docker-cache/.pypi-token`, which does
-> not exist. `docs/RELEASE-v1.4.0.md` records the exact artifact names, sizes
-> and sha256 values. The 1.2.0 description PyPI still shows is older than this
-> text; it is superseded by this document on the next upload, not re-uploaded
-> on its own.
->
-> ```sh
-> pip install weftcodec==1.2.0     # what PyPI actually serves today
-> ```
-
-Install the 1.4.0 wheel from `python/dist/` (commands above) or from the GitHub
-release; `pip install weftcodec==1.4.0` fails until the upload is unblocked.
+<!-- BEGIN GENERATED:python-readme-current (scripts/perf_numbers.py) -->
+**Published.** PyPI serves `weftcodec 1.4.0` (wheel sha256
+`41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6`, 115,851 B; sdist sha256
+`2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0`, 156,858 B), so `pip install weftcodec==1.4.0`
+works. The 1.4.1 artifacts are rebuilt from this tree in the python court and
+`twine check`-clean: wheel `74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176` (115,540 B), sdist
+`9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0` (156,293 B). Exact live registry state is in
+`bench/receipts/release-artifacts-20261113T011500Z.json` and
+`docs/RELEASE-v1.4.1.md`; this file is the long description, so a wheel cannot
+contain its own digest.
+<!-- END GENERATED:python-readme-current -->
 
 ## Usage
 

@@ -41,27 +41,23 @@ the exact per-mode check order are indexed in [`docs/RFC.md`](docs/RFC.md); the
 third-party conformance distribution is built by
 `scripts/package-conformance.sh`; and the README/release-note claims are
 audited adversarially in [`docs/CLAIM-AUDIT.md`](docs/CLAIM-AUDIT.md).
-The paper's headline loss is the **pre-R17** measurement, retained as history;
-the current result is stated below.
+The paper's abstract leads with the current measured augmentation delta and with
+the frontier separately; the pre-R17 number survives only as a historical
+quotation naming its receipt stamp and revision.
 
 <!-- BEGIN GENERATED:readme-current-result (scripts/perf_numbers.py) -->
-**Current measured result (staging).** The durable write of the frozen
-101-tensor Qwen2.5-0.5B-Instruct fixture (424,439,296 logical bytes) takes
-**592.6 ms** least-contended and **600.9 ms** median
-on 4 CPUs in the 3 GiB court, and publishes **282,106,049 B** —
-**33.5 %** fewer physical bytes than the same backend's native
-per-tensor write (**332.0 ms**, 424,439,296 B), which is
-**1.78×** the native wall. All 101 restores are byte-exact. Source:
-receipt `bench/receipts/r22-pareto-20261112T230000Z.json` (stamp 20261112T202816Z, revision
-ccc6d695b114); every rung and every loss is in
-[`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md).
-
-The paper's abstract still leads with the **pre-R17** measurement —
-**73.9× slower to write for 33.1 % fewer physical bytes** — because that is what
-the R3 court measured
-(`bench/receipts/augmentation-local-20261109T134132Z.json`, stamp 20261109T134244Z, revision
-2fb4e4b7fa5e). The R17–R22 ladder supersedes it; the historical
-number is retained here and in the paper rather than rewritten.
+**Current measured result (R25, staging).** One backend with and without the augmentation,
+six arms, seven interleaved repetitions. The shipped planned write (arm C,
+`weftfs checkpoint write`, no flags) of the frozen 101-tensor Qwen2.5-0.5B-Instruct subset
+(424,439,296 logical bytes) takes **974.1 ms** least-contended /
+**1,175.3 ms** p50 on 4 CPUs in the 3 GiB court, and publishes
+**282,106,049 B** — **33.53 %** fewer physical bytes than the same
+backend's native per-tensor path (arm A, **327.2 ms**, 424,439,296 B).
+That is **2.98×** the native wall: native parity is not reached. All 101 restores
+are byte-exact. The ≈592.6 ms frontier in
+[`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md) is a store-API row, **not** the shipped
+default. Source: `bench/receipts/augmentation-local-20261113T004000Z.json` (stamp 20261113T004503Z,
+revision 0a01606e2654).
 <!-- END GENERATED:readme-current-result -->
 
 ## Architecture at a glance
@@ -158,7 +154,7 @@ non-claims are in [`docs/AI-STORAGE-AUGMENTATION.md`](docs/AI-STORAGE-AUGMENTATI
 |---|---|---|
 | Does reconstruction reduce stored bytes? | Qwen2.5-0.5B base → Instruct family: **1,276,128,956 B** (**1,199,958,505 B** of tensor data) versus **1,528,909,007 B** for independent per-tensor `zstd -19` (**16.5 %** smaller) and **1,316,518,229 B** for ZipNN 0.5.4 (**3.07 %** under). | `bench/receipts/planner-float-20261106T035316Z.json`, `bench/receipts/real-model-20261105T012000Z.json` (stamp 2026-11-06T03:53:16Z, revision ba5a0e66ddba), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md) |
 | Does independent tiling make region reads cheap? | Qwen embedding one-row read: **749.26 ms** as one mode-9 frame → **2.12 ms** with tiles (**353×**), at **+0.51 %** physical bytes; a 100-row read falls from **777.08 ms** to **2.30 ms** (**339×**). | `bench/receipts/float-tiled-20261107T042955Z.json` (stamp 20261107T042955Z, revision —), [`bench/RESULTS-mode17.md`](bench/RESULTS-mode17.md) |
-| What exactness and recovery evidence exists? | **46/46** verification courts pass at parent `0461132d4fc6` (stamp 20261112T223540Z); **420** conformance vectors; **100,000/100,000** crash iterations with **0** bad states. | `bench/receipts/verify-20261112T223540Z.json`, `conformance/manifest.json`, `bench/receipts/crash-torture-20261104T104233Z.json` |
+| What exactness and recovery evidence exists? | **46/46** verification courts pass at parent `e67e63186456` (stamp 20261113T022751Z); **420** conformance vectors; **100,000/100,000** crash iterations with **0** bad states. | `bench/receipts/verify-20261113T022751Z.json`, `conformance/manifest.json`, `bench/receipts/crash-torture-20261104T104233Z.json` |
 | Does multi-writer publication scale? | **No, and it is published as a loss:** 4,000 tx/s at N=1 → 638 tx/s at N=32 (efficiency **0.0050**) on the local backend; a hot name yields exactly one winner and typed conflicts. MinIO N=4: 212.8 tx/s. | `bench/receipts/bench-multiwriter-20261109T150423Z.json` (stamp 20261109T150423Z, revision b0bcbc5e4ded), [`bench/RESULTS-multiwriter.md`](bench/RESULTS-multiwriter.md) |
 <!-- END GENERATED:readme-what-is-measured -->
 
@@ -232,14 +228,14 @@ comparison.
 | P5 | Rust FUSE frontend, POSIX matrix, context views | <!-- BEGIN GENERATED:readme-p5 (scripts/perf_numbers.py) --> **Implemented** — the FUSE all-targets suite passes: **850** passed / 0 failed / 2 `#[ignore]`d in the 46/46 aggregate log; ownership needs `CAP_SETUID`, and same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md) <!-- END GENERATED:readme-p5 --> |
 | P5a | Commit-time write budgets + branching time travel (Rust + Go) | **Implemented** — admission budgets fail closed with `BudgetExceeded` before publication; usage is a committed-state-derived `quota` record that survives reopen and fails closed on mismatch; `snapshot branch` / `context branch` / union `merge` at parity. Rust `tests/quota.rs` + `tests/branching.rs` (19 tests) and Go `store/quota_test.go` + `store/branch_test.go` (14 tests) pass, including both cross-language directions; bench receipt `bench/receipts/quota-branch-20261105T071244Z.json`, 10,000-version demo receipt `bench/receipts/branching-20261105T071457Z.json` (7/7). See [`spec/WEFT-QUOTA.md`](spec/WEFT-QUOTA.md) and [`bench/RESULTS-quota-branch.md`](bench/RESULTS-quota-branch.md) |
 | P6 | Go WeftFS core + FUSE + storage handoff court | **Implemented with documented gaps** — the full Go suite (`cmd/weftfs`, `fusefs`, `index`, `model`, `store`) passes under `-race` in the FUSE court at the R14/R15 tree, plus a byte-identical fixture rebuild, bidirectional Rust↔Go handoff and GC. Daemon-side locking, tmpfile, fallocate modes, copy_file_range, and SEEK_DATA/HOLE are implemented; kernel 7.3 rejects COLLAPSE/INSERT before forwarding and physical-space PUNCH_HOLE is not claimed. R20 adds the Rust-equivalent `weft.manifest.v4` overlay writer and compaction, a probed blob/commit plane split, the physical pack plane, and `weft.calibration.v1` loading to Go, with cross-language byte-equality courts. R24 adds Go `calibrate` measurement (a Rust-accepted `weft.calibration.v1` document with the identical id) and FUSE mount coverage for packed, split, and packed-split stores. R25 adds a real **Go S3 backend** — SigV4, `If-None-Match`/`If-Match` planes, the ported fenced writer, all four split layouts — with a MinIO court and 17/17 Rust↔Go checks in both directions. R26 adds **WFX2 selector-index persistence** to Go, byte-compatible with Rust in both directions, cutting the first relation query after a 10k-object reopen from ~16.85 to ~7.75 ms. R26/R27 add a real **Go GCS backend**, the v3 fenced writer, `calibrate --install`, and read-only FUSE mounts over S3 and GCS. R14 adds a real **Go Azure Blob backend** — SharedKey and SAS, the measured `If-Match` form, the v3 fenced `LOCK`, a two-way Rust↔Go handoff, and the Azurite court that runs both implementations (`bench/receipts/azure-court-20261111T144613Z.json`); MW2 on Go `azure` is currently refused `Unsupported`, and Go still has **no writable FUSE-over-object run**. See [`WeftFS-Go/NOTES.md`](WeftFS-Go/NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md#subphase-r20--go-parity-for-the-r9r12-storage-surfaces-2026-11-06) |
-| P7 | Bench courts, receipt bundle, showcase, release | <!-- BEGIN GENERATED:readme-p7 (scripts/perf_numbers.py) --> **v1.4.0 released** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-20261112T223540Z.json` (**46/46**, 0 failed, 0 skipped) at parent `0461132d4fc6`. The authoritative inventory is `scripts/verify-all.sh`. Losses and gaps are published in the `bench/RESULTS-*.md` files listed there; no performance-superiority claim is made. See [`docs/RELEASE-v1.4.0.md`](docs/RELEASE-v1.4.0.md); the previous release note is [`docs/RELEASE-v1.3.0.md`](docs/RELEASE-v1.3.0.md). <!-- END GENERATED:readme-p7 --> |
+| P7 | Bench courts, receipt bundle, showcase, release | <!-- BEGIN GENERATED:readme-p7 (scripts/perf_numbers.py) --> **v1.4.1 released** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-20261113T022751Z.json` (**46/46**, 0 failed, 0 skipped) at parent `e67e63186456`. The authoritative inventory is `scripts/verify-all.sh`. Losses and gaps are published in the `bench/RESULTS-*.md` files listed there; no performance-superiority claim is made. See [`docs/RELEASE-v1.4.1.md`](docs/RELEASE-v1.4.1.md); the previous release note is [`docs/RELEASE-v1.4.0.md`](docs/RELEASE-v1.4.0.md). <!-- END GENERATED:readme-p7 --> |
 | F2 | Context Roots, capability/budget enforcement, causal identity (Rust + Go) | **Implemented** — 70 Rust tests pass (2 ignored: `CAP_SETUID` ownership and the documented kernel/fuser EIO), Go `store` + `fusefs` pass under `-race`, and Rust↔Go context/causal/capability handoff gates pass. See [`NOTES.md`](NOTES.md) and [`docs/STATUS.md`](docs/STATUS.md). |
 | F3 | Context mounts, ambiguity court, time-travel POSIX, replay bundle (A1/A2/A3/A4/D2) | **Implemented** — `mount --context` / `--at` in Rust and Go; default 3-mount demo plus **100 concurrent read-only context mounts** (50 `by:task`, 25 `by:model`, 25 `derived_from` roots; 425 file checks, 100/100 distinct listing digests) and a **1,000 concurrent context-mount court** (500 Rust + 500 Go daemons, 1,000 distinct roots, 4,250 file SHA-256 checks, 1,000 distinct digests, 1,000 cat comparisons, `semantic_match=true`, at explicit `52g / 8 CPUs / 16384 pids` court overrides — at `24g / 8 / 4096` the same court reaches 692 mounted and passes completely at 400, so 1,000 is **not** claimed to fit the default court); ambiguity fails closed and lists every ObjectId; default 100-version plus **10,000-version time travel** (101 snapshots, 10 mounted at once, later live write/rename leaves every snapshot byte-identical); Rust `export-bundle` + independent Go replay. Receipts: `context-mounts-20261103T210625Z.json` (6/6, default), `context-mounts-20261104T125344Z.json` (5/5, 100 mounts, `semantic_match=true`), `context-mounts-20261105T122643Z.json` + `context-mounts-20261105T131116Z.json` (5/5 each, 1,000 mounts, `semantic_match=true`), `context-mounts-20261105T140342Z.json` (INCOMPLETE 692/1000 at the directed limits), `ambiguity-20261103T210633Z.json` (4/4), `time-travel-20261103T210633Z.json` (4/4, default), `time-travel-20261104T125947Z.json` (6/6, 10,000 versions, `semantic_match=true`), `replay-bundle-20261103T210824Z.json` (4/4). Single-host court, synthetic fixtures; not a fleet claim. Time travel is correctness-only: no io_uring/EKBLOOM acceleration is implemented or claimed. |
 | F5 | Proof courts: decoder bombs, randomized POSIX torture, crash-consistency torture, receipt bundle (B1–B4) | **Implemented with documented gaps** — 36/36 decoder bombs, 6/6 POSIX runs (13,694 ops), **100,000/100,000 crash iterations at 19.2 it/s** (66,667 old / 33,333 new, 0 partial, 0 failures); one-command bundle verifier. Receipts: `decoder-bombs-20261103T213314Z.json`, `posix-torture-20261103T213317Z.json`, `crash-torture-20261104T104233Z.json`. Crashes are process-fault proxies, not physical power loss; `pjdfstest`/`fsstress` are not available and no substitute run is claimed. |
 | F6 | AI codec v1: exact tensor + token modes, cross-language | **Implemented (modes 6–20)** — `TENSOR` (6), `TOKEN_SEQUENCE` (7), `QUANTIZED_TENSOR` (8), `FLOAT_TENSOR` (9, `huffman-canonical-v1`), `TENSOR_SHARDED` (10, `q4_0`/`q8_0`), `WEIGHT_DELTA` (11), `KV_CACHE` (12), `ACTIVATION_STREAM` (13), exact `SEMANTIC_DELTA` (14), `TENSOR_TILED` (15), `SPARSE_DELTA` (16, `zero-run-v1`), `FLOAT_TILED` (17), `FLOAT_TILED_STREAMS` (18), `KV_CACHE_PROV` (19), and **`ENGRAM_SHARD` (20, `weft.ai.engram_shard.v1`)** — region-addressable row groups with per-group roots and an explicit supersession chain — with canonical WCB descriptors, limits, vectors/rejects, CLI, and byte-identical Rust↔Go frames. R7 mode 20 writes only changed groups on update (4/64 groups: 62.7 ms / 16.79 MB vs 499.7 ms / 118.73 MB) but loses whole-table size/decode to one ZSTD frame; see [`bench/RESULTS-engram.md`](bench/RESULTS-engram.md) and `bench/receipts/engram-20261109T232921Z.json`. Remaining brainstormed modes have no wire value. See `spec/WEFT-AI-CODEC.md` and [`docs/RELEASE-v0.5.0.md`](docs/RELEASE-v0.5.0.md). |
 | F7 | AI corpus + cost graph (C1/C2) | **Implemented (synthetic)** — 60-file deterministic `bench/corpora/ai-v1` (CC0-1.0, 1.94 MB source / 1.52 MB visible), four strategies with whole-object accounting, cold dependency-DAG latency, and depth. Receipt `ai-corpus-20261104T021627Z.json` (whole-pair-aware planner); results, every loss, and caveats in [`bench/RESULTS-ai-v1.md`](bench/RESULTS-ai-v1.md). No Meta/production data and no superiority claim. |
 | F8 | Product/identity hooks: Buck2 CAS, spec-as-code types, agent memory | **Implemented (prototype)** — Buck2 CAS prototype (15/15), generated Rust/Go identity types with a drift court, agent-memory replay demo (7/7), and `QUANTIZED_TENSOR` mode 8 byte-identical Rust↔Go. Not a Buck2 plugin and not REAPI; see [`docs/STATUS.md`](docs/STATUS.md). |
-| F9 | Verification: TLA+ model, power-loss/block-layer courts, comparative baselines | **Implemented with documented limits** — TLA+ commit/recovery model with a buggy-model counterexample, QEMU lying-fsync and dm-flakey/blkdebug block-layer courts, whole-disk ZFS/Btrfs plus ext4/XFS `fio` baselines, and SQLite relational/adjacency baselines. Physical media power loss, host page-cache loss, and RAPL energy are **not** claimed. See [`verification/README.md`](verification/README.md). |
+| F9 | Verification: TLA+ model, power-loss/block-layer courts, provenance baselines | **Implemented with documented limits** — TLA+ commit/recovery model with a buggy-model counterexample, QEMU lying-fsync and dm-flakey/blkdebug block-layer courts, plus **reference-filesystem provenance courts** (whole-disk ZFS/Btrfs and ext4/XFS `fio`) that are labelled provenance and excluded from every performance claim, and SQLite relational/adjacency baselines. Physical media power loss, host page-cache loss, and RAPL energy are **not** claimed. See [`verification/README.md`](verification/README.md). |
 | F10 | Real public model checkpoint family: exact ingest, automatic shared/independent representation, storage and restore vs baselines | **Implemented, measured twice** — Qwen2.5-0.5B + Instruct (BF16, 290 tensors, 988 MB each); every restored file matches the Hugging Face LFS SHA-256. F10 (bytes-only planner): ZipNN wins complete storage by 5.27 % (1.317 GB vs 1.390 GB); restore 968.8 ms base / 14,367 ms instruct. **R1 (measured decode table + mode-9 candidate): the storage headline flips — WeftFS is 1,276,128,956 B, 3.07 % under ZipNN and 8.18 % under its own F10 total**; data-only 1.200 GB, indexes 5.92 %. Restore gets slower (13,776 ms base / 26,936 ms instruct; single tensor 111.4 / 221.9 ms). `weft rebase` plans 73 hot instruct deltas to mode 9 without writes. **R2 (decoder throughput, no wire change): storage is byte-identical, and restore is 2.98x faster (base 4,627.5 ms) and 2.37x faster (instruct 11,371.2 ms); mode 9 decode 15,403,165 -> 4,683,726 ns/MiB.** Base read is still 4.8x the zstd-strategy path, and materialization remains writeback-bound. Bounded parallel restore is implemented (R2, `parallel-restore-20261106T043524Z.json`); pipelined restore reaches 1,434.7 ms / 695.5 MB/s on the 0.5B container at 2 workers (R10, `throughput-20261110T134917Z.json`). **R13 removes the single backend mutex from immutable reads and overlaps a tensor's shards:** store-only Qwen2.5-0.5B restore is 1,188/2,233/2,776/2,780 MB/s at 1/2/4/8 requested workers (shard_threads=4: 2,354/3,801/2,903/3,394) and 3B is 1,177/2,090/2,998/3,073 (shard_threads=4: 2,390/3,480/2,439/2,438); the state-mutex hold share is 0.000 in every configuration, four independent readers reach 1,860–2,658 MB/s aggregate, and the single 0.5B/3B embedding falls 552→454 ms and 1,303→1,072 ms. Losses (whole-file SHA floor, 4×4 oversubscription, +14–20 % RSS, 3FS not pooled, sequential region restores) are in [`bench/RESULTS-restore-scaling.md`](bench/RESULTS-restore-scaling.md); receipts `restore-scaling-20261111T090904Z`, `restore-scaling-3b-final-20261111T092000Z`, `restore-scaling-readers-20261111T091500Z`, `restore-scaling-minio-20261111T085500Z`. Receipts `bench/receipts/real-model-20261105T012000Z.json`, `bench/receipts/planner-float-20261106T025351Z.json`, and `bench/receipts/planner-float-20261106T035316Z.json`; every loss in [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md). |
 
 Labels used throughout: **implemented** (built and tested), **experimental**
@@ -306,6 +302,14 @@ The release is **R12c**, **R14d**, and **R17–R22**.
   (WeftCodec `d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`); **420**
   conformance vectors, aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; **1,046** audited claims.
 <!-- END GENERATED:readme-v140 -->
+
+> **Correction (v1.4.1).** The R21/R22 rows above measure the bounded
+> prepare/publish pipeline (`Store::prepare_tensor_group_pipelined`), which no
+> shipped CLI verb reaches. The shipped default at v1.4.0 was the sequential
+> planned writer. v1.4.1 publishes both separately: the shipped default in the
+> current-result block above and the frontier in
+> [`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md). No measured byte changed
+> between the two readings.
 
 **Historical release notes follow.** Every section below was written at its own
 release; none of it is current status. Current state and current receipts are
@@ -857,19 +861,20 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
 Published on GHCR, anonymously pullable:
 
 ```sh
-docker pull ghcr.io/infinityabundance/weftcodec:v1.3.0
-docker pull ghcr.io/infinityabundance/weftcodec-go:v1.3.0
-docker pull ghcr.io/infinityabundance/weftfs:v1.3.0
-docker pull ghcr.io/infinityabundance/weftfs-go:v1.3.0
+docker pull ghcr.io/infinityabundance/weftcodec:v1.4.0
+docker pull ghcr.io/infinityabundance/weftcodec-go:v1.4.0
+docker pull ghcr.io/infinityabundance/weftfs:v1.4.0
+docker pull ghcr.io/infinityabundance/weftfs-go:v1.4.0
 ```
 
-`latest` is also published. **The v1.4.0 images are not published in this
-release run**; `v1.3.0` is what GHCR serves today and the commands above name
-it deliberately. The v1.2.0 images remain pullable, and the v1.3.0 images are
-published: `weftfs` `sha256:07c70fd7…`, `weftcodec`
-`sha256:0b8cc85f…`, `weftcodec-go` `sha256:ad627083…`, `weftfs-go`
-`sha256:396cb94b…` (image-index digests read live, recorded in
-`bench/receipts/release-artifacts-20261111T200115Z.json`; a rebuild is not
+`latest` is also published. The v1.4.0 images are published and anonymously
+pullable, so the commands above name them; the v1.4.1 images are produced by the
+tag workflows when the `v1.4.1` tag is pushed. The v1.3.0 and v1.2.0 images
+remain pullable. Published v1.4.0 image-index digests: `weftfs`
+`sha256:f516c999…`, `weftcodec` `sha256:89246fe7…`, `weftcodec-go`
+`sha256:bd44215d…`, `weftfs-go` `sha256:be61d573…` (read live with
+`docker manifest inspect`, recorded in
+`bench/receipts/release-artifacts-20261113T011500Z.json`; a rebuild is not
 bit-reproducible). FUSE mounts require `--device /dev/fuse
 --cap-add SYS_ADMIN`; codec and store-only commands do not. See
 [`docs/containers.md`](docs/containers.md).
@@ -880,25 +885,25 @@ Published on crates.io:
 
 ```toml
 [dependencies]
-weftcodec = "1.3.0"
-weftfs = "1.3.0"
+weftcodec = "1.4.0"
+weftfs = "1.4.0"
 ```
 
 ```sh
-cargo add weftcodec@1.3.0
-cargo add weftfs@1.3.0
+cargo add weftcodec@1.4.0
+cargo add weftfs@1.4.0
 ```
 
-**What the registry serves today is 1.3.0.** This tree is **1.4.0**
+**What the registry serves today is 1.4.0.** This tree is **1.4.1**
 (`Cargo.toml`, `WeftCodec/Cargo.toml`, `python/pyproject.toml`,
-`python/weftcodec/__init__.py`, `WeftFS-Go/store/rebase.go`), and its crates are
-built and dry-run-checked but **not published**; the commands above keep naming
-the last released version so they work as written. The coordinator's registry
-step is `scripts/publish-crates.sh` for `weftcodec 1.4.0` then `weftfs 1.4.0`;
-the artifact hashes are in `docs/RELEASE-v1.4.0.md`. crates.io serves
-`weftcodec 1.3.0` and `weftfs 1.3.0`: checksums `45cfbd12433c5f40…` and
-`f7e394acdef06aef…`, both `yanked=false`, read from the live registry and
-recorded in `bench/receipts/release-artifacts-20261111T200115Z.json`.
+`python/weftcodec/__init__.py`, `WeftFS-Go/store/rebase.go`); the 1.4.1 crates
+are built and dry-run-checked, and `scripts/publish-crates.sh` publishes
+`weftcodec 1.4.1` then `weftfs 1.4.1`. crates.io serves `weftcodec 1.4.0`
+(checksum `7f24d38382f7894903cc04763493530b48a5cc13d8e4b66fa08e0f82ea756882`)
+and `weftfs 1.4.0` (checksum
+`d94ff6e7803a7ae7af807c5b4fa162b60f1002fa1b3388e086a63562a4d06be0`), both
+`yanked=false`, read from the live registry and recorded in
+`bench/receipts/release-artifacts-20261113T011500Z.json`.
 
 `weftcodec` is the lossless codec/framing library and CLI. `weftfs` is the
 transactional store plus FUSE frontend (the `fuse` feature enables mounting).

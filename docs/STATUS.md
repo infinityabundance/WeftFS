@@ -1,19 +1,19 @@
-# Implementation status — 2026-11-12 (v1.4.0 released)
+# Implementation status — 2026-11-13 (v1.4.1 released)
 
 <!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
-**At a glance (generated from receipts).** v1.4.0 is released. The cited
-aggregate is `bench/receipts/verify-20261112T223540Z.json` — **46/46**
-courts pass, 0 failed, 0 skipped — at WeftFS
-`0461132d4fc63ce458de6b388b38a8f27222d387`. The shipped compressed write is **592.6 ms**
-least-contended / 600.9 ms median at **282,106,049 B**
-(33.5 % below the native control). Rust all-targets
+**At a glance (generated from receipts).** v1.4.1 is released. The cited aggregate is
+`bench/receipts/verify-20261113T022751Z.json` — **46/46** courts pass,
+0 failed, 0 skipped — at WeftFS `e67e63186456d8d0915204baa19d65013a6bb281`.
+The shipped planned write is **974.1 ms** least-contended /
+1,175.3 ms p50 at **282,106,049 B** (33.53 % below
+the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,046** claims are
-audited. Every number in this block is emitted by `scripts/perf_numbers.py`
-between `BEGIN GENERATED` sentinels and re-validated against its receipt by the
-`perf_numbers` court; the entries below this block are a chronological log of
-subphases and are quoted with the receipt and revision they were written at.
+audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
+`BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
+court; the entries below this block are a chronological log of subphases, quoted with
+the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
 
 This is the honest, evidence-backed state of the program. It distinguishes
@@ -23,9 +23,10 @@ receipts by `scripts/perf_numbers.py` into the block above and into
 when any generated number drifts from its receipt. Everything below the block
 is a chronological log of subphases, retained verbatim: each entry is a
 **historical quotation** written at the receipt and revision it names, not a
-statement about the current tree. The v1.4.0 note with every loss and every
-non-claim is [`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md); the previous notes
-are [`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
+statement about the current tree. The v1.4.1 note with every loss and every
+non-claim is [`docs/RELEASE-v1.4.1.md`](RELEASE-v1.4.1.md); the previous note is
+[`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md), then
+[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
 [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md) and
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). Both codec implementations cover
 every allocated mode 0–20; the independent Python reader covers every allocated
@@ -1025,12 +1026,15 @@ WeftFS-Go `225eb0d`; the aggregate immediately before the release candidate is
   both directions. Process overhead measured separately (Rust 0.326 ms, Go
   0.387 ms) and not subtracted; no library-vs-library comparison is claimed.
 - Cold-cache concurrent fio: `bench-fs-cold-20261103T232216Z.json` (stability
-  run `T233740Z`). QEMU guest with a genuine guest
+  run `T233740Z`). **Provenance only, per rule 13: the Rust/Go reference
+  filesystems over FUSE are not performance contenders and this row is excluded
+  from every claim.** QEMU guest with a genuine guest
   `sync; echo 3 > /proc/sys/vm/drop_caches` cold run, `numjobs` 1/4/16,
   ext4/XFS plus Rust and Go WeftFS over FUSE, two repetitions per cell. The
   Rust and Go mounts differ in `allow_other`/`max_read` defaults; that is
   published as a limitation.
-- Whole-disk ZFS and Btrfs (2026-11-04):
+- Whole-disk ZFS and Btrfs (2026-11-04), **provenance only and excluded from
+  every claim under rule 13**:
   `bench-fs-cold-20261104T071922Z.json` runs ext4/XFS/Btrfs/`zfs-whole` in one
   guest court, one repetition per cell, 30 fio runs per target. For `zfs-whole`
   the guest passed the raw `/dev/vdb` block device to `zpool create -f -m
@@ -1406,10 +1410,11 @@ It is **not published to PyPI** (no API token); it is a release artifact.
 
 ## 4. What is **not** done (ranked)
 
-1. **Remaining benchmark gaps** (P7): the comparative pass closed the external
-   SQLite, ext4/XFS cold-cache, concurrent-fio, matched Go/Rust codec, and now
-   whole-disk ZFS/Btrfs gaps (`bench/RESULTS-comparative-v1.md`). The 2026-11-04
-   pass adds `bench-fs-cold-20261104T071922Z.json` (whole-disk `zfs-whole` on raw
+1. **Remaining benchmark gaps** (P7): the old comparative pass closed the
+   external SQLite, ext4/XFS cold-cache, concurrent-fio, matched Go/Rust codec,
+   and whole-disk ZFS/Btrfs gaps (`bench/RESULTS-comparative-v1.md`). **Those
+   reference-filesystem rows are provenance only and excluded from every claim
+   under rule 13.** The 2026-11-04 pass adds `bench-fs-cold-20261104T071922Z.json` (whole-disk `zfs-whole` on raw
    `/dev/vdb` plus Btrfs), `blkdebug-20261104T072008Z.json` (dm-flakey lying-disk
    matrix; blkdebug mount blocker), and `hostcache-probe-20261104T072314Z.json`
    (global cache drop refused). Still open: physical media power loss, host/
@@ -9881,3 +9886,73 @@ write is now durability-bound, not encode-bound.
     `scripts/publish-crates.sh` (weftcodec first), then
     `scripts/publish-pypi.sh` once a token is present. GHCR images come from the
     per-repo tag workflows.
+
+- 2026-11-13 (R25 / v1.4.1): the augmentation numbers re-measured, rule 13
+  enforced, and the stale prose corrected. Parent `staging` `1af4218` at the
+  aggregate; submodules WeftCodec `5104fa0` (1.4.1), WeftFS-Go `725229d` (Go
+  provenance tool version 1.4.1), WeftCodec-Go `9812d15` (unchanged).
+  * **Contract court.** The frozen `bench/CONTRACTS-augmentation.md` method now
+    runs seven interleaved, one-position-rotated repetitions, and every
+    `configurations.<row>.reproduction` records `shipped_default`,
+    `requires_flag` and `reproduces_with`. Only A (the backend's own path) and
+    C (`weftfs checkpoint write`, no flags) are shipped defaults; B, D, E and N
+    need flags or harness composition. Receipts:
+    `augmentation-local-20261113T004000Z.json` (local, A/N/B/C/D/E),
+    `augmentation-minio-20261113T010500Z.json` (MinIO A and C),
+    `augmentation-local-20261113T011500Z.json` (pythia-70m step 0),
+    `…T012000Z.json` (step 8) and `…T013000Z.json` (Qwen2.5-3B-Instruct). The
+    local host was shared and several cells contain multi-second durability
+    stalls; every raw sample is published and the least-contended repetition is
+    used for attribution (contract §6.10), with the median and p95 unchanged.
+  * **Shipped default vs frontier.** The shipped planned write re-measures at
+    974.1 ms least-contended / 1,175.3 ms p50 at 282,106,049 B (2.98x native A,
+    33.53 % fewer bytes) in `augmentation-local-20261113T004000Z.json`. The
+    R22 `C-pipe4` row (592.6 ms, 1.78x) drives
+    `Store::prepare_tensor_group_pipelined`, which **no shipped CLI verb
+    reaches**; it is published as a separate frontier row, never as the default.
+    The <= 336 ms rung is not reached. The cross-family rows are a real loss on
+    pythia-70m (roughly 51-53x native); the 3B row is a nine-tensor 626 MB
+    subset, not the whole model.
+  * **Rule 13.** Every write result is one backend with and without the
+    augmentation; the reference filesystem is not a comparator. The existing
+    ext4/XFS/ZFS reference-filesystem courts
+    (`bench-fs-cold-*`, `RESULTS-comparative-v1.md`, the STATUS entries and the
+    README F9 row) are relabelled **provenance only and excluded from every
+    claim**. No doc in the tree now headlines a reference-filesystem
+    comparison.
+  * **Generated numbers.** `docs/perf-numbers.json` gains the `contract`,
+    `frontier`, `family` and extended `ladder` groups (316 numbers, 62 blocks).
+    The paper, README current-result block, STATUS head, RFC §6, PERF-NUMBERS,
+    `python/README.md` and `RELEASE-v1.4.1.md` read from the new receipts;
+    `perf_numbers.py --check` is green. The v1.4.0 release note keeps its own
+    receipt through `verify.v140`/`tests.v140` numbers.
+  * **Paper.** The abstract leads with the shipped 2.98x / 33.53 % result and
+    states that native parity is not reached; the R22 frontier is named
+    separately. Results are the R3 -> R17 -> R18 -> R19 -> R20 -> R21 -> R22 ->
+    R25 ladder plus the cross-family table, each rung from its own receipt.
+    Threats now include one host, warm cache, tmpfs, MinIO loopback, the pythia
+    loss, the unreached 336 ms rung, and the fact that the frontier is a
+    numerical claim about one fixture.
+  * **Prose corrections.** `python/README.md` previously said PyPI served 1.2.0
+    and that 1.4.0 was not uploaded. 1.4.0 is live (wheel
+    `41ad31b4…d3c6`, 115,851 B; sdist `2fd174fc…e69c0`, 156,858 B, read from
+    `https://pypi.org/pypi/weftcodec/json` on 2026-11-13). crates.io serves
+    `weftcodec 1.4.0` (`7f24d383…56882`) and `weftfs 1.4.0`
+    (`d94ff6e7…06be0`); GHCR serves `v1.4.0` (digests recorded in
+    `bench/receipts/release-artifacts-20261113T011500Z.json`). The v1.4.0 note's
+    "Nothing was uploaded" paragraph is corrected. `scripts/publish-pypi.sh`
+    now stages a private 0600 copy and deletes only that copy; an
+    operator-supplied `WEFT_PYPI_TOKEN_FILE` is never deleted, and `PYPI_TOKEN`
+    is accepted directly.
+  * **Aggregate.** `bench/receipts/verify-20261113T022751Z.json`: **46/46**
+    courts pass, 0 failed, 0 skipped at WeftFS `e67e63186456`. Test counts:
+    rust_store 807, rust_fuse 850 passed / 0 failed / 2 pre-existing ignored,
+    rust_codec 290. Claims 1,046; spec drift 60/60; conformance 420.
+  * **Release.** Versions 1.4.1 in `Cargo.toml`, `WeftCodec/Cargo.toml`,
+    `python/pyproject.toml`, `python/weftcodec/__init__.py` and the Go
+    provenance tool version. Artifacts built in the python court and
+    `twine check`-clean: wheel `74779b5c…b176` (115,540 B), sdist
+    `9fa6cfb6…79a0` (156,293 B). `cargo publish --dry-run` passes for
+    `weftcodec 1.4.1` (528 files); the `weftfs` dry run is blocked on publish
+    order as in 1.4.0. PyPI upload needs a token; none was available to this
+    session, and the exact blocker is recorded rather than papered over.
