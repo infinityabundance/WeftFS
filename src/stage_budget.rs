@@ -22,8 +22,14 @@
 //! * **In-flight bytes.** A request declares how many bytes it will hold. The
 //!   sum over granted requests stays within
 //!   [`StageBudgetPolicy::max_inflight_bytes`]. A request whose own size
-//!   exceeds that bound runs **alone** (it waits until no bytes are reserved),
-//!   so a tensor larger than the budget always completes and never deadlocks.
+//!   exceeds that bound runs **alone**: it is granted only when no bytes and no
+//!   workers are held, it claims no byte budget of its own (so the published
+//!   high-water mark still respects the bound), and it holds the budget
+//!   **exclusively** until its [`Admission`] is dropped, so no later request
+//!   can be admitted beside it. Strict FIFO means a stream of small requests
+//!   cannot starve it. A tensor larger than the budget therefore always
+//!   completes and cannot deadlock; see `docs/STAGE-BUDGET.md` for the
+//!   liveness argument.
 //! * **Cancellation.** Each request may carry a [`StageCancelToken`]. A waiter that
 //!   observes a cancelled token releases its ticket, wakes the next waiter, and
 //!   returns [`Class::Cancelled`]. A grant already held is released by its
@@ -32,7 +38,9 @@
 //! * **Fairness.** Admission is strictly FIFO over tickets. A stage that is
 //!   waiting is served before any later request from any stage, so no stage can
 //!   starve another (encode cannot lock out restore, restore cannot lock out
-//!   background maintenance).
+//!   background maintenance). A waiter that gives up (cancellation) is removed
+//!   from the queue even when it is not at the head, so a cancelled ticket can
+//!   never leave a hole that stalls every later ticket.
 //! * **Determinism.** Callers hand tickets in a deterministic order (the
 //!   restore pipeline reserves in input index order; the write pipeline is FIFO
 //!   over the staged tensors). Given that order, the *set* of admissions and
@@ -53,6 +61,7 @@
 //! into the one scheduler. See `docs/STAGE-BUDGET.md` for the measured
 //! consequence of that choice.
 
+use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::time::Instant;
@@ -180,6 +189,20 @@ struct State {
     next_ticket: u64,
     /// Ticket currently allowed to attempt admission (strict FIFO).
     serving: u64,
+    /// Tickets that gave up while queued ahead of `serving`.
+    ///
+    /// A cancelled waiter advances the cursor itself when it is the head;
+    /// otherwise it leaves its ticket here so that the cursor skips the hole
+    /// when it reaches it. Entries are removed as the cursor passes them, so
+    /// the set is bounded by the number of waiters that cancelled ahead of the
+    /// cursor.
+    abandoned: BTreeSet<u64>,
+    /// True while an oversize [`Admission`] holds the budget alone.
+    ///
+    /// At most one oversize request is live at a time, because a second one
+    /// cannot be granted while this flag is set. The flag is cleared only by
+    /// the owning `Admission` on drop, including during unwinding.
+    exclusive: bool,
     /// Requests blocked in `admit`.
     waiters: usize,
     /// Bookkeeping for stats, indexed by `Stage` discriminant.
@@ -274,6 +297,8 @@ impl StageBudget {
                     inflight_bytes: 0,
                     next_ticket: 0,
                     serving: 0,
+                    abandoned: BTreeSet::new(),
+                    exclusive: false,
                     waiters: 0,
                     counters: Default::default(),
                     clamped: 0,
@@ -368,17 +393,26 @@ impl StageBudget {
             }
             if guard.serving == ticket {
                 let active_ok = guard.active_workers + granted_workers <= policy.max_active_workers;
-                let bytes_ok = if oversized {
-                    guard.inflight_bytes == 0
+                // An oversize request runs alone: it is admitted only when the
+                // budget is completely idle, it claims no byte budget, and it
+                // keeps `exclusive` set until it is dropped. While it is live,
+                // `exclusive` blocks every other admission (including another
+                // oversize request), so "alone" is a property of its whole
+                // lifetime rather than of the instant it was granted.
+                let room = if oversized {
+                    !guard.exclusive && guard.inflight_bytes == 0 && guard.active_workers == 0
                 } else {
-                    guard.inflight_bytes + bytes <= policy.max_inflight_bytes
+                    !guard.exclusive && guard.inflight_bytes + bytes <= policy.max_inflight_bytes
                 };
-                if active_ok && bytes_ok {
+                if active_ok && room {
                     guard.active_workers += granted_workers;
-                    if !oversized {
+                    if oversized {
+                        guard.exclusive = true;
+                    } else {
                         guard.inflight_bytes += bytes;
                     }
                     guard.serving = ticket + 1;
+                    advance_serving(&mut guard);
                     guard.waiters -= 1;
                     guard.observed_active = guard.observed_active.max(guard.active_workers);
                     guard.observed_bytes = guard.observed_bytes.max(guard.inflight_bytes);
@@ -500,6 +534,12 @@ impl Admission {
     /// keeps its decoded bytes reserved until the ordered writer has consumed
     /// them, so the byte bound covers the whole staging window while the worker
     /// cap covers only actual work. Calling this twice is a no-op.
+    ///
+    /// The byte reservation belongs to the request, not to its workers: it is
+    /// released only by [`Drop`], including during unwinding. An oversize
+    /// admission keeps the budget exclusive after its workers are released,
+    /// because the bytes it decoded are still live and unaccounted by the byte
+    /// bound.
     pub fn release_workers(&mut self) {
         if self.workers == 0 {
             return;
@@ -517,6 +557,10 @@ impl Drop for Admission {
         let mut guard = lock(&self.inner.state);
         guard.active_workers = guard.active_workers.saturating_sub(self.workers);
         guard.inflight_bytes = guard.inflight_bytes.saturating_sub(self.bytes);
+        if self.oversized {
+            guard.exclusive = false;
+            self.oversized = false;
+        }
         self.workers = 0;
         self.bytes = 0;
         drop(guard);
@@ -536,15 +580,34 @@ fn cancellation(inner: &Inner, token: Option<&StageCancelToken>) -> bool {
 }
 
 /// Give up a ticket: advance FIFO service past it and wake the next waiter.
+///
+/// A cancelled waiter must never stall the queue. When it is the head, the
+/// cursor advances immediately; when it is behind the head, the ticket is
+/// recorded in `abandoned` and the cursor skips it when it arrives. Without the
+/// second case a cancelled non-head ticket would leave a hole that no waiter
+/// owns, and every later ticket would wait forever.
 fn abandon(inner: &Inner, guard: MutexGuard<'_, State>, ticket: u64, stage: Stage) {
     let mut guard = guard;
     if guard.serving == ticket {
         guard.serving = ticket + 1;
+        advance_serving(&mut guard);
+    } else {
+        // A live waiter's ticket is never below the cursor: a ticket is only
+        // granted or abandoned when it reaches the cursor.
+        debug_assert!(ticket > guard.serving, "abandoned ticket below the cursor");
+        guard.abandoned.insert(ticket);
     }
     guard.waiters = guard.waiters.saturating_sub(1);
     guard.counters_mut(stage).waited += 1;
     drop(guard);
     inner.cv.notify_all();
+}
+
+/// Move the FIFO cursor past every ticket that already gave up.
+fn advance_serving(state: &mut State) {
+    while state.abandoned.remove(&state.serving) {
+        state.serving += 1;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -630,6 +693,33 @@ mod tests {
     use std::thread;
     use std::time::Duration;
 
+    /// Poll until `condition` holds, failing (not hanging) after ten seconds.
+    fn wait_until(what: &str, mut condition: impl FnMut() -> bool) {
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while !condition() {
+            if Instant::now() >= deadline {
+                panic!("timed out waiting for {what}");
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+    }
+
+    /// Join a worker, failing instead of hanging when admission deadlocks.
+    ///
+    /// A leaked blocked thread cannot outlive the test binary, and every test
+    /// uses its own budget, so a failure here is reported as a test failure
+    /// rather than a stalled suite.
+    fn join_within<T: Send + 'static>(handle: thread::JoinHandle<T>, secs: u64) -> T {
+        let deadline = Instant::now() + Duration::from_secs(secs);
+        while !handle.is_finished() {
+            if Instant::now() >= deadline {
+                panic!("worker did not finish within {secs}s: admission deadlocked");
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+        handle.join().expect("worker panicked")
+    }
+
     #[test]
     fn a_zero_policy_is_rejected() {
         assert_eq!(
@@ -665,7 +755,7 @@ mod tests {
             }));
         }
         for handle in handles {
-            handle.join().unwrap();
+            join_within(handle, 30);
         }
         assert!(
             observed.load(Ordering::SeqCst) <= 4,
@@ -677,23 +767,37 @@ mod tests {
         assert!(stats.observed_max_waiters > 1, "{stats:?}");
     }
 
+    /// An oversize request must run alone for its whole lifetime: no other
+    /// request is admitted while it is alive, not merely while it is waiting.
     #[test]
     fn a_byte_request_larger_than_the_budget_runs_alone_and_completes() {
         let budget = StageBudget::with_capacity(8, 1 << 20).unwrap();
         let big = budget.admit(Stage::Restore, 1, 4 << 20, None).unwrap();
         assert!(big.oversized());
-        let started = Instant::now();
+        assert_eq!(big.bytes(), 0, "an oversize request claims no byte budget");
+        assert_eq!(big.requested_bytes(), 4 << 20);
+
+        let admitted = Arc::new(AtomicBool::new(false));
         let budget2 = Arc::clone(&budget);
+        let flag = Arc::clone(&admitted);
         let waiter = thread::spawn(move || {
-            // A normal request must wait behind the oversize admission.
             let admission = budget2.admit(Stage::Restore, 1, 1024, None).unwrap();
             assert!(!admission.oversized());
-            started.elapsed()
+            flag.store(true, Ordering::SeqCst);
+            admission.workers()
         });
-        thread::sleep(Duration::from_millis(30));
+        // The normal request reaches the queue and then stays there for as long
+        // as the oversize admission is live.
+        wait_until("the normal request to queue", || waiting_now(&budget) >= 1);
+        thread::sleep(Duration::from_millis(25));
+        assert!(
+            !admitted.load(Ordering::SeqCst),
+            "a normal request ran concurrently with a live oversize admission"
+        );
+        assert_eq!(budget.grants(), 1, "only the oversize request was granted");
         drop(big);
-        let waited = waiter.join().unwrap();
-        assert!(waited >= Duration::from_millis(25), "{waited:?}");
+        assert_eq!(join_within(waiter, 10), 1);
+        assert!(admitted.load(Ordering::SeqCst));
         assert_eq!(budget.stats().oversized_admissions, 1);
     }
 
@@ -710,11 +814,9 @@ mod tests {
                 .map(|admission| admission.workers())
         });
         // Wait until the worker is really queued.
-        while waiting_now(&budget) == 0 {
-            thread::sleep(Duration::from_millis(1));
-        }
+        wait_until("the waiter to queue", || waiting_now(&budget) > 0);
         token.cancel();
-        let outcome = waiter.join().unwrap();
+        let outcome = join_within(waiter, 10);
         assert_eq!(outcome.unwrap_err().class(), crate::error::Class::Cancelled);
         // The cancelled ticket must not block the queue: a later request is
         // served as soon as capacity is free.
@@ -743,22 +845,236 @@ mod tests {
         assert_eq!(admission.workers(), 2);
     }
 
+    /// Unwinding out of an oversize holder must clear both the worker slots and
+    /// the exclusivity flag; otherwise every later request would wait forever.
+    #[test]
+    fn a_panicking_oversize_holder_releases_exclusivity() {
+        let budget = StageBudget::with_capacity(2, 1024).unwrap();
+        let budget2 = Arc::clone(&budget);
+        let outcome = thread::spawn(move || {
+            let _admission = budget2.admit(Stage::Restore, 2, 4096, None).unwrap();
+            panic!("oversize stage panicked while holding the budget alone");
+        })
+        .join();
+        assert!(outcome.is_err());
+        let after = budget
+            .admit(Stage::Restore, 2, 1024, None)
+            .expect("the panicked oversize holder must release exclusivity");
+        assert!(!after.oversized());
+        assert_eq!(after.workers(), 2);
+    }
+
+    /// The byte reservation belongs to the request, not to the worker count.
+    /// Releasing workers frees worker slots immediately; the bytes stay charged
+    /// until the owning admission is dropped.
     #[test]
     fn releasing_workers_keeps_the_byte_reservation() {
         let budget = StageBudget::with_capacity(1, 64).unwrap();
         let mut first = budget.admit(Stage::Restore, 1, 64, None).unwrap();
         first.release_workers();
-        // A second worker may now decode, but its bytes must wait.
+
+        // The worker slot really is free: a zero-byte request is admitted now.
+        let probe = budget
+            .admit(Stage::Restore, 1, 0, None)
+            .expect("release_workers must free the worker slot");
+        assert_eq!(probe.workers(), 1);
+        drop(probe);
+
+        // The 64 bytes are not: a one-byte request still waits.
+        let admitted = Arc::new(AtomicBool::new(false));
         let budget2 = Arc::clone(&budget);
-        let second = thread::spawn(move || {
-            let mut admission = budget2.admit(Stage::Restore, 1, 1, None).unwrap();
-            admission.release_workers();
-            admission.workers()
+        let flag = Arc::clone(&admitted);
+        let waiter = thread::spawn(move || {
+            let _admission = budget2.admit(Stage::Restore, 1, 1, None).unwrap();
+            flag.store(true, Ordering::SeqCst);
         });
-        // Wait for the second to grant and exit, then check bytes are intact.
-        second.join().unwrap();
+        wait_until("the byte waiter to queue", || waiting_now(&budget) > 0);
+        thread::sleep(Duration::from_millis(25));
+        assert!(
+            !admitted.load(Ordering::SeqCst),
+            "release_workers() released the request's byte reservation"
+        );
         assert_eq!(budget.stats().observed_max_inflight_bytes, 64);
+
         drop(first);
+        join_within(waiter, 10);
+        assert!(admitted.load(Ordering::SeqCst));
+    }
+
+    /// An oversize request that arrives while smaller requests hold bytes must
+    /// wait for them to drain, and a later stream of small requests must not
+    /// overtake it (no starvation), and none of it may deadlock.
+    #[test]
+    fn an_oversize_request_drains_existing_holders_without_being_overtaken() {
+        let budget = StageBudget::with_capacity(8, 1000).unwrap();
+        let small_a = budget.admit(Stage::Restore, 1, 400, None).unwrap();
+        let small_b = budget.admit(Stage::Restore, 1, 400, None).unwrap();
+
+        let order = Arc::new(Mutex::new(Vec::new()));
+        let big_admitted = Arc::new(AtomicBool::new(false));
+        let big = {
+            let budget = Arc::clone(&budget);
+            let order = Arc::clone(&order);
+            let admitted = Arc::clone(&big_admitted);
+            thread::spawn(move || {
+                let admission = budget.admit(Stage::Restore, 1, 2000, None).unwrap();
+                lock(&order).push("oversize");
+                admitted.store(true, Ordering::SeqCst);
+                admission.oversized()
+            })
+        };
+        wait_until("the oversize request to queue", || {
+            waiting_now(&budget) >= 1
+        });
+
+        // A stream of later small requests must queue behind the oversize one.
+        let mut stream = Vec::new();
+        for _ in 0..5 {
+            let budget = Arc::clone(&budget);
+            let order = Arc::clone(&order);
+            stream.push(thread::spawn(move || {
+                let admission = budget.admit(Stage::Restore, 1, 1, None).unwrap();
+                assert!(!admission.oversized());
+                lock(&order).push("small");
+            }));
+        }
+        wait_until("the small stream to queue", || waiting_now(&budget) >= 6);
+        thread::sleep(Duration::from_millis(25));
+        assert!(
+            !big_admitted.load(Ordering::SeqCst),
+            "an oversize request ran while smaller holders still held bytes"
+        );
+        assert!(
+            lock(&order).is_empty(),
+            "a later small request overtook the queued oversize request"
+        );
+
+        drop(small_a);
+        thread::sleep(Duration::from_millis(15));
+        assert!(
+            !big_admitted.load(Ordering::SeqCst),
+            "an oversize request ran while another holder still held bytes"
+        );
+        drop(small_b);
+
+        assert!(
+            join_within(big, 10),
+            "the oversize request was granted alone"
+        );
+        for handle in stream {
+            join_within(handle, 10);
+        }
+        let order = lock(&order);
+        assert_eq!(order.first(), Some(&"oversize"), "order: {order:?}");
+        assert_eq!(order.len(), 6, "order: {order:?}");
+        let stats = budget.stats();
+        assert_eq!(stats.oversized_admissions, 1);
+        assert!(stats.observed_max_active_workers <= 8);
+        assert!(stats.observed_max_inflight_bytes <= 1000);
+    }
+
+    /// Two oversize requests queue one after the other; they never overlap.
+    #[test]
+    fn two_oversize_requests_are_serialised() {
+        let budget = StageBudget::with_capacity(4, 1024).unwrap();
+        let first = budget.admit(Stage::Restore, 1, 4096, None).unwrap();
+        assert!(first.oversized());
+
+        let admitted = Arc::new(AtomicBool::new(false));
+        let second = {
+            let budget = Arc::clone(&budget);
+            let admitted = Arc::clone(&admitted);
+            thread::spawn(move || {
+                let admission = budget.admit(Stage::Restore, 1, 8192, None).unwrap();
+                admitted.store(true, Ordering::SeqCst);
+                admission.oversized()
+            })
+        };
+        wait_until("the second oversize request to queue", || {
+            waiting_now(&budget) >= 1
+        });
+        thread::sleep(Duration::from_millis(25));
+        assert!(
+            !admitted.load(Ordering::SeqCst),
+            "two oversize admissions were granted concurrently"
+        );
+        drop(first);
+        assert!(join_within(second, 10));
+        assert_eq!(budget.stats().oversized_admissions, 2);
+    }
+
+    /// Cancelling waiters that are *not* at the head must not leave a hole in
+    /// the FIFO cursor: the surviving waiters (and a fresh request) are served.
+    #[test]
+    fn cancelling_waiters_behind_the_head_does_not_stall_the_queue() {
+        let budget = StageBudget::with_capacity(4, 1024).unwrap();
+        let big = budget.admit(Stage::Restore, 1, 4096, None).unwrap();
+
+        // Waiter i is spawned after waiter i-1 is queued, so tickets are 1..=8.
+        let tokens: Vec<StageCancelToken> = (0..8).map(|_| budget.cancel_token()).collect();
+        let mut handles: Vec<Option<thread::JoinHandle<Result<usize>>>> = Vec::new();
+        for (index, token) in tokens.iter().enumerate() {
+            let worker_budget = Arc::clone(&budget);
+            let token = token.clone();
+            handles.push(Some(thread::spawn(move || {
+                worker_budget
+                    .admit(Stage::Restore, 1, 1, Some(&token))
+                    .map(|admission| admission.workers())
+            })));
+            wait_until("the next waiter to queue", || {
+                waiting_now(&budget) == index + 1
+            });
+        }
+
+        // Cancel the odd tickets: ticket 1 is the head, the rest are holes that
+        // the cursor must skip when it reaches them.
+        for index in [1usize, 3, 5, 7] {
+            tokens[index].cancel();
+        }
+        for index in [1usize, 3, 5, 7] {
+            let handle = handles[index].take().expect("cancelled waiter handle");
+            let outcome = join_within(handle, 10);
+            assert_eq!(outcome.unwrap_err().class(), crate::error::Class::Cancelled);
+        }
+        // The even tickets (originally 2, 4, 6, 8) remain and must all be
+        // served once the oversize holder drops.
+        drop(big);
+        for index in [0usize, 2, 4, 6] {
+            let handle = handles[index].take().expect("surviving waiter handle");
+            let workers = join_within(handle, 10).unwrap_or_else(|err| panic!("{err}"));
+            assert_eq!(workers, 1);
+        }
+        // A fresh request is served too: the cursor is not parked on a hole.
+        let fresh = budget
+            .admit(Stage::Restore, 1, 1, None)
+            .expect("the cursor advanced past every cancelled ticket");
+        assert_eq!(fresh.workers(), 1);
+        assert_eq!(budget.stats().cancelled_waiters, 4);
+    }
+
+    /// A waiter that gives up without ever being admitted (its ticket is
+    /// abandoned) must not consume capacity or block a fresh request.
+    #[test]
+    fn a_dropped_waiter_is_not_admitted_and_holds_nothing() {
+        let budget = StageBudget::with_capacity(1, 1024).unwrap();
+        let holder = budget.admit(Stage::Restore, 1, 1024, None).unwrap();
+        let token = budget.cancel_token();
+        let budget2 = Arc::clone(&budget);
+        let token2 = token.clone();
+        let waiter = thread::spawn(move || {
+            budget2
+                .admit(Stage::Restore, 1, 1024, Some(&token2))
+                .is_ok()
+        });
+        wait_until("the waiter to queue", || waiting_now(&budget) == 1);
+        token.cancel();
+        assert!(!join_within(waiter, 10), "a cancelled waiter was admitted");
+        assert_eq!(waiting_now(&budget), 0);
+        drop(holder);
+        let after = budget
+            .admit(Stage::Restore, 1, 1024, None)
+            .expect("the abandoned waiter leaked capacity");
+        assert_eq!(after.bytes(), 1024);
     }
 
     #[test]
@@ -779,7 +1095,7 @@ mod tests {
         }
         drop(held);
         for handle in handles {
-            handle.join().unwrap();
+            join_within(handle, 30);
         }
         assert_eq!(*lock(&order), vec![0, 1, 2, 3]);
     }
