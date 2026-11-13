@@ -130,8 +130,8 @@ multiplier is not.
 ## Verification
 
 <!-- BEGIN GENERATED:release-v141-verify (scripts/perf_numbers.py) -->
-`bench/receipts/verify-20261112T223540Z.json`: **46/46** courts pass,
-0 failed, 0 skipped, at WeftFS `0461132d4fc63ce458de6b388b38a8f27222d387`.
+`bench/receipts/verify-20261113T022751Z.json`: **46/46** courts pass,
+0 failed, 0 skipped, at WeftFS `e67e63186456d8d0915204baa19d65013a6bb281`.
 Rust all-targets **807** passed / 0 failed; FUSE all-targets
 **850** passed / 0 failed / 2 ignored
 (the two pre-existing kernel/`CAP_SETUID` tests); WeftCodec **290** passed.

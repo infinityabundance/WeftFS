@@ -393,23 +393,23 @@ loss (efficiency falls with N). Receipt
 <!-- BEGIN GENERATED:perf-catalog-verification (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `verify.courts` | 46 | courts | Courts in the cited aggregate | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
-| `verify.passed` | 46 | courts | Courts passed | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
-| `verify.failed` | 0 | courts | Courts failed | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
-| `verify.skipped` | 0 | courts | Courts skipped | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
-| `verify.stamp` | 20261112T223540Z | text | Aggregate stamp | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
-| `verify.revision` | 0461132d4fc63ce458de6b388b38a8f27222d387 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.courts` | 46 | courts | Courts in the cited aggregate | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.passed` | 46 | courts | Courts passed | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.failed` | 0 | courts | Courts failed | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.skipped` | 0 | courts | Courts skipped | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.stamp` | 20261113T022751Z | text | Aggregate stamp | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.revision` | e67e63186456d8d0915204baa19d65013a6bb281 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
 | `claims.count` | 1,046 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
-| `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
-| `tests.rust_store_binaries` | 170 | tests | Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
-| `tests.rust_fuse_passed` | 850 | tests | FUSE all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
-| `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
-| `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
-| `tests.rust_codec_passed` | 290 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.rust_store_binaries` | 170 | tests | Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.rust_fuse_passed` | 850 | tests | FUSE all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.rust_codec_passed` | 290 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
 | `artifacts.wheel_bytes` | 115,851 | B | wheel size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.wheel_sha` | 9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928 | text | wheel sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_bytes` | 156,977 | B | sdist size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
@@ -424,6 +424,17 @@ loss (efficiency falls with N). Receipt
 | `live.pypi.sdist_bytes` | 156,858 | B | sdist size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.crates.weftcodec` | 7f24d38382f7894903cc04763493530b48a5cc13d8e4b66fa08e0f82ea756882 | — | weftcodec 1.4.0 crates.io checksum | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.crates.weftfs` | d94ff6e7803a7ae7af807c5b4fa162b60f1002fa1b3388e086a63562a4d06be0 | — | weftfs 1.4.0 crates.io checksum | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `verify.v140.courts` | 46 | courts | v1.4.0 courts | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.v140.passed` | 46 | courts | v1.4.0 courts passed | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.v140.failed` | 0 | courts | v1.4.0 courts failed | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.v140.skipped` | 0 | courts | v1.4.0 courts skipped | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.v140.stamp` | 20261112T223540Z | — | v1.4.0 aggregate stamp | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `verify.v140.revision` | 0461132d4fc63ce458de6b388b38a8f27222d387 | — | v1.4.0 aggregate revision | `bench/receipts/verify-20261112T223540Z.json` | 20261112T223540Z | 0461132d4fc6 |
+| `tests.v140.rust_store_passed` | 807 | tests | v1.4.0 Rust all-targets passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.v140.rust_fuse_passed` | 850 | tests | v1.4.0 FUSE all-targets passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.v140.rust_fuse_failed` | 0 | tests | v1.4.0 FUSE all-targets failed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.v140.rust_fuse_ignored` | 2 | tests | v1.4.0 FUSE all-targets ignored | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `tests.v140.rust_codec_passed` | 290 | tests | v1.4.0 Rust codec all-targets passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Historical quotations

@@ -2,8 +2,8 @@
 
 <!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
 **At a glance (generated from receipts).** v1.4.1 is released. The cited aggregate is
-`bench/receipts/verify-20261112T223540Z.json` — **46/46** courts pass,
-0 failed, 0 skipped — at WeftFS `0461132d4fc63ce458de6b388b38a8f27222d387`.
+`bench/receipts/verify-20261113T022751Z.json` — **46/46** courts pass,
+0 failed, 0 skipped — at WeftFS `e67e63186456d8d0915204baa19d65013a6bb281`.
 The shipped planned write is **974.1 ms** least-contended /
 1,175.3 ms p50 at **282,106,049 B** (33.53 % below
 the native control, 2.98× its wall). Rust all-targets
