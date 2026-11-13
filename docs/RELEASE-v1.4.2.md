@@ -118,7 +118,7 @@ FUSE all-targets **850** passed / 0 failed /
 2 ignored (the two pre-existing kernel/`CAP_SETUID` tests);
 WeftCodec **290** passed. The conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`);
-**1,056** claims are audited; `scripts/check-claims.sh`,
+**1,057** claims are audited; `scripts/check-claims.sh`,
 `scripts/perf_numbers.py --check`, spec drift, the conformance manifest/coverage
 and the new `long_description` court all pass.
 <!-- END GENERATED:release-v142-verify -->
@@ -156,6 +156,13 @@ the rust court; the `weftfs 1.4.2` dry run cannot resolve `weftcodec 1.4.2` from
 the index until `weftcodec` is published, exactly as in 1.4.0 and 1.4.1 — the
 real run publishes `weftcodec` first, waits for the index, then publishes
 `weftfs`. Neither crate was published by this session.
+
+**Uploading these bytes.** `scripts/publish-pypi.sh --from-dist` uploads the
+existing `python/dist/` artifacts and twine-checks them first; it does not
+rebuild. That mode exists because a Python rebuild here is not bit-reproducible,
+so it is the only way to make the uploaded bytes the recorded bytes. Plain
+`scripts/publish-pypi.sh` still rebuilds, and its output must then be recorded
+as its own build — the mistake that produced three 1.4.1 artifacts.
 
 PyPI: neither 1.4.2 artifact was uploaded by this session. The coordinator
 performs the upload and then records the live state; until then

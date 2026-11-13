@@ -2,7 +2,12 @@
 # Publish the Python `weftcodec` package to PyPI inside the OOM-protected
 # python court.
 #
-#   scripts/publish-pypi.sh [--dry-run]
+#   scripts/publish-pypi.sh [--dry-run] [--from-dist]
+#
+# `--from-dist` uploads the artifacts already in `python/dist/` instead of
+# rebuilding them. Python builds here are not bit-reproducible, so a release
+# note that names digests must use this mode to make the uploaded bytes the
+# recorded bytes.
 #
 # Credentials, in precedence order:
 #   * `$PYPI_TOKEN` (the token itself, never written to a tracked file);
@@ -23,9 +28,17 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
 dry_run=0
-if [[ "${1:-}" == "--dry-run" ]]; then
-  dry_run=1
-fi
+from_dist=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) dry_run=1 ;;
+    --from-dist) from_dist=1 ;;
+    *)
+      echo "publish-pypi: unknown argument $arg" >&2
+      exit 64
+      ;;
+  esac
+done
 
 cache="$root/.docker-cache"
 dist="$root/python/dist"
@@ -45,11 +58,19 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-dry_run_inner="cd /work && bash scripts/pypi-publish-inner.sh"
+inner_args=""
 if [[ "$dry_run" == "1" ]]; then
-  # A dry run builds and twine-checks, then stops before the token is read, so
-  # it must work without a credential.
-  inner="$dry_run_inner --dry-run"
+  inner_args="$inner_args --dry-run"
+fi
+if [[ "$from_dist" == "1" ]]; then
+  inner_args="$inner_args --from-dist"
+fi
+
+if [[ "$dry_run" == "1" ]]; then
+  # A dry run builds (or reuses) and twine-checks, then stops before the token
+  # is read, so it must work without a credential. `--from-dist` on its own
+  # still uploads, so it follows the token path below.
+  inner="cd /work && bash scripts/pypi-publish-inner.sh$inner_args"
 else
   if [[ -n "${PYPI_TOKEN:-}" ]]; then
     staged="$(mktemp "$cache/.pypi-token-stage.XXXXXX")"
@@ -68,12 +89,12 @@ else
     exit 66
   fi
   staged_in_court="/work/${staged#"$root"/}"
-  inner="cd /work && WEFT_PYPI_TOKEN_FILE=$staged_in_court bash scripts/pypi-publish-inner.sh"
+  inner="cd /work && WEFT_PYPI_TOKEN_FILE=$staged_in_court bash scripts/pypi-publish-inner.sh$inner_args"
 fi
 
 mkdir -p "$dist"
 
-echo "publish-pypi: version=$version dry_run=$dry_run"
+echo "publish-pypi: version=$version dry_run=$dry_run from_dist=$from_dist"
 # Deliberately not `exec`: the EXIT trap must still run so the staging copy is
 # removed even when the court fails.
 "$root/scripts/docker-court.sh" python "$inner"
