@@ -38,11 +38,12 @@
 //!   diagnostic instead of a silently passing exclusion assertion.
 //!
 //! The previous version of the two-process test closed its read end and then
-//! read from it. The read failed `EBADF`, the holder exited immediately, and
-//! the parent's probe raced that exit: measured 4/1,000 acquisitions while the
-//! holder was still alive versus 4/1,000 where the holder had already gone
-//! (`.docker-cache/lockrace/mechanism.c`), and 1/200 direct runs of the test
-//! failed at `tests/writer_lock.rs:308:42` (CI run 43408465922).
+//! read from it. The read failed `EBADF`, the holder exited immediately, and the
+//! parent's probe raced that exit: a reduced C reproduction of the child saw the
+//! hold read fail with `EBADF` in every iteration and the parent acquired the
+//! lock exactly in the iterations where the holder had already exited, and direct
+//! runs of the old test failed at `tests/writer_lock.rs:308:42` (CI run
+//! 43408465922).
 
 use std::fs::{self, File, OpenOptions};
 use std::io;
@@ -58,9 +59,9 @@ use weftfs::error::Class;
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::writer_lock::{LockMechanism, WriterLock};
 
-/// The thread's `errno` word, read without allocating. Only used in the
-/// post-`fork` child, where `io::Error::last_os_error` is technically safe but
-/// reading the word directly removes all doubt.
+/// The thread's `errno` word. Only used in the post-`fork` child;
+/// `io::Error::last_os_error` is a small value for an OS error and does not
+/// allocate.
 fn last_errno() -> i32 {
     io::Error::last_os_error().raw_os_error().unwrap_or(0)
 }
