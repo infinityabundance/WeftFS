@@ -123,7 +123,10 @@ number, so it is left to the caller and documented here.
 `scripts/resource_courts.sh` produces the X06 and N09 receipts; the policy table
 and every measured number are in `bench/RESULTS-resource-courts.md`.
 `scripts/stage_budget_court.sh` repeats the unit suite at `--test-threads=8`, 2
-and 1 through a per-run `timeout` and writes a receipt; it is standalone and is
-not part of `verify-all`. The X31 defect (an oversize admission that did not
-block others, and a test that required a reservation to be released mid-join)
-and its fix are recorded in `docs/STATUS.md`.
+and 1 and the ordered-pipeline suite at `--test-threads=4`, every repetition
+through a per-run `timeout`, and writes a receipt; it is standalone and is not
+part of `verify-all`. The X31 defect (an oversize admission that did not block
+others, a test that required a reservation to be released mid-join, a cancelled
+non-head ticket that stalled the queue, and an ordered-pipeline deadlock caused
+by admitting the budget out of input order) and its fix are recorded in
+`docs/STATUS.md` and `bench/RESULTS-stage-budget-fix.md`.
