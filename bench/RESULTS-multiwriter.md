@@ -217,8 +217,11 @@ not a linearizability proof.
 11. **Single repetition, one host, 4 vCPUs.** No confidence intervals, no
     multi-node, no cold media, no fleet claim. The retained runs differ by up
     to 19 % at N=32.
-12. **Only local, object, `3fs`, and S3 MW2 are implemented in Rust; Go is
-    local/object only.** GCS/Azure are refused for optimistic mode.
+12. **MW2 is not implemented for every plane.** Rust implements it for
+    `local`, `object`, `3fs`, `s3` and `azure`; Go for `local`, `object` and
+    `azure`. GCS is refused for optimistic mode. The Azure plane's mixed-language
+    behaviour is measured separately in
+    [`RESULTS-azure-mw2.md`](RESULTS-azure-mw2.md) (X13/N14).
 13. **FUSE and generic checkpoint publication are still MW1.** No MW2 claim
     for file mutations or a checkpoint set.
 14. **MW3 is not implemented.** No conflict domains, no multi-writer GC
