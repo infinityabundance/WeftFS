@@ -258,3 +258,25 @@ finally `payload_hash`. A single-section reader must not claim it verified
 
 The aggregate runner is `scripts/verify-all.sh`; a court that cannot run is
 recorded as `skip` with a reason, and a skip is not a pass.
+
+---
+
+## 6. Performance claims and the comparator
+
+<!-- BEGIN GENERATED:rfc-augmentation (scripts/perf_numbers.py) -->
+**Augmentation, not a filesystem comparison.** Every write claim in this repository is
+one backend **with and without** the WeftFS protocol + codec. The comparator is that
+backend's own durable path (arm A) or a native-plus-manifest path (arm N); the Rust/Go
+reference filesystem is development provenance and is never the subject of a headline
+comparison, and no row pits it against ext4, XFS, ZFS, Btrfs, 3FS, Lustre, CephFS,
+JuiceFS, DAOS, Weka or VAST.
+
+The frozen method is [`bench/CONTRACTS-augmentation.md`](../bench/CONTRACTS-augmentation.md):
+arms A native, N native + manifest, B protocol pass-through, C codec, D protocol, E
+combined, matched durability/consistency/workload, seven interleaved repetitions. Current
+shipped default (arm C): **974.1 ms** least-contended /
+1,175.3 ms p50 for **282,106,049 B**, **33.53 %** below A's
+424,439,296 B, at **2.98×** A's 327.2 ms. Receipt
+`bench/receipts/augmentation-local-20261113T004000Z.json` (stamp 20261113T004503Z, revision
+0a01606e2654). The frontier row in §3.1 of the paper is not the shipped default.
+<!-- END GENERATED:rfc-augmentation -->

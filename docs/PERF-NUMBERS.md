@@ -39,12 +39,163 @@ earlier release are listed under "Historical quotations" below *with their
 receipt, stamp and revision*. They are generated too, so they cannot silently
 drift, but they are labelled as superseded.
 
+## Current six-arm contract court (R25)
+
+The frozen contract (§[`bench/CONTRACTS-augmentation.md`](../bench/CONTRACTS-augmentation.md)),
+seven interleaved repetitions, local POSIX, 101 tensors / 424,439,296 logical
+bytes. Only `A` and `C` are shipped defaults; every row's `reproduction` object
+in the receipt says how it is reached. Receipt
+`bench/receipts/augmentation-local-20261113T004000Z.json`.
+
+<!-- BEGIN GENERATED:perf-catalog-contract (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `contract.A.ms_min` | 327.2 | ms | A native durable write: durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.ms_p50` | 335.3 | ms | A native durable write: durable write wall, p50 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.ms_p95` | 7,012.2 | ms | A native durable write: durable write wall, p95 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.foot_b` | 424,439,296 | B | A native durable write: physical footprint, least-contended rep | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.cold_ms` | 349.6 | ms | A native durable write: cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.cold_p50` | 401.6 | ms | A native durable write: cold restore wall, p50 | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.cpu_ms` | 80 | ms | A native durable write: write CPU user+sys, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.rss_kib` | 271,160 | KiB | A native durable write: write peak RSS, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.written_b` | 424,439,296 | B | A native durable write: bytes handed to the backend | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.A.wreq` | 101 | requests | A native durable write: backend write requests | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.ms_min` | 333.4 | ms | N native + application manifest (supplementary): durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.ms_p50` | 345.9 | ms | N native + application manifest (supplementary): durable write wall, p50 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.ms_p95` | 7,474.9 | ms | N native + application manifest (supplementary): durable write wall, p95 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.foot_b` | 424,477,171 | B | N native + application manifest (supplementary): physical footprint, least-contended rep | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.cold_ms` | 348.8 | ms | N native + application manifest (supplementary): cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.cold_p50` | 582.7 | ms | N native + application manifest (supplementary): cold restore wall, p50 | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.cpu_ms` | 90 | ms | N native + application manifest (supplementary): write CPU user+sys, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.rss_kib` | 271,492 | KiB | N native + application manifest (supplementary): write peak RSS, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.written_b` | 424,477,171 | B | N native + application manifest (supplementary): bytes handed to the backend | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.wreq` | 104 | requests | N native + application manifest (supplementary): backend write requests | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.ms_min` | 931.2 | ms | B protocol pass-through: durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.ms_p50` | 1,543.7 | ms | B protocol pass-through: durable write wall, p50 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.ms_p95` | 19,021.6 | ms | B protocol pass-through: durable write wall, p95 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.foot_b` | 424,608,542 | B | B protocol pass-through: physical footprint, least-contended rep | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.cold_ms` | 533.6 | ms | B protocol pass-through: cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.cold_p50` | 585.3 | ms | B protocol pass-through: cold restore wall, p50 | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.cpu_ms` | 250 | ms | B protocol pass-through: write CPU user+sys, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.rss_kib` | 538,720 | KiB | B protocol pass-through: write peak RSS, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.written_b` | 424,621,048 | B | B protocol pass-through: bytes handed to the backend | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.wreq` | 611 | requests | B protocol pass-through: backend write requests | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.ms_min` | 974.1 | ms | C codec (shipped planned write): durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.ms_p50` | 1,175.3 | ms | C codec (shipped planned write): durable write wall, p50 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.ms_p95` | 7,605.3 | ms | C codec (shipped planned write): durable write wall, p95 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.foot_b` | 282,106,049 | B | C codec (shipped planned write): physical footprint, least-contended rep | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.cold_ms` | 1,408.3 | ms | C codec (shipped planned write): cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.cold_p50` | 1,431.8 | ms | C codec (shipped planned write): cold restore wall, p50 | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.cpu_ms` | 1,090 | ms | C codec (shipped planned write): write CPU user+sys, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.rss_kib` | 690,664 | KiB | C codec (shipped planned write): write peak RSS, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.written_b` | 282,118,555 | B | C codec (shipped planned write): bytes handed to the backend | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.wreq` | 216 | requests | C codec (shipped planned write): backend write requests | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.ms_min` | 1,522.5 | ms | D protocol: durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.ms_p50` | 9,338.5 | ms | D protocol: durable write wall, p50 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.ms_p95` | 20,637.1 | ms | D protocol: durable write wall, p95 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.foot_b` | 424,659,735 | B | D protocol: physical footprint, least-contended rep | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.cold_ms` | 537.3 | ms | D protocol: cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.cold_p50` | 620.0 | ms | D protocol: cold restore wall, p50 | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.cpu_ms` | 270 | ms | D protocol: write CPU user+sys, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.rss_kib` | 538,844 | KiB | D protocol: write peak RSS, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.written_b` | 424,629,900 | B | D protocol: bytes handed to the backend | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.wreq` | 611 | requests | D protocol: backend write requests | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.ms_min` | 1,019.3 | ms | E combined: durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.ms_p50` | 11,271.6 | ms | E combined: durable write wall, p50 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.ms_p95` | 11,728.3 | ms | E combined: durable write wall, p95 (7 reps) | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.foot_b` | 282,157,242 | B | E combined: physical footprint, least-contended rep | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.cold_ms` | 1,426.3 | ms | E combined: cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.cold_p50` | 1,545.8 | ms | E combined: cold restore wall, p50 | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.cpu_ms` | 1,090 | ms | E combined: write CPU user+sys, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.rss_kib` | 690,980 | KiB | E combined: write peak RSS, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.written_b` | 282,127,407 | B | E combined: bytes handed to the backend | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.wreq` | 216 | requests | E combined: backend write requests | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.ratio` | 1.02 | x | N write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.N.storage_pct` | -0.01 | % | N physical-footprint reduction vs A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.ratio` | 2.85 | x | B write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.B.storage_pct` | -0.04 | % | B physical-footprint reduction vs A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.ratio` | 2.98 | x | C write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.C.storage_pct` | 33.53 | % | C physical-footprint reduction vs A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.ratio` | 4.65 | x | D write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.D.storage_pct` | -0.05 | % | D physical-footprint reduction vs A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.ratio` | 3.12 | x | E write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.E.storage_pct` | 33.52 | % | E physical-footprint reduction vs A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `contract.minio.A.ms_min` | 823.6 | ms | MinIO A: durable write wall, least-contended | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.A.ms_p50` | 829.4 | ms | MinIO A: durable write wall, p50 | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.A.foot_b` | 424,439,296 | B | MinIO A: physical footprint | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.A.cold_ms` | 300.5 | ms | MinIO A: cold restore wall, least-contended | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.C.ms_min` | 1,238.9 | ms | MinIO C: durable write wall, least-contended | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.C.ms_p50` | 1,252.3 | ms | MinIO C: durable write wall, p50 | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.C.foot_b` | 282,106,311 | B | MinIO C: physical footprint | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.C.cold_ms` | 1,519.3 | ms | MinIO C: cold restore wall, least-contended | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+| `contract.minio.C.ratio` | 1.50 | x | MinIO C write wall as a multiple of A | `bench/receipts/augmentation-minio-20261113T010500Z.json` | 20261113T004643Z | 0a01606e2654 |
+<!-- END GENERATED:perf-catalog-contract -->
+
+## R22 store-API frontier (not the shipped default)
+
+`C-pipe4` drives the bounded prepare/publish pipeline
+(`Store::prepare_tensor_group_pipelined`); no shipped CLI verb reaches it. It is
+reported separately so the frontier is never read as the product default.
+
+<!-- BEGIN GENERATED:perf-catalog-frontier (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `frontier.c.ms_min` | 592.6 | ms | R22 C-pipe4 write wall, least-contended | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `frontier.c.ms_med` | 600.9 | ms | R22 C-pipe4 write wall, median of 7 | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `frontier.c.foot_b` | 282,106,049 | B | R22 C-pipe4 physical footprint | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `frontier.c.rss_kib` | 939,256 | KiB | R22 C-pipe4 peak RSS | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `frontier.c.cpu_ms` | 1,150 | ms | R22 C-pipe4 write CPU | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `frontier.a.ms_min` | 332.0 | ms | R22 native A write wall, least-contended | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `frontier.c.ratio` | 1.78 | x | R22 C-pipe4 write wall as a multiple of A | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+<!-- END GENERATED:perf-catalog-frontier -->
+
+## Cross-family contract rows (R25)
+
+Same contract and repetitions; only the fixture and its bounded subset differ.
+The pythia rows are a measured loss.
+
+<!-- BEGIN GENERATED:perf-catalog-family (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `family.qwen05.logical_b` | 424,439,296 | B | Qwen2.5-0.5B-Instruct (101-tensor subset): logical bytes | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.a_ms` | 327.2 | ms | Qwen2.5-0.5B-Instruct (101-tensor subset): native A durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.c_ms` | 974.1 | ms | Qwen2.5-0.5B-Instruct (101-tensor subset): shipped C durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.a_foot_b` | 424,439,296 | B | Qwen2.5-0.5B-Instruct (101-tensor subset): native A physical footprint | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.c_foot_b` | 282,106,049 | B | Qwen2.5-0.5B-Instruct (101-tensor subset): shipped C physical footprint | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.c_cold_ms` | 1,408.3 | ms | Qwen2.5-0.5B-Instruct (101-tensor subset): shipped C cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.ratio` | 2.98 | x | Qwen2.5-0.5B-Instruct (101-tensor subset): C write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen05.storage_pct` | 33.53 | % | Qwen2.5-0.5B-Instruct (101-tensor subset): C footprint reduction vs A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `family.qwen3b.logical_b` | 626,540,544 | B | Qwen2.5-3B-Instruct (9-tensor subset): logical bytes | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.a_ms` | 411.6 | ms | Qwen2.5-3B-Instruct (9-tensor subset): native A durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.c_ms` | 1,329.1 | ms | Qwen2.5-3B-Instruct (9-tensor subset): shipped C durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.a_foot_b` | 626,540,544 | B | Qwen2.5-3B-Instruct (9-tensor subset): native A physical footprint | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.c_foot_b` | 415,882,220 | B | Qwen2.5-3B-Instruct (9-tensor subset): shipped C physical footprint | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.c_cold_ms` | 2,129.2 | ms | Qwen2.5-3B-Instruct (9-tensor subset): shipped C cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.ratio` | 3.23 | x | Qwen2.5-3B-Instruct (9-tensor subset): C write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.qwen3b.storage_pct` | 33.62 | % | Qwen2.5-3B-Instruct (9-tensor subset): C footprint reduction vs A | `bench/receipts/augmentation-local-20261113T013000Z.json` | 20261113T010916Z | 9d8fa3845486 |
+| `family.pythia0.logical_b` | 281,706,496 | B | pythia-70m step 0 (76-tensor subset): logical bytes | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.a_ms` | 233.3 | ms | pythia-70m step 0 (76-tensor subset): native A durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.c_ms` | 12,008.6 | ms | pythia-70m step 0 (76-tensor subset): shipped C durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.a_foot_b` | 281,706,496 | B | pythia-70m step 0 (76-tensor subset): native A physical footprint | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.c_foot_b` | 163,964,176 | B | pythia-70m step 0 (76-tensor subset): shipped C physical footprint | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.c_cold_ms` | 682.6 | ms | pythia-70m step 0 (76-tensor subset): shipped C cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.ratio` | 51.48 | x | pythia-70m step 0 (76-tensor subset): C write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia0.storage_pct` | 41.80 | % | pythia-70m step 0 (76-tensor subset): C footprint reduction vs A | `bench/receipts/augmentation-local-20261113T011500Z.json` | 20261113T005131Z | 9d8fa3845486 |
+| `family.pythia8.logical_b` | 281,706,496 | B | pythia-70m step 8 (76-tensor subset): logical bytes | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.a_ms` | 226.8 | ms | pythia-70m step 8 (76-tensor subset): native A durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.c_ms` | 12,070.4 | ms | pythia-70m step 8 (76-tensor subset): shipped C durable write wall, least-contended | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.a_foot_b` | 281,706,496 | B | pythia-70m step 8 (76-tensor subset): native A physical footprint | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.c_foot_b` | 163,830,373 | B | pythia-70m step 8 (76-tensor subset): shipped C physical footprint | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.c_cold_ms` | 689.5 | ms | pythia-70m step 8 (76-tensor subset): shipped C cold restore wall, least-contended | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.ratio` | 53.22 | x | pythia-70m step 8 (76-tensor subset): C write wall as a multiple of A | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+| `family.pythia8.storage_pct` | 41.84 | % | pythia-70m step 8 (76-tensor subset): C footprint reduction vs A | `bench/receipts/augmentation-local-20261113T012000Z.json` | 20261113T005724Z | 9d8fa3845486 |
+<!-- END GENERATED:perf-catalog-family -->
+
 ## Compressed write (R17–R22)
 
-The fixture is the frozen 101-tensor Qwen2.5-0.5B-Instruct subset
-on the local POSIX backend, 4 CPUs,
-3 GiB court. `A` is the same backend's native per-tensor write; `C-pipe4` is the
-shipped planned write. Receipt
+This section is the historical R17–R22 frontier. `A` is the same backend's
+native per-tensor write; `C-pipe4` is a **store-API row, not the shipped
+default** (the shipped default is the R25 contract row above). Receipt
 `bench/receipts/r22-pareto-20261112T230000Z.json`.
 
 <!-- BEGIN GENERATED:perf-catalog-write (scripts/perf_numbers.py) -->
@@ -137,6 +288,29 @@ shipped planned write. Receipt
 | `ladder.r19_encode_threaded_ms` | 224.3 | ms | Mode-9 encode after R19, four emission threads | `bench/receipts/mode9-encoder-20261112T160000Z.json` | 20261112T102632Z | c3f5e1a5d988 |
 | `ladder.r19_speedup` | 2.85 | x | R19 mode-9 encoder speed-up, sequential | `bench/receipts/mode9-encoder-20261112T160000Z.json` | 20261112T102632Z | c3f5e1a5d988 |
 | `ladder.r19_speedup_threaded` | 5.81 | x | R19 mode-9 encoder speed-up, four threads | `bench/receipts/mode9-encoder-20261112T160000Z.json` | 20261112T102632Z | c3f5e1a5d988 |
+| `ladder.r3_footprint_b` | 284,139,539 | B | R3 planned footprint | `bench/receipts/augmentation-local-20261109T134132Z.json` | 20261109T134244Z | 2fb4e4b7fa5e |
+| `ladder.r17_a_ms` | 326.4 | ms | Rung R17 native A write wall, least-contended | `bench/receipts/write-cost-ablation-20261112T052203Z.json` | 20261112T054124Z | d1893e1abd05 |
+| `ladder.r18_a_ms` | 327.8 | ms | Rung R18 native A write wall, least-contended | `bench/receipts/planner-two-stage-20261112T081151Z.json` | 20261112T081151Z | 4c6a9abc640c |
+| `ladder.r19_a_ms` | 329.8 | ms | Rung R19 native A write wall, least-contended | `bench/receipts/r19-wall-after-20261112T140000Z.json` | 20261112T100622Z | c3f5e1a5d988 |
+| `ladder.r19_footprint_b` | 282,283,011 | B | Rung R19 planned footprint | `bench/receipts/r19-wall-after-20261112T140000Z.json` | 20261112T100622Z | c3f5e1a5d988 |
+| `ladder.r20_a_ms` | 339.0 | ms | Rung R20 native A write wall, least-contended | `bench/receipts/r20-publication-20261112T150000Z.json` | 20261112T125513Z | ad0ca3be596c |
+| `ladder.r20_footprint_b` | 282,106,049 | B | Rung R20 planned footprint | `bench/receipts/r20-publication-20261112T150000Z.json` | 20261112T125513Z | ad0ca3be596c |
+| `ladder.r21_a_ms` | 333.5 | ms | Rung R21 native A write wall, least-contended | `bench/receipts/r21-pipeline-20261112T201500Z.json` | 20261112T155655Z | 209858e04b60 |
+| `ladder.r21_footprint_b` | 282,106,049 | B | Rung R21 planned footprint | `bench/receipts/r21-pipeline-20261112T201500Z.json` | 20261112T155655Z | 209858e04b60 |
+| `ladder.r22_a_ms` | 332.0 | ms | Rung R22 native A write wall, least-contended | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `ladder.r22_footprint_b` | 282,106,049 | B | Rung R22 planned footprint | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `ladder.r22_ms` | 592.6 | ms | R22 frontier planned write wall, least-contended | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `ladder.r25_ms` | 974.1 | ms | R25 shipped planned write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `ladder.r25_a_ms` | 327.2 | ms | R25 native A write wall, least-contended | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `ladder.r25_footprint_b` | 282,106,049 | B | R25 shipped planned footprint | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
+| `ladder.r3_ratio` | 73.96 | x | Rung R3 planned write as a multiple of A | `bench/receipts/augmentation-local-20261109T134132Z.json` | 20261109T134244Z | 2fb4e4b7fa5e |
+| `ladder.r17_ratio` | 74.22 | x | Rung R17 planned write as a multiple of A | `bench/receipts/write-cost-ablation-20261112T052203Z.json` | 20261112T054124Z | d1893e1abd05 |
+| `ladder.r18_ratio` | 12.56 | x | Rung R18 planned write as a multiple of A | `bench/receipts/planner-two-stage-20261112T081151Z.json` | 20261112T081151Z | 4c6a9abc640c |
+| `ladder.r19_ratio` | 7.06 | x | Rung R19 planned write as a multiple of A | `bench/receipts/r19-wall-after-20261112T140000Z.json` | 20261112T100622Z | c3f5e1a5d988 |
+| `ladder.r20_ratio` | 3.65 | x | Rung R20 planned write as a multiple of A | `bench/receipts/r20-publication-20261112T150000Z.json` | 20261112T125513Z | ad0ca3be596c |
+| `ladder.r21_ratio` | 1.87 | x | Rung R21 planned write as a multiple of A | `bench/receipts/r21-pipeline-20261112T201500Z.json` | 20261112T155655Z | 209858e04b60 |
+| `ladder.r22_ratio` | 1.78 | x | Rung R22 planned write as a multiple of A | `bench/receipts/r22-pareto-20261112T230000Z.json` | 20261112T202816Z | ccc6d695b114 |
+| `ladder.r25_ratio` | 2.98 | x | Rung R25 planned write as a multiple of A | `bench/receipts/augmentation-local-20261113T004000Z.json` | 20261113T004503Z | 0a01606e2654 |
 <!-- END GENERATED:perf-catalog-ladder -->
 
 ## R12c: checkpoint sessions, queue, incremental index, DCP metadata
@@ -240,6 +414,16 @@ loss (efficiency falls with N). Receipt
 | `artifacts.wheel_sha` | 9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928 | text | wheel sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_bytes` | 156,977 | B | sdist size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_sha` | cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295 | text | sdist sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
+| `build.wheel_sha` | 74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.wheel_bytes` | 115,540 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.sdist_sha` | 9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.sdist_bytes` | 156,293 | B | sdist size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `live.pypi.wheel_sha` | 41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `live.pypi.wheel_bytes` | 115,851 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `live.pypi.sdist_sha` | 2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `live.pypi.sdist_bytes` | 156,858 | B | sdist size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `live.crates.weftcodec` | 7f24d38382f7894903cc04763493530b48a5cc13d8e4b66fa08e0f82ea756882 | — | weftcodec 1.4.0 crates.io checksum | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `live.crates.weftfs` | d94ff6e7803a7ae7af807c5b4fa162b60f1002fa1b3388e086a63562a4d06be0 | — | weftfs 1.4.0 crates.io checksum | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Historical quotations

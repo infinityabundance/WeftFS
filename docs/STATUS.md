@@ -1,19 +1,19 @@
-# Implementation status — 2026-11-12 (v1.4.0 released)
+# Implementation status — 2026-11-13 (v1.4.1 released)
 
 <!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
-**At a glance (generated from receipts).** v1.4.0 is released. The cited
-aggregate is `bench/receipts/verify-20261112T223540Z.json` — **46/46**
-courts pass, 0 failed, 0 skipped — at WeftFS
-`0461132d4fc63ce458de6b388b38a8f27222d387`. The shipped compressed write is **592.6 ms**
-least-contended / 600.9 ms median at **282,106,049 B**
-(33.5 % below the native control). Rust all-targets
+**At a glance (generated from receipts).** v1.4.1 is released. The cited aggregate is
+`bench/receipts/verify-20261112T223540Z.json` — **46/46** courts pass,
+0 failed, 0 skipped — at WeftFS `0461132d4fc63ce458de6b388b38a8f27222d387`.
+The shipped planned write is **974.1 ms** least-contended /
+1,175.3 ms p50 at **282,106,049 B** (33.53 % below
+the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,046** claims are
-audited. Every number in this block is emitted by `scripts/perf_numbers.py`
-between `BEGIN GENERATED` sentinels and re-validated against its receipt by the
-`perf_numbers` court; the entries below this block are a chronological log of
-subphases and are quoted with the receipt and revision they were written at.
+audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
+`BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
+court; the entries below this block are a chronological log of subphases, quoted with
+the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
 
 This is the honest, evidence-backed state of the program. It distinguishes
@@ -23,9 +23,10 @@ receipts by `scripts/perf_numbers.py` into the block above and into
 when any generated number drifts from its receipt. Everything below the block
 is a chronological log of subphases, retained verbatim: each entry is a
 **historical quotation** written at the receipt and revision it names, not a
-statement about the current tree. The v1.4.0 note with every loss and every
-non-claim is [`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md); the previous notes
-are [`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
+statement about the current tree. The v1.4.1 note with every loss and every
+non-claim is [`docs/RELEASE-v1.4.1.md`](RELEASE-v1.4.1.md); the previous note is
+[`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md), then
+[`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
 [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md) and
 [`docs/RELEASE-v1.1.0.md`](RELEASE-v1.1.0.md). Both codec implementations cover
 every allocated mode 0–20; the independent Python reader covers every allocated
@@ -1025,12 +1026,15 @@ WeftFS-Go `225eb0d`; the aggregate immediately before the release candidate is
   both directions. Process overhead measured separately (Rust 0.326 ms, Go
   0.387 ms) and not subtracted; no library-vs-library comparison is claimed.
 - Cold-cache concurrent fio: `bench-fs-cold-20261103T232216Z.json` (stability
-  run `T233740Z`). QEMU guest with a genuine guest
+  run `T233740Z`). **Provenance only, per rule 13: the Rust/Go reference
+  filesystems over FUSE are not performance contenders and this row is excluded
+  from every claim.** QEMU guest with a genuine guest
   `sync; echo 3 > /proc/sys/vm/drop_caches` cold run, `numjobs` 1/4/16,
   ext4/XFS plus Rust and Go WeftFS over FUSE, two repetitions per cell. The
   Rust and Go mounts differ in `allow_other`/`max_read` defaults; that is
   published as a limitation.
-- Whole-disk ZFS and Btrfs (2026-11-04):
+- Whole-disk ZFS and Btrfs (2026-11-04), **provenance only and excluded from
+  every claim under rule 13**:
   `bench-fs-cold-20261104T071922Z.json` runs ext4/XFS/Btrfs/`zfs-whole` in one
   guest court, one repetition per cell, 30 fio runs per target. For `zfs-whole`
   the guest passed the raw `/dev/vdb` block device to `zpool create -f -m
@@ -1406,10 +1410,11 @@ It is **not published to PyPI** (no API token); it is a release artifact.
 
 ## 4. What is **not** done (ranked)
 
-1. **Remaining benchmark gaps** (P7): the comparative pass closed the external
-   SQLite, ext4/XFS cold-cache, concurrent-fio, matched Go/Rust codec, and now
-   whole-disk ZFS/Btrfs gaps (`bench/RESULTS-comparative-v1.md`). The 2026-11-04
-   pass adds `bench-fs-cold-20261104T071922Z.json` (whole-disk `zfs-whole` on raw
+1. **Remaining benchmark gaps** (P7): the old comparative pass closed the
+   external SQLite, ext4/XFS cold-cache, concurrent-fio, matched Go/Rust codec,
+   and whole-disk ZFS/Btrfs gaps (`bench/RESULTS-comparative-v1.md`). **Those
+   reference-filesystem rows are provenance only and excluded from every claim
+   under rule 13.** The 2026-11-04 pass adds `bench-fs-cold-20261104T071922Z.json` (whole-disk `zfs-whole` on raw
    `/dev/vdb` plus Btrfs), `blkdebug-20261104T072008Z.json` (dm-flakey lying-disk
    matrix; blkdebug mount blocker), and `hostcache-probe-20261104T072314Z.json`
    (global cache drop refused). Still open: physical media power loss, host/

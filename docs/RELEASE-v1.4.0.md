@@ -43,6 +43,12 @@ The scoreboard: **G1 (≤ 3,360 ms) met at R19, G2 (≤ 1,344 ms) met at R20,
 G3 (≤ 672 ms) met at R21 and held at R22; the final rung (≤ 336 ms) is not
 met** — the measured wall against the 336 ms target is stated above.
 
+> **Correction (v1.4.1).** The R21/R22 rows quoted in this note measure the
+> bounded prepare/publish pipeline, which no shipped CLI verb reaches. The
+> shipped default was the sequential planned writer. v1.4.1 publishes the
+> shipped default and the frontier separately; see
+> [`RELEASE-v1.4.1.md`](RELEASE-v1.4.1.md) and the R25 contract receipt.
+
 ## What changed
 
 ### R12c — checkpoint sessions, incremental indexes, metadata, and a bounded queue
@@ -337,25 +343,21 @@ and checked with `twine check`:
 
 | file | size | sha256 |
 |---|---:|---|
-| `weftcodec-1.4.0-py3-none-any.whl` | 115,851 B | `9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928` |
-| `weftcodec-1.4.0.tar.gz` | 156,977 B | `cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295` |
+| `weftcodec-1.4.0-py3-none-any.whl` (build receipt) | 115,851 B | `9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928` |
+| `weftcodec-1.4.0.tar.gz` (build receipt) | 156,977 B | `cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295` |
 
-`cargo publish --dry-run` **passes** for `weftcodec 1.4.0` (528 files packaged,
-package verified). It **cannot pass** for `weftfs 1.4.0` until `weftcodec 1.4.0`
-is on crates.io: the dependency requirement `weftcodec = "^1.4.0"` has no
-candidate there yet, and the exact error is recorded in the receipt. Publish
-`weftcodec` first, then re-run the `weftfs` dry run.
+**These were uploaded.** The 1.4.0 package was rebuilt after the first build receipt
+and the uploaded artifacts are live on PyPI: wheel sha256
+`41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6` (115,851 B) and sdist
+`2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0` (156,858 B), both yanked false. The
+earlier text in this file said nothing was uploaded; that was wrong and is
+corrected here. The live long description is still the pre-R25 text that said PyPI
+served 1.2.0; the 1.4.1 upload replaces it.
 
-**Nothing was uploaded.** No PyPI token was present (`.docker-cache/.pypi-token`
-is absent), so the 1.4.0 Python package and its description were not published;
-a crates.io token does exist in `~/.cargo/credentials.toml`, and the registry
-commands are `scripts/publish-crates.sh` and `scripts/publish-pypi.sh`.
-GHCR images are built by the per-repo tag workflows and were not part of this run.
+crates.io published `weftcodec 1.4.0` (checksum `7f24d38382f7894903cc04763493530b48a5cc13d8e4b66fa08e0f82ea756882`) and
+`weftfs 1.4.0` (checksum `d94ff6e7803a7ae7af807c5b4fa162b60f1002fa1b3388e086a63562a4d06be0`).
 
-The tag is annotated and created at the release commit after this inventory was
-written; the tag and merge SHAs are recorded in the R24 release entry of
-[`docs/STATUS.md`](STATUS.md), because a file cannot contain the hash of the
-commit that contains it.
+GHCR images are built by the per-repo tag workflows.
 <!-- END GENERATED:release-artifacts -->
 
 ## Where to read next
