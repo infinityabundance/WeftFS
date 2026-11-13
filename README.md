@@ -74,10 +74,11 @@ dimensions plus position, full value validation before reuse, TTL/eviction and
 its own subset selection); `W` the backend plus the shipped context plane.
 Frozen contract [`bench/CONTRACTS-context-advantage.md`](bench/CONTRACTS-context-advantage.md);
 method and every loss in
-[`bench/RESULTS-context-advantage.md`](bench/RESULTS-context-advantage.md); receipts
-`bench/receipts/context-advantage-20261113T072921Z.json` (local POSIX) and `bench/receipts/context-advantage-s3-20261113T073016Z.json` (one loopback
-MinIO process).
-loopback MinIO process).
+[`bench/RESULTS-context-advantage.md`](bench/RESULTS-context-advantage.md).
+Receipts:
+
+* local POSIX data plane: `bench/receipts/context-advantage-20261113T072921Z.json`
+* one loopback MinIO process: `bench/receipts/context-advantage-s3-20261113T073016Z.json`
 
 | What holds, measured | `N` backend alone | `M` metadata baseline | `W` context plane |
 |---|---|---|---|
