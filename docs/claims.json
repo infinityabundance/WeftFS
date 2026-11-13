@@ -1,13 +1,13 @@
 [
  {
   "id": "verify_receipt_current",
-  "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (46/46 courts pass).",
-  "value": "verify-20261113T022751Z.json",
+  "claim": "README.md and docs/STATUS.md cite the latest full verification receipt (47/47 courts pass).",
+  "value": "verify-20261113T033408Z.json",
   "locations": [
    "docs/STATUS.md",
    "README.md"
   ],
-  "receipt": "bench/receipts/verify-20261113T022751Z.json",
+  "receipt": "bench/receipts/verify-20261113T033408Z.json",
   "kind": "present"
  },
  {
@@ -4822,9 +4822,9 @@
   "kind": "present"
  },
  {
-  "id": "v100_crates_current",
-  "claim": "README names the crates.io versions it tells a reader to install.",
-  "value": "weftcodec = \"1.4.0\"",
+  "id": "readme_crates_compatible_requirement",
+  "claim": "README.md shows a version-compatible crates.io requirement and does not track the live registry version.",
+  "value": "weftcodec = \"1.4\"",
   "locations": [
    "README.md",
    "docs/containers.md"
@@ -4833,9 +4833,9 @@
   "kind": "present"
  },
  {
-  "id": "v100_docker_tag_current",
-  "claim": "The container documentation names the currently published image tag.",
-  "value": "weftfs:v1.4.0",
+  "id": "readme_docker_latest_tag",
+  "claim": "README.md's container commands use the unpinned :latest tag; pinned tags are named in prose.",
+  "value": "ghcr.io/infinityabundance/weftfs:latest",
   "locations": [
    "README.md",
    "docs/containers.md"
@@ -9665,9 +9665,9 @@
   "kind": "present"
  },
  {
-  "id": "r14_readme_install_1_3_0",
-  "claim": "README shows the cargo add command for the published crates.",
-  "value": "cargo add weftcodec@1.4.0",
+  "id": "readme_cargo_add_compatible",
+  "claim": "README.md's cargo add command uses a version-compatible requirement.",
+  "value": "cargo add weftcodec@1.4",
   "locations": [
    "README.md"
   ],
@@ -11141,6 +11141,87 @@
    "docs/PERF-NUMBERS.md"
   ],
   "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "long_description_court_registered",
+  "claim": "The long-description guard is registered in the aggregate (its wrapper script is invoked there).",
+  "value": "scripts/check_long_description_court.sh",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/long-description-court-20261113T045732Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "long_description_guard_digest_rule",
+  "claim": "The guard rejects a literal 64-hex digest in the long description.",
+  "value": "digest-literal",
+  "locations": [
+   "scripts/check_long_description.py"
+  ],
+  "receipt": "bench/receipts/long-description-court-20261113T045732Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "long_description_no_registry_claim",
+  "claim": "The long description makes no claim about what a registry serves.",
+  "value": "PyPI serves",
+  "locations": [
+   "python/README.md"
+  ],
+  "receipt": null,
+  "kind": "absent"
+ },
+ {
+  "id": "long_description_no_pinned_install",
+  "claim": "The long description pins no install version.",
+  "value": "weftcodec==",
+  "locations": [
+   "python/README.md"
+  ],
+  "receipt": null,
+  "kind": "absent"
+ },
+ {
+  "id": "long_description_unpinned_install",
+  "claim": "The long description keeps the unpinned install command.",
+  "value": "pip install weftcodec",
+  "locations": [
+   "python/README.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "release_v142_note",
+  "claim": "README.md links the v1.4.2 release note.",
+  "value": "docs/RELEASE-v1.4.2.md",
+  "locations": [
+   "README.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "release_v142_three_141_builds",
+  "claim": "Both release notes name the PyPI 1.4.1 build digest, so no single digest stands as 'the' 1.4.1 artifact.",
+  "value": "73cd3422ec7267b9876ad48458682e6d7dede24a53b4c33c76d50dc8613b4f32",
+  "locations": [
+   "docs/RELEASE-v1.4.2.md",
+   "docs/RELEASE-v1.4.1.md"
+  ],
+  "receipt": "bench/receipts/release-artifacts-20261113T045609Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "release_v142_artifacts",
+  "claim": "The v1.4.2 note prints the wheel digest recorded in the artifact receipt.",
+  "value": "787cc6ca203ea6a6c6285551281833de44b826946968ba3faf3b3d2d9ef2b022",
+  "locations": [
+   "docs/RELEASE-v1.4.2.md"
+  ],
+  "receipt": "bench/receipts/release-artifacts-20261113T045609Z.json",
   "kind": "present"
  }
 ]
