@@ -1,10 +1,19 @@
-# Context Advantage Court — frozen contract (R26, version 2)
+# Context Advantage Court — frozen contract (R26, version 3)
 
 This contract is written and committed **before** the court is run. It fixes the
 arms, the invariants, the metric definitions, the declared tolerance for
 fast-path neutrality, and the conditions that falsify the claim. Nothing here is
 edited after a measurement; a changed rule is a new contract version and a new
 receipt.
+
+**v3 change log (R29, 2026-11-13).** The court is now run on **two** backends,
+each in its own receipt, and the second one is declared here **before** it is
+measured. No arm, invariant, metric, phase, gate or tolerance is changed: the
+same three arms, the same fixture, the same durability contract at the backend's
+own declared capability level, the same seven interleaved repetitions, and **the
+same declared tolerances**. No tolerance is added, relaxed or widened for the
+second backend, and the second backend is a second row, not a replacement: the
+local-POSIX receipt remains the primary result under §5. What v3 adds is §2.1.
 
 **v2 change log (R28, 2026-11-13).** One number was wrong in v1 §3 C3: it said
 `1.25 ×` while the tolerance the harness declares and enforces in its receipt
@@ -30,10 +39,11 @@ Receipt schema: `weft.context_advantage.v1`.
 
 ## 1. The three arms
 
-One backend — the local POSIX data plane of the WeftFS store
-(`BackendKind::Local`), the same commit protocol, the same chunk size, the same
-durability barrier — used three ways. Each arm gets its own store root so the
-arms cannot share caches or commit chains.
+One backend at a time — primary: the local POSIX data plane of the WeftFS
+store (`BackendKind::Local`); second row: `BackendKind::S3` against one loopback
+MinIO process (§2.1) — used three ways. The same commit protocol, the same chunk
+size, the same barrier the backend declares. Each arm gets its own store root
+(local) or bucket (S3) so the arms cannot share caches or commit chains.
 
 ### N — backend alone
 
@@ -96,8 +106,8 @@ The shipped context plane, with no special-casing:
 
 | Invariant | Value | How it is held |
 |---|---|---|
-| Backend | `BackendKind::Local`, one root per arm | same `Options`, same `chunk_size` (65,536 B) |
-| Durability | the store's ordinary commit protocol and fsync barrier | every arm publishes through `create_file` / `write_checkpoint`; no arm bypasses the commit |
+| Backend | `BackendKind::Local` (§2 primary) or `BackendKind::S3` against one loopback MinIO server (§2.1), one store root or bucket per arm | same `Options`, same `chunk_size` (65,536 B) |
+| Durability | the store's ordinary commit protocol and the barrier the backend declares | every arm publishes through `create_file` / `write_checkpoint`; no arm bypasses the commit. Local: `fsync` of the file and its directory. S3: the provider acknowledgement the backend's `durable_fsync` capability names (MinIO on a tmpfs data directory, so no media claim) |
 | Logical objects | identical element bytes, identical names, identical count | the same `build` generator feeds all three arms |
 | Cache capacity | no decoded-object cache (`cache_bytes = 0`), no single-flight | `Options` default for all arms |
 | Concurrency | one process, one thread, one request at a time | the harness is single-threaded |
@@ -119,6 +129,40 @@ Deliberate, declared asymmetries (they are the thing under test, not confounds):
    its identity. This is the property under test.
 
 ---
+
+### 2.1 The second backend (declared before measurement)
+
+The first backend is local POSIX, where a backend byte costs almost nothing: the
+whole fast-path penalty the court measures there is decode and verification
+work. That is a property of the **backend**, not of the protocol, so the same
+court is run a second time against a backend where a byte and a round trip cost
+something:
+
+* **One loopback MinIO process** (the pinned release the S3 court already uses,
+  signed binary sha256 recorded in the receipt), single node, tmpfs data
+directory, started as a sibling container under the same hard limits. **Not a
+  cloud, multi-node, fleet, media or power-loss claim.**
+* **One bucket per (arm, repetition, store)** — the S3 backend honours no local
+  store-root prefix, so a bucket is the isolation unit that a directory is on
+  local POSIX. Each repetition still starts from an empty store.
+* Identical arms, fixture, logical objects, object count, demanded output set,
+  chunk size (`65,536 B`), cache policy (no decoded-object cache, no
+  single-flight), concurrency (one process, one thread, one request at a time),
+  fixed store clock, and the same Docker court limits, never raised.
+* **Same declared tolerances** (C1–C4 in §3). They were fixed for the court, not
+  for a backend, and the whole point of the second row is to test them where the
+  cost model differs. If they are met there and missed here, both are published
+  as measured.
+* Metrics that mean something different on a remote backend are renamed, not
+  reinterpreted: `requests` are HTTP requests, and a *store-level* footprint walk
+  does not exist, so the S3 receipts report the bytes handed to the backend
+  (`backend_bytes_written`) instead of a walked footprint and say so in the
+  receipt's `backend` block.
+
+The crossover between the two rows — the per-request latency or per-byte price
+at which W's smaller byte count outweighs its decode cost — is reported in
+`bench/RESULTS-context-advantage.md` and is labelled **derived** unless the
+backend cost was actually varied.
 
 ## 3. The workload
 
@@ -261,7 +305,8 @@ physical media, other backends, GPU prefill, or any reference filesystem.
 ## 7. What this court does not establish
 
 * Not a fleet, cloud, multi-writer or power-loss result: one host, one process
-  at a time, local POSIX data plane.
+  at a time, one backend per receipt (local POSIX, or a single loopback MinIO
+  process with a tmpfs data directory).
 * Not a GPU or production-prefill result: `recompute_ms` is a scalar reference
   kernel that regenerates the page, and it is labelled as such everywhere it
   appears. It is not an optimized prefill and no ratio against it is a

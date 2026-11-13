@@ -252,11 +252,14 @@ run_orchestrated_court augmentation_local augmentation_court \
   env WEFT_AUGMENTATION_REDUCED=1 WEFT_AUGMENTATION_STAMP="$stamp" \
   bash scripts/augmentation_court.sh --local
 
-# R26 Context Advantage Court: one backend (the local POSIX data plane), three
-# arms — the backend alone, a strong application-level metadata baseline, and the
-# WeftFS context plane — interleaved with the arm order rotated per repetition.
-# The aggregate uses the reduced three-repetition configuration; the full
-# seven-repetition receipt is `context-advantage-20261113T054528Z.json`, cited in
+# R26 Context Advantage Court: one backend at a time, three arms — the backend
+# alone, a strong application-level metadata baseline, and the WeftFS context
+# plane — interleaved with the arm order rotated per repetition. This court is
+# the local POSIX data plane; `context_advantage_s3` below is the same court on
+# one loopback MinIO process. The aggregate uses the reduced three-repetition
+# configuration; the full seven-repetition receipts are
+# `context-advantage-20261113T072921Z.json` and
+# `context-advantage-s3-20261113T073016Z.json`, cited in
 # `bench/RESULTS-context-advantage.md`, and the frozen contract is
 # `bench/CONTRACTS-context-advantage.md`. A court that cannot run prints
 # `context_advantage_court: skip <reason>` and exits 78; the aggregate records a
@@ -265,6 +268,17 @@ run_orchestrated_court augmentation_local augmentation_court \
 run_orchestrated_court context_advantage context_advantage_court \
   env WEFT_CONTEXT_ADVANTAGE_STAMP="$stamp" \
   bash scripts/context_advantage_court.sh --reduced
+
+# R29 second backend for the same court: one loopback MinIO process, the same
+# three arms, the same fixture and the same declared tolerances (contract §2.1,
+# version 3). Reduced three-repetition configuration like the row above; the
+# full seven-repetition receipt is `context-advantage-s3-20261113T073016Z.json`.
+# A court that cannot run prints `context_advantage_court: skip <reason>` and
+# exits 78; the aggregate records a skip, never a pass. Single-node loopback
+# server: not a cloud, multi-node, fleet, media or power-loss result.
+run_orchestrated_court context_advantage_s3 context_advantage_court \
+  env WEFT_CONTEXT_ADVANTAGE_STAMP="$stamp" \
+  bash scripts/context_advantage_court.sh --reduced --backend=s3
 
 # R13 third-party conformance distribution: build the bundle in the fuse court,
 # run the reference Rust adapter from the extracted copy only, and verify the

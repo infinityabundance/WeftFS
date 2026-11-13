@@ -1,10 +1,10 @@
-//! Context Advantage Court (R26) — one backend, with and without the context
-//! plane.
+//! Context Advantage Court (R26, extended by R29) — one backend, with and
+//! without the context plane.
 //!
 //! The frozen methodology is `bench/CONTRACTS-context-advantage.md`, which was
 //! committed before this harness produced any measurement. Three arms run on
-//! the same local POSIX data plane with the same commit protocol, chunking,
-//! durability barrier, cache capacity, concurrency and logical objects:
+//! one backend at a time, with the same commit protocol, chunking, durability
+//! barrier, cache capacity, concurrency and logical objects:
 //!
 //! * `N` — the backend alone: plain durable objects, no metadata at all;
 //! * `M` — the backend plus a strong application-level metadata system: a
@@ -14,6 +14,13 @@
 //! * `W` — the backend plus the shipped WeftFS context plane: provenance-bound
 //!   KV pages (mode 19), capability-scoped reads, `weft.checkpoint.v1`
 //!   manifests and causal-closure resolution.
+//!
+//! `--backend local` (the default) uses the local POSIX data plane. `--backend
+//! s3` uses one S3-compatible endpoint (`WEFT_S3_*`): the bucket is derived per
+//! arm, repetition and store from `WEFT_S3_BUCKET`, because the S3 backend
+//! honours no local store-root prefix, so a bucket is the isolation unit a
+//! directory is on local POSIX. The same arms, fixture, tolerances and courts
+//! apply; see contract §2.1.
 //!
 //! Two subcommands:
 //!
@@ -41,8 +48,10 @@ use weftcodec::capability::{
 use weftcodec::kv_cache::{KvCacheInput, KvDtype};
 use weftcodec::kv_prov::{KvAttention, KvLayout, KvPositional, KvProvenanceInput};
 use weftcodec::Limits;
+use weftfs::backend::BackendKind;
 use weftfs::checkpoint::{CheckpointWriteOptions, ShardStrategy};
 use weftfs::identity::Hash32;
+use weftfs::s3::{S3Backend, S3Config};
 use weftfs::safetensors::{self, SafetensorsEntry};
 use weftfs::state::object_causal_closure;
 use weftfs::store::{OpenMode, Options, Store};
@@ -653,13 +662,107 @@ fn options() -> Options {
     }
 }
 
-fn open_readonly(path: &Path) -> Result<Store, String> {
-    Store::open(path, OpenMode::ReadOnly).map_err(|err| format!("open {}: {err}", path.display()))
+/// Which data plane this arm-run targets. `Local` is the primary row; `S3` is
+/// the second row the contract declares in §2.1. The S3 configuration's bucket
+/// is already the per-(arm, repetition, store) bucket, so a `Plan` names exactly
+/// one store.
+#[derive(Clone)]
+struct Plan {
+    s3: Option<S3Config>,
 }
 
-fn open_readwrite(path: &Path) -> Result<Store, String> {
-    Store::open(path, OpenMode::ReadWrite)
-        .map_err(|err| format!("open rw {}: {err}", path.display()))
+impl Plan {
+    fn local() -> Plan {
+        Plan { s3: None }
+    }
+
+    fn is_s3(&self) -> bool {
+        self.s3.is_some()
+    }
+
+    fn label(&self) -> &'static str {
+        if self.is_s3() {
+            "s3"
+        } else {
+            "local"
+        }
+    }
+
+    fn bucket(&self) -> Option<&str> {
+        self.s3.as_ref().map(|config| config.bucket.as_str())
+    }
+
+    fn kind(&self) -> BackendKind {
+        match &self.s3 {
+            None => BackendKind::Local,
+            Some(config) => BackendKind::S3 {
+                config: config.clone(),
+            },
+        }
+    }
+
+    fn init(&self, path: &Path) -> Result<Store, String> {
+        Store::init_with_backend(path, options(), self.kind())
+            .map_err(|err| format!("init {}: {err}", path.display()))
+    }
+
+    fn open(&self, path: &Path, mode: OpenMode) -> Result<Store, String> {
+        Store::open_with_options_and_backend(path, mode, options(), self.kind())
+            .map_err(|err| format!("open {}: {err}", path.display()))
+    }
+}
+
+/// S3 bucket names are DNS labels. The runner passes a short base; the suffix
+/// names the repetition, the arm and the store, so every arm-run starts from an
+/// empty store without a delete-bucket primitive.
+fn bucket_name(base: &str, rep: u64, arm: Arm, store: char) -> String {
+    let mut clean = String::with_capacity(base.len());
+    for ch in base.chars() {
+        if ch.is_ascii_alphanumeric() {
+            clean.push(ch.to_ascii_lowercase());
+        } else if !clean.ends_with('-') {
+            clean.push('-');
+        }
+    }
+    let clean = clean.trim_matches('-').to_owned();
+    let suffix = format!("-r{rep}{}{store}", arm.as_str().to_ascii_lowercase());
+    // S3 bucket names are at most 63 bytes; keep the trunk short enough that
+    // the suffix never truncates.
+    let room = 63usize.saturating_sub(suffix.len());
+    let mut trunk = clean.chars().take(room).collect::<String>();
+    while trunk.len() >= 3 && trunk.ends_with('-') {
+        trunk.pop();
+    }
+    if trunk.len() < 3 {
+        format!("weft-ca{suffix}")
+    } else {
+        format!("{trunk}{suffix}")
+    }
+}
+
+fn plan_for(backend: &str, rep: u64, arm: Arm, store: char) -> Result<Plan, String> {
+    match backend {
+        "local" => Ok(Plan::local()),
+        "s3" => {
+            let mut config = S3Config::from_env().map_err(|err| err.to_string())?;
+            let base = config.bucket.clone();
+            config.bucket = bucket_name(&base, rep, arm, store);
+            let probe = S3Backend::new("<context-advantage>", config.clone());
+            probe
+                .ensure_bucket()
+                .map_err(|err| format!("ensure bucket {}: {err}", config.bucket))?;
+            Ok(Plan { s3: Some(config) })
+        }
+        other => Err(format!("unknown backend `{other}` (expected local|s3)")),
+    }
+}
+
+fn open_readonly(plan: &Plan, path: &Path) -> Result<Store, String> {
+    plan.open(path, OpenMode::ReadOnly)
+}
+
+fn open_readwrite(plan: &Plan, path: &Path) -> Result<Store, String> {
+    plan.open(path, OpenMode::ReadWrite)
 }
 
 fn resolve(store: &Store, path: &str) -> Option<Hash32> {
@@ -1734,13 +1837,15 @@ fn measure_loss(
 // Experiment B: dependency-aware recovery
 // ---------------------------------------------------------------------------
 
-fn build_b(arm: Arm, work: &Path) -> Result<(Json, String), String> {
+fn build_b(arm: Arm, plan: &Plan, work: &Path) -> Result<(Json, String), String> {
     let root = work.join("store-b");
-    if root.exists() {
-        fs::remove_dir_all(&root).map_err(|err| format!("{}: {err}", root.display()))?;
+    if !plan.is_s3() {
+        if root.exists() {
+            fs::remove_dir_all(&root).map_err(|err| format!("{}: {err}", root.display()))?;
+        }
+        fs::create_dir_all(&root).map_err(|err| format!("{}: {err}", root.display()))?;
     }
-    fs::create_dir_all(&root).map_err(|err| format!("{}: {err}", root.display()))?;
-    let mut store = Store::init(&root, options()).map_err(|err| err.to_string())?;
+    let mut store = plan.init(&root)?;
     let root_id = store.resolve_path("/").map_err(|err| err.to_string())?;
     let ckpt = store
         .mkdir(root_id, b"ckpt", 0o755, 0, 0)
@@ -2110,9 +2215,9 @@ fn recovery_pass(
     })
 }
 
-fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
+fn measure_b(arm: Arm, plan: &Plan, work: &Path) -> Result<(Json, Json), String> {
     let root = work.join("store-b");
-    let store = open_readonly(&root)?;
+    let store = open_readonly(plan, &root)?;
 
     let mut samples = Vec::new();
     let before = store.backend_stats();
@@ -2226,7 +2331,7 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
 
     // Missing dependency: remove one activation the derived artifact needs.
     drop(store);
-    let mut store = open_readwrite(&root)?;
+    let mut store = open_readwrite(plan, &root)?;
     store
         .unlink(
             resolve(&store, "/ckpt").ok_or_else(|| "no /ckpt".to_owned())?,
@@ -2234,7 +2339,7 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
         )
         .map_err(|err| format!("unlink activation: {err}"))?;
     drop(store);
-    let store = open_readonly(&root)?;
+    let store = open_readonly(plan, &root)?;
     let missing = match arm {
         Arm::N => {
             let path = "/ckpt/act000.bin";
@@ -2311,9 +2416,13 @@ fn run_arm(args: &Args) -> Result<(), String> {
     let arm = Arm::parse(&args.arm)?;
     let work = args.work.clone();
     let store_root = work.join("store-a");
-    if store_root.exists() {
-        fs::remove_dir_all(&store_root)
-            .map_err(|err| format!("{}: {err}", store_root.display()))?;
+    let plan_a = plan_for(&args.backend, args.rep, arm, 'a')?;
+    let plan_b = plan_for(&args.backend, args.rep, arm, 'b')?;
+    if !plan_a.is_s3() {
+        if store_root.exists() {
+            fs::remove_dir_all(&store_root)
+                .map_err(|err| format!("{}: {err}", store_root.display()))?;
+        }
     }
     fs::create_dir_all(&work).map_err(|err| format!("{}: {err}", work.display()))?;
 
@@ -2336,17 +2445,21 @@ fn run_arm(args: &Args) -> Result<(), String> {
         .collect();
 
     let cpu_before = cpu_ms();
-    let mut store = Store::init(&store_root, options()).map_err(|err| err.to_string())?;
+    let mut store = plan_a.init(&store_root)?;
     let root_id = store.resolve_path("/").map_err(|err| err.to_string())?;
     let kv = store
         .mkdir(root_id, b"kv", 0o755, 0, 0)
         .map_err(|err| err.to_string())?;
     let build_a_report = build_a(arm, &mut store, kv, &pages, &scope)?;
-    let footprint = walk_footprint(&store_root);
+    let footprint = if plan_a.is_s3() {
+        None
+    } else {
+        Some(walk_footprint(&store_root))
+    };
     drop(store);
 
     let open_started = Instant::now();
-    let store = open_readonly(&store_root)?;
+    let store = open_readonly(&plan_a, &store_root)?;
     let open_ms = open_started.elapsed().as_secs_f64() * 1000.0;
     let index_started = Instant::now();
     let index = if arm == Arm::M {
@@ -2387,7 +2500,7 @@ fn run_arm(args: &Args) -> Result<(), String> {
     // Metadata loss: physically remove the application metadata, then re-read
     // with an empty index. Only M has metadata to lose.
     if arm == Arm::M {
-        let mut store = open_readwrite(&store_root)?;
+        let mut store = open_readwrite(&plan_a, &store_root)?;
         let kv_dir = resolve(&store, "/kv").ok_or_else(|| "no /kv".to_owned())?;
         for name in ["index.json", "manifest.json"] {
             if resolve(&store, &format!("/kv/{name}")).is_some() {
@@ -2398,12 +2511,12 @@ fn run_arm(args: &Args) -> Result<(), String> {
         }
         drop(store);
     }
-    let store = open_readonly(&store_root)?;
+    let store = open_readonly(&plan_a, &store_root)?;
     let loss = measure_loss(arm, &store, &pages, &scope, 2)?;
     drop(store);
 
-    let (build_b_report, expected_digest) = build_b(arm, &work)?;
-    let (recovery_report, missing_dependency) = measure_b(arm, &work)?;
+    let (build_b_report, expected_digest) = build_b(arm, &plan_b, &work)?;
+    let (recovery_report, missing_dependency) = measure_b(arm, &plan_b, &work)?;
 
     let mut probe_json = JsonMap::new();
     let mut tally_totals = ProbeTally::default();
@@ -2442,6 +2555,11 @@ fn run_arm(args: &Args) -> Result<(), String> {
         "order_index": args.order_index,
         "order": args.order,
         "reduced": args.reduced,
+        "backend": {
+            "kind": plan_a.label(),
+            "bucket_a": plan_a.bucket(),
+            "bucket_b": plan_b.bucket(),
+        },
         "build_a": {
             "ms": build_a_report.ms,
             "writes": build_a_report.writes,
@@ -2452,8 +2570,13 @@ fn run_arm(args: &Args) -> Result<(), String> {
             "mode12_bytes": build_a_report.mode12_bytes,
             "page_bytes": build_a_report.page_bytes,
             "note": build_a_report.note,
-            "footprint_files": footprint.0,
-            "footprint_bytes": footprint.1,
+            "footprint_files": footprint.map(|(files, _)| files),
+            "footprint_bytes": footprint.map(|(_, bytes)| bytes),
+            "footprint_note": if footprint.is_some() {
+                Json::Null
+            } else {
+                json!("S3 backend: no store-side footprint walk; `backend_bytes_written` is the measured byte cost")
+            },
         },
         "open_ms": measurement.open_ms,
         "index_load": measurement.index_load,
@@ -2502,6 +2625,7 @@ fn run_arm(args: &Args) -> Result<(), String> {
 struct Args {
     command: String,
     arm: String,
+    backend: String,
     work: PathBuf,
     out: PathBuf,
     log: PathBuf,
@@ -2516,6 +2640,7 @@ fn parse_args() -> Result<Args, String> {
     let mut args = Args {
         command: String::new(),
         arm: "N".to_owned(),
+        backend: "local".to_owned(),
         work: PathBuf::from(".docker-cache/context-advantage"),
         out: PathBuf::from("bench/receipts/context-advantage.json"),
         log: PathBuf::from("bench/receipts/context-advantage.log"),
@@ -2556,6 +2681,7 @@ fn parse_args() -> Result<Args, String> {
             };
             match name {
                 "arm" => args.arm = value("arm")?,
+                "backend" => args.backend = value("backend")?,
                 "work" => args.work = PathBuf::from(value("work")?),
                 "out" => args.out = PathBuf::from(value("out")?),
                 "log" => args.log = PathBuf::from(value("log")?),
@@ -2584,10 +2710,9 @@ fn parse_args() -> Result<Args, String> {
     }
     args.command = positional.first().cloned().unwrap_or_default();
     if args.command.is_empty() {
-        return Err(
-            "usage: context_advantage_court run|assemble [--arm N|M|W] [--work DIR] [--out FILE]"
-                .to_owned(),
-        );
+        return Err("usage: context_advantage_court run|assemble [--arm N|M|W] \
+             [--backend local|s3] [--work DIR] [--out FILE]"
+            .to_owned());
     }
     Ok(args)
 }
@@ -3222,8 +3347,8 @@ fn assemble(args: &Args) -> Result<(), String> {
     // ---- Declared tolerance (contract §3) — evaluated, never widened.
     let n_p50 = arm_metric("N", "hit_p50_us", "median");
     let n_p95 = arm_metric("N", "hit_p95_us", "median");
-    let n_bytes = arm_metric("N", "compatible_backend_bytes", "median")
-        / arm_metric("N", "compatible_total", "median").max(1.0);
+    let n_total = arm_metric("N", "compatible_total", "median").max(1.0);
+    let n_bytes = arm_metric("N", "compatible_backend_bytes", "median") / n_total;
     let w_p50 = arm_metric("W", "hit_p50_us", "median");
     let w_p95 = arm_metric("W", "hit_p95_us", "median");
     let w_bytes = arm_metric("W", "compatible_backend_bytes", "median")
@@ -3232,6 +3357,11 @@ fn assemble(args: &Args) -> Result<(), String> {
     let m_p95 = arm_metric("M", "hit_p95_us", "median");
     let m_bytes = arm_metric("M", "compatible_backend_bytes", "median")
         / arm_metric("M", "compatible_total", "median").max(1.0);
+    let n_req = arm_metric("N", "compatible_requests", "median") / n_total;
+    let m_req = arm_metric("M", "compatible_requests", "median")
+        / arm_metric("M", "compatible_total", "median").max(1.0);
+    let w_req = arm_metric("W", "compatible_requests", "median")
+        / arm_metric("W", "compatible_total", "median").max(1.0);
     let c1 = w_p50 <= n_p50 * TOL_P50;
     let c2 = w_p95 <= n_p95 * TOL_P95;
     let c3 = w_bytes <= n_bytes * TOL_BYTES;
@@ -3242,9 +3372,21 @@ fn assemble(args: &Args) -> Result<(), String> {
             "bytes_ratio_max": TOL_BYTES,
         },
         "observed": {
-            "N": {"p50_us": n_p50, "p95_us": n_p95, "backend_bytes_per_request": n_bytes},
-            "M": {"p50_us": m_p50, "p95_us": m_p95, "backend_bytes_per_request": m_bytes},
-            "W": {"p50_us": w_p50, "p95_us": w_p95, "backend_bytes_per_request": w_bytes},
+            "N": {
+                "p50_us": n_p50, "p95_us": n_p95,
+                "backend_bytes_per_request": n_bytes,
+                "requests_per_read": n_req,
+            },
+            "M": {
+                "p50_us": m_p50, "p95_us": m_p95,
+                "backend_bytes_per_request": m_bytes,
+                "requests_per_read": m_req,
+            },
+            "W": {
+                "p50_us": w_p50, "p95_us": w_p95,
+                "backend_bytes_per_request": w_bytes,
+                "requests_per_read": w_req,
+            },
         },
         "ratios": {
             "W_over_N_p50": w_p50 / n_p50.max(1e-9),
@@ -3253,6 +3395,11 @@ fn assemble(args: &Args) -> Result<(), String> {
             "M_over_N_p50": m_p50 / n_p50.max(1e-9),
             "M_over_N_p95": m_p95 / n_p95.max(1e-9),
             "M_over_N_bytes": m_bytes / n_bytes.max(1e-9),
+        },
+        "bytes_saved_per_request": {
+            "W_vs_N": n_bytes - w_bytes,
+            "W_vs_M": m_bytes - w_bytes,
+            "N_vs_M": n_bytes - m_bytes,
         },
     });
 
@@ -3481,11 +3628,76 @@ fn assemble(args: &Args) -> Result<(), String> {
         .iter()
         .all(|check| check.get("ok").and_then(Json::as_bool) == Some(true));
 
+    // ---- The data plane this receipt measured. Local POSIX is the primary
+    // row; the S3 row names the one loopback server it ran against and every
+    // bucket it used, because a bucket is the isolation unit there.
+    let backend = {
+        let kind = phases
+            .first()
+            .and_then(|row| row.get("backend"))
+            .and_then(|backend| backend.get("kind"))
+            .and_then(Json::as_str)
+            .unwrap_or("local")
+            .to_owned();
+        let mut buckets = BTreeSet::new();
+        for row in &phases {
+            if let Some(backend) = row.get("backend") {
+                for field in ["bucket_a", "bucket_b"] {
+                    if let Some(bucket) = backend.get(field).and_then(Json::as_str) {
+                        buckets.insert(bucket.to_owned());
+                    }
+                }
+            }
+        }
+        let server = if kind == "s3" {
+            json!({
+                "product": std::env::var("WEFT_S3_SERVER_PRODUCT").ok(),
+                "release": std::env::var("WEFT_S3_SERVER_RELEASE").ok(),
+                "version_line": std::env::var("WEFT_S3_SERVER_LABEL").ok(),
+                "binary_sha256": std::env::var("WEFT_S3_SERVER_SHA256").ok(),
+                "endpoint": std::env::var("WEFT_S3_ENDPOINT").ok(),
+                "container_image": std::env::var("WEFT_S3_CONTAINER_IMAGE").ok(),
+                "data_directory": "tmpfs, 1 GiB",
+                "lock_lease_secs": std::env::var("WEFT_S3_LOCK_LEASE_SECS").ok(),
+            })
+        } else {
+            Json::Null
+        };
+        json!({
+            "kind": kind,
+            "label": if kind == "s3" {
+                "one loopback MinIO process (single node, tmpfs data directory) reached over HTTP; \
+                 every request is an HTTP request and durability is the provider acknowledgement \
+                 the backend declares. Not a cloud, multi-node, fleet, media or power-loss court"
+            } else {
+                "local POSIX data plane (BackendKind::Local); durability is fsync of the file and \
+                 its directory"
+            },
+            "server": server,
+            "buckets": buckets.into_iter().collect::<Vec<String>>(),
+            "footprint_walked": kind != "s3",
+            "cost_note": if kind == "s3" {
+                "a backend byte crosses an HTTP request here, so the fast-path penalty is the decode \
+                 and verification work plus the round trips both arms pay; the byte counts are the \
+                 same logical reads, and `backend_bytes_written` replaces the walked footprint"
+            } else {
+                "a backend byte is a local read here, so the fast-path penalty is almost entirely \
+                 decode and verification work"
+            },
+        })
+    };
+    let backend_kind = backend
+        .get("kind")
+        .and_then(Json::as_str)
+        .unwrap_or("local")
+        .to_owned();
+
     let receipt = json!({
         "schema": SCHEMA,
         "generated_utc": std::env::var("WEFT_CONTEXT_ADVANTAGE_STAMP").ok(),
         "label": std::env::var("WEFT_CONTEXT_ADVANTAGE_LABEL").ok(),
         "contract": CONTRACT,
+        "backend": backend,
         "methodology": {
             "arms": {
                 "N": "backend alone: plain durable objects, no metadata",
@@ -3496,8 +3708,13 @@ fn assemble(args: &Args) -> Result<(), String> {
                       capability-scoped reads, weft.checkpoint.v1 manifests, causal closure",
             },
             "held_constant": [
-                "BackendKind::Local data plane",
-                "commit protocol and durability barrier",
+                if backend_kind == "s3" {
+                    "BackendKind::S3 against one loopback MinIO process, one bucket per (arm, \
+                     repetition, store)"
+                } else {
+                    "BackendKind::Local data plane, one store root per (arm, repetition, store)"
+                },
+                "commit protocol and durability barrier the backend declares",
                 "chunk size 65,536 B",
                 "no decoded-object cache, no single-flight",
                 "single process, single thread, one request at a time",
@@ -3510,6 +3727,7 @@ fn assemble(args: &Args) -> Result<(), String> {
                 "p95_ratio_max": TOL_P95,
                 "bytes_ratio_max": TOL_BYTES,
                 "declared_before_measurement": true,
+                "unchanged_by_backend": true,
             },
             "repetitions": rep_count,
             "reduced": args.reduced,
@@ -3551,15 +3769,25 @@ fn assemble(args: &Args) -> Result<(), String> {
             "GPU or production prefill: recompute_ms is a scalar reference kernel",
             "an application baseline that embeds a canonical scope record in every blob and \
              rebuilds its index by scanning (available, untested)",
-            "live cloud backends; this court is the local POSIX data plane",
+            if backend_kind == "s3" {
+                "a live cloud S3, GCS or Azure account: this row is one loopback MinIO process with a \
+                 tmpfs data directory, not AWS and not a media, power-loss or fleet court"
+            } else {
+                "live cloud backends; this row is the local POSIX data plane"
+            },
             "timing, size or access-pattern privacy of the salt",
             "a raw or direct-byte payload representation for provenance-bound pages: the wire \
              format fixes huffman-canonical-v1 byte planes for modes 9-19, so the fast path in \
              this receipt is the shipped codec; the raw-copy floor is reported beside it rather \
              than substituted for it",
         ],
-        "scope": "single host, one backend, OOM-protected Docker court. Not a cloud, fleet, media \
-                  or power-loss claim.",
+        "scope": if backend_kind == "s3" {
+            "single host, one loopback S3-compatible server (MinIO, single node, tmpfs data \
+             directory), OOM-protected Docker court. Not a cloud, fleet, media or power-loss claim."
+        } else {
+            "single host, one backend (local POSIX data plane), OOM-protected Docker court. Not a \
+             cloud, fleet, media or power-loss claim."
+        },
     });
 
     write_json_atomic(&args.out, &receipt)?;
