@@ -331,7 +331,7 @@ pre-existing kernel/`CAP_SETUID` tests); WeftCodec **290** passed; the Go
 whole suite passes under `-race` in the fuse court (R14d receipt
 `bench/receipts/r14d-go-suite-20261112T221649Z.json`). The conformance manifest
 holds **420** vectors, aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; the claims manifest
-holds **1,046** entries and `scripts/check-claims.sh` passes.
+is audited by `scripts/check-claims.sh` at that tree (its size is a property of today, not of that release).
 <!-- END GENERATED:release-verification -->
 
 ## Artifacts
