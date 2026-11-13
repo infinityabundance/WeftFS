@@ -1,0 +1,3813 @@
+{
+  "arms": {
+    "M": {
+      "causal_closure": [
+        {
+          "declared": false,
+          "verified": false
+        }
+      ],
+      "description": "backend + strong application metadata (manifest, index, TTL, own subset selection)",
+      "fast_path_ledger": {
+        "instrumented_us_per_read": {
+          "max": 105.626578125,
+          "median": 105.626578125,
+          "min": 105.626578125,
+          "n": 1
+        },
+        "phases_us_per_read": {
+          "assemble": {
+            "max": 0.243046875,
+            "median": 0.243046875,
+            "min": 0.243046875,
+            "n": 1
+          },
+          "blob_hash_manifest": {
+            "max": 0.25728125,
+            "median": 0.25728125,
+            "min": 0.25728125,
+            "n": 1
+          },
+          "blob_hash_object": {
+            "max": 11.000234375,
+            "median": 11.000234375,
+            "min": 11.000234375,
+            "n": 1
+          },
+          "blob_io_manifest": {
+            "max": 1.7549375,
+            "median": 1.7549375,
+            "min": 1.7549375,
+            "n": 1
+          },
+          "blob_io_object": {
+            "max": 2.136203125,
+            "median": 2.136203125,
+            "min": 2.136203125,
+            "n": 1
+          },
+          "content_verify": {
+            "max": 10.997390625,
+            "median": 10.997390625,
+            "min": 10.997390625,
+            "n": 1
+          },
+          "manifest_decode": {
+            "max": 0.83984375,
+            "median": 0.83984375,
+            "min": 0.83984375,
+            "n": 1
+          }
+        },
+        "reads_per_rep": 64.0,
+        "residual_us_per_read": {
+          "max": 78.397640625,
+          "median": 78.397640625,
+          "min": 78.397640625,
+          "n": 1
+        }
+      },
+      "metrics": {
+        "build_bytes": {
+          "max": 318018.0,
+          "median": 318018.0,
+          "min": 318018.0,
+          "n": 1
+        },
+        "build_commits": {
+          "max": 10.0,
+          "median": 10.0,
+          "min": 10.0,
+          "n": 1
+        },
+        "build_ms": {
+          "max": 142.311876,
+          "median": 142.311876,
+          "min": 142.311876,
+          "n": 1
+        },
+        "compatible_backend_bytes": {
+          "max": 2042736.0,
+          "median": 2042736.0,
+          "min": 2042736.0,
+          "n": 1
+        },
+        "compatible_exact": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 1
+        },
+        "compatible_requests": {
+          "max": 128.0,
+          "median": 128.0,
+          "min": 128.0,
+          "n": 1
+        },
+        "compatible_total": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 1
+        },
+        "footprint_bytes": {
+          "max": 287151.0,
+          "median": 287151.0,
+          "min": 287151.0,
+          "n": 1
+        },
+        "frame_mode12_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "frame_mode19_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "hit_p50_us": {
+          "max": 104.054,
+          "median": 104.054,
+          "min": 104.054,
+          "n": 1
+        },
+        "hit_p95_us": {
+          "max": 108.322,
+          "median": 108.322,
+          "min": 108.322,
+          "n": 1
+        },
+        "index_load_ms": {
+          "max": 0.06133400000000001,
+          "median": 0.06133400000000001,
+          "min": 0.06133400000000001,
+          "n": 1
+        },
+        "loss_reused": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "loss_reused_exact": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "loss_total": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "open_ms": {
+          "max": 0.30723300000000003,
+          "median": 0.30723300000000003,
+          "min": 0.30723300000000003,
+          "n": 1
+        },
+        "probe_accepted": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_accepted_wrong_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_backend_bytes": {
+          "max": 766026.0,
+          "median": 766026.0,
+          "min": 766026.0,
+          "n": 1
+        },
+        "probe_denied": {
+          "max": 56.0,
+          "median": 56.0,
+          "min": 56.0,
+          "n": 1
+        },
+        "probe_logical_bytes_returned": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_requests": {
+          "max": 48.0,
+          "median": 48.0,
+          "min": 48.0,
+          "n": 1
+        },
+        "recompute_p50_us": {
+          "max": 2279.629,
+          "median": 2279.629,
+          "min": 2279.629,
+          "n": 1
+        },
+        "recovery_backend_bytes": {
+          "max": 286540.0,
+          "median": 286540.0,
+          "min": 286540.0,
+          "n": 1
+        },
+        "recovery_logical_bytes": {
+          "max": 270336.0,
+          "median": 270336.0,
+          "min": 270336.0,
+          "n": 1
+        },
+        "recovery_manifest_loads": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "recovery_manifest_object_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "recovery_output_p50_us": {
+          "max": 24.505,
+          "median": 24.505,
+          "min": 24.505,
+          "n": 1
+        },
+        "recovery_outputs": {
+          "max": 9.0,
+          "median": 9.0,
+          "min": 9.0,
+          "n": 1
+        },
+        "recovery_wall_ms": {
+          "max": 0.390869,
+          "median": 0.390869,
+          "min": 0.390869,
+          "n": 1
+        },
+        "rss_kib": {
+          "max": 17864.0,
+          "median": 17864.0,
+          "min": 17864.0,
+          "n": 1
+        }
+      },
+      "missing_dependency": [
+        {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        }
+      ],
+      "probe_variants": {
+        "adapter": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 0.191,
+            "median": 0.191,
+            "min": 0.191,
+            "n": 1
+          }
+        },
+        "attention": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 0.181,
+            "median": 0.181,
+            "min": 0.181,
+            "n": 1
+          }
+        },
+        "dtype": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 255342.0,
+            "median": 255342.0,
+            "min": 255342.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 102.982,
+            "median": 102.982,
+            "min": 102.982,
+            "n": 1
+          }
+        },
+        "model": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 0.191,
+            "median": 0.191,
+            "min": 0.191,
+            "n": 1
+          }
+        },
+        "positional": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 255342.0,
+            "median": 255342.0,
+            "min": 255342.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 103.283,
+            "median": 103.283,
+            "min": 103.283,
+            "n": 1
+          }
+        },
+        "salt": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 255342.0,
+            "median": 255342.0,
+            "min": 255342.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 102.761,
+            "median": 102.761,
+            "min": 102.761,
+            "n": 1
+          }
+        },
+        "tokenizer": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 0.161,
+            "median": 0.161,
+            "min": 0.161,
+            "n": 1
+          }
+        }
+      },
+      "recovery_digests": [
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"
+      ],
+      "recovery_ledger": {
+        "instrumented_wall_ms": {
+          "max": 0.366563,
+          "median": 0.366563,
+          "min": 0.366563,
+          "n": 1
+        },
+        "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+        "phases": {
+          "assemble": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.001725,
+              "median": 0.001725,
+              "min": 0.001725,
+              "n": 1
+            }
+          },
+          "blob_hash_manifest": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.002494,
+              "median": 0.002494,
+              "min": 0.002494,
+              "n": 1
+            }
+          },
+          "blob_hash_object": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.073066,
+              "median": 0.073066,
+              "min": 0.073066,
+              "n": 1
+            }
+          },
+          "blob_io_manifest": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.015738,
+              "median": 0.015738,
+              "min": 0.015738,
+              "n": 1
+            }
+          },
+          "blob_io_object": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.023945,
+              "median": 0.023945,
+              "min": 0.023945,
+              "n": 1
+            }
+          },
+          "content_verify": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.073146,
+              "median": 0.073146,
+              "min": 0.073146,
+              "n": 1
+            }
+          },
+          "manifest_decode": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.007955,
+              "median": 0.007955,
+              "min": 0.007955,
+              "n": 1
+            }
+          }
+        },
+        "residual_ms": {
+          "max": 0.16849399999999998,
+          "median": 0.16849399999999998,
+          "min": 0.16849399999999998,
+          "n": 1
+        }
+      }
+    },
+    "N": {
+      "causal_closure": [
+        {
+          "declared": false,
+          "verified": false
+        }
+      ],
+      "description": "backend alone: plain durable objects, no metadata",
+      "fast_path_ledger": {
+        "instrumented_us_per_read": {
+          "max": 28.99325,
+          "median": 28.99325,
+          "min": 28.99325,
+          "n": 1
+        },
+        "phases_us_per_read": {
+          "assemble": {
+            "max": 0.55690625,
+            "median": 0.55690625,
+            "min": 0.55690625,
+            "n": 1
+          },
+          "blob_hash_manifest": {
+            "max": 0.24721875,
+            "median": 0.24721875,
+            "min": 0.24721875,
+            "n": 1
+          },
+          "blob_hash_object": {
+            "max": 10.48090625,
+            "median": 10.48090625,
+            "min": 10.48090625,
+            "n": 1
+          },
+          "blob_io_manifest": {
+            "max": 1.41890625,
+            "median": 1.41890625,
+            "min": 1.41890625,
+            "n": 1
+          },
+          "blob_io_object": {
+            "max": 2.3254375,
+            "median": 2.3254375,
+            "min": 2.3254375,
+            "n": 1
+          },
+          "compare": {
+            "max": 0.858765625,
+            "median": 0.858765625,
+            "min": 0.858765625,
+            "n": 1
+          },
+          "content_verify": {
+            "max": 10.473046875,
+            "median": 10.473046875,
+            "min": 10.473046875,
+            "n": 1
+          },
+          "manifest_decode": {
+            "max": 0.754078125,
+            "median": 0.754078125,
+            "min": 0.754078125,
+            "n": 1
+          },
+          "read_resolve": {
+            "max": 0.997296875,
+            "median": 0.997296875,
+            "min": 0.997296875,
+            "n": 1
+          }
+        },
+        "reads_per_rep": 64.0,
+        "residual_us_per_read": {
+          "max": 0.8806875,
+          "median": 0.8806875,
+          "min": 0.8806875,
+          "n": 1
+        }
+      },
+      "metrics": {
+        "build_bytes": {
+          "max": 566768.0,
+          "median": 566768.0,
+          "min": 566768.0,
+          "n": 1
+        },
+        "build_commits": {
+          "max": 8.0,
+          "median": 8.0,
+          "min": 8.0,
+          "n": 1
+        },
+        "build_ms": {
+          "max": 112.756644,
+          "median": 112.756644,
+          "min": 112.756644,
+          "n": 1
+        },
+        "compatible_backend_bytes": {
+          "max": 4204736.0,
+          "median": 4204736.0,
+          "min": 4204736.0,
+          "n": 1
+        },
+        "compatible_exact": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 1
+        },
+        "compatible_requests": {
+          "max": 128.0,
+          "median": 128.0,
+          "min": 128.0,
+          "n": 1
+        },
+        "compatible_total": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 1
+        },
+        "footprint_bytes": {
+          "max": 544093.0,
+          "median": 544093.0,
+          "min": 544093.0,
+          "n": 1
+        },
+        "frame_mode12_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "frame_mode19_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "hit_p50_us": {
+          "max": 29.115,
+          "median": 29.115,
+          "min": 29.115,
+          "n": 1
+        },
+        "hit_p95_us": {
+          "max": 36.248000000000005,
+          "median": 36.248000000000005,
+          "min": 36.248000000000005,
+          "n": 1
+        },
+        "index_load_ms": {
+          "max": 0.00017,
+          "median": 0.00017,
+          "min": 0.00017,
+          "n": 1
+        },
+        "loss_reused": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "loss_reused_exact": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "loss_total": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "open_ms": {
+          "max": 0.249125,
+          "median": 0.249125,
+          "min": 0.249125,
+          "n": 1
+        },
+        "probe_accepted": {
+          "max": 48.0,
+          "median": 48.0,
+          "min": 48.0,
+          "n": 1
+        },
+        "probe_accepted_wrong_bytes": {
+          "max": 48.0,
+          "median": 48.0,
+          "min": 48.0,
+          "n": 1
+        },
+        "probe_backend_bytes": {
+          "max": 3153552.0,
+          "median": 3153552.0,
+          "min": 3153552.0,
+          "n": 1
+        },
+        "probe_denied": {
+          "max": 8.0,
+          "median": 8.0,
+          "min": 8.0,
+          "n": 1
+        },
+        "probe_logical_bytes_returned": {
+          "max": 3145728.0,
+          "median": 3145728.0,
+          "min": 3145728.0,
+          "n": 1
+        },
+        "probe_requests": {
+          "max": 96.0,
+          "median": 96.0,
+          "min": 96.0,
+          "n": 1
+        },
+        "recompute_p50_us": {
+          "max": 2120.002,
+          "median": 2120.002,
+          "min": 2120.002,
+          "n": 1
+        },
+        "recovery_backend_bytes": {
+          "max": 3235591.0,
+          "median": 3235591.0,
+          "min": 3235591.0,
+          "n": 1
+        },
+        "recovery_logical_bytes": {
+          "max": 3219456.0,
+          "median": 3219456.0,
+          "min": 3219456.0,
+          "n": 1
+        },
+        "recovery_manifest_loads": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "recovery_manifest_object_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "recovery_output_p50_us": {
+          "max": 21.569999999999997,
+          "median": 21.569999999999997,
+          "min": 21.569999999999997,
+          "n": 1
+        },
+        "recovery_outputs": {
+          "max": 99.0,
+          "median": 99.0,
+          "min": 99.0,
+          "n": 1
+        },
+        "recovery_wall_ms": {
+          "max": 2.614133,
+          "median": 2.614133,
+          "min": 2.614133,
+          "n": 1
+        },
+        "rss_kib": {
+          "max": 19764.0,
+          "median": 19764.0,
+          "min": 19764.0,
+          "n": 1
+        }
+      },
+      "missing_dependency": [
+        {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        }
+      ],
+      "probe_variants": {
+        "adapter": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 28.613,
+            "median": 28.613,
+            "min": 28.613,
+            "n": 1
+          }
+        },
+        "attention": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 27.201,
+            "median": 27.201,
+            "min": 27.201,
+            "n": 1
+          }
+        },
+        "dtype": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 27.11,
+            "median": 27.11,
+            "min": 27.11,
+            "n": 1
+          }
+        },
+        "model": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.012,
+            "median": 1.012,
+            "min": 1.012,
+            "n": 1
+          }
+        },
+        "positional": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 27.091,
+            "median": 27.091,
+            "min": 27.091,
+            "n": 1
+          }
+        },
+        "salt": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 27.632,
+            "median": 27.632,
+            "min": 27.632,
+            "n": 1
+          }
+        },
+        "tokenizer": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 27.231,
+            "median": 27.231,
+            "min": 27.231,
+            "n": 1
+          }
+        }
+      },
+      "recovery_digests": [
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"
+      ],
+      "recovery_ledger": {
+        "instrumented_wall_ms": {
+          "max": 2.577725,
+          "median": 2.577725,
+          "min": 2.577725,
+          "n": 1
+        },
+        "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+        "phases": {
+          "assemble": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.021566,
+              "median": 0.021566,
+              "min": 0.021566,
+              "n": 1
+            }
+          },
+          "blob_hash_manifest": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.024596,
+              "median": 0.024596,
+              "min": 0.024596,
+              "n": 1
+            }
+          },
+          "blob_hash_object": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.757443,
+              "median": 0.757443,
+              "min": 0.757443,
+              "n": 1
+            }
+          },
+          "blob_io_manifest": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.146316,
+              "median": 0.146316,
+              "min": 0.146316,
+              "n": 1
+            }
+          },
+          "blob_io_object": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.302633,
+              "median": 0.302633,
+              "min": 0.302633,
+              "n": 1
+            }
+          },
+          "content_verify": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.753233,
+              "median": 0.753233,
+              "min": 0.753233,
+              "n": 1
+            }
+          },
+          "manifest_decode": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.074528,
+              "median": 0.074528,
+              "min": 0.074528,
+              "n": 1
+            }
+          }
+        },
+        "residual_ms": {
+          "max": 0.4974099999999999,
+          "median": 0.4974099999999999,
+          "min": 0.4974099999999999,
+          "n": 1
+        }
+      }
+    },
+    "W": {
+      "causal_closure": [
+        {
+          "closure_members": 2,
+          "declared": true,
+          "missing": 0,
+          "parents": 2,
+          "verified": true
+        }
+      ],
+      "description": "backend + WeftFS context plane (mode 19, scoped reads, causal closure)",
+      "fast_path_ledger": {
+        "instrumented_us_per_read": {
+          "max": 181.821125,
+          "median": 181.821125,
+          "min": 181.821125,
+          "n": 1
+        },
+        "phases_us_per_read": {
+          "assemble": {
+            "max": 0.191375,
+            "median": 0.191375,
+            "min": 0.191375,
+            "n": 1
+          },
+          "auth_capability": {
+            "max": 0.137390625,
+            "median": 0.137390625,
+            "min": 0.137390625,
+            "n": 1
+          },
+          "auth_descriptor": {
+            "max": 0.134765625,
+            "median": 0.134765625,
+            "min": 0.134765625,
+            "n": 1
+          },
+          "auth_posix": {
+            "max": 0.053390625,
+            "median": 0.053390625,
+            "min": 0.053390625,
+            "n": 1
+          },
+          "auth_state": {
+            "max": 0.201390625,
+            "median": 0.201390625,
+            "min": 0.201390625,
+            "n": 1
+          },
+          "blob_hash_manifest": {
+            "max": 0.24975,
+            "median": 0.24975,
+            "min": 0.24975,
+            "n": 1
+          },
+          "blob_hash_object": {
+            "max": 9.593640625,
+            "median": 9.593640625,
+            "min": 9.593640625,
+            "n": 1
+          },
+          "blob_io_manifest": {
+            "max": 1.55253125,
+            "median": 1.55253125,
+            "min": 1.55253125,
+            "n": 1
+          },
+          "blob_io_object": {
+            "max": 2.189765625,
+            "median": 2.189765625,
+            "min": 2.189765625,
+            "n": 1
+          },
+          "compare": {
+            "max": 0.8938125,
+            "median": 0.8938125,
+            "min": 0.8938125,
+            "n": 1
+          },
+          "content_verify": {
+            "max": 9.5715,
+            "median": 9.5715,
+            "min": 9.5715,
+            "n": 1
+          },
+          "frame_parse": {
+            "max": 0.82546875,
+            "median": 0.82546875,
+            "min": 0.82546875,
+            "n": 1
+          },
+          "manifest_decode": {
+            "max": 0.8230625,
+            "median": 0.8230625,
+            "min": 0.8230625,
+            "n": 1
+          },
+          "page_decode": {
+            "max": 150.06103125,
+            "median": 150.06103125,
+            "min": 150.06103125,
+            "n": 1
+          },
+          "read_resolve": {
+            "max": 1.166109375,
+            "median": 1.166109375,
+            "min": 1.166109375,
+            "n": 1
+          }
+        },
+        "reads_per_rep": 64.0,
+        "residual_us_per_read": {
+          "max": 4.176140625,
+          "median": 4.176140625,
+          "min": 4.176140625,
+          "n": 1
+        }
+      },
+      "metrics": {
+        "build_bytes": {
+          "max": 290679.0,
+          "median": 290679.0,
+          "min": 290679.0,
+          "n": 1
+        },
+        "build_commits": {
+          "max": 8.0,
+          "median": 8.0,
+          "min": 8.0,
+          "n": 1
+        },
+        "build_ms": {
+          "max": 118.493127,
+          "median": 118.493127,
+          "min": 118.493127,
+          "n": 1
+        },
+        "compatible_backend_bytes": {
+          "max": 1812040.0,
+          "median": 1812040.0,
+          "min": 1812040.0,
+          "n": 1
+        },
+        "compatible_exact": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 1
+        },
+        "compatible_requests": {
+          "max": 128.0,
+          "median": 128.0,
+          "min": 128.0,
+          "n": 1
+        },
+        "compatible_total": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 1
+        },
+        "footprint_bytes": {
+          "max": 268004.0,
+          "median": 268004.0,
+          "min": 268004.0,
+          "n": 1
+        },
+        "frame_mode12_bytes": {
+          "max": 221001.0,
+          "median": 221001.0,
+          "min": 221001.0,
+          "n": 1
+        },
+        "frame_mode19_bytes": {
+          "max": 225201.0,
+          "median": 225201.0,
+          "min": 225201.0,
+          "n": 1
+        },
+        "hit_p50_us": {
+          "max": 168.123,
+          "median": 168.123,
+          "min": 168.123,
+          "n": 1
+        },
+        "hit_p95_us": {
+          "max": 238.895,
+          "median": 238.895,
+          "min": 238.895,
+          "n": 1
+        },
+        "index_load_ms": {
+          "max": 0.00017,
+          "median": 0.00017,
+          "min": 0.00017,
+          "n": 1
+        },
+        "loss_reused": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "loss_reused_exact": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "loss_total": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 1
+        },
+        "open_ms": {
+          "max": 0.454717,
+          "median": 0.454717,
+          "min": 0.454717,
+          "n": 1
+        },
+        "probe_accepted": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_accepted_wrong_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_backend_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_denied": {
+          "max": 56.0,
+          "median": 56.0,
+          "min": 56.0,
+          "n": 1
+        },
+        "probe_logical_bytes_returned": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "probe_requests": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 1
+        },
+        "recompute_p50_us": {
+          "max": 2119.9919999999997,
+          "median": 2119.9919999999997,
+          "min": 2119.9919999999997,
+          "n": 1
+        },
+        "recovery_backend_bytes": {
+          "max": 321343.0,
+          "median": 321343.0,
+          "min": 321343.0,
+          "n": 1
+        },
+        "recovery_logical_bytes": {
+          "max": 270336.0,
+          "median": 270336.0,
+          "min": 270336.0,
+          "n": 1
+        },
+        "recovery_manifest_loads": {
+          "max": 1.0,
+          "median": 1.0,
+          "min": 1.0,
+          "n": 1
+        },
+        "recovery_manifest_object_bytes": {
+          "max": 45197.0,
+          "median": 45197.0,
+          "min": 45197.0,
+          "n": 1
+        },
+        "recovery_output_p50_us": {
+          "max": 96.761,
+          "median": 96.761,
+          "min": 96.761,
+          "n": 1
+        },
+        "recovery_outputs": {
+          "max": 9.0,
+          "median": 9.0,
+          "min": 9.0,
+          "n": 1
+        },
+        "recovery_wall_ms": {
+          "max": 1.272141,
+          "median": 1.272141,
+          "min": 1.272141,
+          "n": 1
+        },
+        "rss_kib": {
+          "max": 23188.0,
+          "median": 23188.0,
+          "min": 23188.0,
+          "n": 1
+        }
+      },
+      "missing_dependency": [
+        {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        }
+      ],
+      "probe_variants": {
+        "adapter": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.352,
+            "median": 1.352,
+            "min": 1.352,
+            "n": 1
+          }
+        },
+        "attention": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.362,
+            "median": 1.362,
+            "min": 1.362,
+            "n": 1
+          }
+        },
+        "dtype": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.3230000000000002,
+            "median": 1.3230000000000002,
+            "min": 1.3230000000000002,
+            "n": 1
+          }
+        },
+        "model": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.433,
+            "median": 1.433,
+            "min": 1.433,
+            "n": 1
+          }
+        },
+        "positional": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.363,
+            "median": 1.363,
+            "min": 1.363,
+            "n": 1
+          }
+        },
+        "salt": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.403,
+            "median": 1.403,
+            "min": 1.403,
+            "n": 1
+          }
+        },
+        "tokenizer": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 1
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 1
+          },
+          "p50_us": {
+            "max": 1.472,
+            "median": 1.472,
+            "min": 1.472,
+            "n": 1
+          }
+        }
+      },
+      "recovery_digests": [
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"
+      ],
+      "recovery_ledger": {
+        "instrumented_wall_ms": {
+          "max": 1.405119,
+          "median": 1.405119,
+          "min": 1.405119,
+          "n": 1
+        },
+        "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+        "phases": {
+          "assemble": {
+            "sections": {
+              "max": 4.0,
+              "median": 4.0,
+              "min": 4.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.000983,
+              "median": 0.000983,
+              "min": 0.000983,
+              "n": 1
+            }
+          },
+          "blob_hash_manifest": {
+            "sections": {
+              "max": 28.0,
+              "median": 28.0,
+              "min": 28.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.059339,
+              "median": 0.059339,
+              "min": 0.059339,
+              "n": 1
+            }
+          },
+          "blob_hash_object": {
+            "sections": {
+              "max": 4.0,
+              "median": 4.0,
+              "min": 4.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.032882,
+              "median": 0.032882,
+              "min": 0.032882,
+              "n": 1
+            }
+          },
+          "blob_io_manifest": {
+            "sections": {
+              "max": 28.0,
+              "median": 28.0,
+              "min": 28.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.058592,
+              "median": 0.058592,
+              "min": 0.058592,
+              "n": 1
+            }
+          },
+          "blob_io_object": {
+            "sections": {
+              "max": 4.0,
+              "median": 4.0,
+              "min": 4.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.011822,
+              "median": 0.011822,
+              "min": 0.011822,
+              "n": 1
+            }
+          },
+          "content_verify": {
+            "sections": {
+              "max": 4.0,
+              "median": 4.0,
+              "min": 4.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.032681,
+              "median": 0.032681,
+              "min": 0.032681,
+              "n": 1
+            }
+          },
+          "manifest_decode": {
+            "sections": {
+              "max": 22.0,
+              "median": 22.0,
+              "min": 22.0,
+              "n": 1
+            },
+            "total_ms": {
+              "max": 0.035528,
+              "median": 0.035528,
+              "min": 0.035528,
+              "n": 1
+            }
+          }
+        },
+        "residual_ms": {
+          "max": 1.173292,
+          "median": 1.173292,
+          "min": 1.173292,
+          "n": 1
+        }
+      }
+    }
+  },
+  "backend": {
+    "buckets": [],
+    "cost_note": "a backend byte is a local read here, so the fast-path penalty is almost entirely decode and verification work",
+    "footprint_walked": true,
+    "kind": "local",
+    "label": "local POSIX data plane (BackendKind::Local); durability is fsync of the file and its directory",
+    "server": null
+  },
+  "checks": [
+    {
+      "detail": "rows per arm [(\"N\", 1), (\"M\", 1), (\"W\", 1)], expected 1",
+      "id": "rows_complete",
+      "ok": true
+    },
+    {
+      "detail": "distinct orders 1; slot->arms {1: [\"N\"], 2: [\"M\"], 3: [\"W\"]}",
+      "id": "interleaved_orders",
+      "ok": true
+    },
+    {
+      "detail": "N 64/64 M 64/64 W 64/64 (min across reps)",
+      "id": "compatible_reuse_exact_every_arm",
+      "ok": true
+    },
+    {
+      "detail": "N accepted 48 probes (min across reps); a zero would make the probe vacuous",
+      "id": "n_probe_is_live",
+      "ok": true
+    },
+    {
+      "detail": "W accepted 0 across every rep (max)",
+      "id": "w_zero_incompatible_accepted",
+      "ok": true
+    },
+    {
+      "detail": "W returned 0 logical bytes on probes (max)",
+      "id": "w_zero_bytes_on_denial",
+      "ok": true
+    },
+    {
+      "detail": "M (governing arm, full value validation) accepted 0 (max)",
+      "id": "m_incompatible_accepted",
+      "ok": true
+    },
+    {
+      "detail": "N logical bytes returned on probes: 3145728",
+      "id": "refusal_emits_nothing_N",
+      "ok": true
+    },
+    {
+      "detail": "M logical bytes returned on probes: 0",
+      "id": "refusal_emits_nothing_M",
+      "ok": true
+    },
+    {
+      "detail": "W logical bytes returned on probes: 0",
+      "id": "refusal_emits_nothing_W",
+      "ok": true
+    },
+    {
+      "detail": "expected digest Some(\"2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613\"); all arms matched in every rep: true",
+      "id": "recovery_outputs_exact_every_arm",
+      "ok": true
+    },
+    {
+      "detail": "W resolved the derived artifact's two declared parents to live objects",
+      "id": "w_causal_closure_verified",
+      "ok": true
+    },
+    {
+      "detail": "every arm refused after one activation was removed",
+      "id": "missing_dependency_fails_closed",
+      "ok": true
+    },
+    {
+      "detail": "W checkpoint manifest loads per recovery pass: 1 (max across reps)",
+      "id": "w_recovery_loads_the_manifest_once",
+      "ok": true
+    },
+    {
+      "detail": "the measured recompute kernel reproduced the stored page bytes",
+      "id": "recompute_regenerates_the_page",
+      "ok": true
+    }
+  ],
+  "claim_gates": [
+    {
+      "detail": "W accepted 0 and returned 0 bytes",
+      "holds": true,
+      "id": "f1_w_rejects_cross_scope"
+    },
+    {
+      "detail": "N accepted 48 (min)",
+      "holds": true,
+      "id": "f2_probe_is_live"
+    },
+    {
+      "detail": "M accepted 0 incompatible and reused 0 after metadata loss; a tie here refutes the claim",
+      "holds": true,
+      "id": "f3_baseline_does_not_tie"
+    },
+    {
+      "detail": "W materialized 270336 B, M 270336 B for the identical output set",
+      "holds": true,
+      "id": "f4_recovery_does_not_materialize_more"
+    },
+    {
+      "detail": "W p50 168.1 us vs N 29.1 us = 5.77x (declared <= 2x)",
+      "holds": false,
+      "id": "c1_fast_path_p50"
+    },
+    {
+      "detail": "W p95 238.9 us vs N 36.2 us = 6.59x (declared <= 2.5x)",
+      "holds": false,
+      "id": "c2_fast_path_p95"
+    },
+    {
+      "detail": "W 28313 B/request vs N 65699 B/request = 0.43x (declared <= 1.1x)",
+      "holds": true,
+      "id": "c3_fast_path_bytes"
+    }
+  ],
+  "claim_holds": false,
+  "contract": "bench/CONTRACTS-context-advantage.md",
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "nproc": "2048",
+    "pids": "1024",
+    "revisions": {
+      "WeftCodec": "75f08634824d3f6fe1561a1c523e97f390e85391",
+      "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e",
+      "WeftFS": "ad263816cbbc4965471c159b4bf783a15d48650c",
+      "WeftFS-Go": "7f55d11a7a66a5c6e542e345d06539d801281a4c"
+    },
+    "uname": "Linux 7.3.3-1-cachyos x86_64"
+  },
+  "fast_path": {
+    "bytes_saved_per_request": {
+      "N_vs_M": 33781.25,
+      "W_vs_M": 3604.625,
+      "W_vs_N": 37385.875
+    },
+    "declared": {
+      "bytes_ratio_max": 1.1,
+      "p50_ratio_max": 2.0,
+      "p95_ratio_max": 2.5
+    },
+    "observed": {
+      "M": {
+        "backend_bytes_per_request": 31917.75,
+        "p50_us": 104.054,
+        "p95_us": 108.322,
+        "requests_per_read": 2.0
+      },
+      "N": {
+        "backend_bytes_per_request": 65699.0,
+        "p50_us": 29.115,
+        "p95_us": 36.248000000000005,
+        "requests_per_read": 2.0
+      },
+      "W": {
+        "backend_bytes_per_request": 28313.125,
+        "p50_us": 168.123,
+        "p95_us": 238.895,
+        "requests_per_read": 2.0
+      }
+    },
+    "ratios": {
+      "M_over_N_bytes": 0.48581789677164033,
+      "M_over_N_p50": 3.5738966168641597,
+      "M_over_N_p95": 2.98835797837122,
+      "W_over_N_bytes": 0.4309521453903408,
+      "W_over_N_p50": 5.774446161772282,
+      "W_over_N_p95": 6.590570514235267
+    }
+  },
+  "fixture": {
+    "activation_bytes": 32768,
+    "base_scope": {
+      "adapter": null,
+      "dtype": "bf16",
+      "head_count": 8,
+      "head_dim": 64,
+      "label": "S0",
+      "layer_count": 2,
+      "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+      "page_rows": 64,
+      "positional": "rope",
+      "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+      "tokenizer_scheme": "bpe",
+      "tokenizer_vocab": 151936
+    },
+    "derived_bytes": 8192,
+    "head_elements": 512,
+    "layers": 2,
+    "needed": [
+      3,
+      17,
+      31,
+      45,
+      67,
+      91
+    ],
+    "page_bytes": 65536,
+    "page_rows": 64,
+    "pages_written": 8,
+    "prefixes": 4,
+    "probe_count": 56,
+    "recompute": "scalar reference kernel that regenerates the page; not an optimized prefill",
+    "tensor_bytes": 32768,
+    "tensors": 96,
+    "variants": [
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "model",
+        "layer_count": 2,
+        "model_root": "2222222222222222222222222222222222222222222222222222222222222222",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": "3333333333333333333333333333333333333333333333333333333333333333",
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "adapter",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "tokenizer",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "spm",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 16,
+        "head_dim": 32,
+        "label": "attention",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "positional",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "alibi",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "fp16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "dtype",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "salt",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      }
+    ]
+  },
+  "generated_utc": "20261113T072847Z",
+  "label": "full",
+  "losses": [
+    "W fast-path p50 is 5.77x N (168.1 vs 29.1 us): the context plane does not preserve a raw-read critical path on this workload",
+    "M fast-path p50 is 3.57x N (104.1 vs 29.1 us): the penalty is not unique to W -- any compressed representation pays it",
+    "M is 1.62x faster than W on the fast path (104.1 vs 168.1 us)",
+    "W reads 1.12x M's backend bytes for the identical recovery output set (321343 vs 286540 B): the checkpoint path reads per-shard tensor metadata to verify each shard's content root and logical root, which M's flat manifest does not carry, and the manifest is loaded once per pass",
+    "W recovery wall is 3.25x M (1.272 vs 0.391 ms)",
+    "N accepted 48 of 56 cross-scope requests and returned the wrong bytes for every one: the floor is unsafe by construction",
+    "M reused nothing after its metadata database was lost (0 of 16): its safe-reuse capability is tied to that database",
+    "M read 766026 backend bytes to refuse cross-scope requests whose key it matched: the three dimensions its index key omits must be validated from the payload"
+  ],
+  "methodology": {
+    "arms": {
+      "M": "backend + strong application metadata: zstd-3 blob, canonical manifest, key->value index on the brief's five dimensions plus position, full value validation before reuse, TTL/eviction, own subset selection",
+      "N": "backend alone: plain durable objects, no metadata",
+      "W": "backend + WeftFS context plane: provenance-bound KV pages (mode 19), capability-scoped reads, weft.checkpoint.v1 manifests, causal closure"
+    },
+    "declared_tolerance": {
+      "bytes_ratio_max": 1.1,
+      "declared_before_measurement": true,
+      "p50_ratio_max": 2.0,
+      "p95_ratio_max": 2.5,
+      "unchanged_by_backend": true
+    },
+    "held_constant": [
+      "BackendKind::Local data plane, one store root per (arm, repetition, store)",
+      "commit protocol and durability barrier the backend declares",
+      "chunk size 65,536 B",
+      "no decoded-object cache, no single-flight",
+      "single process, single thread, one request at a time",
+      "identical logical objects, names, counts and demanded output set",
+      "fixed store clock",
+      "Docker court limits 3g/3g/1024 pids/4 cpus, never raised"
+    ],
+    "raw_samples": "every repetition's phase JSON is committed beside the receipt",
+    "reduced": false,
+    "repetitions": 1
+  },
+  "not_measured": [
+    "fleet, multi-host, multi-writer and media power-loss durability",
+    "GPU or production prefill: recompute_ms is a scalar reference kernel",
+    "an application baseline that embeds a canonical scope record in every blob and rebuilds its index by scanning (available, untested)",
+    "live cloud backends; this row is the local POSIX data plane",
+    "timing, size or access-pattern privacy of the salt",
+    "a raw or direct-byte payload representation for provenance-bound pages: the wire format fixes huffman-canonical-v1 byte planes for modes 9-19, so the fast path in this receipt is the shipped codec; the raw-copy floor is reported beside it rather than substituted for it"
+  ],
+  "provenance_overhead": {
+    "mode12_decode_p50_us": 116.717,
+    "mode19_decode_p50_us": 131.055,
+    "mode19_descriptor_parse_p50_us": 9.849,
+    "mode19_descriptor_root_p50_us": 4.94,
+    "mode19_page_hash_p50_us": 10.41,
+    "mode19_planes_p50_us": 103.863,
+    "note": "in-memory decode of the same page, same payload codec; isolates the provenance descriptor from I/O and from the payload codec, and splits the payload decode from the reconstructed-page hash and the descriptor identity",
+    "ratio": 1.1228441443834232
+  },
+  "raw": [
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 4204736,
+          "exact": 64,
+          "latency": {
+            "max_us": 67.476,
+            "min_us": 28.212999999999997,
+            "n": 64,
+            "p50_us": 29.115,
+            "p95_us": 36.248000000000005
+          },
+          "logical_bytes": 4194304,
+          "raw_samples_ns": [
+            67476,
+            54712,
+            54371,
+            36248,
+            34684,
+            34354,
+            34234,
+            33723,
+            33252,
+            32680,
+            32650,
+            32971,
+            32952,
+            32180,
+            32741,
+            32481,
+            29084,
+            28353,
+            28864,
+            29034,
+            29335,
+            28984,
+            29075,
+            29224,
+            29075,
+            28272,
+            29025,
+            29144,
+            29064,
+            29075,
+            28934,
+            31438,
+            28934,
+            28213,
+            28904,
+            29044,
+            29124,
+            28964,
+            28923,
+            29014,
+            28803,
+            28272,
+            29295,
+            29104,
+            29374,
+            28954,
+            29255,
+            28954,
+            28904,
+            28283,
+            29174,
+            29044,
+            29224,
+            28964,
+            29134,
+            29124,
+            29115,
+            28252,
+            29074,
+            29034,
+            29024,
+            29195,
+            29284,
+            29404
+          ],
+          "requests": 128,
+          "total": 64
+        },
+        "diagnostics": {},
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 44.553,
+            "min_us": 27.762,
+            "n": 16,
+            "p50_us": 28.183,
+            "p95_us": 30.367
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 48,
+          "accepted_wrong_bytes": 48,
+          "backend_bytes": 3153552,
+          "denied": 8,
+          "logical_bytes_returned": 3145728,
+          "requests": 96
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 29.835,
+              "min_us": 27.692,
+              "n": 8,
+              "p50_us": 28.613,
+              "p95_us": 29.835
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "attention": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.331,
+              "min_us": 27.03,
+              "n": 8,
+              "p50_us": 27.201,
+              "p95_us": 27.331
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "dtype": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 29.034,
+              "min_us": 27.041,
+              "n": 8,
+              "p50_us": 27.11,
+              "p95_us": 29.034
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 1.432,
+              "min_us": 0.932,
+              "n": 8,
+              "p50_us": 1.012,
+              "p95_us": 1.432
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.251,
+              "min_us": 27.0,
+              "n": 8,
+              "p50_us": 27.091,
+              "p95_us": 27.251
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 28.473,
+              "min_us": 27.241,
+              "n": 8,
+              "p50_us": 27.632,
+              "p95_us": 28.473
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.321,
+              "min_us": 27.11,
+              "n": 8,
+              "p50_us": 27.231,
+              "p95_us": 27.321
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2122.356,
+            "min_us": 2118.018,
+            "n": 3,
+            "p50_us": 2120.002,
+            "p95_us": 2122.356
+          },
+          "raw_samples_ns": [
+            2122356,
+            2118018,
+            2120002
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "N",
+      "arm_description": "backend alone: plain durable objects, no metadata",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3744358,
+          "logical_bytes": 3219456,
+          "ms": 1360.9480970000002,
+          "writes": 99
+        },
+        "missing_dependency": {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 3235591,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 31.418000000000003,
+            "min_us": 14.767,
+            "n": 99,
+            "p50_us": 21.569999999999997,
+            "p95_us": 23.033
+          },
+          "ledger": {
+            "logical_bytes": 3219456,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 99,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.191,
+                "p95_us": 0.27,
+                "sections": 99,
+                "total_ms": 0.021566
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.25,
+                "p95_us": 0.261,
+                "sections": 99,
+                "total_ms": 0.024596
+              },
+              "blob_hash_object": {
+                "p50_us": 7.654,
+                "p95_us": 7.705,
+                "sections": 99,
+                "total_ms": 0.757443
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.443,
+                "p95_us": 1.613,
+                "sections": 99,
+                "total_ms": 0.146316
+              },
+              "blob_io_object": {
+                "p50_us": 2.314,
+                "p95_us": 2.564,
+                "sections": 99,
+                "total_ms": 0.302633
+              },
+              "content_verify": {
+                "p50_us": 7.634,
+                "p95_us": 7.674,
+                "sections": 99,
+                "total_ms": 0.753233
+              },
+              "manifest_decode": {
+                "p50_us": 0.751,
+                "p95_us": 0.802,
+                "sections": 99,
+                "total_ms": 0.074528
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.4974099999999999,
+            "sum_phases_ms": 2.080315,
+            "wall_ms": 2.577725
+          },
+          "logical_bytes": 3219456,
+          "manifest_loads": 0,
+          "manifest_object_bytes": 0,
+          "manifest_root": null,
+          "outputs": 99,
+          "requests": 198,
+          "wall_ms": 2.614133
+        }
+      },
+      "backend": {
+        "bucket_a": null,
+        "bucket_b": null,
+        "kind": "local"
+      },
+      "build_a": {
+        "backend_bytes_written": 566768,
+        "commits": 8,
+        "footprint_bytes": 544093,
+        "footprint_files": 39,
+        "footprint_note": null,
+        "index_entries": 0,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 112.756644,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 60.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 4204736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.561,
+            "p95_us": 0.571,
+            "sections": 64,
+            "total_ms": 0.035642,
+            "us_per_read": 0.55690625
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.241,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.015822,
+            "us_per_read": 0.24721875
+          },
+          "blob_hash_object": {
+            "p50_us": 10.399,
+            "p95_us": 10.48,
+            "sections": 64,
+            "total_ms": 0.670778,
+            "us_per_read": 10.48090625
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.333,
+            "p95_us": 1.493,
+            "sections": 64,
+            "total_ms": 0.09081,
+            "us_per_read": 1.41890625
+          },
+          "blob_io_object": {
+            "p50_us": 2.224,
+            "p95_us": 3.066,
+            "sections": 64,
+            "total_ms": 0.148828,
+            "us_per_read": 2.3254375
+          },
+          "compare": {
+            "p50_us": 0.841,
+            "p95_us": 0.931,
+            "sections": 64,
+            "total_ms": 0.054961,
+            "us_per_read": 0.858765625
+          },
+          "content_verify": {
+            "p50_us": 10.45,
+            "p95_us": 10.499,
+            "sections": 64,
+            "total_ms": 0.670275,
+            "us_per_read": 10.473046875
+          },
+          "manifest_decode": {
+            "p50_us": 0.701,
+            "p95_us": 0.812,
+            "sections": 64,
+            "total_ms": 0.048261,
+            "us_per_read": 0.754078125
+          },
+          "read_resolve": {
+            "p50_us": 0.942,
+            "p95_us": 1.183,
+            "sections": 64,
+            "total_ms": 0.063827,
+            "us_per_read": 0.997296875
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.056364,
+        "residual_us_per_read": 0.8806875,
+        "sum_phases_ms": 1.799204,
+        "sum_phases_us_per_read": 28.1125625,
+        "us_per_read": 28.99325,
+        "wall_ms": 1.855568
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.00017,
+        "note": "not applicable"
+      },
+      "open_ms": 0.249125,
+      "order": "N,M,W",
+      "order_index": 1,
+      "reduced": false,
+      "rep": 1,
+      "rss_kib": 19764,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 2042736,
+          "exact": 64,
+          "latency": {
+            "max_us": 136.214,
+            "min_us": 101.048,
+            "n": 64,
+            "p50_us": 104.054,
+            "p95_us": 108.322
+          },
+          "logical_bytes": 4194304,
+          "raw_samples_ns": [
+            136214,
+            109544,
+            112279,
+            108322,
+            106268,
+            104816,
+            107250,
+            106909,
+            104455,
+            104014,
+            105026,
+            105046,
+            106379,
+            101920,
+            104655,
+            103984,
+            103864,
+            103443,
+            104354,
+            105616,
+            103482,
+            106077,
+            104625,
+            103863,
+            103543,
+            103053,
+            104054,
+            104094,
+            102892,
+            101098,
+            103804,
+            106709,
+            103844,
+            103052,
+            104074,
+            104505,
+            103113,
+            101168,
+            104125,
+            104044,
+            107440,
+            103303,
+            104094,
+            104084,
+            103072,
+            101199,
+            104405,
+            104014,
+            103343,
+            103012,
+            105977,
+            104254,
+            102962,
+            101048,
+            103983,
+            103654,
+            103372,
+            103022,
+            103913,
+            104194,
+            104725,
+            101279,
+            104144,
+            103694
+          ],
+          "requests": 128,
+          "total": 64
+        },
+        "diagnostics": {
+          "full_key_denial_backend_bytes": 0,
+          "full_key_denied": 56,
+          "index_loaded_entries": 8,
+          "index_note": null,
+          "index_only_accepts": 24
+        },
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 1.493,
+            "min_us": 0.13,
+            "n": 16,
+            "p50_us": 0.16999999999999998,
+            "p95_us": 0.251
+          },
+          "metadata_removed": true,
+          "reused": 0,
+          "reused_exact": 0,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 766026,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 48
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.521,
+              "min_us": 0.161,
+              "n": 8,
+              "p50_us": 0.191,
+              "p95_us": 0.521
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.41,
+              "min_us": 0.16,
+              "n": 8,
+              "p50_us": 0.181,
+              "p95_us": 0.41
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 104.795,
+              "min_us": 100.537,
+              "n": 8,
+              "p50_us": 102.982,
+              "p95_us": 104.795
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.481,
+              "min_us": 0.151,
+              "n": 8,
+              "p50_us": 0.191,
+              "p95_us": 0.481
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 113.752,
+              "min_us": 102.16,
+              "n": 8,
+              "p50_us": 103.283,
+              "p95_us": 113.752
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 103.162,
+              "min_us": 100.207,
+              "n": 8,
+              "p50_us": 102.761,
+              "p95_us": 103.162
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.231,
+              "min_us": 0.141,
+              "n": 8,
+              "p50_us": 0.161,
+              "p95_us": 0.231
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2316.668,
+            "min_us": 2122.767,
+            "n": 3,
+            "p50_us": 2279.629,
+            "p95_us": 2316.668
+          },
+          "raw_samples_ns": [
+            2316668,
+            2279629,
+            2122767
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "M",
+      "arm_description": "backend + strong application metadata (manifest, index, TTL, own subset selection)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3770190,
+          "logical_bytes": 3219456,
+          "ms": 1365.424192,
+          "writes": 101
+        },
+        "missing_dependency": {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 286540,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 32.872,
+            "min_us": 14.577,
+            "n": 9,
+            "p50_us": 24.505,
+            "p95_us": 32.872
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.181,
+                "p95_us": 0.21,
+                "sections": 10,
+                "total_ms": 0.001725
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.251,
+                "p95_us": 0.26,
+                "sections": 10,
+                "total_ms": 0.002494
+              },
+              "blob_hash_object": {
+                "p50_us": 7.615,
+                "p95_us": 7.685,
+                "sections": 10,
+                "total_ms": 0.073066
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.543,
+                "p95_us": 1.944,
+                "sections": 10,
+                "total_ms": 0.015738
+              },
+              "blob_io_object": {
+                "p50_us": 2.464,
+                "p95_us": 2.665,
+                "sections": 10,
+                "total_ms": 0.023945
+              },
+              "content_verify": {
+                "p50_us": 7.634,
+                "p95_us": 7.684,
+                "sections": 10,
+                "total_ms": 0.073146
+              },
+              "manifest_decode": {
+                "p50_us": 0.811,
+                "p95_us": 0.982,
+                "sections": 10,
+                "total_ms": 0.007955
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.16849399999999998,
+            "sum_phases_ms": 0.198069,
+            "wall_ms": 0.366563
+          },
+          "logical_bytes": 270336,
+          "manifest_loads": 0,
+          "manifest_object_bytes": 0,
+          "manifest_root": null,
+          "outputs": 9,
+          "requests": 20,
+          "wall_ms": 0.390869
+        }
+      },
+      "backend": {
+        "bucket_a": null,
+        "bucket_b": null,
+        "kind": "local"
+      },
+      "build_a": {
+        "backend_bytes_written": 318018,
+        "commits": 10,
+        "footprint_bytes": 287151,
+        "footprint_files": 47,
+        "footprint_note": null,
+        "index_entries": 8,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 142.311876,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 80.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 2042736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.24,
+            "p95_us": 0.331,
+            "sections": 64,
+            "total_ms": 0.015555,
+            "us_per_read": 0.243046875
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.251,
+            "p95_us": 0.27,
+            "sections": 64,
+            "total_ms": 0.016466,
+            "us_per_read": 0.25728125
+          },
+          "blob_hash_object": {
+            "p50_us": 11.161,
+            "p95_us": 11.562,
+            "sections": 64,
+            "total_ms": 0.704015,
+            "us_per_read": 11.000234375
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.372,
+            "p95_us": 2.014,
+            "sections": 64,
+            "total_ms": 0.112316,
+            "us_per_read": 1.7549375
+          },
+          "blob_io_object": {
+            "p50_us": 1.964,
+            "p95_us": 2.936,
+            "sections": 64,
+            "total_ms": 0.136717,
+            "us_per_read": 2.136203125
+          },
+          "content_verify": {
+            "p50_us": 11.16,
+            "p95_us": 11.532,
+            "sections": 64,
+            "total_ms": 0.703833,
+            "us_per_read": 10.997390625
+          },
+          "manifest_decode": {
+            "p50_us": 0.742,
+            "p95_us": 1.012,
+            "sections": 64,
+            "total_ms": 0.05375,
+            "us_per_read": 0.83984375
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 5.017449,
+        "residual_us_per_read": 78.397640625,
+        "sum_phases_ms": 1.742652,
+        "sum_phases_us_per_read": 27.2289375,
+        "us_per_read": 105.626578125,
+        "wall_ms": 6.760101
+      },
+      "index_load": {
+        "entries": 8,
+        "ms": 0.06133400000000001,
+        "note": null
+      },
+      "open_ms": 0.30723300000000003,
+      "order": "N,M,W",
+      "order_index": 2,
+      "reduced": false,
+      "rep": 1,
+      "rss_kib": 17864,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 1812040,
+          "exact": 64,
+          "latency": {
+            "max_us": 328.252,
+            "min_us": 164.908,
+            "n": 64,
+            "p50_us": 168.123,
+            "p95_us": 238.895
+          },
+          "logical_bytes": 4194304,
+          "raw_samples_ns": [
+            227695,
+            247631,
+            238895,
+            328252,
+            220300,
+            210542,
+            212747,
+            191467,
+            171209,
+            226082,
+            172531,
+            228076,
+            170337,
+            169236,
+            168875,
+            168875,
+            166941,
+            225931,
+            168084,
+            222885,
+            166700,
+            167763,
+            170338,
+            166901,
+            166841,
+            221183,
+            168123,
+            226392,
+            167643,
+            166310,
+            167733,
+            166480,
+            165018,
+            245908,
+            166891,
+            221863,
+            166561,
+            166941,
+            168665,
+            167342,
+            165067,
+            220481,
+            167171,
+            221113,
+            167953,
+            165639,
+            167191,
+            166069,
+            164908,
+            223616,
+            166931,
+            222284,
+            165909,
+            166370,
+            165909,
+            169195,
+            165188,
+            222424,
+            166220,
+            220552,
+            168043,
+            166631,
+            167943,
+            166150
+          ],
+          "requests": 128,
+          "total": 64
+        },
+        "diagnostics": {
+          "decode_only": {
+            "mode12": {
+              "max_us": 128.61,
+              "min_us": 116.096,
+              "n": 8,
+              "p50_us": 116.717,
+              "p95_us": 128.61
+            },
+            "mode12_frame_bytes": 26616,
+            "mode19": {
+              "max_us": 139.469,
+              "min_us": 129.171,
+              "n": 8,
+              "p50_us": 131.055,
+              "p95_us": 139.469
+            },
+            "mode19_descriptor_parse": {
+              "max_us": 12.523,
+              "min_us": 9.477,
+              "n": 8,
+              "p50_us": 9.849,
+              "p95_us": 12.523
+            },
+            "mode19_descriptor_root": {
+              "max_us": 5.591,
+              "min_us": 4.519,
+              "n": 8,
+              "p50_us": 4.94,
+              "p95_us": 5.591
+            },
+            "mode19_frame_bytes": 27141,
+            "mode19_page_hash_only": {
+              "max_us": 10.55,
+              "min_us": 10.399,
+              "n": 8,
+              "p50_us": 10.41,
+              "p95_us": 10.55
+            },
+            "mode19_planes_only": {
+              "max_us": 105.567,
+              "min_us": 103.463,
+              "n": 8,
+              "p50_us": 103.863,
+              "p95_us": 105.567
+            },
+            "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash, the descriptor identity and a raw-copy floor from each other",
+            "raw_payload_copy_only": {
+              "max_us": 0.871,
+              "min_us": 0.6719999999999999,
+              "n": 8,
+              "p50_us": 0.7010000000000001,
+              "p95_us": 0.871
+            }
+          },
+          "probe_setup_ms": 15.020199
+        },
+        "metadata_loss": {
+          "backend_bytes": 453010,
+          "latency": {
+            "max_us": 238.795,
+            "min_us": 166.42,
+            "n": 16,
+            "p50_us": 179.214,
+            "p95_us": 238.435
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 0,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 0
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.935,
+              "min_us": 1.313,
+              "n": 8,
+              "p50_us": 1.352,
+              "p95_us": 7.935
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.604,
+              "min_us": 1.312,
+              "n": 8,
+              "p50_us": 1.362,
+              "p95_us": 7.604
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 6.582,
+              "min_us": 1.302,
+              "n": 8,
+              "p50_us": 1.3230000000000002,
+              "p95_us": 6.582
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 14.366,
+              "min_us": 1.353,
+              "n": 8,
+              "p50_us": 1.433,
+              "p95_us": 14.366
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 6.803,
+              "min_us": 1.312,
+              "n": 8,
+              "p50_us": 1.363,
+              "p95_us": 6.803
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 6.893,
+              "min_us": 1.322,
+              "n": 8,
+              "p50_us": 1.403,
+              "p95_us": 6.893
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.644,
+              "min_us": 1.313,
+              "n": 8,
+              "p50_us": 1.472,
+              "p95_us": 7.644
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2125.281,
+            "min_us": 2119.932,
+            "n": 3,
+            "p50_us": 2119.9919999999997,
+            "p95_us": 2125.281
+          },
+          "raw_samples_ns": [
+            2119992,
+            2119932,
+            2125281
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "W",
+      "arm_description": "backend + WeftFS context plane (mode 19, scoped reads, causal closure)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3430878,
+          "logical_bytes": 3219456,
+          "ms": 467.946086,
+          "writes": 4
+        },
+        "missing_dependency": {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        },
+        "recovery": {
+          "backend_bytes": 321343,
+          "causal_closure": {
+            "closure_members": 2,
+            "declared": true,
+            "missing": 0,
+            "parents": 2,
+            "verified": true
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 159.648,
+            "min_us": 15.419,
+            "n": 9,
+            "p50_us": 96.761,
+            "p95_us": 159.648
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.261,
+                "p95_us": 0.431,
+                "sections": 4,
+                "total_ms": 0.000983
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.33,
+                "p95_us": 8.747,
+                "sections": 28,
+                "total_ms": 0.059339
+              },
+              "blob_hash_object": {
+                "p50_us": 8.676,
+                "p95_us": 10.4,
+                "sections": 4,
+                "total_ms": 0.032882
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.743,
+                "p95_us": 3.747,
+                "sections": 28,
+                "total_ms": 0.058592
+              },
+              "blob_io_object": {
+                "p50_us": 3.296,
+                "p95_us": 3.436,
+                "sections": 4,
+                "total_ms": 0.011822
+              },
+              "content_verify": {
+                "p50_us": 8.666,
+                "p95_us": 10.309,
+                "sections": 4,
+                "total_ms": 0.032681
+              },
+              "manifest_decode": {
+                "p50_us": 1.483,
+                "p95_us": 2.264,
+                "sections": 22,
+                "total_ms": 0.035528
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 1.173292,
+            "sum_phases_ms": 0.231827,
+            "wall_ms": 1.405119
+          },
+          "logical_bytes": 270336,
+          "manifest_loads": 1,
+          "manifest_object_bytes": 45197,
+          "manifest_root": "c921677967ca1461867a297420d0bbe79862fb9197f89eb51e77204193d00bf1",
+          "outputs": 9,
+          "requests": 32,
+          "wall_ms": 1.272141
+        }
+      },
+      "backend": {
+        "bucket_a": null,
+        "bucket_b": null,
+        "kind": "local"
+      },
+      "build_a": {
+        "backend_bytes_written": 290679,
+        "commits": 8,
+        "footprint_bytes": 268004,
+        "footprint_files": 39,
+        "footprint_note": null,
+        "index_entries": 0,
+        "mode12_bytes": 221001,
+        "mode19_bytes": 225201,
+        "ms": 118.493127,
+        "note": null,
+        "page_bytes": 524288,
+        "writes": 8
+      },
+      "cpu_ms": 100.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 1812040,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.181,
+            "p95_us": 0.25,
+            "sections": 64,
+            "total_ms": 0.012248,
+            "us_per_read": 0.191375
+          },
+          "auth_capability": {
+            "p50_us": 0.13,
+            "p95_us": 0.161,
+            "sections": 64,
+            "total_ms": 0.008793,
+            "us_per_read": 0.137390625
+          },
+          "auth_descriptor": {
+            "p50_us": 0.131,
+            "p95_us": 0.17,
+            "sections": 64,
+            "total_ms": 0.008625,
+            "us_per_read": 0.134765625
+          },
+          "auth_posix": {
+            "p50_us": 0.05,
+            "p95_us": 0.09,
+            "sections": 64,
+            "total_ms": 0.003417,
+            "us_per_read": 0.053390625
+          },
+          "auth_state": {
+            "p50_us": 0.191,
+            "p95_us": 0.29,
+            "sections": 64,
+            "total_ms": 0.012889,
+            "us_per_read": 0.201390625
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.25,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.015984,
+            "us_per_read": 0.24975
+          },
+          "blob_hash_object": {
+            "p50_us": 9.568,
+            "p95_us": 10.83,
+            "sections": 64,
+            "total_ms": 0.613993,
+            "us_per_read": 9.593640625
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.523,
+            "p95_us": 1.653,
+            "sections": 64,
+            "total_ms": 0.099362,
+            "us_per_read": 1.55253125
+          },
+          "blob_io_object": {
+            "p50_us": 2.314,
+            "p95_us": 2.746,
+            "sections": 64,
+            "total_ms": 0.140145,
+            "us_per_read": 2.189765625
+          },
+          "compare": {
+            "p50_us": 0.892,
+            "p95_us": 0.982,
+            "sections": 64,
+            "total_ms": 0.057204,
+            "us_per_read": 0.8938125
+          },
+          "content_verify": {
+            "p50_us": 9.548,
+            "p95_us": 10.82,
+            "sections": 64,
+            "total_ms": 0.612576,
+            "us_per_read": 9.5715
+          },
+          "frame_parse": {
+            "p50_us": 0.801,
+            "p95_us": 0.942,
+            "sections": 64,
+            "total_ms": 0.05283,
+            "us_per_read": 0.82546875
+          },
+          "manifest_decode": {
+            "p50_us": 0.801,
+            "p95_us": 0.941,
+            "sections": 64,
+            "total_ms": 0.052676,
+            "us_per_read": 0.8230625
+          },
+          "page_decode": {
+            "p50_us": 137.476,
+            "p95_us": 190.676,
+            "sections": 64,
+            "total_ms": 9.603906,
+            "us_per_read": 150.06103125
+          },
+          "read_resolve": {
+            "p50_us": 1.162,
+            "p95_us": 1.322,
+            "sections": 64,
+            "total_ms": 0.074631,
+            "us_per_read": 1.166109375
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.267273,
+        "residual_us_per_read": 4.176140625,
+        "sum_phases_ms": 11.369279,
+        "sum_phases_us_per_read": 177.644984375,
+        "us_per_read": 181.821125,
+        "wall_ms": 11.636552
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.00017,
+        "note": "not applicable"
+      },
+      "open_ms": 0.454717,
+      "order": "N,M,W",
+      "order_index": 3,
+      "reduced": false,
+      "rep": 1,
+      "rss_kib": 23188,
+      "schema": "weft.context_advantage.phase.v1"
+    }
+  ],
+  "representation": {
+    "huffman_canonical_mb_per_s": 630.9850476107949,
+    "huffman_canonical_p50_us": 103.863,
+    "huffman_over_raw_copy": 148.16405135520682,
+    "note": "payload step only, measured in memory on the same page and the same bytes; the shipped representation is huffman-canonical-v1 byte planes; the raw-copy row is the irreducible payload step of a raw payload representation, not a shipped codec, and the provenance checks (page hash, descriptor parse, descriptor identity) are excluded from both rows and listed beside them",
+    "page_bytes": 65536,
+    "raw_copy_floor_mb_per_s": 93489.30099857345,
+    "raw_copy_floor_p50_us": 0.7010000000000001
+  },
+  "result": "pass",
+  "result_note": "`result` reports measurement validity (every row present, every arm exact, every declared check met). `claim_holds` reports whether the pre-registered capability claim survived; the two are deliberately separate.",
+  "schema": "weft.context_advantage.v1",
+  "scope": "single host, one backend (local POSIX data plane), OOM-protected Docker court. Not a cloud, fleet, media or power-loss claim."
+}
