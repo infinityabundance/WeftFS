@@ -20,3 +20,7 @@ sha2 = "0.10"
 # the harness depending on the repository; the repository never depends on the
 # harness.
 weftfs = { path = "../.." }
+# The tensor region type the shipped `Store::read_tensor_region` takes. This is
+# the same `weftcodec` path dependency `weftfs` already uses; the harness names
+# it directly only to construct a `Region`.
+weftcodec = { path = "../../WeftCodec" }

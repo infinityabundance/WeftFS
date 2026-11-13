@@ -24,20 +24,24 @@
 //! memory limit. Every refusal is recorded, never silently dropped.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
+use std::fs::{self, File};
+use std::io::{Seek, SeekFrom, Write};
+use std::os::unix::fs::FileExt;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
+use weftcodec::tensor::Region;
 use weftfs::safetensors::{SafetensorsFile, SafetensorsTensor};
-use weftfs::store::{Options, Store};
-use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions};
-use weftfs::Hash32;
+use weftfs::store::{OpenMode, Options, Store};
+use weftfs::tensor_store::{TensorLayoutSpec, TensorPlanOptions, TensorWriteSpec};
+use weftfs::{Hash32, TensorStrategy, TileDecodeOptions};
 
 // ---------------------------------------------------------------------------
-// Frozen contract constants (bench/CONTRACTS-ekbloom.md, version 1)
+// Frozen contract constants (bench/CONTRACTS-ekbloom.md version 1; §9 is the
+// version 2 E3 amendment)
 // ---------------------------------------------------------------------------
 
 const RECEIPT_SCHEMA: &str = "weft.ekbloom-court.v1";
@@ -77,6 +81,33 @@ const EKBLOOM_DEFAULT_POLICY: &str =
     "create_auto: machine 2 if it shrinks, else machine 3 (crate default)";
 
 // ---------------------------------------------------------------------------
+// E3 frozen constants (bench/CONTRACTS-ekbloom.md §9, contract version 2)
+// ---------------------------------------------------------------------------
+
+/// Contract §9.3: region classes in bytes.
+const READ_REGION_CLASSES: [u64; 3] = [1, 4_096, 65_536];
+/// Contract §9.3: eight offsets per eligible (tensor, class).
+const READ_OFFSETS_PER_CLASS: u64 = 8;
+/// Contract §9.3: seven repetitions (rep 0 cold-first, reps 1-6 warm).
+const READ_REPETITIONS: u32 = 7;
+/// Contract §9.2: tile shape by rank.
+const READ_TILE_1D: u64 = 128;
+const READ_TILE_2D: u64 = 128;
+/// Contract §9.5 G3: 2 * p95_E <= 5 * p95_best (2.5x, borrowed from
+/// bench/CONTRACTS-context-advantage.md §3 C2).
+const READ_P95_TOLERANCE_NUMERATOR: u64 = 5;
+const READ_P95_TOLERANCE_DENOMINATOR: u64 = 2;
+/// Contract §9.5 G3: the declared minimum sample counts for a p99.
+const READ_MIN_POOLED_SAMPLES_FOR_P99: usize = 2_000;
+const READ_MIN_CLASS_SAMPLES_FOR_P99: usize = 500;
+/// Contract §9.1: the manifested EKBLOOM profile that provides a bounded path.
+const READ_E_PROFILE: &str = "Sparse { interval: 1024 } (crate restart geometry)";
+/// Contract §9.1: baseline alignment.
+const READ_BASELINE_ALIGNMENT: u64 = 8;
+/// Fixed store clock, matching the E1/E2 court.
+const READ_FIXED_TIMESTAMP_NS: i64 = 1_700_000_000_000_000_000;
+
+// ---------------------------------------------------------------------------
 // Arguments
 // ---------------------------------------------------------------------------
 
@@ -92,7 +123,7 @@ struct Args {
 
 fn usage() -> ! {
     eprintln!(
-        "usage: ekbloom-harness --phase boundary|space --out RECEIPT.json \\\n\
+        "usage: ekbloom-harness --phase boundary|space|read --out RECEIPT.json \\\n\
          \x20            --work DIR --stamp STAMP --lock-checksum HEX \\\n\
          \x20            --rustc-version STR --cargo-version STR"
     );
@@ -126,8 +157,10 @@ fn parse_args() -> Args {
         }
     }
     let phase = phase.unwrap_or_else(|| usage());
-    if phase != "boundary" && phase != "space" {
-        eprintln!("unsupported phase '{phase}' (this subphase implements boundary and space)");
+    if phase != "boundary" && phase != "space" && phase != "read" {
+        eprintln!(
+            "unsupported phase '{phase}' (this subphase implements boundary, space and read)"
+        );
         std::process::exit(64);
     }
     Args {
@@ -743,6 +776,7 @@ fn main() {
     let receipt = match args.phase.as_str() {
         "boundary" => run_boundary(&args, &arms, &corpus_dir),
         "space" => run_space(&args, &arms, &corpus_dir),
+        "read" => run_read(&args, &arms, &corpus_dir),
         _ => unreachable!(),
     };
 
@@ -758,7 +792,8 @@ fn main() {
         .and_then(Value::as_str)
         .unwrap_or("fail");
     println!("verdict: {verdict}");
-    if verdict != "pass" && !(verdict == "loss" && args.phase == "space") {
+    if verdict != "pass" && !(verdict == "loss" && (args.phase == "space" || args.phase == "read"))
+    {
         std::process::exit(1);
     }
 }
@@ -1415,6 +1450,1349 @@ fn run_space(args: &Args, arms: &[VerifiedArm], corpus_dir: &Path) -> Value {
         "the corpus is one public checkpoint pair; this is a per-object size result on these \
          objects, not a general codec claim",
         "one host, warm page cache, one process; not a fleet, media, power-loss or cloud result",
+    ]);
+    receipt["verdict"] = json!(verdict);
+    receipt
+}
+
+// ---------------------------------------------------------------------------
+// E3 — bounded random access (contract version 2, §9)
+// ---------------------------------------------------------------------------
+
+struct ReadObject<'a> {
+    key: String,
+    container: &'a str,
+    tensor: &'a SafetensorsTensor,
+    file: &'a SafetensorsFile,
+    elem: u64,
+    requests: Vec<(u64, u64)>,
+}
+
+#[derive(Clone)]
+struct ARecord {
+    offset: u64,
+    length: u64,
+    sha256: String,
+}
+
+struct WArm {
+    store: Store,
+    ids: BTreeMap<String, Hash32>,
+    per_object: BTreeMap<String, u64>,
+    head: String,
+    build_ms: f64,
+}
+
+struct AArm {
+    file: File,
+    records: BTreeMap<String, ARecord>,
+    build_ms: f64,
+}
+
+struct EngineProbe {
+    plan_error: Option<String>,
+    requests: Vec<Value>,
+}
+
+struct EArm {
+    bodies: BTreeMap<String, ekbloom::FileBody>,
+    containers: BTreeMap<String, Value>,
+    probes: BTreeMap<String, EngineProbe>,
+    build_ms: f64,
+}
+
+struct ReadSample {
+    arm: &'static str,
+    rep: u32,
+    tensor: String,
+    offset: u64,
+    length: u64,
+    ns: u64,
+    exact: bool,
+    bytes_read: u64,
+    requests: u64,
+    units: u64,
+    encoded_bytes: u64,
+}
+
+fn element_bytes(dtype: &str) -> Result<u64, Refusal> {
+    match dtype {
+        "bf16" | "f16" | "i16" | "u16" => Ok(2),
+        "f32" | "i32" | "u32" => Ok(4),
+        "f64" | "i64" | "u64" => Ok(8),
+        "i8" | "u8" | "bool" => Ok(1),
+        other => Err(Refusal {
+            kind: "unsupported_dtype",
+            detail: format!("dtype `{other}` has no declared element width in this contract"),
+        }),
+    }
+}
+
+fn tile_shape_for(shape: &[u64]) -> Option<Vec<u64>> {
+    match shape.len() {
+        1 if shape[0] % READ_TILE_1D == 0 => Some(vec![READ_TILE_1D]),
+        2 if shape[0] % READ_TILE_2D == 0 && shape[1] % READ_TILE_2D == 0 => {
+            Some(vec![READ_TILE_2D, READ_TILE_2D])
+        }
+        _ => None,
+    }
+}
+
+/// Contract §9.2: per `(dtype, shape)` class, the lexicographically smallest
+/// tensor name. Applied to each container independently.
+fn read_selection(file: &SafetensorsFile) -> Vec<&SafetensorsTensor> {
+    let mut best: BTreeMap<(String, Vec<u64>), usize> = BTreeMap::new();
+    for (index, tensor) in file.tensors.iter().enumerate() {
+        let key = (tensor.dtype.clone(), tensor.shape.clone());
+        let slot = best.entry(key).or_insert(index);
+        if tensor.name < file.tensors[*slot].name {
+            *slot = index;
+        }
+    }
+    let mut selected: Vec<&SafetensorsTensor> =
+        best.values().map(|&index| &file.tensors[index]).collect();
+    selected.sort_by(|a, b| a.name.cmp(&b.name));
+    selected
+}
+
+/// Contract §9.3: three region classes, eight offsets, `floor(i*(L-len)/7)`.
+fn requests_for_tensor(tensor: &SafetensorsTensor) -> Vec<(u64, u64)> {
+    let logical = tensor.byte_len();
+    let mut out = Vec::new();
+    for &length in &READ_REGION_CLASSES {
+        if logical < length {
+            continue;
+        }
+        for i in 0..READ_OFFSETS_PER_CLASS {
+            let span = (logical - length) as u128;
+            let offset = (i as u128 * span / (READ_OFFSETS_PER_CLASS as u128 - 1)) as u64;
+            out.push((offset, length));
+        }
+    }
+    out
+}
+
+/// The minimal row-aligned covering region of a contiguous byte range, and the
+/// offset of the requested range inside the returned region bytes.
+fn covering_region(
+    shape: &[u64],
+    elem: u64,
+    offset: u64,
+    length: u64,
+) -> Result<(Region, usize), Refusal> {
+    let end = offset.checked_add(length).ok_or_else(|| Refusal {
+        kind: "invalid_region",
+        detail: "offset + length overflows u64".to_owned(),
+    })?;
+    match shape.len() {
+        1 => {
+            let n = shape[0];
+            let start = offset / elem;
+            let stop = (end + elem - 1) / elem;
+            if stop > n {
+                return Err(Refusal {
+                    kind: "invalid_region",
+                    detail: format!("1-D region end element {stop} exceeds shape {n}"),
+                });
+            }
+            let slice_start = (offset - start * elem) as usize;
+            Ok((Region::new(vec![start], vec![stop]), slice_start))
+        }
+        2 => {
+            let rows = shape[0];
+            let cols = shape[1];
+            let row_bytes = cols * elem;
+            let start = offset / row_bytes;
+            let stop = (end + row_bytes - 1) / row_bytes;
+            if stop > rows {
+                return Err(Refusal {
+                    kind: "invalid_region",
+                    detail: format!("2-D region end row {stop} exceeds shape {rows}x{cols}"),
+                });
+            }
+            let slice_start = (offset - start * row_bytes) as usize;
+            Ok((Region::new(vec![start, 0], vec![stop, cols]), slice_start))
+        }
+        rank => Err(Refusal {
+            kind: "unsupported_rank",
+            detail: format!("rank {rank} is not measured by this contract"),
+        }),
+    }
+}
+
+fn seed_for(key: &str) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(b"weft/ekbloom-read/w/v1");
+    hasher.update(key.as_bytes());
+    let digest = hasher.finalize();
+    let mut seed = [0u8; 32];
+    seed.copy_from_slice(&digest);
+    seed
+}
+
+fn read_tensor_bytes(
+    file: &SafetensorsFile,
+    tensor: &SafetensorsTensor,
+) -> Result<Vec<u8>, Refusal> {
+    file.read_tensor(tensor).map_err(|err| Refusal {
+        kind: "corpus_read_failed",
+        detail: format!("{}: {err}", tensor.name),
+    })
+}
+
+fn rss_guard() -> Result<(), Refusal> {
+    let rss = status_kib("VmRSS").unwrap_or(0).saturating_mul(1024);
+    if rss > RSS_ABORT_BYTES {
+        Err(Refusal {
+            kind: "memory_bound",
+            detail: format!(
+                "process RSS {rss} B exceeds the declared abort bound {RSS_ABORT_BYTES} B"
+            ),
+        })
+    } else {
+        Ok(())
+    }
+}
+
+fn rchar_bytes() -> Option<u64> {
+    let text = fs::read_to_string("/proc/self/io").ok()?;
+    for line in text.lines() {
+        if let Some(rest) = line.strip_prefix("rchar:") {
+            return rest.trim().parse().ok();
+        }
+    }
+    None
+}
+
+fn dir_breakdown(root: &Path) -> (u64, Value) {
+    let mut total = 0u64;
+    let mut map = serde_json::Map::new();
+    if let Ok(entries) = fs::read_dir(root) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            let meta = entry.metadata().ok();
+            let bytes = if meta.as_ref().map(|m| m.is_dir()).unwrap_or(false) {
+                dir_bytes(&entry.path())
+            } else {
+                meta.map(|m| m.len()).unwrap_or(0)
+            };
+            total = total.saturating_add(bytes);
+            map.insert(name, json!(bytes));
+        }
+    }
+    (total, Value::Object(map))
+}
+
+fn counter_is_zero(value: &Value) -> Option<bool> {
+    value
+        .as_str()
+        .and_then(|text| text.parse::<u64>().ok())
+        .map(|number| number == 0)
+}
+
+/// Nearest-rank percentile over an ascending slice.
+fn percentile_sorted(sorted: &[u64], p: u64) -> u64 {
+    if sorted.is_empty() {
+        return 0;
+    }
+    let n = sorted.len() as u128;
+    let rank = ((p as u128 * n) + 99) / 100;
+    let index = rank.max(1).min(n) - 1;
+    sorted[index as usize]
+}
+
+fn latency_stats(samples: &[&ReadSample], p99_min_n: usize) -> Value {
+    let mut values: Vec<u64> = samples.iter().map(|sample| sample.ns).collect();
+    values.sort_unstable();
+    let n = values.len();
+    if n == 0 {
+        return json!({
+            "samples": 0,
+            "mean_ns": Value::Null,
+            "min_ns": Value::Null,
+            "p50_ns": Value::Null,
+            "p95_ns": Value::Null,
+            "p99_ns": Value::Null,
+            "p99_eligible": false,
+            "max_ns": Value::Null,
+        });
+    }
+    let sum: u128 = values.iter().map(|&value| value as u128).sum();
+    json!({
+        "samples": n,
+        "mean_ns": sum as f64 / n as f64,
+        "min_ns": values[0],
+        "p50_ns": percentile_sorted(&values, 50),
+        "p95_ns": percentile_sorted(&values, 95),
+        "p99_ns": if n >= p99_min_n { json!(percentile_sorted(&values, 99)) } else { Value::Null },
+        "p99_eligible": n >= p99_min_n,
+        "max_ns": values[n - 1],
+    })
+}
+
+fn p95_ns(samples: &[&ReadSample]) -> u64 {
+    let mut values: Vec<u64> = samples.iter().map(|sample| sample.ns).collect();
+    values.sort_unstable();
+    percentile_sorted(&values, 95)
+}
+
+fn backend_summary(samples: &[&ReadSample]) -> Value {
+    let n = samples.len();
+    let bytes: u128 = samples.iter().map(|sample| sample.bytes_read as u128).sum();
+    let requests: u128 = samples.iter().map(|sample| sample.requests as u128).sum();
+    let units: u128 = samples.iter().map(|sample| sample.units as u128).sum();
+    let encoded: u128 = samples
+        .iter()
+        .map(|sample| sample.encoded_bytes as u128)
+        .sum();
+    json!({
+        "samples": n,
+        "bytes_read": bytes as u64,
+        "requests": requests as u64,
+        "units": units as u64,
+        "encoded_bytes": encoded as u64,
+        "bytes_per_read": if n == 0 { Value::Null } else { json!(bytes as f64 / n as f64) },
+        "requests_per_read": if n == 0 { Value::Null } else { json!(requests as f64 / n as f64) },
+    })
+}
+
+fn build_w(root: &Path, objects: &[ReadObject<'_>]) -> Result<WArm, Refusal> {
+    let _ = fs::remove_dir_all(root);
+    fs::create_dir_all(root).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("cannot create W root {}: {err}", root.display()),
+    })?;
+    let options = Options {
+        fixed_timestamp_ns: Some(READ_FIXED_TIMESTAMP_NS),
+        ..Options::default()
+    };
+    let mut store = Store::init(root, options).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("W Store::init: {err}"),
+    })?;
+    let root_id = store.resolve_path("/").map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("W resolve_path(/): {err}"),
+    })?;
+    let mut ids: BTreeMap<String, Hash32> = BTreeMap::new();
+    let mut last = String::new();
+    let started = Instant::now();
+    let outcome = store.group(|inner| {
+        for obj in objects {
+            last = obj.key.clone();
+            let tile = tile_shape_for(&obj.tensor.shape).ok_or_else(|| {
+                weftfs::Error::invalid_argument(format!(
+                    "shape {:?} does not divide the declared tile grid",
+                    obj.tensor.shape
+                ))
+            })?;
+            let bytes = obj.file.read_tensor(obj.tensor)?;
+            let mut plan = TensorPlanOptions::default();
+            // Only the forced mode-15 representation is emitted. Candidates that
+            // cannot be chosen under the hint are disabled so the build stays
+            // bounded; this changes no emitted byte of the mode-15 frame.
+            plan.float_tensor = false;
+            plan.zstd19 = false;
+            plan.semantic_search = false;
+            plan.zstd_encode_threads = 1;
+            let spec = TensorWriteSpec {
+                strategy_hint: Some(TensorStrategy::TensorTiled),
+                plan,
+                tile_shape: Some(tile),
+                ..TensorWriteSpec::default()
+            };
+            let id = inner.write_tensor_file_with_spec_seeded(
+                root_id,
+                obj.key.as_bytes(),
+                &obj.tensor.dtype,
+                &obj.tensor.shape,
+                &bytes,
+                &TensorLayoutSpec::row_major(),
+                &spec,
+                &seed_for(&obj.key),
+            )?;
+            ids.insert(obj.key.clone(), id);
+            rss_guard().map_err(|refusal| weftfs::Error::io(refusal.detail))?;
+        }
+        Ok(())
+    });
+    let (_, head) = outcome.map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("W write failed (last object {last}): {err}"),
+    })?;
+    let build_ms = ms(started);
+    drop(store);
+    let read_store = Store::open(root, OpenMode::ReadOnly).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("W read-only open: {err}"),
+    })?;
+    let mut per_object = BTreeMap::new();
+    for obj in objects {
+        let id = ids.get(&obj.key).ok_or_else(|| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("W object {} has no id", obj.key),
+        })?;
+        let footprint = object_footprint(&read_store, *id).map_err(|detail| Refusal {
+            kind: "arm_build_failed",
+            detail,
+        })?;
+        per_object.insert(obj.key.clone(), footprint);
+    }
+    Ok(WArm {
+        store: read_store,
+        ids,
+        per_object,
+        head: head.to_hex(),
+        build_ms,
+    })
+}
+
+fn build_a(root: &Path, objects: &[ReadObject<'_>]) -> Result<AArm, Refusal> {
+    let _ = fs::remove_dir_all(root);
+    fs::create_dir_all(root).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("cannot create A root {}: {err}", root.display()),
+    })?;
+    let mut ordered: Vec<(&ReadObject<'_>, u64, u64)> = Vec::new();
+    let mut offset = 0u64;
+    for obj in objects {
+        let length = obj.tensor.byte_len();
+        let pad = (READ_BASELINE_ALIGNMENT - (offset % READ_BASELINE_ALIGNMENT))
+            % READ_BASELINE_ALIGNMENT;
+        offset = offset.saturating_add(pad);
+        ordered.push((obj, offset, length));
+        offset = offset.saturating_add(length);
+    }
+    let total = offset;
+    let started = Instant::now();
+    let payload_path = root.join("payload.raw");
+    let mut payload = File::create(&payload_path).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("A payload create: {err}"),
+    })?;
+    let mut records: BTreeMap<String, ARecord> = BTreeMap::new();
+    let mut manifest_records: Vec<Value> = Vec::new();
+    let mut index_records: Vec<Value> = Vec::new();
+    for (obj, record_offset, length) in &ordered {
+        let bytes = read_tensor_bytes(obj.file, obj.tensor)?;
+        if bytes.len() as u64 != *length {
+            return Err(Refusal {
+                kind: "arm_build_failed",
+                detail: format!(
+                    "A tensor {} read {} bytes, expected {length}",
+                    obj.key,
+                    bytes.len()
+                ),
+            });
+        }
+        let digest = sha256_hex(&bytes);
+        payload
+            .seek(SeekFrom::Start(*record_offset))
+            .map_err(|err| Refusal {
+                kind: "arm_build_failed",
+                detail: format!("A payload seek {}: {err}", obj.key),
+            })?;
+        payload.write_all(&bytes).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A payload write {}: {err}", obj.key),
+        })?;
+        records.insert(
+            obj.key.clone(),
+            ARecord {
+                offset: *record_offset,
+                length: *length,
+                sha256: digest.clone(),
+            },
+        );
+        manifest_records.push(json!({
+            "name": obj.key,
+            "container": obj.container,
+            "tensor": obj.tensor.name,
+            "dtype": obj.tensor.dtype,
+            "shape": obj.tensor.shape,
+            "offset": record_offset,
+            "length": length,
+            "sha256": digest,
+        }));
+        index_records.push(json!({
+            "name": obj.key,
+            "offset": record_offset,
+            "length": length,
+        }));
+        rss_guard()?;
+    }
+    let _ = payload.sync_all();
+    drop(payload);
+    let manifest = json!({
+        "schema": "weft.ekbloom-read-baseline.v1",
+        "payload_file": "payload.raw",
+        "alignment_bytes": READ_BASELINE_ALIGNMENT,
+        "payload_bytes": total,
+        "tensors": manifest_records,
+    });
+    let index = json!({
+        "schema": "weft.ekbloom-read-index.v1",
+        "payload_file": "payload.raw",
+        "tensors": index_records,
+    });
+    let manifest_path = root.join("manifest.json");
+    let index_path = root.join("index.json");
+    fs::write(
+        &manifest_path,
+        serde_json::to_vec(&manifest).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A manifest encode: {err}"),
+        })?,
+    )
+    .map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("A manifest write: {err}"),
+    })?;
+    fs::write(
+        &index_path,
+        serde_json::to_vec(&index).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A index encode: {err}"),
+        })?,
+    )
+    .map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("A index write: {err}"),
+    })?;
+    // Open-time validation: the manifest and index must describe the same
+    // records the builder wrote, and the payload must exist at the declared
+    // length. The payload is not re-read here (it was just written; a re-read
+    // would only warm the page cache).
+    let read_manifest: Value =
+        serde_json::from_slice(&fs::read(&manifest_path).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A manifest re-read: {err}"),
+        })?)
+        .map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A manifest parse: {err}"),
+        })?;
+    let read_index: Value =
+        serde_json::from_slice(&fs::read(&index_path).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A index re-read: {err}"),
+        })?)
+        .map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("A index parse: {err}"),
+        })?;
+    if read_manifest["schema"] != "weft.ekbloom-read-baseline.v1"
+        || read_index["schema"] != "weft.ekbloom-read-index.v1"
+        || read_manifest["payload_bytes"].as_u64() != Some(total)
+        || fs::metadata(&payload_path).map(|meta| meta.len()).ok() != Some(total)
+        || read_manifest["tensors"].as_array().map(|rows| rows.len()) != Some(records.len())
+        || read_index["tensors"].as_array().map(|rows| rows.len()) != Some(records.len())
+    {
+        return Err(Refusal {
+            kind: "arm_build_failed",
+            detail: "A manifest/index failed open-time validation".to_owned(),
+        });
+    }
+    let file = File::open(&payload_path).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("A payload open: {err}"),
+    })?;
+    Ok(AArm {
+        file,
+        records,
+        build_ms: ms(started),
+    })
+}
+
+fn probe_engine(container: &Path, expected: &[u8], requests: &[(u64, u64)]) -> EngineProbe {
+    let body = match ekbloom::open(container) {
+        Ok(body) => body,
+        Err(err) => {
+            return EngineProbe {
+                plan_error: Some(format!("open: {err}")),
+                requests: Vec::new(),
+            }
+        }
+    };
+    let workload = ekbloom::Workload {
+        kind: ekbloom::WorkloadKind::RangeMixed,
+        hot_prefix: None,
+        sample: requests.to_vec(),
+    };
+    let budget = ekbloom::ManifestationBudget {
+        maximum_physical_bytes: u64::MAX,
+    };
+    let engine = match ekbloom::Engine::plan(&body, &budget, &workload) {
+        Ok(engine) => engine,
+        Err(err) => {
+            return EngineProbe {
+                plan_error: Some(format!("plan: {err}")),
+                requests: Vec::new(),
+            }
+        }
+    };
+    let mut rows = Vec::new();
+    for &(offset, length) in requests {
+        let request = ekbloom::ReadRequest { offset, length };
+        let claimed = engine.worst_case_steps_for(request);
+        match engine.read_counted_steps(&body, request) {
+            Ok((bytes, steps)) => {
+                let exact = bytes.len() == length as usize
+                    && bytes.as_slice() == &expected[offset as usize..(offset + length) as usize];
+                rows.push(json!({
+                    "offset": offset,
+                    "length": length,
+                    "claimed_steps": claimed,
+                    "actual_positioning": steps.positioning,
+                    "exact": exact,
+                }));
+            }
+            Err(err) => rows.push(json!({
+                "offset": offset,
+                "length": length,
+                "claimed_steps": claimed,
+                "error": format!("{err}"),
+            })),
+        }
+    }
+    EngineProbe {
+        plan_error: None,
+        requests: rows,
+    }
+}
+
+fn build_e(root: &Path, objects: &[ReadObject<'_>]) -> Result<EArm, Refusal> {
+    let _ = fs::remove_dir_all(root);
+    fs::create_dir_all(root).map_err(|err| Refusal {
+        kind: "arm_build_failed",
+        detail: format!("cannot create E root {}: {err}", root.display()),
+    })?;
+    let started = Instant::now();
+    let mut bodies = BTreeMap::new();
+    let mut containers = BTreeMap::new();
+    let mut probes = BTreeMap::new();
+    for (index, obj) in objects.iter().enumerate() {
+        let bytes = read_tensor_bytes(obj.file, obj.tensor)?;
+        let logical = bytes.len() as u64;
+        let container = root.join(format!("{index:02}.ekb"));
+        let body = ekbloom::create_auto(
+            &bytes,
+            ekbloom::ManifestationProfile::Sparse { interval: 1024 },
+        )
+        .map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("E create_auto {}: {err}", obj.key),
+        })?;
+        let physical = body.physical_bytes();
+        let machine = body.machine_id;
+        let profiles = body.profiles.clone();
+        let logical_len = body.logical_len;
+        if physical > logical.saturating_mul(BODY_CAP_MULTIPLE) {
+            return Err(Refusal {
+                kind: "memory_bound",
+                detail: format!(
+                    "E body {physical} B for {} exceeds the contract's {BODY_CAP_MULTIPLE}x logical cap ({} B)",
+                    obj.key,
+                    logical.saturating_mul(BODY_CAP_MULTIPLE)
+                ),
+            });
+        }
+        ekbloom::write_body(&container, &body).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("E write_body {}: {err}", obj.key),
+        })?;
+        let body_bytes = fs::metadata(&container)
+            .map_err(|err| Refusal {
+                kind: "arm_build_failed",
+                detail: format!("E stat {}: {err}", obj.key),
+            })?
+            .len();
+        drop(body);
+        let rchar_before = rchar_bytes();
+        let open_started = Instant::now();
+        let file_body = ekbloom::FileBody::open(&container).map_err(|err| Refusal {
+            kind: "arm_build_failed",
+            detail: format!("E FileBody::open {}: {err}", obj.key),
+        })?;
+        let open_ms = ms(open_started);
+        let open_rchar = match (rchar_before, rchar_bytes()) {
+            (Some(before), Some(after)) => Some(after.saturating_sub(before)),
+            _ => None,
+        };
+        let probe = probe_engine(&container, &bytes, &obj.requests);
+        bodies.insert(obj.key.clone(), file_body);
+        containers.insert(
+            obj.key.clone(),
+            json!({
+                "container": container.file_name().map(|name| name.to_string_lossy().to_string()),
+                "logical_bytes": logical,
+                "body_bytes": body_bytes,
+                "in_memory_physical_bytes": physical,
+                "container_overhead_bytes": body_bytes.saturating_sub(physical),
+                "machine_id": machine,
+                "profiles": profiles,
+                "logical_len": logical_len,
+                "file_body_open_ms": open_ms,
+                "file_body_open_rchar_bytes": open_rchar,
+                "engine_probe": Value::Null,
+            }),
+        );
+        probes.insert(obj.key.clone(), probe);
+        rss_guard()?;
+    }
+    Ok(EArm {
+        bodies,
+        containers,
+        probes,
+        build_ms: ms(started),
+    })
+}
+
+fn measure_pass(
+    rep: u32,
+    record: bool,
+    objects: &[ReadObject<'_>],
+    w: &WArm,
+    a: &AArm,
+    e: &EArm,
+    samples: &mut Vec<ReadSample>,
+    exact_failures: &mut Vec<Value>,
+) -> Result<(), Refusal> {
+    let shift = if rep == u32::MAX {
+        0
+    } else {
+        (rep % 3) as usize
+    };
+    let base = ["W", "A", "E"];
+    let order = [base[shift], base[(shift + 1) % 3], base[(shift + 2) % 3]];
+    let mut scratch: Vec<u8> = Vec::new();
+    for obj in objects {
+        let source = read_tensor_bytes(obj.file, obj.tensor)?;
+        for arm in order {
+            for &(offset, length) in &obj.requests {
+                let expected = &source[offset as usize..(offset + length) as usize];
+                let mut sample = ReadSample {
+                    arm,
+                    rep: if rep == u32::MAX { 0 } else { rep },
+                    tensor: obj.key.clone(),
+                    offset,
+                    length,
+                    ns: 0,
+                    exact: false,
+                    bytes_read: 0,
+                    requests: 0,
+                    units: 0,
+                    encoded_bytes: 0,
+                };
+                match arm {
+                    "W" => {
+                        let (region, slice_start) =
+                            covering_region(&obj.tensor.shape, obj.elem, offset, length)?;
+                        let id = *w.ids.get(&obj.key).ok_or_else(|| Refusal {
+                            kind: "arm_read_failed",
+                            detail: format!("W has no id for {}", obj.key),
+                        })?;
+                        let before = w.store.backend_stats();
+                        let started = Instant::now();
+                        let (read, stats) = w
+                            .store
+                            .read_tensor_region_with_options_and_stats(
+                                id,
+                                &region,
+                                &TileDecodeOptions::default(),
+                            )
+                            .map_err(|err| Refusal {
+                                kind: "arm_read_failed",
+                                detail: format!("W read {}: {err}", obj.key),
+                            })?;
+                        sample.ns = started.elapsed().as_nanos() as u64;
+                        let after = w.store.backend_stats();
+                        sample.bytes_read = after.bytes_read.saturating_sub(before.bytes_read);
+                        sample.requests = after.reads.saturating_sub(before.reads);
+                        sample.units = stats.tiles as u64;
+                        let stop = slice_start.saturating_add(length as usize);
+                        sample.exact = read.bytes.len() >= stop
+                            && &read.bytes[slice_start..stop] == expected
+                            && sha256_hex(&read.bytes[slice_start..stop]) == sha256_hex(expected);
+                    }
+                    "A" => {
+                        let record = a.records.get(&obj.key).ok_or_else(|| Refusal {
+                            kind: "arm_read_failed",
+                            detail: format!("A has no record for {}", obj.key),
+                        })?;
+                        if scratch.len() != length as usize {
+                            scratch.resize(length as usize, 0);
+                        }
+                        let started = Instant::now();
+                        a.file
+                            .read_exact_at(&mut scratch, record.offset + offset)
+                            .map_err(|err| Refusal {
+                                kind: "arm_read_failed",
+                                detail: format!("A read {}: {err}", obj.key),
+                            })?;
+                        sample.ns = started.elapsed().as_nanos() as u64;
+                        sample.bytes_read = length;
+                        sample.requests = 1;
+                        sample.units = 1;
+                        sample.exact = scratch.as_slice() == expected
+                            && sha256_hex(&scratch) == sha256_hex(expected);
+                    }
+                    "E" => {
+                        let body = e.bodies.get(&obj.key).ok_or_else(|| Refusal {
+                            kind: "arm_read_failed",
+                            detail: format!("E has no body for {}", obj.key),
+                        })?;
+                        let before = (
+                            body.fetched_bytes(),
+                            body.fetched_reads(),
+                            body.fetched_encoded_bytes(),
+                        );
+                        let started = Instant::now();
+                        let bytes =
+                            body.read(ekbloom::ReadRequest { offset, length })
+                                .map_err(|err| Refusal {
+                                    kind: "arm_read_failed",
+                                    detail: format!("E read {}: {err}", obj.key),
+                                })?;
+                        sample.ns = started.elapsed().as_nanos() as u64;
+                        let after = (
+                            body.fetched_bytes(),
+                            body.fetched_reads(),
+                            body.fetched_encoded_bytes(),
+                        );
+                        sample.bytes_read = after.0.saturating_sub(before.0);
+                        sample.requests = after.1.saturating_sub(before.1);
+                        sample.units = sample.requests;
+                        sample.encoded_bytes = after.2.saturating_sub(before.2);
+                        sample.exact = bytes.as_slice() == expected
+                            && sha256_hex(&bytes) == sha256_hex(expected);
+                    }
+                    _ => unreachable!(),
+                }
+                if record {
+                    if !sample.exact && exact_failures.len() < 16 {
+                        exact_failures.push(json!({
+                            "arm": sample.arm,
+                            "rep": sample.rep,
+                            "tensor": sample.tensor,
+                            "offset": sample.offset,
+                            "length": sample.length,
+                        }));
+                    }
+                    samples.push(sample);
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn read_base_receipt(args: &Args, arms: &[VerifiedArm], corpus_dir: &Path) -> Value {
+    let mut receipt = base_receipt(args, "read", arms, corpus_dir);
+    receipt["contract"] = json!("bench/CONTRACTS-ekbloom.md (version 2, §9)");
+    receipt["feature_string"] = json!(
+        "weftfs: default (no features); weftcodec: path dependency; ekbloom: default (no features)"
+    );
+    receipt["upstream"]["api_used"] = json!([
+        "ekbloom::create_auto(&[u8], ManifestationProfile::Sparse { interval: 1024 }) -> EkbloomBody",
+        "ekbloom::write_body(&Path, &EkbloomBody)",
+        "ekbloom::FileBody::open(&Path) -> FileBody",
+        "FileBody::read(ReadRequest { offset, length }) -> Vec<u8>",
+        "FileBody::fetched_bytes() / fetched_reads() / fetched_encoded_bytes() -> u64",
+        "ekbloom::open(&Path) -> EkbloomBody; ekbloom::Engine::plan(..); Engine::worst_case_steps_for(..); Engine::read_counted_steps(..) [supporting probe, not the gating path]",
+        "weftfs: Store::group, Store::write_tensor_file_with_spec_seeded(TensorStrategy::TensorTiled), Store::open(ReadOnly), Store::read_tensor_region_with_options_and_stats, Store::backend_stats",
+    ]);
+    receipt["e3_contract"] = json!({
+        "region_classes_bytes": READ_REGION_CLASSES,
+        "offsets_per_class": READ_OFFSETS_PER_CLASS,
+        "repetitions": READ_REPETITIONS,
+        "repetition_0": "cold-first (first timed pass, no warm-up)",
+        "repetitions_1_6": "warm (one untimed full pass precedes them)",
+        "tile_shape_rank_1": [READ_TILE_1D],
+        "tile_shape_rank_2": [READ_TILE_2D, READ_TILE_2D],
+        "ebloom_profile": READ_E_PROFILE,
+        "baseline_alignment_bytes": READ_BASELINE_ALIGNMENT,
+        "p99_min_pooled_samples": READ_MIN_POOLED_SAMPLES_FOR_P99,
+        "p99_min_class_samples": READ_MIN_CLASS_SAMPLES_FOR_P99,
+        "p95_tolerance": {
+            "numerator": READ_P95_TOLERANCE_NUMERATOR,
+            "denominator": READ_P95_TOLERANCE_DENOMINATOR,
+            "integer_form": "2 * p95_E_ns <= 5 * p95_best_ns",
+            "citation": "bench/CONTRACTS-context-advantage.md §3 (C — fast-path neutrality), C2: p95 <= 2.5x",
+            "declared_before_measurement": true,
+            "operator_veto": "docs/EKBLOOM-PLAN.md §9 item 1 (E3 gate shape)",
+        },
+    });
+    receipt
+}
+
+fn read_loss_receipt(mut receipt: Value, kind: &str, detail: &str) -> Value {
+    receipt["refusal"] = json!({"kind": kind, "detail": detail});
+    receipt["verdict"] = json!("loss");
+    receipt["checks"] = json!([
+        {"id": "C_arms_built", "pass": false, "detail": detail},
+    ]);
+    receipt["cgroup"] = json!({
+        "memory_peak_bytes": cgroup_value("/sys/fs/cgroup/memory.peak"),
+        "memory_max_bytes": cgroup_value("/sys/fs/cgroup/memory.max"),
+        "pids_events_max": cgroup_pids_events_max(),
+        "pids_current": cgroup_value("/sys/fs/cgroup/pids.current"),
+        "pids_max": cgroup_value("/sys/fs/cgroup/pids.max"),
+        "oom_kill": cgroup_oom_kill(),
+        "process_peak_rss_kib": status_kib("VmHWM").unwrap_or(0),
+        "process_rss_kib": status_kib("VmRSS").unwrap_or(0),
+    });
+    receipt["limitations"] = json!([
+        "typed arm build refusal; the gate was not evaluated and no number is reported for it",
+        "one host, one process, local POSIX; no fleet, cloud, media, power-loss or GPU claim",
+    ]);
+    receipt
+}
+
+fn run_read(args: &Args, arms: &[VerifiedArm], corpus_dir: &Path) -> Value {
+    let mut receipt = read_base_receipt(args, arms, corpus_dir);
+    let mut objects: Vec<ReadObject<'_>> = Vec::new();
+    let mut excluded: Vec<Value> = Vec::new();
+    for arm in arms {
+        let selected = read_selection(&arm.file);
+        for tensor in selected {
+            let elem = match element_bytes(&tensor.dtype) {
+                Ok(elem) => elem,
+                Err(refusal) => {
+                    excluded.push(json!({
+                        "container": arm.arm.name,
+                        "name": tensor.name,
+                        "reason": refusal.detail,
+                    }));
+                    continue;
+                }
+            };
+            if tile_shape_for(&tensor.shape).is_none() {
+                excluded.push(json!({
+                    "container": arm.arm.name,
+                    "name": tensor.name,
+                    "shape": tensor.shape,
+                    "reason": "shape does not divide the declared [128] / [128,128] tile grid",
+                }));
+                continue;
+            }
+            let key = format!("{}__{}", arm.arm.name, tensor.name);
+            objects.push(ReadObject {
+                key,
+                container: arm.arm.name,
+                tensor,
+                file: &arm.file,
+                elem,
+                requests: requests_for_tensor(tensor),
+            });
+        }
+    }
+    objects.sort_by(|left, right| left.key.cmp(&right.key));
+    let logical_bytes: u64 = objects.iter().map(|obj| obj.tensor.byte_len()).sum();
+    let mut per_container: BTreeMap<&str, (usize, u64)> = BTreeMap::new();
+    for obj in &objects {
+        let entry = per_container.entry(obj.container).or_insert((0, 0));
+        entry.0 += 1;
+        entry.1 = entry.1.saturating_add(obj.tensor.byte_len());
+    }
+    receipt["selection"] = json!({
+        "rule": "contract §9.2: per (dtype, shape) class, the lexicographically smallest tensor name; applied to base and instruct independently",
+        "objects": objects.len(),
+        "expected_objects": 14,
+        "logical_bytes": logical_bytes,
+        "per_container": per_container.iter().map(|(container, (count, bytes))| json!({
+            "container": container,
+            "objects": count,
+            "logical_bytes": bytes,
+        })).collect::<Vec<_>>(),
+        "excluded": excluded,
+    });
+    if objects.is_empty() {
+        return read_loss_receipt(
+            receipt,
+            "no_usable_tensors",
+            "no tensor survived the declared selection rule",
+        );
+    }
+
+    let w_root = args.work.join("arm-w");
+    let a_root = args.work.join("arm-a");
+    let e_root = args.work.join("arm-e");
+    receipt["roots"] = json!({
+        "W": w_root.display().to_string(),
+        "A": a_root.display().to_string(),
+        "E": e_root.display().to_string(),
+    });
+
+    let w = match build_w(&w_root, &objects) {
+        Ok(w) => w,
+        Err(refusal) => {
+            return read_loss_receipt(receipt, refusal.kind, &refusal.detail);
+        }
+    };
+    let a = match build_a(&a_root, &objects) {
+        Ok(a) => a,
+        Err(refusal) => {
+            return read_loss_receipt(receipt, refusal.kind, &refusal.detail);
+        }
+    };
+    let e = match build_e(&e_root, &objects) {
+        Ok(e) => e,
+        Err(refusal) => {
+            return read_loss_receipt(receipt, refusal.kind, &refusal.detail);
+        }
+    };
+
+    let w_head = w.head.clone();
+    let w_build_ms = w.build_ms;
+    let w_objects = w.ids.len();
+    let a_build_ms = a.build_ms;
+    let a_records = a.records.len();
+    let e_build_ms = e.build_ms;
+    let mut e_containers = serde_json::Map::new();
+    for (key, value) in &e.containers {
+        e_containers.insert(key.clone(), value.clone());
+    }
+    let mut engine_probes = serde_json::Map::new();
+    for (key, probe) in &e.probes {
+        engine_probes.insert(
+            key.clone(),
+            json!({
+                "plan_error": probe.plan_error,
+                "requests": probe.requests,
+            }),
+        );
+    }
+    let mut rows: Vec<Value> = Vec::new();
+    for obj in &objects {
+        let id = w.ids.get(&obj.key);
+        let record = a.records.get(&obj.key);
+        rows.push(json!({
+            "container": obj.container,
+            "name": obj.tensor.name,
+            "key": obj.key,
+            "dtype": obj.tensor.dtype,
+            "shape": obj.tensor.shape,
+            "logical_bytes": obj.tensor.byte_len(),
+            "element_bytes": obj.elem,
+            "requests": obj.requests.len(),
+            "W": {
+                "object_id": id.map(|id| id.to_hex()),
+                "object_footprint_bytes": w.per_object.get(&obj.key),
+            },
+            "A": {
+                "offset": record.map(|record| record.offset),
+                "length": record.map(|record| record.length),
+                "sha256": record.map(|record| record.sha256.clone()),
+            },
+            "E": e.containers.get(&obj.key),
+        }));
+    }
+    receipt["rows"] = json!(rows);
+    // Contract §9.6: a digest over the per-object retained sizes and content
+    // hashes, so a repeated run can be compared structurally.
+    let mut determinism = Sha256::new();
+    determinism.update(b"weft/ekbloom-read/determinism/v1");
+    for obj in &objects {
+        determinism.update(obj.key.as_bytes());
+        determinism.update(
+            w.per_object
+                .get(&obj.key)
+                .copied()
+                .unwrap_or(0)
+                .to_le_bytes(),
+        );
+        if let Some(record) = a.records.get(&obj.key) {
+            determinism.update(record.length.to_le_bytes());
+            determinism.update(record.sha256.as_bytes());
+        }
+        if let Some(Value::Object(map)) = e.containers.get(&obj.key) {
+            let body_bytes = map.get("body_bytes").and_then(Value::as_u64).unwrap_or(0);
+            determinism.update(body_bytes.to_le_bytes());
+        }
+    }
+    receipt["determinism_digest"] = json!(hex(&determinism.finalize()));
+    receipt["determinism_inputs"] =
+        json!("SHA-256 over (key, W whole-object footprint, A length, A source SHA-256, E body_bytes) in ascending key order");
+    let base_order = ["W", "A", "E"];
+    let repetition_order: Vec<Value> = (0..READ_REPETITIONS)
+        .map(|rep| {
+            let shift = (rep % 3) as usize;
+            json!([
+                base_order[shift],
+                base_order[(shift + 1) % 3],
+                base_order[(shift + 2) % 3]
+            ])
+        })
+        .collect();
+    receipt["repetition_order"] = json!(repetition_order);
+    receipt["repetition_semantics"] = json!({
+        "0": "cold-first: first timed pass after construction, no warm-up",
+        "1_6": "warm: one untimed full pass precedes them",
+        "cold_definition": "process-cold only; the court cannot drop the host page cache",
+    });
+    receipt["construction"] = json!({
+        "W": {
+            "build_ms": w_build_ms,
+            "head": w_head,
+            "objects": w_objects,
+            "write_options": {
+                "strategy_hint": "tensor-tiled",
+                "tile_shape_rank_1": [READ_TILE_1D],
+                "tile_shape_rank_2": [READ_TILE_2D, READ_TILE_2D],
+                "planner_options": {
+                    "float_tensor": false,
+                    "zstd19": false,
+                    "semantic_search": false,
+                    "zstd_encode_threads": 1,
+                    "note": "candidates that cannot be chosen under the forced mode-15 hint are disabled; no emitted mode-15 byte changes",
+                },
+                "commit": "one Store::group",
+            },
+        },
+        "A": {
+            "build_ms": a_build_ms,
+            "records": a_records,
+            "payload_file": "payload.raw",
+            "manifest_file": "manifest.json",
+            "index_file": "index.json",
+            "alignment_bytes": READ_BASELINE_ALIGNMENT,
+            "open_validation": "manifest and index schema, record count, offsets, lengths and payload length are validated once at open; the payload is not re-read (it was just written, and a re-read would only warm the page cache)",
+        },
+        "E": {
+            "build_ms": e_build_ms,
+            "profile": READ_E_PROFILE,
+            "containers": e_containers,
+            "engine_probe": engine_probes,
+            "note": "the engine probe is the in-memory Engine at an unbounded budget; it is supporting evidence, not the gating FileBody path",
+            "open_io_note": "FileBody::open validates the container by streaming it; per-container file_body_open_ms and file_body_open_rchar_bytes are reported and are never added to a read's latency",
+        },
+    });
+
+    let mut samples: Vec<ReadSample> = Vec::new();
+    let mut exact_failures: Vec<Value> = Vec::new();
+    if let Err(refusal) = measure_pass(
+        0,
+        true,
+        &objects,
+        &w,
+        &a,
+        &e,
+        &mut samples,
+        &mut exact_failures,
+    ) {
+        return read_loss_receipt(receipt, refusal.kind, &refusal.detail);
+    }
+    // One untimed full pass precedes the six warm repetitions (contract §9.3).
+    if let Err(refusal) = measure_pass(
+        u32::MAX,
+        false,
+        &objects,
+        &w,
+        &a,
+        &e,
+        &mut samples,
+        &mut exact_failures,
+    ) {
+        return read_loss_receipt(receipt, refusal.kind, &refusal.detail);
+    }
+    for rep in 1..READ_REPETITIONS {
+        if let Err(refusal) = measure_pass(
+            rep,
+            true,
+            &objects,
+            &w,
+            &a,
+            &e,
+            &mut samples,
+            &mut exact_failures,
+        ) {
+            return read_loss_receipt(receipt, refusal.kind, &refusal.detail);
+        }
+    }
+
+    // Footprint is measured after every arm handle is dropped (contract §9.4).
+    drop(w.store);
+    drop(a.file);
+    drop(e.bodies);
+    let (w_bytes, w_breakdown) = dir_breakdown(&w_root);
+    let (a_bytes, a_breakdown) = dir_breakdown(&a_root);
+    let (e_bytes, e_breakdown) = dir_breakdown(&e_root);
+
+    let pooled = |arm: &str| -> Vec<&ReadSample> {
+        samples.iter().filter(|sample| sample.arm == arm).collect()
+    };
+    let by_class = |arm: &str, length: u64| -> Vec<&ReadSample> {
+        samples
+            .iter()
+            .filter(|sample| sample.arm == arm && sample.length == length)
+            .collect()
+    };
+    let class_stats = |arm: &str| -> Value {
+        let mut map = serde_json::Map::new();
+        for length in READ_REGION_CLASSES {
+            map.insert(
+                length.to_string(),
+                latency_stats(&by_class(arm, length), READ_MIN_CLASS_SAMPLES_FOR_P99),
+            );
+        }
+        Value::Object(map)
+    };
+    let latency = json!({
+        "W": {"pooled": latency_stats(&pooled("W"), READ_MIN_POOLED_SAMPLES_FOR_P99), "by_class": class_stats("W")},
+        "A": {"pooled": latency_stats(&pooled("A"), READ_MIN_POOLED_SAMPLES_FOR_P99), "by_class": class_stats("A")},
+        "E": {"pooled": latency_stats(&pooled("E"), READ_MIN_POOLED_SAMPLES_FOR_P99), "by_class": class_stats("E")},
+        "percentile_method": "nearest-rank over the pooled samples; per-class statistics are observations",
+    });
+    let backend = json!({
+        "W": backend_summary(&pooled("W")),
+        "A": backend_summary(&pooled("A")),
+        "E": backend_summary(&pooled("E")),
+        "method": {
+            "W": "Store::backend_stats() deltas around the read (reads, range_reads, bytes_read) plus TileDecodeStats.tiles",
+            "A": "one pread per read, exactly the requested length; counted by the harness",
+            "E": "FileBody::fetched_bytes/fetched_reads/fetched_encoded_bytes deltas; open-time I/O is reported separately and excluded",
+        },
+    });
+    let exactness = json!({
+        "W": {"samples": pooled("W").len(), "exact": pooled("W").iter().filter(|sample| sample.exact).count()},
+        "A": {"samples": pooled("A").len(), "exact": pooled("A").iter().filter(|sample| sample.exact).count()},
+        "E": {"samples": pooled("E").len(), "exact": pooled("E").iter().filter(|sample| sample.exact).count()},
+        "all_exact": samples.iter().all(|sample| sample.exact),
+        "first_failures": exact_failures,
+    });
+    let footprint = json!({
+        "logical_bytes": logical_bytes,
+        "W": {"retained_bytes": w_bytes, "breakdown": w_breakdown},
+        "A": {"retained_bytes": a_bytes, "breakdown": a_breakdown},
+        "E": {"retained_bytes": e_bytes, "breakdown": e_breakdown},
+        "E_over_W_ppm": if w_bytes > 0 { (e_bytes as u128 * 1_000_000 / w_bytes as u128) as u64 } else { 0 },
+        "E_over_A_ppm": if a_bytes > 0 { (e_bytes as u128 * 1_000_000 / a_bytes as u128) as u64 } else { 0 },
+        "includes": "regular files only: W is the whole store tree (FORMAT, LOCK, superblock, commits, objects, manifests, indexes, refs, catalog); A is payload.raw + manifest.json + index.json; E is every .ekb container. Directory metadata and block-size rounding are excluded for all arms.",
+    });
+
+    let exact_ok = !samples.is_empty() && samples.iter().all(|sample| sample.exact);
+    let footprint_ok = e_bytes < w_bytes && e_bytes < a_bytes;
+    let p95_e = p95_ns(&pooled("E"));
+    let p95_w = p95_ns(&pooled("W"));
+    let p95_a = p95_ns(&pooled("A"));
+    let p95_best = p95_w.min(p95_a);
+    let p95_holds = (p95_e as u128) * READ_P95_TOLERANCE_DENOMINATOR as u128
+        <= (p95_best as u128) * READ_P95_TOLERANCE_NUMERATOR as u128;
+    let oom_zero = counter_is_zero(&cgroup_oom_kill());
+    let pids_zero = counter_is_zero(&cgroup_pids_events_max());
+    let resource_ok = oom_zero == Some(true) && pids_zero == Some(true);
+    let pass = exact_ok && footprint_ok && p95_holds && resource_ok;
+    let verdict = if !exact_ok {
+        "fail"
+    } else if pass {
+        "pass"
+    } else {
+        "loss"
+    };
+    receipt["latency"] = latency;
+    receipt["backend"] = backend;
+    receipt["exactness"] = exactness;
+    let mut expected_by_class = BTreeMap::new();
+    for obj in &objects {
+        for &(_, length) in &obj.requests {
+            *expected_by_class.entry(length).or_insert(0usize) += READ_REPETITIONS as usize;
+        }
+    }
+    let mut actual_by_class = BTreeMap::new();
+    for &length in &READ_REGION_CLASSES {
+        actual_by_class.insert(
+            length,
+            samples
+                .iter()
+                .filter(|sample| sample.arm == "W" && sample.length == length)
+                .count(),
+        );
+    }
+    let actual_pooled = samples.iter().filter(|sample| sample.arm == "W").count();
+    let expected_pooled: usize = expected_by_class.values().sum();
+    receipt["sample_counts"] = json!({
+        "per_arm": true,
+        "arms": ["W", "A", "E"],
+        "expected_by_class": expected_by_class,
+        "actual_by_class": actual_by_class,
+        "expected_pooled": expected_pooled,
+        "actual_pooled": actual_pooled,
+        "p99_pooled_eligible": actual_pooled >= READ_MIN_POOLED_SAMPLES_FOR_P99,
+        "p99_class_eligible": actual_by_class.iter().map(|(length, count)| (length.to_string(), *count >= READ_MIN_CLASS_SAMPLES_FOR_P99)).collect::<BTreeMap<_, _>>(),
+        "note": "counts are per arm; all three arms measured the same 1,904 reads. The contract's stated expected counts (784 / 672 / 672 = 2,128 pooled) assumed every selected tensor was eligible for every class; the contract's own L >= len rule excludes the four rank-1 tensors (two per container) from the 4,096 and 65,536 classes, so the actual counts are 784 / 560 / 560 = 1,904 pooled. The gate uses the pooled p95 and is unaffected; the pooled p99 is reported as ineligible, and every per-class p99 is eligible (>= 500).",
+    });
+    receipt["footprint"] = footprint;
+    receipt["gate"] = json!({
+        "G1_exactness": exact_ok,
+        "G2_footprint": footprint_ok,
+        "G3_p95": p95_holds,
+        "G4_resource": resource_ok,
+        "E_footprint_bytes": e_bytes,
+        "W_footprint_bytes": w_bytes,
+        "A_footprint_bytes": a_bytes,
+        "E_strictly_smaller_than_W": e_bytes < w_bytes,
+        "E_strictly_smaller_than_A": e_bytes < a_bytes,
+        "p95_E_ns": p95_e,
+        "p95_W_ns": p95_w,
+        "p95_A_ns": p95_a,
+        "p95_best_ns": p95_best,
+        "tolerance": {
+            "numerator": READ_P95_TOLERANCE_NUMERATOR,
+            "denominator": READ_P95_TOLERANCE_DENOMINATOR,
+            "integer_check": "2 * p95_E_ns <= 5 * p95_best_ns",
+            "citation": "bench/CONTRACTS-context-advantage.md §3 (C — fast-path neutrality), C2: p95 <= 2.5x",
+        },
+        "p95_lhs": ((p95_e as u128) * READ_P95_TOLERANCE_DENOMINATOR as u128) as u64,
+        "p95_rhs": ((p95_best as u128) * READ_P95_TOLERANCE_NUMERATOR as u128) as u64,
+        "pass": pass,
+    });
+    receipt["checks"] = json!([
+        {"id": "C_arms_built", "pass": true, "detail": "W, A and E constructed and opened"},
+        {"id": "G1_exactness", "pass": exact_ok, "detail": format!("{} samples; {} exact", samples.len(), samples.iter().filter(|sample| sample.exact).count())},
+        {"id": "G2_footprint", "pass": footprint_ok, "detail": format!("E {e_bytes} B; W {w_bytes} B; A {a_bytes} B; strict against both: {footprint_ok}")},
+        {"id": "G3_p95", "pass": p95_holds, "detail": format!("2 * {p95_e} <= 5 * {p95_best} (E p95 {} ns; W {} ns; A {} ns)", p95_e, p95_w, p95_a)},
+        {"id": "G4_resource", "pass": resource_ok, "detail": format!("oom_kill zero: {oom_zero:?}; pids.events max zero: {pids_zero:?}")},
+        {"id": "C_engine_bound", "pass": engine_probes.values().all(|probe| probe
+            .get("requests").and_then(Value::as_array).map(|rows| rows.iter().all(|row| row.get("error").is_none() && row.get("exact").and_then(Value::as_bool) == Some(true))).unwrap_or(false)),
+         "gating": false,
+         "detail": "supporting in-memory Engine probe: every request decoded exactly and no read errored (not the gating FileBody path)"},
+    ]);
+    receipt["samples"] = json!(samples
+        .iter()
+        .map(|sample| json!({
+            "arm": sample.arm,
+            "rep": sample.rep,
+            "tensor": sample.tensor,
+            "offset": sample.offset,
+            "length": sample.length,
+            "ns": sample.ns,
+            "exact": sample.exact,
+            "bytes_read": sample.bytes_read,
+            "requests": sample.requests,
+            "units": sample.units,
+            "encoded_bytes": sample.encoded_bytes,
+        }))
+        .collect::<Vec<_>>());
+    receipt["cgroup"] = json!({
+        "memory_peak_bytes": cgroup_value("/sys/fs/cgroup/memory.peak"),
+        "memory_max_bytes": cgroup_value("/sys/fs/cgroup/memory.max"),
+        "pids_events_max": cgroup_pids_events_max(),
+        "pids_current": cgroup_value("/sys/fs/cgroup/pids.current"),
+        "pids_max": cgroup_value("/sys/fs/cgroup/pids.max"),
+        "oom_kill": cgroup_oom_kill(),
+        "process_peak_rss_kib": status_kib("VmHWM").unwrap_or(0),
+        "process_rss_kib": status_kib("VmRSS").unwrap_or(0),
+    });
+    receipt["limitations"] = json!([
+        "process-cold first pass only: the court cannot drop the host page cache and the data was just written; no media or power-loss claim",
+        "A is a raw local payload + canonical manifest + index; no compression and no decode",
+        "E is the file-backed FileBody path on a Sparse{1024} container; the in-memory Engine bound is supporting evidence, not the gating path",
+        "W uses mode 15 with tile [128] / [128,128] and a read-only store with no decoded-object cache and no single-flight",
+        "E open-time I/O is reported separately (container bytes and /proc/self/io rchar) and excluded from read latency",
+        "per-class and strict latency wins are observations; the gate is the pooled p95 and the strict footprint",
+        "footprint excludes directory metadata and block-size rounding for all three arms equally",
+        "one host, one process, local POSIX, warm page cache; no fleet, cloud, media, power-loss, GPU or serving claim",
     ]);
     receipt["verdict"] = json!(verdict);
     receipt

@@ -27,11 +27,13 @@ set -Eeuo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: scripts/ekbloom_court.sh --phase boundary|space
-       (also accepted but not implemented in this subphase: read, restore, write)
+usage: scripts/ekbloom_court.sh --phase boundary|space|read
+       (also accepted but not implemented in this subphase: restore, write)
 
 Run it inside the rust court:
   scripts/docker-court.sh rust "cd /work && bash scripts/ekbloom_court.sh --phase boundary"
+  scripts/docker-court.sh rust "cd /work && bash scripts/ekbloom_court.sh --phase space"
+  scripts/docker-court.sh rust "cd /work && bash scripts/ekbloom_court.sh --phase read"
 USAGE
   exit 64
 }
@@ -48,13 +50,13 @@ done
 [[ -n "$phase" ]] || usage
 
 case "$phase" in
-  boundary|space) ;;
-  read|restore|write)
+  boundary|space|read) ;;
+  restore|write)
     echo "ekbloom_court: not implemented in this subphase (--phase $phase)" >&2
     exit 3
     ;;
   *)
-    echo "unknown phase '$phase' (expected boundary|space)" >&2
+    echo "unknown phase '$phase' (expected boundary|space|read)" >&2
     exit 64
     ;;
 esac
@@ -75,6 +77,7 @@ stamp="${WEFT_EKBLOOM_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 case "$phase" in
   boundary) receipt="bench/receipts/ekbloom-${stamp}.json" ;;
   space) receipt="bench/receipts/ekbloom-space-${stamp}.json" ;;
+  read) receipt="bench/receipts/ekbloom-read-${stamp}.json" ;;
 esac
 log="${receipt%.json}.log"
 work=".docker-cache/ekbloom-court-${stamp}-${phase}"
