@@ -300,7 +300,7 @@ The release is **R12c**, **R14d**, and **R17–R22**.
 - **Verification.** `bench/receipts/verify-20261112T223540Z.json` — **46/46**
   courts pass, 0 failed, 0 skipped, at parent `0461132d4fc6`
   (WeftCodec `d95fa78`, WeftCodec-Go `0db665e`, WeftFS-Go `6d58137`); **420**
-  conformance vectors, aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; **1,054** audited claims.
+  conformance vectors, aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`; the claims manifest is audited by `scripts/check-claims.sh`.
 <!-- END GENERATED:readme-v140 -->
 
 > **Correction (v1.4.1).** The R21/R22 rows above measure the bounded

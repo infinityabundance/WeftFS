@@ -1,0 +1,85 @@
+{
+ "schema": "weft.release_artifacts.v1",
+ "generated_utc": "20261113T050602Z",
+ "label": "v1.4.2 published state observed after the merge, tag and GitHub release; registry uploads not performed",
+ "revisions": {
+  "WeftFS_merge": "aac23a9a11e722afe750e93b83b16594bd816be7",
+  "WeftCodec_merge": "926410bd7572fb2f831fca3faaf6666e0d10809b",
+  "WeftCodec-Go_merge": "20c320c91056db6a8c6c940f4ce345c08c60dd83",
+  "WeftFS-Go_merge": "480eb9e6a92414e693e4bd5233a62970b9966328",
+  "measured_tree": "52da9888f3726e6af5c364af7707fd98574fc954",
+  "aggregate_verify": "bench/receipts/verify-20261113T033408Z.json"
+ },
+ "tags": {
+  "WeftFS": {"name": "v1.4.2", "tag_object": "1c8fcc5b63811cc3893053429d7177d2cb0dcbb6", "commit": "aac23a9a11e722afe750e93b83b16594bd816be7"},
+  "WeftCodec": {"name": "v1.4.2", "tag_object": "0a12da9d8505fc43de031c724c1b4a281100f357", "commit": "926410bd7572fb2f831fca3faaf6666e0d10809b"},
+  "WeftCodec-Go": {"name": "v1.4.2", "tag_object": "dc179363ceb67bb65d41df7597c5832fc2cfe1df", "commit": "20c320c91056db6a8c6c940f4ce345c08c60dd83"},
+  "WeftFS-Go": {"name": "v1.4.2", "tag_object": "a1959f62c0f6064c2a5ca0f6f3a0eda10ba625a6", "commit": "480eb9e6a92414e693e4bd5233a62970b9966328"}
+ },
+ "github_releases": {
+  "WeftFS": "https://github.com/infinityabundance/WeftFS/releases/tag/v1.4.2",
+  "WeftCodec": "https://github.com/infinityabundance/WeftCodec/releases/tag/v1.4.2",
+  "WeftCodec-Go": "https://github.com/infinityabundance/WeftCodec-Go/releases/tag/v1.4.2",
+  "WeftFS-Go": "https://github.com/infinityabundance/WeftFS-Go/releases/tag/v1.4.2"
+ },
+ "github_release_assets": {
+  "repo": "infinityabundance/WeftFS",
+  "source": "gh release view v1.4.2 --repo infinityabundance/WeftFS --json assets",
+  "fetched_utc": "2026-11-13T05:02Z",
+  "wheel": {
+   "name": "weftcodec-1.4.2-py3-none-any.whl",
+   "size_bytes": 115685,
+   "sha256": "787cc6ca203ea6a6c6285551281833de44b826946968ba3faf3b3d2d9ef2b022"
+  },
+  "sdist": {
+   "name": "weftcodec-1.4.2.tar.gz",
+   "size_bytes": 156563,
+   "sha256": "ab214bffced0312f0f50fb3a1929a68c2163e32493f9a159821a9ea78b39ae78"
+  },
+  "matches_local_build": true
+ },
+ "pypi_142": {
+  "published": false,
+  "checked": "https://pypi.org/pypi/weftcodec/1.4.2/json",
+  "fetched_utc": "2026-11-13T05:06:02Z",
+  "http_status": 404,
+  "note": "by instruction this session stops before the registry upload; the coordinator uploads the attached wheel and sdist"
+ },
+ "crates_142": {
+  "published": false,
+  "checked": "https://crates.io/api/v1/crates/weftcodec/1.4.2",
+  "fetched_utc": "2026-11-13T05:06:02Z",
+  "http_status": 404,
+  "weftcodec_dry_run": "pass: 528 files packaged, 8.8 MiB (2.9 MiB compressed), package verified (rust court)",
+  "weftfs_dry_run": "blocked: failed to select a version for the requirement `weftcodec = \"^1.4.2\"`; candidates 1.4.1, 1.4.0, 1.3.0 did not match. scripts/publish-crates.sh publishes weftcodec first, waits for the index, then weftfs.",
+  "note": "by instruction this session does not upload; the coordinator runs scripts/publish-crates.sh"
+ },
+ "ghcr_142": {
+  "weftfs": "sha256:3a17098a2c188b3d7c50731b88dee98a1474d577c86846b4b9927291d1326141",
+  "weftcodec": "sha256:b8893492fdb6c13ab695089a45075d185b380118c55c31a197378632e0b90680",
+  "weftcodec_go": "sha256:af6b30bd6c8c897d79b80be838cded1c8af8cc078b3a255489492401f814bdbe",
+  "weftfs_go": "sha256:7b44ce77c17b46101fbe92726a7c9d4c10677962c61dbd750466749c6ca1a03c",
+  "latest_matches_v142": true,
+  "source": "docker buildx imagetools inspect ghcr.io/infinityabundance/<image>:{v1.4.2,latest}",
+  "fetched_utc": "2026-11-13T05:05Z",
+  "workflow_runs": {
+   "WeftFS": 43369368602,
+   "WeftCodec": 43369368236,
+   "WeftCodec-Go": 43369377848,
+   "WeftFS-Go": 43369376873
+  },
+  "note": "image-index digests; a rebuild is not bit-reproducible"
+ },
+ "environment": {
+  "court": "weft/python-court:1 and weft/rust-court:1 for the artifacts; GitHub-hosted workflows for GHCR",
+  "limits": "the court defaults (memory 3g == swap, 4 cpus, pids 1024, bounded /tmp, no-new-privileges, cap-drop=ALL) for everything built locally; nothing was built on the host",
+  "host_builds": "none"
+ },
+ "not_claimed": [
+  "weftcodec 1.4.2 and weftfs 1.4.2 are not on PyPI or crates.io at this stamp; the coordinator uploads and then records the live state",
+  "WeftCodec-Go has no source change in 1.4.2; its tag names the tree already merged from staging",
+  "GHCR digests are observations, not reproducibility proofs",
+  "no live Azure, AWS or GCS account was exercised",
+  "no physical power loss, host page-cache loss, RAPL energy, GPU, fleet or multi-node claim"
+ ]
+}

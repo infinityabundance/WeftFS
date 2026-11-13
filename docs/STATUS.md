@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,054** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,055** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10026,3 +10026,25 @@ write is now durability-bound, not encode-bound.
     1.4.0/1.4.1 descriptions stay wrong until 1.4.2 is uploaded; the guard is a
     rule set, not a proof; no power-loss, media, fleet, cloud, GPU or live
     Azure/AWS/GCS claim.
+
+- 2026-11-13 (v1.4.2 released): merged and tagged in all four repositories.
+  WeftFS `aac23a9a11e7` (tag `v1.4.2`, tag object `1c8fcc5b6381`), WeftCodec
+  `926410bd7572`, WeftCodec-Go `20c320c91056` (no source change; the tag names
+  the tree already merged from staging), WeftFS-Go `480eb9e6a924`; all four
+  `staging` and `main` trees pushed, all four annotated tags pushed (they drive
+  GHCR), and four GitHub releases created. The WeftFS release carries the 1.4.2
+  wheel and sdist, and `gh release view` reports the same digests as the local
+  build recorded in `bench/receipts/release-artifacts-20261113T045609Z.json`.
+  * Post-tag observation receipt:
+    `bench/receipts/release-artifacts-20261113T050602Z.json` (merge/tag objects,
+    release URLs, asset digests, all four GHCR workflow runs and image-index
+    digests, and the PyPI/crates.io `404`s at the stamp).
+  * Registry uploads were **not** performed by this session, by instruction.
+    `weftcodec 1.4.2` and `weftfs 1.4.2` are absent from PyPI and crates.io at
+    the stamp; the coordinator uploads the attached wheel/sdist and runs
+    `scripts/publish-crates.sh`, then records the live checksums.
+  * The live 1.4.1 wheel and sdist on PyPI are the third 1.4.1 build
+    (`73cd3422…`, `93a0b8c8…`), not the GitHub assets; all three builds and the
+    non-reproducibility statement are recorded in
+    `bench/receipts/release-artifacts-20261113T045609Z.json` and in both release
+    notes.

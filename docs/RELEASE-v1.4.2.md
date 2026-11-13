@@ -118,7 +118,7 @@ FUSE all-targets **850** passed / 0 failed /
 2 ignored (the two pre-existing kernel/`CAP_SETUID` tests);
 WeftCodec **290** passed. The conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`);
-**1,054** claims are audited; `scripts/check-claims.sh`,
+**1,055** claims are audited; `scripts/check-claims.sh`,
 `scripts/perf_numbers.py --check`, spec drift, the conformance manifest/coverage
 and the new `long_description` court all pass.
 <!-- END GENERATED:release-v142-verify -->
@@ -180,3 +180,37 @@ still serves the 1.4.1 artifacts whose long description is the pre-fix text.
   receipt, stamp and revision.
 * [`python/README.md`](../python/README.md) — the long description itself, and
   `scripts/check_long_description.py` — the guard.
+
+## Published state (post-tag observation)
+
+Recorded in `bench/receipts/release-artifacts-20261113T050602Z.json`.
+
+| Repo | Merge commit | Tag object | Tagged commit |
+|---|---|---|---|
+| WeftFS | `aac23a9a11e7` | `1c8fcc5b6381` | `aac23a9a11e7` |
+| WeftCodec | `926410bd7572` | `0a12da9d8505` | `926410bd7572` |
+| WeftCodec-Go | `20c320c91056` | `dc179363ceb6` | `20c320c91056` |
+| WeftFS-Go | `480eb9e6a924` | `a1959f62c0f6` | `480eb9e6a924` |
+
+GitHub releases: [WeftFS](https://github.com/infinityabundance/WeftFS/releases/tag/v1.4.2),
+[WeftCodec](https://github.com/infinityabundance/WeftCodec/releases/tag/v1.4.2),
+[WeftCodec-Go](https://github.com/infinityabundance/WeftCodec-Go/releases/tag/v1.4.2),
+[WeftFS-Go](https://github.com/infinityabundance/WeftFS-Go/releases/tag/v1.4.2).
+The WeftFS release carries the wheel and sdist, and `gh release view` reports
+the same digests as the local build in the table above.
+
+GHCR `:v1.4.2` and `:latest` were read live and are the same image-index digest
+per image: `weftfs` `sha256:3a17098a…26141`, `weftcodec`
+`sha256:b8893492…90680`, `weftcodec-go` `sha256:af6b30bd…14bdbe`, `weftfs-go`
+`sha256:7b44ce77…ca1a03c`. The four tag workflows succeeded. A rebuild is not
+bit-reproducible.
+
+`WeftCodec-Go` carries no source change in this release; its tag names the tree
+that was already merged from staging, so its codec is byte-identical to 1.4.1.
+
+**Registry uploads were not performed by this session.** At this stamp
+`https://pypi.org/pypi/weftcodec/1.4.2/json` and
+`https://crates.io/api/v1/crates/weftcodec/1.4.2` both return `404`. The
+coordinator performs the uploads and records the live state; until then the
+project page still serves the 1.4.1 artifacts with the pre-fix long
+description.
