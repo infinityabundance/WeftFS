@@ -2046,8 +2046,8 @@ fn recovery_pass(
             // Resolve the checkpoint manifest once and reuse it for every
             // demanded tensor. The per-tensor verification is unchanged
             // (`restore_named_tensor_with_manifest` runs the same checks as
-            // `restore_named_tensor_at`); what stops being paid is the same
-            // ~51 KiB manifest blob read six times.
+            // `restore_named_tensor_at`); what stops being paid is one
+            // manifest blob read per demanded tensor.
             let loaded = store
                 .load_checkpoint_manifest("ckpt")
                 .map_err(|err| format!("W checkpoint manifest: {err}"))?;

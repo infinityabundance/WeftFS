@@ -10310,3 +10310,7 @@ write is now durability-bound, not encode-bound.
     representation design is unimplemented and its storage delta and latency are
     therefore unknown; W's recovery is still slower than M's (3.24×) because it
     verifies more; one host, one backend, no fleet/cloud/media/power-loss claim.
+  * Two comments written after the cited run (`src/checkpoint.rs` and the court's
+    W arm) drop a fixture-specific size from their prose; they change no code,
+    so the cited revision `5752a83` and the current tree differ only in comment
+    text.

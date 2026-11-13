@@ -3001,8 +3001,8 @@ impl Store {
     /// This is the same operation as [`Store::restore_named_tensor_at`] with
     /// the manifest read lifted out, for a caller that restores several tensors
     /// from one checkpoint: the manifest is resolved, verified and decoded once
-    /// instead of once per tensor, and the backend byte count stops paying for
-    /// the same ~51 KiB blob six times.
+    /// instead of once per tensor, so the backend stops paying for the same
+    /// manifest blob once per restored tensor.
     ///
     /// **No verification is weakened.** The per-tensor checks are the same code
     /// ([`Store::restore_manifest_tensor`]): every shard is read through the
