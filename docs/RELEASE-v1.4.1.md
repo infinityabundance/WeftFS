@@ -224,3 +224,14 @@ to the GitHub release. `scripts/publish-pypi.sh` no longer deletes an
 operator-supplied token file, so an operator can now point
 `WEFT_PYPI_TOKEN_FILE` at a persistent file and upload without the script
 removing it.
+
+**Artifact-hash note.** The generated artifact table earlier in this file was
+written at the tag and names the first 1.4.1 build. `python/README.md` is the
+long description, so it must not name the wheel's own digest; removing that
+self-reference changed the description and therefore the next build. The
+attached GitHub-release assets are the **final** build — wheel
+`92efd39d2e4732081dccfccb19c2f2849ff427e9f38d6aed9226624d5ceed06` (115,889 B)
+and sdist `773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2`
+(156,971 B) — and those hashes are the authoritative ones in
+`bench/receipts/release-artifacts-20261113T032500Z.json`. A rebuild is not
+bit-reproducible; the attached asset and the receipt win.
