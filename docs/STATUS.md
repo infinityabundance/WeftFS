@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,140** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,146** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11094,6 +11094,9 @@ failing suite receipt `bench/receipts/stage-budget-suites-20261113T221717Z.json`
 `bench/receipts/stage-budget-fix-20261113T224055Z.json` at `a6ab12e`:
 
 <!-- BEGIN GENERATED:stage-budget-fix-status (scripts/perf_numbers.py) -->
+X31 (2026-11-13): **120** repetitions (**90** of the **13**-test
+`stage_budget` module at caps 8/2/1, **30** of the **8**-test `restore_budget` suite at cap 4) produced
+**0** failures and **0** timeouts (a hang is exit 124, recorded, never a pass).
 <!-- END GENERATED:stage-budget-fix-status -->
 
 Full suites at the same revision are recorded in

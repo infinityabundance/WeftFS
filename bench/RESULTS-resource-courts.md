@@ -46,6 +46,11 @@ sixteen threads on four CPUs. That is the price of never exceeding the cap, not
 a like-for-like comparison at the same width.
 
 <!-- BEGIN GENERATED:resource-courts (scripts/perf_numbers.py) -->
+* **X06**: at cap 4 the best row is **2.59 ms** p50 (2 tensor workers, 2 shard workers) and the measured default is **2.92 ms**; the unbudgeted 4×4 control is **1.91 ms**, so the cap costs **+35.7 %** on this fixture. At cap 1 the best is **8.50 ms**; at cap 8 the default reaches **1.86 ms**.
+* **N08 dominant tensor**: one 64 MiB, 8-shard tensor restores in **669.41 ms** with one shard worker and **388.11 ms** with two — shard parallelism is the only restore-side lever for a single dominant tensor.
+* **N08 100-tensor restore** (100 × 1 MiB, 4 tensor workers): **278.72 ms** p50 with the worker-side SHA-256 and no copy; **272.21 ms** with the pre-N08 copy restored and **273.95 ms** with the writer-side SHA-256 control. Neither change is a win at this scale. A 2-row region read is **5.43 ms**; the resumed 10-tensor usable set is **118.65 ms**.
+* **X07**: 16 capped readers reach **255,808 reads/s**; at 128 readers the uncapped control reaches **257,859 reads/s** and the cap of 64 yields **66,223 reads/s** — the cap costs a factor of about four exactly where it binds.
+* **N09**: running the encode and restore stages concurrently takes **0.936×** the sequential pair at cap 4 and **0.858×** at cap 8. The policy bounds both stages; it does not promise an overlap win.
 <!-- END GENERATED:resource-courts -->
 
 ## X07 — a hard cap on active handles
@@ -87,8 +92,8 @@ member). No product defect was found in X08.
 
 The profile (new `tensor_decode` and `logical_root` phases, plus the existing
 `content_verify`, `digest`, `blob_*`) is dominated by the mode-9 payload decode:
-for the 100 × 1 MiB fixture the decode is the overwhelming majority of the CPU
-time, and the four threads decode at ~4× the single-thread rate
+for the 100 x 1 MiB fixture the decode is the overwhelming majority of the CPU
+time, and the four threads decode at roughly four times the single-thread rate
 (`decode_sum_ms / decode_wall_ms`). Manifest I/O, manifest hashing, whole-content
 verification and the per-tensor SHA-256 are each one to two orders of magnitude
 smaller.
@@ -97,21 +102,20 @@ Two principled changes were implemented and **measured; neither is a win at this
 scale, and neither is claimed as one**:
 
 * a whole-tensor read no longer copies the decoded buffer before verifying it
-  (`WEFT_TENSOR_READ_COPY=1` restores the copy as the control arm). The copy is
-  invisible in the restore wall: 268.4 ms without it, 268.0 ms with it at 100
-  tensors (also within noise at 1 and 10);
+  (`WEFT_TENSOR_READ_COPY=1` restores the copy as the control arm); the copy is
+  invisible in the restore wall (see the generated N08 row);
 * the report's per-tensor SHA-256 moved from the ordered writer to the decode
-  worker (`WEFT_RESTORE_WRITER_SHA=1` restores the writer arm). With four
+  worker (`WEFT_RESTORE_WRITER_SHA=1` restores the writer arm); with four
   workers the writer was already waiting, so moving the hash changes nothing
-  measurable (268.4 vs 268.1 ms).
+  measurable (see the generated N08 row).
 
 What *is* a win is the shape the budget recommends. A tensor cannot spread
 across tensor workers when it is the only tensor, so the dominant term is a
-single tensor's decode and the only lever is its shard workers. One 64 MiB,
-8-shard tensor restores at the two figures in the generated block: shard-parallel
-restore is **~1.72×** faster, and a budget of four reproduces the same wall. That
-is why `RestorePipelineOptions::budgeted()` now defaults to two shard workers and
-`max(1, cap / 2)` tensor workers.
+single tensor's decode and the only lever is its shard workers. For one 64 MiB,
+8-shard tensor the generated block gives both shard-worker figures; the ratio
+between them is the shard-parallel gain, and a budget of four reproduces the
+same wall. That is why `RestorePipelineOptions::budgeted()` now defaults to two
+shard workers and `max(1, cap / 2)` tensor workers.
 
 `resume` in the receipt is the T058 question measured as far as this subphase
 reaches: the time to restore the first *k* tensors one at a time after a
