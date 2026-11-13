@@ -97,7 +97,12 @@ load-bearing, and it is not a pass.
   while three `gc --apply` passes run. Every writer succeeds, every GC pass
   succeeds, GC reclaims the unreachable blobs, `verify --full` is clean in both
   languages, the snapshot-protected object reads back exactly by both
-  languages, and every writer's files are still exact.
+  languages, and every writer's files are still exact. The root used is a
+  snapshot because a *checkpoint* or a generic *provenance* publication is an
+  MW1 surface in this version: the `writers` policy record refuses a
+  single-writer handle on an optimistic namespace, so an MW2 store can only be
+  given snapshot roots through its own transaction API. The GC root machinery
+  is the same one; it is the publication path that differs.
 * **S7 — fail-closed mode detection.** A network fake drops `If-Match` or
   `If-None-Match` and **re-signs** the modified request with the emulator's
   development key (the Blob SharedKey string-to-sign includes both headers, so
