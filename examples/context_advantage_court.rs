@@ -2957,6 +2957,7 @@ fn assemble(args: &Args) -> Result<(), String> {
     let receipt = json!({
         "schema": SCHEMA,
         "generated_utc": std::env::var("WEFT_CONTEXT_ADVANTAGE_STAMP").ok(),
+        "label": std::env::var("WEFT_CONTEXT_ADVANTAGE_LABEL").ok(),
         "contract": CONTRACT,
         "methodology": {
             "arms": {

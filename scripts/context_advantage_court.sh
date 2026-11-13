@@ -103,7 +103,7 @@ for ((rep = 1; rep <= reps; rep++)); do
     order_index=$((order_index + 1))
     echo "context_advantage_court: rep $rep/$reps arm $arm order=$joined slot=$order_index" >&2
     if ! scripts/docker-court.sh bench \
-      "cd /work && cargo run --release --quiet --example context_advantage_court -- run \
+      "cd /work && WEFT_CONTEXT_ADVANTAGE_STAMP=$stamp WEFT_CONTEXT_ADVANTAGE_LABEL=$label cargo run --release --quiet --example context_advantage_court -- run \
          --arm $arm \
          --work /work/.docker-cache/context-advantage-$stamp/rep-$(printf '%02d' "$rep") \
          --out /work/.docker-cache/context-advantage-$stamp/rep-$(printf '%02d' "$rep")/$arm.json \
@@ -118,7 +118,7 @@ done
 
 echo "context_advantage_court: assembling $receipt" >&2
 if ! scripts/docker-court.sh bench \
-  "cd /work && cargo run --release --quiet --example context_advantage_court -- assemble \
+  "cd /work && WEFT_CONTEXT_ADVANTAGE_STAMP=$stamp WEFT_CONTEXT_ADVANTAGE_LABEL=$label cargo run --release --quiet --example context_advantage_court -- assemble \
      --work /work/.docker-cache/context-advantage-$stamp \
      --out /work/$receipt --log /work/$log --reps $reps $phase_flag" \
   >>"$work/run.log" 2>&1; then
