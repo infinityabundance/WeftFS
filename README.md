@@ -330,6 +330,20 @@ Earlier aggregates, retained as history and superseded by the current receipt:
 `bench/receipts/verify-20261111T131235Z.json` (R13 tree) and
 `bench/receipts/verify-20261111T182601Z.json` (v1.3.0 release tree).
 
+## What's new in v1.4.2 and v1.4.1
+
+**v1.4.2 — packaging correctness.** No frozen wire or on-disk byte changed.
+The Python wheel's long description stopped describing its own upload state,
+and a court (`long_description`) now rejects that class of statement. The
+release is otherwise version metadata and documentation. Full note:
+[`docs/RELEASE-v1.4.2.md`](docs/RELEASE-v1.4.2.md).
+
+**v1.4.1 — measured numbers and corrected prose.** Also no wire change. It
+separated the **shipped default** write (the sequential planned writer) from
+the bounded prepare/publish pipeline that the v1.4.0 note had quoted, corrected
+the pre-R17 phrasing, and publishes both readings side by side. Full note:
+[`docs/RELEASE-v1.4.1.md`](docs/RELEASE-v1.4.1.md).
+
 ## What's new in v1.4.0
 
 Full note with every limit, every loss and every non-claim:
