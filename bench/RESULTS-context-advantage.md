@@ -29,6 +29,19 @@ below is generated from the current receipt by `scripts/perf_numbers.py`.
 availability difference are real and measured. The performance claim was
 **declared in advance, measured, and failed**; it is not restated as a win.
 
+The surviving claim, in the exact words this court supports:
+
+> On one backend, with a strong application-level metadata baseline given
+> compression, an in-memory index on the brief's five dimensions, full value
+> validation, TTL/eviction and its own manifest-based subset selection, the
+> WeftFS context plane rejects every cross-scope request with zero bytes read
+> and zero bytes returned, and retains exact re-use after the metadata database
+> is lost. The baseline matches the happy path and ties the refusal count; on the
+> fast path it is faster, and that is the published result.
+
+**No fast-path or neutrality claim is made.** The gate is not met, and R27 says
+what the remaining cost is made of rather than moving the gate (§6.1, §6.2).
+
 ## 2. Where the baseline wins, ties and loses
 
 This is the most important part of the session, so it comes first.
