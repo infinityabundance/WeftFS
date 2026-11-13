@@ -252,6 +252,20 @@ run_orchestrated_court augmentation_local augmentation_court \
   env WEFT_AUGMENTATION_REDUCED=1 WEFT_AUGMENTATION_STAMP="$stamp" \
   bash scripts/augmentation_court.sh --local
 
+# R26 Context Advantage Court: one backend (the local POSIX data plane), three
+# arms — the backend alone, a strong application-level metadata baseline, and the
+# WeftFS context plane — interleaved with the arm order rotated per repetition.
+# The aggregate uses the reduced three-repetition configuration; the full
+# seven-repetition receipt is `context-advantage-20261113T054528Z.json`, cited in
+# `bench/RESULTS-context-advantage.md`, and the frozen contract is
+# `bench/CONTRACTS-context-advantage.md`. A court that cannot run prints
+# `context_advantage_court: skip <reason>` and exits 78; the aggregate records a
+# skip, never a pass. The court's `claim_holds` is reported in the receipt and is
+# deliberately independent of its measurement validity.
+run_orchestrated_court context_advantage context_advantage \
+  env WEFT_CONTEXT_ADVANTAGE_STAMP="$stamp" \
+  bash scripts/context_advantage_court.sh --reduced
+
 # R13 third-party conformance distribution: build the bundle in the fuse court,
 # run the reference Rust adapter from the extracted copy only, and verify the
 # bundle with `scripts/verify-receipts.sh` in the court and again on the host

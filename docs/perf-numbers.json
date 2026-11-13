@@ -41,6 +41,10 @@
   {
    "id": "family",
    "title": "Cross-family contract rows (R25)"
+  },
+  {
+   "id": "context-advantage",
+   "title": "Context Advantage Court (R26): one backend, arms N/M/W, seven interleaved repetitions"
   }
  ],
  "numbers": [
@@ -4347,6 +4351,979 @@
    "stamp": "20261113T045609Z",
    "revision_path": "revisions.WeftFS",
    "revision": "52da9888f3726e6af5c364af7707fd98574fc954"
+  },
+  {
+   "key": "ca.page_bytes",
+   "label": "KV page logical size",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fixture.page_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.pages",
+   "label": "pages written per arm",
+   "unit": "pages",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fixture.pages_written",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.probes",
+   "label": "declared cross-scope probes",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fixture.probe_count",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.tol.p50",
+   "label": "declared fast-path p50 tolerance (W / N)",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.declared.p50_ratio_max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.tol.p95",
+   "label": "declared fast-path p95 tolerance (W / N)",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.declared.p95_ratio_max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.tol.bytes",
+   "label": "declared fast-path backend-byte tolerance (W / N)",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.declared.bytes_ratio_max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.p50",
+   "label": "N fast-path p50",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.hit_p50_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.p95",
+   "label": "N fast-path p95",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.hit_p95_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.bytes_per_req",
+   "label": "N backend bytes per fast-path request",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.observed.N.backend_bytes_per_request",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.exact",
+   "label": "N byte-exact compatible reads",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.compatible_exact.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.accepted",
+   "label": "N cross-scope probes accepted",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.probe_accepted.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.wrong",
+   "label": "N cross-scope acceptances with the wrong payload",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.probe_accepted_wrong_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.denied",
+   "label": "N cross-scope probes refused",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.probe_denied.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.probe_bytes",
+   "label": "N backend bytes read while refusing",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.probe_backend_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.probe_requests",
+   "label": "N requests issued while refusing",
+   "unit": "requests",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.probe_requests.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.probe_returned",
+   "label": "N logical bytes returned on a refusal",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.probe_logical_bytes_returned.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.loss_reused",
+   "label": "N compatible reuse after metadata loss",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.loss_reused.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.build_ms",
+   "label": "N page build wall",
+   "unit": "ms",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.build_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.footprint",
+   "label": "N physical footprint",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.rss",
+   "label": "N peak RSS",
+   "unit": "KiB",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.rss_kib.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.rec_outputs",
+   "label": "N recovery outputs materialized",
+   "unit": "outputs",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.recovery_outputs.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.rec_logical",
+   "label": "N recovery logical bytes materialized",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.recovery_logical_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.rec_backend",
+   "label": "N recovery backend bytes read",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.recovery_backend_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.n.rec_wall",
+   "label": "N recovery wall",
+   "unit": "ms",
+   "group": "context-advantage",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.recovery_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.p50",
+   "label": "M fast-path p50",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.hit_p50_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.p95",
+   "label": "M fast-path p95",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.hit_p95_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.bytes_per_req",
+   "label": "M backend bytes per fast-path request",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.observed.M.backend_bytes_per_request",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.exact",
+   "label": "M byte-exact compatible reads",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.compatible_exact.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.accepted",
+   "label": "M cross-scope probes accepted",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.probe_accepted.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.wrong",
+   "label": "M cross-scope acceptances with the wrong payload",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.probe_accepted_wrong_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.denied",
+   "label": "M cross-scope probes refused",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.probe_denied.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.probe_bytes",
+   "label": "M backend bytes read while refusing",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.probe_backend_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.probe_requests",
+   "label": "M requests issued while refusing",
+   "unit": "requests",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.probe_requests.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.probe_returned",
+   "label": "M logical bytes returned on a refusal",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.probe_logical_bytes_returned.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.loss_reused",
+   "label": "M compatible reuse after metadata loss",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.loss_reused.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.build_ms",
+   "label": "M page build wall",
+   "unit": "ms",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.build_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.footprint",
+   "label": "M physical footprint",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.rss",
+   "label": "M peak RSS",
+   "unit": "KiB",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.rss_kib.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.rec_outputs",
+   "label": "M recovery outputs materialized",
+   "unit": "outputs",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.recovery_outputs.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.rec_logical",
+   "label": "M recovery logical bytes materialized",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.recovery_logical_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.rec_backend",
+   "label": "M recovery backend bytes read",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.recovery_backend_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.rec_wall",
+   "label": "M recovery wall",
+   "unit": "ms",
+   "group": "context-advantage",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.recovery_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.p50",
+   "label": "W fast-path p50",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.hit_p50_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.p95",
+   "label": "W fast-path p95",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.hit_p95_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.bytes_per_req",
+   "label": "W backend bytes per fast-path request",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.observed.W.backend_bytes_per_request",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.exact",
+   "label": "W byte-exact compatible reads",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.compatible_exact.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.accepted",
+   "label": "W cross-scope probes accepted",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.probe_accepted.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.wrong",
+   "label": "W cross-scope acceptances with the wrong payload",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.probe_accepted_wrong_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.denied",
+   "label": "W cross-scope probes refused",
+   "unit": "probes",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.probe_denied.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.probe_bytes",
+   "label": "W backend bytes read while refusing",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.probe_backend_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.probe_requests",
+   "label": "W requests issued while refusing",
+   "unit": "requests",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.probe_requests.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.probe_returned",
+   "label": "W logical bytes returned on a refusal",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.probe_logical_bytes_returned.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.loss_reused",
+   "label": "W compatible reuse after metadata loss",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.loss_reused.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.build_ms",
+   "label": "W page build wall",
+   "unit": "ms",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.build_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.footprint",
+   "label": "W physical footprint",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.rss",
+   "label": "W peak RSS",
+   "unit": "KiB",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.rss_kib.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.rec_outputs",
+   "label": "W recovery outputs materialized",
+   "unit": "outputs",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.recovery_outputs.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.rec_logical",
+   "label": "W recovery logical bytes materialized",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.recovery_logical_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.rec_backend",
+   "label": "W recovery backend bytes read",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.recovery_backend_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.rec_wall",
+   "label": "W recovery wall",
+   "unit": "ms",
+   "group": "context-advantage",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.recovery_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.compat_total",
+   "label": "byte-exact compatible reads in the declared workload",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.compatible_total.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.loss_total",
+   "label": "compatible reads repeated with the metadata database removed",
+   "unit": "reads",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.loss_total.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.recompute",
+   "label": "measured recompute of one page (scalar kernel)",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.recompute_p50_us.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.ratio.w_n_p50",
+   "label": "W / N fast-path p50",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.ratios.W_over_N_p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.ratio.w_n_p95",
+   "label": "W / N fast-path p95",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.ratios.W_over_N_p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.ratio.m_n_p50",
+   "label": "M / N fast-path p50",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.ratios.M_over_N_p50",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.ratio.m_n_p95",
+   "label": "M / N fast-path p95",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.ratios.M_over_N_p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.ratio.w_n_bytes",
+   "label": "W / N backend bytes per request",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fast_path.ratios.W_over_N_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.mode12_decode",
+   "label": "mode-12 decode p50 of the same page",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "provenance_overhead.mode12_decode_p50_us",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.mode19_decode",
+   "label": "mode-19 decode p50 of the same page",
+   "unit": "\u00b5s",
+   "group": "context-advantage",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "provenance_overhead.mode19_decode_p50_us",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.prov_ratio",
+   "label": "mode-19 / mode-12 decode",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "provenance_overhead.ratio",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.frame_bytes",
+   "label": "mode-19 frame bytes for the eight pages",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.frame_mode19_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.mode12_bytes",
+   "label": "the same eight pages as mode-12 frames",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.frame_mode12_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.frame_delta_pct",
+   "label": "provenance descriptor overhead on frame size",
+   "unit": "%",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "expr": "({ca.w.frame_bytes} - {ca.w.mode12_bytes}) / {ca.w.mode12_bytes} * 100"
+  },
+  {
+   "key": "ca.ratio.w_m_rec_backend",
+   "label": "W / M recovery backend bytes",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "expr": "{ca.w.rec_backend} / {ca.m.rec_backend}"
+  },
+  {
+   "key": "ca.ratio.w_m_rec_wall",
+   "label": "W / M recovery wall",
+   "unit": "\u00d7",
+   "group": "context-advantage",
+   "format": "fixed:2",
+   "expr": "{ca.w.rec_wall} / {ca.m.rec_wall}"
   }
  ],
  "blocks": [
@@ -6617,6 +7594,332 @@
      "template": "| PyPI | `pip install weftcodec==1.4.1` | {{build141.pypi.wheel_bytes}} B | `{{build141.pypi.wheel_sha}}` | {{build141.pypi.sdist_bytes}} B | `{{build141.pypi.sdist_sha}}` |"
     }
    ]
+  },
+  {
+   "id": "context-advantage-verdict",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Safety:** W refused **{{ca.w.denied}} of {{ca.probes}}** declared cross-scope probes and returned **{{ca.w.probe_returned}}** bytes; N accepted **{{ca.n.accepted}}** and returned the wrong payload **{{ca.n.wrong}}** times; M accepted **{{ca.m.accepted}}** but read **{{ca.m.probe_bytes}}** B over **{{ca.m.probe_requests}}** requests to refuse the ones its five-dimension key could not distinguish."
+    },
+    {
+     "template": "**Availability:** after the metadata database was removed, M reused **{{ca.m.loss_reused}} of {{ca.loss_total}}** pages and W reused **{{ca.w.loss_reused}} of {{ca.loss_total}}** byte-exactly."
+    },
+    {
+     "template": "**Fast path, declared tolerance measured and failed:** W **{{ca.w.p50}}** \u00b5s p50 against N's **{{ca.n.p50}}** \u00b5s = **{{ca.ratio.w_n_p50}}\u00d7** (declared \u2264 {{ca.tol.p50}}\u00d7); W **{{ca.w.p95}}** \u00b5s p95 against N's **{{ca.n.p95}}** \u00b5s = **{{ca.ratio.w_n_p95}}\u00d7** (declared \u2264 {{ca.tol.p95}}\u00d7); W reads **{{ca.ratio.w_n_bytes}}\u00d7** N's backend bytes per request (declared \u2264 {{ca.tol.bytes}}\u00d7)."
+    },
+    {
+     "template": "**Recovery:** W and M both materialize **{{ca.m.rec_logical}}** B for the identical demanded output set, and W reads **{{ca.ratio.w_m_rec_backend}}\u00d7** M's backend bytes (**{{ca.w.rec_backend}}** B against **{{ca.m.rec_backend}}** B)."
+    },
+    {
+     "template": "**Only one capability claim survives:** provenance-safe reuse that outlives the application's metadata database, and a refusal that reads nothing. Every performance claim in this court failed or tied."
+    }
+   ]
+  },
+  {
+   "id": "context-advantage-a",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| measure | N | M | W |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| fast-path p50 (\u00b5s) | {{ca.n.p50}} | {{ca.m.p50}} | {{ca.w.p50}} |"
+    },
+    {
+     "template": "| fast-path p95 (\u00b5s) | {{ca.n.p95}} | {{ca.m.p95}} | {{ca.w.p95}} |"
+    },
+    {
+     "template": "| backend bytes per fast-path request | {{ca.n.bytes_per_req}} | {{ca.m.bytes_per_req}} | {{ca.w.bytes_per_req}} |"
+    },
+    {
+     "template": "| compatible reads byte-exact | {{ca.n.exact}} / {{ca.compat_total}} | {{ca.m.exact}} / {{ca.compat_total}} | {{ca.w.exact}} / {{ca.compat_total}} |"
+    },
+    {
+     "template": "| cross-scope probes accepted | {{ca.n.accepted}} | {{ca.m.accepted}} | {{ca.w.accepted}} |"
+    },
+    {
+     "template": "| \u2026 of which returned the wrong payload | {{ca.n.wrong}} | {{ca.m.wrong}} | {{ca.w.wrong}} |"
+    },
+    {
+     "template": "| cross-scope probes refused | {{ca.n.denied}} | {{ca.m.denied}} | {{ca.w.denied}} |"
+    },
+    {
+     "template": "| backend bytes read while refusing | {{ca.n.probe_bytes}} | {{ca.m.probe_bytes}} | {{ca.w.probe_bytes}} |"
+    },
+    {
+     "template": "| requests issued while refusing | {{ca.n.probe_requests}} | {{ca.m.probe_requests}} | {{ca.w.probe_requests}} |"
+    },
+    {
+     "template": "| logical bytes returned on a refusal | {{ca.n.probe_returned}} | {{ca.m.probe_returned}} | {{ca.w.probe_returned}} |"
+    },
+    {
+     "template": "| compatible reuse after metadata loss | {{ca.n.loss_reused}} / {{ca.loss_total}} | {{ca.m.loss_reused}} / {{ca.loss_total}} | {{ca.w.loss_reused}} / {{ca.loss_total}} |"
+    },
+    {
+     "template": "| page build wall (ms) | {{ca.n.build_ms}} | {{ca.m.build_ms}} | {{ca.w.build_ms}} |"
+    },
+    {
+     "template": "| physical footprint (B) | {{ca.n.footprint}} | {{ca.m.footprint}} | {{ca.w.footprint}} |"
+    },
+    {
+     "template": "| peak RSS (KiB) | {{ca.n.rss}} | {{ca.m.rss}} | {{ca.w.rss}} |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "Measured recompute of one page (the same scalar kernel in every arm): **{{ca.recompute}} \u00b5s**. The workload was {{ca.pages}} pages of {{ca.page_bytes}} logical bytes and {{ca.probes}} cross-scope probes."
+    }
+   ]
+  },
+  {
+   "id": "context-advantage-n",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+    "stamp_path": "generated_utc",
+    "stamp": "20261113T054528Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "21a16be12b66ff14756751becbde235961cacbc2",
+    "array": "arms.N.probe_variants",
+    "order": [
+     "model",
+     "adapter",
+     "tokenizer",
+     "attention",
+     "positional",
+     "dtype",
+     "salt"
+    ],
+    "columns": [
+     {
+      "header": "variant",
+      "text": "`{name}`"
+     },
+     {
+      "header": "accepted",
+      "path": "accepted.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "wrong payload",
+      "path": "accepted_wrong_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "denied",
+      "path": "denied.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "backend B read",
+      "path": "backend_bytes.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ]
+   }
+  },
+  {
+   "id": "context-advantage-m",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+    "stamp_path": "generated_utc",
+    "stamp": "20261113T054528Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "21a16be12b66ff14756751becbde235961cacbc2",
+    "array": "arms.M.probe_variants",
+    "order": [
+     "model",
+     "adapter",
+     "tokenizer",
+     "attention",
+     "positional",
+     "dtype",
+     "salt"
+    ],
+    "columns": [
+     {
+      "header": "variant",
+      "text": "`{name}`"
+     },
+     {
+      "header": "accepted",
+      "path": "accepted.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "wrong payload",
+      "path": "accepted_wrong_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "denied",
+      "path": "denied.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "backend B read",
+      "path": "backend_bytes.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ]
+   }
+  },
+  {
+   "id": "context-advantage-w",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+    "stamp_path": "generated_utc",
+    "stamp": "20261113T054528Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "21a16be12b66ff14756751becbde235961cacbc2",
+    "array": "arms.W.probe_variants",
+    "order": [
+     "model",
+     "adapter",
+     "tokenizer",
+     "attention",
+     "positional",
+     "dtype",
+     "salt"
+    ],
+    "columns": [
+     {
+      "header": "variant",
+      "text": "`{name}`"
+     },
+     {
+      "header": "accepted",
+      "path": "accepted.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "wrong payload",
+      "path": "accepted_wrong_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "denied",
+      "path": "denied.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "backend B read",
+      "path": "backend_bytes.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ]
+   }
+  },
+  {
+   "id": "context-advantage-b",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| measure | N | M | W |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| outputs materialized | {{ca.n.rec_outputs}} | {{ca.m.rec_outputs}} | {{ca.w.rec_outputs}} |"
+    },
+    {
+     "template": "| logical bytes materialized | {{ca.n.rec_logical}} | {{ca.m.rec_logical}} | {{ca.w.rec_logical}} |"
+    },
+    {
+     "template": "| backend bytes read | {{ca.n.rec_backend}} | {{ca.m.rec_backend}} | {{ca.w.rec_backend}} |"
+    },
+    {
+     "template": "| wall time (ms) | {{ca.n.rec_wall}} | {{ca.m.rec_wall}} | {{ca.w.rec_wall}} |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "For the same output set W reads **{{ca.ratio.w_m_rec_backend}}\u00d7** M's backend bytes and takes **{{ca.ratio.w_m_rec_wall}}\u00d7** M's wall time. N's row is the full restore the contract lets it do."
+    }
+   ]
+  },
+  {
+   "id": "context-advantage-c",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| measure | N | M | W | declared limit |"
+    },
+    {
+     "template": "|---|---:|---:|---:|---:|"
+    },
+    {
+     "template": "| p50 (\u00b5s) | {{ca.n.p50}} | {{ca.m.p50}} | {{ca.w.p50}} | W \u2264 {{ca.tol.p50}}\u00d7 N |"
+    },
+    {
+     "template": "| p95 (\u00b5s) | {{ca.n.p95}} | {{ca.m.p95}} | {{ca.w.p95}} | W \u2264 {{ca.tol.p95}}\u00d7 N |"
+    },
+    {
+     "template": "| backend bytes per request | {{ca.n.bytes_per_req}} | {{ca.m.bytes_per_req}} | {{ca.w.bytes_per_req}} | W \u2264 {{ca.tol.bytes}}\u00d7 N |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "| ratio to N | M | W |"
+    },
+    {
+     "template": "|---|---:|---:|"
+    },
+    {
+     "template": "| p50 | {{ca.ratio.m_n_p50}}\u00d7 | {{ca.ratio.w_n_p50}}\u00d7 |"
+    },
+    {
+     "template": "| p95 | {{ca.ratio.m_n_p95}}\u00d7 | {{ca.ratio.w_n_p95}}\u00d7 |"
+    },
+    {
+     "template": "| backend bytes per request | | {{ca.ratio.w_n_bytes}}\u00d7 |"
+    }
+   ]
+  },
+  {
+   "id": "context-advantage-provenance",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Mode-12 decode p50 **{{ca.mode12_decode}} \u00b5s**, mode-19 **{{ca.mode19_decode}} \u00b5s**, ratio **{{ca.prov_ratio}}\u00d7**. At the eight-page scale the mode-19 frames are **{{ca.w.frame_bytes}} B** against **{{ca.w.mode12_bytes}} B** for the same pages as mode-12 frames: **+{{ca.frame_delta_pct}} %**, which is the descriptor."
+    }
+   ]
+  },
+  {
+   "id": "perf-catalog-context-advantage",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "context-advantage"
   }
  ]
 }

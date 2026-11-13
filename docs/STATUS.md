@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,057** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,065** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10048,3 +10048,68 @@ write is now durability-bound, not encode-bound.
     non-reproducibility statement are recorded in
     `bench/receipts/release-artifacts-20261113T045609Z.json` and in both release
     notes.
+
+- 2026-11-13 (R26, Context Advantage Court): parent `staging` (code
+  `5f3f42f`/`21a16be`, receipt + docs after it); submodules unchanged. The court
+  required by programme rule 14: one backend, with and without the context
+  plane, and a **strong application-level baseline** that decides whether the
+  contribution is real.
+  * Contract `bench/CONTRACTS-context-advantage.md`, committed before any
+    measurement: arms N (backend alone, plain durable objects, no metadata), M
+    (zstd-3 blob + canonical manifest + a real key→value index on the brief's
+    five dimensions plus position, full value validation before reuse,
+    TTL/eviction, own subset selection), W (mode-19 provenance-bound KV pages,
+    capability-scoped reads, `weft.checkpoint.v1` manifests, causal closure).
+    Held constant: local POSIX data plane, commit protocol and durability
+    barrier, 65,536 B chunks, no decoded-object cache, no single-flight, one
+    thread, identical logical objects and demanded output set, fixed clock, and
+    the unchanged 3 GiB/1024-pid/4-cpu court.
+  * Harness `examples/context_advantage_court.rs`, runner
+    `scripts/context_advantage_court.sh`, seven interleaved repetitions with the
+    arm order rotated per repetition, raw samples in the receipt.
+  * Receipt `bench/receipts/context-advantage-20261113T054528Z.json` (stamp
+    `20261113T054528Z`, WeftFS `21a16be12b66`), analysis
+    `bench/RESULTS-context-advantage.md`. Measurement validity: **pass**;
+    **`claim_holds: false`**.
+  * **M wins on the fast path.** All three arms serve the happy path exactly
+    (64/64 byte-exact reads each), but a plain zstd blob with an in-memory index
+    and a SHA-256 check is faster than a scoped mode-19 read.
+  * **M ties on materialized bytes**: for the identical demanded recovery output
+    set (six tensors, two activations, one derived artifact) both arms
+    materialize the contract's bytes exactly. W does not win by materializing
+    less.
+  * **W's safety result is 0**: 56/56 declared cross-scope probes refused, zero
+    bytes read and zero bytes returned, because authorization precedes the
+    read. M also refuses all 56 — but reads 766,026 B over 48 requests to reject
+    the 24 whose five-dimension key matches, and 0 for the 32 it misses. N, the
+    floor, accepts 48 and returns the wrong payload for all 48.
+  * **W's availability result**: after the metadata database (index + manifest
+    objects) is removed from the same store, M reuses 0 of 16 compatible pages
+    and W reuses 16 of 16 byte-exactly. N reuses 16 of 16 but was never safe.
+    This is the only capability that survived all five pre-registered falsifiers
+    (F1–F4 hold; C1/C2 do not, so the fast-path claim is excluded).
+  * **The fast-path tolerance was declared in advance and failed.** Declared:
+    W p50 ≤ 2.0× N, p95 ≤ 2.5× N, bytes ≤ 1.10× N. Measured: p50 187.8 µs vs
+    28.9 µs (6.51×), p95 250.8 µs vs 31.7 µs (7.91×), bytes 0.431×. The
+    tolerance was not widened. M is also outside it (3.61× p50), which shows the
+    penalty is mostly payload decode, not the context plane: decoding the same
+    page in memory as mode 12 vs mode 19 costs 116.4 µs vs 132.4 µs, so the
+    descriptor is **+13.7 %** (frame +1.90 %).
+  * **W's recovery losses**: identical logical bytes, but 2.07× M's backend
+    reads and 8.23× M's wall time, because `restore_named_tensor_at` reloads the
+    checkpoint manifest on every call. Published, not hidden.
+  * Two earlier seven-repetition receipts (`...T053807Z`, `...T053930Z`) are
+    retained but not cited: the first recorded a null stamp (the runner did not
+    forward it into the container) and both used a fixture whose payload was
+    identical across scopes, which made "accepted but wrong bytes" structurally
+    unobservable.
+  * Courts: `context_advantage` is registered in `scripts/verify-all.sh` with
+    the reduced three-repetition configuration.
+  * Not claimed: no fleet, cloud, multi-writer, media or power-loss result; no
+    GPU or production-prefill result (`recompute` is a scalar kernel that
+    regenerates the page and is labelled as such); no codec comparison; no
+    timing or access-pattern privacy from the salt; no "impossible without
+    WeftFS" claim. An application baseline that embeds a canonical scope record
+    in every blob and rebuilds its index by scanning is **available and
+    untested** — it is the most important open baseline, named in
+    `bench/RESULTS-context-advantage.md` §9.
