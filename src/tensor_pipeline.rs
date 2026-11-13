@@ -145,6 +145,13 @@ pub struct TensorPipelineOptions {
     /// record. It only stops the whole group's writeback from landing on the
     /// critical path of the last barrier.
     pub publish_sync_bytes: u64,
+    /// The one process-wide admission object, when the caller opted in (N09).
+    ///
+    /// The encode side charges its busy encoder threads and worker-reserved
+    /// bytes to the same [`crate::stage_budget::StageBudget`] the restore side
+    /// uses, so a concurrent save and restore cannot each assume they own the
+    /// machine. `None` keeps the historical private budgets exactly.
+    pub budget: Option<std::sync::Arc<crate::stage_budget::StageBudget>>,
 }
 
 /// The measured default token count for `encode_threads` (R22.3).
@@ -174,6 +181,7 @@ impl Default for TensorPipelineOptions {
             worker_bytes: DEFAULT_WORKER_BYTES,
             candidate_parallel_min_bytes: DEFAULT_CANDIDATE_PARALLEL_MIN_BYTES,
             publish_sync_bytes: DEFAULT_PUBLISH_SYNC_BYTES,
+            budget: None,
         }
     }
 }
@@ -472,6 +480,28 @@ impl Store {
                         let StagedTensor { index, bytes } = claimed;
                         let tensor = &tensors[index];
                         let reservation = options.worker_reservation(tensor.byte_len) as usize;
+                        // N09: charge this encode to the shared budget as well
+                        // as the pipeline's own worker/token bounds. The
+                        // admission is released when the encode finishes; the
+                        // fragment's publish bytes stay on the pipeline's own
+                        // publish bound (the publisher is one thread).
+                        let budget_admission = match &options.budget {
+                            Some(budget) => match budget.admit(
+                                crate::stage_budget::Stage::Encode,
+                                tokens,
+                                reservation,
+                                None,
+                            ) {
+                                Ok(admission) => Some(admission),
+                                Err(err) => {
+                                    release_worker(shared, cv, reservation);
+                                    release_tokens(shared, cv, tokens);
+                                    fail(shared, cv, index, err);
+                                    return;
+                                }
+                            },
+                            None => None,
+                        };
                         let mut tensor_spec = spec.clone();
                         tensor_spec.plan.parallel_candidates = options.candidate_parallel_min_bytes
                             > 0
@@ -502,6 +532,7 @@ impl Store {
                         }
                         release_worker(shared, cv, reservation);
                         release_tokens(shared, cv, tokens);
+                        drop(budget_admission);
                         match encoded {
                             Ok(encoded) => {
                                 let resident =
@@ -554,45 +585,31 @@ impl Store {
             {
                 let writeback = &writeback;
                 let options = options;
-                scope.spawn(move || {
-                    loop {
-                        let batch = {
-                            let mut state = lock_wb(writeback);
-                            loop {
-                                if state.closed && state.queue.is_empty() {
-                                    return;
-                                }
-                                if let Some(batch) = state.queue.pop_front() {
-                                    break Some(batch);
-                                }
-                                state = writeback
-                                    .cv
-                                    .wait(state)
-                                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                scope.spawn(move || loop {
+                    let batch = {
+                        let mut state = lock_wb(writeback);
+                        loop {
+                            if state.closed && state.queue.is_empty() {
+                                return;
                             }
-                        };
-                        let Some(batch) = batch else { return };
-                        let started = Instant::now();
-                        let mut synced = 0u64;
-                        for path in &batch {
-                            match std::fs::File::open(path) {
-                                Ok(file) => {
-                                    if let Err(err) = file.sync_data() {
-                                        let error = Error::io(format!(
-                                            "early barrier cannot fsync {}: {err}",
-                                            path.display()
-                                        ));
-                                        let mut state = lock_wb(writeback);
-                                        if state.error.is_none() {
-                                            state.error = Some(error);
-                                        }
-                                        return;
-                                    }
-                                    synced += 1;
-                                }
-                                Err(err) => {
+                            if let Some(batch) = state.queue.pop_front() {
+                                break Some(batch);
+                            }
+                            state = writeback
+                                .cv
+                                .wait(state)
+                                .unwrap_or_else(|poisoned| poisoned.into_inner());
+                        }
+                    };
+                    let Some(batch) = batch else { return };
+                    let started = Instant::now();
+                    let mut synced = 0u64;
+                    for path in &batch {
+                        match std::fs::File::open(path) {
+                            Ok(file) => {
+                                if let Err(err) = file.sync_data() {
                                     let error = Error::io(format!(
-                                        "early barrier cannot open {}: {err}",
+                                        "early barrier cannot fsync {}: {err}",
                                         path.display()
                                     ));
                                     let mut state = lock_wb(writeback);
@@ -601,23 +618,35 @@ impl Store {
                                     }
                                     return;
                                 }
+                                synced += 1;
+                            }
+                            Err(err) => {
+                                let error = Error::io(format!(
+                                    "early barrier cannot open {}: {err}",
+                                    path.display()
+                                ));
+                                let mut state = lock_wb(writeback);
+                                if state.error.is_none() {
+                                    state.error = Some(error);
+                                }
+                                return;
                             }
                         }
-                        let elapsed = started.elapsed().as_nanos() as usize;
-                        let mut state = lock_wb(writeback);
-                        state.files = state.files.saturating_add(synced);
-                        state.passes += 1;
-                        state.ns = state.ns.saturating_add(elapsed);
-                        drop(state);
-                        if let Err(err) = self.note_external_file_barriers(synced) {
-                            let mut state = lock_wb(writeback);
-                            if state.error.is_none() {
-                                state.error = Some(err);
-                            }
-                            return;
-                        }
-                        let _ = options;
                     }
+                    let elapsed = started.elapsed().as_nanos() as usize;
+                    let mut state = lock_wb(writeback);
+                    state.files = state.files.saturating_add(synced);
+                    state.passes += 1;
+                    state.ns = state.ns.saturating_add(elapsed);
+                    drop(state);
+                    if let Err(err) = self.note_external_file_barriers(synced) {
+                        let mut state = lock_wb(writeback);
+                        if state.error.is_none() {
+                            state.error = Some(err);
+                        }
+                        return;
+                    }
+                    let _ = options;
                 });
             }
 

@@ -2780,7 +2780,7 @@ impl Store {
         let limits = Limits::default();
         let before = self.backend_stats();
         let tiles = crate::parallel::TileDecodeOptions {
-            threads: pipeline.tile_threads,
+            threads: pipeline.effective_tile_threads(),
             ..crate::parallel::TileDecodeOptions::default()
         };
         let region = options.region.as_ref();
@@ -2807,7 +2807,7 @@ impl Store {
             pipeline,
             |_index, tensor| {
                 let _probe = self.begin_tensor_probe(_index);
-                self.restore_tensor(
+                let restored = self.restore_tensor(
                     name,
                     tensor,
                     region,
@@ -2817,12 +2817,26 @@ impl Store {
                     snapshot,
                     lazy_tiles,
                     &tiles,
-                    pipeline.shard_threads,
+                    pipeline.effective_shard_threads(),
                     pipeline.shard_max_inflight_bytes,
-                )
+                )?;
+                // N08: the report's per-tensor SHA-256 is computed on the
+                // decode worker, not on the ordered writer. The writer only
+                // copies bytes to the sink; hashing here overlaps this
+                // tensor's digest with the next tensors' decodes under the
+                // X06 budget, and takes a full serial pass off the critical
+                // path. The bytes hashed are identical either way.
+                let sha = if hash_tensors && !Self::writer_sha_control() {
+                    crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                        safetensors::sha256(&restored.bytes)
+                    })
+                } else {
+                    [0u8; 32]
+                };
+                Ok((restored, sha))
             },
-            |restored| restored.bytes.len(),
-            |_index, restored| {
+            |(restored, _sha)| restored.bytes.len(),
+            |_index, (restored, sha)| {
                 writer
                     .write_all(&restored.bytes)
                     .map_err(|err| Error::io(format!("restore output: {err}")))?;
@@ -2846,10 +2860,13 @@ impl Store {
                     full_root_verified: restored.full_root_verified,
                     shard_roots_verified: restored.shard_roots_verified,
                     topology_root: restored.topology_root,
-                    sha256: if hash_tensors {
-                        safetensors::sha256(&restored.bytes)
+                    // The pre-N08 control arm hashes on the ordered writer.
+                    sha256: if hash_tensors && Self::writer_sha_control() {
+                        crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
+                            safetensors::sha256(&restored.bytes)
+                        })
                     } else {
-                        [0u8; 32]
+                        *sha
                     },
                 });
                 Ok(())
@@ -2877,7 +2894,19 @@ impl Store {
         )
     }
 
-    /// Validate the restore request, load the manifest, and derive the output
+    /// The pre-N08 control arm: compute the report's per-tensor SHA-256 on the
+/// ordered writer instead of the decode worker (N08).
+///
+/// `WEFT_RESTORE_WRITER_SHA=1` selects it. Both arms hash identical bytes and
+/// produce identical reports; only where the work happens differs.
+fn writer_sha_control() -> bool {
+    matches!(
+        std::env::var("WEFT_RESTORE_WRITER_SHA").as_deref(),
+        Ok("1") | Ok("true")
+    )
+}
+
+/// Validate the restore request, load the manifest, and derive the output
     /// header. Shared by the sequential, the pipelined, and the load-receipt
     /// restores so none of them can disagree about what "exact" means.
     fn restore_prologue(

@@ -1827,6 +1827,20 @@ fn float_dtype_matches_tensor(
     float_tensor_dtype(tensor) == Some(float)
 }
 
+/// The pre-N08 whole-tensor read copy is disabled by default (X06/N08).
+///
+/// `WEFT_TENSOR_READ_COPY=1` forces the historical
+/// `logical[start..stop].to_vec()` for a whole-object read, which is the
+/// control arm of the restore cost court. Any other value, or no value,
+/// returns the decoded buffer directly. This is a measurement switch only:
+/// both arms return identical bytes and verify identically.
+fn tensor_read_copy_control() -> bool {
+    matches!(
+        std::env::var("WEFT_TENSOR_READ_COPY").as_deref(),
+        Ok("1") | Ok("true")
+    )
+}
+
 impl Store {
     /// Write one logical tensor as a new file object.
     ///
@@ -6172,7 +6186,9 @@ impl Store {
         let frame_bytes =
             self.read_blob_verified_keyed(BlobKind::Manifest, frame_id, identity::MANIFEST_DOMAIN)?;
         let limits = Limits::default();
-        let frame = Frame::parse(&frame_bytes, &limits)?;
+        let frame = crate::phase_profile::timed(crate::phase_profile::Phase::FrameParse, || {
+            Frame::parse(&frame_bytes, &limits)
+        })?;
         let expected_mode = match tensor.tensor_mode {
             9 => Mode::FloatTensor,
             10 => Mode::TensorSharded,
@@ -6198,6 +6214,7 @@ impl Store {
                 frame.header.mode.as_str()
             )));
         }
+        let decode_scope = crate::phase_profile::scope(crate::phase_profile::Phase::TensorDecode);
         let logical = match tensor.tensor_mode {
             9 => self.decode_mode9(&frame, tensor, manifest, &limits)?,
             10 => self.decode_mode10(&frame, tensor, manifest, &limits)?,
@@ -6245,6 +6262,7 @@ impl Store {
             }
             _ => unreachable!("checked above"),
         };
+        drop(decode_scope);
         if logical.len() as u64 != manifest.size || logical.len() as u64 != rep.decoded_size {
             return Err(Error::corrupt(
                 "tensor representation decoded length disagrees with the manifest",
@@ -6261,8 +6279,19 @@ impl Store {
             .map_err(|_| Error::limit_exceeded("tensor range offset does not fit usize"))?;
         let stop = usize::try_from(end)
             .map_err(|_| Error::limit_exceeded("tensor range end does not fit usize"))?;
-        let out = logical[start..stop].to_vec();
+        // N08: a whole-object read already owns exactly the requested bytes in
+        // `logical`, so copying them into a second full-size buffer is pure
+        // work (and re-reads cold memory for the content hash). Return the
+        // decoded buffer directly; a sub-range still needs its slice. The
+        // pre-N08 copy is retained as a control arm, selectable at run time, so
+        // the court can price the copy honestly.
+        let out = if start == 0 && stop == logical.len() && !tensor_read_copy_control() {
+            logical
+        } else {
+            logical[start..stop].to_vec()
+        };
         if verify_whole && offset == 0 && end == manifest.size {
+            let _verify = crate::phase_profile::scope(crate::phase_profile::Phase::ContentVerify);
             if identity::content_hash(&out) != manifest.content_hash {
                 return Err(Error::corrupt("whole-content hash mismatch"));
             }
@@ -6311,7 +6340,9 @@ impl Store {
             .dtype
             .physical_tensor_dtype()
             .ok_or_else(|| Error::unsupported_version("mode-9 dtype has no logical root"))?;
-        let root = weftcodec::tensor::logical_root(physical, &tensor.shape, &logical, limits)?;
+        let root = crate::phase_profile::timed(crate::phase_profile::Phase::LogicalRoot, || {
+            weftcodec::tensor::logical_root(physical, &tensor.shape, &logical, limits)
+        })?;
         if root != tensor.logical_root {
             return Err(Error::corrupt("mode-9 logical root recomputation mismatch"));
         }

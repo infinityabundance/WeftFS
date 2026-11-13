@@ -1436,6 +1436,7 @@ fn measure(args: &[String]) -> Result<(), String> {
             tile_threads: thread_count,
             shard_threads: 1,
             shard_max_inflight_bytes: 64 * 1024 * 1024,
+            ..RestorePipelineOptions::default()
         };
         let mut samples = Vec::new();
         let mut bytes_read = 0u64;
@@ -1501,6 +1502,7 @@ fn measure(args: &[String]) -> Result<(), String> {
             tile_threads: thread_count,
             shard_threads: 1,
             shard_max_inflight_bytes: 64 * 1024 * 1024,
+            ..RestorePipelineOptions::default()
         };
         let mut samples = Vec::new();
         let mut bytes_read = 0u64;
@@ -1663,6 +1665,7 @@ fn measure(args: &[String]) -> Result<(), String> {
             tile_threads: 1,
             shard_threads: 1,
             shard_max_inflight_bytes: 64 * 1024 * 1024,
+            ..RestorePipelineOptions::default()
         };
         let mut samples = Vec::new();
         let mut bytes_read = 0u64;
@@ -2432,6 +2435,7 @@ fn restore(args: &[String]) -> Result<(), String> {
                 tile_threads: tile_worker_threads,
                 shard_threads,
                 shard_max_inflight_bytes: shard_max_inflight,
+                ..RestorePipelineOptions::default()
             };
             let mut samples = Vec::new();
             let mut backend_bytes = 0u64;
@@ -2616,6 +2620,7 @@ fn restore(args: &[String]) -> Result<(), String> {
         tile_threads: 1,
         shard_threads,
         shard_max_inflight_bytes: shard_max_inflight,
+        ..RestorePipelineOptions::default()
     };
     if probe_enabled {
         store.reset_lock_probe();

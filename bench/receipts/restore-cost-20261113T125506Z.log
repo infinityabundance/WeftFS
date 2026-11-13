@@ -1,0 +1,2417 @@
+{
+  "checkpoints": {
+    "c1": {
+      "checkpoint": "ckpt",
+      "logical_bytes": 1048576,
+      "source": "/tmp/cost/src/c1.safetensors",
+      "source_sha256": "548fe61167ca45b46e63ff4e75498c4246130fd09b6f316679c94cb6583a2cdc",
+      "store": "/tmp/cost/store-c1",
+      "tensors": 1,
+      "write_ms": 29.803427,
+      "written_objects": 1
+    },
+    "c10": {
+      "checkpoint": "ckpt",
+      "logical_bytes": 10485760,
+      "source": "/tmp/cost/src/c10.safetensors",
+      "source_sha256": "00f12ba7c60131e028f6e53f82c84cc8f1967d03261e06cc777c9aaf15a23be5",
+      "store": "/tmp/cost/store-c10",
+      "tensors": 10,
+      "write_ms": 278.630049,
+      "written_objects": 10
+    },
+    "c100": {
+      "checkpoint": "ckpt",
+      "logical_bytes": 104857600,
+      "source": "/tmp/cost/src/c100.safetensors",
+      "source_sha256": "41b578f46be76d1530cb987592a096a91c7a4a12c78ba13b25ef98908bc41460",
+      "store": "/tmp/cost/store-c100",
+      "tensors": 100,
+      "write_ms": 2811.4465219999997,
+      "written_objects": 100
+    }
+  },
+  "phase": "build",
+  "schema": "weft.restore_cost.build.v1",
+  "tensor_bytes": 1048576
+}
+{
+  "backend": {
+    "bytes_read": 757464169,
+    "reads": 6308
+  },
+  "checkpoints": {
+    "c1": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 12.036741,
+          "mean_ms": 11.181225000000001,
+          "min_ms": 10.813122,
+          "p50_ms": 11.080593,
+          "p95_ms": 12.036741,
+          "p99_ms": 12.036741,
+          "reps": 5,
+          "samples_ms": [
+            12.036741,
+            10.821168,
+            10.813122,
+            11.154501000000002,
+            11.080593
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.00007,
+            "mean_ms": 0.00007,
+            "total_ms": 0.00007
+          },
+          "blob_hash_manifest": {
+            "count": 9,
+            "max_ms": 0.052078,
+            "mean_ms": 0.011813222222222223,
+            "total_ms": 0.106319
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.001072,
+            "mean_ms": 0.001072,
+            "total_ms": 0.001072
+          },
+          "blob_io_manifest": {
+            "count": 9,
+            "max_ms": 0.0798,
+            "mean_ms": 0.015033777777777778,
+            "total_ms": 0.135304
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.002245,
+            "mean_ms": 0.002245,
+            "total_ms": 0.002245
+          },
+          "content_verify": {
+            "count": 3,
+            "max_ms": 0.047268,
+            "mean_ms": 0.031856333333333334,
+            "total_ms": 0.095569
+          },
+          "digest": {
+            "count": 1,
+            "max_ms": 0.409075,
+            "mean_ms": 0.409075,
+            "total_ms": 0.409075
+          },
+          "frame_parse": {
+            "count": 2,
+            "max_ms": 0.014517,
+            "mean_ms": 0.014362,
+            "total_ms": 0.028724
+          },
+          "manifest_decode": {
+            "count": 7,
+            "max_ms": 0.005521,
+            "mean_ms": 0.0038458571428571426,
+            "total_ms": 0.026921
+          },
+          "tensor_decode": {
+            "count": 2,
+            "max_ms": 4.495928,
+            "mean_ms": 4.4523065,
+            "total_ms": 8.904613
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 12.343484,
+            "decode_wall_ms": 12.398507,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 13.241414,
+            "transfer_ms": 12.327444,
+            "write_ms": 0.817449
+          },
+          {
+            "decode_sum_ms": 10.348984,
+            "decode_wall_ms": 10.374121,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.237295,
+            "transfer_ms": 10.342482,
+            "write_ms": 0.816016
+          },
+          {
+            "decode_sum_ms": 10.141987,
+            "decode_wall_ms": 10.167465,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.014619999999999,
+            "transfer_ms": 10.13342,
+            "write_ms": 0.815645
+          },
+          {
+            "decode_sum_ms": 12.136166,
+            "decode_wall_ms": 12.162586,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 13.020109999999999,
+            "transfer_ms": 12.129043,
+            "write_ms": 0.820785
+          },
+          {
+            "decode_sum_ms": 10.163097,
+            "decode_wall_ms": 10.185258,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.0367,
+            "transfer_ms": 10.152627,
+            "write_ms": 0.81853
+          }
+        ],
+        "restored_bytes": 1048656,
+        "wall": {
+          "max_ms": 13.323868000000001,
+          "mean_ms": 11.9777466,
+          "min_ms": 11.088628,
+          "p50_ms": 11.300293,
+          "p95_ms": 13.323868000000001,
+          "p99_ms": 13.323868000000001,
+          "reps": 5,
+          "samples_ms": [
+            13.323868000000001,
+            11.300293,
+            11.088628,
+            13.073019,
+            11.102924999999999
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 4.86581,
+          "mean_ms": 4.840430199999999,
+          "min_ms": 4.800507,
+          "p50_ms": 4.848637999999999,
+          "p95_ms": 4.86581,
+          "p99_ms": 4.86581,
+          "reps": 5,
+          "samples_ms": [
+            4.86581,
+            4.848637999999999,
+            4.850351,
+            4.836845,
+            4.800507
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 1,
+        "wall": {
+          "max_ms": 11.127631000000001,
+          "mean_ms": 11.01177,
+          "min_ms": 10.796251,
+          "p50_ms": 11.043634,
+          "p95_ms": 11.127631000000001,
+          "p99_ms": 11.127631000000001,
+          "reps": 5,
+          "samples_ms": [
+            11.022222999999999,
+            11.127631000000001,
+            11.043634,
+            11.069111,
+            10.796251
+          ]
+        }
+      },
+      "source_sha256": "548fe61167ca45b46e63ff4e75498c4246130fd09b6f316679c94cb6583a2cdc"
+    },
+    "c10": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 11.805919,
+          "mean_ms": 11.109564599999999,
+          "min_ms": 10.669935,
+          "p50_ms": 10.965106,
+          "p95_ms": 11.805919,
+          "p99_ms": 11.805919,
+          "reps": 5,
+          "samples_ms": [
+            10.965106,
+            11.253285,
+            10.853577999999999,
+            11.805919,
+            10.669935
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.00018,
+            "mean_ms": 0.00018,
+            "total_ms": 0.00018
+          },
+          "blob_hash_manifest": {
+            "count": 81,
+            "max_ms": 0.05376,
+            "mean_ms": 0.013041074074074075,
+            "total_ms": 1.056327
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.005791,
+            "mean_ms": 0.005791,
+            "total_ms": 0.005791
+          },
+          "blob_io_manifest": {
+            "count": 81,
+            "max_ms": 0.071574,
+            "mean_ms": 0.010220814814814816,
+            "total_ms": 0.827886
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.004819,
+            "mean_ms": 0.004819,
+            "total_ms": 0.004819
+          },
+          "content_verify": {
+            "count": 21,
+            "max_ms": 0.048882,
+            "mean_ms": 0.045653238095238094,
+            "total_ms": 0.958718
+          },
+          "digest": {
+            "count": 10,
+            "max_ms": 0.41153,
+            "mean_ms": 0.4085371,
+            "total_ms": 4.085371
+          },
+          "frame_parse": {
+            "count": 20,
+            "max_ms": 0.014697,
+            "mean_ms": 0.01401265,
+            "total_ms": 0.280253
+          },
+          "manifest_decode": {
+            "count": 61,
+            "max_ms": 0.008857,
+            "mean_ms": 0.003465360655737705,
+            "total_ms": 0.211387
+          },
+          "tensor_decode": {
+            "count": 20,
+            "max_ms": 4.648673,
+            "mean_ms": 4.399067349999999,
+            "total_ms": 87.981347
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 105.025725,
+            "decode_wall_ms": 32.528313,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 33.350901,
+            "transfer_ms": 25.058233,
+            "write_ms": 8.184136
+          },
+          {
+            "decode_sum_ms": 101.327478,
+            "decode_wall_ms": 31.073893,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.900048,
+            "transfer_ms": 23.57091,
+            "write_ms": 8.194917
+          },
+          {
+            "decode_sum_ms": 101.982462,
+            "decode_wall_ms": 30.046772,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.831189000000002,
+            "transfer_ms": 22.888686,
+            "write_ms": 8.475268
+          },
+          {
+            "decode_sum_ms": 103.175205,
+            "decode_wall_ms": 31.032976,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 32.023068,
+            "transfer_ms": 23.585079,
+            "write_ms": 8.179065
+          },
+          {
+            "decode_sum_ms": 100.106365,
+            "decode_wall_ms": 29.958648,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 30.860324000000002,
+            "transfer_ms": 22.482848,
+            "write_ms": 8.196077
+          }
+        ],
+        "restored_bytes": 10486528,
+        "wall": {
+          "max_ms": 33.498658,
+          "mean_ms": 32.15978,
+          "min_ms": 31.033107,
+          "p50_ms": 32.078272,
+          "p95_ms": 33.498658,
+          "p99_ms": 33.498658,
+          "reps": 5,
+          "samples_ms": [
+            33.498658,
+            32.078272,
+            31.988102999999995,
+            32.20076,
+            31.033107
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 5.768508000000001,
+          "mean_ms": 5.095106599999999,
+          "min_ms": 4.675775,
+          "p50_ms": 4.959926,
+          "p95_ms": 5.768508000000001,
+          "p99_ms": 5.768508000000001,
+          "reps": 5,
+          "samples_ms": [
+            4.675775,
+            5.768508000000001,
+            5.188543,
+            4.8827810000000005,
+            4.959926
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 116.89372900000001,
+          "mean_ms": 112.9013626,
+          "min_ms": 109.610007,
+          "p50_ms": 113.204209,
+          "p95_ms": 116.89372900000001,
+          "p99_ms": 116.89372900000001,
+          "reps": 5,
+          "samples_ms": [
+            111.24909299999999,
+            116.89372900000001,
+            113.204209,
+            109.610007,
+            113.54977500000001
+          ]
+        }
+      },
+      "source_sha256": "00f12ba7c60131e028f6e53f82c84cc8f1967d03261e06cc777c9aaf15a23be5"
+    },
+    "c100": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 11.99353,
+          "mean_ms": 11.4149454,
+          "min_ms": 11.153378,
+          "p50_ms": 11.325190000000001,
+          "p95_ms": 11.99353,
+          "p99_ms": 11.99353,
+          "reps": 5,
+          "samples_ms": [
+            11.99353,
+            11.422521,
+            11.325190000000001,
+            11.180107999999999,
+            11.153378
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 2,
+            "max_ms": 0.001633,
+            "mean_ms": 0.0008365,
+            "total_ms": 0.001673
+          },
+          "blob_hash_manifest": {
+            "count": 801,
+            "max_ms": 7.353331,
+            "mean_ms": 0.022269509363295883,
+            "total_ms": 17.837877
+          },
+          "blob_hash_object": {
+            "count": 2,
+            "max_ms": 0.012042,
+            "mean_ms": 0.0078045,
+            "total_ms": 0.015609
+          },
+          "blob_io_manifest": {
+            "count": 801,
+            "max_ms": 0.135744,
+            "mean_ms": 0.010995123595505618,
+            "total_ms": 8.807094
+          },
+          "blob_io_object": {
+            "count": 2,
+            "max_ms": 0.01035,
+            "mean_ms": 0.006613,
+            "total_ms": 0.013226
+          },
+          "content_verify": {
+            "count": 201,
+            "max_ms": 0.053601,
+            "mean_ms": 0.047376930348258704,
+            "total_ms": 9.522763
+          },
+          "digest": {
+            "count": 100,
+            "max_ms": 0.415487,
+            "mean_ms": 0.40840077,
+            "total_ms": 40.840077
+          },
+          "frame_parse": {
+            "count": 200,
+            "max_ms": 0.016892,
+            "mean_ms": 0.014080780000000001,
+            "total_ms": 2.816156
+          },
+          "manifest_decode": {
+            "count": 601,
+            "max_ms": 0.009789,
+            "mean_ms": 0.003278316139767055,
+            "total_ms": 1.970268
+          },
+          "tensor_decode": {
+            "count": 200,
+            "max_ms": 13.60861,
+            "mean_ms": 4.56493599,
+            "total_ms": 912.987198
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 1043.397221,
+            "decode_wall_ms": 265.460341,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 266.324347,
+            "transfer_ms": 176.572759,
+            "write_ms": 89.615158
+          },
+          {
+            "decode_sum_ms": 1012.431777,
+            "decode_wall_ms": 256.709605,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 257.598447,
+            "transfer_ms": 167.27635,
+            "write_ms": 90.205813
+          },
+          {
+            "decode_sum_ms": 1080.930573,
+            "decode_wall_ms": 274.437268,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 275.32863499999996,
+            "transfer_ms": 186.290409,
+            "write_ms": 88.89377
+          },
+          {
+            "decode_sum_ms": 1053.418019,
+            "decode_wall_ms": 266.539057,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 267.361996,
+            "transfer_ms": 185.130488,
+            "write_ms": 82.102235
+          },
+          {
+            "decode_sum_ms": 1039.214006,
+            "decode_wall_ms": 269.88314,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 270.702743,
+            "transfer_ms": 168.920585,
+            "write_ms": 101.659545
+          }
+        ],
+        "restored_bytes": 104865400,
+        "wall": {
+          "max_ms": 276.513911,
+          "mean_ms": 268.51994759999997,
+          "min_ms": 258.601433,
+          "p50_ms": 268.41600700000004,
+          "p95_ms": 276.513911,
+          "p99_ms": 276.513911,
+          "reps": 5,
+          "samples_ms": [
+            267.311613,
+            258.601433,
+            276.513911,
+            268.41600700000004,
+            271.75677399999995
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 5.350787,
+          "mean_ms": 5.291137,
+          "min_ms": 5.256049,
+          "p50_ms": 5.281317,
+          "p95_ms": 5.350787,
+          "p99_ms": 5.350787,
+          "reps": 5,
+          "samples_ms": [
+            5.281317,
+            5.256049,
+            5.2625210000000004,
+            5.305011,
+            5.350787
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 122.38278299999999,
+          "mean_ms": 118.0293696,
+          "min_ms": 114.82000000000001,
+          "p50_ms": 118.014944,
+          "p95_ms": 122.38278299999999,
+          "p99_ms": 122.38278299999999,
+          "reps": 5,
+          "samples_ms": [
+            118.014944,
+            116.51104199999999,
+            122.38278299999999,
+            118.41807899999999,
+            114.82000000000001
+          ]
+        }
+      },
+      "source_sha256": "41b578f46be76d1530cb987592a096a91c7a4a12c78ba13b25ef98908bc41460"
+    }
+  },
+  "copy_control": false,
+  "note": "cold label means a fresh process; the page cache is not dropped inside the court",
+  "phase": "measure",
+  "reps": 5,
+  "restore_pipeline": {
+    "shard_threads": 1,
+    "threads": 4,
+    "tile_threads": 1
+  },
+  "schema": "weft.restore_cost.measure.v1",
+  "sizes": [
+    1,
+    10,
+    100
+  ],
+  "tensor_bytes": 1048576,
+  "writer_sha_control": false
+}
+{
+  "backend": {
+    "bytes_read": 757464169,
+    "reads": 6308
+  },
+  "checkpoints": {
+    "c1": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 11.225663,
+          "mean_ms": 10.930794,
+          "min_ms": 10.780601,
+          "p50_ms": 10.850662,
+          "p95_ms": 11.225663,
+          "p99_ms": 11.225663,
+          "reps": 5,
+          "samples_ms": [
+            11.225663,
+            10.850662,
+            10.809826,
+            10.987218,
+            10.780601
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.00006,
+            "mean_ms": 0.00006,
+            "total_ms": 0.00006
+          },
+          "blob_hash_manifest": {
+            "count": 9,
+            "max_ms": 0.051636,
+            "mean_ms": 0.011778777777777777,
+            "total_ms": 0.106009
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.001072,
+            "mean_ms": 0.001072,
+            "total_ms": 0.001072
+          },
+          "blob_io_manifest": {
+            "count": 9,
+            "max_ms": 0.097422,
+            "mean_ms": 0.016289222222222222,
+            "total_ms": 0.146603
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.002454,
+            "mean_ms": 0.002454,
+            "total_ms": 0.002454
+          },
+          "content_verify": {
+            "count": 3,
+            "max_ms": 0.047599,
+            "mean_ms": 0.031923,
+            "total_ms": 0.095769
+          },
+          "digest": {
+            "count": 1,
+            "max_ms": 0.408113,
+            "mean_ms": 0.408113,
+            "total_ms": 0.408113
+          },
+          "frame_parse": {
+            "count": 2,
+            "max_ms": 0.014307,
+            "mean_ms": 0.0141465,
+            "total_ms": 0.028293
+          },
+          "manifest_decode": {
+            "count": 7,
+            "max_ms": 0.006382,
+            "mean_ms": 0.004193714285714285,
+            "total_ms": 0.029356
+          },
+          "tensor_decode": {
+            "count": 2,
+            "max_ms": 4.862534,
+            "mean_ms": 4.663246,
+            "total_ms": 9.326492
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 11.155302,
+            "decode_wall_ms": 11.205616,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 12.055696,
+            "transfer_ms": 11.13794,
+            "write_ms": 0.821256
+          },
+          {
+            "decode_sum_ms": 10.493715,
+            "decode_wall_ms": 10.52327,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.497060999999999,
+            "transfer_ms": 10.482264,
+            "write_ms": 0.817679
+          },
+          {
+            "decode_sum_ms": 10.520865,
+            "decode_wall_ms": 10.543939,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.417171999999999,
+            "transfer_ms": 10.506418,
+            "write_ms": 0.820505
+          },
+          {
+            "decode_sum_ms": 10.518601,
+            "decode_wall_ms": 10.545732,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.43229,
+            "transfer_ms": 10.514904,
+            "write_ms": 0.815886
+          },
+          {
+            "decode_sum_ms": 10.5986,
+            "decode_wall_ms": 10.629628,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.522518,
+            "transfer_ms": 10.596878,
+            "write_ms": 0.82342
+          }
+        ],
+        "restored_bytes": 1048656,
+        "wall": {
+          "max_ms": 12.135325,
+          "mean_ms": 11.6608074,
+          "min_ms": 11.492713,
+          "p50_ms": 11.571981000000001,
+          "p95_ms": 12.135325,
+          "p99_ms": 12.135325,
+          "reps": 5,
+          "samples_ms": [
+            12.135325,
+            11.571981000000001,
+            11.492713,
+            11.505187,
+            11.598831
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 4.856923,
+          "mean_ms": 4.760114,
+          "min_ms": 4.675223,
+          "p50_ms": 4.728172,
+          "p95_ms": 4.856923,
+          "p99_ms": 4.856923,
+          "reps": 5,
+          "samples_ms": [
+            4.709678,
+            4.728172,
+            4.675223,
+            4.856923,
+            4.8305739999999995
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 1,
+        "wall": {
+          "max_ms": 10.896127,
+          "mean_ms": 10.835494,
+          "min_ms": 10.748521,
+          "p50_ms": 10.849731,
+          "p95_ms": 10.896127,
+          "p99_ms": 10.896127,
+          "reps": 5,
+          "samples_ms": [
+            10.867092999999999,
+            10.849731,
+            10.896127,
+            10.748521,
+            10.815998
+          ]
+        }
+      },
+      "source_sha256": "548fe61167ca45b46e63ff4e75498c4246130fd09b6f316679c94cb6583a2cdc"
+    },
+    "c10": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 11.772716,
+          "mean_ms": 11.2856132,
+          "min_ms": 10.909011,
+          "p50_ms": 11.081834,
+          "p95_ms": 11.772716,
+          "p99_ms": 11.772716,
+          "reps": 5,
+          "samples_ms": [
+            11.598701,
+            11.065804,
+            10.909011,
+            11.772716,
+            11.081834
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.000231,
+            "mean_ms": 0.000231,
+            "total_ms": 0.000231
+          },
+          "blob_hash_manifest": {
+            "count": 81,
+            "max_ms": 0.06427,
+            "mean_ms": 0.013374975308641976,
+            "total_ms": 1.083373
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.006091,
+            "mean_ms": 0.006091,
+            "total_ms": 0.006091
+          },
+          "blob_io_manifest": {
+            "count": 81,
+            "max_ms": 0.103203,
+            "mean_ms": 0.012498160493827161,
+            "total_ms": 1.012351
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.004228,
+            "mean_ms": 0.004228,
+            "total_ms": 0.004228
+          },
+          "content_verify": {
+            "count": 21,
+            "max_ms": 0.050936,
+            "mean_ms": 0.046028,
+            "total_ms": 0.966588
+          },
+          "digest": {
+            "count": 10,
+            "max_ms": 0.419554,
+            "mean_ms": 0.40924140000000003,
+            "total_ms": 4.092414
+          },
+          "frame_parse": {
+            "count": 20,
+            "max_ms": 0.026289,
+            "mean_ms": 0.014897299999999999,
+            "total_ms": 0.297946
+          },
+          "manifest_decode": {
+            "count": 61,
+            "max_ms": 0.009318,
+            "mean_ms": 0.003982262295081967,
+            "total_ms": 0.242918
+          },
+          "tensor_decode": {
+            "count": 20,
+            "max_ms": 6.11755,
+            "mean_ms": 4.637939650000001,
+            "total_ms": 92.758793
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 103.838253,
+            "decode_wall_ms": 30.46316,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 32.366169,
+            "transfer_ms": 23.669334,
+            "write_ms": 8.236604
+          },
+          {
+            "decode_sum_ms": 102.906749,
+            "decode_wall_ms": 30.849313,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 32.422895,
+            "transfer_ms": 23.799529,
+            "write_ms": 8.252382
+          },
+          {
+            "decode_sum_ms": 106.421822,
+            "decode_wall_ms": 32.012608,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 33.855374,
+            "transfer_ms": 25.233,
+            "write_ms": 8.18571
+          },
+          {
+            "decode_sum_ms": 105.050528,
+            "decode_wall_ms": 30.431471,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 32.097036,
+            "transfer_ms": 23.423694,
+            "write_ms": 8.198002
+          },
+          {
+            "decode_sum_ms": 105.671983,
+            "decode_wall_ms": 30.913713,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 32.433866,
+            "transfer_ms": 24.001635,
+            "write_ms": 8.212069
+          }
+        ],
+        "restored_bytes": 10486528,
+        "wall": {
+          "max_ms": 34.025652,
+          "mean_ms": 32.8050558,
+          "min_ms": 32.270811,
+          "p50_ms": 32.605176,
+          "p95_ms": 34.025652,
+          "p99_ms": 34.025652,
+          "reps": 5,
+          "samples_ms": [
+            32.515057,
+            32.605176,
+            34.025652,
+            32.270811,
+            32.608582999999996
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 5.099165999999999,
+          "mean_ms": 5.0178038,
+          "min_ms": 4.962902,
+          "p50_ms": 4.9892,
+          "p95_ms": 5.099165999999999,
+          "p99_ms": 5.099165999999999,
+          "reps": 5,
+          "samples_ms": [
+            5.060844,
+            4.9892,
+            4.976907,
+            4.962902,
+            5.099165999999999
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 115.631687,
+          "mean_ms": 111.818219,
+          "min_ms": 109.566334,
+          "p50_ms": 111.736211,
+          "p95_ms": 115.631687,
+          "p99_ms": 115.631687,
+          "reps": 5,
+          "samples_ms": [
+            109.566334,
+            112.556636,
+            109.60022699999999,
+            111.736211,
+            115.631687
+          ]
+        }
+      },
+      "source_sha256": "00f12ba7c60131e028f6e53f82c84cc8f1967d03261e06cc777c9aaf15a23be5"
+    },
+    "c100": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 12.037973000000001,
+          "mean_ms": 11.5544546,
+          "min_ms": 11.358312,
+          "p50_ms": 11.463889,
+          "p95_ms": 12.037973000000001,
+          "p99_ms": 12.037973000000001,
+          "reps": 5,
+          "samples_ms": [
+            12.037973000000001,
+            11.463889,
+            11.529632,
+            11.358312,
+            11.382467
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 2,
+            "max_ms": 0.001202,
+            "mean_ms": 0.000621,
+            "total_ms": 0.001242
+          },
+          "blob_hash_manifest": {
+            "count": 801,
+            "max_ms": 0.06951,
+            "mean_ms": 0.013308077403245943,
+            "total_ms": 10.65977
+          },
+          "blob_hash_object": {
+            "count": 2,
+            "max_ms": 0.011572,
+            "mean_ms": 0.0075445,
+            "total_ms": 0.015089
+          },
+          "blob_io_manifest": {
+            "count": 801,
+            "max_ms": 0.101219,
+            "mean_ms": 0.011784868913857677,
+            "total_ms": 9.43968
+          },
+          "blob_io_object": {
+            "count": 2,
+            "max_ms": 0.011602,
+            "mean_ms": 0.0072585,
+            "total_ms": 0.014517
+          },
+          "content_verify": {
+            "count": 201,
+            "max_ms": 0.052949,
+            "mean_ms": 0.04760186069651741,
+            "total_ms": 9.567974
+          },
+          "digest": {
+            "count": 100,
+            "max_ms": 0.491369,
+            "mean_ms": 0.40984521999999995,
+            "total_ms": 40.984522
+          },
+          "frame_parse": {
+            "count": 200,
+            "max_ms": 0.100107,
+            "mean_ms": 0.014641485000000001,
+            "total_ms": 2.928297
+          },
+          "manifest_decode": {
+            "count": 601,
+            "max_ms": 0.01051,
+            "mean_ms": 0.0035580033277870216,
+            "total_ms": 2.13836
+          },
+          "tensor_decode": {
+            "count": 200,
+            "max_ms": 14.5553,
+            "mean_ms": 4.778049429999999,
+            "total_ms": 955.609886
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 1049.1844,
+            "decode_wall_ms": 266.077849,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 266.901409,
+            "transfer_ms": 184.303152,
+            "write_ms": 82.476163
+          },
+          {
+            "decode_sum_ms": 1051.310701,
+            "decode_wall_ms": 266.192263,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 267.091695,
+            "transfer_ms": 180.458258,
+            "write_ms": 86.50931
+          },
+          {
+            "decode_sum_ms": 1032.529282,
+            "decode_wall_ms": 262.221888,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 263.044636,
+            "transfer_ms": 180.580001,
+            "write_ms": 82.324451
+          },
+          {
+            "decode_sum_ms": 1049.90698,
+            "decode_wall_ms": 264.587221,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 266.50242299999996,
+            "transfer_ms": 181.504188,
+            "write_ms": 84.86582
+          },
+          {
+            "decode_sum_ms": 1078.306447,
+            "decode_wall_ms": 273.012586,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 273.845934,
+            "transfer_ms": 187.026021,
+            "write_ms": 86.700281
+          }
+        ],
+        "restored_bytes": 104865400,
+        "wall": {
+          "max_ms": 274.936755,
+          "mean_ms": 268.53984499999996,
+          "min_ms": 264.09477,
+          "p50_ms": 267.95306600000004,
+          "p95_ms": 274.936755,
+          "p99_ms": 274.936755,
+          "reps": 5,
+          "samples_ms": [
+            267.95306600000004,
+            268.141559,
+            264.09477,
+            267.573075,
+            274.936755
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 5.462375000000001,
+          "mean_ms": 5.4145276,
+          "min_ms": 5.357019,
+          "p50_ms": 5.423582,
+          "p95_ms": 5.462375000000001,
+          "p99_ms": 5.462375000000001,
+          "reps": 5,
+          "samples_ms": [
+            5.357019,
+            5.39029,
+            5.462375000000001,
+            5.423582,
+            5.439372
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 120.880821,
+          "mean_ms": 116.47955060000001,
+          "min_ms": 114.268355,
+          "p50_ms": 115.152028,
+          "p95_ms": 120.880821,
+          "p99_ms": 120.880821,
+          "reps": 5,
+          "samples_ms": [
+            120.880821,
+            117.379023,
+            115.152028,
+            114.268355,
+            114.717526
+          ]
+        }
+      },
+      "source_sha256": "41b578f46be76d1530cb987592a096a91c7a4a12c78ba13b25ef98908bc41460"
+    }
+  },
+  "copy_control": true,
+  "note": "cold label means a fresh process; the page cache is not dropped inside the court",
+  "phase": "measure",
+  "reps": 5,
+  "restore_pipeline": {
+    "shard_threads": 1,
+    "threads": 4,
+    "tile_threads": 1
+  },
+  "schema": "weft.restore_cost.measure.v1",
+  "sizes": [
+    1,
+    10,
+    100
+  ],
+  "tensor_bytes": 1048576,
+  "writer_sha_control": false
+}
+{
+  "backend": {
+    "bytes_read": 757464169,
+    "reads": 6308
+  },
+  "checkpoints": {
+    "c1": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 10.870238,
+          "mean_ms": 10.7217228,
+          "min_ms": 10.648524,
+          "p50_ms": 10.656389,
+          "p95_ms": 10.870238,
+          "p99_ms": 10.870238,
+          "reps": 5,
+          "samples_ms": [
+            10.870238,
+            10.779198000000001,
+            10.648524,
+            10.654264999999999,
+            10.656389
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.00003,
+            "mean_ms": 0.00003,
+            "total_ms": 0.00003
+          },
+          "blob_hash_manifest": {
+            "count": 9,
+            "max_ms": 0.052237,
+            "mean_ms": 0.011802,
+            "total_ms": 0.106218
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.001052,
+            "mean_ms": 0.001052,
+            "total_ms": 0.001052
+          },
+          "blob_io_manifest": {
+            "count": 9,
+            "max_ms": 0.09652,
+            "mean_ms": 0.015033444444444445,
+            "total_ms": 0.135301
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.001533,
+            "mean_ms": 0.001533,
+            "total_ms": 0.001533
+          },
+          "content_verify": {
+            "count": 3,
+            "max_ms": 0.048361,
+            "mean_ms": 0.03231733333333333,
+            "total_ms": 0.096952
+          },
+          "digest": {
+            "count": 1,
+            "max_ms": 0.4064,
+            "mean_ms": 0.4064,
+            "total_ms": 0.4064
+          },
+          "frame_parse": {
+            "count": 2,
+            "max_ms": 0.014367,
+            "mean_ms": 0.014232,
+            "total_ms": 0.028464
+          },
+          "manifest_decode": {
+            "count": 7,
+            "max_ms": 0.007925,
+            "mean_ms": 0.0038271428571428575,
+            "total_ms": 0.02679
+          },
+          "tensor_decode": {
+            "count": 2,
+            "max_ms": 4.592068,
+            "mean_ms": 4.4602515,
+            "total_ms": 8.920503
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 10.275918,
+            "decode_wall_ms": 10.331922,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.581468,
+            "transfer_ms": 10.26632,
+            "write_ms": 1.226885
+          },
+          {
+            "decode_sum_ms": 9.611695,
+            "decode_wall_ms": 9.634858,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 10.889494,
+            "transfer_ms": 9.601606,
+            "write_ms": 1.227635
+          },
+          {
+            "decode_sum_ms": 9.912438,
+            "decode_wall_ms": 9.932095,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.201889,
+            "transfer_ms": 9.903641,
+            "write_ms": 1.221263
+          },
+          {
+            "decode_sum_ms": 10.439704,
+            "decode_wall_ms": 10.461284,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.749272999999999,
+            "transfer_ms": 10.435305,
+            "write_ms": 1.222547
+          },
+          {
+            "decode_sum_ms": 9.8549,
+            "decode_wall_ms": 9.870028,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.125385999999999,
+            "transfer_ms": 9.845653,
+            "write_ms": 1.223348
+          }
+        ],
+        "restored_bytes": 1048656,
+        "wall": {
+          "max_ms": 11.790079,
+          "mean_ms": 11.3631142,
+          "min_ms": 10.961820000000001,
+          "p50_ms": 11.249347,
+          "p95_ms": 11.790079,
+          "p99_ms": 11.790079,
+          "reps": 5,
+          "samples_ms": [
+            11.653914,
+            10.961820000000001,
+            11.249347,
+            11.790079,
+            11.160411
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 4.658862,
+          "mean_ms": 4.6272454,
+          "min_ms": 4.6092900000000006,
+          "p50_ms": 4.618888,
+          "p95_ms": 4.658862,
+          "p99_ms": 4.658862,
+          "reps": 5,
+          "samples_ms": [
+            4.658862,
+            4.618888,
+            4.634497,
+            4.6092900000000006,
+            4.61469
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 1,
+        "wall": {
+          "max_ms": 10.632413999999999,
+          "mean_ms": 10.6104106,
+          "min_ms": 10.591558,
+          "p50_ms": 10.608859,
+          "p95_ms": 10.632413999999999,
+          "p99_ms": 10.632413999999999,
+          "reps": 5,
+          "samples_ms": [
+            10.618938,
+            10.608859,
+            10.600284,
+            10.591558,
+            10.632413999999999
+          ]
+        }
+      },
+      "source_sha256": "548fe61167ca45b46e63ff4e75498c4246130fd09b6f316679c94cb6583a2cdc"
+    },
+    "c10": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 12.548407,
+          "mean_ms": 11.2790652,
+          "min_ms": 10.583623000000001,
+          "p50_ms": 10.74798,
+          "p95_ms": 12.548407,
+          "p99_ms": 12.548407,
+          "reps": 5,
+          "samples_ms": [
+            12.548407,
+            11.799627,
+            10.74798,
+            10.715689000000001,
+            10.583623000000001
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.00021,
+            "mean_ms": 0.00021,
+            "total_ms": 0.00021
+          },
+          "blob_hash_manifest": {
+            "count": 81,
+            "max_ms": 0.054602,
+            "mean_ms": 0.013105604938271604,
+            "total_ms": 1.061554
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.005631,
+            "mean_ms": 0.005631,
+            "total_ms": 0.005631
+          },
+          "blob_io_manifest": {
+            "count": 81,
+            "max_ms": 0.078056,
+            "mean_ms": 0.009384382716049381,
+            "total_ms": 0.760135
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.003987,
+            "mean_ms": 0.003987,
+            "total_ms": 0.003987
+          },
+          "content_verify": {
+            "count": 21,
+            "max_ms": 0.055414,
+            "mean_ms": 0.04639971428571428,
+            "total_ms": 0.974394
+          },
+          "digest": {
+            "count": 10,
+            "max_ms": 0.421858,
+            "mean_ms": 0.41049040000000003,
+            "total_ms": 4.104904
+          },
+          "frame_parse": {
+            "count": 20,
+            "max_ms": 0.015179,
+            "mean_ms": 0.0141729,
+            "total_ms": 0.283458
+          },
+          "manifest_decode": {
+            "count": 61,
+            "max_ms": 0.008816,
+            "mean_ms": 0.0036154918032786885,
+            "total_ms": 0.220545
+          },
+          "tensor_decode": {
+            "count": 20,
+            "max_ms": 4.816146,
+            "mean_ms": 4.443074,
+            "total_ms": 88.86148
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 99.140224,
+            "decode_wall_ms": 28.977431,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 30.689002,
+            "transfer_ms": 18.168668,
+            "write_ms": 12.27721
+          },
+          {
+            "decode_sum_ms": 96.974482,
+            "decode_wall_ms": 28.355578,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 30.897491,
+            "transfer_ms": 18.392777,
+            "write_ms": 12.261791
+          },
+          {
+            "decode_sum_ms": 97.997856,
+            "decode_wall_ms": 28.779961,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.293310999999996,
+            "transfer_ms": 18.705622,
+            "write_ms": 12.352339
+          },
+          {
+            "decode_sum_ms": 99.57555,
+            "decode_wall_ms": 29.184408,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.571753,
+            "transfer_ms": 18.996203,
+            "write_ms": 12.285084
+          },
+          {
+            "decode_sum_ms": 96.743732,
+            "decode_wall_ms": 28.604594,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.139284,
+            "transfer_ms": 18.404329,
+            "write_ms": 12.312769
+          }
+        ],
+        "restored_bytes": 10486528,
+        "wall": {
+          "max_ms": 31.746079,
+          "mean_ms": 31.280544399999997,
+          "min_ms": 30.83194,
+          "p50_ms": 31.299464,
+          "p95_ms": 31.746079,
+          "p99_ms": 31.746079,
+          "reps": 5,
+          "samples_ms": [
+            30.83194,
+            31.071386999999998,
+            31.453851999999998,
+            31.746079,
+            31.299464
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 4.784638,
+          "mean_ms": 4.7255512,
+          "min_ms": 4.665504,
+          "p50_ms": 4.731428,
+          "p95_ms": 4.784638,
+          "p99_ms": 4.784638,
+          "reps": 5,
+          "samples_ms": [
+            4.665504,
+            4.731428,
+            4.732982,
+            4.784638,
+            4.713204
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 110.11273200000001,
+          "mean_ms": 108.16692600000002,
+          "min_ms": 106.925853,
+          "p50_ms": 108.09015099999999,
+          "p95_ms": 110.11273200000001,
+          "p99_ms": 110.11273200000001,
+          "reps": 5,
+          "samples_ms": [
+            108.09015099999999,
+            107.420659,
+            106.925853,
+            108.285235,
+            110.11273200000001
+          ]
+        }
+      },
+      "source_sha256": "00f12ba7c60131e028f6e53f82c84cc8f1967d03261e06cc777c9aaf15a23be5"
+    },
+    "c100": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 12.121829,
+          "mean_ms": 11.447980999999999,
+          "min_ms": 11.222427,
+          "p50_ms": 11.256630999999999,
+          "p95_ms": 12.121829,
+          "p99_ms": 12.121829,
+          "reps": 5,
+          "samples_ms": [
+            12.121829,
+            11.403506,
+            11.235512,
+            11.222427,
+            11.256630999999999
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 2,
+            "max_ms": 0.001773,
+            "mean_ms": 0.0009065,
+            "total_ms": 0.001813
+          },
+          "blob_hash_manifest": {
+            "count": 801,
+            "max_ms": 0.06922,
+            "mean_ms": 0.013226077403245943,
+            "total_ms": 10.594088
+          },
+          "blob_hash_object": {
+            "count": 2,
+            "max_ms": 0.011481,
+            "mean_ms": 0.0075035,
+            "total_ms": 0.015007
+          },
+          "blob_io_manifest": {
+            "count": 801,
+            "max_ms": 0.12838,
+            "mean_ms": 0.011199576779026218,
+            "total_ms": 8.970861
+          },
+          "blob_io_object": {
+            "count": 2,
+            "max_ms": 0.010891,
+            "mean_ms": 0.0068835,
+            "total_ms": 0.013767
+          },
+          "content_verify": {
+            "count": 201,
+            "max_ms": 0.064661,
+            "mean_ms": 0.047700965174129355,
+            "total_ms": 9.587894
+          },
+          "digest": {
+            "count": 100,
+            "max_ms": 0.420056,
+            "mean_ms": 0.40963465000000004,
+            "total_ms": 40.963465
+          },
+          "frame_parse": {
+            "count": 200,
+            "max_ms": 0.02116,
+            "mean_ms": 0.014082805,
+            "total_ms": 2.816561
+          },
+          "manifest_decode": {
+            "count": 601,
+            "max_ms": 0.010219,
+            "mean_ms": 0.0033535623960066555,
+            "total_ms": 2.015491
+          },
+          "tensor_decode": {
+            "count": 200,
+            "max_ms": 16.719407,
+            "mean_ms": 4.636679725,
+            "total_ms": 927.335945
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 1045.433913,
+            "decode_wall_ms": 265.850058,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 267.089556,
+            "transfer_ms": 143.690897,
+            "write_ms": 123.266825
+          },
+          {
+            "decode_sum_ms": 1012.944393,
+            "decode_wall_ms": 257.383985,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 258.61236199999996,
+            "transfer_ms": 135.134122,
+            "write_ms": 123.357861
+          },
+          {
+            "decode_sum_ms": 1054.873599,
+            "decode_wall_ms": 265.894801,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 268.345524,
+            "transfer_ms": 121.382629,
+            "write_ms": 146.828843
+          },
+          {
+            "decode_sum_ms": 1058.889855,
+            "decode_wall_ms": 267.720956,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 268.95066499999996,
+            "transfer_ms": 112.864693,
+            "write_ms": 155.971489
+          },
+          {
+            "decode_sum_ms": 1005.975071,
+            "decode_wall_ms": 255.909015,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 257.13619,
+            "transfer_ms": 120.540595,
+            "write_ms": 136.474816
+          }
+        ],
+        "restored_bytes": 104865400,
+        "wall": {
+          "max_ms": 269.96677600000004,
+          "mean_ms": 265.0525436,
+          "min_ms": 258.145898,
+          "p50_ms": 268.054761,
+          "p95_ms": 269.96677600000004,
+          "p99_ms": 269.96677600000004,
+          "reps": 5,
+          "samples_ms": [
+            268.054761,
+            259.622521,
+            269.472762,
+            269.96677600000004,
+            258.145898
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 5.411159,
+          "mean_ms": 5.379854999999999,
+          "min_ms": 5.362639,
+          "p50_ms": 5.369841999999999,
+          "p95_ms": 5.411159,
+          "p99_ms": 5.411159,
+          "reps": 5,
+          "samples_ms": [
+            5.411159,
+            5.369841999999999,
+            5.392956,
+            5.362679,
+            5.362639
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 119.720449,
+          "mean_ms": 116.82389,
+          "min_ms": 114.708736,
+          "p50_ms": 116.57793199999999,
+          "p95_ms": 119.720449,
+          "p99_ms": 119.720449,
+          "reps": 5,
+          "samples_ms": [
+            116.57793199999999,
+            117.840203,
+            115.27213,
+            119.720449,
+            114.708736
+          ]
+        }
+      },
+      "source_sha256": "41b578f46be76d1530cb987592a096a91c7a4a12c78ba13b25ef98908bc41460"
+    }
+  },
+  "copy_control": false,
+  "note": "cold label means a fresh process; the page cache is not dropped inside the court",
+  "phase": "measure",
+  "reps": 5,
+  "restore_pipeline": {
+    "shard_threads": 1,
+    "threads": 4,
+    "tile_threads": 1
+  },
+  "schema": "weft.restore_cost.measure.v1",
+  "sizes": [
+    1,
+    10,
+    100
+  ],
+  "tensor_bytes": 1048576,
+  "writer_sha_control": true
+}
+{
+  "backend": {
+    "bytes_read": 757464169,
+    "reads": 6308
+  },
+  "checkpoints": {
+    "c1": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 11.409066000000001,
+          "mean_ms": 11.089162,
+          "min_ms": 10.700822,
+          "p50_ms": 11.224331000000001,
+          "p95_ms": 11.409066000000001,
+          "p99_ms": 11.409066000000001,
+          "reps": 5,
+          "samples_ms": [
+            11.409066000000001,
+            11.319528,
+            11.224331000000001,
+            10.700822,
+            10.792062999999999
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.00004,
+            "mean_ms": 0.00004,
+            "total_ms": 0.00004
+          },
+          "blob_hash_manifest": {
+            "count": 9,
+            "max_ms": 0.053239,
+            "mean_ms": 0.012005888888888889,
+            "total_ms": 0.108053
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.001122,
+            "mean_ms": 0.001122,
+            "total_ms": 0.001122
+          },
+          "blob_io_manifest": {
+            "count": 9,
+            "max_ms": 0.09079,
+            "mean_ms": 0.015249777777777777,
+            "total_ms": 0.137248
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.035427,
+            "mean_ms": 0.035427,
+            "total_ms": 0.035427
+          },
+          "content_verify": {
+            "count": 3,
+            "max_ms": 0.047829,
+            "mean_ms": 0.03198633333333333,
+            "total_ms": 0.095959
+          },
+          "digest": {
+            "count": 1,
+            "max_ms": 0.40627,
+            "mean_ms": 0.40627,
+            "total_ms": 0.40627
+          },
+          "frame_parse": {
+            "count": 2,
+            "max_ms": 0.014617,
+            "mean_ms": 0.014427,
+            "total_ms": 0.028854
+          },
+          "manifest_decode": {
+            "count": 7,
+            "max_ms": 0.007875,
+            "mean_ms": 0.0042408571428571434,
+            "total_ms": 0.029686
+          },
+          "tensor_decode": {
+            "count": 2,
+            "max_ms": 4.663831,
+            "mean_ms": 4.645397,
+            "total_ms": 9.290794
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 10.332723,
+            "decode_wall_ms": 10.382196,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.632174000000001,
+            "transfer_ms": 10.319086,
+            "write_ms": 1.227265
+          },
+          {
+            "decode_sum_ms": 9.712914,
+            "decode_wall_ms": 9.744212,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.018355,
+            "transfer_ms": 9.708676,
+            "write_ms": 1.223317
+          },
+          {
+            "decode_sum_ms": 9.92456,
+            "decode_wall_ms": 9.944026,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.252093,
+            "transfer_ms": 9.917256,
+            "write_ms": 1.257091
+          },
+          {
+            "decode_sum_ms": 10.992978,
+            "decode_wall_ms": 11.019708,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 12.296105,
+            "transfer_ms": 10.989903,
+            "write_ms": 1.22438
+          },
+          {
+            "decode_sum_ms": 10.156594,
+            "decode_wall_ms": 10.182552,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 1048576,
+            "total_ms": 11.460352,
+            "transfer_ms": 10.150182,
+            "write_ms": 1.222947
+          }
+        ],
+        "restored_bytes": 1048656,
+        "wall": {
+          "max_ms": 12.353171,
+          "mean_ms": 11.594592599999999,
+          "min_ms": 11.075752,
+          "p50_ms": 11.540692,
+          "p95_ms": 12.353171,
+          "p99_ms": 12.353171,
+          "reps": 5,
+          "samples_ms": [
+            11.70558,
+            11.075752,
+            11.297768,
+            12.353171,
+            11.540692
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 4.806839,
+          "mean_ms": 4.6760468,
+          "min_ms": 4.628957000000001,
+          "p50_ms": 4.648784,
+          "p95_ms": 4.806839,
+          "p99_ms": 4.806839,
+          "reps": 5,
+          "samples_ms": [
+            4.806839,
+            4.648784,
+            4.66285,
+            4.628957000000001,
+            4.632804
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 1,
+        "wall": {
+          "max_ms": 11.284542,
+          "mean_ms": 11.034906000000001,
+          "min_ms": 10.900184,
+          "p50_ms": 11.013797,
+          "p95_ms": 11.284542,
+          "p99_ms": 11.284542,
+          "reps": 5,
+          "samples_ms": [
+            11.037671000000001,
+            11.013797,
+            10.900184,
+            11.284542,
+            10.938336
+          ]
+        }
+      },
+      "source_sha256": "548fe61167ca45b46e63ff4e75498c4246130fd09b6f316679c94cb6583a2cdc"
+    },
+    "c10": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 10.916706,
+          "mean_ms": 10.8595808,
+          "min_ms": 10.816256999999998,
+          "p50_ms": 10.83365,
+          "p95_ms": 10.916706,
+          "p99_ms": 10.916706,
+          "reps": 5,
+          "samples_ms": [
+            10.83365,
+            10.816256999999998,
+            10.823071,
+            10.916706,
+            10.90822
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 1,
+            "max_ms": 0.000331,
+            "mean_ms": 0.000331,
+            "total_ms": 0.000331
+          },
+          "blob_hash_manifest": {
+            "count": 81,
+            "max_ms": 0.060113,
+            "mean_ms": 0.013271358024691359,
+            "total_ms": 1.07498
+          },
+          "blob_hash_object": {
+            "count": 1,
+            "max_ms": 0.006222,
+            "mean_ms": 0.006222,
+            "total_ms": 0.006222
+          },
+          "blob_io_manifest": {
+            "count": 81,
+            "max_ms": 0.082715,
+            "mean_ms": 0.010170259259259259,
+            "total_ms": 0.823791
+          },
+          "blob_io_object": {
+            "count": 1,
+            "max_ms": 0.004208,
+            "mean_ms": 0.004208,
+            "total_ms": 0.004208
+          },
+          "content_verify": {
+            "count": 21,
+            "max_ms": 0.049703,
+            "mean_ms": 0.045739857142857145,
+            "total_ms": 0.960537
+          },
+          "digest": {
+            "count": 10,
+            "max_ms": 0.413443,
+            "mean_ms": 0.4092053,
+            "total_ms": 4.092053
+          },
+          "frame_parse": {
+            "count": 20,
+            "max_ms": 0.016471,
+            "mean_ms": 0.01433175,
+            "total_ms": 0.286635
+          },
+          "manifest_decode": {
+            "count": 61,
+            "max_ms": 0.009197,
+            "mean_ms": 0.0037545245901639346,
+            "total_ms": 0.229026
+          },
+          "tensor_decode": {
+            "count": 20,
+            "max_ms": 5.486169,
+            "mean_ms": 4.48129085,
+            "total_ms": 89.625817
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 103.863526,
+            "decode_wall_ms": 29.842789,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 31.697837999999997,
+            "transfer_ms": 19.134222,
+            "write_ms": 12.271648
+          },
+          {
+            "decode_sum_ms": 103.375372,
+            "decode_wall_ms": 30.182053,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 7340032,
+            "total_ms": 31.460854000000005,
+            "transfer_ms": 18.934419,
+            "write_ms": 12.29341
+          },
+          {
+            "decode_sum_ms": 97.715627,
+            "decode_wall_ms": 28.685204,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.227178000000002,
+            "transfer_ms": 18.722292,
+            "write_ms": 12.260597
+          },
+          {
+            "decode_sum_ms": 99.437346,
+            "decode_wall_ms": 29.29252,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.980517,
+            "transfer_ms": 19.317666,
+            "write_ms": 12.391504
+          },
+          {
+            "decode_sum_ms": 97.907133,
+            "decode_wall_ms": 29.107674,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 31.278253,
+            "transfer_ms": 18.559397,
+            "write_ms": 12.296165
+          }
+        ],
+        "restored_bytes": 10486528,
+        "wall": {
+          "max_ms": 32.156837,
+          "mean_ms": 31.699749399999995,
+          "min_ms": 31.395041,
+          "p50_ms": 31.643435999999998,
+          "p95_ms": 32.156837,
+          "p99_ms": 32.156837,
+          "reps": 5,
+          "samples_ms": [
+            31.845102999999998,
+            31.643435999999998,
+            31.395041,
+            32.156837,
+            31.45833
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 4.849709,
+          "mean_ms": 4.825676,
+          "min_ms": 4.800227,
+          "p50_ms": 4.833818999999999,
+          "p95_ms": 4.849709,
+          "p99_ms": 4.849709,
+          "reps": 5,
+          "samples_ms": [
+            4.839129,
+            4.849709,
+            4.833818999999999,
+            4.800227,
+            4.805496000000001
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 117.73465399999999,
+          "mean_ms": 115.1844252,
+          "min_ms": 111.673119,
+          "p50_ms": 116.34639800000001,
+          "p95_ms": 117.73465399999999,
+          "p99_ms": 117.73465399999999,
+          "reps": 5,
+          "samples_ms": [
+            111.673119,
+            112.894513,
+            116.34639800000001,
+            117.273442,
+            117.73465399999999
+          ]
+        }
+      },
+      "source_sha256": "00f12ba7c60131e028f6e53f82c84cc8f1967d03261e06cc777c9aaf15a23be5"
+    },
+    "c100": {
+      "first_tensor": {
+        "restored_bytes_per_rep": 1048656,
+        "wall": {
+          "max_ms": 12.09084,
+          "mean_ms": 11.8035714,
+          "min_ms": 11.497602,
+          "p50_ms": 11.736167,
+          "p95_ms": 12.09084,
+          "p99_ms": 12.09084,
+          "reps": 5,
+          "samples_ms": [
+            11.999690000000001,
+            11.497602,
+            11.693558,
+            11.736167,
+            12.09084
+          ]
+        }
+      },
+      "full": {
+        "exact_source_file": true,
+        "phases": {
+          "assemble": {
+            "count": 2,
+            "max_ms": 0.002184,
+            "mean_ms": 0.001117,
+            "total_ms": 0.002234
+          },
+          "blob_hash_manifest": {
+            "count": 801,
+            "max_ms": 0.138479,
+            "mean_ms": 0.013301988764044943,
+            "total_ms": 10.654893
+          },
+          "blob_hash_object": {
+            "count": 2,
+            "max_ms": 0.011963,
+            "mean_ms": 0.00775,
+            "total_ms": 0.0155
+          },
+          "blob_io_manifest": {
+            "count": 801,
+            "max_ms": 15.304461,
+            "mean_ms": 0.029703534332084894,
+            "total_ms": 23.792531
+          },
+          "blob_io_object": {
+            "count": 2,
+            "max_ms": 0.010209,
+            "mean_ms": 0.0067175,
+            "total_ms": 0.013435
+          },
+          "content_verify": {
+            "count": 201,
+            "max_ms": 0.051146,
+            "mean_ms": 0.047402975124378105,
+            "total_ms": 9.527998
+          },
+          "digest": {
+            "count": 100,
+            "max_ms": 0.435254,
+            "mean_ms": 0.4097368,
+            "total_ms": 40.97368
+          },
+          "frame_parse": {
+            "count": 200,
+            "max_ms": 0.01626,
+            "mean_ms": 0.014078799999999999,
+            "total_ms": 2.81576
+          },
+          "manifest_decode": {
+            "count": 601,
+            "max_ms": 0.010089,
+            "mean_ms": 0.003227207986688852,
+            "total_ms": 1.939552
+          },
+          "tensor_decode": {
+            "count": 200,
+            "max_ms": 16.505306,
+            "mean_ms": 4.7577062649999995,
+            "total_ms": 951.541253
+          }
+        },
+        "pipeline": [
+          {
+            "decode_sum_ms": 1034.823034,
+            "decode_wall_ms": 260.66204,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 262.39248599999996,
+            "transfer_ms": 123.833973,
+            "write_ms": 138.428272
+          },
+          {
+            "decode_sum_ms": 1021.834007,
+            "decode_wall_ms": 265.94548,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 267.17399800000004,
+            "transfer_ms": 131.096925,
+            "write_ms": 135.907047
+          },
+          {
+            "decode_sum_ms": 1029.759562,
+            "decode_wall_ms": 259.694119,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 261.16294600000003,
+            "transfer_ms": 113.061846,
+            "write_ms": 147.974096
+          },
+          {
+            "decode_sum_ms": 1077.473181,
+            "decode_wall_ms": 272.633576,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 273.861943,
+            "transfer_ms": 149.621948,
+            "write_ms": 124.110377
+          },
+          {
+            "decode_sum_ms": 1046.275494,
+            "decode_wall_ms": 269.336079,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 8388608,
+            "total_ms": 270.572471,
+            "transfer_ms": 134.696566,
+            "write_ms": 135.757571
+          }
+        ],
+        "restored_bytes": 104865400,
+        "wall": {
+          "max_ms": 274.890427,
+          "mean_ms": 268.0600538,
+          "min_ms": 262.15376899999995,
+          "p50_ms": 268.18381600000004,
+          "p95_ms": 274.890427,
+          "p99_ms": 274.890427,
+          "reps": 5,
+          "samples_ms": [
+            263.354234,
+            268.18381600000004,
+            262.15376899999995,
+            274.890427,
+            271.71802299999996
+          ]
+        }
+      },
+      "region_2_rows": {
+        "restored_bytes_per_rep": 4176,
+        "wall": {
+          "max_ms": 5.840452,
+          "mean_ms": 5.7128576,
+          "min_ms": 5.572271,
+          "p50_ms": 5.727771000000001,
+          "p95_ms": 5.840452,
+          "p99_ms": 5.840452,
+          "reps": 5,
+          "samples_ms": [
+            5.840452,
+            5.727771000000001,
+            5.676365,
+            5.572271,
+            5.747429
+          ]
+        }
+      },
+      "resume": {
+        "basis": "per-tensor restore of the first k tensors, one at a time (the resumed usable set)",
+        "tensors": 10,
+        "wall": {
+          "max_ms": 122.05487199999999,
+          "mean_ms": 119.9868442,
+          "min_ms": 119.200304,
+          "p50_ms": 119.47169000000001,
+          "p95_ms": 122.05487199999999,
+          "p99_ms": 122.05487199999999,
+          "reps": 5,
+          "samples_ms": [
+            122.05487199999999,
+            119.450151,
+            119.200304,
+            119.757204,
+            119.47169000000001
+          ]
+        }
+      },
+      "source_sha256": "41b578f46be76d1530cb987592a096a91c7a4a12c78ba13b25ef98908bc41460"
+    }
+  },
+  "copy_control": true,
+  "note": "cold label means a fresh process; the page cache is not dropped inside the court",
+  "phase": "measure",
+  "reps": 5,
+  "restore_pipeline": {
+    "shard_threads": 1,
+    "threads": 4,
+    "tile_threads": 1
+  },
+  "schema": "weft.restore_cost.measure.v1",
+  "sizes": [
+    1,
+    10,
+    100
+  ],
+  "tensor_bytes": 1048576,
+  "writer_sha_control": true
+}

@@ -151,6 +151,11 @@ pub enum Phase {
     PageDecode,
     /// Exactness comparison of a returned page with the expected bytes.
     Compare,
+    /// A stored tensor frame's payload decode (mode 9/10/11/12/13/14/15/16/17/
+    /// 18/20), excluding blob I/O and manifest parsing (N08).
+    TensorDecode,
+    /// Recomputing a tensor's logical root from the decoded bytes (N08).
+    LogicalRoot,
 }
 
 impl Phase {
@@ -193,6 +198,8 @@ impl Phase {
             Phase::FrameParse => "frame_parse",
             Phase::PageDecode => "page_decode",
             Phase::Compare => "compare",
+            Phase::TensorDecode => "tensor_decode",
+            Phase::LogicalRoot => "logical_root",
         }
     }
 
@@ -216,7 +223,7 @@ impl Phase {
     }
 
     /// Every phase, in report order.
-    pub const ALL: [Phase; 36] = [
+    pub const ALL: [Phase; 38] = [
         Phase::SourceRead,
         Phase::Digest,
         Phase::Encode,
@@ -253,6 +260,8 @@ impl Phase {
         Phase::FrameParse,
         Phase::PageDecode,
         Phase::Compare,
+        Phase::TensorDecode,
+        Phase::LogicalRoot,
     ];
 }
 

@@ -77,6 +77,7 @@ pub mod s3;
 pub mod safetensors;
 pub mod service_account;
 pub mod singleflight;
+pub mod stage_budget;
 pub mod state;
 pub mod store;
 pub mod tensor_pipeline;
@@ -150,6 +151,7 @@ pub use s3::{S3Backend, S3Config};
 pub use singleflight::{
     CancelToken, ReconstructionKey, RegionKey, SingleFlightOptions, SingleFlightStats,
 };
+pub use stage_budget::{Stage, StageBudget, StageBudgetPolicy, StageBudgetStats, StageCancelToken};
 pub use state::{ObjectKind, ObjectRecord, RelationRecord, RelationTarget};
 pub use store::{
     AuthorizedRead, GcReport, LineageEntry, OpenMode, Options, PublicationLedger, ReadLayerStats,

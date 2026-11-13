@@ -18,7 +18,12 @@
 //!   that buffered them, so [`crate::store::Store`] reads them through the
 //!   writer and counts them separately (`buffered_blob_reads`).
 //! * **Bounded.** At most [`MAX_IDLE_HANDLES`] handles are kept; one handle is
-//!   checked out per concurrent read and returned on completion.
+//!   checked out per concurrent read and returned on completion. At most
+//!   [`MAX_ACTIVE_HANDLES`] handles may be *active* at once (X07): the cap is
+//!   acquired before a handle is checked out and released on drop, so a fanout
+//!   of readers cannot hand the backend an unbounded number of concurrent
+//!   handles. A `0` cap restores the pre-X07 unbounded behaviour for a control
+//!   arm and is labelled as such in every receipt.
 //! * **Invalidated by mutation.** Every backend mutation bumps the pool's
 //!   epoch; a handle from an older epoch is dropped rather than reused. That
 //!   matters for a packed blob plane, whose handle caches the pack catalog as
@@ -35,8 +40,8 @@
 
 use std::mem;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Mutex, MutexGuard};
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Condvar, Mutex, MutexGuard};
 use std::time::Instant;
 
 use serde::Serialize;
@@ -46,6 +51,16 @@ use crate::error::Result;
 
 /// Maximum idle handles retained by one store handle.
 pub const MAX_IDLE_HANDLES: usize = 64;
+
+/// Default cap on simultaneously *active* handles (X07).
+///
+/// Idle handles and active handles are different resources. The idle cap bounds
+/// cached descriptors; the active cap bounds what the backend is asked to open
+/// at once. `1/4/16/64` concurrent readers are measured in
+/// `bench/RESULTS-handle-cap.md`; the cap is set above the point where the
+/// backend stops scaling on the courts, so it never serialises the measured
+/// fanout.
+pub const MAX_ACTIVE_HANDLES: usize = 64;
 
 struct PooledHandle {
     epoch: u64,
@@ -79,6 +94,17 @@ pub struct ReadPoolStats {
     pub in_flight: u64,
     /// Largest number of simultaneous reads observed.
     pub max_in_flight: u64,
+    /// Configured cap on simultaneously active handles (0 = unbounded).
+    pub active_cap: usize,
+    /// Handles active at this instant (checked out or in the checkout path).
+    pub active_handles: u64,
+    /// Largest number of simultaneously active handles observed (the X07
+    /// high-water mark; it is asserted never to exceed `active_cap`).
+    pub observed_max_active_handles: u64,
+    /// Reads that had to wait for an active-handle slot.
+    pub cap_waits: u64,
+    /// Total time blocked waiting for an active-handle slot, in nanoseconds.
+    pub cap_wait_ns: u128,
     /// Total time inside backend read calls.
     pub io_total_ns: u128,
     /// Longest single backend read call.
@@ -106,6 +132,71 @@ pub struct ReadHandlePool {
     /// Set when the pool observed that constructing a handle failed once, so a
     /// later receipt can say reads had to fall back rather than guess.
     construction_failures: AtomicBool,
+    /// X07: cap on simultaneously active handles. `0` means the pre-X07
+    /// unbounded behaviour (control arm only).
+    active_cap: AtomicUsize,
+    active: Mutex<ActiveHandles>,
+    active_cv: Condvar,
+    cap_waits: AtomicU64,
+    cap_wait_ns: AtomicU64,
+}
+
+/// Active-handle bookkeeping for the X07 cap.
+struct ActiveHandles {
+    active: usize,
+    observed_max: usize,
+}
+
+/// RAII lease on one active-handle slot.
+///
+/// Acquired before a handle is checked out and released on drop, so a panic or
+/// an early return can never leak a slot (there is no manual release path).
+struct ActiveLease<'a> {
+    pool: &'a ReadHandlePool,
+}
+
+impl Drop for ActiveLease<'_> {
+    fn drop(&mut self) {
+        let mut guard = Self::lock(&self.pool.active);
+        guard.active = guard.active.saturating_sub(1);
+        drop(guard);
+        self.pool.active_cv.notify_one();
+    }
+}
+
+impl<'a> ActiveLease<'a> {
+    fn lock<T>(lock: &Mutex<T>) -> MutexGuard<'_, T> {
+        lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    /// Wait for a slot under `cap`, or return `None` when the cap is disabled.
+    fn acquire(pool: &'a ReadHandlePool, cap: usize) -> Option<Self> {
+        if cap == 0 {
+            return None;
+        }
+        let mut guard = Self::lock(&pool.active);
+        let mut waited = false;
+        let mut wait_started = Instant::now();
+        while guard.active >= cap {
+            if !waited {
+                pool.cap_waits.fetch_add(1, Ordering::Relaxed);
+                wait_started = Instant::now();
+                waited = true;
+            }
+            guard = pool
+                .active_cv
+                .wait(guard)
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+        }
+        if waited {
+            pool.cap_wait_ns
+                .fetch_add(wait_started.elapsed().as_nanos() as u64, Ordering::Relaxed);
+        }
+        guard.active += 1;
+        guard.observed_max = guard.observed_max.max(guard.active);
+        drop(guard);
+        Some(ActiveLease { pool })
+    }
 }
 
 impl ReadHandlePool {
@@ -131,7 +222,31 @@ impl ReadHandlePool {
             io_max_ns: AtomicU64::new(0),
             harvested: Mutex::new(BackendStats::default()),
             construction_failures: AtomicBool::new(false),
+            active_cap: AtomicUsize::new(MAX_ACTIVE_HANDLES),
+            active: Mutex::new(ActiveHandles {
+                active: 0,
+                observed_max: 0,
+            }),
+            active_cv: Condvar::new(),
+            cap_waits: AtomicU64::new(0),
+            cap_wait_ns: AtomicU64::new(0),
         }
+    }
+
+    /// The configured cap on simultaneously active handles (`0` = unbounded).
+    pub fn active_cap(&self) -> usize {
+        self.active_cap.load(Ordering::Acquire)
+    }
+
+    /// Change the active-handle cap (X07 court and embedded callers).
+    ///
+    /// `0` disables the cap and restores the pre-X07 unbounded behaviour; that
+    /// is the control arm of the handle-cap court and is recorded as such. The
+    /// change takes effect for the next read; in-flight leases finish under the
+    /// cap they acquired.
+    pub fn set_active_cap(&self, cap: usize) {
+        self.active_cap.store(cap, Ordering::Release);
+        self.active_cv.notify_all();
     }
 
     /// Whether immutable reads use this pool for the current transport.
@@ -234,6 +349,7 @@ impl ReadHandlePool {
     /// hash check is the caller's job and must run after this returns, so it
     /// does not hold a handle.
     pub fn read_all(&self, key: &Key) -> Result<(Vec<u8>, u64)> {
+        let _lease = ActiveLease::acquire(self, self.active_cap());
         let handle = self.acquire()?;
         let now = self.in_flight.fetch_add(1, Ordering::Relaxed) + 1;
         self.max_in_flight.fetch_max(now, Ordering::Relaxed);
@@ -252,6 +368,7 @@ impl ReadHandlePool {
 
     /// Read a byte range of an immutable blob through a pooled handle.
     pub fn read_range(&self, key: &Key, offset: u64, len: u64) -> Result<(Vec<u8>, u64)> {
+        let _lease = ActiveLease::acquire(self, self.active_cap());
         let handle = self.acquire()?;
         let now = self.in_flight.fetch_add(1, Ordering::Relaxed) + 1;
         self.max_in_flight.fetch_max(now, Ordering::Relaxed);
@@ -275,6 +392,7 @@ impl ReadHandlePool {
 
     /// A point-in-time counter snapshot.
     pub fn stats(&self) -> ReadPoolStats {
+        let active = Self::lock(&self.active);
         ReadPoolStats {
             poolable: self.poolable,
             handles_created: self.handles_created.load(Ordering::Relaxed),
@@ -285,6 +403,11 @@ impl ReadHandlePool {
             bytes: self.bytes.load(Ordering::Relaxed),
             in_flight: self.in_flight.load(Ordering::Relaxed),
             max_in_flight: self.max_in_flight.load(Ordering::Relaxed),
+            active_cap: self.active_cap.load(Ordering::Relaxed),
+            active_handles: active.active as u64,
+            observed_max_active_handles: active.observed_max as u64,
+            cap_waits: self.cap_waits.load(Ordering::Relaxed),
+            cap_wait_ns: u128::from(self.cap_wait_ns.load(Ordering::Relaxed)),
             io_total_ns: u128::from(self.io_total_ns.load(Ordering::Relaxed)),
             io_max_ns: self.io_max_ns.load(Ordering::Relaxed),
             epoch: self.epoch.load(Ordering::Relaxed),

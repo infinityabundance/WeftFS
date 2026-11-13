@@ -1437,6 +1437,7 @@ fn restore_checkpoint(
                 tile_threads: 1,
                 shard_threads: 1,
                 shard_max_inflight_bytes: options.max_inflight_bytes,
+                ..RestorePipelineOptions::default()
             };
             Some(
                 store

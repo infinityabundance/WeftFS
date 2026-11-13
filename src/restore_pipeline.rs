@@ -49,15 +49,16 @@
 use std::io::Write;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use std::sync::{Condvar, Mutex, MutexGuard};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::time::Instant;
 
 use crate::error::{Error, Result};
 use crate::parallel::{effective_threads, TileDecodeOptions, DEFAULT_MAX_INFLIGHT_BYTES};
+use crate::stage_budget::{Admission, Stage, StageBudget, StageCancelToken};
 use crate::store::{AuthorizedRead, Store};
 
 /// Worker bound and staging bound for an ordered restore pipeline.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct RestorePipelineOptions {
     /// Requested worker count. `0` means one worker; the effective count is
     /// also capped at [`std::thread::available_parallelism`].
@@ -80,6 +81,18 @@ pub struct RestorePipelineOptions {
     /// `max_inflight_bytes` still bounds how many tensors are in flight, and a
     /// tensor's full decoded payload is reserved there before it starts.
     pub shard_max_inflight_bytes: usize,
+    /// The one process-wide admission object, when the caller opted in.
+    ///
+    /// With a budget, tensor workers, per-tensor shard workers and per-tensor
+    /// tile workers are admitted from the same policy, so
+    /// `threads x shard_threads x tile_threads` can no longer silently
+    /// oversubscribe the machine. `None` keeps the historical private bounds
+    /// exactly (there is no implicit global).
+    pub budget: Option<Arc<StageBudget>>,
+    /// Per-request cancellation for a budgeted restore.
+    pub cancel: Option<Arc<StageCancelToken>>,
+    /// The stage this restore charges its admissions to.
+    pub stage: Stage,
 }
 
 impl Default for RestorePipelineOptions {
@@ -90,6 +103,81 @@ impl Default for RestorePipelineOptions {
             tile_threads: 1,
             shard_threads: 1,
             shard_max_inflight_bytes: DEFAULT_MAX_INFLIGHT_BYTES,
+            budget: None,
+            cancel: None,
+            stage: Stage::Restore,
+        }
+    }
+}
+
+impl RestorePipelineOptions {
+    /// The shard and tile widths one tensor will actually run at.
+    ///
+    /// Without a budget these are the requested values. With a budget they are
+    /// reduced so their product never exceeds the policy's active-worker cap;
+    /// the reduction is a pure function of the request and the policy (shard
+    /// parallelism is kept first, then tiles), so a given budget always
+    /// produces the same widths, the same read order and the same bytes.
+    pub fn effective_widths(&self) -> (usize, usize) {
+        let shard = self.shard_threads.max(1);
+        let tile = self.tile_threads.max(1);
+        match &self.budget {
+            None => (shard, tile),
+            Some(budget) => {
+                let cap = budget.policy().max_active_workers.max(1);
+                let shard = shard.min(cap);
+                let tile = tile.min(cap / shard).max(1);
+                (shard, tile)
+            }
+        }
+    }
+
+    /// Shard width after the budget clamp.
+    pub fn effective_shard_threads(&self) -> usize {
+        self.effective_widths().0
+    }
+
+    /// Tile width after the budget clamp.
+    pub fn effective_tile_threads(&self) -> usize {
+        self.effective_widths().1
+    }
+
+    /// The worker width one tensor's decode is admitted at (1 when the
+    /// requested widths are 1).
+    fn group_width(&self) -> usize {
+        let (shard, tile) = self.effective_widths();
+        shard.saturating_mul(tile).max(1)
+    }
+
+    /// The measured default for a restore that opted into a shared budget.
+    ///
+    /// The historical default (`threads = 1`, `shard_threads = 1`,
+    /// `tile_threads = 1`, no budget) is left exactly as it was: changing it
+    /// would silently change every published restore number. A caller that
+    /// already opted into budgeted restore gets the configuration the X06 court
+    /// measured as best at each cap:
+    ///
+    /// | cap | threads | shard_threads | tile_threads |
+    /// | --- | --- | --- | --- |
+    /// | 1 | 1 | 1 | 1 |
+    /// | 2 | 2 | 1 | 1 |
+    /// | 4 | 2 | 2 | 1 |
+    /// | 8 | 4 | 2 | 1 |
+    ///
+    /// Two shards per tensor is also the dominant win on a single huge tensor:
+    /// the N08 court measures a 64 MiB, 8-shard tensor at 668.5 ms with
+    /// `shard_threads = 1` and 381.6 ms with 2 on four CPUs (1.75x), because a
+    /// tensor cannot spread across tensor workers when it is the only tensor.
+    pub fn budgeted(budget: Arc<StageBudget>) -> Self {
+        let cap = budget.policy().max_active_workers.max(1);
+        let shard_threads = 2.min(cap);
+        let threads = (cap / shard_threads).max(1);
+        RestorePipelineOptions {
+            threads,
+            shard_threads,
+            tile_threads: 1,
+            budget: Some(budget),
+            ..RestorePipelineOptions::default()
         }
     }
 }
@@ -181,18 +269,39 @@ where
         let mut decode_ns = 0u64;
         let mut write_ns = 0u64;
         for (index, input) in inputs.iter().enumerate() {
-            match &sizes[index] {
+            if cancelled(options) {
+                return Err(Error::new(
+                    crate::error::Class::Cancelled,
+                    "ordered restore cancelled before the next tensor",
+                ));
+            }
+            let len = match &sizes[index] {
                 Ok(len) => {
                     if *len > options.max_inflight_bytes {
                         stats.oversized_tasks += 1;
                     }
+                    *len
                 }
                 Err(err) => return Err(err.clone()),
-            }
+            };
+            // With a budget the one tensor in flight still charges the shared
+            // policy, so a single-worker restore cannot exceed the process cap.
+            let mut admission = match &options.budget {
+                Some(budget) => Some(budget.admit(
+                    options.stage,
+                    options.group_width(),
+                    len,
+                    options.cancel.as_deref(),
+                )?),
+                None => None,
+            };
             let decode_started = Instant::now();
             let value = work(index, input)?;
             decode_ns += decode_started.elapsed().as_nanos() as u64;
             let actual = measure(&value);
+            if let Some(admission) = admission.as_mut() {
+                admission.release_workers();
+            }
             stats.tensors_written += 1;
             stats.observed_max_inflight_tasks = stats.observed_max_inflight_tasks.max(1);
             stats.observed_max_inflight_bytes = stats.observed_max_inflight_bytes.max(actual);
@@ -200,6 +309,7 @@ where
             consume(index, &value)?;
             write_ns += write_started.elapsed().as_nanos() as u64;
             stats.bytes_written += actual as u64;
+            drop(admission);
         }
         stats.decode_wall_ms = decode_ns as f64 / 1_000_000.0;
         stats.decode_sum_ms = stats.decode_wall_ms;
@@ -275,6 +385,7 @@ where
                             held: false,
                             size: 0,
                             outcome: Err(err.clone()),
+                            admission: None,
                         });
                         cv.notify_all();
                         continue;
@@ -285,12 +396,51 @@ where
                         oversized_ran.fetch_add(1, Ordering::Relaxed);
                     }
 
+                    // X06: the tensor worker, its shard workers and its tile
+                    // workers are one admitted group. The group width is the
+                    // product of the (budget-clamped) widths, so the process
+                    // cap covers every thread this tensor will run. Nested
+                    // runners inside `work` do not admit again.
+                    let mut admission = match &options.budget {
+                        Some(budget) => match budget.admit(
+                            options.stage,
+                            options.group_width(),
+                            reserve,
+                            options.cancel.as_deref(),
+                        ) {
+                            Ok(admission) => Some(admission),
+                            Err(err) => {
+                                let mut guard = lock(&queue);
+                                release_held(&mut guard, granted.oversized, reserve);
+                                guard.slots[index] = Some(Pending {
+                                    oversized: granted.oversized,
+                                    held: false,
+                                    size: 0,
+                                    outcome: Err(err),
+                                    admission: None,
+                                });
+                                cv.notify_all();
+                                continue;
+                            }
+                        },
+                        None => None,
+                    };
+                    let _group = admission
+                        .as_ref()
+                        .map(|_| crate::stage_budget::enter_group());
+
                     let decode_started = Instant::now();
                     let outcome = catch_unwind(AssertUnwindSafe(|| work(index, &inputs[index])));
                     let decode_ns = decode_started.elapsed().as_nanos() as u64;
                     decode_sum_ns.fetch_add(decode_ns, Ordering::Relaxed);
                     last_decode_finish_ns
                         .fetch_max(start.elapsed().as_nanos() as u64, Ordering::Relaxed);
+                    // The decode is finished: stop counting its threads, but
+                    // keep its bytes reserved until the ordered writer has
+                    // consumed them.
+                    if let Some(admission) = admission.as_mut() {
+                        admission.release_workers();
+                    }
 
                     let mut guard = lock(&queue);
                     match outcome {
@@ -306,6 +456,7 @@ where
                                         outcome: Err(Error::corrupt(
                                             "ordered restore size measurement panicked",
                                         )),
+                                        admission: None,
                                     });
                                     cv.notify_all();
                                     continue;
@@ -319,6 +470,7 @@ where
                                 held: true,
                                 size: actual,
                                 outcome: Ok(value),
+                                admission,
                             });
                             cv.notify_all();
                         }
@@ -329,6 +481,7 @@ where
                                 held: false,
                                 size: 0,
                                 outcome: Err(err),
+                                admission: None,
                             });
                             cv.notify_all();
                         }
@@ -339,6 +492,7 @@ where
                                 held: false,
                                 size: 0,
                                 outcome: Err(Error::corrupt("ordered restore decode panicked")),
+                                admission: None,
                             });
                             cv.notify_all();
                         }
@@ -354,6 +508,14 @@ where
         // reservation while another worker waits for it.
         let mut guard = lock(&queue);
         loop {
+            if failure.is_none() && cancelled(options) {
+                failure = Some(Error::new(
+                    crate::error::Class::Cancelled,
+                    "ordered restore cancelled",
+                ));
+                guard.aborted = true;
+                cv.notify_all();
+            }
             if failure.is_none() && cursor < inputs.len() {
                 if let Some(pending) = guard.slots[cursor].take() {
                     let Pending {
@@ -361,6 +523,7 @@ where
                         held,
                         size,
                         outcome,
+                        admission,
                     } = pending;
                     match outcome {
                         Ok(value) => {
@@ -372,6 +535,7 @@ where
                             let outcome =
                                 catch_unwind(AssertUnwindSafe(|| consume(cursor, &value)));
                             write_ns += write_started.elapsed().as_nanos() as u64;
+                            drop(admission);
                             guard = lock(&queue);
                             release_pending(&mut guard, oversized, held, size);
                             cv.notify_all();
@@ -525,7 +689,7 @@ impl Store {
                 self.read_tensor_authorized(
                     token,
                     &TileDecodeOptions {
-                        threads: options.tile_threads,
+                        threads: options.effective_tile_threads(),
                         ..TileDecodeOptions::default()
                     },
                 )
@@ -560,6 +724,9 @@ struct Pending<U> {
     /// Currently reserved bytes (0 once an error released them).
     size: usize,
     outcome: Result<U>,
+    /// The shared-budget admission, held until the ordered writer has
+    /// consumed (or dropped) the result. Dropping it releases the bytes.
+    admission: Option<Admission>,
 }
 
 struct Queue<U> {
@@ -603,6 +770,15 @@ fn lock<U>(queue: &Mutex<Queue<U>>) -> MutexGuard<'_, Queue<U>> {
     queue
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// Whether the caller cancelled this restore.
+fn cancelled(options: &RestorePipelineOptions) -> bool {
+    options
+        .cancel
+        .as_ref()
+        .map(|token| token.is_cancelled())
+        .unwrap_or(false)
 }
 
 fn claim(next: &AtomicUsize, len: usize) -> Option<usize> {

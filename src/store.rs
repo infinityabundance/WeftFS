@@ -1849,6 +1849,22 @@ impl Store {
         stats
     }
 
+    /// Set the cap on simultaneously active immutable-read handles (X07).
+    ///
+    /// `0` disables the cap and restores the pre-X07 behaviour; the default is
+    /// [`crate::read_pool::MAX_ACTIVE_HANDLES`]. Applies to reads that start
+    /// after the call; leases already held finish under the cap they acquired.
+    /// Epoch invalidation, the buffered-pack bypass and every error class are
+    /// unchanged.
+    pub fn set_read_pool_active_cap(&self, cap: usize) {
+        self.read_pool.set_active_cap(cap);
+    }
+
+    /// The configured active-handle cap (`0` = unbounded).
+    pub fn read_pool_active_cap(&self) -> usize {
+        self.read_pool.active_cap()
+    }
+
     /// Begin attributing backend entries on this thread to one tensor input.
     /// The returned guard publishes a row on drop; a no-op when the probe is
     /// disabled.

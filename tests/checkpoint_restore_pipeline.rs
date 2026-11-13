@@ -145,6 +145,7 @@ fn pipelined_restore_is_byte_identical_at_every_worker_count() {
                     tile_threads,
                     shard_threads,
                     shard_max_inflight_bytes: 256 * 1024,
+                    ..RestorePipelineOptions::default()
                 };
                 let mut output = Vec::new();
                 let report = store
@@ -190,6 +191,7 @@ fn pipelined_restore_is_bounded_and_reports_the_bound() {
         tile_threads: 1,
         shard_threads: 1,
         shard_max_inflight_bytes: 128 * 1024,
+        ..RestorePipelineOptions::default()
     };
     let report = store
         .restore_checkpoint_pipelined(
@@ -232,6 +234,7 @@ fn pipelined_single_tensor_and_region_match_the_sequential_path() {
             tile_threads: 2,
             shard_threads: 1,
             shard_max_inflight_bytes: 4096,
+            ..RestorePipelineOptions::default()
         };
         let mut pipelined = Vec::new();
         store
@@ -289,6 +292,7 @@ fn pipelined_restore_of_a_tiled_checkpoint_matches_sequential() {
                 tile_threads,
                 shard_threads: 1,
                 shard_max_inflight_bytes: 512 * 1024,
+                ..RestorePipelineOptions::default()
             };
             let mut output = Vec::new();
             let report = reader
