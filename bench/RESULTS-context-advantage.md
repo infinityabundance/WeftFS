@@ -31,10 +31,9 @@ availability difference are real and measured. The performance claim was
 This is the most important part of the session, so it comes first.
 
 **M wins on the fast path.** A plain zstd-3 blob with an in-memory index and a
-SHA-256 check is materially faster than a mode-19 scoped read, and it is faster
-than the raw backend read would allow if it compressed nothing — but it is not
-free. W is the slowest of the three arms on a request that needs no contextual
-transformation.
+SHA-256 check is materially faster than a mode-19 scoped read, and it reads
+about half the bytes the raw floor does — but it is not free: it too is slower
+than the raw floor, for the same reason (see §6).
 
 **M ties on the happy path.** All three arms returned every compatible page
 byte-exactly, every repetition. There is no correctness advantage to the
