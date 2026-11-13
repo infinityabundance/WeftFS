@@ -737,38 +737,38 @@ opt-in MW2 transaction API. Azurite is not Azure. The positive receipt is
 <!-- BEGIN GENERATED:perf-catalog-azure-mw2 (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `azm2.scenarios` | 8 | scenarios | Azure MW2 scenarios run | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.scenarios_passed` | 8 | scenarios | Azure MW2 scenarios passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.checks` | 167 | checks | Azure MW2 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.checks_passed` | 167 | checks | Azure MW2 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.failures` | 0 | failures | Azure MW2 failures | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.duration_s` | 30.7 | s | Azure MW2 court wall | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.memory_peak_b` | 51,494,912 | B | Azure MW2 court cgroup memory peak | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s1.checks` | 30 | checks | Azure MW2 S1 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s1.passed` | 30 | checks | Azure MW2 S1 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s2.checks` | 28 | checks | Azure MW2 S2 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s2.passed` | 28 | checks | Azure MW2 S2 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s3.checks` | 22 | checks | Azure MW2 S3 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s3.passed` | 22 | checks | Azure MW2 S3 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s4.checks` | 18 | checks | Azure MW2 S4 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s4.passed` | 18 | checks | Azure MW2 S4 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s5.checks` | 18 | checks | Azure MW2 S5 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s5.passed` | 18 | checks | Azure MW2 S5 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s6.checks` | 24 | checks | Azure MW2 S6 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s6.passed` | 24 | checks | Azure MW2 S6 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s7.checks` | 18 | checks | Azure MW2 S7 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s7.passed` | 18 | checks | Azure MW2 S7 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s8.checks` | 9 | checks | Azure MW2 S8 checks | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
-| `azm2.s8.passed` | 9 | checks | Azure MW2 S8 checks passed | `bench/receipts/azure-mw2-20261113T095300Z.json` | 20261113T095300Z | bcbfb2d3ab7d |
+| `azm2.scenarios` | 8 | scenarios | Azure MW2 scenarios run | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.scenarios_passed` | 8 | scenarios | Azure MW2 scenarios passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.checks` | 167 | checks | Azure MW2 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.checks_passed` | 167 | checks | Azure MW2 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.failures` | 0 | failures | Azure MW2 failures | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.duration_s` | 31.2 | s | Azure MW2 court wall | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.memory_peak_b` | 52,457,472 | B | Azure MW2 court cgroup memory peak | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s1.checks` | 30 | checks | Azure MW2 S1 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s1.passed` | 30 | checks | Azure MW2 S1 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s2.checks` | 28 | checks | Azure MW2 S2 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s2.passed` | 28 | checks | Azure MW2 S2 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s3.checks` | 22 | checks | Azure MW2 S3 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s3.passed` | 22 | checks | Azure MW2 S3 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s4.checks` | 18 | checks | Azure MW2 S4 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s4.passed` | 18 | checks | Azure MW2 S4 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s5.checks` | 18 | checks | Azure MW2 S5 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s5.passed` | 18 | checks | Azure MW2 S5 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s6.checks` | 24 | checks | Azure MW2 S6 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s6.passed` | 24 | checks | Azure MW2 S6 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s7.checks` | 18 | checks | Azure MW2 S7 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s7.passed` | 18 | checks | Azure MW2 S7 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s8.checks` | 9 | checks | Azure MW2 S8 checks | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
+| `azm2.s8.passed` | 9 | checks | Azure MW2 S8 checks passed | `bench/receipts/azure-mw2-20261113T101500Z.json` | 20261113T101500Z | 352a4d32ac77 |
 <!-- END GENERATED:perf-catalog-azure-mw2 -->
 
 <!-- BEGIN GENERATED:perf-catalog-azure-mw2-negative (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `azm2n.checks` | 167 | checks | Retained negative run checks | `bench/receipts/azure-mw2-20261113T094900Z.json` | 20261113T094900Z | bcbfb2d3ab7d |
-| `azm2n.checks_passed` | 163 | checks | Retained negative run checks passed | `bench/receipts/azure-mw2-20261113T094900Z.json` | 20261113T094900Z | bcbfb2d3ab7d |
-| `azm2n.failures` | 4 | failures | Retained negative run failures | `bench/receipts/azure-mw2-20261113T094900Z.json` | 20261113T094900Z | bcbfb2d3ab7d |
-| `azm2n.scenarios_passed` | 7 | scenarios | Retained negative run scenarios passed | `bench/receipts/azure-mw2-20261113T094900Z.json` | 20261113T094900Z | bcbfb2d3ab7d |
+| `azm2n.checks` | 167 | checks | Retained negative run checks | `bench/receipts/azure-mw2-20261113T101700Z.json` | 20261113T101700Z | 352a4d32ac77 |
+| `azm2n.checks_passed` | 163 | checks | Retained negative run checks passed | `bench/receipts/azure-mw2-20261113T101700Z.json` | 20261113T101700Z | 352a4d32ac77 |
+| `azm2n.failures` | 4 | failures | Retained negative run failures | `bench/receipts/azure-mw2-20261113T101700Z.json` | 20261113T101700Z | 352a4d32ac77 |
+| `azm2n.scenarios_passed` | 7 | scenarios | Retained negative run scenarios passed | `bench/receipts/azure-mw2-20261113T101700Z.json` | 20261113T101700Z | 352a4d32ac77 |
 <!-- END GENERATED:perf-catalog-azure-mw2-negative -->
 
 ## Historical quotations

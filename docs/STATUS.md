@@ -10623,7 +10623,7 @@ writer opens with `--writer-mode optimistic`.
   cross-language verification plus deterministic parity. The counted table is
   generated from the receipt in
   [`bench/RESULTS-azure-mw2.md`](../bench/RESULTS-azure-mw2.md).
-  Positive receipt `azure-mw2-20261113T095300Z.json` at WeftFS `bcbfb2d` /
+  Positive receipt `azure-mw2-20261113T101500Z.json` at WeftFS `352a4d3` /
   WeftFS-Go `61ac5c9`: every scenario and every check passed.
 * **Defect 1 (S1, first run), fixed at the root.** Both Azure `tmp/` sweeps
   deleted every blob under `tmp/` and ignored the grace argument, assuming the
@@ -10642,17 +10642,18 @@ writer opens with `--writer-mode optimistic`.
 * **Negative result retained.** With the sweep grace at 1 s — shorter than a
   transaction's prepare-to-publish interval — a concurrent pass reclaims
   prepared blobs and a committed generation becomes unreadable. Receipt
-  `azure-mw2-20261113T094900Z.json`, same two revisions, one variable changed.
+  `azure-mw2-20261113T101700Z.json`, same two revisions, one variable changed.
   The court therefore ages its garbage past a 10 s window instead of relaxing
   any check, and the results document states the operational contract: size
   `gc_grace_secs` above transaction latency, or collect while quiescent. MW2 GC
   has no exclusive coordinator.
-* **Verification run.** Rust `cargo test --all-targets` 819 passed / 0 failed /
-  0 ignored; the existing Azure court re-ran unchanged (`22` backend, `9`
-  fencing, Go `TestAzure*`, same image digest); WeftFS-Go `go test -race
-  ./store/...` passes. `scripts/verify-all.sh` was **not** rerun; the cited
-  aggregate stays `verify-20261113T033408Z.json` (47/47) until the next
-  aggregate, which now carries `azure_mw2` as court 48 with its own skip path.
+* **Verification run.** Rust `cargo test --all-targets` passes; the existing
+  Azure backend and fencing suites and the Go Azure tests re-ran unchanged
+  against the same image digest (receipt `azure-20261113T094005Z.json`), and
+  WeftFS-Go `go test -race ./store/...` passes. `scripts/verify-all.sh` was
+  **not** rerun, so the cited aggregate receipt stays
+  `verify-20261113T033408Z.json`; the next full run carries `azure_mw2` with
+  its own skip path.
 * **Not proven.** No live Azure/GCS/S3 run; process faults only, not power loss;
   S4 is the fenced *lease* (MW1) and not two MW2 committers racing; no
   per-operation latency is claimed.
