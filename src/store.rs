@@ -2679,6 +2679,35 @@ impl Store {
         Some(AttestedBase { index, chain })
     }
 
+    /// The advisory index segments a retained root still names: the current
+    /// head, every snapshot, every commit carrying a checkpoint manifest, and
+    /// the chain ancestors of each, resolved with the same per-root bound and
+    /// fail-closed rules GC uses.
+    ///
+    /// Diagnostic only (benchmarks and tests). It exists so a court can check
+    /// that GC kept exactly what a retained root needs instead of inferring it
+    /// from a directory diff, and so the cost of that root set is measurable on
+    /// an aged store. It reads commit records; it never mutates anything.
+    pub fn retained_index_segment_ids(&self) -> Result<Vec<Hash32>> {
+        let mut retained: BTreeSet<Hash32> = BTreeSet::new();
+        retained.insert(self.head);
+        retained.extend(self.state.snapshots.values().copied());
+        {
+            let mut found = Vec::new();
+            self.with_backend(|backend| {
+                recovery::for_each_commit_via(backend, u64::MAX, |commit| {
+                    if commit.commit.checkpoint.is_some() {
+                        found.push(commit.hash);
+                    }
+                    Ok(())
+                })
+            })?;
+            retained.extend(found);
+        }
+        self.expand_retained_index_chains(&mut retained)?;
+        Ok(retained.into_iter().collect())
+    }
+
     /// Total bytes currently held in `indexes/`. Only called when a byte budget
     /// is configured or by the diagnostic CLI.
     pub fn index_bytes_total(&self) -> Result<u64> {
@@ -7804,30 +7833,30 @@ impl Store {
             }),
         }
 
-        // Verify every checkpoint manifest named by a parsed commit.
-        for commit in
-            self.with_backend(|backend| recovery::all_commits_via(backend, max_visible))?
-        {
-            if let Some(checkpoint) = commit.commit.checkpoint {
-                report.checked_manifests += 1;
-                match self.read_state_manifest_keyed(checkpoint) {
-                    Ok(state) => {
-                        if state.generation != commit.generation {
-                            report.problems.push(VerifyProblem {
-                                class: "Corrupt".to_owned(),
-                                detail: format!(
-                                    "checkpoint {checkpoint} declares generation {} but is \
-                                     named by generation {}",
-                                    state.generation, commit.generation
-                                ),
-                            });
-                        }
+        // Verify every checkpoint manifest named by a parsed commit. Only the
+        // checkpoint rows are retained; an aged store's full history is not
+        // materialised (it was the peak allocation of this pass at 1M commits).
+        let checkpoint_commits =
+            self.with_backend(|backend| recovery::checkpoint_commits_via(backend, max_visible))?;
+        for (generation, _commit, checkpoint) in checkpoint_commits {
+            report.checked_manifests += 1;
+            match self.read_state_manifest_keyed(checkpoint) {
+                Ok(state) => {
+                    if state.generation != generation {
+                        report.problems.push(VerifyProblem {
+                            class: "Corrupt".to_owned(),
+                            detail: format!(
+                                "checkpoint {checkpoint} declares generation {} but is \
+                                 named by generation {generation}",
+                                state.generation
+                            ),
+                        });
                     }
-                    Err(err) => report.problems.push(VerifyProblem {
-                        class: err.class_name().to_owned(),
-                        detail: format!("checkpoint {checkpoint}: {err}"),
-                    }),
                 }
+                Err(err) => report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("checkpoint {checkpoint}: {err}"),
+                }),
             }
         }
 
@@ -8434,19 +8463,14 @@ impl Store {
 
         // Checkpoints are roots even for rejected/unpublished generations:
         // they are immutable evidence and are never swept by inference.
-        let mut commits =
-            self.with_backend(|backend| recovery::all_commits_via(backend, u64::MAX))?;
-        commits.sort_by_key(|commit| commit.generation);
-        for commit in commits {
-            if let Some(checkpoint) = commit.commit.checkpoint {
-                let origin = format!("checkpoint:{}", checkpoint.to_hex());
-                reach.mark_manifest(checkpoint, &origin);
-                match self.read_state_manifest_keyed(checkpoint) {
-                    Ok(state) => mark_state(self, &state, &mut reach, &origin, problems),
-                    Err(err) => {
-                        problems.push(format!("checkpoint {checkpoint} is unreadable: {err}"))
-                    }
-                }
+        let checkpoint_commits =
+            self.with_backend(|backend| recovery::checkpoint_commits_via(backend, u64::MAX))?;
+        for (_generation, _commit, checkpoint) in checkpoint_commits {
+            let origin = format!("checkpoint:{}", checkpoint.to_hex());
+            reach.mark_manifest(checkpoint, &origin);
+            match self.read_state_manifest_keyed(checkpoint) {
+                Ok(state) => mark_state(self, &state, &mut reach, &origin, problems),
+                Err(err) => problems.push(format!("checkpoint {checkpoint} is unreadable: {err}")),
             }
         }
 
@@ -8589,10 +8613,17 @@ impl Store {
         let mut retained_indexes: BTreeSet<Hash32> = BTreeSet::new();
         retained_indexes.insert(self.head);
         retained_indexes.extend(self.state.snapshots.values().copied());
-        for commit in self.with_backend(|backend| recovery::all_commits_via(backend, u64::MAX))? {
-            if commit.commit.checkpoint.is_some() {
-                retained_indexes.insert(commit.hash);
-            }
+        {
+            let mut found = Vec::new();
+            self.with_backend(|backend| {
+                recovery::for_each_commit_via(backend, u64::MAX, |commit| {
+                    if commit.commit.checkpoint.is_some() {
+                        found.push(commit.hash);
+                    }
+                    Ok(())
+                })
+            })?;
+            retained_indexes.extend(found);
         }
         match self.expand_retained_index_chains(&mut retained_indexes) {
             Ok(()) => {

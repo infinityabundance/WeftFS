@@ -931,8 +931,15 @@ fn resolve_parsed_segment(segment: &Segment, base: Option<&StateIndex>) -> Resul
         let present = reader.u8()?;
         match present {
             PRESENT => {
-                let edge_count = reader.bounded_count(32)?;
-                let mut edges = Vec::with_capacity(edge_count);
+                // One encoded edge is at least one byte (`kind` + payload; a
+                // null target is the kind byte alone). The old bound of 32
+                // assumed object targets, so a segment whose last relation row
+                // held a short value-target edge was rejected as corrupt and
+                // rebuilt on every reopen. The count is still bounded by the
+                // remaining bytes, and the vector is pre-sized conservatively,
+                // so a hostile count cannot amplify the allocation.
+                let edge_count = reader.bounded_count(1)?;
+                let mut edges = Vec::with_capacity(edge_count.min(1024));
                 let mut last_target: Option<Vec<u8>> = None;
                 for _ in 0..edge_count {
                     let (kind, target) = read_target(&mut reader)?;
@@ -1122,6 +1129,48 @@ pub(crate) fn forge_remove_tag_for_test(bytes: &[u8], tag: &str) -> Result<Vec<u
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_short_value_target_edge_at_the_tail_round_trips() {
+        // Regression: the reader used to require `edge_count * 32` remaining
+        // bytes. A value target encodes to one kind byte plus its payload, so a
+        // full segment whose last relation row is a value edge has fewer than
+        // 32 bytes after its edge count and was refused as corrupt. The wire
+        // bytes are unchanged; only the reader's bound was wrong.
+        use crate::state::{RelationKind, RelationTarget};
+        use weftcodec::wcb::Value;
+
+        let subject = Hash32::from_bytes([9u8; 32]);
+        let mut relations_from = HashMap::new();
+        relations_from.insert(
+            (subject, "tagged_as".to_owned()),
+            vec![IndexedRelation {
+                kind: RelationKind::Value,
+                target: RelationTarget::Value(Value::Str("alpha".to_owned())),
+            }],
+        );
+        let index = StateIndex::from_parts(
+            Hash32::ZERO,
+            7,
+            1,
+            1,
+            0,
+            HashMap::new(),
+            HashMap::new(),
+            relations_from,
+            HashMap::new(),
+        );
+        let bytes = encode_full(&index).expect("encode full");
+        let resolved = decode_segment(&bytes)
+            .and_then(|segment| resolve_parsed_segment(&segment, None))
+            .expect("a value-target tail must decode");
+        assert_eq!(resolved.generation(), 7);
+        assert_eq!(resolved.relation_count(), 1);
+        assert_eq!(
+            resolved.candidates_root().expect("candidates root"),
+            index.candidates_root().expect("candidates root")
+        );
+    }
 
     #[test]
     fn a_full_segment_round_trips() {

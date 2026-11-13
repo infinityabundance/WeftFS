@@ -715,6 +715,52 @@ impl Op {
     }
 }
 
+/// One reversible mutation, captured before it happens.
+///
+/// `apply_ops` used to clone the whole `State` so a failed commit left the
+/// previous state untouched. That made every replayed commit O(state), so a
+/// 10,000-object store paid a 10,000-row copy per commit and a 1,000,000-object
+/// store paid a million rows per commit. The journal records only the slots the
+/// ops actually touch, which is O(ops), and restores exactly those slots on
+/// failure. It changes no successful-path byte and no error behaviour.
+enum Undo {
+    Object(Hash32, Option<ObjectRecord>),
+    ObjectAndTip(Hash32, Option<ObjectRecord>, Option<Hash32>),
+    Entry(Hash32, Option<EntryRecord>),
+    Relation(Hash32, Option<RelationRecord>),
+    Snapshot(String, Option<Hash32>),
+    Tip(Hash32, Option<Hash32>),
+    Nothing,
+}
+
+impl Undo {
+    fn restore(self, state: &mut State) {
+        match self {
+            Undo::Object(id, previous) => restore_slot(&mut state.objects, id, previous),
+            Undo::ObjectAndTip(id, previous, tip) => {
+                restore_slot(&mut state.objects, id, previous);
+                restore_slot(&mut state.tips, id, tip);
+            }
+            Undo::Entry(id, previous) => restore_slot(&mut state.entries, id, previous),
+            Undo::Relation(id, previous) => restore_slot(&mut state.relations, id, previous),
+            Undo::Snapshot(name, previous) => restore_slot(&mut state.snapshots, name, previous),
+            Undo::Tip(id, previous) => restore_slot(&mut state.tips, id, previous),
+            Undo::Nothing => {}
+        }
+    }
+}
+
+fn restore_slot<K: Ord, V>(map: &mut BTreeMap<K, V>, key: K, previous: Option<V>) {
+    match previous {
+        Some(value) => {
+            map.insert(key, value);
+        }
+        None => {
+            map.remove(&key);
+        }
+    }
+}
+
 /// The complete replayed state.
 #[derive(Clone, Debug, Default)]
 pub struct State {
@@ -849,6 +895,10 @@ impl State {
     }
 
     /// Apply a list of ops atomically: all or nothing.
+    ///
+    /// Atomicity is provided by a journal of the touched slots, not by cloning
+    /// the whole state, so the cost is proportional to the ops in this commit.
+    /// A failure restores every slot to its pre-commit value.
     pub fn apply_ops(&mut self, ops: &[Op]) -> Result<()> {
         // `set_quota_usage` describes the state after the other ops in its
         // commit, so it must be last; a reset must stand alone.
@@ -873,12 +923,40 @@ impl State {
                 }
             }
         }
-        let mut next = self.clone();
+        let mut journal: Vec<Undo> = Vec::with_capacity(ops.len());
         for op in ops {
-            next.apply_op(op)?;
+            journal.push(self.undo_for(op));
+            if let Err(err) = self.apply_op(op) {
+                for entry in journal.into_iter().rev() {
+                    entry.restore(self);
+                }
+                return Err(err);
+            }
         }
-        *self = next;
         Ok(())
+    }
+
+    /// The pre-commit value of every slot this op writes.
+    fn undo_for(&self, op: &Op) -> Undo {
+        match op {
+            Op::PutObject(record) => Undo::Object(record.id, self.objects.get(&record.id).cloned()),
+            Op::DeleteObject(id) => Undo::ObjectAndTip(
+                *id,
+                self.objects.get(id).cloned(),
+                self.tips.get(id).copied(),
+            ),
+            Op::PutEntry(record) => Undo::Entry(record.id, self.entries.get(&record.id).cloned()),
+            Op::DelEntry(id) => Undo::Entry(*id, self.entries.get(id).cloned()),
+            Op::PutRelation(record) => {
+                Undo::Relation(record.id, self.relations.get(&record.id).cloned())
+            }
+            Op::DelRelation(id) => Undo::Relation(*id, self.relations.get(id).cloned()),
+            Op::SetSnapshot { name, .. } => {
+                Undo::Snapshot(name.clone(), self.snapshots.get(name).copied())
+            }
+            Op::SetTip { object, .. } => Undo::Tip(*object, self.tips.get(object).copied()),
+            Op::SetQuotaUsage(_) => Undo::Nothing,
+        }
     }
 
     /// Look up a child by exact byte name.

@@ -1054,3 +1054,54 @@ pub fn all_commits_via(
     out.sort_by_key(|commit| commit.generation);
     Ok(out)
 }
+
+/// Visit every commit in generation order without materialising the history.
+///
+/// `all_commits_via` returns one `LoadedCommit` per generation, each carrying
+/// its decoded ops. On a million-generation store that vector was the peak
+/// allocation of an aged GC (and OOM-killed the process under the court's
+/// 3 GiB limit). A caller that only needs one field per commit streams instead;
+/// the commit it is handed is dropped before the next one is read.
+pub fn for_each_commit_via<F>(
+    backend: &dyn StorageBackend,
+    max_generation: u64,
+    mut visit: F,
+) -> Result<()>
+where
+    F: FnMut(&LoadedCommit) -> Result<()>,
+{
+    // `scan_commit_keys_via` returns a generation-keyed map, so iteration is
+    // already in generation order and no full-history vector is built.
+    for (generation, key) in scan_commit_keys_via(backend)? {
+        if generation > max_generation {
+            continue;
+        }
+        // A torn or unreadable commit is skipped exactly as `all_commits_via`
+        // skipped it: recovery decides what is published, this scan only
+        // reports what a retained root may name.
+        if let Ok(loaded) = load_commit_key_via(backend, &key, Some(generation)) {
+            visit(&loaded)?;
+        }
+    }
+    Ok(())
+}
+
+/// Every commit that carries a checkpoint manifest, in generation order, as
+/// `(generation, commit id, checkpoint manifest id)`.
+///
+/// Checkpoints are retention roots for both data GC and advisory-index GC. On
+/// an aged store the number of checkpoints is a small fraction of the number of
+/// commits, so this holds only those rows instead of the whole history.
+pub fn checkpoint_commits_via(
+    backend: &dyn StorageBackend,
+    max_generation: u64,
+) -> Result<Vec<(u64, Hash32, Hash32)>> {
+    let mut found = Vec::new();
+    for_each_commit_via(backend, max_generation, |commit| {
+        if let Some(checkpoint) = commit.commit.checkpoint {
+            found.push((commit.generation, commit.hash, checkpoint));
+        }
+        Ok(())
+    })?;
+    Ok(found)
+}
