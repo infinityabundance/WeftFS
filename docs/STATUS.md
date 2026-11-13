@@ -9886,3 +9886,73 @@ write is now durability-bound, not encode-bound.
     `scripts/publish-crates.sh` (weftcodec first), then
     `scripts/publish-pypi.sh` once a token is present. GHCR images come from the
     per-repo tag workflows.
+
+- 2026-11-13 (R25 / v1.4.1): the augmentation numbers re-measured, rule 13
+  enforced, and the stale prose corrected. Parent `staging` `1af4218` at the
+  aggregate; submodules WeftCodec `5104fa0` (1.4.1), WeftFS-Go `725229d` (Go
+  provenance tool version 1.4.1), WeftCodec-Go `9812d15` (unchanged).
+  * **Contract court.** The frozen `bench/CONTRACTS-augmentation.md` method now
+    runs seven interleaved, one-position-rotated repetitions, and every
+    `configurations.<row>.reproduction` records `shipped_default`,
+    `requires_flag` and `reproduces_with`. Only A (the backend's own path) and
+    C (`weftfs checkpoint write`, no flags) are shipped defaults; B, D, E and N
+    need flags or harness composition. Receipts:
+    `augmentation-local-20261113T004000Z.json` (local, A/N/B/C/D/E),
+    `augmentation-minio-20261113T010500Z.json` (MinIO A and C),
+    `augmentation-local-20261113T011500Z.json` (pythia-70m step 0),
+    `…T012000Z.json` (step 8) and `…T013000Z.json` (Qwen2.5-3B-Instruct). The
+    local host was shared and several cells contain multi-second durability
+    stalls; every raw sample is published and the least-contended repetition is
+    used for attribution (contract §6.10), with the median and p95 unchanged.
+  * **Shipped default vs frontier.** The shipped planned write re-measures at
+    974.1 ms least-contended / 1,175.3 ms p50 at 282,106,049 B (2.98x native A,
+    33.53 % fewer bytes) in `augmentation-local-20261113T004000Z.json`. The
+    R22 `C-pipe4` row (592.6 ms, 1.78x) drives
+    `Store::prepare_tensor_group_pipelined`, which **no shipped CLI verb
+    reaches**; it is published as a separate frontier row, never as the default.
+    The <= 336 ms rung is not reached. The cross-family rows are a real loss on
+    pythia-70m (roughly 51-53x native); the 3B row is a nine-tensor 626 MB
+    subset, not the whole model.
+  * **Rule 13.** Every write result is one backend with and without the
+    augmentation; the reference filesystem is not a comparator. The existing
+    ext4/XFS/ZFS reference-filesystem courts
+    (`bench-fs-cold-*`, `RESULTS-comparative-v1.md`, the STATUS entries and the
+    README F9 row) are relabelled **provenance only and excluded from every
+    claim**. No doc in the tree now headlines a reference-filesystem
+    comparison.
+  * **Generated numbers.** `docs/perf-numbers.json` gains the `contract`,
+    `frontier`, `family` and extended `ladder` groups (316 numbers, 62 blocks).
+    The paper, README current-result block, STATUS head, RFC §6, PERF-NUMBERS,
+    `python/README.md` and `RELEASE-v1.4.1.md` read from the new receipts;
+    `perf_numbers.py --check` is green. The v1.4.0 release note keeps its own
+    receipt through `verify.v140`/`tests.v140` numbers.
+  * **Paper.** The abstract leads with the shipped 2.98x / 33.53 % result and
+    states that native parity is not reached; the R22 frontier is named
+    separately. Results are the R3 -> R17 -> R18 -> R19 -> R20 -> R21 -> R22 ->
+    R25 ladder plus the cross-family table, each rung from its own receipt.
+    Threats now include one host, warm cache, tmpfs, MinIO loopback, the pythia
+    loss, the unreached 336 ms rung, and the fact that the frontier is a
+    numerical claim about one fixture.
+  * **Prose corrections.** `python/README.md` previously said PyPI served 1.2.0
+    and that 1.4.0 was not uploaded. 1.4.0 is live (wheel
+    `41ad31b4…d3c6`, 115,851 B; sdist `2fd174fc…e69c0`, 156,858 B, read from
+    `https://pypi.org/pypi/weftcodec/json` on 2026-11-13). crates.io serves
+    `weftcodec 1.4.0` (`7f24d383…56882`) and `weftfs 1.4.0`
+    (`d94ff6e7…06be0`); GHCR serves `v1.4.0` (digests recorded in
+    `bench/receipts/release-artifacts-20261113T011500Z.json`). The v1.4.0 note's
+    "Nothing was uploaded" paragraph is corrected. `scripts/publish-pypi.sh`
+    now stages a private 0600 copy and deletes only that copy; an
+    operator-supplied `WEFT_PYPI_TOKEN_FILE` is never deleted, and `PYPI_TOKEN`
+    is accepted directly.
+  * **Aggregate.** `bench/receipts/verify-20261113T022751Z.json`: **46/46**
+    courts pass, 0 failed, 0 skipped at WeftFS `e67e63186456`. Test counts:
+    rust_store 807, rust_fuse 850 passed / 0 failed / 2 pre-existing ignored,
+    rust_codec 290. Claims 1,046; spec drift 60/60; conformance 420.
+  * **Release.** Versions 1.4.1 in `Cargo.toml`, `WeftCodec/Cargo.toml`,
+    `python/pyproject.toml`, `python/weftcodec/__init__.py` and the Go
+    provenance tool version. Artifacts built in the python court and
+    `twine check`-clean: wheel `74779b5c…b176` (115,540 B), sdist
+    `9fa6cfb6…79a0` (156,293 B). `cargo publish --dry-run` passes for
+    `weftcodec 1.4.1` (528 files); the `weftfs` dry run is blocked on publish
+    order as in 1.4.0. PyPI upload needs a token; none was available to this
+    session, and the exact blocker is recorded rather than papered over.
