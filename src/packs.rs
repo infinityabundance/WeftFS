@@ -380,7 +380,13 @@ struct CatalogState {
     /// When set, sealing publishes the pack object and *records* its members
     /// here instead of touching the catalog. One owner adopts them later.
     defer: bool,
+    /// Default behaviour (N15): every seal records its members and the catalog
+    /// is published once, by `flush`, before the commit record.
+    auto_defer: bool,
     pending: Vec<Entry>,
+    /// Key -> position in `pending`, maintained with it, so a member sealed but
+    /// not yet catalogued is still readable by this handle.
+    pending_index: BTreeMap<(u8, Hash32), usize>,
     /// Digest per deferred key, so a second publication of the same key inside
     /// one handle is idempotent and a different payload is still refused.
     pending_digests: BTreeMap<(u8, Hash32), Hash32>,
@@ -466,7 +472,10 @@ impl PackedBlobPlane {
             inner,
             catalog,
             options,
-            state: Mutex::new(CatalogState::default()),
+            state: Mutex::new(CatalogState {
+                auto_defer: true,
+                ..CatalogState::default()
+            }),
         })
     }
 
@@ -484,7 +493,8 @@ impl PackedBlobPlane {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let mut stats = state.counters.clone();
-        stats.catalog_entries = state.total_entries + state.open_entries.len() as u64;
+        stats.catalog_entries =
+            state.total_entries + state.open_entries.len() as u64 + state.pending.len() as u64;
         stats.open_pack_bytes = state.open_bytes.len() as u64;
         stats.open_pack_members = state.open_entries.len() as u64;
         stats.packing_disabled = state
@@ -583,7 +593,7 @@ impl BlobPlane for PackedBlobPlane {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
-        let Some((entry, segment)) = find(&**inner, options, &mut state, key)? else {
+        let Some((entry, slot)) = find(&**inner, options, &mut state, key)? else {
             return match inner.get_range(key, offset, len) {
                 Ok(bytes) => Ok(bytes),
                 Err(err) if err.class() == Class::NotFound => {
@@ -604,7 +614,7 @@ impl BlobPlane for PackedBlobPlane {
         if want == 0 {
             return Ok(Vec::new());
         }
-        if segment.is_none() {
+        if matches!(slot, Slot::Open) {
             let start = usize::try_from(entry.offset + offset)
                 .map_err(|_| Error::limit_exceeded("open pack offset does not fit memory"))?;
             let end = start
@@ -643,8 +653,8 @@ impl BlobPlane for PackedBlobPlane {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
         // The blob may already exist in a pack, in the open pack, or flat.
-        if let Some((entry, segment)) = find(&**inner, options, &mut state, key)? {
-            let existing = if segment.is_none() {
+        if let Some((entry, slot)) = find(&**inner, options, &mut state, key)? {
+            let existing = if matches!(slot, Slot::Open) {
                 let start = entry.offset as usize;
                 let end = start + entry.length as usize;
                 state
@@ -841,7 +851,11 @@ impl BlobPlane for PackedBlobPlane {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
-        seal(inner, catalog, options, &mut state)
+        seal(inner, catalog, options, &mut state)?;
+        if state.auto_defer && !state.defer && !state.pending.is_empty() {
+            adopt_pending(inner, catalog, options, &mut state)?;
+        }
+        Ok(())
     }
 
     fn buffered_blob_kinds(&self) -> u8 {
@@ -885,6 +899,7 @@ impl BlobPlane for PackedBlobPlane {
         seal_deferred(inner, options, &mut state)?;
         let entries = std::mem::take(&mut state.pending);
         state.pending_digests.clear();
+        state.pending_index.clear();
         state.buffered_kinds = 0;
         Ok(Some(DeferredPackEntries { entries }))
     }
@@ -1111,14 +1126,20 @@ impl BlobPlane for PackedBlobPlane {
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         ensure_loaded(&**catalog, options, &mut state)?;
         let mut removed_open: BTreeSet<(u8, Hash32)> = BTreeSet::new();
+        let mut removed_pending: BTreeSet<(u8, Hash32)> = BTreeSet::new();
         let mut touched: BTreeMap<usize, BTreeSet<(u8, Hash32)>> = BTreeMap::new();
         let mut flat: Vec<&Key> = Vec::new();
         for key in keys {
             match find(&**inner, options, &mut state, key)? {
-                Some((entry, None)) => {
+                Some((entry, Slot::Open)) => {
                     removed_open.insert(entry.sort_key());
                 }
-                Some((entry, Some(_))) => {
+                Some((entry, Slot::Pending)) => {
+                    // Never catalogued, so nothing names it: dropping the record
+                    // is enough and the pack's bytes become garbage.
+                    removed_pending.insert(entry.sort_key());
+                }
+                Some((entry, Slot::Catalog(_))) => {
                     let index = segment_index(entry.id, options.catalog_segments);
                     touched.entry(index).or_default().insert(entry.sort_key());
                 }
@@ -1130,6 +1151,9 @@ impl BlobPlane for PackedBlobPlane {
         }
         if !removed_open.is_empty() {
             rebuild_open(&mut state, &removed_open);
+        }
+        if !removed_pending.is_empty() {
+            rebuild_pending(&mut state, &removed_pending);
         }
         if touched.is_empty() {
             return Ok(());
@@ -1242,12 +1266,23 @@ fn load_segment(
     Ok(segment)
 }
 
+/// Where a catalogued member's bytes live right now.
+enum Slot {
+    /// Buffered in this handle's open, unpublished pack.
+    Open,
+    /// In a pack object this handle already published, whose catalog record has
+    /// not been published yet (N15 auto-deferral between seal and flush).
+    Pending,
+    /// In a pack named by a published catalog segment.
+    Catalog(Arc<Segment>),
+}
+
 fn find(
     inner: &dyn BlobPlane,
     options: &PackOptions,
     state: &mut CatalogState,
     key: &Key,
-) -> Result<Option<(Entry, Option<Arc<Segment>>)>> {
+) -> Result<Option<(Entry, Slot)>> {
     let Some((kind, id)) = member_identity(key) else {
         return Ok(None);
     };
@@ -1256,7 +1291,14 @@ fn find(
             .open_entries
             .get(*index)
             .ok_or_else(|| Error::corrupt("open pack index is inconsistent"))?;
-        return Ok(Some((entry, None)));
+        return Ok(Some((entry, Slot::Open)));
+    }
+    if let Some(index) = state.pending_index.get(&(kind, id)) {
+        let entry = *state
+            .pending
+            .get(*index)
+            .ok_or_else(|| Error::corrupt("pending pack index is inconsistent"))?;
+        return Ok(Some((entry, Slot::Pending)));
     }
     let index = segment_index(id, options.catalog_segments);
     let segment = load_segment(inner, options, state, index)?;
@@ -1265,7 +1307,7 @@ fn find(
         .entries
         .binary_search_by(|entry| entry.sort_key().cmp(&wanted))
     {
-        Ok(position) => Ok(Some((segment.entries[position], Some(segment)))),
+        Ok(position) => Ok(Some((segment.entries[position], Slot::Catalog(segment)))),
         Err(_) => Ok(None),
     }
 }
@@ -1276,10 +1318,10 @@ fn read_packed(
     state: &mut CatalogState,
     key: &Key,
 ) -> Result<Option<Vec<u8>>> {
-    let Some((entry, segment)) = find(inner, options, state, key)? else {
+    let Some((entry, slot)) = find(inner, options, state, key)? else {
         return Ok(None);
     };
-    let bytes = if segment.is_none() {
+    let bytes = if matches!(slot, Slot::Open) {
         let start = usize::try_from(entry.offset)
             .map_err(|_| Error::limit_exceeded("open pack offset does not fit memory"))?;
         let end = start
@@ -1363,7 +1405,7 @@ fn seal(
     if state.open_entries.is_empty() {
         return Ok(());
     }
-    if state.defer {
+    if state.defer || state.auto_defer {
         return seal_deferred(inner, options, state);
     }
     let pack_bytes = std::mem::take(&mut state.open_bytes);
@@ -1412,6 +1454,9 @@ fn seal_deferred(
     crash_point("pack_after_pack_object");
     for entry in entries {
         state.pending_digests.insert(entry.sort_key(), entry.digest);
+        state
+            .pending_index
+            .insert(entry.sort_key(), state.pending.len());
         state.pending.push(entry);
     }
     state.counters.sealed_packs += 1;
@@ -1568,6 +1613,43 @@ fn commit_entries(
             }
             Err(err) => return Err(err),
         }
+    }
+}
+
+/// Publish every sealed-but-uncatalogued member in **one** catalog write.
+///
+/// This is the N15 change: the sequential write path seals packs as they fill
+/// and used to republish every touched segment per seal, so a large save wrote
+/// the whole catalog hundreds of times (the 7B save measured 148,694 segment
+/// publications and +51.16 % bytes). The invariants are unchanged — the pack
+/// object is durable before any catalog record names it, and the root is still
+/// one compare-and-swap — but the catalog is written once per flush, and the
+/// store flushes before every commit record.
+fn adopt_pending(
+    inner: &mut Box<dyn BlobPlane + Send>,
+    catalog: &mut Box<dyn CommitPlane + Send>,
+    options: &PackOptions,
+    state: &mut CatalogState,
+) -> Result<()> {
+    let entries = std::mem::take(&mut state.pending);
+    state.pending_digests.clear();
+    state.pending_index.clear();
+    state.buffered_kinds = 0;
+    commit_entries(inner, catalog, options, state, entries)
+}
+
+fn rebuild_pending(state: &mut CatalogState, removed: &BTreeSet<(u8, Hash32)>) {
+    let entries = std::mem::take(&mut state.pending);
+    state.pending_index.clear();
+    for entry in entries {
+        if removed.contains(&entry.sort_key()) {
+            state.pending_digests.remove(&entry.sort_key());
+            continue;
+        }
+        state
+            .pending_index
+            .insert(entry.sort_key(), state.pending.len());
+        state.pending.push(entry);
     }
 }
 

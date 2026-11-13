@@ -53,6 +53,14 @@ fn member(i: u8) -> Key {
     Key::object(Hash32::from_bytes([i.wrapping_add(1); 32]))
 }
 
+/// Distinct object key from a 32-bit counter.
+fn member32(i: u32) -> Key {
+    let mut raw = [0u8; 32];
+    raw[..4].copy_from_slice(&i.to_le_bytes());
+    raw[31] = 0xa5;
+    Key::object(Hash32::from_bytes(raw))
+}
+
 fn body(len: usize, seed: u8) -> Vec<u8> {
     (0..len)
         .map(|index| (index as u8).wrapping_mul(31).wrapping_add(seed))
@@ -548,4 +556,157 @@ fn backend_kind_refuses_packing_a_weak_plane() {
         Ok(_) => panic!("packing a weak plane must be refused"),
         Err(err) => assert_eq!(err.class(), Class::UnsupportedVersion, "{err}"),
     }
+}
+
+// ---------------------------------------------------------------------------
+// N15: catalog amplification
+// ---------------------------------------------------------------------------
+
+/// A packed plane now publishes the catalog **once per flush**, not once per
+/// sealed pack, and the final catalog is identical either way.
+///
+/// The pre-N15 sequential writer republished every touched segment on every
+/// seal. With `catalog_segments` segments and `packs` seals that is up to
+/// `packs * segments` segment writes, each carrying the whole merged segment,
+/// and every superseded segment stays on disk as an orphan. This test writes the
+/// same members two ways and requires (a) the same final root, (b) at most one
+/// publication per segment for the batched run, (c) no orphan segment blobs, and
+/// (d) that the per-put-flush run really did publish many more segments.
+#[test]
+fn the_catalog_is_published_once_per_flush_and_ends_identical() {
+    let options = PackOptions {
+        pack_target_bytes: 8192,
+        member_threshold_bytes: 2048,
+        max_members_per_pack: 64,
+        max_catalog_bytes: 4 * 1024 * 1024,
+        catalog_segments: 8,
+    };
+    let count = 400u32;
+    // Members are 1000 bytes and a pack holds 8192, so a pack fills after
+    // exactly 8 members. Flushing on those boundaries is the *old* schedule: it
+    // seals and catalogues each pack as it fills. Both runs therefore produce
+    // the same packs, and only the catalog publication count may differ.
+    let run = |flush_each_pack: bool| {
+        let dir = tempdir().unwrap();
+        let mut plane = plane_at(dir.path(), options);
+        for i in 0..count {
+            plane
+                .put_if_absent(&member32(i), &body(1000, i as u8))
+                .unwrap();
+            if flush_each_pack && (i + 1) % 8 == 0 {
+                plane.flush().unwrap();
+            }
+        }
+        plane.flush().unwrap();
+        let stats = plane.pack_stats();
+        let catalog = LocalBackend::new(dir.path());
+        let root = catalog
+            .read_control(&Key::pack_catalog_root())
+            .unwrap()
+            .expect("catalog root");
+        let segments_on_disk = catalog.list(&Key::prefix(KeyKind::PackCatalog)).unwrap().len();
+        // Every member is still readable after the batched publication.
+        for i in 0..count {
+            let bytes = plane.get(&member32(i)).unwrap();
+            assert_eq!(bytes, body(1000, i as u8), "member {i} differs");
+        }
+        std::mem::drop(plane);
+        (
+            root.bytes,
+            stats.catalog_segment_publishes,
+            stats.sealed_packs,
+            segments_on_disk,
+        )
+    };
+    let batched = run(false);
+    let per_pack = run(true);
+    eprintln!(
+        "catalog amplification: batched publishes={} packs={} segment_blobs={}; \
+         per-seal publishes={} packs={} segment_blobs={}",
+        batched.1, batched.2, batched.3, per_pack.1, per_pack.2, per_pack.3
+    );
+    assert_eq!(
+        batched.0, per_pack.0,
+        "the final catalog root must not depend on publication batching"
+    );
+    assert_eq!(
+        batched.2, per_pack.2,
+        "pack layout (sealed packs) must not depend on publication batching"
+    );
+    assert!(
+        batched.1 <= options.catalog_segments as u64,
+        "batched run published {} segments for {} segments of catalog",
+        batched.1,
+        options.catalog_segments
+    );
+    assert!(
+        batched.3 <= options.catalog_segments as usize,
+        "batched run left {} segment blobs on disk for {} segments",
+        batched.3,
+        options.catalog_segments
+    );
+    assert!(
+        per_pack.1 >= batched.1 * 4,
+        "the per-pack-seal control should publish far more segments: {} vs {}",
+        per_pack.1,
+        batched.1
+    );
+    assert!(
+        per_pack.3 > batched.3,
+        "the per-pack-seal control should leave orphan segments: {} vs {}",
+        per_pack.3,
+        batched.3
+    );
+}
+
+/// A packed store and a flat store that receive the same writes publish the same
+/// head, the same manifests and the same content roots. Packing changes physical
+/// layout only.
+#[test]
+fn packing_does_not_change_state_or_identity() {
+    let run = |packed: bool| {
+        let dir = tempdir().unwrap();
+        let path = dir.path().join("store");
+        let backend = if packed {
+            packed_local(pack_options())
+        } else {
+            BackendKind::Local
+        };
+        let mut store = Store::init_with_backend(&path, store_options(), backend).unwrap();
+        let root = store.resolve_path("/").unwrap();
+        let sub = store
+            .mkdir_seeded(root, b"d", 0o755, 0, 0, &[9u8; 32])
+            .unwrap();
+        let mut ids = Vec::new();
+        for i in 0..12u8 {
+            let payload = body(300 + i as usize * 11, i);
+            let id = store
+                .create_file_seeded(
+                    sub,
+                    format!("f{i}").as_bytes(),
+                    &payload,
+                    0o644,
+                    0,
+                    0,
+                    BTreeMap::new(),
+                    format!("seed-{i}").as_bytes(),
+                )
+                .unwrap();
+            ids.push((id, payload));
+        }
+        let head = store.head();
+        let generation = store.generation();
+        let verify = store.verify(true).unwrap();
+        assert!(verify.problems.is_empty(), "{:?}", verify.problems);
+        for (id, payload) in &ids {
+            assert_eq!(&store.read_object(*id).unwrap(), payload);
+        }
+        let strategies: Vec<u64> = ids.iter().map(|(id, _)| *id.as_bytes().last().unwrap() as u64).collect();
+        (head, generation, strategies)
+    };
+    let flat = run(false);
+    let packed = run(true);
+    assert_eq!(flat.0, packed.0, "head differs between flat and packed");
+    assert_eq!(flat.1, packed.1, "generation differs");
+    assert_eq!(flat.2, packed.2, "object identity stream differs");
 }

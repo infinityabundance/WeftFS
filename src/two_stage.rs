@@ -59,11 +59,11 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use weftcodec::modes::{
-    encode_zstd, float_tensor_encoded_len_from_histogram, FloatDtype,
+    encode_zstd, float_tensor_encoded_len_from_histogram, ByteSource, FloatDtype,
 };
 use weftcodec::Limits;
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 
 /// Relative error floor for the level-3 sampled estimate, in basis points.
 ///
@@ -345,7 +345,23 @@ pub fn analyse(
     price_zstd19: bool,
     limits: &Limits,
 ) -> Result<Analysis> {
-    let size = logical.len() as u64;
+    let mut source: &[u8] = logical;
+    analyse_source(&mut source, chunk_bytes, price_zstd19, limits)
+}
+
+/// [`analyse`] over a bounded source (X04).
+///
+/// Identical in every field to [`analyse`]: the sample set, the per-chunk
+/// measurements and the interval arithmetic are the same; only the way the
+/// sampled windows are obtained differs (a bounded read per window instead of a
+/// slice into an already-resident tensor). Nothing here reads the whole tensor.
+pub fn analyse_source(
+    source: &mut dyn ByteSource,
+    chunk_bytes: u64,
+    price_zstd19: bool,
+    limits: &Limits,
+) -> Result<Analysis> {
+    let size = source.len();
     let chunk = chunk_bytes.max(1);
     let chunks = chunk_count(size, chunk);
     let full_chunks = size / chunk;
@@ -354,6 +370,9 @@ pub fn analyse(
     // than it spans.
     let remainder = size - full_chunks * chunk;
     let indices = sample_indices(full_chunks, SAMPLE_CHUNKS);
+    let window_len = usize::try_from(chunk)
+        .map_err(|_| Error::limit_exceeded("codec chunk size does not fit usize"))?;
+    let mut buffer = vec![0u8; window_len.max(1)];
 
     let mut samples: Vec<SampledChunk> = Vec::with_capacity(indices.len());
     let mut level3_values: Vec<(u64, u64)> = Vec::new();
@@ -366,7 +385,10 @@ pub fn analyse(
         if end <= offset {
             continue;
         }
-        let window = &logical[offset as usize..end as usize];
+        let len = usize::try_from(end - offset)
+            .map_err(|_| Error::limit_exceeded("sample window does not fit usize"))?;
+        source.read_at(offset, &mut buffer[..len])?;
+        let window = &buffer[..len];
         let level3 = compressed_chunk_len(window, crate::representation::CODEC_ZSTD_LEVEL, limits);
         let level19 = if price_zstd19 && slot < SAMPLE_CHUNKS_19 {
             Some(compressed_chunk_len(window, 19, limits))
@@ -398,8 +420,11 @@ pub fn analyse(
         let measured: u64 = samples.iter().map(|sample| sample.level3).sum();
         let tail = if remainder > 0 {
             let offset = full_chunks * chunk;
+            let len = usize::try_from(remainder)
+                .map_err(|_| Error::limit_exceeded("tail window does not fit usize"))?;
+            source.read_at(offset, &mut buffer[..len])?;
             compressed_chunk_len(
-                &logical[offset as usize..],
+                &buffer[..len],
                 crate::representation::CODEC_ZSTD_LEVEL,
                 limits,
             )
@@ -599,6 +624,114 @@ pub fn analyse_tensor_with(
         )?);
     }
     Ok(analysis)
+}
+
+/// One bounded pass over a tensor source: the two-stage [`Analysis`] plus the
+/// two whole-tensor digests the store needs.
+///
+/// `content_hash` is `H("weft/chunk/v1", bytes)` (the manifest and, for a codec
+/// or tensor frame, the header field) and `values_hash` is the canonical
+/// `WEFT-TENSOR` values digest the logical root is built from. Both are folded
+/// window by window, so they are the exact one-shot digests.
+pub struct StreamedTensorAnalysis {
+    pub analysis: Analysis,
+    pub content_hash: weftcodec::Hash32,
+    pub values_hash: weftcodec::Hash32,
+}
+
+/// [`analyse_tensor_with`] over a bounded source (X04).
+///
+/// The tensor is read once in `window_bytes` windows for the histogram and the
+/// two digests; the zstd sample is then taken from the same source (at most
+/// `SAMPLE_CHUNKS` whole chunks plus the tail, i.e. a few MiB). Nothing here
+/// holds the whole tensor.
+#[allow(clippy::too_many_arguments)]
+pub fn analyse_tensor_source(
+    source: &mut dyn ByteSource,
+    chunk_bytes: u64,
+    price_zstd19: bool,
+    mode9_dtype: Option<FloatDtype>,
+    values_dtype: Option<weftcodec::TensorDtype>,
+    shape: &[u64],
+    limits: &Limits,
+    window_bytes: usize,
+) -> Result<StreamedTensorAnalysis> {
+    let size = source.len();
+    let window = if window_bytes == 0 {
+        4 << 20
+    } else {
+        window_bytes
+    };
+    let window = usize::try_from(size.min(window as u64).max(1))
+        .map_err(|_| crate::error::Error::limit_exceeded("ingest window does not fit usize"))?;
+    let mut buffer = vec![0u8; window];
+    let mut histogram = [0u64; 256];
+    let mut content = crate::identity::content_hash_hasher();
+    let mut values = weftcodec::tensor::values_hasher();
+    let mut done: u64 = 0;
+    // Mode-9 windows must be element-aligned; the value digest has no such
+    // constraint, so an unaligned tail is simply the last short window.
+    let element_bytes = mode9_dtype
+        .map(|dtype| dtype.element_size())
+        .unwrap_or(1)
+        .max(1) as u64;
+    if let Some(dtype) = values_dtype {
+        if size % dtype.element_size() != 0 {
+            return Err(crate::error::Error::malformed(format!(
+                "tensor source is {size} bytes, not a whole number of {} elements",
+                dtype.as_str()
+            )));
+        }
+    }
+    while done < size {
+        let remaining = size - done;
+        let mut want = remaining.min(window as u64);
+        if want % element_bytes != 0 && want != remaining {
+            want -= want % element_bytes;
+        }
+        let len = usize::try_from(want)
+            .map_err(|_| crate::error::Error::limit_exceeded("ingest window does not fit usize"))?;
+        source.read_at(done, &mut buffer[..len])?;
+        if mode9_dtype.is_some() {
+            weftcodec::modes::accumulate_float_tensor_histogram(
+                &mut histogram,
+                &buffer[..len],
+                mode9_dtype.expect("checked above"),
+            )?;
+        }
+        content.update(&buffer[..len]);
+        values.update(&buffer[..len]);
+        done += len as u64;
+    }
+    let mut analysis = analyse_source(source, chunk_bytes, price_zstd19, limits)?;
+    if let Some(dtype) = mode9_dtype {
+        analysis.mode9 = Some(crate::phase_profile::timed(
+            crate::phase_profile::Phase::AnalyzeMode9,
+            || {
+                let counted = histogram
+                    .iter()
+                    .try_fold(0u64, |total, &count| total.checked_add(count));
+                if counted != Some(size / element_bytes) {
+                    return Err(crate::error::Error::malformed(
+                        "streamed tensor histogram does not count every element",
+                    ));
+                }
+                let exact_bytes =
+                    float_tensor_encoded_len_from_histogram(dtype, shape, &histogram, limits)?;
+                Ok(Mode9Prediction {
+                    exact_bytes,
+                    dtype,
+                    exponent_symbols: histogram.iter().filter(|&&count| count > 0).count(),
+                    exponent_histogram: Arc::new(histogram),
+                })
+            },
+        )?);
+    }
+    Ok(StreamedTensorAnalysis {
+        analysis,
+        content_hash: crate::identity::finish_content_hash(content),
+        values_hash: values.finalize(),
+    })
 }
 
 /// The shipped mode-9 `1/64` worthwhileness rule, evaluated against a level-3

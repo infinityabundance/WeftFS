@@ -527,6 +527,72 @@ impl SafetensorsFile {
     }
 }
 
+/// A bounded, random-access reader over one tensor's bytes in a container.
+///
+/// Implements [`weftcodec::modes::ByteSource`], so an encoder reads windows of a
+/// tensor without the store ever holding it. The file handle is the only state;
+/// nothing is buffered beyond the caller's window.
+pub struct TensorByteSource {
+    file: File,
+    base: u64,
+    len: u64,
+}
+
+impl SafetensorsFile {
+    /// Open a bounded source over `tensor`'s payload.
+    pub fn open_tensor_source(&self, tensor: &SafetensorsTensor) -> Result<TensorByteSource> {
+        let file = File::open(&self.path)
+            .map_err(|err| Error::io(format!("{}: {err}", self.path.display())))?;
+        Ok(TensorByteSource {
+            file,
+            base: self.data_start + tensor.begin,
+            len: tensor.byte_len(),
+        })
+    }
+}
+
+impl TensorByteSource {
+    /// Logical length in bytes.
+    pub fn len(&self) -> u64 {
+        self.len
+    }
+
+    /// True when the tensor has no payload bytes.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// Read exactly `out.len()` bytes at logical `offset`.
+    pub fn read_at(&mut self, offset: u64, out: &mut [u8]) -> Result<()> {
+        let end = offset
+            .checked_add(out.len() as u64)
+            .ok_or_else(|| Error::limit_exceeded("tensor source read range overflows u64"))?;
+        if end > self.len {
+            return Err(Error::malformed(format!(
+                "tensor source is {} bytes but the read ends at {end}",
+                self.len
+            )));
+        }
+        self.file
+            .seek(SeekFrom::Start(self.base + offset))
+            .map_err(|err| Error::io(format!("tensor source seek: {err}")))?;
+        self.file
+            .read_exact(out)
+            .map_err(|err| Error::io(format!("tensor source read: {err}")))
+    }
+}
+
+impl weftcodec::modes::ByteSource for TensorByteSource {
+    fn len(&self) -> u64 {
+        TensorByteSource::len(self)
+    }
+
+    fn read_at(&mut self, offset: u64, out: &mut [u8]) -> weftcodec::Result<()> {
+        TensorByteSource::read_at(self, offset, out)
+            .map_err(|err| weftcodec::Error::io(err.message().to_owned()))
+    }
+}
+
 /// One tensor to write into a synthesized safetensors container.
 pub struct SafetensorsEntry<'a> {
     pub name: &'a str,

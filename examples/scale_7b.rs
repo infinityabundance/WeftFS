@@ -1,22 +1,30 @@
-//! 7B-scale court harness (subphase R12, increment 1).
+//! 7B-scale court harness (subphase R12, increment 1; X04).
 //!
-//! Four phases, each run as its own process so peak RSS is honest:
+//! Phases, each run as its own process so peak RSS is honest:
 //!
 //! * `ingest`     — write every tensor of one safetensors container through the
-//!                  shipped per-tensor planner (`write_tensor_file_with_spec`).
-//!                  This path needs whole tensor bytes, so it is the phase that
-//!                  reports where a 3 GiB court stops fitting.
+//!                  per-tensor planner (`write_tensor_file_with_spec[_seeded]`),
+//!                  or, with `--stream`, through the bounded source writer
+//!                  (`write_tensor_file_from_source`). With a deterministic
+//!                  seed (`--seeded`/default) both modes must publish the same
+//!                  head, which is the 7B identity proof.
 //! * `checkpoint` — the bounded / streaming checkpoint writer
 //!                  (`Store::write_checkpoint`, `--max-ingest-bytes`), N-way
-//!                  sharded, flat or packed.
+//!                  sharded, flat or packed, planned or fast-raw.
 //! * `restore`    — `Store::restore_checkpoint_pipelined` at 1/4/8 workers into
 //!                  a SHA-256 sink; the container digest must equal the source
 //!                  file's SHA-256.
 //! * `verify`     — `Store::verify(true)` plus the retained byte count.
+//! * `catalog`    — pack-catalog accounting: entries, segment blobs on disk,
+//!                  bytes per namespace, and the amplification ratio against the
+//!                  logical data.
 //!
 //! Nothing here is a model framework: the safetensors header is parsed directly
 //! and the bytes go through the shipped store API. Every number is printed as
 //! JSON; the court wrapper adds the environment and assembles the receipt.
+//! With `WEFT_PHASE_PROFILE=1` each phase also reports the per-stage profile
+//! (encode, publish, digest, index, commit), so a memory or wall finding can be
+//! attributed to a stage.
 
 use std::collections::BTreeMap;
 use std::fs::{self, File};
@@ -32,7 +40,8 @@ use weftfs::checkpoint::{CheckpointRestoreOptions, CheckpointWriteOptions, Shard
 use weftfs::restore_pipeline::RestorePipelineOptions;
 use weftfs::store::{OpenMode, Options, Store};
 use weftfs::tensor_store::{
-    FastCodec, TensorLayoutSpec, TensorPlanOptions, TensorWriteSpec, WritePolicy,
+    FastCodec, StreamedWriteOptions, TensorLayoutSpec, TensorPlanOptions, TensorWriteSpec,
+    WritePolicy,
 };
 
 fn main() {
@@ -50,9 +59,26 @@ fn run() -> Result<(), String> {
         "checkpoint" => checkpoint(&args[1..]),
         "restore" => restore(&args[1..]),
         "verify" => verify(&args[1..]),
+        "catalog" => catalog(&args[1..]),
         other => Err(format!(
-            "unknown phase `{other}` (expected ingest, checkpoint, restore, verify)"
+            "unknown phase `{other}` (expected ingest, checkpoint, restore, verify, catalog)"
         )),
+    }
+}
+
+/// Begin phase profiling when the court asked for it.
+fn profile_begin() {
+    if std::env::var_os("WEFT_PHASE_PROFILE").is_some() {
+        weftfs::phase_profile::begin();
+    }
+}
+
+/// Per-stage totals for the report, or `null` when profiling is off.
+fn profile_json() -> Json {
+    if std::env::var_os("WEFT_PHASE_PROFILE").is_some() {
+        weftfs::phase_profile::snapshot().to_json()
+    } else {
+        Json::Null
     }
 }
 
@@ -139,6 +165,32 @@ fn sha256_file(path: &Path) -> Result<String, String> {
             break;
         }
         hasher.update(&buffer[..read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
+}
+
+/// SHA-256 of one tensor's bytes, read in bounded windows.
+///
+/// The streamed ingest must not materialise a 1.09 GB tensor to hash it; this
+/// walks the same bounded source the writer uses.
+fn sha256_tensor_streaming(
+    file: &weftfs::safetensors::SafetensorsFile,
+    tensor: &weftfs::safetensors::SafetensorsTensor,
+) -> Result<String, String> {
+    let mut source = file
+        .open_tensor_source(tensor)
+        .map_err(|err| err.to_string())?;
+    let total = source.len();
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0u8; 8 << 20];
+    let mut offset = 0u64;
+    while offset < total {
+        let want = (total - offset).min(buffer.len() as u64) as usize;
+        source
+            .read_at(offset, &mut buffer[..want])
+            .map_err(|err| err.to_string())?;
+        hasher.update(&buffer[..want]);
+        offset += want as u64;
     }
     Ok(hex::encode(hasher.finalize()))
 }
@@ -267,6 +319,10 @@ fn store_options(_args: &[String]) -> Options {
     Options {
         chunk_size: 65_536,
         checkpoint_interval: 256,
+        // A fixed clock makes every phase's store reproducible, so the slice
+        // and streamed ingest runs can be compared by head rather than by
+        // per-field inspection. The receipt records the value.
+        fixed_timestamp_ns: Some(1_700_000_000_000_000_000),
         ..Options::default()
     }
 }
@@ -295,13 +351,19 @@ fn store_backend(args: &[String]) -> Result<BackendKind, String> {
 }
 
 // ---------------------------------------------------------------------------
-// ingest — per-tensor planner path (whole tensor bytes)
+// ingest — per-tensor planner path (whole tensor bytes, or a bounded source)
 // ---------------------------------------------------------------------------
 
 fn ingest(args: &[String]) -> Result<(), String> {
     let source = PathBuf::from(required(args, "--source")?);
     let store_path = PathBuf::from(required(args, "--store")?);
     let out = PathBuf::from(required(args, "--out")?);
+    let streaming = flag(args, "--stream");
+    let stream_options = StreamedWriteOptions {
+        window_bytes: parse_u64(args, "--window-bytes", 4 << 20)? as usize,
+        max_frame_bytes: parse_u64(args, "--max-stream-bytes", u64::MAX)?,
+        ..StreamedWriteOptions::default()
+    };
     let limit = match value_of(args, "--limit") {
         Some(text) => Some(
             text.parse::<usize>()
@@ -315,6 +377,12 @@ fn ingest(args: &[String]) -> Result<(), String> {
     };
 
     let container = parse_safetensors(&source)?;
+    // A streamed write needs the real container reader; parse it once.
+    let parsed = if streaming {
+        Some(weftfs::safetensors::SafetensorsFile::parse(&source).map_err(|err| err.to_string())?)
+    } else {
+        None
+    };
     let selected: Vec<&TensorHeader> = match limit {
         Some(limit) => container.tensors.iter().take(limit).collect(),
         None => container.tensors.iter().collect(),
@@ -335,7 +403,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
         .map_err(|err| err.to_string())?;
     let root = store.resolve_path("/").map_err(|err| err.to_string())?;
     let dir = store
-        .mkdir(root, b"model", 0o755, 0, 0)
+        .mkdir_seeded(root, b"model", 0o755, 0, 0, &[0x33u8; 32])
         .map_err(|err| err.to_string())?;
     let layout = TensorLayoutSpec::row_major();
     let spec = TensorWriteSpec {
@@ -343,6 +411,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
         ..TensorWriteSpec::default()
     };
 
+    profile_begin();
     let started = Instant::now();
     let mut rows = Vec::with_capacity(selected.len());
     let mut strategies: BTreeMap<String, u64> = BTreeMap::new();
@@ -355,40 +424,83 @@ fn ingest(args: &[String]) -> Result<(), String> {
             tensor.byte_len(),
             peak_rss_kib()
         );
+        // A deterministic per-tensor seed: the streamed and slice paths must
+        // publish the same ObjectId, manifest and head for the same tensor.
+        let seed = weftfs::identity::h("weft/scale7b/ingest-seed/v1", tensor.name.as_bytes());
         let read_started = Instant::now();
-        let bytes = read_tensor_bytes(&container, tensor)?;
-        let read_ms = read_started.elapsed().as_secs_f64() * 1000.0;
-        let tensor_started = Instant::now();
-        let id = store
-            .write_tensor_file_with_spec(
-                dir,
-                tensor.name.as_bytes(),
-                &tensor.dtype,
-                &tensor.shape,
-                &bytes,
-                &layout,
-                &spec,
-            )
-            .map_err(|err| format!("write {}: {err}", tensor.name))?;
-        let write_ms = tensor_started.elapsed().as_secs_f64() * 1000.0;
+        let (id, digest, read_ms, write_ms) = if let Some(parsed) = parsed.as_ref() {
+            let tensor_ref = parsed
+                .tensors
+                .iter()
+                .find(|candidate| candidate.name == tensor.name)
+                .ok_or_else(|| format!("the container reader has no tensor `{}`", tensor.name))?;
+            // The digest is computed with a bounded streaming read, never by
+            // materialising the tensor (that is the whole point of this phase).
+            let digest = sha256_tensor_streaming(parsed, tensor_ref)?;
+            let read_ms = read_started.elapsed().as_secs_f64() * 1000.0;
+            let tensor_started = Instant::now();
+            let mut bytes_source = parsed
+                .open_tensor_source(tensor_ref)
+                .map_err(|err| err.to_string())?;
+            let id = store
+                .write_tensor_file_from_source(
+                    dir,
+                    tensor.name.as_bytes(),
+                    &tensor.dtype,
+                    &tensor.shape,
+                    &mut bytes_source,
+                    &layout,
+                    &spec,
+                    seed.as_bytes(),
+                    &stream_options,
+                )
+                .map_err(|err| format!("streamed write {}: {err}", tensor.name))?;
+            let write_ms = tensor_started.elapsed().as_secs_f64() * 1000.0;
+            eprintln!(
+                "PROGRESS ingest {} {} {} bytes={} read_ms={} write_ms={} rss_hwm_kib={}",
+                index,
+                tensor.name,
+                "streamed",
+                tensor.byte_len(),
+                round(read_ms),
+                round(write_ms),
+                peak_rss_kib()
+            );
+            (id, digest, read_ms, write_ms)
+        } else {
+            let bytes = read_tensor_bytes(&container, tensor)?;
+            let read_ms = read_started.elapsed().as_secs_f64() * 1000.0;
+            let tensor_started = Instant::now();
+            let id = store
+                .write_tensor_file_with_spec_seeded(
+                    dir,
+                    tensor.name.as_bytes(),
+                    &tensor.dtype,
+                    &tensor.shape,
+                    &bytes,
+                    &layout,
+                    &spec,
+                    seed.as_bytes(),
+                )
+                .map_err(|err| format!("write {}: {err}", tensor.name))?;
+            let write_ms = tensor_started.elapsed().as_secs_f64() * 1000.0;
+            let meta = store.tensor_metadata(id).map_err(|err| err.to_string())?;
+            eprintln!(
+                "PROGRESS ingest {} {} {} bytes={} read_ms={} write_ms={} rss_hwm_kib={}",
+                index,
+                tensor.name,
+                meta.strategy,
+                tensor.byte_len(),
+                round(read_ms),
+                round(write_ms),
+                peak_rss_kib()
+            );
+            let digest = sha256_hex(&bytes);
+            (id, digest, read_ms, write_ms)
+        };
         let meta = store.tensor_metadata(id).map_err(|err| err.to_string())?;
         *strategies.entry(meta.strategy.clone()).or_insert(0) += 1;
         written_bytes = written_bytes.saturating_add(tensor.byte_len());
-        let digest = sha256_hex(&bytes);
-        drop(bytes);
-        eprintln!(
-            "PROGRESS ingest {} {} {} bytes={} read_ms={} write_ms={} rss_hwm_kib={}",
-            index,
-            tensor.name,
-            meta.strategy,
-            tensor.byte_len(),
-            round(read_ms),
-            round(write_ms),
-            peak_rss_kib()
-        );
-        if let Some(object) = out.parent() {
-            let _ = object;
-        }
         rows.push(json!({
             "name": tensor.name,
             "dtype": tensor.dtype,
@@ -428,6 +540,10 @@ fn ingest(args: &[String]) -> Result<(), String> {
         "source": source.display().to_string(),
         "source_bytes": container.file_len,
         "source_sha256": source_sha256,
+        "streamed": streaming,
+        "window_bytes": stream_options.window_bytes,
+        "max_stream_bytes": stream_options.max_frame_bytes,
+        "head": store.head().to_hex(),
         "tensors": selected.len(),
         "logical_bytes": logical_bytes,
         "largest_tensor": {"name": largest.0, "bytes": largest.1},
@@ -438,6 +554,7 @@ fn ingest(args: &[String]) -> Result<(), String> {
         "store_bytes": tree_bytes(&store_path),
         "generation": store.generation(),
         "verify": verify_json(&verify),
+        "profile": profile_json(),
         "rows": rows,
     });
     write_json(&out, &report)?;
@@ -469,10 +586,17 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         Some("zstd") => FastCodec::Zstd,
         Some(other) => return Err(format!("unknown --fast-codec `{other}`")),
     };
+    let strategy = match value_of(args, "--shard-strategy").as_deref() {
+        None | Some("tensor-sharded") => ShardStrategy::TensorSharded,
+        Some("planned") => ShardStrategy::Planned,
+        Some("zstd") => ShardStrategy::Zstd,
+        Some("raw") => ShardStrategy::Raw,
+        Some(other) => return Err(format!("unknown --shard-strategy `{other}`")),
+    };
     let mut options = CheckpointWriteOptions {
         shards,
         axis,
-        strategy: ShardStrategy::TensorSharded,
+        strategy,
         write_policy: if fast {
             WritePolicy::Fast
         } else {
@@ -482,6 +606,10 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         fast_zstd_level: parse_u64(args, "--fast-zstd-level", 1)? as i32,
         semantic_search: !flag(args, "--no-semantic"),
         max_ingest_bytes: parse_u64(args, "--max-ingest-bytes", 1024 * 1024 * 1024)?,
+        // A fixed seed makes every phase's checkpoint reproducible, so a flat
+        // write and a packed write of the same bytes must publish the same
+        // head. Recorded in the report.
+        deterministic_seed: Some([0x5a; 32]),
         ..CheckpointWriteOptions::default()
     };
     if let Some(filters) = value_of(args, "--tensor-filters") {
@@ -511,6 +639,7 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         Store::init_with_backend(&store_path, store_options(args), backend)
             .map_err(|err| err.to_string())?
     };
+    profile_begin();
     let started = Instant::now();
     let report = store
         .write_checkpoint(&name, &source, &options)
@@ -533,10 +662,12 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
         "tensors": report.tensors.len(),
         "total_element_bytes": report.total_element_bytes,
         "shard_objects": report.shard_objects,
+        "deterministic_seed": hex::encode([0x5au8; 32]),
         "complete": report.complete,
         "shards": shards,
         "axis": axis,
         "write_policy": if fast { "fast" } else { "planned" },
+        "shard_strategy": strategy.as_str(),
         "fast_codec": if fast_codec == FastCodec::Raw { "raw" } else { "zstd" },
         "max_ingest_bytes": options.max_ingest_bytes,
         "packed": flag(args, "--pack"),
@@ -564,6 +695,7 @@ fn checkpoint(args: &[String]) -> Result<(), String> {
             "packing_disabled": stats.packing_disabled,
         })),
         "verify": verify_json(&verify_report),
+        "profile": profile_json(),
     });
     write_json(&out, &out_json)?;
     println!(
@@ -696,6 +828,115 @@ fn verify(args: &[String]) -> Result<(), String> {
     println!(
         "{}",
         serde_json::to_string(&json_out).map_err(|err| err.to_string())?
+    );
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// catalog — pack-catalog accounting
+// ---------------------------------------------------------------------------
+
+/// Per-namespace bytes and file counts on disk.
+fn namespace_bytes(root: &Path) -> BTreeMap<String, (u64, u64)> {
+    fn walk(dir: &Path, total: &mut u64, files: &mut u64) {
+        let Ok(entries) = fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let Ok(meta) = entry.metadata() else {
+                continue;
+            };
+            if meta.is_dir() {
+                walk(&entry.path(), total, files);
+            } else if meta.is_file() {
+                *total = total.saturating_add(meta.len());
+                *files += 1;
+            }
+        }
+    }
+    let mut out = BTreeMap::new();
+    let Ok(entries) = fs::read_dir(root) else {
+        return out;
+    };
+    for entry in entries.flatten() {
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let mut total = 0u64;
+        let mut files = 0u64;
+        if meta.is_dir() {
+            walk(&entry.path(), &mut total, &mut files);
+        } else if meta.is_file() {
+            total = meta.len();
+            files = 1;
+        }
+        out.insert(name, (total, files));
+    }
+    out
+}
+
+/// Report what the physical pack plane actually costs.
+///
+/// `packs/` is the packed data, `pack-catalog/` is catalog metadata. The
+/// amplification a packed write pays is `catalog bytes / packed bytes`; the
+/// absolute overhead is what the court compares before and after N15.
+fn catalog(args: &[String]) -> Result<(), String> {
+    let store_path = PathBuf::from(required(args, "--store")?);
+    let out = PathBuf::from(required(args, "--out")?);
+    let backend = store_backend(args)?;
+    let store = Store::open_with_options_and_backend(
+        &store_path,
+        OpenMode::ReadOnly,
+        store_options(args),
+        backend,
+    )
+    .map_err(|err| err.to_string())?;
+    let namespaces = namespace_bytes(&store_path);
+    let bytes_of = |name: &str| namespaces.get(name).map(|entry| entry.0).unwrap_or(0);
+    let files_of = |name: &str| namespaces.get(name).map(|entry| entry.1).unwrap_or(0);
+    let packed = bytes_of("packs");
+    let catalog = bytes_of("pack-catalog");
+    let pack_stats = store.pack_stats();
+    let out_json = json!({
+        "phase": "catalog",
+        "status": "ok",
+        "generation": store.generation(),
+        "head": store.head().to_hex(),
+        "namespaces": namespaces
+            .iter()
+            .map(|(name, (bytes, files))| (name.clone(), json!({"bytes": bytes, "files": files})))
+            .collect::<BTreeMap<String, Json>>(),
+        "packed_bytes": packed,
+        "catalog_bytes": catalog,
+        "catalog_files": files_of("pack-catalog"),
+        "amplification": if packed > 0 {
+            round(catalog as f64 / packed as f64)
+        } else {
+            0.0
+        },
+        "store_bytes": tree_bytes(&store_path),
+        "objects_bytes": bytes_of("objects"),
+        "manifests_bytes": bytes_of("manifests"),
+        "commits_bytes": bytes_of("commits"),
+        "indexes_bytes": bytes_of("indexes"),
+        "pack_stats": pack_stats.map(|stats| json!({
+            "sealed_packs": stats.sealed_packs,
+            "packed_members": stats.packed_members,
+            "packed_bytes": stats.packed_bytes,
+            "flat_members": stats.flat_members,
+            "flat_bytes": stats.flat_bytes,
+            "catalog_entries": stats.catalog_entries,
+            "catalog_segment_publishes": stats.catalog_segment_publishes,
+            "catalog_root_publishes": stats.catalog_root_publishes,
+            "packing_disabled": stats.packing_disabled,
+        })),
+        "peak_rss_kib": peak_rss_kib(),
+    });
+    write_json(&out, &out_json)?;
+    println!(
+        "{}",
+        serde_json::to_string(&out_json).map_err(|err| err.to_string())?
     );
     Ok(())
 }

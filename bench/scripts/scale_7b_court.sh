@@ -1,25 +1,35 @@
 #!/usr/bin/env bash
-# R12 increment 1 — 7B-scale court.
+# 7B-scale court (R12 increment 1; extended by X04).
 #
-# Host orchestrator (like bench/scripts/shared_mounts_court.sh): every phase
-# runs in its own OOM-protected bench container, so peak RSS is honest per
-# phase and an out-of-memory kill cannot take the court down with it.
+# Host orchestrator: every phase runs in its own OOM-protected bench container,
+# so peak RSS is honest per phase and an out-of-memory kill cannot take the court
+# down with it. Limits are never raised: the default is the unchanged
+# 3 GiB / 3 GiB / 1024 pids / 4 cpus with a bounded `/tmp`. `WEFT_SCALE_MEMORY`
+# may only *lower* the memory limit, and a lower value is recorded in the
+# receipt.
 #
-# Corpus: the real Qwen/Qwen2.5-7B-Instruct checkpoint (4 published shards
-# merged into one container by bench/scripts/safetensors_merge.py, which
-# verified every tensor against its source shard). The merged file's SHA-256 is
-# checked here before any phase runs.
+# Corpus: the real Qwen/Qwen2.5-7B-Instruct checkpoint (4 published shards merged
+# into one container by bench/scripts/safetensors_merge.py, which verified every
+# tensor against its source shard). The merged file is read in place from
+# `.docker-cache/real-corpus/` (never copied) and its SHA-256 is checked here
+# before any phase runs.
 #
-# Phases:
-#   ingest      per-tensor planner ingest (whole-tensor bytes; 3 GiB court)
-#   verify      verify --full of the ingest store
-#   flat        8-way streaming checkpoint write, fast raw, flat
-#   packed      the same write through the physical pack plane
-#   restore1/4/8 full pipelined restore at 1, 4 and 8 workers
+# Phases (`WEFT_SCALE_PHASES="planned flat restore_1"` selects a subset):
+#   ingest          per-tensor planner ingest with whole-tensor bytes
+#                   (the pre-X04 path; OOM at 7B and retained as the finding)
+#   ingest_streamed the same ingest through the bounded source writer
+#   planned         8-way streaming checkpoint write, *planned* policy
+#   flat            8-way streaming checkpoint write, fast raw, flat
+#   packed          the same write through the physical pack plane
+#   catalog         pack-catalog accounting on the packed store
+#   restore_N       full pipelined restore at N workers, source SHA-256 checked
+#   verify_*        verify --full of the store a phase published
 #
-# Disk: the ingest store is deleted before the checkpoint stores are created,
-# and the flat store before the packed one. The source container and one store
-# are the widest overlap; headroom is recorded in the receipt.
+# Disk discipline: the corpus (15.24 GB) stays in place, exactly one store is
+# alive at a time, and every phase deletes its store before the next starts.
+# The court prints `df -h` at the start, refuses to start a phase whose measured
+# requirement exceeds the free space, and re-checks before each phase. Earlier
+# sessions destroyed work with ENOSPC; this is the guard against repeating it.
 set -Eeuo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -34,15 +44,44 @@ corpus="$root/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors"
 work_c="/work/.docker-cache/scale-7b-$stamp"
 corpus_c="/work/.docker-cache/real-corpus/$(basename "$corpus")"
 corpus_sha="5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1"
+corpus_bytes=15231272088
+
 memory="${WEFT_SCALE_MEMORY:-3g}"
+case "$memory" in
+  3g) ;;
+  *[!0-9.mg]*) echo "scale_7b_court: invalid WEFT_SCALE_MEMORY=$memory" >&2; exit 78 ;;
+esac
+# Never raise the court's memory limit; a larger value is refused outright.
+mem_mb="$(python3 - "$memory" <<'PY'
+import sys
+value = sys.argv[1]
+if value.endswith("g"):
+    print(int(float(value[:-1]) * 1024))
+elif value.endswith("m"):
+    print(int(float(value[:-1])))
+else:
+    print(int(value))
+PY
+)"
+if [[ "$mem_mb" -gt 3072 ]]; then
+  echo "scale_7b_court: WEFT_SCALE_MEMORY=$memory exceeds the court's 3072 MiB limit" >&2
+  exit 78
+fi
+
 mkdir -p "$work" "$root/bench/receipts"
 chmod a+rwX "$work" "$root/bench/receipts" 2>/dev/null || true
 : > "$log"
 
 echo "scale_7b_court: stamp=$stamp memory=$memory" | tee -a "$log"
+df -h "$root" | tee -a "$log"
 
 if [[ ! -f "$corpus" ]]; then
   echo "scale_7b_court: missing corpus $corpus" >&2
+  exit 1
+fi
+corpus_stat_bytes="$(stat -c %s "$corpus")"
+if [[ "$corpus_stat_bytes" != "$corpus_bytes" ]]; then
+  echo "scale_7b_court: corpus size $corpus_stat_bytes != $corpus_bytes" >&2
   exit 1
 fi
 actual_sha="$(sha256sum "$corpus" | awk '{print $1}')"
@@ -50,7 +89,22 @@ if [[ "$actual_sha" != "$corpus_sha" ]]; then
   echo "scale_7b_court: corpus sha256 mismatch (expected $corpus_sha, got $actual_sha)" >&2
   exit 1
 fi
-echo "scale_7b_court: verified $(basename "$corpus") sha256=$actual_sha size=$(stat -c %s "$corpus")" | tee -a "$log"
+echo "scale_7b_court: verified $(basename "$corpus") sha256=$actual_sha size=$corpus_stat_bytes" | tee -a "$log"
+
+free_bytes() {
+  df --output=avail -B1 "$root" | tail -1 | tr -d ' '
+}
+
+# require_headroom <bytes> <label>
+require_headroom() {
+  local need="$1" label="$2" free
+  free="$(free_bytes)"
+  if [[ "$free" -lt "$need" ]]; then
+    echo "scale_7b_court: refusing $label: needs $need B, only $free B free" | tee -a "$log" >&2
+    return 1
+  fi
+  echo "scale_7b_court: $label headroom ok ($free B free, needs $need B)" | tee -a "$log"
+}
 
 # One build, reused by every phase.
 build_status=0
@@ -67,10 +121,6 @@ fi
 bin="/work/.docker-cache/target-rust/release/examples/scale_7b"
 
 # run_phase <name> <cmd>
-# The harness writes its JSON to $work_c/<name>.json; the container's cgroup
-# memory peak is captured beside it. The phase directory is widened so the host
-# orchestrator can delete a store between phases (the container runs as uid 0
-# with cap-drop=ALL, so files it creates are not host-user-writable).
 run_phase() {
   local name="$1" cmd="$2"
   local phase_log="$work/$name.log"
@@ -97,41 +147,70 @@ run_phase() {
 
 source_args="--source $corpus_c --source-sha256 $corpus_sha"
 pack_args="--pack --pack-catalog-bytes 67108864"
+ingest_args="--max-ingest-bytes 1610612736"
 
 # Optional phase filter (space-separated names). Empty means every phase.
 only="${WEFT_SCALE_PHASES:-}"
 want() { [[ -z "$only" || " $only " == *" $1 "* ]]; }
 
-# Record the exact court environment (image, revisions, kernel) for the receipt.
 run_phase court_env "env | grep -E '^WEFT_(COURT|REPO)_' > $work_c/court.env"
 
-# 1. Planned per-tensor ingest. This is the phase that needs whole tensor bytes.
-if want ingest; then run_phase ingest "$bin ingest $source_args --store $work_c/ingest-store --fresh --out $work_c/ingest.json"; fi
-# 2. Full verification of whatever the ingest published.
+# 1. Per-tensor planned ingest with whole-tensor bytes. Pre-X04 this is the
+#    phase that OOMs; it is retained because that is the finding.
+if want ingest; then
+  if require_headroom $((corpus_bytes + 18000000000)) ingest; then
+    run_phase ingest "$bin ingest $source_args --store $work_c/ingest-store --fresh --out $work_c/ingest.json $ingest_args"
+  fi
+fi
 if want verify_ingest; then run_phase verify_ingest "$bin verify --store $work_c/ingest-store --out $work_c/verify_ingest.json"; fi
+rm -rf "$work/ingest-store"; sync
 
-# Free the ingest store before the checkpoint writes.
-rm -rf "$work/ingest-store"
-sync
+# 2. The same planned ingest through the bounded source writer.
+if want ingest_streamed; then
+  if require_headroom $((corpus_bytes + 18000000000)) ingest_streamed; then
+    run_phase ingest_streamed "$bin ingest $source_args --store $work_c/ingest-stream-store --stream --fresh --out $work_c/ingest_streamed.json $ingest_args"
+  fi
+fi
+if want verify_ingest_streamed; then run_phase verify_ingest_streamed "$bin verify --store $work_c/ingest-stream-store --out $work_c/verify_ingest_streamed.json"; fi
+rm -rf "$work/ingest-stream-store"; sync
 
-# 3. Eight-way streaming checkpoint write, flat.
-if want flat; then run_phase flat "$bin checkpoint $source_args --store $work_c/flat-store --name qwen7b --shards 8 --axis 0 --write-policy fast --fast-codec raw --max-ingest-bytes 1610612736 --fresh --out $work_c/flat.json"; fi
+# 3. Eight-way *planned* streaming checkpoint write.
+if want planned; then
+  if require_headroom $((corpus_bytes + 9000000000)) planned; then
+    run_phase planned "$bin checkpoint $source_args --store $work_c/planned-store --name qwen7b --shards 8 --axis 0 --write-policy planned --shard-strategy planned --fresh --out $work_c/planned.json $ingest_args"
+  fi
+fi
+if want verify_planned; then run_phase verify_planned "$bin verify --store $work_c/planned-store --out $work_c/verify_planned.json"; fi
+if want catalog_planned; then run_phase catalog_planned "$bin catalog --store $work_c/planned-store --out $work_c/catalog_planned.json"; fi
+if want planned || want verify_planned || want catalog_planned; then rm -rf "$work/planned-store"; sync; fi
+
+# 4. Eight-way fast-raw checkpoint write, flat.
+if want flat; then
+  if require_headroom $((corpus_bytes + 17000000000)) flat; then
+    run_phase flat "$bin checkpoint $source_args --store $work_c/flat-store --name qwen7b --shards 8 --axis 0 --write-policy fast --fast-codec raw --fresh --out $work_c/flat.json $ingest_args"
+  fi
+fi
 if want verify_flat; then run_phase verify_flat "$bin verify --store $work_c/flat-store --out $work_c/verify_flat.json"; fi
 if want flat || want verify_flat; then rm -rf "$work/flat-store"; sync; fi
 
-# 4. The same write through the pack plane. Every later phase that reopens the
-# store must name the same plane, or it would look for flat keys that a packed
-# store does not have.
-if want packed; then run_phase packed "$bin checkpoint $source_args --store $work_c/packed-store --name qwen7b --shards 8 --axis 0 --write-policy fast --fast-codec raw --max-ingest-bytes 1610612736 $pack_args --fresh --out $work_c/packed.json"; fi
+# 5. The same write through the pack plane. Every later phase that reopens the
+#    store must name the same plane, or it would look for flat keys.
+if want packed; then
+  if require_headroom $((corpus_bytes + 17000000000)) packed; then
+    run_phase packed "$bin checkpoint $source_args --store $work_c/packed-store --name qwen7b --shards 8 --axis 0 --write-policy fast --fast-codec raw $pack_args --fresh --out $work_c/packed.json $ingest_args"
+  fi
+fi
 if want verify_packed; then run_phase verify_packed "$bin verify $pack_args --store $work_c/packed-store --out $work_c/verify_packed.json"; fi
+if want catalog || want catalog_packed; then run_phase catalog "$bin catalog $pack_args --store $work_c/packed-store --out $work_c/catalog.json"; fi
 
-# 5. Full restores at 1, 4 and 8 workers, from the packed store.
+# 6. Full restores at 1, 4 and 8 workers, from the packed store.
 for threads in 1 4 8; do
-  if want "restore_$threads"; then run_phase "restore_$threads" "$bin restore $pack_args --store $work_c/packed-store --name qwen7b --threads $threads --expect-sha256 $corpus_sha --out $work_c/restore_$threads.json"; fi
+  if want "restore_$threads"; then
+    run_phase "restore_$threads" "$bin restore $pack_args --store $work_c/packed-store --name qwen7b --threads $threads --expect-sha256 $corpus_sha --out $work_c/restore_$threads.json"
+  fi
 done
 
-# Delete the packed store only when this run created it.
-if want packed || want verify_packed || want restore_1 || want restore_4 || want restore_8; then
+if want packed || want verify_packed || want catalog || want catalog_packed || want restore_1 || want restore_4 || want restore_8; then
   rm -rf "$work/packed-store"
   sync
 fi
@@ -155,6 +234,7 @@ if os.path.exists(court_env_path):
             key, value = line.rstrip("\n").split("=", 1)
             court_env[key] = value
 
+
 def read(name):
     path = os.path.join(work, name)
     if not os.path.exists(path):
@@ -165,6 +245,7 @@ def read(name):
     except Exception:
         return None
 
+
 def peak(name):
     path = os.path.join(work, name + ".cgroup_peak")
     try:
@@ -172,6 +253,7 @@ def peak(name):
             return int(handle.read().strip())
     except Exception:
         return None
+
 
 status = {}
 status_path = os.path.join(work, "status.tsv")
@@ -181,13 +263,30 @@ if os.path.exists(status_path):
         if len(parts) == 2:
             status[parts[0]] = int(parts[1])
 
+phase_names = [
+    "ingest",
+    "verify_ingest",
+    "ingest_streamed",
+    "verify_ingest_streamed",
+    "planned",
+    "verify_planned",
+    "catalog_planned",
+    "flat",
+    "verify_flat",
+    "packed",
+    "verify_packed",
+    "catalog",
+    "restore_1",
+    "restore_4",
+    "restore_8",
+]
 phases = {}
-for name in ["ingest", "verify_ingest", "flat", "verify_flat", "packed", "verify_packed",
-             "restore_1", "restore_4", "restore_8"]:
+for name in phase_names:
+    report = read(name + ".json")
     phases[name] = {
         "exit": status.get(name),
         "cgroup_memory_peak_bytes": peak(name),
-        "report": read(name + ".json"),
+        "report": report,
     }
 
 data = {
@@ -227,7 +326,7 @@ with open(receipt, "w") as handle:
     json.dump(data, handle, indent=2, sort_keys=True)
     handle.write("\n")
 
-# Print the summary table the report will quote.
+
 def g(phase, *keys, default=None):
     report = phases.get(phase, {}).get("report") or {}
     value = report
@@ -237,8 +336,11 @@ def g(phase, *keys, default=None):
         value = value[key]
     return value
 
+
 print("phase|exit|wall_ms|MB/s|peak_rss_kib|cgroup_peak_bytes")
-for name in ["ingest", "flat", "packed", "restore_1", "restore_4", "restore_8"]:
+for name in phase_names:
+    if phases[name]["exit"] is None and phases[name]["cgroup_memory_peak_bytes"] is None:
+        continue
     print("{}|{}|{}|{}|{}|{}".format(
         name,
         phases[name]["exit"],

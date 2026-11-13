@@ -31,6 +31,7 @@ use std::sync::Arc;
 
 use weftcodec::dependency::MapResolver;
 use weftcodec::frame::{Frame, Mode};
+use weftcodec::modes::ByteSource;
 use weftcodec::tensor::{PhysicalTensor, Region, RegionRead, TensorLayout};
 use weftcodec::wcb::Value;
 use weftcodec::{Limits, SemanticPolicy};
@@ -1890,6 +1891,37 @@ impl Store {
         self.require_free_name(parent, name)?;
         let prepared =
             self.prepare_tensor_object_with_spec_seeded(dtype, shape, bytes, layout, spec, seed)?;
+        self.commit_prepared_tensor_object(parent, name, &prepared, 0o644)
+    }
+
+    /// Write one logical tensor from a **bounded source** with the automatic
+    /// two-stage plan (X04).
+    ///
+    /// The measurement schedule differs from
+    /// [`Store::write_tensor_file_with_spec_seeded`] — bytes never have to be
+    /// resident — but the plan, the frames, the `LogicalTensorRoot`, the
+    /// manifest and the object are the same. See
+    /// [`Store::prepare_tensor_object_streamed`] for exactly which requests are
+    /// refused and why.
+    #[allow(clippy::too_many_arguments)]
+    pub fn write_tensor_file_from_source(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        dtype: &str,
+        shape: &[u64],
+        source: &mut dyn ByteSource,
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+        stream: &StreamedWriteOptions,
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        self.require_dir(parent)?;
+        crate::state::validate_name_bytes(name)?;
+        self.require_free_name(parent, name)?;
+        let (prepared, _plan) =
+            self.prepare_tensor_object_streamed(dtype, shape, source, layout, spec, seed, stream)?;
         self.commit_prepared_tensor_object(parent, name, &prepared, 0o644)
     }
 
@@ -7127,4 +7159,755 @@ impl Representation {
         manifest.representation = Some(self);
         manifest
     }
+}
+
+// ---------------------------------------------------------------------------
+// Bounded streaming planned write (subphase X04)
+// ---------------------------------------------------------------------------
+//
+// The automatic two-stage planner materialises the whole tensor before it can
+// analyse or encode it. That is what made a 7B-scale *whole-tensor* planned
+// ingest impossible in a 3 GiB court: a 1.09 GB BF16 tensor plus a level-3
+// frame plus a mode-9 frame plus a level-19 frame cannot coexist.
+//
+// This path runs the **same** analyse → select → materialise stages over a
+// bounded source instead of a slice:
+//
+//   1. one pass in `window_bytes` windows for the exponent histogram and the
+//      two whole-tensor digests;
+//   2. the same deterministic zstd sample the slice analyser takes;
+//   3. the same `select_before_encodes` / `refine_level19` decisions;
+//   4. one encode of each candidate the decision actually asks for, streamed.
+//
+// The candidate set is exactly the automatic float-tensor one — raw, ZSTD level
+// 3, ZSTD level 19, mode 9 — because every other strategy needs either a
+// whole-tensor slice (deltas, tiles, experimental modes) or a pinned hint. Those
+// are refused with a typed error naming the sharded checkpoint writer, which
+// reads one shard at a time and is the supported path for them; this is a
+// **declared policy bound**, not a silent fallback.
+
+/// Bounds for [`Store::prepare_tensor_object_streamed`].
+#[derive(Clone, Copy, Debug)]
+pub struct StreamedWriteOptions {
+    /// Hard bound on any frame the streaming encoders may allocate. A tensor
+    /// whose chosen frame would exceed it fails closed (`LimitExceeded`).
+    pub max_frame_bytes: u64,
+    /// Bytes read from the source per window during the digest/histogram pass.
+    pub window_bytes: usize,
+    /// Capacity hint for the streaming ZSTD frame buffer. It sizes one
+    /// allocation; `max_frame_bytes` is the bound that is enforced.
+    pub zstd_capacity_hint: u64,
+}
+
+impl Default for StreamedWriteOptions {
+    fn default() -> Self {
+        Self {
+            max_frame_bytes: Limits::default().max_frame_bytes,
+            window_bytes: 4 << 20,
+            zstd_capacity_hint: 64 << 20,
+        }
+    }
+}
+
+impl StreamedWriteOptions {
+    /// Validate the bounds.
+    pub fn validate(&self) -> Result<()> {
+        if self.max_frame_bytes == 0 {
+            return Err(Error::invalid_argument(
+                "max_frame_bytes must be greater than zero",
+            ));
+        }
+        if self.window_bytes == 0 {
+            return Err(Error::invalid_argument(
+                "window_bytes must be greater than zero",
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl Store {
+    /// Plan, encode and publish one tensor from a bounded source.
+    ///
+    /// Produces the same frames, `LogicalTensorRoot`, manifest bytes and object
+    /// as [`Store::write_tensor_file_with_spec_seeded`] for a tensor small
+    /// enough to run both, because the analysis, the decisions and every encoder
+    /// are the same code. What differs is only how the bytes reach the encoders:
+    /// window by window, never as one resident tensor.
+    ///
+    /// Refused (typed `UnsupportedVersion`/`InvalidArgument`) when the request
+    /// needs a path this writer deliberately does not implement: a strategy
+    /// hint, the fast policy, a causal base (delta candidates), a tile shape,
+    /// experimental modes, a non-row-major layout, `q8_0`, or an unchunked ZSTD
+    /// frame. Each message names the sharded checkpoint writer.
+    pub fn prepare_tensor_object_streamed(
+        &self,
+        dtype: &str,
+        shape: &[u64],
+        source: &mut dyn ByteSource,
+        layout: &TensorLayoutSpec,
+        spec: &TensorWriteSpec,
+        seed: &[u8; 32],
+        stream: &StreamedWriteOptions,
+    ) -> Result<(PreparedTensorObject, TensorPlan)> {
+        stream.validate()?;
+        let dtype = TensorElementDtype::parse(dtype)?;
+        layout.validate(dtype, shape)?;
+        if layout.layout != TensorLayout::RowMajor {
+            return Err(Error::unsupported_version(
+                "a streamed planned write requires row-major source bytes; a non-row-major layout \
+                 needs the tensor materialised to canonicalise it (use the sharded checkpoint \
+                 writer, which reads one shard at a time)",
+            ));
+        }
+        if spec.strategy_hint.is_some() {
+            return Err(Error::unsupported_version(
+                "a streamed planned write implements the automatic plan only; a pinned strategy \
+                 hint needs the slice encoder (use the sharded checkpoint writer)",
+            ));
+        }
+        if spec.plan.write_policy.is_fast() {
+            return Err(Error::unsupported_version(
+                "a streamed planned write is for the planned policy; the fast policy needs no \
+                 planning and already streams (use the sharded checkpoint writer)",
+            ));
+        }
+        if !spec.causal.is_empty() {
+            return Err(Error::unsupported_version(
+                "a streamed planned write does not implement delta candidates: a base tensor plus \
+                 the target cannot both be held; use the sharded checkpoint writer, whose shard \
+                 bound limits that residency",
+            ));
+        }
+        if spec.tile_shape.is_some() || spec.plan.tile_shape.is_some() {
+            return Err(Error::unsupported_version(
+                "a streamed planned write does not implement tiled modes (a tile grid needs the \
+                 tensor); use the sharded checkpoint writer",
+            ));
+        }
+        if spec.plan.allow_experimental_modes {
+            return Err(Error::unsupported_version(
+                "a streamed planned write offers only raw/ZSTD/mode 9; experimental modes need \
+                 the tensor materialised",
+            ));
+        }
+        if dtype == TensorElementDtype::Q8_0 {
+            return Err(Error::unsupported_version(
+                "a streamed planned write does not implement q8_0 (mode 10); use the sharded \
+                 checkpoint writer",
+            ));
+        }
+        let physical_dtype = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::unsupported_version(format!(
+                "tensor dtype `{}` has no physical layout",
+                dtype.as_str()
+            ))
+        })?;
+        let limits = Limits::default();
+        let size = source.len();
+        let options = &spec.plan;
+        let float_dtype = float_tensor_dtype(dtype);
+        let chunk_bytes = options
+            .zstd_frame_chunk
+            .resolve(self.options().chunk_size.max(1))
+            .map(|value| value as u64)
+            .unwrap_or_else(|| self.options().chunk_size.max(1));
+        let zstd19_offered = options.zstd19
+            && size >= options.zstd19_min_bytes
+            && crate::cost_model::estimate_encode_ns(crate::cost_model::EncodeClass::Zstd19, size)
+                <= options.zstd19_cpu_budget_ns;
+        let mode9_offered = options.float_tensor && float_dtype.is_some();
+
+        // Stage 1: one bounded pass for the histogram and both digests, then the
+        // same zstd sample the slice analyser takes.
+        let streamed = crate::phase_profile::timed(crate::phase_profile::Phase::Analyze, || {
+            crate::two_stage::analyse_tensor_source(
+                source,
+                chunk_bytes,
+                zstd19_offered,
+                float_dtype,
+                Some(physical_dtype),
+                shape,
+                &limits,
+                stream.window_bytes,
+            )
+        })?;
+        let analysis = streamed.analysis;
+        let decode_lambda = u128::from(options.lambda_ns);
+        let write_lambda = u128::from(options.effective_write_lambda());
+        let fixed_for = |class: crate::cost_model::CostClass,
+                         strategy: TensorStrategy,
+                         encode_class: crate::cost_model::EncodeClass|
+         -> u128 {
+            let decode = options.estimate_ns_at_pattern(class, strategy, size);
+            let encode = crate::cost_model::estimate_encode_ns(encode_class, size);
+            decode_lambda * u128::from(decode) + write_lambda * u128::from(encode)
+        };
+        let fixed = crate::two_stage::FixedCosts {
+            raw: fixed_for(
+                crate::cost_model::CostClass::Raw,
+                TensorStrategy::Raw,
+                TensorStrategy::Raw.encode_class(),
+            ),
+            zstd3: fixed_for(
+                crate::cost_model::CostClass::Zstd,
+                TensorStrategy::Zstd,
+                TensorStrategy::Zstd.encode_class(),
+            ),
+            zstd19: fixed_for(
+                crate::cost_model::CostClass::Zstd,
+                TensorStrategy::Zstd,
+                crate::cost_model::EncodeClass::Zstd19,
+            ),
+            mode9: fixed_for(
+                crate::cost_model::CostClass::FloatTensor,
+                TensorStrategy::FloatTensor,
+                TensorStrategy::FloatTensor.encode_class(),
+            ),
+        };
+        let decision = crate::two_stage::select_before_encodes(&analysis, mode9_offered, fixed);
+        let mut trace = PlannerTrace {
+            mode: PlannerMode::TwoStage,
+            analysis,
+            decision,
+            level19: None,
+            fixed,
+            actual_zstd3: None,
+            actual_zstd19: None,
+            actual_mode9: None,
+            prediction_violations: Vec::new(),
+            fallback_exhaustive: false,
+        };
+
+        let mut out: Vec<PreparedCandidate> = Vec::new();
+
+        // Raw: the exact canonical bytes are the source, so nothing is encoded.
+        let raw_candidate = PreparedCandidate {
+            candidate: TensorPlanCandidate {
+                strategy: TensorStrategy::Raw,
+                applicable: true,
+                detail: "canonical row-major chunks".to_owned(),
+                physical_bytes: Some(size),
+                estimated_decode_ns: Some(options.estimate_ns_at_pattern(
+                    crate::cost_model::CostClass::Raw,
+                    TensorStrategy::Raw,
+                    size,
+                )),
+                estimated_encode_ns: Some(options.estimate_encode_ns(TensorStrategy::Raw, size)),
+                cost: Some(options.price_candidate(
+                    size,
+                    options.estimate_ns_at_pattern(
+                        crate::cost_model::CostClass::Raw,
+                        TensorStrategy::Raw,
+                        size,
+                    ),
+                    options.estimate_encode_ns(TensorStrategy::Raw, size),
+                )),
+                dependency: None,
+            },
+            artifact: Some(PreparedArtifact {
+                kind: RepresentationKind::Raw,
+                strategy_name: "raw".to_owned(),
+                frame: None,
+                dependencies: Vec::new(),
+                tensor: None,
+                tile_shape: None,
+            }),
+        };
+        retain_candidate(&mut out, None, true, raw_candidate);
+
+        let codec_chunk = options
+            .zstd_frame_chunk
+            .resolve(self.options().chunk_size.max(1));
+        let zstd_bound = stream.max_frame_bytes;
+
+        // ZSTD level 3, when the decision says it can still win.
+        if !trace.decision.need_zstd3 {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                trace.decision.zstd3_skip_bound.clone().unwrap_or_else(|| {
+                    "level-3 ZSTD not encoded: the planner proved it cannot win".to_owned()
+                }),
+            ));
+        } else {
+            let capacity = trace
+                .analysis
+                .zstd3
+                .as_ref()
+                .map(|estimate| estimate.upper)
+                .unwrap_or(size);
+            let encoded = encode_zstd_from_source(
+                source,
+                crate::representation::CODEC_ZSTD_LEVEL,
+                codec_chunk,
+                &limits,
+                zstd_bound,
+                capacity,
+            );
+            match encoded {
+                Ok(frame) => {
+                    let physical = frame.len() as u64;
+                    trace.actual_zstd3 = Some(physical);
+                    if let Some(estimate) = &trace.analysis.zstd3 {
+                        if !estimate.contains(physical) {
+                            trace.prediction_violations.push(format!(
+                                "level-3 actual {physical} B is outside the predicted interval {} \
+                                 (method {})",
+                                estimate.interval(),
+                                estimate.method
+                            ));
+                        }
+                    }
+                    let estimate = options.estimate_ns_at_pattern(
+                        crate::cost_model::CostClass::Zstd,
+                        TensorStrategy::Zstd,
+                        size,
+                    );
+                    retain_candidate(
+                        &mut out,
+                        None,
+                        true,
+                        PreparedCandidate {
+                            candidate: TensorPlanCandidate {
+                                strategy: TensorStrategy::Zstd,
+                                applicable: true,
+                                detail: "one ZSTD frame".to_owned(),
+                                physical_bytes: Some(physical),
+                                estimated_decode_ns: Some(estimate),
+                                estimated_encode_ns: Some(
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                ),
+                                cost: Some(options.price_candidate(
+                                    physical,
+                                    estimate,
+                                    options.estimate_encode_ns(TensorStrategy::Zstd, size),
+                                )),
+                                dependency: None,
+                            },
+                            artifact: Some(PreparedArtifact {
+                                kind: RepresentationKind::Codec,
+                                strategy_name: "zstd".to_owned(),
+                                frame: Some(frame),
+                                dependencies: Vec::new(),
+                                tensor: None,
+                                tile_shape: None,
+                            }),
+                        },
+                    );
+                }
+                Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
+            }
+        }
+
+        // ZSTD level 19, decided after level 3 is measured — the same rule the
+        // slice planner applies.
+        if !options.zstd19 {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                "zstd-19 disabled (--no-zstd19)".to_owned(),
+            ));
+        } else if size < options.zstd19_min_bytes {
+            out.push(skipped(
+                TensorStrategy::Zstd,
+                format!(
+                    "zstd-19 skipped: {size} bytes is below the {} byte threshold",
+                    options.zstd19_min_bytes
+                ),
+            ));
+        } else {
+            let encode_ns =
+                crate::cost_model::estimate_encode_ns(crate::cost_model::EncodeClass::Zstd19, size);
+            let measured_zstd3 = out
+                .iter()
+                .find(|item| {
+                    item.candidate.strategy == TensorStrategy::Zstd && item.candidate.applicable
+                })
+                .and_then(|item| item.candidate.physical_bytes);
+            let estimate = crate::two_stage::refine_level19(&trace.analysis, measured_zstd3);
+            let mut incumbent = crate::two_stage::Incumbent::priced(
+                trace.analysis.raw_bytes,
+                trace.fixed.raw,
+                "raw",
+            );
+            if let Some(measured) = measured_zstd3 {
+                let candidate = crate::two_stage::Incumbent::priced(
+                    measured,
+                    trace.fixed.zstd3,
+                    "measured zstd level 3",
+                );
+                if candidate.cost < incumbent.cost {
+                    incumbent = candidate;
+                }
+            }
+            if let Some(prediction) = &trace.analysis.mode9 {
+                let candidate = crate::two_stage::Incumbent::priced(
+                    prediction.exact_bytes,
+                    trace.fixed.mode9,
+                    "mode-9 float-tensor (exact)",
+                );
+                if candidate.cost < incumbent.cost {
+                    incumbent = candidate;
+                }
+            }
+            let level19_decision = crate::two_stage::select_level19_with_margin(
+                estimate.as_ref(),
+                trace.fixed.zstd19,
+                incumbent,
+                options.zstd19_gate_margin_bytes,
+            );
+            trace.analysis.zstd19 = level19_decision.estimate.clone();
+            trace.level19 = Some(level19_decision.clone());
+            if encode_ns > options.zstd19_cpu_budget_ns {
+                out.push(skipped(
+                    TensorStrategy::Zstd,
+                    format!(
+                        "zstd-19 skipped: estimated encode {encode_ns} ns exceeds the {} ns CPU \
+                         budget",
+                        options.zstd19_cpu_budget_ns
+                    ),
+                ));
+            } else if !level19_decision.encode {
+                out.push(skipped(
+                    TensorStrategy::Zstd,
+                    level19_decision.skip_bound.clone().unwrap_or_else(|| {
+                        "level-19 ZSTD not encoded: the planner proved it cannot win".to_owned()
+                    }),
+                ));
+            } else {
+                let capacity = level19_decision
+                    .estimate
+                    .as_ref()
+                    .map(|estimate| estimate.upper)
+                    .unwrap_or(size);
+                match encode_zstd_from_source(
+                    source,
+                    19,
+                    codec_chunk,
+                    &limits,
+                    zstd_bound,
+                    capacity,
+                ) {
+                    Ok(frame) => {
+                        let physical = frame.len() as u64;
+                        trace.actual_zstd19 = Some(physical);
+                        if let Some(estimate) = level19_decision
+                            .estimate
+                            .as_ref()
+                            .filter(|estimate| !estimate.contains(physical))
+                        {
+                            trace.prediction_violations.push(format!(
+                                "level-19 actual {physical} B is outside the predicted interval {} \
+                                 (method {})",
+                                estimate.interval(),
+                                estimate.method
+                            ));
+                        }
+                        let estimate = options.estimate_ns_at_pattern(
+                            crate::cost_model::CostClass::Zstd,
+                            TensorStrategy::Zstd,
+                            size,
+                        );
+                        retain_candidate(
+                            &mut out,
+                            None,
+                            true,
+                            PreparedCandidate {
+                                candidate: TensorPlanCandidate {
+                                    strategy: TensorStrategy::Zstd,
+                                    applicable: true,
+                                    detail: "one ZSTD level-19 frame".to_owned(),
+                                    physical_bytes: Some(physical),
+                                    estimated_decode_ns: Some(estimate),
+                                    estimated_encode_ns: Some(encode_ns),
+                                    cost: Some(
+                                        options.price_candidate(physical, estimate, encode_ns),
+                                    ),
+                                    dependency: None,
+                                },
+                                artifact: Some(PreparedArtifact {
+                                    kind: RepresentationKind::Codec,
+                                    strategy_name: "zstd".to_owned(),
+                                    frame: Some(frame),
+                                    dependencies: Vec::new(),
+                                    tensor: None,
+                                    tile_shape: None,
+                                }),
+                            },
+                        );
+                    }
+                    Err(err) => out.push(skipped(TensorStrategy::Zstd, err.to_string())),
+                }
+            }
+        }
+
+        // Mode 9, exactly as the slice planner offers it: the 1/64 rule is
+        // decided from the exact prediction and the measured level-3 size.
+        let zstd_physical = out
+            .iter()
+            .find(|item| {
+                item.candidate.strategy == TensorStrategy::Zstd && item.candidate.applicable
+            })
+            .and_then(|item| item.candidate.physical_bytes);
+        match float_dtype {
+            Some(float_dtype) if !mode9_offered => {
+                out.push(skipped(
+                    TensorStrategy::FloatTensor,
+                    "mode 9 disabled (--no-float-tensor)".to_owned(),
+                ));
+            }
+            Some(float_dtype) => {
+                let mode9_pre_decided: Option<bool> = Some(match trace.decision.mode9 {
+                    crate::two_stage::Mode9Gate::Pass => true,
+                    crate::two_stage::Mode9Gate::Fail => false,
+                    crate::two_stage::Mode9Gate::Unresolved => trace
+                        .analysis
+                        .mode9
+                        .as_ref()
+                        .map(|prediction| {
+                            zstd_physical
+                                .map(|zstd| {
+                                    prediction.exact_bytes.saturating_mul(64)
+                                        <= zstd.saturating_mul(63)
+                                })
+                                .unwrap_or(true)
+                        })
+                        .unwrap_or(true),
+                });
+                if mode9_pre_decided == Some(false) {
+                    let detail = trace.analysis.mode9.as_ref().map(|prediction| {
+                        match trace.analysis.zstd3.as_ref() {
+                            Some(estimate) => format!(
+                                "mode 9 not encoded: the exact predicted frame is {} B, which \
+                                 cannot reach 63/64 of the level-3 interval {} ({} B at the upper \
+                                 end), so the 1/64 rule fails",
+                                prediction.exact_bytes,
+                                estimate.interval(),
+                                estimate.upper.saturating_mul(63) / 64,
+                            ),
+                            None => format!(
+                                "mode 9 not encoded: the exact predicted frame is {} B and it \
+                                 cannot pass the 1/64 rule",
+                                prediction.exact_bytes
+                            ),
+                        }
+                    });
+                    out.push(skipped(
+                        TensorStrategy::FloatTensor,
+                        detail.unwrap_or_else(|| {
+                            "mode 9 not encoded: the 1/64 rule fails".to_owned()
+                        }),
+                    ));
+                } else {
+                    let prediction =
+                        trace.analysis.mode9.as_ref().ok_or_else(|| {
+                            Error::corrupt("mode-9 decision without a prediction")
+                        })?;
+                    let stream_analysis =
+                        weftcodec::modes::FloatTensorStreamAnalysis::from_histogram(
+                            float_dtype,
+                            shape,
+                            *prediction.exponent_histogram,
+                            streamed.content_hash,
+                            &limits,
+                        )?;
+                    let encode_options = weftcodec::modes::FloatTensorStreamOptions {
+                        window_bytes: stream.window_bytes,
+                        max_stream_bytes: stream.max_frame_bytes,
+                    };
+                    let encoded = crate::phase_profile::timed(
+                        crate::phase_profile::Phase::EncodeFloatTensor,
+                        || {
+                            weftcodec::modes::encode_float_tensor_stream(
+                                source,
+                                float_dtype,
+                                shape,
+                                &limits,
+                                &encode_options,
+                                Some(&stream_analysis),
+                            )
+                        },
+                    );
+                    match encoded {
+                        Ok(frame) => {
+                            let physical = frame.len() as u64;
+                            trace.actual_mode9 = Some(physical);
+                            if physical != prediction.exact_bytes {
+                                trace.prediction_violations.push(format!(
+                                    "mode-9 actual {physical} B is not the exact predicted {} B",
+                                    prediction.exact_bytes
+                                ));
+                            }
+                            let worthwhile = mode9_pre_decided.unwrap_or(true);
+                            if !worthwhile {
+                                out.push(skipped(
+                                    TensorStrategy::FloatTensor,
+                                    format!(
+                                        "mode 9 saves less than 1/64 of the zstd frame \
+                                         ({physical} vs {} bytes); not worth the decode cost",
+                                        zstd_physical.unwrap_or(0)
+                                    ),
+                                ));
+                            } else {
+                                let estimate = options.estimate_ns_at_pattern(
+                                    crate::cost_model::CostClass::FloatTensor,
+                                    TensorStrategy::FloatTensor,
+                                    size,
+                                );
+                                let root = weftcodec::tensor::logical_root_from_values_hash(
+                                    physical_dtype,
+                                    shape,
+                                    streamed.values_hash,
+                                    &limits,
+                                )?;
+                                retain_candidate(
+                                    &mut out,
+                                    None,
+                                    true,
+                                    PreparedCandidate {
+                                        candidate: TensorPlanCandidate {
+                                            strategy: TensorStrategy::FloatTensor,
+                                            applicable: true,
+                                            detail: format!(
+                                                "one mode-9 FLOAT_TENSOR frame ({})",
+                                                float_dtype.as_str()
+                                            ),
+                                            physical_bytes: Some(physical),
+                                            estimated_decode_ns: Some(estimate),
+                                            estimated_encode_ns: Some(options.estimate_encode_ns(
+                                                TensorStrategy::FloatTensor,
+                                                size,
+                                            )),
+                                            cost: Some(options.price_candidate(
+                                                physical,
+                                                estimate,
+                                                options.estimate_encode_ns(
+                                                    TensorStrategy::FloatTensor,
+                                                    size,
+                                                ),
+                                            )),
+                                            dependency: None,
+                                        },
+                                        artifact: Some(PreparedArtifact {
+                                            kind: RepresentationKind::Tensor,
+                                            strategy_name: "float-tensor".to_owned(),
+                                            frame: Some(frame),
+                                            dependencies: Vec::new(),
+                                            tensor: Some(TensorRepresentation {
+                                                tensor_mode: 9,
+                                                dtype,
+                                                shape: shape.to_vec(),
+                                                logical_root: root,
+                                                layout: layout.to_value(dtype, shape)?,
+                                            }),
+                                            tile_shape: None,
+                                        }),
+                                    },
+                                );
+                            }
+                        }
+                        Err(err) => out.push(skipped(TensorStrategy::FloatTensor, err.to_string())),
+                    }
+                }
+            }
+            None => out.push(skipped(
+                TensorStrategy::FloatTensor,
+                format!("dtype {} has no mode-9 float layout", dtype.as_str()),
+            )),
+        }
+
+        let chosen = self.choose_candidate(&out, None)?;
+        let plan = plan_from_prepared(&out, chosen, Some(trace));
+        let artifact = chosen
+            .artifact
+            .clone()
+            .ok_or_else(|| Error::invalid_argument("chosen tensor strategy has no artifact"))?;
+        let logical_root = weftcodec::tensor::logical_root_from_values_hash(
+            physical_dtype,
+            shape,
+            streamed.values_hash,
+            &limits,
+        )?;
+        let manifest = match artifact.kind {
+            RepresentationKind::Raw => self.build_raw_manifest_streamed(
+                source,
+                self.options().chunk_size,
+                streamed.content_hash,
+            )?,
+            RepresentationKind::Codec | RepresentationKind::Tensor => {
+                let frame_bytes = artifact
+                    .frame
+                    .as_ref()
+                    .ok_or_else(|| Error::corrupt("codec artifact has no frame"))?;
+                let frame_id =
+                    self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, frame_bytes)?;
+                Manifest {
+                    size,
+                    chunk_size: self.options().chunk_size,
+                    chunks: Vec::new(),
+                    content_hash: streamed.content_hash,
+                    representation: Some(Representation {
+                        kind: artifact.kind,
+                        frame: Some(frame_id),
+                        dependencies: artifact.dependencies.clone(),
+                        strategy: artifact.strategy_name.clone(),
+                        decoded_size: size,
+                        tensor: artifact.tensor.clone(),
+                        overlay: None,
+                    }),
+                    identity: crate::format::ContentIdentity::WholeFileV1,
+                }
+            }
+            RepresentationKind::Overlay => {
+                return Err(Error::invalid_argument(
+                    "overlay representations are not produced by the tensor writer",
+                ))
+            }
+        };
+        let (manifest_id, content_hash, manifest_size) = self.store_manifest(manifest)?;
+        let mut attrs = BTreeMap::new();
+        apply_tensor_attrs(
+            &mut attrs,
+            dtype,
+            shape,
+            logical_root,
+            layout,
+            artifact.strategy_name.as_str(),
+            artifact.tile_shape.as_deref(),
+        )?;
+        Ok((
+            PreparedTensorObject {
+                seed: *seed,
+                manifest_id,
+                content_root: content_hash,
+                size: manifest_size,
+                logical_root,
+                attrs,
+                dtype: dtype.as_str().to_owned(),
+                shape: shape.to_vec(),
+                strategy: artifact.strategy_name,
+                causal: spec.causal.clone(),
+            },
+            plan,
+        ))
+    }
+}
+
+/// Encode a chunked ZSTD frame from a source, refusing an unchunked request.
+fn encode_zstd_from_source(
+    source: &mut dyn ByteSource,
+    level: i32,
+    chunk: Option<usize>,
+    limits: &Limits,
+    max_frame_bytes: u64,
+    body_capacity_hint: u64,
+) -> Result<Vec<u8>> {
+    weftcodec::modes::encode_zstd_stream(
+        source,
+        level,
+        chunk,
+        limits,
+        max_frame_bytes,
+        body_capacity_hint,
+    )
+    .map_err(Error::from)
 }

@@ -15,15 +15,16 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use weftcodec::context::CausalClosure;
 use weftcodec::dependency::MapResolver;
 use weftcodec::frame::{Frame, Mode};
+use weftcodec::modes::ByteSource;
 use weftcodec::selector::Selector;
 use weftcodec::wcb::Value;
 use weftcodec::Limits;
 
 use crate::auth::Principal;
-use crate::context::CapabilityContext;
 use crate::backend::{
     BackendKind, BackendStats, Capabilities, HeadExpectation, Key, KeyKind, StorageBackend,
 };
+use crate::context::CapabilityContext;
 use crate::cost_model::CostClass;
 use crate::error::{Class, Error, Result};
 use crate::format::IndexAttestation;
@@ -10383,6 +10384,46 @@ impl Store {
         }
         Ok(Manifest {
             size: bytes.len() as u64,
+            chunk_size,
+            chunks,
+            content_hash,
+            representation: None,
+            identity: ContentIdentity::WholeFileV1,
+        })
+    }
+
+    /// Build a raw (chunk-table) manifest from a bounded source.
+    ///
+    /// Byte-identical to [`Store::build_raw_manifest`] for the same bytes: each
+    /// chunk is stored as the same content-addressed blob and the table is built
+    /// in the same order. It reads one chunk at a time, so the whole tensor is
+    /// never resident.
+    pub(crate) fn build_raw_manifest_streamed(
+        &self,
+        source: &mut dyn ByteSource,
+        chunk_size: u64,
+        content_hash: Hash32,
+    ) -> Result<Manifest> {
+        let step = usize::try_from(chunk_size)
+            .map_err(|_| Error::limit_exceeded("chunk size does not fit usize"))?;
+        if step == 0 {
+            return Err(Error::invalid_argument(
+                "chunk size must be greater than zero",
+            ));
+        }
+        let size = source.len();
+        let mut chunks = Vec::new();
+        let mut buffer = vec![0u8; step];
+        let mut offset: u64 = 0;
+        while offset < size {
+            let len = (size - offset).min(chunk_size) as usize;
+            source.read_at(offset, &mut buffer[..len])?;
+            let hash = self.store_blob(BlobKind::Object, identity::CHUNK_DOMAIN, &buffer[..len])?;
+            push_chunk_ref(&mut chunks, hash, len as u64)?;
+            offset += len as u64;
+        }
+        Ok(Manifest {
+            size,
             chunk_size,
             chunks,
             content_hash,
