@@ -478,135 +478,135 @@ carried in the same receipt and **failed**; `claim_holds` is false.
 <!-- BEGIN GENERATED:perf-catalog-context-advantage (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `ca.page_bytes` | 65,536 | B | KV page logical size | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.pages` | 8 | pages | pages written per arm | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.probes` | 56 | probes | declared cross-scope probes | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.tol.p50` | 2.0 | × | declared fast-path p50 tolerance (W / N) | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.tol.p95` | 2.5 | × | declared fast-path p95 tolerance (W / N) | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.tol.bytes` | 1.10 | × | declared fast-path backend-byte tolerance (W / N) | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.p50` | 29.0 | µs | N fast-path p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.p95` | 32.0 | µs | N fast-path p95 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.bytes_per_req` | 65,699 | B | N backend bytes per fast-path request | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.exact` | 64 | reads | N byte-exact compatible reads | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.accepted` | 48 | probes | N cross-scope probes accepted | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.wrong` | 48 | probes | N cross-scope acceptances with the wrong payload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.denied` | 8 | probes | N cross-scope probes refused | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.probe_bytes` | 3,153,552 | B | N backend bytes read while refusing | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.probe_requests` | 96 | requests | N requests issued while refusing | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.probe_returned` | 3,145,728 | B | N logical bytes returned on a refusal | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.loss_reused` | 16 | reads | N compatible reuse after metadata loss | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.build_ms` | 113.8 | ms | N page build wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.footprint` | 544,093 | B | N physical footprint | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rss` | 20,600 | KiB | N peak RSS | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_outputs` | 99 | outputs | N recovery outputs materialized | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_logical` | 3,219,456 | B | N recovery logical bytes materialized | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_backend` | 3,235,591 | B | N recovery backend bytes read | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_wall` | 2.692 | ms | N recovery wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.p50` | 104.1 | µs | M fast-path p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.p95` | 113.8 | µs | M fast-path p95 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.bytes_per_req` | 31,918 | B | M backend bytes per fast-path request | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.exact` | 64 | reads | M byte-exact compatible reads | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.accepted` | 0 | probes | M cross-scope probes accepted | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.wrong` | 0 | probes | M cross-scope acceptances with the wrong payload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.denied` | 56 | probes | M cross-scope probes refused | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.probe_bytes` | 766,026 | B | M backend bytes read while refusing | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.probe_requests` | 48 | requests | M requests issued while refusing | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.probe_returned` | 0 | B | M logical bytes returned on a refusal | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.loss_reused` | 0 | reads | M compatible reuse after metadata loss | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.build_ms` | 144.0 | ms | M page build wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.footprint` | 287,151 | B | M physical footprint | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rss` | 18,044 | KiB | M peak RSS | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_outputs` | 9 | outputs | M recovery outputs materialized | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_logical` | 270,336 | B | M recovery logical bytes materialized | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_backend` | 286,540 | B | M recovery backend bytes read | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_wall` | 0.397 | ms | M recovery wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.p50` | 169.6 | µs | W fast-path p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.p95` | 232.7 | µs | W fast-path p95 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.bytes_per_req` | 28,313 | B | W backend bytes per fast-path request | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.exact` | 64 | reads | W byte-exact compatible reads | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.accepted` | 0 | probes | W cross-scope probes accepted | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.wrong` | 0 | probes | W cross-scope acceptances with the wrong payload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.denied` | 56 | probes | W cross-scope probes refused | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.probe_bytes` | 0 | B | W backend bytes read while refusing | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.probe_requests` | 0 | requests | W requests issued while refusing | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.probe_returned` | 0 | B | W logical bytes returned on a refusal | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.loss_reused` | 16 | reads | W compatible reuse after metadata loss | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.build_ms` | 118.3 | ms | W page build wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.footprint` | 268,004 | B | W physical footprint | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rss` | 22,980 | KiB | W peak RSS | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_outputs` | 9 | outputs | W recovery outputs materialized | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_logical` | 270,336 | B | W recovery logical bytes materialized | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_backend` | 321,343 | B | W recovery backend bytes read | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_wall` | 1.283 | ms | W recovery wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.compat_total` | 64 | reads | byte-exact compatible reads in the declared workload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.loss_total` | 16 | reads | compatible reads repeated with the metadata database removed | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.recompute` | 2,121.9 | µs | measured recompute of one page (scalar kernel) | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.w_n_p50` | 5.85 | × | W / N fast-path p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.w_n_p95` | 7.28 | × | W / N fast-path p95 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.m_n_p50` | 3.59 | × | M / N fast-path p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.m_n_p95` | 3.56 | × | M / N fast-path p95 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.w_n_bytes` | 0.431 | × | W / N backend bytes per request | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.mode12_decode` | 116.9 | µs | mode-12 decode p50 of the same page | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.mode19_decode` | 130.7 | µs | mode-19 decode p50 of the same page | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.prov_ratio` | 1.118 | × | mode-19 / mode-12 decode | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.frame_bytes` | 225,201 | B | mode-19 frame bytes for the eight pages | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.mode12_bytes` | 221,001 | B | the same eight pages as mode-12 frames | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.frame_delta_pct` | 1.90 | % | provenance descriptor overhead on frame size | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.w_m_rec_backend` | 1.12 | × | W / M recovery backend bytes | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.ratio.w_m_rec_wall` | 3.24 | × | W / M recovery wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.build_commits` | 8 | commits | N commits published for the same workload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.build_commits` | 10 | commits | M commits published for the same workload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.build_commits` | 8 | commits | W commits published for the same workload | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.tensors` | 96 | tensors | tensors in the recovery fixture | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.tensor_bytes` | 32,768 | B | bytes per recovery tensor | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.resolve` | 0.98 | µs | N path resolution | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.obj_io` | 2.32 | µs | N object blob I/O | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.blob_hash` | 10.52 | µs | N object blob hash | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.manifest_io` | 1.56 | µs | N manifest I/O | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.manifest_hash` | 0.25 | µs | N manifest hash | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.manifest_decode` | 0.78 | µs | N manifest decode | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.assemble` | 0.54 | µs | N chunk assembly | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.content_verify` | 10.52 | µs | N whole-content verification | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.compare` | 0.86 | µs | N exactness compare | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.instrumented` | 29.28 | µs | N instrumented wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.residual` | 0.92 | µs | N unnamed residual | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.resolve` | 1.16 | µs | W path resolution | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.auth_state` | 0.23 | µs | W object-record lookup | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.auth_descriptor` | 0.15 | µs | W descriptor decode + identity | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.auth_capability` | 0.16 | µs | W capability envelope + grants | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.auth_posix` | 0.06 | µs | W POSIX / ACL | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.obj_io` | 2.39 | µs | W object blob I/O | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.blob_hash` | 9.64 | µs | W object blob hash | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.manifest_io` | 1.74 | µs | W manifest I/O | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.manifest_hash` | 0.26 | µs | W manifest hash | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.manifest_decode` | 0.95 | µs | W manifest decode | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.assemble` | 0.22 | µs | W chunk assembly | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.content_verify` | 9.62 | µs | W whole-content verification | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.frame_parse` | 0.87 | µs | W frame parse + checksum | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode` | 150.61 | µs | W payload decode | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.compare` | 0.91 | µs | W exactness compare | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.instrumented` | 183.68 | µs | W instrumented wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.residual` | 4.49 | µs | W unnamed residual | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.auth_total` | 0.61 | µs | W total authorization preamble | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.overhead_vs_n` | 154.40 | µs | W instrumented wall minus N instrumented wall | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_planes` | 103.69 | µs | mode-19 byte planes (unpack + join), p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_hash` | 10.45 | µs | mode-19 reconstructed-page hash, p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_desc` | 10.19 | µs | mode-19 descriptor parse, p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_root` | 4.89 | µs | mode-19 descriptor identity (re-encode + hash), p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_all` | 130.71 | µs | mode-19 decode, p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_alloc` | 1.49 | µs | mode-19 decode not covered by the named components, p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.decode_share` | 0.89 | x | payload decode as a share of W fast-path p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_manifest_reads` | 99 | count | N manifest reads per recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_manifest_reads` | 10 | count | M manifest reads per recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_manifest_reads` | 28 | count | W manifest reads per recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_object_reads` | 99 | count | N object reads per recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_object_reads` | 10 | count | M object reads per recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_object_reads` | 4 | count | W object reads per recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_ledger_wall` | 2.52 | ms | N recovery, instrumented pass | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_ledger_wall` | 0.37 | ms | M recovery, instrumented pass | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_ledger_wall` | 1.20 | ms | W recovery, instrumented pass | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.rec_gap_extra_bytes` | 34,803 | B | W minus M backend bytes, recovery | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.rec_gap_per_tensor` | 5,800 | B | the same gap divided by the six tensor restores | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
+| `ca.page_bytes` | 65,536 | B | KV page logical size | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.pages` | 8 | pages | pages written per arm | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.probes` | 56 | probes | declared cross-scope probes | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.tol.p50` | 2.0 | × | declared fast-path p50 tolerance (W / N) | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.tol.p95` | 2.5 | × | declared fast-path p95 tolerance (W / N) | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.tol.bytes` | 1.10 | × | declared fast-path backend-byte tolerance (W / N) | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.p50` | 29.3 | µs | N fast-path p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.p95` | 32.8 | µs | N fast-path p95 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.bytes_per_req` | 65,699 | B | N backend bytes per fast-path request | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.exact` | 64 | reads | N byte-exact compatible reads | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.accepted` | 48 | probes | N cross-scope probes accepted | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.wrong` | 48 | probes | N cross-scope acceptances with the wrong payload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.denied` | 8 | probes | N cross-scope probes refused | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.probe_bytes` | 3,153,552 | B | N backend bytes read while refusing | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.probe_requests` | 96 | requests | N requests issued while refusing | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.probe_returned` | 3,145,728 | B | N logical bytes returned on a refusal | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.loss_reused` | 16 | reads | N compatible reuse after metadata loss | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.build_ms` | 116.5 | ms | N page build wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.footprint` | 544,093 | B | N physical footprint | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rss` | 20,120 | KiB | N peak RSS | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_outputs` | 99 | outputs | N recovery outputs materialized | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_logical` | 3,219,456 | B | N recovery logical bytes materialized | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_backend` | 3,235,591 | B | N recovery backend bytes read | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_wall` | 2.576 | ms | N recovery wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.p50` | 104.4 | µs | M fast-path p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.p95` | 123.7 | µs | M fast-path p95 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.bytes_per_req` | 31,918 | B | M backend bytes per fast-path request | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.exact` | 64 | reads | M byte-exact compatible reads | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.accepted` | 0 | probes | M cross-scope probes accepted | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.wrong` | 0 | probes | M cross-scope acceptances with the wrong payload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.denied` | 56 | probes | M cross-scope probes refused | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.probe_bytes` | 766,026 | B | M backend bytes read while refusing | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.probe_requests` | 48 | requests | M requests issued while refusing | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.probe_returned` | 0 | B | M logical bytes returned on a refusal | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.loss_reused` | 0 | reads | M compatible reuse after metadata loss | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.build_ms` | 144.0 | ms | M page build wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.footprint` | 287,151 | B | M physical footprint | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rss` | 17,976 | KiB | M peak RSS | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_outputs` | 9 | outputs | M recovery outputs materialized | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_logical` | 270,336 | B | M recovery logical bytes materialized | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_backend` | 286,540 | B | M recovery backend bytes read | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_wall` | 0.407 | ms | M recovery wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.p50` | 169.2 | µs | W fast-path p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.p95` | 239.1 | µs | W fast-path p95 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.bytes_per_req` | 28,313 | B | W backend bytes per fast-path request | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.exact` | 64 | reads | W byte-exact compatible reads | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.accepted` | 0 | probes | W cross-scope probes accepted | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.wrong` | 0 | probes | W cross-scope acceptances with the wrong payload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.denied` | 56 | probes | W cross-scope probes refused | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.probe_bytes` | 0 | B | W backend bytes read while refusing | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.probe_requests` | 0 | requests | W requests issued while refusing | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.probe_returned` | 0 | B | W logical bytes returned on a refusal | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.loss_reused` | 16 | reads | W compatible reuse after metadata loss | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.build_ms` | 123.9 | ms | W page build wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.footprint` | 268,004 | B | W physical footprint | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rss` | 23,020 | KiB | W peak RSS | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_outputs` | 9 | outputs | W recovery outputs materialized | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_logical` | 270,336 | B | W recovery logical bytes materialized | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_backend` | 321,343 | B | W recovery backend bytes read | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_wall` | 1.305 | ms | W recovery wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.compat_total` | 64 | reads | byte-exact compatible reads in the declared workload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.loss_total` | 16 | reads | compatible reads repeated with the metadata database removed | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.recompute` | 2,123.6 | µs | measured recompute of one page (scalar kernel) | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.w_n_p50` | 5.78 | × | W / N fast-path p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.w_n_p95` | 7.29 | × | W / N fast-path p95 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.m_n_p50` | 3.57 | × | M / N fast-path p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.m_n_p95` | 3.77 | × | M / N fast-path p95 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.w_n_bytes` | 0.431 | × | W / N backend bytes per request | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.mode12_decode` | 116.7 | µs | mode-12 decode p50 of the same page | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.mode19_decode` | 130.6 | µs | mode-19 decode p50 of the same page | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.prov_ratio` | 1.119 | × | mode-19 / mode-12 decode | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.frame_bytes` | 225,201 | B | mode-19 frame bytes for the eight pages | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.mode12_bytes` | 221,001 | B | the same eight pages as mode-12 frames | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.frame_delta_pct` | 1.90 | % | provenance descriptor overhead on frame size | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.w_m_rec_backend` | 1.12 | × | W / M recovery backend bytes | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.ratio.w_m_rec_wall` | 3.21 | × | W / M recovery wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.build_commits` | 8 | commits | N commits published for the same workload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.build_commits` | 10 | commits | M commits published for the same workload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.build_commits` | 8 | commits | W commits published for the same workload | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.tensors` | 96 | tensors | tensors in the recovery fixture | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.tensor_bytes` | 32,768 | B | bytes per recovery tensor | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.resolve` | 1.01 | µs | N path resolution | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.obj_io` | 2.34 | µs | N object blob I/O | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.blob_hash` | 10.48 | µs | N object blob hash | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.manifest_io` | 1.50 | µs | N manifest I/O | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.manifest_hash` | 0.25 | µs | N manifest hash | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.manifest_decode` | 0.77 | µs | N manifest decode | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.assemble` | 0.54 | µs | N chunk assembly | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.content_verify` | 10.48 | µs | N whole-content verification | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.compare` | 0.85 | µs | N exactness compare | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.instrumented` | 29.15 | µs | N instrumented wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.residual` | 0.92 | µs | N unnamed residual | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.resolve` | 1.21 | µs | W path resolution | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.auth_state` | 0.24 | µs | W object-record lookup | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.auth_descriptor` | 0.16 | µs | W descriptor decode + identity | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.auth_capability` | 0.17 | µs | W capability envelope + grants | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.auth_posix` | 0.06 | µs | W POSIX / ACL | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.obj_io` | 2.17 | µs | W object blob I/O | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.blob_hash` | 9.65 | µs | W object blob hash | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.manifest_io` | 1.90 | µs | W manifest I/O | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.manifest_hash` | 0.25 | µs | W manifest hash | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.manifest_decode` | 1.00 | µs | W manifest decode | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.assemble` | 0.23 | µs | W chunk assembly | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.content_verify` | 9.61 | µs | W whole-content verification | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.frame_parse` | 0.90 | µs | W frame parse + checksum | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode` | 154.60 | µs | W payload decode | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.compare` | 0.94 | µs | W exactness compare | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.instrumented` | 187.59 | µs | W instrumented wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.residual` | 4.68 | µs | W unnamed residual | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.auth_total` | 0.63 | µs | W total authorization preamble | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.overhead_vs_n` | 158.44 | µs | W instrumented wall minus N instrumented wall | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_planes` | 103.61 | µs | mode-19 byte planes (unpack + join), p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_hash` | 10.49 | µs | mode-19 reconstructed-page hash, p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_desc` | 10.40 | µs | mode-19 descriptor parse, p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_root` | 4.85 | µs | mode-19 descriptor identity (re-encode + hash), p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_all` | 130.64 | µs | mode-19 decode, p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_alloc` | 1.29 | µs | mode-19 decode not covered by the named components, p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.decode_share` | 0.91 | x | payload decode as a share of W fast-path p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_manifest_reads` | 99 | count | N manifest reads per recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_manifest_reads` | 10 | count | M manifest reads per recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_manifest_reads` | 28 | count | W manifest reads per recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_object_reads` | 99 | count | N object reads per recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_object_reads` | 10 | count | M object reads per recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_object_reads` | 4 | count | W object reads per recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_ledger_wall` | 2.57 | ms | N recovery, instrumented pass | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_ledger_wall` | 0.38 | ms | M recovery, instrumented pass | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_ledger_wall` | 1.21 | ms | W recovery, instrumented pass | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.rec_gap_extra_bytes` | 34,803 | B | W minus M backend bytes, recovery | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.rec_gap_per_tensor` | 5,800 | B | the same gap divided by the six tensor restores | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
 | `ca.r26.w.p50` | 187.8 | µs | R26 W fast-path p50 | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 | `ca.r26.w.p95` | 250.8 | µs | R26 W fast-path p95 | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 | `ca.r26.n.p50` | 28.9 | µs | R26 N fast-path p50 | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
@@ -614,9 +614,9 @@ carried in the same receipt and **failed**; `claim_holds` is false.
 | `ca.r26.ratio.w_n_p50` | 6.51 | x | R26 W-over-N p50 | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 | `ca.r26.ratio.w_n_p95` | 7.91 | x | R26 W-over-N p95 | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 | `ca.r26.w.denied` | 56 | count | R26 W refused probes | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
-| `ca.p50_reduction_pct` | 9.7 | % | W fast-path p50 reduction since R26 | `bench/receipts/context-advantage-20261113T054528Z.json, bench/receipts/context-advantage-20261113T064743Z.json` | mixed | mixed |
-| `ca.p95_reduction_pct` | 7.2 | % | W fast-path p95 reduction since R26 | `bench/receipts/context-advantage-20261113T054528Z.json, bench/receipts/context-advantage-20261113T064743Z.json` | mixed | mixed |
-| `ca.ratio.w_m_p50` | 1.63 | x | W over M on the fast path (diagnostic, not the gate) | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
+| `ca.p50_reduction_pct` | 9.9 | % | W fast-path p50 reduction since R26 | `bench/receipts/context-advantage-20261113T054528Z.json, bench/receipts/context-advantage-20261113T070714Z.json` | mixed | mixed |
+| `ca.p95_reduction_pct` | 4.7 | % | W fast-path p95 reduction since R26 | `bench/receipts/context-advantage-20261113T054528Z.json, bench/receipts/context-advantage-20261113T070714Z.json` | mixed | mixed |
+| `ca.ratio.w_m_p50` | 1.62 | x | W over M on the fast path (diagnostic, not the gate) | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
 | `ca.r27.w.rec_backend` | 593,503 | B | R27 W recovery backend bytes | `bench/receipts/context-advantage-20261113T061907Z.json` | 20261113T061907Z | 20e66147a7f8 |
 | `ca.r27.m.rec_backend` | 286,540 | B | R27 M recovery backend bytes | `bench/receipts/context-advantage-20261113T061907Z.json` | 20261113T061907Z | 20e66147a7f8 |
 | `ca.r27.w.rec_wall` | 3.340 | ms | R27 W recovery wall | `bench/receipts/context-advantage-20261113T061907Z.json` | 20261113T061907Z | 20e66147a7f8 |
@@ -628,24 +628,24 @@ carried in the same receipt and **failed**; `claim_holds` is false.
 | `ca.r27.rec_gap_extra_bytes` | 306,963 | B | R27 W minus M recovery backend bytes | `bench/receipts/context-advantage-20261113T061907Z.json` | 20261113T061907Z | 20e66147a7f8 |
 | `ca.r27.p50_reduction_pct` | 9.7 | % | R26 to R27 fast-path p50 reduction | `bench/receipts/context-advantage-20261113T054528Z.json, bench/receipts/context-advantage-20261113T061907Z.json` | mixed | mixed |
 | `ca.r27.p95_reduction_pct` | 7.3 | % | R26 to R27 fast-path p95 reduction | `bench/receipts/context-advantage-20261113T054528Z.json, bench/receipts/context-advantage-20261113T061907Z.json` | mixed | mixed |
-| `ca.n.rec_manifest_loads` | 0 | loads | N checkpoint manifest loads per recovery pass | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.n.rec_output_p50` | 21.47 | µs | N recovery per-output p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_manifest_loads` | 0 | loads | M checkpoint manifest loads per recovery pass | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.m.rec_output_p50` | 24.48 | µs | M recovery per-output p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_manifest_loads` | 1 | loads | W checkpoint manifest loads per recovery pass | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_output_p50` | 97.23 | µs | W recovery per-output p50 | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.w.rec_manifest_object` | 45,197 | B | W checkpoint manifest object size | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.rec_gap_closed_bytes` | 272,160 | B | recovery byte gap removed in R28 | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T064743Z.json` | mixed | mixed |
-| `ca.rec_manifest_load_cost` | 45,360 | B | backend bytes one checkpoint manifest load costs | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T064743Z.json` | mixed | mixed |
-| `ca.rec_manifest_frame_bytes` | 163 | B | the manifest blob that describes the manifest object's single chunk | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T064743Z.json` | mixed | mixed |
-| `ca.repr.page_bytes` | 65,536 | B | page logical size for both payload steps | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.repr.huffman_us` | 103.69 | µs | shipped huffman-canonical-v1 payload step | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.repr.huffman_mbs` | 632.0 | MB/s | shipped huffman-canonical-v1 payload step throughput | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.repr.raw_us` | 0.68 | µs | raw-payload floor: one allocation and one copy | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.repr.raw_mbs` | 96,234.9 | MB/s | raw-payload floor throughput | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
-| `ca.repr.ratio` | 152.3 | × | shipped payload step over the raw-copy floor | `bench/receipts/context-advantage-20261113T064743Z.json` | 20261113T064743Z | 5752a833bd99 |
+| `ca.n.rec_manifest_loads` | 0 | loads | N checkpoint manifest loads per recovery pass | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.n.rec_output_p50` | 21.40 | µs | N recovery per-output p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_manifest_loads` | 0 | loads | M checkpoint manifest loads per recovery pass | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.m.rec_output_p50` | 24.70 | µs | M recovery per-output p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_manifest_loads` | 1 | loads | W checkpoint manifest loads per recovery pass | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_output_p50` | 97.87 | µs | W recovery per-output p50 | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.w.rec_manifest_object` | 45,197 | B | W checkpoint manifest object size | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.rec_gap_closed_bytes` | 272,160 | B | recovery byte gap removed in R28 | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T070714Z.json` | mixed | mixed |
+| `ca.rec_manifest_load_cost` | 45,360 | B | backend bytes one checkpoint manifest load costs | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T070714Z.json` | mixed | mixed |
+| `ca.rec_manifest_frame_bytes` | 163 | B | the manifest blob that describes the manifest object's single chunk | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T070714Z.json` | mixed | mixed |
+| `ca.repr.page_bytes` | 65,536 | B | page logical size for both payload steps | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.repr.huffman_us` | 103.61 | µs | shipped huffman-canonical-v1 payload step | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.repr.huffman_mbs` | 632.5 | MB/s | shipped huffman-canonical-v1 payload step throughput | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.repr.raw_us` | 0.70 | µs | raw-payload floor: one allocation and one copy | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.repr.raw_mbs` | 93,489.3 | MB/s | raw-payload floor throughput | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
+| `ca.repr.ratio` | 147.8 | × | shipped payload step over the raw-copy floor | `bench/receipts/context-advantage-20261113T070714Z.json` | 20261113T070714Z | 923c7bc4d187 |
 | `ca.r27.w.rec_manifest_reads` | 34 | reads | R27 W recovery manifest-blob reads | `bench/receipts/context-advantage-20261113T061907Z.json` | 20261113T061907Z | 20e66147a7f8 |
-| `ca.rec_manifest_loads_removed` | 6 | loads | checkpoint manifest loads removed per recovery pass | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T064743Z.json` | mixed | mixed |
+| `ca.rec_manifest_loads_removed` | 6 | loads | checkpoint manifest loads removed per recovery pass | `bench/receipts/context-advantage-20261113T061907Z.json, bench/receipts/context-advantage-20261113T070714Z.json` | mixed | mixed |
 <!-- END GENERATED:perf-catalog-context-advantage -->
 
 ## Historical quotations

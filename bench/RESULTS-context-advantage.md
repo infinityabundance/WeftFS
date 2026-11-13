@@ -7,12 +7,13 @@ optimizations constant. Frozen contract:
 (version 2; see §6 for the one correction), committed before the court produced
 any measurement.
 
-Receipt: `bench/receipts/context-advantage-20261113T064743Z.json` (R28, stamp
-`20261113T064743Z`, WeftFS `5752a833bd99`), superseding the R27 receipt
+Receipt: `bench/receipts/context-advantage-20261113T070714Z.json` (R28, stamp
+`20261113T070714Z`, WeftFS `923c7bc4d187`), superseding the R28 runs
+`...T064743Z`, `...T064629Z` and `...T064310Z`, the R27 receipt
 `context-advantage-20261113T061907Z.json` and the R26 receipt
 `context-advantage-20261113T054528Z.json`; all are retained, and §12 lists the
 runs that are not cited. The reduced three-repetition configuration the
-aggregate court runs is `context-advantage-20261113T064832Z.json`. Every number
+aggregate court runs is `context-advantage-20261113T070956Z.json`. Every number
 below is generated from the current receipt by `scripts/perf_numbers.py`.
 
 ---
@@ -22,8 +23,8 @@ below is generated from the current receipt by `scripts/perf_numbers.py`.
 <!-- BEGIN GENERATED:context-advantage-verdict (scripts/perf_numbers.py) -->
 **Safety:** W refused **56 of 56** declared cross-scope probes and returned **0** bytes; N accepted **48** and returned the wrong payload **48** times; M accepted **0** but read **766,026** B over **48** requests to refuse the ones its five-dimension key could not distinguish.
 **Availability:** after the metadata database was removed, M reused **0 of 16** pages and W reused **16 of 16** byte-exactly.
-**Fast path, declared tolerance measured and failed:** W **169.6** µs p50 against N's **29.0** µs = **5.85×** (declared ≤ 2.0×); W **232.7** µs p95 against N's **32.0** µs = **7.28×** (declared ≤ 2.5×); W reads **0.431×** N's backend bytes per request (declared ≤ 1.10×).
-**Recovery:** W and M both materialize **270,336** B for the identical demanded output set; W reads **1.12×** M's backend bytes (**321,343** B against **286,540** B) and takes **3.24×** M's wall time, after resolving the checkpoint manifest once per pass instead of once per demanded tensor.
+**Fast path, declared tolerance measured and failed:** W **169.2** µs p50 against N's **29.3** µs = **5.78×** (declared ≤ 2.0×); W **239.1** µs p95 against N's **32.8** µs = **7.29×** (declared ≤ 2.5×); W reads **0.431×** N's backend bytes per request (declared ≤ 1.10×).
+**Recovery:** W and M both materialize **270,336** B for the identical demanded output set; W reads **1.12×** M's backend bytes (**321,343** B against **286,540** B) and takes **3.21×** M's wall time, after resolving the checkpoint manifest once per pass instead of once per demanded tensor.
 **Only one capability claim survives:** provenance-safe reuse that outlives the application's metadata database, and a refusal that reads nothing. Every performance claim in this court failed or tied.
 <!-- END GENERATED:context-advantage-verdict -->
 
@@ -126,8 +127,8 @@ holds every sample.
 <!-- BEGIN GENERATED:context-advantage-a (scripts/perf_numbers.py) -->
 | measure | N | M | W |
 |---|---:|---:|---:|
-| fast-path p50 (µs) | 29.0 | 104.1 | 169.6 |
-| fast-path p95 (µs) | 32.0 | 113.8 | 232.7 |
+| fast-path p50 (µs) | 29.3 | 104.4 | 169.2 |
+| fast-path p95 (µs) | 32.8 | 123.7 | 239.1 |
 | backend bytes per fast-path request | 65,699 | 31,918 | 28,313 |
 | compatible reads byte-exact | 64 / 64 | 64 / 64 | 64 / 64 |
 | cross-scope probes accepted | 48 | 0 | 0 |
@@ -138,11 +139,11 @@ holds every sample.
 | logical bytes returned on a refusal | 3,145,728 | 0 | 0 |
 | compatible reuse after metadata loss | 16 / 16 | 0 / 16 | 16 / 16 |
 | build commits for the same workload | 8 | 10 | 8 |
-| page build wall (ms) | 113.8 | 144.0 | 118.3 |
+| page build wall (ms) | 116.5 | 144.0 | 123.9 |
 | physical footprint (B) | 544,093 | 287,151 | 268,004 |
-| peak RSS (KiB) | 20,600 | 18,044 | 22,980 |
+| peak RSS (KiB) | 20,120 | 17,976 | 23,020 |
 
-Measured recompute of one page (the same scalar kernel in every arm): **2,121.9 µs**. The workload was 8 pages of 65,536 logical bytes and 56 cross-scope probes.
+Measured recompute of one page (the same scalar kernel in every arm): **2,123.6 µs**. The workload was 8 pages of 65,536 logical bytes and 56 cross-scope probes.
 <!-- END GENERATED:context-advantage-a -->
 
 Per-variant detail, by arm (accepted / denied / backend bytes read):
@@ -246,9 +247,9 @@ reads), and proves a forged shard root or byte length still fails `Corrupt`.
 | checkpoint manifest loads | 0 | 0 | 1 |
 | logical bytes materialized | 3,219,456 | 270,336 | 270,336 |
 | backend bytes read | 3,235,591 | 286,540 | 321,343 |
-| wall time (ms) | 2.692 | 0.397 | 1.283 |
+| wall time (ms) | 2.576 | 0.407 | 1.305 |
 
-For the same output set W reads **1.12×** M's backend bytes and takes **3.24×** M's wall time. N's row is the full restore the contract lets it do. The fixture is 96 tensors of 32,768 B, two activation blobs and one derived artifact.
+For the same output set W reads **1.12×** M's backend bytes and takes **3.21×** M's wall time. N's row is the full restore the contract lets it do. The fixture is 96 tensors of 32,768 B, two activation blobs and one derived artifact.
 <!-- END GENERATED:context-advantage-b -->
 
 All three arms returned a byte-identical digest of the demanded output set in
@@ -279,8 +280,8 @@ many checkpoint manifests the arm loads, and where the wall goes.
 | manifest reads | 99 | 10 | 28 |
 | checkpoint manifest loads | 0 | 0 | 1 |
 | backend bytes | 3,235,591 | 286,540 | 321,343 |
-| wall (headline pass, ms) | 2.692 | 0.397 | 1.283 |
-| wall (instrumented second pass, ms) | 2.52 | 0.37 | 1.20 |
+| wall (headline pass, ms) | 2.576 | 0.407 | 1.305 |
+| wall (instrumented second pass, ms) | 2.57 | 0.38 | 1.21 |
 
 W reads the same number of objects as M and now loads the checkpoint manifest **once** per pass instead of once per demanded tensor. The whole byte gap against M is **34,803 B** (**5,800 B** per demanded tensor), which is the per-shard tensor metadata the checkpoint path reads to verify each shard's content root and its own logical root; M's flat JSON manifest has no per-shard identity to verify.
 <!-- END GENERATED:context-advantage-recovery-ledger -->
@@ -298,7 +299,7 @@ quantified: what the duplicated manifest read was worth, and what is left.
 | of which the checkpoint manifest object | 45,197 |
 | of which the manifest blob describing its single chunk | 163 |
 
-The **6** eliminated loads of **45,360 B** each are the whole **272,160 B** reduction, and the ledger's section counts agree (`blob_io_manifest` 28 against R27's 34). What is left is decode and root recomputation, not metadata: W's per-output restore p50 is **97.23 µs** against M's **24.48 µs** over **9** outputs.
+The **6** eliminated loads of **45,360 B** each are the whole **272,160 B** reduction, and the ledger's section counts agree (`blob_io_manifest` 28 against R27's 34). What is left is decode and root recomputation, not metadata: W's per-output restore p50 is **97.87 µs** against M's **24.70 µs** over **9** outputs.
 <!-- END GENERATED:context-advantage-recovery-fix -->
 
 The remaining per-output cost is decode, not metadata, and it is the same
@@ -333,14 +334,14 @@ than N rather than more, so C3 passes under both.
 <!-- BEGIN GENERATED:context-advantage-c (scripts/perf_numbers.py) -->
 | measure | N | M | W | declared limit |
 |---|---:|---:|---:|---:|
-| p50 (µs) | 29.0 | 104.1 | 169.6 | W ≤ 2.0× N |
-| p95 (µs) | 32.0 | 113.8 | 232.7 | W ≤ 2.5× N |
+| p50 (µs) | 29.3 | 104.4 | 169.2 | W ≤ 2.0× N |
+| p95 (µs) | 32.8 | 123.7 | 239.1 | W ≤ 2.5× N |
 | backend bytes per request | 65,699 | 31,918 | 28,313 | W ≤ 1.10× N |
 
 | ratio to N | M | W |
 |---|---:|---:|
-| p50 | 3.59× | 5.85× |
-| p95 | 3.56× | 7.28× |
+| p50 | 3.57× | 5.78× |
+| p95 | 3.77× | 7.29× |
 | backend bytes per request | | 0.431× |
 <!-- END GENERATED:context-advantage-c -->
 
@@ -359,25 +360,25 @@ another, so the rows add up.
 <!-- BEGIN GENERATED:context-advantage-ledger (scripts/perf_numbers.py) -->
 | phase, µs per fast-path read | N | W |
 |---|---:|---:|
-| path resolution | 0.98 | 1.16 |
-| object-record lookup | — | 0.23 |
-| descriptor decode + identity | — | 0.15 |
-| capability envelope + grants | — | 0.16 |
+| path resolution | 1.01 | 1.21 |
+| object-record lookup | — | 0.24 |
+| descriptor decode + identity | — | 0.16 |
+| capability envelope + grants | — | 0.17 |
 | POSIX / ACL | — | 0.06 |
-| manifest read (I/O) | 1.56 | 1.74 |
-| manifest hash | 0.25 | 0.26 |
-| manifest decode | 0.78 | 0.95 |
-| object read (I/O) | 2.32 | 2.39 |
-| object blob hash | 10.52 | 9.64 |
-| chunk assembly | 0.54 | 0.22 |
-| whole-content verification | 10.52 | 9.62 |
-| frame parse + checksum | — | 0.87 |
-| payload decode | — | 150.61 |
-| exactness compare | 0.86 | 0.91 |
-| **instrumented wall** | **29.28** | **183.68** |
-| unnamed residual (wall minus the rows, per repetition) | 0.92 | 4.49 |
+| manifest read (I/O) | 1.50 | 1.90 |
+| manifest hash | 0.25 | 0.25 |
+| manifest decode | 0.77 | 1.00 |
+| object read (I/O) | 2.34 | 2.17 |
+| object blob hash | 10.48 | 9.65 |
+| chunk assembly | 0.54 | 0.23 |
+| whole-content verification | 10.48 | 9.61 |
+| frame parse + checksum | — | 0.90 |
+| payload decode | — | 154.60 |
+| exactness compare | 0.85 | 0.94 |
+| **instrumented wall** | **29.15** | **187.59** |
+| unnamed residual (wall minus the rows, per repetition) | 0.92 | 4.68 |
 
-W's whole authorization preamble — object record, descriptor, capability, POSIX — is **0.61 µs** per read. The instrumented ledger runs **154.40 µs** per read above N's, and **0.89×** the uninstrumented W p50 is a single phase: the payload decode.
+W's whole authorization preamble — object record, descriptor, capability, POSIX — is **0.63 µs** per read. The instrumented ledger runs **158.44 µs** per read above N's, and **0.91×** the uninstrumented W p50 is a single phase: the payload decode.
 <!-- END GENERATED:context-advantage-ledger -->
 
 The ledger is instrumented, and the profiler is not free: it takes a global lock
@@ -430,14 +431,14 @@ same page:
 <!-- BEGIN GENERATED:context-advantage-decode (scripts/perf_numbers.py) -->
 | mode-19 decode, in memory | p50 µs |
 |---|---:|
-| byte planes: `huffman-canonical-v1` unpack + word join | 103.69 |
-| reconstructed-page hash | 10.45 |
-| descriptor parse | 10.19 |
-| descriptor identity (re-encode + hash) | 4.89 |
-| not covered by those four (decode buffers, first touch) | 1.49 |
-| **whole mode-19 decode** | **130.71** |
+| byte planes: `huffman-canonical-v1` unpack + word join | 103.61 |
+| reconstructed-page hash | 10.49 |
+| descriptor parse | 10.40 |
+| descriptor identity (re-encode + hash) | 4.85 |
+| not covered by those four (decode buffers, first touch) | 1.29 |
+| **whole mode-19 decode** | **130.64** |
 
-The same page as a mode-12 frame decodes in **116.9 µs**, so the provenance descriptor itself is **1.118×** the decode it wraps, and the frame is **1.90 %** larger. What fills the rest is the byte-plane codec the wire format fixes for modes 9–19, not the context plane's logic.
+The same page as a mode-12 frame decodes in **116.7 µs**, so the provenance descriptor itself is **1.119×** the decode it wraps, and the frame is **1.90 %** larger. What fills the rest is the byte-plane codec the wire format fixes for modes 9–19, not the context plane's logic.
 <!-- END GENERATED:context-advantage-decode -->
 
 So the floor is made of: `huffman-canonical-v1` symbol decode, one hash of the
@@ -462,7 +463,7 @@ Neither compressed arm preserves a raw-read fast path.
 What R28 changed, and what it did not:
 
 <!-- BEGIN GENERATED:context-advantage-r28-delta (scripts/perf_numbers.py) -->
-R28 did not change the fast path. W's p50 is **169.6 µs** against R27's **169.7 µs** and p95 **232.7 µs** against **232.3 µs** (R27 receipt `context-advantage-20261113T061907Z`), so the ratio to N is **5.85×** at p50 and **7.28×** at p95 and the declared **2.0×** / **2.5×** is still missed. What R28 changed is recovery: W's backend bytes fell from **593,503 B** to **321,343 B** and its wall from **3.340 ms** to **1.283 ms**.
+R28 did not change the fast path. W's p50 is **169.2 µs** against R27's **169.7 µs** and p95 **239.1 µs** against **232.3 µs** (R27 receipt `context-advantage-20261113T061907Z`), so the ratio to N is **5.78×** at p50 and **7.29×** at p95 and the declared **2.0×** / **2.5×** is still missed. What R28 changed is recovery: W's backend bytes fell from **593,503 B** to **321,343 B** and its wall from **3.340 ms** to **1.305 ms**.
 <!-- END GENERATED:context-advantage-r28-delta -->
 
 ### 6.3 The representation question — asked, answered, and not yet built
@@ -487,10 +488,10 @@ same process:
 <!-- BEGIN GENERATED:context-advantage-representation (scripts/perf_numbers.py) -->
 | payload step, same page, in memory | p50 µs | MB/s |
 |---|---:|---:|
-| shipped: `huffman-canonical-v1` byte planes (modes 9-19) | 103.69 | 632.0 |
-| floor of a raw payload: one allocation and one copy of the same bytes | 0.68 | 96,234.9 |
+| shipped: `huffman-canonical-v1` byte planes (modes 9-19) | 103.61 | 632.5 |
+| floor of a raw payload: one allocation and one copy of the same bytes | 0.70 | 93,489.3 |
 
-The shipped payload step is **152.3×** the copy on the same 65,536 B. The copy is a floor, not a shipped codec: the wire format fixes `huffman-canonical-v1` for modes 9-19, so no provenance-bound page with a raw payload exists to measure end to end. **The storage delta of this receipt is zero**: no representation changed, the eight pages re-encode to the same 225,201 B of mode-19 frames, and the store footprint is unchanged from R27. Whether replacing the payload step alone would meet C1 is not established here — the store path's Huffman cost is bounded only between the in-memory row above and the ledger's payload-decode row, which also contains the page hash, the descriptor parse and the descriptor identity a raw representation would still pay. The design is `docs/KV-PROV-REPRESENTATION.md`; it is not implemented and nothing here claims it would win.
+The shipped payload step is **147.8×** the copy on the same 65,536 B. The copy is a floor, not a shipped codec: the wire format fixes `huffman-canonical-v1` for modes 9-19, so no provenance-bound page with a raw payload exists to measure end to end. **The storage delta of this receipt is zero**: no representation changed, the eight pages re-encode to the same 225,201 B of mode-19 frames, and the store footprint is unchanged from R27. Whether replacing the payload step alone would meet C1 is not established here — the store path's Huffman cost is bounded only between the in-memory row above and the ledger's payload-decode row, which also contains the page hash, the descriptor parse and the descriptor identity a raw representation would still pay. The design is `docs/KV-PROV-REPRESENTATION.md`; it is not implemented and nothing here claims it would win.
 <!-- END GENERATED:context-advantage-representation -->
 
 **The decision.** Report the design, do not implement it blind. The wire format
@@ -520,7 +521,7 @@ in memory as a mode-12 frame (payload, no provenance) and as a mode-19 frame
 (payload plus provenance), repeatedly, in the same process.
 
 <!-- BEGIN GENERATED:context-advantage-provenance (scripts/perf_numbers.py) -->
-Mode-12 decode p50 **116.9 µs**, mode-19 **130.7 µs**, ratio **1.118×**. At the eight-page scale the mode-19 frames are **225,201 B** against **221,001 B** for the same pages as mode-12 frames: **+1.90 %**, which is the descriptor.
+Mode-12 decode p50 **116.7 µs**, mode-19 **130.6 µs**, ratio **1.119×**. At the eight-page scale the mode-19 frames are **225,201 B** against **221,001 B** for the same pages as mode-12 frames: **+1.90 %**, which is the descriptor.
 <!-- END GENERATED:context-advantage-provenance -->
 
 So the descriptor, the identity derivation and the field-by-field cross-check
@@ -652,8 +653,8 @@ reproduces every structural result and the same failed fast-path gate.
 | `20261113T061016Z` | full | **not cited, deleted.** Produced from a working tree before the fix was committed, so `environment.revisions.WeftFS` named a tree that did not contain the code it measured. A receipt whose revision field cannot reproduce it is not evidence; it is not kept. |
 | `20261113T061410Z` | full | superseded: same code as the cited run, before the aggregated receipt carried the mode-19 decode split. Cited by §6.2's regression only through the R26 receipt, never for a ledger number. |
 | `20261113T061527Z` | reduced | superseded by `...T061953Z`; same structural results and the same failed gate. |
-| `20261113T061907Z` | full | **the cited receipt.** |
-| `20261113T061953Z` | reduced | **the cited reduced receipt** for the aggregate court. |
+| `20261113T061907Z` | full | the R27 receipt; now superseded by `...T064743Z`, and still the "before" side of every R28 before/after comparison. |
+| `20261113T061953Z` | reduced | the R27 reduced receipt; superseded by `...T064832Z`. |
 
 Every structural result is identical across these runs: 56/56 refusals with 0
 backend bytes and 0 bytes returned, 64/64 exact fast-path reads in every arm,
@@ -666,9 +667,11 @@ recovery bytes. Only the current receipt is cited by the generated numbers.
 |---|---|---|
 | `20261113T064310Z` | full | superseded: the manifest-reuse W arm, before the receipt named the manifest object's size and the per-output restore latency. Its structural results match the cited run. |
 | `20261113T064629Z` | full | superseded by `...T064743Z` only by a field rename (`manifest_blob_bytes` → `manifest_object_bytes`) on the same code path; every measured value is identical. |
-| `20261113T064743Z` | full | **the cited receipt.** |
-| `20261113T064832Z` | reduced | **the cited reduced receipt** for the aggregate court; reproduces every structural result and the same failed fast-path gate. |
+| `20261113T064743Z` | full | superseded: same code path, before the receipt's `losses` array stopped describing the manifest re-read that R28 removed; every structural result matches the cited run. |
+| `20261113T064832Z` | reduced | superseded by `...T070956Z`; same structural results and the same failed gate. |
+| `20261113T070714Z` | full | **the cited receipt.** |
+| `20261113T070956Z` | reduced | **the cited reduced receipt** for the aggregate court; reproduces every structural result and the same failed fast-path gate. |
 
-The R28 runs are the first ones the W arm performs with the checkpoint manifest
-resolved once; the recovery byte and wall values above them are not comparable
-to the R27 rows and are never averaged with them.
+The R28 runs are the first ones in which the W arm resolves the checkpoint
+manifest once; their recovery byte and wall values are not comparable with the
+R27 rows and are never averaged with them.

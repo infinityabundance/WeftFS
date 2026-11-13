@@ -10222,13 +10222,14 @@ write is now durability-bound, not encode-bound.
     come from caching decoded pages.
 
 - 2026-11-13 (R28, the recovery manifest resolved once, and the representation
-  question answered): parent `staging` `5752a83` (code `c45d5de`, harness and
-  contract `dd4a027`, receipt fields `ee13bc5`, field name `5752a83`);
+  question answered): parent `staging` `923c7bc` (code `c45d5de`, harness and
+  contract `dd4a027`, receipt fields `ee13bc5`, field name `5752a83`, loss text
+  `923c7bc`);
   submodules unchanged. Evidence: receipt
-  `bench/receipts/context-advantage-20261113T064743Z.json` (stamp
-  `20261113T064743Z`, WeftFS `5752a833bd990131140d2b345400626377bc0390`, label
+  `bench/receipts/context-advantage-20261113T070714Z.json` (stamp
+  `20261113T070714Z`, WeftFS `923c7bc4d1871ef0ba66faeb8cac87994fae3503`, label
   `full`, 7 interleaved reps), reduced three-rep receipt
-  `bench/receipts/context-advantage-20261113T064832Z.json`; analysis
+  `bench/receipts/context-advantage-20261113T070956Z.json`; analysis
   `bench/RESULTS-context-advantage.md`, design
   `docs/KV-PROV-REPRESENTATION.md`. Measurement validity **pass**,
   **`claim_holds: false`**.
@@ -10247,14 +10248,14 @@ write is now durability-bound, not encode-bound.
     measured saving (only the manifest read), wrong-checkpoint refusal, forged
     shard root and byte length both `Corrupt`, pinned manifest equals live.
   * **Measured recovery, before and after** (same court, same fixture; R27
-    receipt `...T061907Z`, R28 `...T064743Z`): W backend bytes **593,503 →
-    321,343**, wall **3.340 → 1.283 ms**, checkpoint manifest loads **6 → 1**,
+    receipt `...T061907Z`, R28 `...T070714Z`): W backend bytes **593,503 →
+    321,343**, wall **3.340 → 1.305 ms**, checkpoint manifest loads **6 → 1**,
     manifest-blob read sections **34 → 28**. The removed **272,160 B** is exactly
     six loads of **45,360 B** (the 45,197 B manifest object plus the 163 B
     manifest blob describing its single chunk). Gap against M: **306,963 →
-    34,803 B** (**2.07× → 1.12×**), wall **8.32× → 3.24×** M. Materialized
+    34,803 B** (**2.07× → 1.12×**), wall **8.32× → 3.21×** M. Materialized
     bytes were and remain identical (270,336 B). What is left is decode and
-    root recomputation, measured per output: W **97.23 µs** vs M **24.48 µs**.
+    root recomputation, measured per output: W **97.87 µs** vs M **24.70 µs**.
   * **Contract reconciled (task 4).** `bench/CONTRACTS-context-advantage.md` is
     now version 2: §3 C3 printed 1.25× while the harness declared and enforced
     1.10× in every receipt since R26. The document was corrected to the enforced,
@@ -10267,8 +10268,8 @@ write is now durability-bound, not encode-bound.
     provenance dimensions exist only in mode 19, and tensor/raw store strategies
     carry a tensor logical root, not provenance. So a page cannot carry mode-19
     identity with a raw payload today. Measured payload step on the same page:
-    Huffman planes **103.69 µs** / **632.0 MB/s**, one-allocation-plus-copy floor
-    **0.68 µs** / **96,234.9 MB/s** (ratio **152.3×**). **Storage delta of this
+    Huffman planes **103.61 µs** / **632.5 MB/s**, one-allocation-plus-copy floor
+    **0.70 µs** / **93,489.3 MB/s** (ratio **147.8×**). **Storage delta of this
     receipt: zero** — no representation changed, the pages re-encode to the same
     225,201 B of mode-19 frames and the store footprint is unchanged.
   * **Decision on the format.** Report the design, do not implement it blind.
@@ -10289,13 +10290,13 @@ write is now durability-bound, not encode-bound.
     wrong payload **48** times. After the metadata database is removed M reuses
     **0/16**, W **16/16** byte-exactly. Happy path **64/64** byte-exact in every
     arm; recovery materializes the same 270,336 B in M and W.
-  * **Fast path, still failed and not re-framed.** W p50 **169.6 µs** vs N
-    **29.0 µs** = **5.85×** (declared ≤ 2.0×), p95 **232.7 µs** vs **32.0 µs** =
-    **7.28×** (declared ≤ 2.5×), backend bytes **0.431×** (declared ≤ 1.10×, so
+  * **Fast path, still failed and not re-framed.** W p50 **169.2 µs** vs N
+    **29.3 µs** = **5.78×** (declared ≤ 2.0×), p95 **239.1 µs** vs **32.8 µs** =
+    **7.29×** (declared ≤ 2.5×), backend bytes **0.431×** (declared ≤ 1.10×, so
     C3 passes). The tolerance was not widened and no metric changed. The floor
     is the representation plus the plane's normative per-read verification, and
     that is now stated in those words.
-  * Gates at `5752a83`: `cargo test --all-targets` **173 suites / 819 passed /
+  * Gates at `923c7bc`: `cargo test --all-targets` **173 suites / 819 passed /
     0 failed / 0 ignored**; `cargo test --features fuse --all-targets` **173
     suites / 862 passed / 0 failed / 2 pre-existing ignored**;
     `scripts/check-claims.sh` **1079/1079**; `scripts/perf_numbers.py --check`
@@ -10312,5 +10313,5 @@ write is now durability-bound, not encode-bound.
     verifies more; one host, one backend, no fleet/cloud/media/power-loss claim.
   * Two comments written after the cited run (`src/checkpoint.rs` and the court's
     W arm) drop a fixture-specific size from their prose; they change no code,
-    so the cited revision `5752a83` and the current tree differ only in comment
+    so the cited revision `923c7bc` and the current tree differ only in comment
     text.
