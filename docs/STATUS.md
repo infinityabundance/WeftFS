@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,099** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,105** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10596,3 +10596,63 @@ development host.
   rustfmt and clippy backlogs remain open, as does the deny-by-default lint in
   `tests/packs.rs`. `scripts/check-commit-identity.sh` does not exist in this
   tree, so the guards job does not invoke it.
+
+## Subphase X13/N14 — Azure MW2 mixed-language and ambiguous-success histories (2026-11-13)
+
+The question was not whether Azure MW2 compiles or passes its own unit tests —
+it did — but whether *independent Rust and Go writer processes* can share one
+Azure-compatible store safely under the failure modes the protocol claims to
+handle. The pin was Azurite 3.35.0
+(`mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`),
+a sibling container under the unchanged court limits. **Azurite is not Azure**:
+service-version acceptance, block-blob limits, listing paging, replication,
+media and cloud failure modes are not exercised, and no cloud, fleet,
+power-loss, media or serving claim is made. MW1 remains the default; every
+writer opens with `--writer-mode optimistic`.
+
+* **New court.** `scripts/azure_mw2_court.sh` (host half) with
+  `bench/scripts/azure_mw2_inner_court.py` and
+  `bench/scripts/azure_mw2_proxy.py` (inside the dual-toolchain `fuse` court)
+  runs eight scenarios: disjoint mixed writers; conflicting mixed writers on one
+  name; ambiguous success on the conditional head write in both
+  kill/resolve directions; fenced takeover with a suspended stale writer in both
+  languages; a held reader that must never observe a newer generation;
+  concurrent GC with mixed writers and a snapshot root; fail-closed mode
+  detection against an endpoint that drops `If-Match` or `If-None-Match`
+  (re-signed by the harness proxy, never by weakening the client); and
+  cross-language verification plus deterministic parity. The counted table is
+  generated from the receipt in
+  [`bench/RESULTS-azure-mw2.md`](../bench/RESULTS-azure-mw2.md).
+  Positive receipt `azure-mw2-20261113T095300Z.json` at WeftFS `bcbfb2d` /
+  WeftFS-Go `61ac5c9`: every scenario and every check passed.
+* **Defect 1 (S1, first run), fixed at the root.** Both Azure `tmp/` sweeps
+  deleted every blob under `tmp/` and ignored the grace argument, assuming the
+  writer lock was held. An optimistic open holds none, so concurrent writers
+  deleted each other's live capability probes and four Rust writers each
+  refused a healthy Azurite as `UnsupportedVersion`. The sweep is now age-gated
+  by `Last-Modified`, and an entry whose age cannot be established is kept. The
+  same defect exists in Go (`61ac5c9`) and the identical un-gated pattern
+  remains in the Rust and Go S3/GCS sweeps (recorded as a residual, not fixed
+  here).
+* **Defect 2 (S6, first run), fixed at the root.** `AzureBackend::modified`
+  returned `None` because the crate had no HTTP-date parser, so the GC age gate
+  always measured zero and a sweep on Azure could never reclaim anything.
+  `modified` now `HEAD`s `Last-Modified` and parses RFC 1123 with a new
+  `parse_rfc1123_secs`/`days_from_civil` pair.
+* **Negative result retained.** With the sweep grace at 1 s — shorter than a
+  transaction's prepare-to-publish interval — a concurrent pass reclaims
+  prepared blobs and a committed generation becomes unreadable. Receipt
+  `azure-mw2-20261113T094900Z.json`, same two revisions, one variable changed.
+  The court therefore ages its garbage past a 10 s window instead of relaxing
+  any check, and the results document states the operational contract: size
+  `gc_grace_secs` above transaction latency, or collect while quiescent. MW2 GC
+  has no exclusive coordinator.
+* **Verification run.** Rust `cargo test --all-targets` 819 passed / 0 failed /
+  0 ignored; the existing Azure court re-ran unchanged (`22` backend, `9`
+  fencing, Go `TestAzure*`, same image digest); WeftFS-Go `go test -race
+  ./store/...` passes. `scripts/verify-all.sh` was **not** rerun; the cited
+  aggregate stays `verify-20261113T033408Z.json` (47/47) until the next
+  aggregate, which now carries `azure_mw2` as court 48 with its own skip path.
+* **Not proven.** No live Azure/GCS/S3 run; process faults only, not power loss;
+  S4 is the fenced *lease* (MW1) and not two MW2 committers racing; no
+  per-operation latency is claimed.

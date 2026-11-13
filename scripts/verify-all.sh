@@ -241,6 +241,18 @@ run_orchestrated_court ceph_rgw ceph_court env WEFT_COMPAT_STAMP="$stamp" bash s
 # as ceph_rgw apply.
 run_orchestrated_court s3_court s3_court env WEFT_COMPAT_STAMP="$stamp" bash scripts/s3_court.sh
 
+# X13/N14 Azure MW2 mixed-language court: one pinned Azurite sidecar and the
+# eight S1-S8 scenarios (Rust and Go writer processes, ambiguous conditional
+# head writes, fenced takeover, stale readers, concurrent GC, fail-closed mode
+# detection, cross-language verification). The full configuration is the
+# standalone one; it costs about half a minute plus the cached build. A host
+# without Docker, or one that cannot obtain the pinned image, prints exactly one
+# `azure_mw2_court: skip <reason>` line and exits 78; the aggregate records a
+# skip, never a pass. Evidence: `bench/RESULTS-azure-mw2.md` and the
+# `azure-mw2-<stamp>.json` receipts.
+run_orchestrated_court azure_mw2 azure_mw2_court \
+  env WEFT_AZURE_MW2_STAMP="$stamp" bash scripts/azure_mw2_court.sh
+
 # R3 same-backend augmentation court. The aggregate uses its explicit reduced
 # configuration: 16 evenly spaced non-embedding tensors (1,849,344 logical
 # bytes, no 272 MB embedding), configurations A/B/C/D/E plus the supplementary

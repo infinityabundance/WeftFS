@@ -11700,5 +11700,68 @@
   ],
   "receipt": null,
   "kind": "absent"
+ },
+ {
+  "id": "azure_mw2_court_current",
+  "claim": "The X13/N14 Azure MW2 mixed-language court passes every scenario and every check against the pinned Azurite emulator.",
+  "value": "azure-mw2-20261113T095300Z.json",
+  "locations": [
+   "bench/RESULTS-azure-mw2.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/azure-mw2-20261113T095300Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "azure_mw2_negative_receipt",
+  "claim": "The short-grace Azure MW2 run is retained as a negative result, not deleted.",
+  "value": "azure-mw2-20261113T094900Z.json",
+  "locations": [
+   "bench/RESULTS-azure-mw2.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/azure-mw2-20261113T094900Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "azure_mw2_mw1_default",
+  "claim": "Azure MW2 remains opt-in: the court labels the flag every writer uses and does not enable MW2 by default.",
+  "value": "`--writer-mode optimistic`",
+  "locations": [
+   "bench/RESULTS-azure-mw2.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "azure_mw2_azurite_not_azure",
+  "claim": "The Azure MW2 court records that Azurite is an emulator and not Azure.",
+  "value": "Azurite is not Azure",
+  "locations": [
+   "bench/RESULTS-azure-mw2.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "azure_mw2_sweep_fix",
+  "claim": "The Azure tmp/ sweep is age-gated, so a concurrent optimistic open cannot delete another writer's live capability probe.",
+  "value": "age-gated",
+  "locations": [
+   "bench/RESULTS-azure-mw2.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "azure_mw2_gc_age_fix",
+  "claim": "Azure's Last-Modified is implemented so the GC age gate can expire; before the fix a sweep reclaimed nothing.",
+  "value": "parse_rfc1123_secs",
+  "locations": [
+   "bench/RESULTS-azure-mw2.md"
+  ],
+  "receipt": null,
+  "kind": "present"
  }
 ]
