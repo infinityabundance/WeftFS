@@ -487,6 +487,69 @@ fn republishing_an_acknowledged_fragment_is_idempotent() {
 }
 
 // ---------------------------------------------------------------------------
+// A publication failure is an error, never a hang
+// ---------------------------------------------------------------------------
+
+/// The early-barrier thread exits only when the publisher closes its queue. A
+/// publisher that returns on an error path without closing it would leave the
+/// scope joining a parked thread forever, turning a provider error into a
+/// hang. This test forces a deterministic publication failure (a declared
+/// 4 KiB object bound) and requires the pipeline to return that error.
+#[test]
+fn a_failed_publication_returns_an_error_instead_of_hanging() {
+    let dir = tempdir().unwrap();
+    let mut capabilities = BackendKind::Local.capabilities();
+    // Large enough for FORMAT/LOCK/commit records/advisory index segments,
+    // far too small for a 1 MiB tensor's manifest frame.
+    capabilities.max_object_bytes = 64 * 1024;
+    let kind = BackendKind::Posix { capabilities };
+    let root = dir.path().join("store");
+    let mut store = Store::init_with_backend(&root, opts(), kind).unwrap();
+    let root_id = store.resolve_path("/").unwrap();
+    let tensors_dir = store
+        .mkdir_seeded(root_id, b"tensors", 0o755, 0, 0, b"tensors-dir")
+        .unwrap();
+    let _ = tensors_dir;
+    let fixtures = fixture();
+    let tensors: Vec<TensorPipelineTensor<'_>> = fixtures
+        .iter()
+        .map(|item| TensorPipelineTensor {
+            name: item.name,
+            dtype: item.dtype,
+            shape: &item.shape,
+            seed: seed_for(item.name),
+            byte_len: item.bytes.len() as u64,
+        })
+        .collect();
+    let read = |index: usize, buf: &mut [u8]| -> weftfs::Result<()> {
+        buf.copy_from_slice(&fixtures[index].bytes);
+        Ok(())
+    };
+    let mut options = TensorPipelineOptions::default();
+    options.encode_threads = 4;
+    options.cpu_tokens = 2;
+    let started = std::time::Instant::now();
+    let outcome = store.prepare_tensor_group_pipelined(
+        &tensors,
+        &read,
+        &spec(),
+        &TensorLayoutSpec::row_major(),
+        &options,
+    );
+    let err = match outcome {
+        Ok(_) => panic!("a blob above the declared object bound must fail"),
+        Err(err) => err,
+    };
+    assert_eq!(err.class_name(), "LimitExceeded", "unexpected error: {err}");
+    assert!(
+        started.elapsed() < std::time::Duration::from_secs(30),
+        "the failed pipeline returned without hanging"
+    );
+    // Nothing was committed, so the store still opens and verifies.
+    assert!(store.verify(true).unwrap().ok);
+}
+
+// ---------------------------------------------------------------------------
 // Object and local namespaces publish the same logical state
 // ---------------------------------------------------------------------------
 

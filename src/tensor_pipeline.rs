@@ -699,6 +699,14 @@ impl Store {
                 let provider_acked_ns = &provider_acked_ns;
                 let publish_sync_kicks = &publish_sync_kicks;
                 scope.spawn(move || {
+                    // The early-barrier thread only exits once the queue is
+                    // closed, so **every** publisher exit path must close it.
+                    // A publication failure returns early; without this guard
+                    // the scope would join a writeback thread parked on the
+                    // condvar forever, turning a provider error into a hang.
+                    // Regression: tests/object_pipeline.rs
+                    // `a_failed_publication_returns_an_error_instead_of_hanging`.
+                    let _closer = CloseWritebackOnDrop(writeback);
                     let mut since_sync: u64 = 0;
                     loop {
                         let item = {
@@ -804,13 +812,9 @@ impl Store {
                         }
                     }
                     // Every published blob is either drained to the writeback
-                    // thread or still in the open batch; closing the queue lets
-                    // the writer finish the drained ones before we return.
-                    {
-                        let mut state = lock_wb(writeback);
-                        state.closed = true;
-                        writeback.cv.notify_all();
-                    }
+                    // thread or still in the open batch; the guard closes the
+                    // queue as this thread returns, which lets the writer finish
+                    // the drained ones before the scope joins.
                 });
             }
         });
@@ -1029,6 +1033,21 @@ fn lock_wb(writeback: &Writeback) -> MutexGuard<'_, WritebackQueue> {
         .queue
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// Close the early-barrier queue when the publisher thread ends, on success and
+/// on an error return alike. The writeback thread's exit condition is
+/// `closed && queue.is_empty()`; a publisher that returned without closing
+/// would leave that thread waiting on the condvar and the scope would never
+/// join.
+struct CloseWritebackOnDrop<'a>(&'a Writeback);
+
+impl Drop for CloseWritebackOnDrop<'_> {
+    fn drop(&mut self) {
+        let mut state = lock_wb(self.0);
+        state.closed = true;
+        self.0.cv.notify_all();
+    }
 }
 
 // ---------------------------------------------------------------------------
