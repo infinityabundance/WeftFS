@@ -118,10 +118,18 @@ FUSE all-targets **850** passed / 0 failed /
 2 ignored (the two pre-existing kernel/`CAP_SETUID` tests);
 WeftCodec **290** passed. The conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`);
-**1,055** claims are audited; `scripts/check-claims.sh`,
+**1,056** claims are audited; `scripts/check-claims.sh`,
 `scripts/perf_numbers.py --check`, spec drift, the conformance manifest/coverage
 and the new `long_description` court all pass.
 <!-- END GENERATED:release-v142-verify -->
+
+Independently of the aggregate, the released wheel was installed into a fresh
+venv in the python court and the Python suite was run from the installed wheel
+rather than the source tree. The receipt
+`bench/receipts/python-installed-wheel-20261113T050840Z.json` records the
+counts, the run time and the installed wheel's digest, and confirms the digest
+is the uploaded build: the run installs `python/dist/` and deliberately does
+not rebuild it, because a Python rebuild here is not bit-reproducible.
 
 ## Artifacts and registry state
 

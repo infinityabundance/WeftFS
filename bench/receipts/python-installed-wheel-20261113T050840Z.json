@@ -1,0 +1,32 @@
+{
+ "schema": "weft.python_installed_wheel.v1",
+ "generated_utc": "20261113T050840Z",
+ "label": "The released 1.4.2 wheel installed into a fresh venv in the python court; the Python suite run from the installed wheel, not the source tree",
+ "environment": {
+  "court": "weft/python-court:1 (image id sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152)",
+  "limits": "memory 3g == swap, 4 cpus, pids 1024, bounded /tmp, no-new-privileges, cap-drop=ALL",
+  "python": "3.12 (court interpreter)",
+  "host_builds": "none"
+ },
+ "artifact": {
+  "name": "weftcodec-1.4.2-py3-none-any.whl",
+  "sha256": "787cc6ca203ea6a6c6285551281833de44b826946968ba3faf3b3d2d9ef2b022",
+  "size_bytes": 115685,
+  "same_as_github_release_asset": true,
+  "source": "python/dist/ in the release tree; the run does not rebuild it"
+ },
+ "command": "/tmp/weft-venv/bin/python -m pytest -p no:cacheprovider -q python/tests (wheel installed with --no-index --no-deps into python3 -m venv --system-site-packages)",
+ "result": {
+  "exit_code": 0,
+  "passed": 437,
+  "skipped": 70,
+  "failed": 0,
+  "duration_s": 45.73,
+  "installed_version_reported": "1.4.2"
+ },
+ "note": "The skips are the documented optional-dependency and environment skips of the suite; none was changed for this run. This receipt exists because the release touched python/pyproject.toml, python/weftcodec/__init__.py and python/README.md, and `scripts/court-receipt.sh` rebuilds a wheel into python/dist (a non-reproducible build that would differ from the uploaded artifact), so the released wheel is installed instead and python/dist is left untouched.",
+ "not_claimed": [
+  "not a rebuild of the artifact; the digest above is the uploaded build",
+  "no GPU/TPU, no distributed JAX/DCP run; the same CPU single-process scope as the other Python courts"
+ ]
+}
