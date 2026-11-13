@@ -554,6 +554,11 @@ carried in the same receipt and **failed**; `claim_holds` is false.
 | `ca.frame_delta_pct` | 1.90 | % | provenance descriptor overhead on frame size | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 | `ca.ratio.w_m_rec_backend` | 2.07 | × | W / M recovery backend bytes | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 | `ca.ratio.w_m_rec_wall` | 8.23 | × | W / M recovery wall | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
+| `ca.n.build_commits` | 8 | commits | N commits published for the same workload | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
+| `ca.m.build_commits` | 10 | commits | M commits published for the same workload | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
+| `ca.w.build_commits` | 8 | commits | W commits published for the same workload | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
+| `ca.tensors` | 96 | tensors | tensors in the recovery fixture | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
+| `ca.tensor_bytes` | 32,768 | B | bytes per recovery tensor | `bench/receipts/context-advantage-20261113T054528Z.json` | 20261113T054528Z | 21a16be12b66 |
 <!-- END GENERATED:perf-catalog-context-advantage -->
 
 ## Historical quotations

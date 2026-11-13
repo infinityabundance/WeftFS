@@ -5324,6 +5324,71 @@
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.w.rec_wall} / {ca.m.rec_wall}"
+  },
+  {
+   "key": "ca.n.build_commits",
+   "label": "N commits published for the same workload",
+   "unit": "commits",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.N.metrics.build_commits.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.m.build_commits",
+   "label": "M commits published for the same workload",
+   "unit": "commits",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.M.metrics.build_commits.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.w.build_commits",
+   "label": "W commits published for the same workload",
+   "unit": "commits",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "arms.W.metrics.build_commits.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.tensors",
+   "label": "tensors in the recovery fixture",
+   "unit": "tensors",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fixture.tensors",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
+  },
+  {
+   "key": "ca.tensor_bytes",
+   "label": "bytes per recovery tensor",
+   "unit": "B",
+   "group": "context-advantage",
+   "format": "int",
+   "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
+   "path": "fixture.tensor_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T054528Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "21a16be12b66ff14756751becbde235961cacbc2"
   }
  ],
  "blocks": [
@@ -7662,6 +7727,9 @@
      "template": "| compatible reuse after metadata loss | {{ca.n.loss_reused}} / {{ca.loss_total}} | {{ca.m.loss_reused}} / {{ca.loss_total}} | {{ca.w.loss_reused}} / {{ca.loss_total}} |"
     },
     {
+     "template": "| build commits for the same workload | {{ca.n.build_commits}} | {{ca.m.build_commits}} | {{ca.w.build_commits}} |"
+    },
+    {
      "template": "| page build wall (ms) | {{ca.n.build_ms}} | {{ca.m.build_ms}} | {{ca.w.build_ms}} |"
     },
     {
@@ -7861,7 +7929,7 @@
      "template": ""
     },
     {
-     "template": "For the same output set W reads **{{ca.ratio.w_m_rec_backend}}\u00d7** M's backend bytes and takes **{{ca.ratio.w_m_rec_wall}}\u00d7** M's wall time. N's row is the full restore the contract lets it do."
+     "template": "For the same output set W reads **{{ca.ratio.w_m_rec_backend}}\u00d7** M's backend bytes and takes **{{ca.ratio.w_m_rec_wall}}\u00d7** M's wall time. N's row is the full restore the contract lets it do. The fixture is {{ca.tensors}} tensors of {{ca.tensor_bytes}} B, two activation blobs and one derived artifact."
     }
    ]
   },
@@ -7920,6 +7988,25 @@
    "file": "docs/PERF-NUMBERS.md",
    "kind": "catalog",
    "group": "context-advantage"
+  },
+  {
+   "id": "context-advantage-tolerances",
+   "file": "bench/RESULTS-context-advantage.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **C1** W p50 \u2264 {{ca.tol.p50}} \u00d7 N p50"
+    },
+    {
+     "template": "* **C2** W p95 \u2264 {{ca.tol.p95}} \u00d7 N p95"
+    },
+    {
+     "template": "* **C3** W backend bytes per request \u2264 {{ca.tol.bytes}} \u00d7 N"
+    },
+    {
+     "template": "* **C4** every fast-path read is byte-exact"
+    }
+   ]
   }
  ]
 }

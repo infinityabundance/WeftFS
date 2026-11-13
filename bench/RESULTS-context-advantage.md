@@ -39,9 +39,9 @@ than the raw floor, for the same reason (see §6).
 byte-exactly, every repetition. There is no correctness advantage to the
 context plane when the caller already knows the scope.
 
-**M ties on materialized bytes.** For the identical demanded output set
-(six tensors, two activations, one derived artifact) M and W both materialize
-exactly the contract's bytes. W does not win by materializing less.
+**M ties on materialized bytes.** For the identical demanded output set M and
+W both materialize exactly the contract's bytes. W does not win by materializing
+less.
 
 **M loses on cross-scope exclusivity and on metadata loss.** M's index key
 covers the five dimensions the brief names; a request that changes
@@ -67,10 +67,9 @@ on decode cost versus both other arms. See §6 and §8.
 | metadata | none | canonical manifest + `app.kv.index.v1` index | the object's own provenance descriptor |
 | reuse check | filename | index hit → blob read → SHA-256 → **all eight** dimensions | descriptor id in the capability envelope, checked **before** the read |
 | subset selection | none (restores everything) | its own manifest | `weft.checkpoint.v1` + causal closure |
-| commits for the same workload | 8 | 10 (8 blobs + index + manifest) | 8 |
 
 Held constant: `BackendKind::Local`, the store's commit protocol and durability
-barrier, `chunk_size` 65,536 B, no decoded-object cache, no single-flight, one
+barrier, the same chunk size, no decoded-object cache, no single-flight, one
 process, one thread, one request at a time, identical logical objects and
 names, identical demanded output set, a fixed store clock, and the unchanged
 Docker court limits (3 GiB / 3 GiB swap / 1024 pids / 4 cpus / bounded `/tmp`).
@@ -82,9 +81,9 @@ differently in practice. §7 isolates it.
 
 ## 4. Experiment A — provenance-safe reuse
 
-Eight pages (4 prefixes × 2 layers, 65,536 logical bytes each) are written under
-the base scope. Seven single-dimension variants are then presented as requests,
-each changing exactly one dimension of the provenance tuple. Only the base
+The fixture writes its page grid under the base scope. Seven single-dimension
+variants are then presented as requests, each changing exactly one dimension of
+the provenance tuple. Only the base
 scope's pages exist, so a correct arm refuses and emits nothing. The payload is
 seeded by the scope, so an arm that returns another scope's page returns
 *different* bytes.
@@ -106,6 +105,7 @@ holds every sample.
 | requests issued while refusing | 96 | 48 | 0 |
 | logical bytes returned on a refusal | 3,145,728 | 0 | 0 |
 | compatible reuse after metadata loss | 16 / 16 | 0 / 16 | 16 / 16 |
+| build commits for the same workload | 8 | 10 | 8 |
 | page build wall (ms) | 113.1 | 143.1 | 118.5 |
 | physical footprint (B) | 544,093 | 287,151 | 268,004 |
 | peak RSS (KiB) | 16,432 | 17,680 | 22,812 |
@@ -188,8 +188,8 @@ receipt labels it that way and no claim is made from it.
 
 ## 5. Experiment B — dependency-aware recovery
 
-A checkpoint of 96 tensors (32,768 B each), two activation blobs and one derived
-artifact that declares the activations as its causal parents. The downstream
+A checkpoint of the recovery fixture's tensors, two activation blobs and one
+derived artifact that declares the activations as its causal parents. The downstream
 operation needs six named tensors, both activations and the derived artifact.
 
 N has no metadata and restores everything. M selects from its own manifest. W
@@ -204,7 +204,7 @@ artifact's causal closure.
 | backend bytes read | 3,235,591 | 286,540 | 593,503 |
 | wall time (ms) | 2.641 | 0.403 | 3.319 |
 
-For the same output set W reads **2.07×** M's backend bytes and takes **8.23×** M's wall time. N's row is the full restore the contract lets it do.
+For the same output set W reads **2.07×** M's backend bytes and takes **8.23×** M's wall time. N's row is the full restore the contract lets it do. The fixture is 96 tensors of 32,768 B, two activation blobs and one derived artifact.
 <!-- END GENERATED:context-advantage-b -->
 
 All three arms returned a byte-identical digest of the demanded output set in
@@ -225,10 +225,12 @@ The critical path is a request that needs no contextual transformation: serve a
 page for a scope the caller already knows is compatible. The tolerance was
 declared in the contract before measurement:
 
+<!-- BEGIN GENERATED:context-advantage-tolerances (scripts/perf_numbers.py) -->
 * **C1** W p50 ≤ 2.0 × N p50
 * **C2** W p95 ≤ 2.5 × N p95
 * **C3** W backend bytes per request ≤ 1.10 × N
 * **C4** every fast-path read is byte-exact
+<!-- END GENERATED:context-advantage-tolerances -->
 
 <!-- BEGIN GENERATED:context-advantage-c (scripts/perf_numbers.py) -->
 | measure | N | M | W | declared limit |
@@ -258,7 +260,7 @@ descriptor cost on top.
 W's fast path mixes three costs: backend I/O, payload decode, and the
 provenance descriptor. The receipt separates them by decoding the *same page*
 in memory as a mode-12 frame (payload, no provenance) and as a mode-19 frame
-(payload plus provenance), eight times each, in the same process.
+(payload plus provenance), repeatedly, in the same process.
 
 <!-- BEGIN GENERATED:context-advantage-provenance (scripts/perf_numbers.py) -->
 Mode-12 decode p50 **116.4 µs**, mode-19 **132.4 µs**, ratio **1.137×**. At the eight-page scale the mode-19 frames are **225,201 B** against **221,001 B** for the same pages as mode-12 frames: **+1.90 %**, which is the descriptor.
