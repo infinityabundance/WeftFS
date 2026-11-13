@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,065** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,070** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10113,3 +10113,109 @@ write is now durability-bound, not encode-bound.
     in every blob and rebuilds its index by scanning is **available and
     untested** — it is the most important open baseline, named in
     `bench/RESULTS-context-advantage.md` §9.
+
+- 2026-11-13 (R27, the fast path attributed, and the duplicated decodes removed):
+  parent `staging` `86c403b` (code + tests, pushed first) and this docs/receipt
+  commit; submodules unchanged. R26 could only say "the frame must be decoded";
+  this session measured where the 187.8 µs went, fixed what the ledger
+  justified, and published the floor that remains. **The declared tolerance is
+  unchanged and the gate still fails.**
+  * Evidence for every number below: receipt
+    `bench/receipts/context-advantage-20261113T061410Z.json` (stamp
+    `20261113T061410Z`, WeftFS `86c403bb91d660470dfdc6377059c8ac9b9105cb`),
+    label `full`, 7 interleaved reps; reduced three-rep receipt
+    `...T061527Z` for the aggregate court. Analysis
+    `bench/RESULTS-context-advantage.md`; every number in that file is emitted
+    from this receipt by `scripts/perf_numbers.py`.
+  * **Instrumentation, benchmark-only.** `src/phase_profile.rs` gained sixteen
+    disjoint read-path phases (path resolution, object-record lookup, descriptor
+    decode + identity, capability envelope + grants, POSIX/ACL, manifest I/O,
+    manifest hash, manifest decode, object I/O, object blob hash, chunk
+    assembly, whole-content verification, frame parse, payload decode, exactness
+    compare). No phase nests inside another, so a ledger sums. The court runs an
+    extra instrumented pass per arm (`fast_path_ledger`) over the same 64 reads
+    and records, per phase, sections / total / µs per read / p50 / p95, plus its
+    own wall and the unnamed residual. `decode_only` was extended to split the
+    mode-19 decode into byte planes, reconstructed-page hash, descriptor parse
+    and descriptor identity.
+  * **The ledger (W, µs per read, medians of seven interleaved reps).** Payload
+    decode dominates at 149.6; object blob hash 9.6, whole-content verification
+    9.6, object I/O 2.2, manifest I/O 1.6, path resolution 1.1, manifest decode
+    0.9, frame parse 0.9, compare 0.9, and the **whole authorization preamble
+    0.6** (record 0.2, descriptor 0.1, capability 0.1, POSIX 0.05). N's entire
+    read is 29.5 µs with the same hash and I/O rows. The instrumented wall is
+    181.4 µs against the headline p50 of 169.5 µs; the ~12 µs difference is the
+    profiler's own global-lock-per-section cost, stated in the results.
+  * **Cause found and fixed: the same immutable descriptor was decoded twice per
+    read.** The stored descriptor was hex-decoded, WCB-decoded, re-encoded and
+    hashed on every read (9.2 µs), and the same capability envelope was decoded
+    twice — once for the tenant/namespace/root grants, again inside
+    `authorize_read` (~5 µs each). Before this session the authorization
+    preamble was ~19 µs of the 187.8 µs; it is now 0.6 µs.
+    * `KvReadCache` (`src/kv_capability.rs`, field on `Store`) keeps the
+      validated descriptor and its id, keyed by the object record's
+      `(id, content, version)`, bounded at 4,096 entries and **dropped whenever
+      the head generation changes** (`fence()`); a hit can only describe the
+      record it was derived from.
+    * The decoded capability scope is kept beside the envelope it came from and
+      is reused **only when that envelope is equal to the caller's**, so a
+      forged `envelope_id`/`blob_id` cannot borrow another grant's scope.
+    * `Store::authorize_read_with_capability` hands the already-decoded context
+      to the unchanged authorization body; `authorize_read`/`authorize_read_in`
+      are thin wrappers, so every caller keeps the same order and the same
+      checks.
+    * **No authorization decision is cached**, no byte is read to decide access,
+      and every read still evaluates validity window, tenant, namespace, root
+      and POSIX/ACL. `tests/kv_fast_path_cache.rs` 6/6: cached descriptor reuse,
+      an expired grant refused on all three reads, a second grant refused while
+      another grant's decode is warm, a forged envelope identity refused, a
+      commit fencing the cache, and a rewrite authorised only by its own
+      descriptor.
+  * Measurement validity **pass**, **`claim_holds: false`**.
+    * Fast path: W p50 **169.5 µs** vs N **28.9 µs** = **5.87×** (was 6.51×),
+      p95 **226.4 µs** vs **31.3 µs** = **7.22×** (was 7.91×), bytes
+      **0.431×**. C1 and C2 still fail; the tolerance was not widened. W is now
+      **1.64×** M on the same path.
+    * Safety unchanged: W accepted 0 of 56 probes, returned 0 bytes, read
+      **0 backend bytes**; M accepted 0 but read 766,026 B over 48 requests; N
+      accepted 48 and returned the wrong payload 48 times.
+    * Availability unchanged: after the metadata database is removed M reuses
+      0/16, W 16/16 byte-exactly.
+    * Happy path 64/64 byte-exact in every arm; recovery materialises the same
+      270,336 B in M and W.
+  * **The floor, measured.** Of the remaining cost: `huffman-canonical-v1`
+    symbol decode of two 65,536-symbol byte planes (~107 µs in memory), one
+    normative hash of the reconstructed page (~10 µs), the descriptor's identity
+    (~9 µs of re-encode + hash), and the first touch of the decode buffers
+    (~20 µs of page faults for ~196 KiB of fresh allocation). The largest item is
+    the payload representation the mode-19 wire format fixes; removing it is a
+    format change, not a read-path fix. Nothing in the store read path remains
+    unaccounted for.
+  * **Recovery gap attributed, not fixed.** W reads the same 10 objects as M and
+    **34 manifests against M's 10**; the whole 306,963 B byte gap is 51,160 B per
+    demanded tensor — `restore_named_tensor_at` re-reads the ~51 KiB checkpoint
+    manifest on every call, where M loads its manifest once. The repair is a
+    `restore_named_tensor_with_manifest` entry point; it is **not** in this
+    receipt because it would change what the W arm does and break the before/
+    after comparison. Named as the next increment.
+  * Ledger numbers are generated: `docs/perf-numbers.json` grew from 420 to 483
+    numbers (phase ledger, decode split, recovery counts, and a
+    receipt-against-receipt comparison) in 78 blocks, and
+    `scripts/perf_numbers.py --check` is green.
+  * Gates: `cargo test --all-targets` 172 suites / 813 passed / 0 failed / 0
+    ignored; `cargo test --features fuse --all-targets` 172 suites / 856 passed
+    / 0 failed / 2 pre-existing ignored; `tests/kv_fast_path_cache.rs` 6/6 in
+    the rust court; `scripts/check-claims.sh` 1070/1070; `perf_numbers --check`
+    483 numbers / 78 blocks; `scripts/check-spec-drift.sh` 60/60 (no spec or
+    wire-format change: the profiler phases and the caches are internal);
+    conformance manifest and coverage 420 entries OK. `scripts/verify-all.sh`
+    was **not** re-run; the cited aggregate remains
+    `bench/receipts/verify-20261111T131235Z.json` (45/45) until the next
+    aggregate run.
+  * Residual: the fast-path gate still fails (5.84×/7.03× against 2.0×/2.5×);
+    the dominant remaining cost is the mode-19 payload codec, which is a
+    wire-format question, not a read-path one; the recovery gap is attributed
+    but not fixed; the descriptor cache is per store handle (not shared); the
+    measured configuration keeps the decoded-object cache and single-flight
+    **off** for every arm, as the contract requires, so none of these numbers
+    come from caching decoded pages.

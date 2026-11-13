@@ -1,0 +1,6185 @@
+{
+  "arms": {
+    "M": {
+      "causal_closure": [
+        {
+          "declared": false,
+          "verified": false
+        },
+        {
+          "declared": false,
+          "verified": false
+        },
+        {
+          "declared": false,
+          "verified": false
+        }
+      ],
+      "description": "backend + strong application metadata (manifest, index, TTL, own subset selection)",
+      "fast_path_ledger": {
+        "instrumented_us_per_read": {
+          "max": 104.902171875,
+          "median": 104.89809375,
+          "min": 103.5604375,
+          "n": 3
+        },
+        "phases_us_per_read": {
+          "assemble": {
+            "max": 0.2415,
+            "median": 0.233625,
+            "min": 0.221015625,
+            "n": 3
+          },
+          "blob_hash_manifest": {
+            "max": 0.25003125,
+            "median": 0.2479375,
+            "min": 0.245,
+            "n": 3
+          },
+          "blob_hash_object": {
+            "max": 10.974328125,
+            "median": 10.971640625,
+            "min": 10.963953125,
+            "n": 3
+          },
+          "blob_io_manifest": {
+            "max": 1.607890625,
+            "median": 1.571203125,
+            "min": 1.49453125,
+            "n": 3
+          },
+          "blob_io_object": {
+            "max": 2.536625,
+            "median": 2.44559375,
+            "min": 1.978625,
+            "n": 3
+          },
+          "content_verify": {
+            "max": 10.948109375,
+            "median": 10.927046875,
+            "min": 10.912765625,
+            "n": 3
+          },
+          "manifest_decode": {
+            "max": 0.825515625,
+            "median": 0.81525,
+            "min": 0.793640625,
+            "n": 3
+          }
+        },
+        "reads_per_rep": 64.0,
+        "residual_us_per_read": {
+          "max": 77.6690625,
+          "median": 77.5795,
+          "min": 76.9063125,
+          "n": 3
+        }
+      },
+      "metrics": {
+        "build_bytes": {
+          "max": 318018.0,
+          "median": 318018.0,
+          "min": 318018.0,
+          "n": 3
+        },
+        "build_commits": {
+          "max": 10.0,
+          "median": 10.0,
+          "min": 10.0,
+          "n": 3
+        },
+        "build_ms": {
+          "max": 144.298654,
+          "median": 143.916017,
+          "min": 140.706932,
+          "n": 3
+        },
+        "compatible_backend_bytes": {
+          "max": 1021368.0,
+          "median": 1021368.0,
+          "min": 1021368.0,
+          "n": 3
+        },
+        "compatible_exact": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "compatible_requests": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 3
+        },
+        "compatible_total": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "footprint_bytes": {
+          "max": 287151.0,
+          "median": 287151.0,
+          "min": 287151.0,
+          "n": 3
+        },
+        "frame_mode12_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "frame_mode19_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "hit_p50_us": {
+          "max": 105.587,
+          "median": 104.004,
+          "min": 103.934,
+          "n": 3
+        },
+        "hit_p95_us": {
+          "max": 116.648,
+          "median": 115.786,
+          "min": 109.163,
+          "n": 3
+        },
+        "index_load_ms": {
+          "max": 0.081022,
+          "median": 0.061906,
+          "min": 0.059852,
+          "n": 3
+        },
+        "loss_reused": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "loss_reused_exact": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "loss_total": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "open_ms": {
+          "max": 0.31144099999999997,
+          "median": 0.29467000000000004,
+          "min": 0.290252,
+          "n": 3
+        },
+        "probe_accepted": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_accepted_wrong_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_backend_bytes": {
+          "max": 766026.0,
+          "median": 766026.0,
+          "min": 766026.0,
+          "n": 3
+        },
+        "probe_denied": {
+          "max": 56.0,
+          "median": 56.0,
+          "min": 56.0,
+          "n": 3
+        },
+        "probe_logical_bytes_returned": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_requests": {
+          "max": 48.0,
+          "median": 48.0,
+          "min": 48.0,
+          "n": 3
+        },
+        "recompute_p50_us": {
+          "max": 2132.379,
+          "median": 2120.667,
+          "min": 2118.5829999999996,
+          "n": 3
+        },
+        "recovery_backend_bytes": {
+          "max": 286540.0,
+          "median": 286540.0,
+          "min": 286540.0,
+          "n": 3
+        },
+        "recovery_logical_bytes": {
+          "max": 270336.0,
+          "median": 270336.0,
+          "min": 270336.0,
+          "n": 3
+        },
+        "recovery_outputs": {
+          "max": 9.0,
+          "median": 9.0,
+          "min": 9.0,
+          "n": 3
+        },
+        "recovery_wall_ms": {
+          "max": 0.399736,
+          "median": 0.393985,
+          "min": 0.384287,
+          "n": 3
+        },
+        "rss_kib": {
+          "max": 17804.0,
+          "median": 16416.0,
+          "min": 16028.0,
+          "n": 3
+        }
+      },
+      "missing_dependency": [
+        {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        },
+        {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        },
+        {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        }
+      ],
+      "probe_variants": {
+        "adapter": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 0.23,
+            "median": 0.22,
+            "min": 0.21,
+            "n": 3
+          }
+        },
+        "attention": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 0.191,
+            "median": 0.171,
+            "min": 0.16999999999999998,
+            "n": 3
+          }
+        },
+        "dtype": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 255342.0,
+            "median": 255342.0,
+            "min": 255342.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 118.712,
+            "median": 103.292,
+            "min": 102.02,
+            "n": 3
+          }
+        },
+        "model": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 0.24,
+            "median": 0.201,
+            "min": 0.19,
+            "n": 3
+          }
+        },
+        "positional": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 255342.0,
+            "median": 255342.0,
+            "min": 255342.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 103.854,
+            "median": 102.912,
+            "min": 102.471,
+            "n": 3
+          }
+        },
+        "salt": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 255342.0,
+            "median": 255342.0,
+            "min": 255342.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 103.934,
+            "median": 103.182,
+            "min": 101.951,
+            "n": 3
+          }
+        },
+        "tokenizer": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 0.2,
+            "median": 0.2,
+            "min": 0.16999999999999998,
+            "n": 3
+          }
+        }
+      },
+      "recovery_digests": [
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"
+      ],
+      "recovery_ledger": {
+        "instrumented_wall_ms": {
+          "max": 0.379738,
+          "median": 0.379248,
+          "min": 0.368768,
+          "n": 3
+        },
+        "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+        "phases": {
+          "assemble": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.002537,
+              "median": 0.002064,
+              "min": 0.001815,
+              "n": 3
+            }
+          },
+          "blob_hash_manifest": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.002525,
+              "median": 0.002475,
+              "min": 0.002475,
+              "n": 3
+            }
+          },
+          "blob_hash_object": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.073166,
+              "median": 0.072965,
+              "min": 0.072914,
+              "n": 3
+            }
+          },
+          "blob_io_manifest": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.016138,
+              "median": 0.01596,
+              "min": 0.015641,
+              "n": 3
+            }
+          },
+          "blob_io_object": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.029473,
+              "median": 0.027904,
+              "min": 0.020108,
+              "n": 3
+            }
+          },
+          "content_verify": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.074599,
+              "median": 0.073599,
+              "min": 0.072885,
+              "n": 3
+            }
+          },
+          "manifest_decode": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.008024,
+              "median": 0.007894,
+              "min": 0.007865,
+              "n": 3
+            }
+          }
+        },
+        "residual_ms": {
+          "max": 0.176774,
+          "median": 0.17515099999999997,
+          "min": 0.17280299999999998,
+          "n": 3
+        }
+      }
+    },
+    "N": {
+      "causal_closure": [
+        {
+          "declared": false,
+          "verified": false
+        },
+        {
+          "declared": false,
+          "verified": false
+        },
+        {
+          "declared": false,
+          "verified": false
+        }
+      ],
+      "description": "backend alone: plain durable objects, no metadata",
+      "fast_path_ledger": {
+        "instrumented_us_per_read": {
+          "max": 29.594765625,
+          "median": 29.316109375,
+          "min": 29.183515625,
+          "n": 3
+        },
+        "phases_us_per_read": {
+          "assemble": {
+            "max": 0.548796875,
+            "median": 0.53465625,
+            "min": 0.531484375,
+            "n": 3
+          },
+          "blob_hash_manifest": {
+            "max": 0.247984375,
+            "median": 0.245265625,
+            "min": 0.2443125,
+            "n": 3
+          },
+          "blob_hash_object": {
+            "max": 10.50484375,
+            "median": 10.485,
+            "min": 10.44940625,
+            "n": 3
+          },
+          "blob_io_manifest": {
+            "max": 1.554203125,
+            "median": 1.512015625,
+            "min": 1.396296875,
+            "n": 3
+          },
+          "blob_io_object": {
+            "max": 2.931859375,
+            "median": 2.755875,
+            "min": 2.348296875,
+            "n": 3
+          },
+          "compare": {
+            "max": 0.857078125,
+            "median": 0.849015625,
+            "min": 0.83534375,
+            "n": 3
+          },
+          "content_verify": {
+            "max": 10.463359375,
+            "median": 10.428390625,
+            "min": 10.42384375,
+            "n": 3
+          },
+          "manifest_decode": {
+            "max": 0.8178125,
+            "median": 0.78115625,
+            "min": 0.7023125,
+            "n": 3
+          },
+          "read_resolve": {
+            "max": 1.019125,
+            "median": 0.984625,
+            "min": 0.9321875,
+            "n": 3
+          }
+        },
+        "reads_per_rep": 64.0,
+        "residual_us_per_read": {
+          "max": 0.9439375,
+          "median": 0.900515625,
+          "min": 0.865390625,
+          "n": 3
+        }
+      },
+      "metrics": {
+        "build_bytes": {
+          "max": 566768.0,
+          "median": 566768.0,
+          "min": 566768.0,
+          "n": 3
+        },
+        "build_commits": {
+          "max": 8.0,
+          "median": 8.0,
+          "min": 8.0,
+          "n": 3
+        },
+        "build_ms": {
+          "max": 114.045658,
+          "median": 113.97036,
+          "min": 113.331705,
+          "n": 3
+        },
+        "compatible_backend_bytes": {
+          "max": 2102368.0,
+          "median": 2102368.0,
+          "min": 2102368.0,
+          "n": 3
+        },
+        "compatible_exact": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "compatible_requests": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 3
+        },
+        "compatible_total": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "footprint_bytes": {
+          "max": 544093.0,
+          "median": 544093.0,
+          "min": 544093.0,
+          "n": 3
+        },
+        "frame_mode12_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "frame_mode19_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "hit_p50_us": {
+          "max": 30.026,
+          "median": 29.515,
+          "min": 29.134,
+          "n": 3
+        },
+        "hit_p95_us": {
+          "max": 38.191,
+          "median": 34.574,
+          "min": 33.772999999999996,
+          "n": 3
+        },
+        "index_load_ms": {
+          "max": 0.00026,
+          "median": 0.000231,
+          "min": 0.00019,
+          "n": 3
+        },
+        "loss_reused": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "loss_reused_exact": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "loss_total": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "open_ms": {
+          "max": 0.342529,
+          "median": 0.256639,
+          "min": 0.237463,
+          "n": 3
+        },
+        "probe_accepted": {
+          "max": 48.0,
+          "median": 48.0,
+          "min": 48.0,
+          "n": 3
+        },
+        "probe_accepted_wrong_bytes": {
+          "max": 48.0,
+          "median": 48.0,
+          "min": 48.0,
+          "n": 3
+        },
+        "probe_backend_bytes": {
+          "max": 3153552.0,
+          "median": 3153552.0,
+          "min": 3153552.0,
+          "n": 3
+        },
+        "probe_denied": {
+          "max": 8.0,
+          "median": 8.0,
+          "min": 8.0,
+          "n": 3
+        },
+        "probe_logical_bytes_returned": {
+          "max": 3145728.0,
+          "median": 3145728.0,
+          "min": 3145728.0,
+          "n": 3
+        },
+        "probe_requests": {
+          "max": 96.0,
+          "median": 96.0,
+          "min": 96.0,
+          "n": 3
+        },
+        "recompute_p50_us": {
+          "max": 2125.957,
+          "median": 2124.505,
+          "min": 2119.536,
+          "n": 3
+        },
+        "recovery_backend_bytes": {
+          "max": 3235591.0,
+          "median": 3235591.0,
+          "min": 3235591.0,
+          "n": 3
+        },
+        "recovery_logical_bytes": {
+          "max": 3219456.0,
+          "median": 3219456.0,
+          "min": 3219456.0,
+          "n": 3
+        },
+        "recovery_outputs": {
+          "max": 99.0,
+          "median": 99.0,
+          "min": 99.0,
+          "n": 3
+        },
+        "recovery_wall_ms": {
+          "max": 2.81838,
+          "median": 2.695921,
+          "min": 2.577831,
+          "n": 3
+        },
+        "rss_kib": {
+          "max": 21536.0,
+          "median": 21180.0,
+          "min": 19532.0,
+          "n": 3
+        }
+      },
+      "missing_dependency": [
+        {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        },
+        {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        },
+        {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        }
+      ],
+      "probe_variants": {
+        "adapter": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 28.353,
+            "median": 28.203,
+            "min": 27.631,
+            "n": 3
+          }
+        },
+        "attention": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 27.611,
+            "median": 27.521,
+            "min": 26.961,
+            "n": 3
+          }
+        },
+        "dtype": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 31.177999999999997,
+            "median": 27.422,
+            "min": 26.851000000000003,
+            "n": 3
+          }
+        },
+        "model": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 1.032,
+            "median": 1.032,
+            "min": 1.022,
+            "n": 3
+          }
+        },
+        "positional": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 32.211,
+            "median": 27.571,
+            "min": 26.950000000000003,
+            "n": 3
+          }
+        },
+        "salt": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 30.817,
+            "median": 27.572,
+            "min": 27.301,
+            "n": 3
+          }
+        },
+        "tokenizer": {
+          "accepted": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 525592.0,
+            "median": 525592.0,
+            "min": 525592.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 524288.0,
+            "median": 524288.0,
+            "min": 524288.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 28.162,
+            "median": 27.671999999999997,
+            "min": 27.161,
+            "n": 3
+          }
+        }
+      },
+      "recovery_digests": [
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"
+      ],
+      "recovery_ledger": {
+        "instrumented_wall_ms": {
+          "max": 2.688918,
+          "median": 2.632603,
+          "min": 2.520733,
+          "n": 3
+        },
+        "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+        "phases": {
+          "assemble": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.022039,
+              "median": 0.021902,
+              "min": 0.021149,
+              "n": 3
+            }
+          },
+          "blob_hash_manifest": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.024466,
+              "median": 0.024304,
+              "min": 0.024155,
+              "n": 3
+            }
+          },
+          "blob_hash_object": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.759923,
+              "median": 0.751025,
+              "min": 0.750987,
+              "n": 3
+            }
+          },
+          "blob_io_manifest": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.149077,
+              "median": 0.14511,
+              "min": 0.144259,
+              "n": 3
+            }
+          },
+          "blob_io_object": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.232813,
+              "median": 0.231695,
+              "min": 0.231213,
+              "n": 3
+            }
+          },
+          "content_verify": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.756619,
+              "median": 0.751415,
+              "min": 0.75136,
+              "n": 3
+            }
+          },
+          "manifest_decode": {
+            "sections": {
+              "max": 99.0,
+              "median": 99.0,
+              "min": 99.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.076166,
+              "median": 0.073237,
+              "min": 0.071198,
+              "n": 3
+            }
+          }
+        },
+        "residual_ms": {
+          "max": 0.6868920000000003,
+          "median": 0.6157659999999998,
+          "min": 0.5254839999999998,
+          "n": 3
+        }
+      }
+    },
+    "W": {
+      "causal_closure": [
+        {
+          "closure_members": 2,
+          "declared": true,
+          "missing": 0,
+          "parents": 2,
+          "verified": true
+        },
+        {
+          "closure_members": 2,
+          "declared": true,
+          "missing": 0,
+          "parents": 2,
+          "verified": true
+        },
+        {
+          "closure_members": 2,
+          "declared": true,
+          "missing": 0,
+          "parents": 2,
+          "verified": true
+        }
+      ],
+      "description": "backend + WeftFS context plane (mode 19, scoped reads, causal closure)",
+      "fast_path_ledger": {
+        "instrumented_us_per_read": {
+          "max": 182.409140625,
+          "median": 181.687015625,
+          "min": 181.672609375,
+          "n": 3
+        },
+        "phases_us_per_read": {
+          "assemble": {
+            "max": 0.228375,
+            "median": 0.209,
+            "min": 0.20478125,
+            "n": 3
+          },
+          "auth_capability": {
+            "max": 0.169953125,
+            "median": 0.15578125,
+            "min": 0.142421875,
+            "n": 3
+          },
+          "auth_descriptor": {
+            "max": 0.15859375,
+            "median": 0.141515625,
+            "min": 0.141359375,
+            "n": 3
+          },
+          "auth_posix": {
+            "max": 0.05553125,
+            "median": 0.054984375,
+            "min": 0.0463125,
+            "n": 3
+          },
+          "auth_state": {
+            "max": 0.230375,
+            "median": 0.225609375,
+            "min": 0.2055,
+            "n": 3
+          },
+          "blob_hash_manifest": {
+            "max": 0.2490625,
+            "median": 0.247671875,
+            "min": 0.2475,
+            "n": 3
+          },
+          "blob_hash_object": {
+            "max": 9.758609375,
+            "median": 9.63046875,
+            "min": 9.586484375,
+            "n": 3
+          },
+          "blob_io_manifest": {
+            "max": 1.711265625,
+            "median": 1.66984375,
+            "min": 1.606390625,
+            "n": 3
+          },
+          "blob_io_object": {
+            "max": 2.475890625,
+            "median": 2.0704375,
+            "min": 1.9175,
+            "n": 3
+          },
+          "compare": {
+            "max": 0.903578125,
+            "median": 0.879328125,
+            "min": 0.874421875,
+            "n": 3
+          },
+          "content_verify": {
+            "max": 9.596796875,
+            "median": 9.58603125,
+            "min": 9.547828125,
+            "n": 3
+          },
+          "frame_parse": {
+            "max": 0.888375,
+            "median": 0.8699375,
+            "min": 0.861265625,
+            "n": 3
+          },
+          "manifest_decode": {
+            "max": 0.9548125,
+            "median": 0.845328125,
+            "min": 0.8439375,
+            "n": 3
+          },
+          "page_decode": {
+            "max": 150.188421875,
+            "median": 150.109828125,
+            "min": 150.0780625,
+            "n": 3
+          },
+          "read_resolve": {
+            "max": 1.157453125,
+            "median": 1.1411875,
+            "min": 1.1346875,
+            "n": 3
+          }
+        },
+        "reads_per_rep": 64.0,
+        "residual_us_per_read": {
+          "max": 4.102984375,
+          "median": 4.0349375,
+          "min": 3.62834375,
+          "n": 3
+        }
+      },
+      "metrics": {
+        "build_bytes": {
+          "max": 290679.0,
+          "median": 290679.0,
+          "min": 290679.0,
+          "n": 3
+        },
+        "build_commits": {
+          "max": 8.0,
+          "median": 8.0,
+          "min": 8.0,
+          "n": 3
+        },
+        "build_ms": {
+          "max": 120.025377,
+          "median": 118.777529,
+          "min": 114.077036,
+          "n": 3
+        },
+        "compatible_backend_bytes": {
+          "max": 906020.0,
+          "median": 906020.0,
+          "min": 906020.0,
+          "n": 3
+        },
+        "compatible_exact": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "compatible_requests": {
+          "max": 64.0,
+          "median": 64.0,
+          "min": 64.0,
+          "n": 3
+        },
+        "compatible_total": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "footprint_bytes": {
+          "max": 268004.0,
+          "median": 268004.0,
+          "min": 268004.0,
+          "n": 3
+        },
+        "frame_mode12_bytes": {
+          "max": 221001.0,
+          "median": 221001.0,
+          "min": 221001.0,
+          "n": 3
+        },
+        "frame_mode19_bytes": {
+          "max": 225201.0,
+          "median": 225201.0,
+          "min": 225201.0,
+          "n": 3
+        },
+        "hit_p50_us": {
+          "max": 183.913,
+          "median": 181.218,
+          "min": 173.724,
+          "n": 3
+        },
+        "hit_p95_us": {
+          "max": 247.582,
+          "median": 244.677,
+          "min": 234.498,
+          "n": 3
+        },
+        "index_load_ms": {
+          "max": 0.00027,
+          "median": 0.000221,
+          "min": 0.000171,
+          "n": 3
+        },
+        "loss_reused": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "loss_reused_exact": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "loss_total": {
+          "max": 16.0,
+          "median": 16.0,
+          "min": 16.0,
+          "n": 3
+        },
+        "open_ms": {
+          "max": 0.342529,
+          "median": 0.3321,
+          "min": 0.331989,
+          "n": 3
+        },
+        "probe_accepted": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_accepted_wrong_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_backend_bytes": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_denied": {
+          "max": 56.0,
+          "median": 56.0,
+          "min": 56.0,
+          "n": 3
+        },
+        "probe_logical_bytes_returned": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "probe_requests": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "recompute_p50_us": {
+          "max": 2125.005,
+          "median": 2124.604,
+          "min": 2122.972,
+          "n": 3
+        },
+        "recovery_backend_bytes": {
+          "max": 593503.0,
+          "median": 593503.0,
+          "min": 593503.0,
+          "n": 3
+        },
+        "recovery_logical_bytes": {
+          "max": 270336.0,
+          "median": 270336.0,
+          "min": 270336.0,
+          "n": 3
+        },
+        "recovery_outputs": {
+          "max": 9.0,
+          "median": 9.0,
+          "min": 9.0,
+          "n": 3
+        },
+        "recovery_wall_ms": {
+          "max": 3.744928,
+          "median": 3.537913,
+          "min": 3.404794,
+          "n": 3
+        },
+        "rss_kib": {
+          "max": 23140.0,
+          "median": 22832.0,
+          "min": 22764.0,
+          "n": 3
+        }
+      },
+      "missing_dependency": [
+        {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        },
+        {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        },
+        {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        }
+      ],
+      "probe_variants": {
+        "adapter": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.295,
+            "median": 1.423,
+            "min": 1.392,
+            "n": 3
+          }
+        },
+        "attention": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.144,
+            "median": 1.413,
+            "min": 1.383,
+            "n": 3
+          }
+        },
+        "dtype": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.194,
+            "median": 1.373,
+            "min": 1.372,
+            "n": 3
+          }
+        },
+        "model": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.375,
+            "median": 1.582,
+            "min": 1.483,
+            "n": 3
+          }
+        },
+        "positional": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.194,
+            "median": 1.392,
+            "min": 1.362,
+            "n": 3
+          }
+        },
+        "salt": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.184,
+            "median": 1.513,
+            "min": 1.393,
+            "n": 3
+          }
+        },
+        "tokenizer": {
+          "accepted": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "accepted_wrong_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "backend_bytes": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "denied": {
+            "max": 8.0,
+            "median": 8.0,
+            "min": 8.0,
+            "n": 3
+          },
+          "logical_bytes_returned": {
+            "max": 0.0,
+            "median": 0.0,
+            "min": 0.0,
+            "n": 3
+          },
+          "p50_us": {
+            "max": 2.3939999999999997,
+            "median": 1.603,
+            "min": 1.4529999999999998,
+            "n": 3
+          }
+        }
+      },
+      "recovery_digests": [
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+        "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613"
+      ],
+      "recovery_ledger": {
+        "instrumented_wall_ms": {
+          "max": 3.296481,
+          "median": 3.25281,
+          "min": 3.229025,
+          "n": 3
+        },
+        "note": "second pass over warm data; phases are medians of the per-repetition totals, and `sections` is how often the phase ran inside one recovery",
+        "phases": {
+          "assemble": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.003917,
+              "median": 0.003545,
+              "min": 0.003446,
+              "n": 3
+            }
+          },
+          "blob_hash_manifest": {
+            "sections": {
+              "max": 34.0,
+              "median": 34.0,
+              "min": 34.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.056202,
+              "median": 0.055896,
+              "min": 0.055871,
+              "n": 3
+            }
+          },
+          "blob_hash_object": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.094165,
+              "median": 0.093187,
+              "min": 0.092784,
+              "n": 3
+            }
+          },
+          "blob_io_manifest": {
+            "sections": {
+              "max": 34.0,
+              "median": 34.0,
+              "min": 34.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.172383,
+              "median": 0.164076,
+              "min": 0.164036,
+              "n": 3
+            }
+          },
+          "blob_io_object": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.030185,
+              "median": 0.028714,
+              "min": 0.027842,
+              "n": 3
+            }
+          },
+          "content_verify": {
+            "sections": {
+              "max": 10.0,
+              "median": 10.0,
+              "min": 10.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.092423,
+              "median": 0.092254,
+              "min": 0.092081,
+              "n": 3
+            }
+          },
+          "manifest_decode": {
+            "sections": {
+              "max": 28.0,
+              "median": 28.0,
+              "min": 28.0,
+              "n": 3
+            },
+            "total_ms": {
+              "max": 0.034052,
+              "median": 0.030787,
+              "min": 0.030184,
+              "n": 3
+            }
+          }
+        },
+        "residual_ms": {
+          "max": 2.81481,
+          "median": 2.785121,
+          "min": 2.760355,
+          "n": 3
+        }
+      }
+    }
+  },
+  "checks": [
+    {
+      "detail": "rows per arm [(\"N\", 3), (\"M\", 3), (\"W\", 3)], expected 3",
+      "id": "rows_complete",
+      "ok": true
+    },
+    {
+      "detail": "distinct orders 3; slot->arms {1: [\"M\", \"N\", \"W\"], 2: [\"M\", \"N\", \"W\"], 3: [\"M\", \"N\", \"W\"]}",
+      "id": "interleaved_orders",
+      "ok": true
+    },
+    {
+      "detail": "N 32/32 M 32/32 W 32/32 (min across reps)",
+      "id": "compatible_reuse_exact_every_arm",
+      "ok": true
+    },
+    {
+      "detail": "N accepted 48 probes (min across reps); a zero would make the probe vacuous",
+      "id": "n_probe_is_live",
+      "ok": true
+    },
+    {
+      "detail": "W accepted 0 across every rep (max)",
+      "id": "w_zero_incompatible_accepted",
+      "ok": true
+    },
+    {
+      "detail": "W returned 0 logical bytes on probes (max)",
+      "id": "w_zero_bytes_on_denial",
+      "ok": true
+    },
+    {
+      "detail": "M (governing arm, full value validation) accepted 0 (max)",
+      "id": "m_incompatible_accepted",
+      "ok": true
+    },
+    {
+      "detail": "N logical bytes returned on probes: 3145728",
+      "id": "refusal_emits_nothing_N",
+      "ok": true
+    },
+    {
+      "detail": "M logical bytes returned on probes: 0",
+      "id": "refusal_emits_nothing_M",
+      "ok": true
+    },
+    {
+      "detail": "W logical bytes returned on probes: 0",
+      "id": "refusal_emits_nothing_W",
+      "ok": true
+    },
+    {
+      "detail": "expected digest Some(\"2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613\"); all arms matched in every rep: true",
+      "id": "recovery_outputs_exact_every_arm",
+      "ok": true
+    },
+    {
+      "detail": "W resolved the derived artifact's two declared parents to live objects",
+      "id": "w_causal_closure_verified",
+      "ok": true
+    },
+    {
+      "detail": "every arm refused after one activation was removed",
+      "id": "missing_dependency_fails_closed",
+      "ok": true
+    },
+    {
+      "detail": "the measured recompute kernel reproduced the stored page bytes",
+      "id": "recompute_regenerates_the_page",
+      "ok": true
+    }
+  ],
+  "claim_gates": [
+    {
+      "detail": "W accepted 0 and returned 0 bytes",
+      "holds": true,
+      "id": "f1_w_rejects_cross_scope"
+    },
+    {
+      "detail": "N accepted 48 (min)",
+      "holds": true,
+      "id": "f2_probe_is_live"
+    },
+    {
+      "detail": "M accepted 0 incompatible and reused 0 after metadata loss; a tie here refutes the claim",
+      "holds": true,
+      "id": "f3_baseline_does_not_tie"
+    },
+    {
+      "detail": "W materialized 270336 B, M 270336 B for the identical output set",
+      "holds": true,
+      "id": "f4_recovery_does_not_materialize_more"
+    },
+    {
+      "detail": "W p50 181.2 us vs N 29.5 us = 6.14x (declared <= 2x)",
+      "holds": false,
+      "id": "c1_fast_path_p50"
+    },
+    {
+      "detail": "W p95 244.7 us vs N 34.6 us = 7.08x (declared <= 2.5x)",
+      "holds": false,
+      "id": "c2_fast_path_p95"
+    },
+    {
+      "detail": "W 28313 B/request vs N 65699 B/request = 0.43x (declared <= 1.1x)",
+      "holds": true,
+      "id": "c3_fast_path_bytes"
+    }
+  ],
+  "claim_holds": false,
+  "contract": "bench/CONTRACTS-context-advantage.md",
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "nproc": "2048",
+    "pids": "1024",
+    "revisions": {
+      "WeftCodec": "75f08634824d3f6fe1561a1c523e97f390e85391",
+      "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e",
+      "WeftFS": "86c403bb91d660470dfdc6377059c8ac9b9105cb",
+      "WeftFS-Go": "7f55d11a7a66a5c6e542e345d06539d801281a4c"
+    },
+    "uname": "Linux 7.3.3-1-cachyos x86_64"
+  },
+  "fast_path": {
+    "declared": {
+      "bytes_ratio_max": 1.1,
+      "p50_ratio_max": 2.0,
+      "p95_ratio_max": 2.5
+    },
+    "observed": {
+      "M": {
+        "backend_bytes_per_request": 31917.75,
+        "p50_us": 104.004,
+        "p95_us": 115.786
+      },
+      "N": {
+        "backend_bytes_per_request": 65699.0,
+        "p50_us": 29.515,
+        "p95_us": 34.574
+      },
+      "W": {
+        "backend_bytes_per_request": 28313.125,
+        "p50_us": 181.218,
+        "p95_us": 244.677
+      }
+    },
+    "ratios": {
+      "M_over_N_bytes": 0.48581789677164033,
+      "M_over_N_p50": 3.5237675758089106,
+      "M_over_N_p95": 3.348932724012264,
+      "W_over_N_bytes": 0.4309521453903408,
+      "W_over_N_p50": 6.1398610875825845,
+      "W_over_N_p95": 7.07690750274773
+    }
+  },
+  "fixture": {
+    "activation_bytes": 32768,
+    "base_scope": {
+      "adapter": null,
+      "dtype": "bf16",
+      "head_count": 8,
+      "head_dim": 64,
+      "label": "S0",
+      "layer_count": 2,
+      "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+      "page_rows": 64,
+      "positional": "rope",
+      "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+      "tokenizer_scheme": "bpe",
+      "tokenizer_vocab": 151936
+    },
+    "derived_bytes": 8192,
+    "head_elements": 512,
+    "layers": 2,
+    "needed": [
+      3,
+      17,
+      31,
+      45,
+      67,
+      91
+    ],
+    "page_bytes": 65536,
+    "page_rows": 64,
+    "pages_written": 8,
+    "prefixes": 4,
+    "probe_count": 56,
+    "recompute": "scalar reference kernel that regenerates the page; not an optimized prefill",
+    "tensor_bytes": 32768,
+    "tensors": 96,
+    "variants": [
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "model",
+        "layer_count": 2,
+        "model_root": "2222222222222222222222222222222222222222222222222222222222222222",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": "3333333333333333333333333333333333333333333333333333333333333333",
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "adapter",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "tokenizer",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "spm",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 16,
+        "head_dim": 32,
+        "label": "attention",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "positional",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "alibi",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "fp16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "dtype",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      },
+      {
+        "adapter": null,
+        "dtype": "bf16",
+        "head_count": 8,
+        "head_dim": 64,
+        "label": "salt",
+        "layer_count": 2,
+        "model_root": "1111111111111111111111111111111111111111111111111111111111111111",
+        "page_rows": 64,
+        "positional": "rope",
+        "salt": "b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0",
+        "tokenizer_scheme": "bpe",
+        "tokenizer_vocab": 151936
+      }
+    ]
+  },
+  "generated_utc": "20261113T061527Z",
+  "label": "reduced",
+  "losses": [
+    "W fast-path p50 is 6.14x N (181.2 vs 29.5 us): the context plane does not preserve a raw-read critical path on this workload",
+    "M fast-path p50 is 3.52x N (104.0 vs 29.5 us): the penalty is not unique to W -- any compressed representation pays it",
+    "M is 1.74x faster than W on the fast path (104.0 vs 181.2 us)",
+    "W reads 2.07x M's backend bytes for the identical recovery output set (593503 vs 286540 B): the shipped per-tensor restore re-loads the checkpoint manifest on every call",
+    "W recovery wall is 8.98x M (3.538 vs 0.394 ms)",
+    "N accepted 48 of 56 cross-scope requests and returned the wrong bytes for every one: the floor is unsafe by construction",
+    "M reused nothing after its metadata database was lost (0 of 16): its safe-reuse capability is tied to that database",
+    "M read 766026 backend bytes to refuse cross-scope requests whose key it matched: the three dimensions its index key omits must be validated from the payload"
+  ],
+  "methodology": {
+    "arms": {
+      "M": "backend + strong application metadata: zstd-3 blob, canonical manifest, key->value index on the brief's five dimensions plus position, full value validation before reuse, TTL/eviction, own subset selection",
+      "N": "backend alone: plain durable objects, no metadata",
+      "W": "backend + WeftFS context plane: provenance-bound KV pages (mode 19), capability-scoped reads, weft.checkpoint.v1 manifests, causal closure"
+    },
+    "declared_tolerance": {
+      "bytes_ratio_max": 1.1,
+      "declared_before_measurement": true,
+      "p50_ratio_max": 2.0,
+      "p95_ratio_max": 2.5
+    },
+    "held_constant": [
+      "BackendKind::Local data plane",
+      "commit protocol and durability barrier",
+      "chunk size 65,536 B",
+      "no decoded-object cache, no single-flight",
+      "single process, single thread, one request at a time",
+      "identical logical objects, names, counts and demanded output set",
+      "fixed store clock",
+      "Docker court limits 3g/3g/1024 pids/4 cpus, never raised"
+    ],
+    "raw_samples": "every repetition's phase JSON is committed beside the receipt",
+    "reduced": true,
+    "repetitions": 3
+  },
+  "not_measured": [
+    "fleet, multi-host, multi-writer and media power-loss durability",
+    "GPU or production prefill: recompute_ms is a scalar reference kernel",
+    "an application baseline that embeds a canonical scope record in every blob and rebuilds its index by scanning (available, untested)",
+    "live cloud backends; this court is the local POSIX data plane",
+    "timing, size or access-pattern privacy of the salt"
+  ],
+  "provenance_overhead": {
+    "mode12_decode_p50_us": 116.648,
+    "mode19_decode_p50_us": 130.143,
+    "note": "in-memory decode of the same page, same payload codec; isolates the provenance descriptor from I/O and from the payload codec",
+    "ratio": 1.1156899389616626
+  },
+  "raw": [
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 2102368,
+          "exact": 32,
+          "latency": {
+            "max_us": 81.22200000000001,
+            "min_us": 28.703,
+            "n": 32,
+            "p50_us": 29.134,
+            "p95_us": 34.574
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            81222,
+            36448,
+            34574,
+            33884,
+            33823,
+            33613,
+            33002,
+            32972,
+            32961,
+            32150,
+            33161,
+            32821,
+            32441,
+            29304,
+            28884,
+            29035,
+            28924,
+            29014,
+            29004,
+            29024,
+            28984,
+            32340,
+            29115,
+            28884,
+            29084,
+            28964,
+            28924,
+            28703,
+            28984,
+            28975,
+            29134,
+            28924
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {},
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 40.616,
+            "min_us": 27.742,
+            "n": 16,
+            "p50_us": 28.233,
+            "p95_us": 29.355
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 48,
+          "accepted_wrong_bytes": 48,
+          "backend_bytes": 3153552,
+          "denied": 8,
+          "logical_bytes_returned": 3145728,
+          "requests": 96
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 28.563,
+              "min_us": 28.062,
+              "n": 8,
+              "p50_us": 28.203,
+              "p95_us": 28.563
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "attention": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.862,
+              "min_us": 27.19,
+              "n": 8,
+              "p50_us": 27.521,
+              "p95_us": 27.862
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "dtype": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 31.368999999999996,
+              "min_us": 30.517,
+              "n": 8,
+              "p50_us": 31.177999999999997,
+              "p95_us": 31.368999999999996
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 1.392,
+              "min_us": 0.982,
+              "n": 8,
+              "p50_us": 1.032,
+              "p95_us": 1.392
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 51.025,
+              "min_us": 31.429,
+              "n": 8,
+              "p50_us": 32.211,
+              "p95_us": 51.025
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 31.158,
+              "min_us": 26.84,
+              "n": 8,
+              "p50_us": 30.817,
+              "p95_us": 31.158
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.912,
+              "min_us": 27.211,
+              "n": 8,
+              "p50_us": 27.671999999999997,
+              "p95_us": 27.912
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2120.887,
+            "min_us": 2115.768,
+            "n": 3,
+            "p50_us": 2119.536,
+            "p95_us": 2120.887
+          },
+          "raw_samples_ns": [
+            2120887,
+            2119536,
+            2115768
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "N",
+      "arm_description": "backend alone: plain durable objects, no metadata",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3744358,
+          "logical_bytes": 3219456,
+          "ms": 1330.962731,
+          "writes": 99
+        },
+        "missing_dependency": {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 3235591,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 28.553,
+            "min_us": 14.707,
+            "n": 99,
+            "p50_us": 21.32,
+            "p95_us": 22.833
+          },
+          "ledger": {
+            "logical_bytes": 3219456,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 99,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.21,
+                "p95_us": 0.261,
+                "sections": 99,
+                "total_ms": 0.022039
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.241,
+                "p95_us": 0.251,
+                "sections": 99,
+                "total_ms": 0.024155
+              },
+              "blob_hash_object": {
+                "p50_us": 7.604,
+                "p95_us": 7.644,
+                "sections": 99,
+                "total_ms": 0.751025
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.443,
+                "p95_us": 1.523,
+                "sections": 99,
+                "total_ms": 0.144259
+              },
+              "blob_io_object": {
+                "p50_us": 2.285,
+                "p95_us": 2.725,
+                "sections": 99,
+                "total_ms": 0.231213
+              },
+              "content_verify": {
+                "p50_us": 7.594,
+                "p95_us": 7.635,
+                "sections": 99,
+                "total_ms": 0.75136
+              },
+              "manifest_decode": {
+                "p50_us": 0.712,
+                "p95_us": 0.782,
+                "sections": 99,
+                "total_ms": 0.071198
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.5254839999999998,
+            "sum_phases_ms": 1.995249,
+            "wall_ms": 2.520733
+          },
+          "logical_bytes": 3219456,
+          "outputs": 99,
+          "requests": 198,
+          "wall_ms": 2.577831
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 566768,
+        "commits": 8,
+        "footprint_bytes": 544093,
+        "footprint_files": 39,
+        "index_entries": 0,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 113.97036,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 60.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 4204736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.551,
+            "p95_us": 0.561,
+            "sections": 64,
+            "total_ms": 0.034015,
+            "us_per_read": 0.531484375
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.25,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.015871,
+            "us_per_read": 0.247984375
+          },
+          "blob_hash_object": {
+            "p50_us": 10.42,
+            "p95_us": 10.479,
+            "sections": 64,
+            "total_ms": 0.668762,
+            "us_per_read": 10.44940625
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.393,
+            "p95_us": 1.513,
+            "sections": 64,
+            "total_ms": 0.089363,
+            "us_per_read": 1.396296875
+          },
+          "blob_io_object": {
+            "p50_us": 3.025,
+            "p95_us": 3.256,
+            "sections": 64,
+            "total_ms": 0.187639,
+            "us_per_read": 2.931859375
+          },
+          "compare": {
+            "p50_us": 0.841,
+            "p95_us": 0.872,
+            "sections": 64,
+            "total_ms": 0.053462,
+            "us_per_read": 0.83534375
+          },
+          "content_verify": {
+            "p50_us": 10.399,
+            "p95_us": 10.44,
+            "sections": 64,
+            "total_ms": 0.667126,
+            "us_per_read": 10.42384375
+          },
+          "manifest_decode": {
+            "p50_us": 0.701,
+            "p95_us": 0.742,
+            "sections": 64,
+            "total_ms": 0.044948,
+            "us_per_read": 0.7023125
+          },
+          "read_resolve": {
+            "p50_us": 0.911,
+            "p95_us": 1.052,
+            "sections": 64,
+            "total_ms": 0.05966,
+            "us_per_read": 0.9321875
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.055385,
+        "residual_us_per_read": 0.865390625,
+        "sum_phases_ms": 1.820846,
+        "sum_phases_us_per_read": 28.45071875,
+        "us_per_read": 29.316109375,
+        "wall_ms": 1.876231
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.000231,
+        "note": "not applicable"
+      },
+      "open_ms": 0.342529,
+      "order": "N,M,W",
+      "order_index": 1,
+      "reduced": true,
+      "rep": 1,
+      "rss_kib": 19532,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 1021368,
+          "exact": 32,
+          "latency": {
+            "max_us": 140.99300000000002,
+            "min_us": 101.86,
+            "n": 32,
+            "p50_us": 105.587,
+            "p95_us": 115.786
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            140993,
+            115786,
+            109945,
+            108903,
+            106880,
+            105266,
+            108373,
+            106849,
+            105587,
+            105116,
+            106078,
+            121747,
+            104646,
+            102742,
+            107360,
+            105928,
+            104856,
+            104435,
+            107501,
+            105868,
+            106258,
+            102261,
+            105056,
+            104746,
+            104084,
+            103824,
+            104906,
+            105407,
+            103994,
+            101860,
+            106760,
+            104625
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {
+          "full_key_denial_backend_bytes": 0,
+          "full_key_denied": 56,
+          "index_loaded_entries": 8,
+          "index_note": null,
+          "index_only_accepts": 24
+        },
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 0.8220000000000001,
+            "min_us": 0.13,
+            "n": 16,
+            "p50_us": 0.16999999999999998,
+            "p95_us": 0.251
+          },
+          "metadata_removed": true,
+          "reused": 0,
+          "reused_exact": 0,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 766026,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 48
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.391,
+              "min_us": 0.18,
+              "n": 8,
+              "p50_us": 0.22,
+              "p95_us": 0.391
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.241,
+              "min_us": 0.15,
+              "n": 8,
+              "p50_us": 0.191,
+              "p95_us": 0.241
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 104.866,
+              "min_us": 100.868,
+              "n": 8,
+              "p50_us": 103.292,
+              "p95_us": 104.866
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.661,
+              "min_us": 0.181,
+              "n": 8,
+              "p50_us": 0.24,
+              "p95_us": 0.661
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 149.889,
+              "min_us": 100.888,
+              "n": 8,
+              "p50_us": 103.854,
+              "p95_us": 149.889
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 103.683,
+              "min_us": 100.337,
+              "n": 8,
+              "p50_us": 103.182,
+              "p95_us": 103.683
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.251,
+              "min_us": 0.16,
+              "n": 8,
+              "p50_us": 0.2,
+              "p95_us": 0.251
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2224.542,
+            "min_us": 2117.181,
+            "n": 3,
+            "p50_us": 2118.5829999999996,
+            "p95_us": 2224.542
+          },
+          "raw_samples_ns": [
+            2224542,
+            2118583,
+            2117181
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "M",
+      "arm_description": "backend + strong application metadata (manifest, index, TTL, own subset selection)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3770190,
+          "logical_bytes": 3219456,
+          "ms": 1370.4151069999998,
+          "writes": 101
+        },
+        "missing_dependency": {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 286540,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 33.162,
+            "min_us": 14.357,
+            "n": 9,
+            "p50_us": 24.266,
+            "p95_us": 33.162
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.21,
+                "p95_us": 0.742,
+                "sections": 10,
+                "total_ms": 0.002537
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.25,
+                "p95_us": 0.251,
+                "sections": 10,
+                "total_ms": 0.002475
+              },
+              "blob_hash_object": {
+                "p50_us": 7.604,
+                "p95_us": 7.754,
+                "sections": 10,
+                "total_ms": 0.072914
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.513,
+                "p95_us": 2.195,
+                "sections": 10,
+                "total_ms": 0.015641
+              },
+              "blob_io_object": {
+                "p50_us": 2.585,
+                "p95_us": 3.757,
+                "sections": 10,
+                "total_ms": 0.027904
+              },
+              "content_verify": {
+                "p50_us": 7.674,
+                "p95_us": 7.725,
+                "sections": 10,
+                "total_ms": 0.073599
+              },
+              "manifest_decode": {
+                "p50_us": 0.792,
+                "p95_us": 0.891,
+                "sections": 10,
+                "total_ms": 0.007894
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.176774,
+            "sum_phases_ms": 0.202964,
+            "wall_ms": 0.379738
+          },
+          "logical_bytes": 270336,
+          "outputs": 9,
+          "requests": 20,
+          "wall_ms": 0.393985
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 318018,
+        "commits": 10,
+        "footprint_bytes": 287151,
+        "footprint_files": 47,
+        "index_entries": 8,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 140.706932,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 70.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 2042736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.24,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.014952,
+            "us_per_read": 0.233625
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.241,
+            "p95_us": 0.26,
+            "sections": 64,
+            "total_ms": 0.01568,
+            "us_per_read": 0.245
+          },
+          "blob_hash_object": {
+            "p50_us": 11.151,
+            "p95_us": 11.602,
+            "sections": 64,
+            "total_ms": 0.702357,
+            "us_per_read": 10.974328125
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.432,
+            "p95_us": 1.723,
+            "sections": 64,
+            "total_ms": 0.100557,
+            "us_per_read": 1.571203125
+          },
+          "blob_io_object": {
+            "p50_us": 2.385,
+            "p95_us": 2.755,
+            "sections": 64,
+            "total_ms": 0.156518,
+            "us_per_read": 2.44559375
+          },
+          "content_verify": {
+            "p50_us": 11.12,
+            "p95_us": 11.512,
+            "sections": 64,
+            "total_ms": 0.700679,
+            "us_per_read": 10.948109375
+          },
+          "manifest_decode": {
+            "p50_us": 0.741,
+            "p95_us": 0.901,
+            "sections": 64,
+            "total_ms": 0.052176,
+            "us_per_read": 0.81525
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 4.97082,
+        "residual_us_per_read": 77.6690625,
+        "sum_phases_ms": 1.742919,
+        "sum_phases_us_per_read": 27.233109375,
+        "us_per_read": 104.902171875,
+        "wall_ms": 6.7137389999999995
+      },
+      "index_load": {
+        "entries": 8,
+        "ms": 0.061906,
+        "note": null
+      },
+      "open_ms": 0.31144099999999997,
+      "order": "N,M,W",
+      "order_index": 2,
+      "reduced": true,
+      "rep": 1,
+      "rss_kib": 16416,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 906020,
+          "exact": 32,
+          "latency": {
+            "max_us": 249.666,
+            "min_us": 166.09,
+            "n": 32,
+            "p50_us": 173.724,
+            "p95_us": 234.498
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            225911,
+            249666,
+            183923,
+            242032,
+            181158,
+            181779,
+            179846,
+            180957,
+            168694,
+            225551,
+            169005,
+            223176,
+            173985,
+            173724,
+            172733,
+            168043,
+            167552,
+            226632,
+            169827,
+            226232,
+            167843,
+            168665,
+            167643,
+            168154,
+            166090,
+            234498,
+            171260,
+            224358,
+            169757,
+            169467,
+            169316,
+            167673
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {
+          "decode_only": {
+            "mode12": {
+              "max_us": 131.646,
+              "min_us": 116.227,
+              "n": 8,
+              "p50_us": 116.648,
+              "p95_us": 131.646
+            },
+            "mode12_frame_bytes": 26616,
+            "mode19": {
+              "max_us": 147.93599999999998,
+              "min_us": 129.892,
+              "n": 8,
+              "p50_us": 130.694,
+              "p95_us": 147.93599999999998
+            },
+            "mode19_descriptor_parse": {
+              "max_us": 14.698,
+              "min_us": 9.548,
+              "n": 8,
+              "p50_us": 10.069,
+              "p95_us": 14.698
+            },
+            "mode19_descriptor_root": {
+              "max_us": 6.192,
+              "min_us": 4.689,
+              "n": 8,
+              "p50_us": 4.949000000000001,
+              "p95_us": 6.192
+            },
+            "mode19_frame_bytes": 27141,
+            "mode19_page_hash_only": {
+              "max_us": 10.62,
+              "min_us": 10.37,
+              "n": 8,
+              "p50_us": 10.42,
+              "p95_us": 10.62
+            },
+            "mode19_planes_only": {
+              "max_us": 106.409,
+              "min_us": 103.312,
+              "n": 8,
+              "p50_us": 104.605,
+              "p95_us": 106.409
+            },
+            "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash and the descriptor identity from each other"
+          },
+          "probe_setup_ms": 15.400128
+        },
+        "metadata_loss": {
+          "backend_bytes": 453010,
+          "latency": {
+            "max_us": 242.713,
+            "min_us": 167.031,
+            "n": 16,
+            "p50_us": 179.254,
+            "p95_us": 239.307
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 0,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 0
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.834,
+              "min_us": 1.363,
+              "n": 8,
+              "p50_us": 1.423,
+              "p95_us": 7.834
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.514,
+              "min_us": 1.372,
+              "n": 8,
+              "p50_us": 1.413,
+              "p95_us": 7.514
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 6.683,
+              "min_us": 1.352,
+              "n": 8,
+              "p50_us": 1.373,
+              "p95_us": 6.683
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 12.053,
+              "min_us": 1.392,
+              "n": 8,
+              "p50_us": 1.582,
+              "p95_us": 12.053
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 6.843,
+              "min_us": 1.3430000000000002,
+              "n": 8,
+              "p50_us": 1.392,
+              "p95_us": 6.843
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.494,
+              "min_us": 1.362,
+              "n": 8,
+              "p50_us": 1.513,
+              "p95_us": 7.494
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.765,
+              "min_us": 1.333,
+              "n": 8,
+              "p50_us": 1.4529999999999998,
+              "p95_us": 7.765
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2125.957,
+            "min_us": 2118.183,
+            "n": 3,
+            "p50_us": 2125.005,
+            "p95_us": 2125.957
+          },
+          "raw_samples_ns": [
+            2118183,
+            2125005,
+            2125957
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "W",
+      "arm_description": "backend + WeftFS context plane (mode 19, scoped reads, causal closure)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3430878,
+          "logical_bytes": 3219456,
+          "ms": 464.735686,
+          "writes": 4
+        },
+        "missing_dependency": {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        },
+        "recovery": {
+          "backend_bytes": 593503,
+          "causal_closure": {
+            "closure_members": 2,
+            "declared": true,
+            "missing": 0,
+            "parents": 2,
+            "verified": true
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 632.3299999999999,
+            "min_us": 15.659999999999998,
+            "n": 9,
+            "p50_us": 467.944,
+            "p95_us": 632.3299999999999
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.521,
+                "p95_us": 0.591,
+                "sections": 10,
+                "total_ms": 0.003917
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.32,
+                "p95_us": 8.025,
+                "sections": 34,
+                "total_ms": 0.056202
+              },
+              "blob_hash_object": {
+                "p50_us": 10.35,
+                "p95_us": 10.65,
+                "sections": 10,
+                "total_ms": 0.092784
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.573,
+                "p95_us": 20.118,
+                "sections": 34,
+                "total_ms": 0.164076
+              },
+              "blob_io_object": {
+                "p50_us": 2.965,
+                "p95_us": 3.256,
+                "sections": 10,
+                "total_ms": 0.027842
+              },
+              "content_verify": {
+                "p50_us": 10.309,
+                "p95_us": 10.339,
+                "sections": 10,
+                "total_ms": 0.092081
+              },
+              "manifest_decode": {
+                "p50_us": 1.062,
+                "p95_us": 1.382,
+                "sections": 28,
+                "total_ms": 0.030787
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 2.785121,
+            "sum_phases_ms": 0.467689,
+            "wall_ms": 3.25281
+          },
+          "logical_bytes": 270336,
+          "outputs": 9,
+          "requests": 44,
+          "wall_ms": 3.537913
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 290679,
+        "commits": 8,
+        "footprint_bytes": 268004,
+        "footprint_files": 39,
+        "index_entries": 0,
+        "mode12_bytes": 221001,
+        "mode19_bytes": 225201,
+        "ms": 120.025377,
+        "note": null,
+        "page_bytes": 524288,
+        "writes": 8
+      },
+      "cpu_ms": 90.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 1812040,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.2,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.013106,
+            "us_per_read": 0.20478125
+          },
+          "auth_capability": {
+            "p50_us": 0.14,
+            "p95_us": 0.191,
+            "sections": 64,
+            "total_ms": 0.00997,
+            "us_per_read": 0.15578125
+          },
+          "auth_descriptor": {
+            "p50_us": 0.131,
+            "p95_us": 0.17,
+            "sections": 64,
+            "total_ms": 0.009057,
+            "us_per_read": 0.141515625
+          },
+          "auth_posix": {
+            "p50_us": 0.05,
+            "p95_us": 0.071,
+            "sections": 64,
+            "total_ms": 0.003519,
+            "us_per_read": 0.054984375
+          },
+          "auth_state": {
+            "p50_us": 0.21,
+            "p95_us": 0.281,
+            "sections": 64,
+            "total_ms": 0.014439,
+            "us_per_read": 0.225609375
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.25,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.01584,
+            "us_per_read": 0.2475
+          },
+          "blob_hash_object": {
+            "p50_us": 9.507,
+            "p95_us": 10.861,
+            "sections": 64,
+            "total_ms": 0.624551,
+            "us_per_read": 9.758609375
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.553,
+            "p95_us": 1.833,
+            "sections": 64,
+            "total_ms": 0.10687,
+            "us_per_read": 1.66984375
+          },
+          "blob_io_object": {
+            "p50_us": 2.415,
+            "p95_us": 2.825,
+            "sections": 64,
+            "total_ms": 0.158457,
+            "us_per_read": 2.475890625
+          },
+          "compare": {
+            "p50_us": 0.862,
+            "p95_us": 0.941,
+            "sections": 64,
+            "total_ms": 0.055963,
+            "us_per_read": 0.874421875
+          },
+          "content_verify": {
+            "p50_us": 9.508,
+            "p95_us": 10.8,
+            "sections": 64,
+            "total_ms": 0.611061,
+            "us_per_read": 9.547828125
+          },
+          "frame_parse": {
+            "p50_us": 0.841,
+            "p95_us": 1.042,
+            "sections": 64,
+            "total_ms": 0.055676,
+            "us_per_read": 0.8699375
+          },
+          "manifest_decode": {
+            "p50_us": 0.782,
+            "p95_us": 0.962,
+            "sections": 64,
+            "total_ms": 0.054012,
+            "us_per_read": 0.8439375
+          },
+          "page_decode": {
+            "p50_us": 137.376,
+            "p95_us": 192.97,
+            "sections": 64,
+            "total_ms": 9.604996,
+            "us_per_read": 150.0780625
+          },
+          "read_resolve": {
+            "p50_us": 1.142,
+            "p95_us": 1.332,
+            "sections": 64,
+            "total_ms": 0.074077,
+            "us_per_read": 1.157453125
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.262591,
+        "residual_us_per_read": 4.102984375,
+        "sum_phases_ms": 11.411594,
+        "sum_phases_us_per_read": 178.30615625,
+        "us_per_read": 182.409140625,
+        "wall_ms": 11.674185
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.00027,
+        "note": "not applicable"
+      },
+      "open_ms": 0.3321,
+      "order": "N,M,W",
+      "order_index": 3,
+      "reduced": true,
+      "rep": 1,
+      "rss_kib": 22832,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 2102368,
+          "exact": 32,
+          "latency": {
+            "max_us": 72.345,
+            "min_us": 28.203,
+            "n": 32,
+            "p50_us": 29.515,
+            "p95_us": 33.772999999999996
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            72345,
+            33773,
+            34895,
+            30658,
+            30817,
+            30767,
+            30106,
+            30217,
+            29725,
+            29585,
+            29645,
+            29465,
+            29795,
+            30217,
+            29946,
+            29745,
+            29515,
+            28884,
+            29124,
+            29165,
+            28904,
+            29475,
+            28974,
+            29045,
+            29004,
+            28293,
+            28323,
+            28513,
+            28273,
+            28403,
+            28203,
+            28333
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {},
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 44.393,
+            "min_us": 27.732000000000003,
+            "n": 16,
+            "p50_us": 28.212999999999997,
+            "p95_us": 30.026
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 48,
+          "accepted_wrong_bytes": 48,
+          "backend_bytes": 3153552,
+          "denied": 8,
+          "logical_bytes_returned": 3145728,
+          "requests": 96
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 29.645000000000003,
+              "min_us": 27.291,
+              "n": 8,
+              "p50_us": 27.631,
+              "p95_us": 29.645000000000003
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "attention": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.191000000000003,
+              "min_us": 26.73,
+              "n": 8,
+              "p50_us": 26.961,
+              "p95_us": 27.191000000000003
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "dtype": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.181,
+              "min_us": 26.7,
+              "n": 8,
+              "p50_us": 26.851000000000003,
+              "p95_us": 27.181
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 1.563,
+              "min_us": 0.982,
+              "n": 8,
+              "p50_us": 1.022,
+              "p95_us": 1.563
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.041,
+              "min_us": 26.68,
+              "n": 8,
+              "p50_us": 26.950000000000003,
+              "p95_us": 27.041
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 30.257,
+              "min_us": 27.041,
+              "n": 8,
+              "p50_us": 27.301,
+              "p95_us": 30.257
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.361,
+              "min_us": 26.9,
+              "n": 8,
+              "p50_us": 27.161,
+              "p95_us": 27.361
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2226.074,
+            "min_us": 2117.1,
+            "n": 3,
+            "p50_us": 2124.505,
+            "p95_us": 2226.074
+          },
+          "raw_samples_ns": [
+            2124505,
+            2117100,
+            2226074
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "N",
+      "arm_description": "backend alone: plain durable objects, no metadata",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3744358,
+          "logical_bytes": 3219456,
+          "ms": 1334.710058,
+          "writes": 99
+        },
+        "missing_dependency": {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 3235591,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 28.103,
+            "min_us": 14.678,
+            "n": 99,
+            "p50_us": 21.35,
+            "p95_us": 22.962
+          },
+          "ledger": {
+            "logical_bytes": 3219456,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 99,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.19,
+                "p95_us": 0.251,
+                "sections": 99,
+                "total_ms": 0.021149
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.241,
+                "p95_us": 0.261,
+                "sections": 99,
+                "total_ms": 0.024466
+              },
+              "blob_hash_object": {
+                "p50_us": 7.604,
+                "p95_us": 7.644,
+                "sections": 99,
+                "total_ms": 0.750987
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.473,
+                "p95_us": 1.593,
+                "sections": 99,
+                "total_ms": 0.149077
+              },
+              "blob_io_object": {
+                "p50_us": 2.324,
+                "p95_us": 2.645,
+                "sections": 99,
+                "total_ms": 0.231695
+              },
+              "content_verify": {
+                "p50_us": 7.594,
+                "p95_us": 7.635,
+                "sections": 99,
+                "total_ms": 0.751415
+              },
+              "manifest_decode": {
+                "p50_us": 0.721,
+                "p95_us": 0.832,
+                "sections": 99,
+                "total_ms": 0.073237
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.6868920000000003,
+            "sum_phases_ms": 2.002026,
+            "wall_ms": 2.688918
+          },
+          "logical_bytes": 3219456,
+          "outputs": 99,
+          "requests": 198,
+          "wall_ms": 2.695921
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 566768,
+        "commits": 8,
+        "footprint_bytes": 544093,
+        "footprint_files": 39,
+        "index_entries": 0,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 114.045658,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 60.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 4204736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.561,
+            "p95_us": 0.571,
+            "sections": 64,
+            "total_ms": 0.035123,
+            "us_per_read": 0.548796875
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.241,
+            "p95_us": 0.251,
+            "sections": 64,
+            "total_ms": 0.015636,
+            "us_per_read": 0.2443125
+          },
+          "blob_hash_object": {
+            "p50_us": 10.459,
+            "p95_us": 10.539,
+            "sections": 64,
+            "total_ms": 0.67231,
+            "us_per_read": 10.50484375
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.383,
+            "p95_us": 1.773,
+            "sections": 64,
+            "total_ms": 0.099469,
+            "us_per_read": 1.554203125
+          },
+          "blob_io_object": {
+            "p50_us": 2.655,
+            "p95_us": 3.266,
+            "sections": 64,
+            "total_ms": 0.176376,
+            "us_per_read": 2.755875
+          },
+          "compare": {
+            "p50_us": 0.842,
+            "p95_us": 0.961,
+            "sections": 64,
+            "total_ms": 0.054853,
+            "us_per_read": 0.857078125
+          },
+          "content_verify": {
+            "p50_us": 10.399,
+            "p95_us": 10.44,
+            "sections": 64,
+            "total_ms": 0.669655,
+            "us_per_read": 10.463359375
+          },
+          "manifest_decode": {
+            "p50_us": 0.692,
+            "p95_us": 0.912,
+            "sections": 64,
+            "total_ms": 0.049994,
+            "us_per_read": 0.78115625
+          },
+          "read_resolve": {
+            "p50_us": 0.891,
+            "p95_us": 1.142,
+            "sections": 64,
+            "total_ms": 0.063016,
+            "us_per_read": 0.984625
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.057633,
+        "residual_us_per_read": 0.900515625,
+        "sum_phases_ms": 1.836432,
+        "sum_phases_us_per_read": 28.69425,
+        "us_per_read": 29.594765625,
+        "wall_ms": 1.894065
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.00026,
+        "note": "not applicable"
+      },
+      "open_ms": 0.256639,
+      "order": "M,W,N",
+      "order_index": 3,
+      "reduced": true,
+      "rep": 2,
+      "rss_kib": 21536,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 1021368,
+          "exact": 32,
+          "latency": {
+            "max_us": 186.408,
+            "min_us": 100.497,
+            "n": 32,
+            "p50_us": 103.934,
+            "p95_us": 116.648
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            186408,
+            120144,
+            115185,
+            108983,
+            116648,
+            112480,
+            108061,
+            107791,
+            103934,
+            108051,
+            104444,
+            106318,
+            102912,
+            100939,
+            103944,
+            103814,
+            103292,
+            102822,
+            103824,
+            106228,
+            102531,
+            100497,
+            103473,
+            103463,
+            102802,
+            102651,
+            103894,
+            104225,
+            104255,
+            100858,
+            103473,
+            103273
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {
+          "full_key_denial_backend_bytes": 0,
+          "full_key_denied": 56,
+          "index_loaded_entries": 8,
+          "index_note": null,
+          "index_only_accepts": 24
+        },
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 0.7120000000000001,
+            "min_us": 0.121,
+            "n": 16,
+            "p50_us": 0.18,
+            "p95_us": 0.24
+          },
+          "metadata_removed": true,
+          "reused": 0,
+          "reused_exact": 0,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 766026,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 48
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.371,
+              "min_us": 0.15,
+              "n": 8,
+              "p50_us": 0.21,
+              "p95_us": 0.371
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.23,
+              "min_us": 0.151,
+              "n": 8,
+              "p50_us": 0.16999999999999998,
+              "p95_us": 0.23
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 255.978,
+              "min_us": 101.76,
+              "n": 8,
+              "p50_us": 118.712,
+              "p95_us": 255.978
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.6010000000000001,
+              "min_us": 0.16999999999999998,
+              "n": 8,
+              "p50_us": 0.201,
+              "p95_us": 0.6010000000000001
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 104.175,
+              "min_us": 99.686,
+              "n": 8,
+              "p50_us": 102.471,
+              "p95_us": 104.175
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 110.285,
+              "min_us": 100.477,
+              "n": 8,
+              "p50_us": 103.934,
+              "p95_us": 110.285
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.211,
+              "min_us": 0.14,
+              "n": 8,
+              "p50_us": 0.16999999999999998,
+              "p95_us": 0.211
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2150.4829999999997,
+            "min_us": 2127.58,
+            "n": 3,
+            "p50_us": 2132.379,
+            "p95_us": 2150.4829999999997
+          },
+          "raw_samples_ns": [
+            2127580,
+            2150483,
+            2132379
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "M",
+      "arm_description": "backend + strong application metadata (manifest, index, TTL, own subset selection)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3770190,
+          "logical_bytes": 3219456,
+          "ms": 1376.209469,
+          "writes": 101
+        },
+        "missing_dependency": {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 286540,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 34.865,
+            "min_us": 14.818,
+            "n": 9,
+            "p50_us": 24.195,
+            "p95_us": 34.865
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.231,
+                "p95_us": 0.381,
+                "sections": 10,
+                "total_ms": 0.002064
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.251,
+                "p95_us": 0.271,
+                "sections": 10,
+                "total_ms": 0.002525
+              },
+              "blob_hash_object": {
+                "p50_us": 7.634,
+                "p95_us": 7.835,
+                "sections": 10,
+                "total_ms": 0.073166
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.543,
+                "p95_us": 2.144,
+                "sections": 10,
+                "total_ms": 0.01596
+              },
+              "blob_io_object": {
+                "p50_us": 2.725,
+                "p95_us": 3.978,
+                "sections": 10,
+                "total_ms": 0.029473
+              },
+              "content_verify": {
+                "p50_us": 7.614,
+                "p95_us": 7.664,
+                "sections": 10,
+                "total_ms": 0.072885
+              },
+              "manifest_decode": {
+                "p50_us": 0.802,
+                "p95_us": 1.012,
+                "sections": 10,
+                "total_ms": 0.008024
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.17515099999999997,
+            "sum_phases_ms": 0.204097,
+            "wall_ms": 0.379248
+          },
+          "logical_bytes": 270336,
+          "outputs": 9,
+          "requests": 20,
+          "wall_ms": 0.399736
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 318018,
+        "commits": 10,
+        "footprint_bytes": 287151,
+        "footprint_files": 47,
+        "index_entries": 8,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 144.298654,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 60.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 2042736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.201,
+            "p95_us": 0.271,
+            "sections": 64,
+            "total_ms": 0.014145,
+            "us_per_read": 0.221015625
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.25,
+            "p95_us": 0.26,
+            "sections": 64,
+            "total_ms": 0.016002,
+            "us_per_read": 0.25003125
+          },
+          "blob_hash_object": {
+            "p50_us": 11.151,
+            "p95_us": 11.532,
+            "sections": 64,
+            "total_ms": 0.702185,
+            "us_per_read": 10.971640625
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.373,
+            "p95_us": 1.633,
+            "sections": 64,
+            "total_ms": 0.09565,
+            "us_per_read": 1.49453125
+          },
+          "blob_io_object": {
+            "p50_us": 1.844,
+            "p95_us": 2.856,
+            "sections": 64,
+            "total_ms": 0.126632,
+            "us_per_read": 1.978625
+          },
+          "content_verify": {
+            "p50_us": 11.101,
+            "p95_us": 11.501,
+            "sections": 64,
+            "total_ms": 0.698417,
+            "us_per_read": 10.912765625
+          },
+          "manifest_decode": {
+            "p50_us": 0.751,
+            "p95_us": 0.902,
+            "sections": 64,
+            "total_ms": 0.052833,
+            "us_per_read": 0.825515625
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 4.922004,
+        "residual_us_per_read": 76.9063125,
+        "sum_phases_ms": 1.705864,
+        "sum_phases_us_per_read": 26.654125,
+        "us_per_read": 103.5604375,
+        "wall_ms": 6.627868
+      },
+      "index_load": {
+        "entries": 8,
+        "ms": 0.081022,
+        "note": null
+      },
+      "open_ms": 0.29467000000000004,
+      "order": "M,W,N",
+      "order_index": 1,
+      "reduced": true,
+      "rep": 2,
+      "rss_kib": 17804,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 906020,
+          "exact": 32,
+          "latency": {
+            "max_us": 255.928,
+            "min_us": 167.632,
+            "n": 32,
+            "p50_us": 181.218,
+            "p95_us": 247.582
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            232594,
+            247582,
+            185657,
+            238054,
+            180177,
+            181218,
+            179966,
+            184945,
+            169887,
+            226533,
+            170088,
+            225711,
+            255928,
+            168795,
+            171250,
+            167632,
+            168113,
+            255407,
+            208650,
+            239357,
+            174936,
+            173554,
+            174466,
+            171921,
+            190305,
+            234357,
+            188491,
+            231391,
+            168153,
+            170128,
+            168264,
+            167783
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {
+          "decode_only": {
+            "mode12": {
+              "max_us": 128.169,
+              "min_us": 116.317,
+              "n": 8,
+              "p50_us": 116.968,
+              "p95_us": 128.169
+            },
+            "mode12_frame_bytes": 26616,
+            "mode19": {
+              "max_us": 138.929,
+              "min_us": 128.79,
+              "n": 8,
+              "p50_us": 130.143,
+              "p95_us": 138.929
+            },
+            "mode19_descriptor_parse": {
+              "max_us": 12.874,
+              "min_us": 9.738,
+              "n": 8,
+              "p50_us": 10.45,
+              "p95_us": 12.874
+            },
+            "mode19_descriptor_root": {
+              "max_us": 5.901,
+              "min_us": 4.588,
+              "n": 8,
+              "p50_us": 4.779,
+              "p95_us": 5.901
+            },
+            "mode19_frame_bytes": 27141,
+            "mode19_page_hash_only": {
+              "max_us": 10.65,
+              "min_us": 10.45,
+              "n": 8,
+              "p50_us": 10.489,
+              "p95_us": 10.65
+            },
+            "mode19_planes_only": {
+              "max_us": 106.349,
+              "min_us": 103.463,
+              "n": 8,
+              "p50_us": 103.543,
+              "p95_us": 106.349
+            },
+            "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash and the descriptor identity from each other"
+          },
+          "probe_setup_ms": 14.735467
+        },
+        "metadata_loss": {
+          "backend_bytes": 453010,
+          "latency": {
+            "max_us": 239.156,
+            "min_us": 165.749,
+            "n": 16,
+            "p50_us": 180.517,
+            "p95_us": 235.36
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 0,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 0
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 8.315999999999999,
+              "min_us": 1.332,
+              "n": 8,
+              "p50_us": 1.392,
+              "p95_us": 8.315999999999999
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.744000000000001,
+              "min_us": 1.352,
+              "n": 8,
+              "p50_us": 1.383,
+              "p95_us": 7.744000000000001
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 6.973,
+              "min_us": 1.332,
+              "n": 8,
+              "p50_us": 1.372,
+              "p95_us": 6.973
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 14.287,
+              "min_us": 1.363,
+              "n": 8,
+              "p50_us": 1.483,
+              "p95_us": 14.287
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.013,
+              "min_us": 1.333,
+              "n": 8,
+              "p50_us": 1.362,
+              "p95_us": 7.013
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.154,
+              "min_us": 1.362,
+              "n": 8,
+              "p50_us": 1.393,
+              "p95_us": 7.154
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 7.645,
+              "min_us": 1.3430000000000002,
+              "n": 8,
+              "p50_us": 1.603,
+              "p95_us": 7.645
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2131.328,
+            "min_us": 2117.421,
+            "n": 3,
+            "p50_us": 2124.604,
+            "p95_us": 2131.328
+          },
+          "raw_samples_ns": [
+            2124604,
+            2131328,
+            2117421
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "W",
+      "arm_description": "backend + WeftFS context plane (mode 19, scoped reads, causal closure)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3430878,
+          "logical_bytes": 3219456,
+          "ms": 461.192862,
+          "writes": 4
+        },
+        "missing_dependency": {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        },
+        "recovery": {
+          "backend_bytes": 593503,
+          "causal_closure": {
+            "closure_members": 2,
+            "declared": true,
+            "missing": 0,
+            "parents": 2,
+            "verified": true
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 689.0759999999999,
+            "min_us": 16.37,
+            "n": 9,
+            "p50_us": 475.658,
+            "p95_us": 689.0759999999999
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.4,
+                "p95_us": 0.741,
+                "sections": 10,
+                "total_ms": 0.003545
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.321,
+                "p95_us": 7.964,
+                "sections": 34,
+                "total_ms": 0.055896
+              },
+              "blob_hash_object": {
+                "p50_us": 10.359,
+                "p95_us": 10.751,
+                "sections": 10,
+                "total_ms": 0.093187
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.573,
+                "p95_us": 20.718,
+                "sections": 34,
+                "total_ms": 0.172383
+              },
+              "blob_io_object": {
+                "p50_us": 3.096,
+                "p95_us": 4.729,
+                "sections": 10,
+                "total_ms": 0.030185
+              },
+              "content_verify": {
+                "p50_us": 10.329,
+                "p95_us": 10.47,
+                "sections": 10,
+                "total_ms": 0.092423
+              },
+              "manifest_decode": {
+                "p50_us": 1.112,
+                "p95_us": 1.753,
+                "sections": 28,
+                "total_ms": 0.034052
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 2.81481,
+            "sum_phases_ms": 0.481671,
+            "wall_ms": 3.296481
+          },
+          "logical_bytes": 270336,
+          "outputs": 9,
+          "requests": 44,
+          "wall_ms": 3.744928
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 290679,
+        "commits": 8,
+        "footprint_bytes": 268004,
+        "footprint_files": 39,
+        "index_entries": 0,
+        "mode12_bytes": 221001,
+        "mode19_bytes": 225201,
+        "ms": 118.777529,
+        "note": null,
+        "page_bytes": 524288,
+        "writes": 8
+      },
+      "cpu_ms": 90.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 1812040,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.22,
+            "p95_us": 0.281,
+            "sections": 64,
+            "total_ms": 0.014616,
+            "us_per_read": 0.228375
+          },
+          "auth_capability": {
+            "p50_us": 0.131,
+            "p95_us": 0.191,
+            "sections": 64,
+            "total_ms": 0.009115,
+            "us_per_read": 0.142421875
+          },
+          "auth_descriptor": {
+            "p50_us": 0.131,
+            "p95_us": 0.2,
+            "sections": 64,
+            "total_ms": 0.009047,
+            "us_per_read": 0.141359375
+          },
+          "auth_posix": {
+            "p50_us": 0.04,
+            "p95_us": 0.07,
+            "sections": 64,
+            "total_ms": 0.002964,
+            "us_per_read": 0.0463125
+          },
+          "auth_state": {
+            "p50_us": 0.2,
+            "p95_us": 0.341,
+            "sections": 64,
+            "total_ms": 0.013152,
+            "us_per_read": 0.2055
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.25,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.01594,
+            "us_per_read": 0.2490625
+          },
+          "blob_hash_object": {
+            "p50_us": 9.518,
+            "p95_us": 10.84,
+            "sections": 64,
+            "total_ms": 0.613535,
+            "us_per_read": 9.586484375
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.543,
+            "p95_us": 1.793,
+            "sections": 64,
+            "total_ms": 0.102809,
+            "us_per_read": 1.606390625
+          },
+          "blob_io_object": {
+            "p50_us": 1.874,
+            "p95_us": 2.114,
+            "sections": 64,
+            "total_ms": 0.12272,
+            "us_per_read": 1.9175
+          },
+          "compare": {
+            "p50_us": 0.871,
+            "p95_us": 0.952,
+            "sections": 64,
+            "total_ms": 0.056277,
+            "us_per_read": 0.879328125
+          },
+          "content_verify": {
+            "p50_us": 9.518,
+            "p95_us": 10.82,
+            "sections": 64,
+            "total_ms": 0.613506,
+            "us_per_read": 9.58603125
+          },
+          "frame_parse": {
+            "p50_us": 0.841,
+            "p95_us": 1.052,
+            "sections": 64,
+            "total_ms": 0.056856,
+            "us_per_read": 0.888375
+          },
+          "manifest_decode": {
+            "p50_us": 0.802,
+            "p95_us": 1.042,
+            "sections": 64,
+            "total_ms": 0.054101,
+            "us_per_read": 0.845328125
+          },
+          "page_decode": {
+            "p50_us": 137.416,
+            "p95_us": 190.816,
+            "sections": 64,
+            "total_ms": 9.612059,
+            "us_per_read": 150.188421875
+          },
+          "read_resolve": {
+            "p50_us": 1.102,
+            "p95_us": 1.462,
+            "sections": 64,
+            "total_ms": 0.073036,
+            "us_per_read": 1.1411875
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.258236,
+        "residual_us_per_read": 4.0349375,
+        "sum_phases_ms": 11.369733,
+        "sum_phases_us_per_read": 177.652078125,
+        "us_per_read": 181.687015625,
+        "wall_ms": 11.627969
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.000221,
+        "note": "not applicable"
+      },
+      "open_ms": 0.342529,
+      "order": "M,W,N",
+      "order_index": 2,
+      "reduced": true,
+      "rep": 2,
+      "rss_kib": 23140,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 2102368,
+          "exact": 32,
+          "latency": {
+            "max_us": 65.733,
+            "min_us": 28.252,
+            "n": 32,
+            "p50_us": 30.026,
+            "p95_us": 38.191
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            65141,
+            31759,
+            30287,
+            30026,
+            30658,
+            29184,
+            30206,
+            33302,
+            65733,
+            38191,
+            33613,
+            32711,
+            32501,
+            32611,
+            32531,
+            32420,
+            32130,
+            29565,
+            28934,
+            28934,
+            28995,
+            28823,
+            28543,
+            28293,
+            28814,
+            28874,
+            28693,
+            28714,
+            28633,
+            28663,
+            28604,
+            28252
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {},
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 41.778,
+            "min_us": 27.712000000000003,
+            "n": 16,
+            "p50_us": 27.991999999999997,
+            "p95_us": 31.309
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 48,
+          "accepted_wrong_bytes": 48,
+          "backend_bytes": 3153552,
+          "denied": 8,
+          "logical_bytes_returned": 3145728,
+          "requests": 96
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 30.586999999999996,
+              "min_us": 27.991999999999997,
+              "n": 8,
+              "p50_us": 28.353,
+              "p95_us": 30.586999999999996
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "attention": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.792,
+              "min_us": 27.201,
+              "n": 8,
+              "p50_us": 27.611,
+              "p95_us": 27.792
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "dtype": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.661,
+              "min_us": 27.07,
+              "n": 8,
+              "p50_us": 27.422,
+              "p95_us": 27.661
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 1.542,
+              "min_us": 0.972,
+              "n": 8,
+              "p50_us": 1.032,
+              "p95_us": 1.542
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 27.721,
+              "min_us": 27.121,
+              "n": 8,
+              "p50_us": 27.571,
+              "p95_us": 27.721
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 29.835,
+              "min_us": 27.251,
+              "n": 8,
+              "p50_us": 27.572,
+              "p95_us": 29.835
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 8,
+            "accepted_wrong_bytes": 8,
+            "backend_bytes": 525592,
+            "denied": 0,
+            "latency": {
+              "max_us": 28.272,
+              "min_us": 27.481,
+              "n": 8,
+              "p50_us": 28.162,
+              "p95_us": 28.272
+            },
+            "logical_bytes_returned": 524288,
+            "requests": 16
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2153.588,
+            "min_us": 2116.33,
+            "n": 3,
+            "p50_us": 2125.957,
+            "p95_us": 2153.588
+          },
+          "raw_samples_ns": [
+            2116330,
+            2153588,
+            2125957
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "N",
+      "arm_description": "backend alone: plain durable objects, no metadata",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3744358,
+          "logical_bytes": 3219456,
+          "ms": 1338.750308,
+          "writes": 99
+        },
+        "missing_dependency": {
+          "class": "NotFound",
+          "emitted": 0,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 3235591,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 164.52700000000002,
+            "min_us": 15.239,
+            "n": 99,
+            "p50_us": 21.3,
+            "p95_us": 24.035
+          },
+          "ledger": {
+            "logical_bytes": 3219456,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 99,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.21,
+                "p95_us": 0.261,
+                "sections": 99,
+                "total_ms": 0.021902
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.241,
+                "p95_us": 0.26,
+                "sections": 99,
+                "total_ms": 0.024304
+              },
+              "blob_hash_object": {
+                "p50_us": 7.594,
+                "p95_us": 7.645,
+                "sections": 99,
+                "total_ms": 0.759923
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.433,
+                "p95_us": 1.523,
+                "sections": 99,
+                "total_ms": 0.14511
+              },
+              "blob_io_object": {
+                "p50_us": 2.324,
+                "p95_us": 2.604,
+                "sections": 99,
+                "total_ms": 0.232813
+              },
+              "content_verify": {
+                "p50_us": 7.604,
+                "p95_us": 7.644,
+                "sections": 99,
+                "total_ms": 0.756619
+              },
+              "manifest_decode": {
+                "p50_us": 0.731,
+                "p95_us": 0.801,
+                "sections": 99,
+                "total_ms": 0.076166
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.6157659999999998,
+            "sum_phases_ms": 2.016837,
+            "wall_ms": 2.632603
+          },
+          "logical_bytes": 3219456,
+          "outputs": 99,
+          "requests": 198,
+          "wall_ms": 2.81838
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 566768,
+        "commits": 8,
+        "footprint_bytes": 544093,
+        "footprint_files": 39,
+        "index_entries": 0,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 113.331705,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 60.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 4204736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.551,
+            "p95_us": 0.591,
+            "sections": 64,
+            "total_ms": 0.034218,
+            "us_per_read": 0.53465625
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.241,
+            "p95_us": 0.26,
+            "sections": 64,
+            "total_ms": 0.015697,
+            "us_per_read": 0.245265625
+          },
+          "blob_hash_object": {
+            "p50_us": 10.409,
+            "p95_us": 10.72,
+            "sections": 64,
+            "total_ms": 0.67104,
+            "us_per_read": 10.485
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.363,
+            "p95_us": 1.684,
+            "sections": 64,
+            "total_ms": 0.096769,
+            "us_per_read": 1.512015625
+          },
+          "blob_io_object": {
+            "p50_us": 2.184,
+            "p95_us": 3.115,
+            "sections": 64,
+            "total_ms": 0.150291,
+            "us_per_read": 2.348296875
+          },
+          "compare": {
+            "p50_us": 0.851,
+            "p95_us": 0.892,
+            "sections": 64,
+            "total_ms": 0.054337,
+            "us_per_read": 0.849015625
+          },
+          "content_verify": {
+            "p50_us": 10.399,
+            "p95_us": 10.7,
+            "sections": 64,
+            "total_ms": 0.667417,
+            "us_per_read": 10.428390625
+          },
+          "manifest_decode": {
+            "p50_us": 0.741,
+            "p95_us": 0.952,
+            "sections": 64,
+            "total_ms": 0.05234,
+            "us_per_read": 0.8178125
+          },
+          "read_resolve": {
+            "p50_us": 0.912,
+            "p95_us": 1.192,
+            "sections": 64,
+            "total_ms": 0.065224,
+            "us_per_read": 1.019125
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.060412,
+        "residual_us_per_read": 0.9439375,
+        "sum_phases_ms": 1.807333,
+        "sum_phases_us_per_read": 28.239578125,
+        "us_per_read": 29.183515625,
+        "wall_ms": 1.867745
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.00019,
+        "note": "not applicable"
+      },
+      "open_ms": 0.237463,
+      "order": "W,N,M",
+      "order_index": 2,
+      "reduced": true,
+      "rep": 3,
+      "rss_kib": 21180,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 1021368,
+          "exact": 32,
+          "latency": {
+            "max_us": 137.57600000000002,
+            "min_us": 100.868,
+            "n": 32,
+            "p50_us": 104.004,
+            "p95_us": 109.163
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            137576,
+            109163,
+            108081,
+            107350,
+            105627,
+            103754,
+            108122,
+            116558,
+            103793,
+            103663,
+            104435,
+            104876,
+            103193,
+            101299,
+            104054,
+            107030,
+            103664,
+            103072,
+            104155,
+            104284,
+            103052,
+            101008,
+            104004,
+            103974,
+            103453,
+            104445,
+            103774,
+            104034,
+            103012,
+            100868,
+            103633,
+            103654
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {
+          "full_key_denial_backend_bytes": 0,
+          "full_key_denied": 56,
+          "index_loaded_entries": 8,
+          "index_note": null,
+          "index_only_accepts": 24
+        },
+        "metadata_loss": {
+          "backend_bytes": 0,
+          "latency": {
+            "max_us": 0.882,
+            "min_us": 0.13,
+            "n": 16,
+            "p50_us": 0.18,
+            "p95_us": 0.27099999999999996
+          },
+          "metadata_removed": true,
+          "reused": 0,
+          "reused_exact": 0,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 766026,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 48
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.32099999999999995,
+              "min_us": 0.181,
+              "n": 8,
+              "p50_us": 0.23,
+              "p95_us": 0.32099999999999995
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.27099999999999996,
+              "min_us": 0.16,
+              "n": 8,
+              "p50_us": 0.171,
+              "p95_us": 0.27099999999999996
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 103.013,
+              "min_us": 99.135,
+              "n": 8,
+              "p50_us": 102.02,
+              "p95_us": 103.013
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.371,
+              "min_us": 0.16,
+              "n": 8,
+              "p50_us": 0.19,
+              "p95_us": 0.371
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 105.317,
+              "min_us": 100.277,
+              "n": 8,
+              "p50_us": 102.912,
+              "p95_us": 105.317
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 255342,
+            "denied": 8,
+            "latency": {
+              "max_us": 103.974,
+              "min_us": 98.985,
+              "n": 8,
+              "p50_us": 101.951,
+              "p95_us": 103.974
+            },
+            "logical_bytes_returned": 0,
+            "requests": 16
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 0.221,
+              "min_us": 0.15,
+              "n": 8,
+              "p50_us": 0.2,
+              "p95_us": 0.221
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2128.843,
+            "min_us": 2120.277,
+            "n": 3,
+            "p50_us": 2120.667,
+            "p95_us": 2128.843
+          },
+          "raw_samples_ns": [
+            2120667,
+            2120277,
+            2128843
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "M",
+      "arm_description": "backend + strong application metadata (manifest, index, TTL, own subset selection)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3770190,
+          "logical_bytes": 3219456,
+          "ms": 1365.680885,
+          "writes": 101
+        },
+        "missing_dependency": {
+          "backend_bytes": 32931,
+          "class": "NotFound",
+          "emitted": 32768,
+          "failed_closed": true
+        },
+        "recovery": {
+          "backend_bytes": 286540,
+          "causal_closure": {
+            "declared": false,
+            "verified": false
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 32.39,
+            "min_us": 14.778,
+            "n": 9,
+            "p50_us": 24.035,
+            "p95_us": 32.39
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.2,
+                "p95_us": 0.221,
+                "sections": 10,
+                "total_ms": 0.001815
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.25,
+                "p95_us": 0.26,
+                "sections": 10,
+                "total_ms": 0.002475
+              },
+              "blob_hash_object": {
+                "p50_us": 7.624,
+                "p95_us": 7.684,
+                "sections": 10,
+                "total_ms": 0.072965
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.523,
+                "p95_us": 2.164,
+                "sections": 10,
+                "total_ms": 0.016138
+              },
+              "blob_io_object": {
+                "p50_us": 1.984,
+                "p95_us": 2.385,
+                "sections": 10,
+                "total_ms": 0.020108
+              },
+              "content_verify": {
+                "p50_us": 7.594,
+                "p95_us": 7.615,
+                "sections": 10,
+                "total_ms": 0.074599
+              },
+              "manifest_decode": {
+                "p50_us": 0.782,
+                "p95_us": 0.882,
+                "sections": 10,
+                "total_ms": 0.007865
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 0.17280299999999998,
+            "sum_phases_ms": 0.195965,
+            "wall_ms": 0.368768
+          },
+          "logical_bytes": 270336,
+          "outputs": 9,
+          "requests": 20,
+          "wall_ms": 0.384287
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 318018,
+        "commits": 10,
+        "footprint_bytes": 287151,
+        "footprint_files": 47,
+        "index_entries": 8,
+        "mode12_bytes": 0,
+        "mode19_bytes": 0,
+        "ms": 143.916017,
+        "note": null,
+        "page_bytes": 0,
+        "writes": 8
+      },
+      "cpu_ms": 60.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 2042736,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.231,
+            "p95_us": 0.301,
+            "sections": 64,
+            "total_ms": 0.015456,
+            "us_per_read": 0.2415
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.25,
+            "p95_us": 0.26,
+            "sections": 64,
+            "total_ms": 0.015868,
+            "us_per_read": 0.2479375
+          },
+          "blob_hash_object": {
+            "p50_us": 11.121,
+            "p95_us": 11.621,
+            "sections": 64,
+            "total_ms": 0.701693,
+            "us_per_read": 10.963953125
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.423,
+            "p95_us": 2.114,
+            "sections": 64,
+            "total_ms": 0.102905,
+            "us_per_read": 1.607890625
+          },
+          "blob_io_object": {
+            "p50_us": 2.505,
+            "p95_us": 2.735,
+            "sections": 64,
+            "total_ms": 0.162344,
+            "us_per_read": 2.536625
+          },
+          "content_verify": {
+            "p50_us": 11.11,
+            "p95_us": 11.511,
+            "sections": 64,
+            "total_ms": 0.699331,
+            "us_per_read": 10.927046875
+          },
+          "manifest_decode": {
+            "p50_us": 0.711,
+            "p95_us": 1.062,
+            "sections": 64,
+            "total_ms": 0.050793,
+            "us_per_read": 0.793640625
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 4.965088,
+        "residual_us_per_read": 77.5795,
+        "sum_phases_ms": 1.74839,
+        "sum_phases_us_per_read": 27.31859375,
+        "us_per_read": 104.89809375,
+        "wall_ms": 6.713478
+      },
+      "index_load": {
+        "entries": 8,
+        "ms": 0.059852,
+        "note": null
+      },
+      "open_ms": 0.290252,
+      "order": "W,N,M",
+      "order_index": 3,
+      "reduced": true,
+      "rep": 3,
+      "rss_kib": 16028,
+      "schema": "weft.context_advantage.phase.v1"
+    },
+    {
+      "a": {
+        "compatible": {
+          "backend_bytes": 906020,
+          "exact": 32,
+          "latency": {
+            "max_us": 389.387,
+            "min_us": 165.62900000000002,
+            "n": 32,
+            "p50_us": 183.913,
+            "p95_us": 244.677
+          },
+          "logical_bytes": 2097152,
+          "raw_samples_ns": [
+            231241,
+            244677,
+            211805,
+            238225,
+            183913,
+            179525,
+            180957,
+            181269,
+            168194,
+            226132,
+            168134,
+            389387,
+            183623,
+            173133,
+            176279,
+            168715,
+            167683,
+            222355,
+            169376,
+            240178,
+            169867,
+            166981,
+            167553,
+            167423,
+            165629,
+            224379,
+            200845,
+            293888,
+            240238,
+            236952,
+            240118,
+            242132
+          ],
+          "requests": 64,
+          "total": 32
+        },
+        "diagnostics": {
+          "decode_only": {
+            "mode12": {
+              "max_us": 133.149,
+              "min_us": 115.997,
+              "n": 8,
+              "p50_us": 116.337,
+              "p95_us": 133.149
+            },
+            "mode12_frame_bytes": 26616,
+            "mode19": {
+              "max_us": 144.229,
+              "min_us": 129.442,
+              "n": 8,
+              "p50_us": 130.112,
+              "p95_us": 144.229
+            },
+            "mode19_descriptor_parse": {
+              "max_us": 13.165,
+              "min_us": 9.347,
+              "n": 8,
+              "p50_us": 10.128,
+              "p95_us": 13.165
+            },
+            "mode19_descriptor_root": {
+              "max_us": 6.302,
+              "min_us": 4.549,
+              "n": 8,
+              "p50_us": 4.778,
+              "p95_us": 6.302
+            },
+            "mode19_frame_bytes": 27141,
+            "mode19_page_hash_only": {
+              "max_us": 11.722,
+              "min_us": 10.4,
+              "n": 8,
+              "p50_us": 10.47,
+              "p95_us": 11.722
+            },
+            "mode19_planes_only": {
+              "max_us": 105.727,
+              "min_us": 103.192,
+              "n": 8,
+              "p50_us": 103.433,
+              "p95_us": 105.727
+            },
+            "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash and the descriptor identity from each other"
+          },
+          "probe_setup_ms": 14.915644
+        },
+        "metadata_loss": {
+          "backend_bytes": 453010,
+          "latency": {
+            "max_us": 239.987,
+            "min_us": 166.37,
+            "n": 16,
+            "p50_us": 179.274,
+            "p95_us": 234.908
+          },
+          "metadata_removed": false,
+          "reused": 16,
+          "reused_exact": 16,
+          "total": 16
+        },
+        "probe_summary": {
+          "accepted": 0,
+          "accepted_wrong_bytes": 0,
+          "backend_bytes": 0,
+          "denied": 56,
+          "logical_bytes_returned": 0,
+          "requests": 0
+        },
+        "probes": {
+          "adapter": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 11.691999999999998,
+              "min_us": 2.174,
+              "n": 8,
+              "p50_us": 2.295,
+              "p95_us": 11.691999999999998
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "attention": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 11.622,
+              "min_us": 1.994,
+              "n": 8,
+              "p50_us": 2.144,
+              "p95_us": 11.622
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "dtype": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 9.868,
+              "min_us": 2.154,
+              "n": 8,
+              "p50_us": 2.194,
+              "p95_us": 9.868
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "model": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 19.978,
+              "min_us": 2.234,
+              "n": 8,
+              "p50_us": 2.375,
+              "p95_us": 19.978
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "positional": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 10.049,
+              "min_us": 2.124,
+              "n": 8,
+              "p50_us": 2.194,
+              "p95_us": 10.049
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "salt": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 10.65,
+              "min_us": 2.0940000000000003,
+              "n": 8,
+              "p50_us": 2.184,
+              "p95_us": 10.65
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          },
+          "tokenizer": {
+            "accepted": 0,
+            "accepted_wrong_bytes": 0,
+            "backend_bytes": 0,
+            "denied": 8,
+            "latency": {
+              "max_us": 11.772,
+              "min_us": 2.194,
+              "n": 8,
+              "p50_us": 2.3939999999999997,
+              "p95_us": 11.772
+            },
+            "logical_bytes_returned": 0,
+            "requests": 0
+          }
+        },
+        "recompute": {
+          "bytes": 65536,
+          "latency": {
+            "max_us": 2418.1620000000003,
+            "min_us": 2117.942,
+            "n": 3,
+            "p50_us": 2122.972,
+            "p95_us": 2418.1620000000003
+          },
+          "raw_samples_ns": [
+            2418162,
+            2122972,
+            2117942
+          ],
+          "regenerated_page_exactly": true
+        }
+      },
+      "arm": "W",
+      "arm_description": "backend + WeftFS context plane (mode 19, scoped reads, causal closure)",
+      "b": {
+        "build": {
+          "backend_bytes_written": 3430878,
+          "logical_bytes": 3219456,
+          "ms": 488.702253,
+          "writes": 4
+        },
+        "missing_dependency": {
+          "class": "DependencyMismatch",
+          "emitted": 0,
+          "failed_closed": true,
+          "missing_members": 1
+        },
+        "recovery": {
+          "backend_bytes": 593503,
+          "causal_closure": {
+            "closure_members": 2,
+            "declared": true,
+            "missing": 0,
+            "parents": 2,
+            "verified": true
+          },
+          "digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+          "latency": {
+            "max_us": 552.18,
+            "min_us": 15.188,
+            "n": 9,
+            "p50_us": 467.322,
+            "p95_us": 552.18
+          },
+          "ledger": {
+            "logical_bytes": 270336,
+            "note": "second, instrumented pass over warm data; not the headline number",
+            "outputs": 9,
+            "phases": {
+              "assemble": {
+                "p50_us": 0.391,
+                "p95_us": 0.441,
+                "sections": 10,
+                "total_ms": 0.003446
+              },
+              "blob_hash_manifest": {
+                "p50_us": 0.321,
+                "p95_us": 7.945,
+                "sections": 34,
+                "total_ms": 0.055871
+              },
+              "blob_hash_object": {
+                "p50_us": 10.369,
+                "p95_us": 11.922,
+                "sections": 10,
+                "total_ms": 0.094165
+              },
+              "blob_io_manifest": {
+                "p50_us": 1.572,
+                "p95_us": 20.108,
+                "sections": 34,
+                "total_ms": 0.164036
+              },
+              "blob_io_object": {
+                "p50_us": 3.046,
+                "p95_us": 3.447,
+                "sections": 10,
+                "total_ms": 0.028714
+              },
+              "content_verify": {
+                "p50_us": 10.329,
+                "p95_us": 10.37,
+                "sections": 10,
+                "total_ms": 0.092254
+              },
+              "manifest_decode": {
+                "p50_us": 1.082,
+                "p95_us": 1.312,
+                "sections": 28,
+                "total_ms": 0.030184
+              }
+            },
+            "residual_covers": "the harness's own buffers and copies, per-output allocation, and call overhead",
+            "residual_ms": 2.760355,
+            "sum_phases_ms": 0.46867,
+            "wall_ms": 3.229025
+          },
+          "logical_bytes": 270336,
+          "outputs": 9,
+          "requests": 44,
+          "wall_ms": 3.404794
+        }
+      },
+      "build_a": {
+        "backend_bytes_written": 290679,
+        "commits": 8,
+        "footprint_bytes": 268004,
+        "footprint_files": 39,
+        "index_entries": 0,
+        "mode12_bytes": 221001,
+        "mode19_bytes": 225201,
+        "ms": 114.077036,
+        "note": null,
+        "page_bytes": 524288,
+        "writes": 8
+      },
+      "cpu_ms": 100.0,
+      "expected_digest": "2068e91b556d45d51913340e246a3396838cd3ad7703a970dd1ecfa3aa428613",
+      "fast_path_ledger": {
+        "backend_bytes": 1812040,
+        "exact": 64,
+        "note": "instrumented pass; the profiler takes a global lock per section, so this wall is not the headline number",
+        "phases": {
+          "assemble": {
+            "p50_us": 0.2,
+            "p95_us": 0.291,
+            "sections": 64,
+            "total_ms": 0.013376,
+            "us_per_read": 0.209
+          },
+          "auth_capability": {
+            "p50_us": 0.14,
+            "p95_us": 0.28,
+            "sections": 64,
+            "total_ms": 0.010877,
+            "us_per_read": 0.169953125
+          },
+          "auth_descriptor": {
+            "p50_us": 0.141,
+            "p95_us": 0.21,
+            "sections": 64,
+            "total_ms": 0.01015,
+            "us_per_read": 0.15859375
+          },
+          "auth_posix": {
+            "p50_us": 0.05,
+            "p95_us": 0.08,
+            "sections": 64,
+            "total_ms": 0.003554,
+            "us_per_read": 0.05553125
+          },
+          "auth_state": {
+            "p50_us": 0.21,
+            "p95_us": 0.331,
+            "sections": 64,
+            "total_ms": 0.014744,
+            "us_per_read": 0.230375
+          },
+          "blob_hash_manifest": {
+            "p50_us": 0.241,
+            "p95_us": 0.261,
+            "sections": 64,
+            "total_ms": 0.015851,
+            "us_per_read": 0.247671875
+          },
+          "blob_hash_object": {
+            "p50_us": 9.527,
+            "p95_us": 10.86,
+            "sections": 64,
+            "total_ms": 0.61635,
+            "us_per_read": 9.63046875
+          },
+          "blob_io_manifest": {
+            "p50_us": 1.443,
+            "p95_us": 2.184,
+            "sections": 64,
+            "total_ms": 0.109521,
+            "us_per_read": 1.711265625
+          },
+          "blob_io_object": {
+            "p50_us": 1.873,
+            "p95_us": 2.825,
+            "sections": 64,
+            "total_ms": 0.132508,
+            "us_per_read": 2.0704375
+          },
+          "compare": {
+            "p50_us": 0.892,
+            "p95_us": 0.992,
+            "sections": 64,
+            "total_ms": 0.057829,
+            "us_per_read": 0.903578125
+          },
+          "content_verify": {
+            "p50_us": 9.508,
+            "p95_us": 10.84,
+            "sections": 64,
+            "total_ms": 0.614195,
+            "us_per_read": 9.596796875
+          },
+          "frame_parse": {
+            "p50_us": 0.822,
+            "p95_us": 1.032,
+            "sections": 64,
+            "total_ms": 0.055121,
+            "us_per_read": 0.861265625
+          },
+          "manifest_decode": {
+            "p50_us": 0.821,
+            "p95_us": 1.583,
+            "sections": 64,
+            "total_ms": 0.061108,
+            "us_per_read": 0.9548125
+          },
+          "page_decode": {
+            "p50_us": 138.89,
+            "p95_us": 190.856,
+            "sections": 64,
+            "total_ms": 9.607029,
+            "us_per_read": 150.109828125
+          },
+          "read_resolve": {
+            "p50_us": 1.042,
+            "p95_us": 1.543,
+            "sections": 64,
+            "total_ms": 0.07262,
+            "us_per_read": 1.1346875
+          }
+        },
+        "reads": 64,
+        "requests": 128,
+        "residual_covers": "allocations and copies outside a named phase, the object-record lookup inside read_object_inner, access counters, and call overhead",
+        "residual_ms": 0.232214,
+        "residual_us_per_read": 3.62834375,
+        "sum_phases_ms": 11.394833,
+        "sum_phases_us_per_read": 178.044265625,
+        "us_per_read": 181.672609375,
+        "wall_ms": 11.627047
+      },
+      "index_load": {
+        "entries": 0,
+        "ms": 0.000171,
+        "note": "not applicable"
+      },
+      "open_ms": 0.331989,
+      "order": "W,N,M",
+      "order_index": 1,
+      "reduced": true,
+      "rep": 3,
+      "rss_kib": 22764,
+      "schema": "weft.context_advantage.phase.v1"
+    }
+  ],
+  "result": "pass",
+  "result_note": "`result` reports measurement validity (every row present, every arm exact, every declared check met). `claim_holds` reports whether the pre-registered capability claim survived; the two are deliberately separate.",
+  "schema": "weft.context_advantage.v1",
+  "scope": "single host, one backend, OOM-protected Docker court. Not a cloud, fleet, media or power-loss claim."
+}
