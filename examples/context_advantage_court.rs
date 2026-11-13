@@ -2382,6 +2382,8 @@ fn assemble(args: &Args) -> Result<(), String> {
             ("footprint_bytes", vec!["build_a", "footprint_bytes"]),
             ("open_ms", vec!["open_ms"]),
             ("index_load_ms", vec!["index_load", "ms"]),
+            ("frame_mode19_bytes", vec!["build_a", "mode19_bytes"]),
+            ("frame_mode12_bytes", vec!["build_a", "mode12_bytes"]),
             ("rss_kib", vec!["rss_kib"]),
         ] {
             let values: Vec<f64> = rows.iter().filter_map(|row| pick(row, &path)).collect();
