@@ -464,14 +464,16 @@ def scenario_s2():
         rust_proc = start(
             rust(
                 "write", "--store", store, "--writer", f"r{index}", "--count", "1",
-                "--hot", name, "--tx-id", rust_tx, container_name=c,
+                "--hot", name, "--tx-id", rust_tx,
+                "--pause-before-execute-ms", "500", container_name=c,
             ),
             log=log_path(f"{tag}-r{index}.json"),
         )
         go_proc = start(
             go(
                 "write", "--store", store, "--writer", f"g{index}", "--count", "1",
-                "--hot", name, "--tx-id", go_tx, container_name=c,
+                "--hot", name, "--tx-id", go_tx,
+                "--pause-before-execute-ms", "500", container_name=c,
             ),
             log=log_path(f"{tag}-g{index}.json"),
         )
