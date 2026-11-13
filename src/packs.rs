@@ -1139,7 +1139,7 @@ impl BlobPlane for PackedBlobPlane {
                     // is enough and the pack's bytes become garbage.
                     removed_pending.insert(entry.sort_key());
                 }
-                Some((entry, Slot::Catalog(_))) => {
+                Some((entry, Slot::Catalog)) => {
                     let index = segment_index(entry.id, options.catalog_segments);
                     touched.entry(index).or_default().insert(entry.sort_key());
                 }
@@ -1273,8 +1273,9 @@ enum Slot {
     /// In a pack object this handle already published, whose catalog record has
     /// not been published yet (N15 auto-deferral between seal and flush).
     Pending,
-    /// In a pack named by a published catalog segment.
-    Catalog(Arc<Segment>),
+    /// In a pack named by a published catalog segment. The segment itself is
+    /// cached in `state.segments`, so the slot carries no reference.
+    Catalog,
 }
 
 fn find(
@@ -1307,7 +1308,7 @@ fn find(
         .entries
         .binary_search_by(|entry| entry.sort_key().cmp(&wanted))
     {
-        Ok(position) => Ok(Some((segment.entries[position], Slot::Catalog(segment)))),
+        Ok(position) => Ok(Some((segment.entries[position], Slot::Catalog))),
         Err(_) => Ok(None),
     }
 }
