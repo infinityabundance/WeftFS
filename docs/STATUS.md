@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,070** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,079** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10220,3 +10220,93 @@ write is now durability-bound, not encode-bound.
     measured configuration keeps the decoded-object cache and single-flight
     **off** for every arm, as the contract requires, so none of these numbers
     come from caching decoded pages.
+
+- 2026-11-13 (R28, the recovery manifest resolved once, and the representation
+  question answered): parent `staging` `5752a83` (code `c45d5de`, harness and
+  contract `dd4a027`, receipt fields `ee13bc5`, field name `5752a83`);
+  submodules unchanged. Evidence: receipt
+  `bench/receipts/context-advantage-20261113T064743Z.json` (stamp
+  `20261113T064743Z`, WeftFS `5752a833bd990131140d2b345400626377bc0390`, label
+  `full`, 7 interleaved reps), reduced three-rep receipt
+  `bench/receipts/context-advantage-20261113T064832Z.json`; analysis
+  `bench/RESULTS-context-advantage.md`, design
+  `docs/KV-PROV-REPRESENTATION.md`. Measurement validity **pass**,
+  **`claim_holds: false`**.
+  * **Recovery manifest reuse (new API).** `Store::load_checkpoint_manifest[_at]`
+    returns a `LoadedCheckpointManifest` (name, content address, root, manifest);
+    `Store::restore_named_tensor_with_manifest` restores one named tensor from
+    it through the same per-tensor code as `restore_named_tensor_at`
+    (`restore_manifest_tensor`): every shard is still read through the
+    content-addressed object path, every shard's content root and own logical
+    root is still recomputed and compared, the assembled tensor root and any
+    requested topology root are still compared, and a manifest naming another
+    checkpoint is refused. A forged manifest cannot make the store return bytes
+    that do not hash to the stored shard roots, because the roots are compared
+    with the bytes actually returned. `tests/checkpoint_manifest_reuse.rs` 6/6:
+    byte-identical bytes/regions/topologies against the per-call path, exact
+    measured saving (only the manifest read), wrong-checkpoint refusal, forged
+    shard root and byte length both `Corrupt`, pinned manifest equals live.
+  * **Measured recovery, before and after** (same court, same fixture; R27
+    receipt `...T061907Z`, R28 `...T064743Z`): W backend bytes **593,503 →
+    321,343**, wall **3.340 → 1.283 ms**, checkpoint manifest loads **6 → 1**,
+    manifest-blob read sections **34 → 28**. The removed **272,160 B** is exactly
+    six loads of **45,360 B** (the 45,197 B manifest object plus the 163 B
+    manifest blob describing its single chunk). Gap against M: **306,963 →
+    34,803 B** (**2.07× → 1.12×**), wall **8.32× → 3.24×** M. Materialized
+    bytes were and remain identical (270,336 B). What is left is decode and
+    root recomputation, measured per output: W **97.23 µs** vs M **24.48 µs**.
+  * **Contract reconciled (task 4).** `bench/CONTRACTS-context-advantage.md` is
+    now version 2: §3 C3 printed 1.25× while the harness declared and enforced
+    1.10× in every receipt since R26. The document was corrected to the enforced,
+    stricter value with an explicit change log; no arm, invariant, metric, gate
+    or tolerance changed, and no run was measured under the printed value.
+  * **Representation question: no existing representation exists.** Mode 19's
+    payload is the mode-12 payload verbatim and the mode-12 descriptor (embedded
+    verbatim) fixes `plane_codec` to exactly `huffman-canonical-v1`
+    (`spec/WEFT-AI-CODEC.md` §13.2/§13.3, `WeftCodec/src/kv_cache.rs`); the eight
+    provenance dimensions exist only in mode 19, and tensor/raw store strategies
+    carry a tensor logical root, not provenance. So a page cannot carry mode-19
+    identity with a raw payload today. Measured payload step on the same page:
+    Huffman planes **103.69 µs** / **632.0 MB/s**, one-allocation-plus-copy floor
+    **0.68 µs** / **96,234.9 MB/s** (ratio **152.3×**). **Storage delta of this
+    receipt: zero** — no representation changed, the pages re-encode to the same
+    225,201 B of mode-19 frames and the store footprint is unchanged.
+  * **Decision on the format.** Report the design, do not implement it blind.
+    `docs/KV-PROV-REPRESENTATION.md` proposes an additive `plane_codec` value
+    (`raw-le-v1`) in the existing field, a representation-independent
+    `scope_root` derived over the eight dimensions plus `payload_hash` so "same
+    provenance identity, either representation" is checked rather than asserted,
+    old readers failing closed on the unknown value, no frozen vector touched,
+    and a court that must publish the storage delta beside any latency win. It is
+    not implemented: replacing the payload step is not shown to meet C1, because
+    the descriptor parse, the descriptor identity and the reconstructed-page hash
+    are normative per-read checks a raw payload still pays, and the store path's
+    Huffman cost is bounded only between the in-memory row and the ledger row.
+    No representation claim is made, and the receipt's `not_measured` says so.
+  * **Unchanged results, re-measured.** W **0/56** cross-scope probes accepted,
+    **0** bytes returned, **0 backend bytes and 0 requests** to refuse; M
+    **0/56** but **766,026 B over 48 requests**; N accepts **48** and returns the
+    wrong payload **48** times. After the metadata database is removed M reuses
+    **0/16**, W **16/16** byte-exactly. Happy path **64/64** byte-exact in every
+    arm; recovery materializes the same 270,336 B in M and W.
+  * **Fast path, still failed and not re-framed.** W p50 **169.6 µs** vs N
+    **29.0 µs** = **5.85×** (declared ≤ 2.0×), p95 **232.7 µs** vs **32.0 µs** =
+    **7.28×** (declared ≤ 2.5×), backend bytes **0.431×** (declared ≤ 1.10×, so
+    C3 passes). The tolerance was not widened and no metric changed. The floor
+    is the representation plus the plane's normative per-read verification, and
+    that is now stated in those words.
+  * Gates at `5752a83`: `cargo test --all-targets` **173 suites / 819 passed /
+    0 failed / 0 ignored**; `cargo test --features fuse --all-targets` **173
+    suites / 862 passed / 0 failed / 2 pre-existing ignored**;
+    `scripts/check-claims.sh` **1079/1079**; `scripts/perf_numbers.py --check`
+    **512 numbers / 81 blocks**; `scripts/check-spec-drift.sh` 60/60;
+    conformance manifest and coverage 420 entries OK. No spec, wire format,
+    vector or codec changed, so the WeftCodec suites and the Rust↔Go cross gate
+    were **not** run; `scripts/verify-all.sh` was **not** run, and the cited
+    aggregate remains `bench/receipts/verify-20261111T131235Z.json` (45/45)
+    until the next aggregate.
+  * Residual: the fast-path gate still fails by the same margin; the recovery gap
+    is now decode and per-shard identity verification rather than metadata; the
+    representation design is unimplemented and its storage delta and latency are
+    therefore unknown; W's recovery is still slower than M's (3.24×) because it
+    verifies more; one host, one backend, no fleet/cloud/media/power-loss claim.

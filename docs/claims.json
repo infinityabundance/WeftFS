@@ -11259,12 +11259,12 @@
  {
   "id": "context_advantage_receipt",
   "claim": "docs/STATUS.md and bench/RESULTS-context-advantage.md cite the current Context Advantage Court receipt.",
-  "value": "context-advantage-20261113T061907Z.json",
+  "value": "context-advantage-20261113T064743Z.json",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-context-advantage.md"
   ],
-  "receipt": "bench/receipts/context-advantage-20261113T061410Z.json",
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
   "kind": "present"
  },
  {
@@ -11382,12 +11382,105 @@
  },
  {
   "id": "context_advantage_r27_recovery_gap",
-  "claim": "The recovery byte gap is attributed to per-call checkpoint-manifest reloads and named as not fixed.",
-  "value": "restore_named_tensor_at",
+  "claim": "The recovery byte gap was attributed to per-call checkpoint-manifest reloads in R27 and is recorded as closed in R28, with the remainder named.",
+  "value": "closed in R28",
   "locations": [
    "bench/RESULTS-context-advantage.md"
   ],
-  "receipt": "bench/receipts/context-advantage-20261113T061410Z.json",
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
   "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_manifest_reuse",
+  "claim": "The recovery fix reuses one loaded checkpoint manifest across several named-tensor restores and has a court proving it matches the per-call path.",
+  "value": "tests/checkpoint_manifest_reuse.rs",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-context-advantage.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_verification_intact",
+  "claim": "The reused manifest is documented as weakening no per-tensor verification.",
+  "value": "every shard's content root and own logical root is still recomputed",
+  "locations": [
+   "bench/RESULTS-context-advantage.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_representation_finding",
+  "claim": "The results state that no shipped representation carries mode-19 identity with a cheap payload.",
+  "value": "An existing representation does not suffice",
+  "locations": [
+   "bench/RESULTS-context-advantage.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_representation_design",
+  "claim": "The representation change is reported as a design with its compatibility rule, not implemented and not claimed.",
+  "value": "an\nadditive `plane_codec` value (`raw-le-v1`)",
+  "locations": [
+   "bench/RESULTS-context-advantage.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_design_doc",
+  "claim": "A one-page design document records the additive representation proposal and what it would have to prove.",
+  "value": "Status: **proposal, not implemented.**",
+  "locations": [
+   "docs/KV-PROV-REPRESENTATION.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_storage_delta_zero",
+  "claim": "The results publish the storage delta of the unchanged representation rather than leaving it implicit.",
+  "value": "The storage delta of this receipt is zero",
+  "locations": [
+   "bench/RESULTS-context-advantage.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_contract_c3",
+  "claim": "The contract's bytes tolerance is reconciled to the value the harness enforces, with a version change log.",
+  "value": "v2 change log",
+  "locations": [
+   "bench/CONTRACTS-context-advantage.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_contract_c3_results",
+  "claim": "The results record the contract correction rather than leaving two numbers.",
+  "value": "The contract was corrected to match the gate it always enforced",
+  "locations": [
+   "bench/RESULTS-context-advantage.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_advantage_r28_no_representation_claim",
+  "claim": "No document claims the context plane already preserves a raw-read fast path through a different representation.",
+  "value": "the context plane preserves a raw-read fast path",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-context-advantage.md",
+   "docs/KV-PROV-REPRESENTATION.md"
+  ],
+  "receipt": "bench/receipts/context-advantage-20261113T064743Z.json",
+  "kind": "absent"
  }
 ]
