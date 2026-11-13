@@ -13,8 +13,11 @@
 #      author's working tree is not evidence: four claims and 66 generated
 #      numbers cited r22-pareto-20261112T230000Z.json, which had never been
 #      committed, and this script passed locally while the CI checkout failed.
-#      The check is skipped (with a note) outside a git work tree, so an
-#      exported tarball or the conformance bundle still verifies.
+#      The same rule now covers every listed location and the manifest itself:
+#      a document that exists only locally cannot be the place a claim is
+#      checked in a clone. The check is skipped (with a note) outside a git
+#      work tree, so an exported tarball or the conformance bundle still
+#      verifies.
 #
 #   2. A claim may not silently cite a **superseded** receipt. Supersession is
 #      declared explicitly in docs/superseded-receipts.json (receipt,
@@ -67,22 +70,26 @@ if [[ "$count" -eq 0 ]]; then
 fi
 
 # ---- committed-file index -------------------------------------------------
-# Only receipts that git knows about are evidence.
+# Only files that git knows about are evidence. `lib-tracked.sh` resolves each
+# path against its **nearest enclosing repository**, so a location inside the
+# WeftCodec / WeftCodec-Go / WeftFS-Go submodules is checked against that
+# repository's index (the parent records only a gitlink for it).
+# shellcheck source=scripts/lib-tracked.sh
+source "$root/scripts/lib-tracked.sh"
 in_git=0
-declare -A tracked
 if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   in_git=1
-  while IFS= read -r -d '' path; do
-    tracked["$path"]=1
-  done < <(git ls-files -z -- .)
 fi
 
 require_committed() {
-  local id="$1" path="$2"
-  if [[ "$in_git" -eq 1 && -z "${tracked[$path]:-}" ]]; then
-    mismatch "$id" "$path" present "committed in git; an untracked receipt is not evidence"
+  local id="$1" path="$2" rc=0
+  weft_tracked "$path" || rc=$?
+  if [[ "$rc" -eq 1 ]]; then
+    mismatch "$id" "$path" present "committed in git; an untracked file is not evidence"
   fi
 }
+
+require_committed manifest "$manifest"
 
 # ---- supersession registry ------------------------------------------------
 declare -A superseded_by
@@ -131,12 +138,11 @@ if [[ -f "$registry" ]]; then
     fi
     require_committed registry "$receipt"
     require_committed registry "$target"
+    require_committed registry "$declared"
     superseded_by["$receipt"]="$target"
     superseded_reason["$receipt"]="$reason"
   done < <(jq -c '.[]' "$registry")
-  if [[ "$in_git" -eq 1 ]]; then
-    require_committed registry "$registry"
-  fi
+  require_committed registry "$registry"
 else
   echo "claims: note: no supersession registry at $registry; supersession is not checked" >&2
 fi
@@ -208,6 +214,7 @@ while IFS= read -r entry; do
       mismatch "$id" "$location" present "$value"
       continue
     fi
+    require_committed "$id" "$location"
     if grep -F -q -- "$value" "$location"; then
       found=1
     else
@@ -226,7 +233,7 @@ if [[ "$failures" -ne 0 ]]; then
   exit 1
 fi
 if [[ "$in_git" -eq 1 ]]; then
-  printf 'claims: OK (%s entries; every cited receipt is committed; %s superseded receipt(s) declared)\n' \
+  printf 'claims: OK (%s entries; every cited receipt and location is committed; %s superseded receipt(s) declared)\n' \
     "$count" "${#superseded_by[@]}"
 else
   printf 'claims: OK (%s entries; not a git work tree, commit checks skipped)\n' "$count"

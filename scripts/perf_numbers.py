@@ -12,8 +12,10 @@ rewrites only the text between sentinel comments:
 
 Everything outside a sentinel region is left byte-identical. `--check` fails
 closed when a region is stale, when a referenced receipt is missing, when a
-declared stamp or revision no longer matches the receipt, or when a manifest
-number has no consumer. `--list` prints the mapping for audit.
+referenced receipt (or `count_of` source, or generated file) exists only in the
+working tree and is **not tracked by git**, when a declared stamp or revision no
+longer matches the receipt, or when a manifest number has no consumer. `--list`
+prints the mapping for audit.
 
 Host-runnable, standard library only. It reads files, never the network.
 """
@@ -26,6 +28,10 @@ import json
 import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from tracked_evidence import EvidenceError, TrackedEvidence, require_tracked  # noqa: E402
 
 SENTINEL_BEGIN = "<!-- BEGIN GENERATED:%s (scripts/perf_numbers.py) -->"
 SENTINEL_END = "<!-- END GENERATED:%s -->"
@@ -178,6 +184,8 @@ class Manifest:
         self.groups = []
         self.blocks = []
         self.block_by_id = {}
+        self.tracked = TrackedEvidence(root)
+        self.untracked_checked = 0
 
     def load(self):
         if self.data.get("schema") != "weft.perf_numbers.v1":
@@ -206,18 +214,33 @@ class Manifest:
 
     # -- receipts ---------------------------------------------------------
 
-    def receipt_path(self, rel):
+    def require_tracked(self, where, rel):
+        """Fail closed when an evidence file exists only in the working tree.
+
+        The same rule `scripts/check-claims.sh` applies to `docs/claims.json`:
+        this manifest is the *second* place that cites receipts, and it does not
+        inherit the first check. Outside a git work tree the check is skipped,
+        so an exported tarball or the conformance bundle still verifies.
+        """
+        try:
+            if require_tracked(self.tracked, rel, where):
+                self.untracked_checked += 1
+        except EvidenceError as exc:
+            raise Failure(str(exc))
+
+    def receipt_path(self, rel, where="receipt"):
         path = os.path.join(self.root, rel)
         if not os.path.isfile(path):
             raise Failure("missing receipt %s" % rel)
+        self.require_tracked(where, rel)
         return path
 
-    def read_receipt(self, rel):
-        with open(self.receipt_path(rel), "r", encoding="utf-8") as handle:
+    def read_receipt(self, rel, where="receipt"):
+        with open(self.receipt_path(rel, where), "r", encoding="utf-8") as handle:
             return json.load(handle)
 
     def check_provenance(self, where, rel, stamp_path, stamp, revision_path, revision, digest_path, digest):
-        receipt = self.read_receipt(rel)
+        receipt = self.read_receipt(rel, where)
         if stamp_path:
             actual = get_path(receipt, stamp_path, where)
             if stamp is not None and actual != stamp:
@@ -287,6 +310,7 @@ class Manifest:
                 path = os.path.join(self.root, rel)
                 if not os.path.isfile(path):
                     raise Failure("%s: missing file %s" % (key, rel))
+                self.require_tracked(key, rel)
                 with open(path, "r", encoding="utf-8") as handle:
                     data = json.load(handle)
                 if not isinstance(data, list):
@@ -566,6 +590,7 @@ class Manifest:
             path = os.path.join(self.root, rel)
             if not os.path.isfile(path):
                 raise Failure("%s: missing file %s" % (block["id"], rel))
+            self.require_tracked(block["id"], rel)
             with open(path, "r", encoding="utf-8") as handle:
                 text = handle.read()
             pattern = self.region_re(block["id"])
@@ -673,21 +698,12 @@ class Manifest:
         return tokens
 
     def tracked_markdown(self):
-        index = os.path.join(self.root, ".git", "index")
-        if not os.path.exists(index):
-            # not a git checkout: only the declared files
-            return sorted({b["file"] for b in self.blocks if b.get("file")})
-        import subprocess
-
-        proc = subprocess.run(
-            ["git", "-C", self.root, "ls-files", "*.md"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        files = [line for line in proc.stdout.splitlines() if line.endswith(".md")]
         declared = {b["file"] for b in self.blocks if b.get("file")}
-        return sorted(set(files) | declared)
+        found = self.tracked.tracked_markdown()
+        if found is None:
+            # not a git checkout: only the declared files
+            return sorted(declared)
+        return sorted(set(found) | declared)
 
     def listing(self):
         groups = {g["id"]: g.get("title", g["id"]) for g in self.groups}
@@ -764,8 +780,8 @@ def main(argv=None):
             )
             return 1
         print(
-            "perf_numbers: OK (%d numbers, %d blocks)"
-            % (len(manifest.numbers), len(manifest.blocks))
+            "perf_numbers: OK (%d numbers, %d blocks; %d evidence file(s) confirmed tracked)"
+            % (len(manifest.numbers), len(manifest.blocks), manifest.untracked_checked)
         )
         return 0
 

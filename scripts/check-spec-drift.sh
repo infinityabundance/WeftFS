@@ -5,11 +5,20 @@
 # directories are versioned mirrors produced by `scripts/export-spec.sh`; they
 # must be byte-identical and must contain no extra normative files.
 #
+# Both sides are enumerated from the working tree, so a copy that exists only
+# locally would satisfy the comparison while a clone would not have it. Every
+# parent spec file and every exported copy must therefore also be tracked by
+# the repository that owns it (`scripts/lib-tracked.sh`). Outside a git work
+# tree that check is skipped, so an exported tarball still verifies.
+#
 # Usage: scripts/check-spec-drift.sh [repo ...]
 set -Eeuo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
+
+# shellcheck source=scripts/lib-tracked.sh
+source "$root/scripts/lib-tracked.sh"
 
 if [[ $# -gt 0 ]]; then
   repos=("$@")
@@ -30,10 +39,16 @@ for repo in "${repos[@]}"; do
   while IFS= read -r -d '' file; do
     name="$(basename "$file")"
     checked=$((checked + 1))
+    if ! weft_require_tracked "$file" "DRIFT parent"; then
+      status=1
+    fi
     if [[ ! -f "$repo/spec/$name" ]]; then
       echo "DRIFT $repo/spec/$name: missing" >&2
       status=1
       continue
+    fi
+    if ! weft_require_tracked "$repo/spec/$name" "DRIFT $repo"; then
+      status=1
     fi
     if ! cmp -s "$file" "$repo/spec/$name"; then
       echo "DRIFT $repo/spec/$name: differs from parent" >&2
@@ -50,6 +65,9 @@ for repo in "${repos[@]}"; do
       status=1
       checked=$((checked + 1))
     fi
+    if ! weft_require_tracked "$file" "DRIFT $repo"; then
+      status=1
+    fi
   done < <(find "$repo/spec" -maxdepth 1 -type f -name '*.md' -print0 | sort -z)
 
   # Canonical schema sources are also normative and exported verbatim.
@@ -57,6 +75,9 @@ for repo in "${repos[@]}"; do
     while IFS= read -r -d '' file; do
       name="$(basename "$file")"
       checked=$((checked + 1))
+      if ! weft_require_tracked "$file" "DRIFT parent"; then
+        status=1
+      fi
       if [[ ! -f "$repo/spec/schema/$name" ]]; then
         echo "DRIFT $repo/spec/schema/$name: missing" >&2
         status=1
@@ -65,11 +86,19 @@ for repo in "${repos[@]}"; do
         diff -u "$file" "$repo/spec/schema/$name" >&2 || true
         status=1
       fi
+      if [[ -f "$repo/spec/schema/$name" ]]; then
+        if ! weft_require_tracked "$repo/spec/schema/$name" "DRIFT $repo"; then
+          status=1
+        fi
+      fi
     done < <(find spec/schema -maxdepth 1 -type f -name '*.schema' -print0 | sort -z)
     while IFS= read -r -d '' file; do
       name="$(basename "$file")"
       if [[ ! -f "spec/schema/$name" ]]; then
         echo "DRIFT $repo/spec/schema/$name: extra file not present in parent" >&2
+        status=1
+      fi
+      if ! weft_require_tracked "$file" "DRIFT $repo"; then
         status=1
       fi
     done < <(find "$repo/spec/schema" -maxdepth 1 -type f -name '*.schema' -print0 | sort -z)

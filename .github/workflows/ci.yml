@@ -136,8 +136,12 @@ jobs:
     # compatibility `flock(2)`, both released explicitly before the descriptor
     # closes (src/writer_lock.rs, tests/writer_lock.rs); that removes the
     # fork-inheritance window that used to make a concurrent reopen return
-    # `Busy`. An earlier comment here claimed the OFD fix was outstanding; it
-    # landed in 580444c and the first real run shows the lock suites green.
+    # `Busy`. The two-process exclusion test had a *test* defect on top of that:
+    # its holder closed the descriptor it then read from, exited immediately,
+    # and the probe raced the release. It now reports both locks over a pipe and
+    # answers a liveness ping before the parent probes, so the assertion cannot
+    # be made against a holder that is already gone (see the commit message and
+    # the X05 entry in docs/STATUS.md).
     #
     # Local court equivalent:
     #   scripts/docker-court.sh rust "cargo test --all-targets"
@@ -244,13 +248,18 @@ jobs:
     # `jq` nor a Python interpreter, so `scripts/verify-all.sh` runs them on the
     # host as well. A stock runner has both.
     #
-    # `check-claims.sh` also requires every cited receipt to be committed (an
-    # untracked receipt is not evidence: that is how four claims and 66
-    # generated numbers came to cite a receipt that was never in the tree) and
-    # requires each citation of a receipt registered in
-    # `docs/superseded-receipts.json` to declare `superseded_by` or a
-    # `supersession_note`. Both are checked here because a fresh checkout is
-    # the only place the first rule can actually be observed.
+    # Every guard here now also refuses evidence that exists only in the
+    # working tree, because a fresh checkout is the only place that class of
+    # defect shows up. `check-claims.sh` requires each cited receipt and each
+    # listed location to be committed and requires each citation of a receipt
+    # registered in `docs/superseded-receipts.json` to declare `superseded_by`
+    # or a `supersession_note`; `perf_numbers.py` requires each receipt,
+    # `count_of` source and generated file to be committed; spec drift and
+    # conformance coverage require the exported spec copies and the enumerated
+    # vectors/mirrors to be committed. All of them skip the rule outside a git
+    # work tree, so an exported tarball still verifies. The same commands fail
+    # identically on the host; `scripts/untracked_evidence_demo.sh` proves each
+    # one refuses an uncommitted file.
     #
     # Local host commands (no Docker):
     #   bash scripts/check-claims.sh

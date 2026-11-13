@@ -12,6 +12,12 @@ Checks, in order:
    root or decoded SHA-256, or an error with a non-empty class.
 5. Every entry's `sha256` matches the file (or directory aggregate for `store`),
    and every mirror exists and matches.
+6. Every enumerated vector and mirror is **tracked by git** in the repository
+   that owns it. The manifest is built by walking the working tree, so an
+   untracked vector would be listed here and be absent from every clone: the
+   local check would pass and the same check would fail after checkout. The
+   nearest enclosing repository decides (the three subprojects are separate
+   repositories).
 
 Host-only: no Docker, no compilation, no network.
 """
@@ -23,6 +29,10 @@ import json
 import os
 import subprocess
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from tracked_evidence import EvidenceError, TrackedEvidence, require_tracked  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MANIFEST = os.path.join(ROOT, "conformance", "manifest.json")
@@ -51,6 +61,16 @@ def main():
         manifest = json.load(handle)
     vectors = manifest["vectors"]
     failures = 0
+    tracked = TrackedEvidence(ROOT)
+
+    def require(path, what):
+        try:
+            require_tracked(tracked, path, what)
+        except EvidenceError as exc:
+            return fail(str(exc))
+        return 0
+
+    failures += require(os.path.relpath(MANIFEST, ROOT), "conformance manifest")
 
     modes = {}
     for entry in vectors:
@@ -104,12 +124,26 @@ def main():
                 failures += fail("%s does not exist" % path)
             elif sha256_file(full) != entry["sha256"]:
                 failures += fail("%s sha256 does not match the manifest" % path)
+            else:
+                failures += require(path, "conformance vector")
+        else:
+            # Directory aggregate: every file in the tree is evidence.
+            full = os.path.join(ROOT, path)
+            if os.path.isdir(full):
+                for dirpath, _dirs, names in os.walk(full):
+                    for name in sorted(names):
+                        member = os.path.join(dirpath, name)
+                        failures += require(
+                            os.path.relpath(member, ROOT), "conformance fixture file"
+                        )
         for mirror in entry.get("mirrors", []):
             full = os.path.join(ROOT, mirror)
             if not os.path.isfile(full):
                 failures += fail("%s mirror does not exist" % mirror)
             elif sha256_file(full) != entry["sha256"]:
                 failures += fail("%s mirror does not match %s" % (mirror, path))
+            else:
+                failures += require(mirror, "conformance mirror")
 
     if failures:
         return fail("%d coverage gap(s)" % failures)

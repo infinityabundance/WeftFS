@@ -28,6 +28,11 @@ silent.
 
 Host-only, standard library only, no network. `--file -` reads stdin, which is
 how the court demonstrates the old text failing.
+
+When the default target is used inside a git work tree, the file must also be
+tracked: `python/README.md` that exists only in the author's tree would pass
+here and be missing from every clone. `--file` deliberately skips that rule so
+the court can feed it draft text.
 """
 
 from __future__ import annotations
@@ -36,6 +41,10 @@ import argparse
 import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from tracked_evidence import EvidenceError, TrackedEvidence, require_tracked  # noqa: E402
 
 TARGET = "python/README.md"
 
@@ -162,6 +171,13 @@ def main(argv=None):
     except OSError as exc:
         print("long_description: cannot read %s: %s" % (label, exc), file=sys.stderr)
         return 1
+
+    if args.file is None:
+        try:
+            require_tracked(TrackedEvidence(root), TARGET, "long_description")
+        except EvidenceError as exc:
+            print("long_description: %s" % exc, file=sys.stderr)
+            return 1
 
     problems = check(text, label)
     if problems:
