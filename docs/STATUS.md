@@ -10785,14 +10785,17 @@ receipt, missing note, wrong successor) and each fails with a named
 ### Gates actually run for this entry
 
 `scripts/docker-court.sh rust "cargo test --test quota"` and the same suite as
-uid 1001; `cargo test --test writer_lock`; the full `cargo test --all-targets`;
-`cargo test --test distributed_semantics`; WeftFS-Go
-`go test -race ./store/...`; `bash scripts/check-claims.sh`;
-`python3 scripts/perf_numbers.py --check`; `bash scripts/check-spec-drift.sh`;
-the long-description, conformance-manifest and conformance-coverage guards.
-`scripts/verify-all.sh` was **not** rerun, so the cited aggregate stays
-`verify-20261113T033408Z.json`; no receipt was produced or altered for this
-entry and no performance number is claimed.
+uid 1001 (the compiled test binary directly: the shared cargo target directory
+is root-owned, so a non-root `cargo` cannot take its build lock; the test
+binary is the same code and spawns the real CLI); `cargo test --test
+writer_lock`; the full `cargo test --all-targets`; `cargo test --test
+writer_fencing`; `cargo test --test distributed_semantics`; `cargo test --test
+multiwriter`; WeftFS-Go `go test -race ./store/...`; `bash
+scripts/check-claims.sh`; `python3 scripts/perf_numbers.py --check`; `bash
+scripts/check-spec-drift.sh`; the long-description, conformance-manifest and
+conformance-coverage guards. `scripts/verify-all.sh` was **not** rerun, so the
+cited aggregate stays `verify-20261113T033408Z.json`; no receipt was produced
+or altered for this entry and no performance number is claimed.
 
 Residual and stated plainly: the GitHub workflow has not been re-run, so the
 green result is local court evidence, not a CI result. A process killed
