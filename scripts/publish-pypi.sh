@@ -45,31 +45,35 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-if [[ -n "${PYPI_TOKEN:-}" ]]; then
-  staged="$(mktemp "$cache/.pypi-token-stage.XXXXXX")"
-  chmod 0600 "$staged"
-  printf '%s' "$PYPI_TOKEN" >"$staged"
-elif [[ -f "${WEFT_PYPI_TOKEN_FILE:-$cache/.pypi-token}" ]]; then
-  source_file="${WEFT_PYPI_TOKEN_FILE:-$cache/.pypi-token}"
-  staged="$(mktemp "$cache/.pypi-token-stage.XXXXXX")"
-  chmod 0600 "$staged"
-  cat "$source_file" >"$staged"
+dry_run_inner="cd /work && bash scripts/pypi-publish-inner.sh"
+if [[ "$dry_run" == "1" ]]; then
+  # A dry run builds and twine-checks, then stops before the token is read, so
+  # it must work without a credential.
+  inner="$dry_run_inner --dry-run"
 else
-  echo "publish-pypi: no token available" >&2
-  echo "  set PYPI_TOKEN, or point WEFT_PYPI_TOKEN_FILE at a readable file," >&2
-  echo "  or write the default .docker-cache/.pypi-token. The source file is" >&2
-  echo "  never deleted; only the private staging copy is." >&2
-  exit 66
+  if [[ -n "${PYPI_TOKEN:-}" ]]; then
+    staged="$(mktemp "$cache/.pypi-token-stage.XXXXXX")"
+    chmod 0600 "$staged"
+    printf '%s' "$PYPI_TOKEN" >"$staged"
+  elif [[ -f "${WEFT_PYPI_TOKEN_FILE:-$cache/.pypi-token}" ]]; then
+    source_file="${WEFT_PYPI_TOKEN_FILE:-$cache/.pypi-token}"
+    staged="$(mktemp "$cache/.pypi-token-stage.XXXXXX")"
+    chmod 0600 "$staged"
+    cat "$source_file" >"$staged"
+  else
+    echo "publish-pypi: no token available" >&2
+    echo "  set PYPI_TOKEN, or point WEFT_PYPI_TOKEN_FILE at a readable file," >&2
+    echo "  or write the default .docker-cache/.pypi-token. The source file is" >&2
+    echo "  never deleted; only the private staging copy is." >&2
+    exit 66
+  fi
+  staged_in_court="/work/${staged#"$root"/}"
+  inner="cd /work && WEFT_PYPI_TOKEN_FILE=$staged_in_court bash scripts/pypi-publish-inner.sh"
 fi
 
 mkdir -p "$dist"
 
 echo "publish-pypi: version=$version dry_run=$dry_run"
-staged_in_court="/work/${staged#"$root"/}"
-inner="cd /work && WEFT_PYPI_TOKEN_FILE=$staged_in_court bash scripts/pypi-publish-inner.sh"
-if [[ "$dry_run" == "1" ]]; then
-  inner="$inner --dry-run"
-fi
 # Deliberately not `exec`: the EXIT trap must still run so the staging copy is
 # removed even when the court fails.
 "$root/scripts/docker-court.sh" python "$inner"
