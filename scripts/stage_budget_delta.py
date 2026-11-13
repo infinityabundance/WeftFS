@@ -74,6 +74,9 @@ def main(argv=None) -> int:
     for entry in manifest["numbers"]:
         if entry.get("group") != "budget" or "expr" in entry:
             continue
+        # Historical quotations of the old receipt are not part of the comparison.
+        if "_prev_" in entry["key"]:
+            continue
         receipt = entry["receipt"]
         base = os.path.basename(receipt)
         if base.startswith("restore-budget-"):

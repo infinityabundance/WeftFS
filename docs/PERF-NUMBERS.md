@@ -401,7 +401,7 @@ loss (efficiency falls with N). Receipt
 | `verify.revision` | 52da9888f3726e6af5c364af7707fd98574fc954 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,140 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,146 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
@@ -471,6 +471,23 @@ loss (efficiency falls with N). Receipt
 | `writer_lock.nonroot.iterations` | 10 | runs | Writer-lock suite repetitions as a non-root uid | `bench/receipts/writer-lock-nonroot-20261113T120819Z.json` | 20261113T120819Z | fcb4cb38c4cc |
 | `writer_lock.nonroot.uid` | 1001 | — | uid the non-root repetitions ran as | `bench/receipts/writer-lock-nonroot-20261113T120819Z.json` | 20261113T120819Z | fcb4cb38c4cc |
 | `writer_lock.nonroot.failed` | 0 | failures | Writer-lock suite failures as a non-root uid | `bench/receipts/writer-lock-nonroot-20261113T120819Z.json` | 20261113T120819Z | fcb4cb38c4cc |
+| `stage_budget.fix.test_count` | 13 | tests | Tests in the stage_budget module | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.reps` | 30 | runs | Repetitions per thread count | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.total_runs` | 120 | runs | Total stage_budget repetitions | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.failed` | 0 | failures | Stage_budget repetition failures | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.timeouts` | 0 | timeouts | Stage_budget repetition timeouts (a hang is exit 124) | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.control_delta_pct` | -20.47 | % | X06 unbudgeted control p50 change (arm never calls admit) | `bench/receipts/stage-budget-delta-20261113T225001Z.json` | 20261113T225001Z | a6ab12eb667b |
+| `stage_budget.fix.restore_test_count` | 8 | tests | Tests in the restore_budget suite | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.stage_budget_runs` | 90 | runs | stage_budget module repetitions | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.fix.restore_budget_runs` | 30 | runs | restore_budget suite repetitions | `bench/receipts/stage-budget-fix-20261113T224055Z.json` | 20261113T224055Z | a6ab12eb667b |
+| `stage_budget.suites.rust_suites` | 182 | tests | Full Rust suites (all-targets) | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.rust_passed` | 862 | tests | Full Rust passed tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.rust_failed` | 0 | tests | Full Rust failed tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.rust_ignored` | 0 | tests | Full Rust ignored tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.fuse_suites` | 182 | tests | Full FUSE suites (all-targets) | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.fuse_passed` | 905 | tests | Full FUSE passed tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.fuse_failed` | 0 | tests | Full FUSE failed tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `stage_budget.suites.fuse_ignored` | 2 | tests | Full FUSE ignored tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Context Advantage Court (R26)
