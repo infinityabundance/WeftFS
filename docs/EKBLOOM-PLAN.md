@@ -517,7 +517,7 @@ failure mode rule 6 and this programme's history explicitly guard against.
 ## 6. Dependency-ordered execution sequence
 
 One subagent per step; one court run per step; nothing runs on the host; no
-limit is raised. Steps 4–6 are conditional on a win, and the sequence is
+limit is raised. Steps 5–7 are conditional on a win, and the sequence is
 designed so that the cheapest decisive falsifier comes first.
 
 | # | Step | Runnable in one session? | Exact command |
@@ -529,7 +529,7 @@ designed so that the cheapest decisive falsifier comes first.
 | 4 | Stop-rule evaluation: if E2 and E3 are both losses → step 7 | Yes | `git` + `bench/RESULTS-ekbloom.md` |
 | 5 | **EKB-E4** decode/restore | Yes | `scripts/docker-court.sh rust "cd /work && bash scripts/ekbloom_court.sh --phase restore"` |
 | 6 | **EKB-E5** write pause | Yes | `scripts/docker-court.sh rust "cd /work && bash scripts/ekbloom_court.sh --phase write"` |
-| 7 | **EKB-E6** portfolio integration (only if a win) | No — the Rust and Go courts plus the four cross-gate courts | `scripts/docker-court.sh rust "cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/cross.sh rust-gen"`; `scripts/docker-court.sh go "cd WeftCodec-Go && bash hack/cross.sh go-build && bash hack/cross.sh go-gen && bash hack/cross.sh go-decode"`; `scripts/docker-court.sh rust "cd /work/WeftCodec-Go && bash hack/cross.sh rust-decode"`; `scripts/docker-court.sh go "cd WeftCodec-Go && bash hack/cross.sh compare"` (see `scripts/verify-all.sh` `codec_cross_*`) | |
+| 7 | **EKB-E6** portfolio integration (only if a win) | No — the Rust and Go courts plus the four cross-gate courts | `scripts/docker-court.sh rust "cd WeftCodec && cargo build --release --quiet && cd /work/WeftCodec-Go && bash hack/cross.sh rust-gen"`; `scripts/docker-court.sh go "cd WeftCodec-Go && bash hack/cross.sh go-build && bash hack/cross.sh go-gen && bash hack/cross.sh go-decode"`; `scripts/docker-court.sh rust "cd /work/WeftCodec-Go && bash hack/cross.sh rust-decode"`; `scripts/docker-court.sh go "cd WeftCodec-Go && bash hack/cross.sh compare"` (see `scripts/verify-all.sh` `codec_cross_*`) |
 | 8 | **EKB-X22** verdict | Yes | host-only guards, then `git` |
 
 The runner script does not exist yet; step 1 creates it along with the harness
