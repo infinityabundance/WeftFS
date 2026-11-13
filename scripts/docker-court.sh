@@ -36,9 +36,20 @@ WEFT_PIDS="${WEFT_PIDS:-1024}"
 # it is the smaller of the two. A scale court may raise both together but never
 # disable either.
 WEFT_NPROC="${WEFT_NPROC:-2048}"
+# Identity the court process runs as. Default 0:0; a non-root uid/gid cannot
+# raise any limit and exists so that identity-dependent behaviour (quota
+# principals, owner ids) can be proven under a non-root uid. See the note
+# beside WEFT_COURT_UID below.
 # Attach stdin only when a caller explicitly streams a secret (for example a
 # signing seed) into the court. The default is detached stdin.
 WEFT_COURT_STDIN="${WEFT_COURT_STDIN:-0}"
+# Identity the court process runs as. The default (0:0) is unchanged. A
+# non-root identity is the only way to prove that a test does not depend on
+# being root: the kernel refuses setuid/setgid inside the court (cap-drop=ALL
+# removes CAP_SETUID/CAP_SETGID), so a reproduction needs Docker `--user`.
+# Hard limits are unaffected; this never disables one.
+WEFT_COURT_UID="${WEFT_COURT_UID:-0}"
+WEFT_COURT_GID="${WEFT_COURT_GID:-0}"
 
 validate_limit() {
   local name="$1" value="$2" re="$3"
@@ -53,6 +64,12 @@ validate_limit WEFT_CPUS "$WEFT_CPUS" '^[1-9][0-9]*(\.[0-9]+)?$'
 validate_limit WEFT_PIDS "$WEFT_PIDS" '^[1-9][0-9]*$'
 validate_limit WEFT_NPROC "$WEFT_NPROC" '^[1-9][0-9]*$'
 validate_limit WEFT_COURT_STDIN "$WEFT_COURT_STDIN" '^(0|1)$'
+validate_limit WEFT_COURT_UID "$WEFT_COURT_UID" '^[0-9]+$'
+validate_limit WEFT_COURT_GID "$WEFT_COURT_GID" '^[0-9]+$'
+if [[ "$WEFT_COURT_UID" == "0" && "$WEFT_COURT_GID" != "0" ]]; then
+  echo "WEFT_COURT_GID='$WEFT_COURT_GID' needs a non-zero WEFT_COURT_UID" >&2
+  exit 78
+fi
 # Optional user-defined Docker network (the S3 court uses one so the test
 # container can resolve the MinIO container by name). Never required; when set
 # it must be a valid network name.
@@ -153,6 +170,10 @@ common=(
 
 if [[ "$WEFT_COURT_STDIN" == "1" ]]; then
   common+=(-i)
+fi
+
+if [[ "$WEFT_COURT_UID" != "0" ]]; then
+  common+=(--user "$WEFT_COURT_UID:$WEFT_COURT_GID")
 fi
 
 # Forward only the S3 court's explicitly named environment. Nothing else from
