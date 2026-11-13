@@ -360,6 +360,14 @@ crates.io published `weftcodec 1.4.0` (checksum `7f24d38382f7894903cc04763493530
 GHCR images are built by the per-repo tag workflows.
 <!-- END GENERATED:release-artifacts -->
 
+> **Dated correction (2026-11-13).** The block above was written at the 1.4.0
+> release and is retained as history. Its prediction that “the 1.4.1 upload
+> replaces it” resolved only partly: the 1.4.1 long description made a new
+> statement about itself, which was stale on upload, and 1.4.2 removed that
+> class of statement entirely. The live PyPI description is now the 1.4.2 text
+> (`docs/RELEASE-v1.4.2.md`). The 1.4.0 crate checksums and uploaded artifact
+> digests in the block above are unchanged and still match the registries.
+
 ## Where to read next
 
 * [`bench/RESULTS-index.md`](../bench/RESULTS-index.md) — the map, the current

@@ -230,3 +230,36 @@ that was already merged from staging, so its codec is byte-identical to 1.4.1.
 coordinator performs the uploads and records the live state; until then the
 project page still serves the 1.4.1 artifacts with the pre-fix long
 description.
+
+## Post-upload observation (dated 2026-11-13)
+
+This section was added after the note above was committed. The coordinator
+performed the uploads; the state below was **observed**, not inferred, from
+`https://pypi.org/pypi/weftcodec/json`,
+`https://crates.io/api/v1/crates/weftcodec`,
+`https://crates.io/api/v1/crates/weftfs` and `gh release view v1.4.2` on
+2026-11-13. No receipt was written for this observation; the commands above are
+the evidence and a reader can re-run them.
+
+| Surface | Observed |
+|---|---|
+| PyPI `weftcodec 1.4.2` | `info.version` is `1.4.2`; wheel sha256 `787cc6ca203ea6a6c6285551281833de44b826946968ba3faf3b3d2d9ef2b022`, sdist sha256 `ab214bffced0312f0f50fb3a1929a68c2163e32493f9a159821a9ea78b39ae78`, both `yanked: false`, upload times `2026-11-13T05:12:55Z` and `05:12:56Z` |
+| PyPI long description | the replacement text required by `scripts/check_long_description.py`: no version literal, no artifact file name, no digest, no upload-state sentence |
+| GitHub `v1.4.2` release assets | the same two digests as the PyPI files, `isDraft: false`, `isPrerelease: false` |
+| crates.io `weftcodec 1.4.2` | checksum `e7739c46c599b60842ac24656b94691c2cf24a280a90db0843257a531067fede`, published `2026-11-13T05:13:04Z`, not yanked |
+| crates.io `weftfs 1.4.2` | checksum `fb7e30a4585f5b581e317cd4bf0683cc4ed2cb1be391cce26d08be859e9e2efe`, published `2026-11-13T05:13:23Z`, not yanked |
+
+The uploaded PyPI digests are byte-identical to the build recorded in the
+generated table above, so for 1.4.2 the uploaded bytes are the recorded bytes
+(unlike 1.4.1, which has three builds). The sentences in this note saying the
+artifacts “were not uploaded by this session” and that the JSON endpoints
+returned `404` were true at this note's own stamp and are retained as written.
+The loss “the published 1.4.0 and 1.4.1 descriptions stay wrong until 1.4.2 is
+uploaded” is resolved for the current project page; the older descriptions
+remain in the registry's history and are not rewritten.
+
+**Not verified from the environment that wrote this section.** GHCR package
+versions: `gh api /users/infinityabundance/packages/container/<name>/versions`
+returns HTTP 403 (“You need at least read:packages scope”), so this section
+neither confirms nor contradicts the GHCR digests quoted above. Those digests
+remain the release session's own observation, cited as such.
