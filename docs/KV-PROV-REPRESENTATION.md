@@ -152,5 +152,30 @@ two, which is the kind of ambiguity this programme refuses.
    returned), the unchanged post-metadata-loss reuse, and `scope_root` equality
    across representations.
 
+## 7. Decision (R29)
+
+**The decision: not accepted; not implemented.** The R29 Context Advantage Court
+was run a second time on a byte-expensive backend, and the evidence now settles
+the question this document exists to ask:
+
+* on the primary backend the entire payload step can be removed and the fast
+  path still misses the declared tolerance, because the reconstructed-page hash,
+  the descriptor parse, the descriptor identity and the decode-buffer first
+  touch are normative per-read checks that this design does not remove;
+* on the second backend the shipped representation already meets the declared
+  tolerance, so a cheaper payload would change no decision there;
+* the design costs storage on exactly the backend where storage is the scarce
+  resource.
+
+The measured values for all three statements are in
+[`bench/RESULTS-context-advantage.md`](../bench/RESULTS-context-advantage.md)
+§6.6, generated from the R29 receipts; this document still carries no
+performance number of its own.
+
+It is reopened by one condition only: a court that measures a page-hot workload
+where a byte is nearly free **and** the decode dominates the critical path, and
+whose no-payload floor is inside the declared tolerance. Until then, §6 is a
+build order for a change that has not earned its increment.
+
 Until step 5 exists, no fast-path claim is made and the court continues to
 measure the shipped Huffman representation.

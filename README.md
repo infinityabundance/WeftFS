@@ -60,6 +60,61 @@ default. Source: `bench/receipts/augmentation-local-20261113T004000Z.json` (stam
 revision 0a01606e2654).
 <!-- END GENERATED:readme-current-result -->
 
+<!-- BEGIN GENERATED:readme-context-advantage (scripts/perf_numbers.py) -->
+## The flagship: a context advantage on one backend, with and without it
+
+The headline of this repository is **not** a filesystem benchmark and not a
+comparison against another filesystem. It is a same-backend A/B: one mature
+backend, used **with** and **without** the WeftFS context plane, holding the
+fixture, the durability contract, the concurrency, the cache policy and the
+available optimizations constant. Three arms run on each backend: `N` the
+backend alone; `M` a strong application-level metadata baseline (zstd-3
+payloads, a canonical manifest, a key→value index on the request's five
+dimensions plus position, full value validation before reuse, TTL/eviction and
+its own subset selection); `W` the backend plus the shipped context plane.
+Frozen contract [`bench/CONTRACTS-context-advantage.md`](bench/CONTRACTS-context-advantage.md);
+method and every loss in
+[`bench/RESULTS-context-advantage.md`](bench/RESULTS-context-advantage.md); receipts
+`bench/receipts/context-advantage-20261113T072921Z.json` (local POSIX) and `bench/receipts/context-advantage-s3-20261113T073016Z.json` (one loopback
+MinIO process).
+loopback MinIO process).
+
+| What holds, measured | `N` backend alone | `M` metadata baseline | `W` context plane |
+|---|---|---|---|
+| Cross-scope request refused? At what cost? | accepts **48 of 56** and returns the wrong payload **48** times | refuses every probe, but reads **766,026 B** over **48** requests to find the mismatch | refuses **56 of 56** with **0 B read and 0 B returned** |
+| Exact reuse after the metadata database is deleted | *not applicable* | **0 of 16** | **16 of 16** |
+| Happy path byte-exact | 64/64 | 64/64 | 64/64 |
+
+**The honest negative.** On the local POSIX data plane the fast path misses its
+declared tolerance, and the tolerance was not widened: `W` **169.6 µs**
+p50 against `N` **29.1 µs** is **5.84×** (declared
+≤ 2.0×), **6.62×** at p95 (declared ≤ 2.5×).
+The cause is the backend's cost model, not the protocol: `W` reads
+**0.431×** `N`'s backend bytes per request, so where a byte is
+nearly free the codec's decode is the whole bill.
+
+**The same gate, where a byte costs something — measured.** On one loopback
+MinIO process, same arms, same fixture, same tolerances: `W`
+**595.0 µs** against `N` **407.4 µs** is
+**1.46×** p50 and **1.44×** p95, at the same
+**0.431×** byte ratio. That is neutrality, not a win: `W` is
+still slower than the floor. The crossover between the two rows is ≈
+**55.7 µs** of backend round-trip per request, and
+the byte-price crossover is ≈ **3.76 ns/B**
+(≈ **266.1 MB/s** of byte-proportional throughput).
+Both crossovers are *derived* from the two measured receipts, not swept.
+Single-host courts; not a cloud, fleet, media or power-loss claim.
+
+**The representation question, decided on evidence.** A provenance-bound page
+whose payload is a raw copy instead of `huffman-canonical-v1` planes is
+specified and not implemented
+([`docs/KV-PROV-REPRESENTATION.md`](docs/KV-PROV-REPRESENTATION.md)): on these
+pages a raw payload would cost **2.33×** the shipped
+frames (**+132.8 %** storage), and even removing the
+entire payload step leaves a **65.9 µs** floor, which is
+**2.27×** `N`. It would not rescue the local gate.
+<!-- END GENERATED:readme-context-advantage -->
+
 ## Architecture at a glance
 
 ```mermaid

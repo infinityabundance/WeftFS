@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,079** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,087** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10315,3 +10315,80 @@ write is now durability-bound, not encode-bound.
     W arm) drop a fixture-specific size from their prose; they change no code,
     so the cited revision `923c7bc` and the current tree differ only in comment
     text.
+
+## Subphase R29 — Context Advantage Court on a second backend, and the representation decision (2026-11-13)
+
+The flagship court now runs on **two** backends with **the same declared
+tolerances**, and the primary row keeps its result. Contract
+`bench/CONTRACTS-context-advantage.md` **version 3** was committed before the
+second backend was measured: it adds §2.1 (one loopback MinIO process, one
+bucket per arm/repetition/store, the same arms, fixture, durability contract,
+concurrency and repetitions) and states that **no tolerance is added, relaxed or
+widened** and that the local row remains the primary result.
+
+* **Second backend, measured.** Pinned MinIO `RELEASE.2025-04-22T22-12-26Z`
+  (binary sha256 `53e2a2cb…bb817c`) in a `debian:bookworm-slim` sibling
+  container, single node, tmpfs data directory, same hard limits
+  (3g / 3g swap / 1024 pids / 4 cpus / bounded `/tmp`, never raised). Receipt
+  `bench/receipts/context-advantage-s3-20261113T073016Z.json` (stamp
+  `20261113T073016Z`, WeftFS `ad26381`, seven interleaved repetitions),
+  `result=pass`, **`claim_holds: true`**: W p50 **595.0 µs** against N
+  **407.4 µs** = **1.46×** (declared ≤ 2.0×), p95 **731.9** against **507.4** =
+  **1.44×** (≤ 2.5×), backend bytes **0.431×** (≤ 1.10×). **C1, C2 and C3 hold
+  on this backend.** That is neutrality, not a win: W is still slower than the
+  floor, and it is published that way.
+* **Primary row re-run through the same harness** and re-published: receipt
+  `bench/receipts/context-advantage-20261113T072921Z.json` (stamp
+  `20261113T072921Z`, WeftFS `ad26381`), `result=pass`,
+  **`claim_holds: false`**; W p50 **169.6 µs** against N **29.1 µs** =
+  **5.84×**, p95 **6.62×**. The tolerance was **not** widened. Local p50 moved by
+  under one percent and p95 by a few percent versus the R28 receipt, which is
+  run-to-run noise on one host; the newer receipt supplies every current number
+  so both rows come from one harness.
+* **Structural results are identical on both backends.** W refuses **56/56**
+  cross-scope probes with **0 backend bytes and 0 bytes returned**; M refuses
+  56/56 but reads **766,026 B** over 48 requests to find the mismatch; N accepts
+  **48** and returns the wrong payload **48** times. After the metadata database
+  is removed M reuses **0/16** and W **16/16** byte-exactly. Happy path **64/64**
+  byte-exact in every arm; recovery materializes **270,336 B** in both M and W.
+* **Crossover, derived and labelled.** Per-request cost on the MinIO row ≈
+  **189.2 µs** (from N's two rows), which predicts a W p50 of **547.9 µs**
+  against **595.0 µs** measured (+8.6 %). The declared 2.0× p50 tolerance is
+  reached at **≥ 55.7 µs** per backend request; the byte-only crossover is
+  **3.76 ns/B**, i.e. ≈ **266 MB/s** of byte-proportional throughput. Two
+  measured operating points bracket the crossover; no point was measured *at*
+  it and no backend cost was varied, so every crossover number is **derived,
+  not measured**. Shaping the link needs `CAP_NET_ADMIN`, which the court does
+  not have (`cap-drop=ALL`) and which is not raised for a benchmark.
+* **Representation decision (`raw-le-v1`): not accepted; not implemented.** On
+  the same pages a raw payload is **2.33×** the shipped frames
+  (**+132.8 %** on the page payload); with the **entire payload step removed**
+  the local fast path is still **65.9 µs**, i.e. **2.27×** N — above the
+  declared 2.0× — because the reconstructed-page hash, the descriptor parse, the
+  descriptor identity and the decode-buffer first touch are normative per-read
+  checks a raw payload still pays. The shipped codec already meets the gate on
+  the second backend (**1.46×**), so the change would alter no measured decision
+  on either backend, and it costs storage exactly where storage is scarce. The
+  design stays specified in `docs/KV-PROV-REPRESENTATION.md` §7, which names
+  the single condition that would reopen it.
+* **README** now reaches the flagship without hunting: a same-backend A/B
+  (rule 13), the three capabilities that hold, the honest local negative with
+  its reason, the measured second row, the derived crossover and the
+  representation decision — every number emitted from `docs/perf-numbers.json`.
+  `scripts/verify-all.sh` registers `context_advantage_s3` (reduced); the
+  aggregate was **not** run, so the cited aggregate remains
+  `bench/receipts/verify-20261111T131235Z.json` (45/45).
+* Gates at `ad26381` (the receipts record this base; the measured tree is the
+  commit that lands this work): `cargo test --all-targets` **173 suites / 819
+  passed / 0 failed / 0 ignored**; `cargo test --features fuse --all-targets`
+  **173 suites / 862 passed / 0 failed / 2 pre-existing ignored**;
+  `scripts/perf_numbers.py --check` **587 numbers / 85 blocks**;
+  `scripts/check-claims.sh` **1087/1087**; `scripts/check-spec-drift.sh` 60/60;
+  conformance manifest and coverage **420 entries OK**. No wire format, frame,
+  descriptor, vector, codec or store format changed, so the codec suites and the
+  Rust↔Go cross gate were **not** run, and `scripts/verify-all.sh` was **not**
+  run.
+* Residual: the crossover is derived from two points rather than swept; the
+  second row is one loopback server (not a cloud, fleet, media or power-loss
+  court); `raw-le-v1` remains unimplemented so its latency is unknown; the
+  local gate still fails and is not re-framed.
