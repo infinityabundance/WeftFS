@@ -24,7 +24,8 @@ The counted results below are emitted from the receipt by
 
 Receipt: `bench/receipts/azure-mw2-20261113T103500Z.json` (stamp
 `20261113T103500Z`, WeftFS revision `103dd99c7fd9d23345589ffc484ab5f43223729b`,
-WeftFS-Go `61ac5c96a61a7b41d0608fc4a1a747e5642750b8`). Pinned emulator:
+WeftFS-Go `a6c1c602448ba88d0230673d67690a793c0fc74c`, whose parent
+`61ac5c9` carries the Azure fix). Pinned emulator:
 `mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`
 (release 3.35.0, image id `sha256:03f7cb26ef2cda2c06ec6760c91975a85460e7bb63277a0df5c9f1d02071ead3`).
 
