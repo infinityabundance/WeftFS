@@ -1925,6 +1925,8 @@ struct RecoveryOutcome {
     manifest_loads: u64,
     /// The manifest root the W arm's one load produced.
     manifest_root: Option<Hash32>,
+    /// The manifest blob's recorded size (W only).
+    manifest_blob_bytes: u64,
 }
 
 /// One dependency-aware recovery pass, exactly as the contract demands it.
@@ -1942,6 +1944,7 @@ fn recovery_pass(
     let mut demanded: Vec<u8> = Vec::new();
     let mut manifest_loads = 0u64;
     let mut manifest_root = None;
+    let mut manifest_blob_bytes = 0u64;
     match arm {
         Arm::N => {
             for index in 0..TENSORS {
@@ -2048,6 +2051,10 @@ fn recovery_pass(
                 .map_err(|err| format!("W checkpoint manifest: {err}"))?;
             manifest_loads = 1;
             manifest_root = Some(loaded.manifest_root);
+            manifest_blob_bytes = store
+                .object_meta(loaded.manifest_id)
+                .map(|record| record.size)
+                .unwrap_or(0);
             for index in NEEDED {
                 let name = format!("t{index:03}");
                 loaded
@@ -2097,6 +2104,7 @@ fn recovery_pass(
         demanded,
         manifest_loads,
         manifest_root,
+        manifest_blob_bytes,
     })
 }
 
@@ -2209,6 +2217,7 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
         "latency": latency_summary(&samples),
         "manifest_loads": outcome.manifest_loads,
         "manifest_root": outcome.manifest_root.map(|root| root.to_hex()),
+        "manifest_blob_bytes": outcome.manifest_blob_bytes,
         "causal_closure": closure,
         "ledger": ledger,
     });
@@ -2798,6 +2807,24 @@ fn assemble(args: &Args) -> Result<(), String> {
                 &rows
                     .iter()
                     .filter_map(|row| pick(row, &["b", "recovery", "manifest_loads"]))
+                    .collect::<Vec<f64>>(),
+            ),
+        );
+        metrics.insert(
+            "recovery_manifest_blob_bytes".to_owned(),
+            spread(
+                &rows
+                    .iter()
+                    .filter_map(|row| pick(row, &["b", "recovery", "manifest_blob_bytes"]))
+                    .collect::<Vec<f64>>(),
+            ),
+        );
+        metrics.insert(
+            "recovery_output_p50_us".to_owned(),
+            spread(
+                &rows
+                    .iter()
+                    .filter_map(|row| pick(row, &["b", "recovery", "latency", "p50_us"]))
                     .collect::<Vec<f64>>(),
             ),
         );
