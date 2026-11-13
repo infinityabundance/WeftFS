@@ -1,0 +1,15 @@
+{
+ "clean_session_reference_megabytes_per_second": 1280.0,
+ "fsync_megabytes_per_second": [
+  3100.0,
+  3400.0,
+  3400.0
+ ],
+ "median_megabytes_per_second": 3400.0,
+ "note": "the native control A writes 424,439,296 B in 101 fsynced files; a median far below 1.28 GB/s means the durability path has degraded and every durable-write row in this session is device-bound",
+ "operation": "dd if=/dev/zero bs=1M count=200 conv=fsync, three times, inside the bench court",
+ "regime": "clean",
+ "schema": "weft.augmentation.device-control.v1",
+ "stamp": "20261113T004000Z",
+ "uname": "Linux-7.3.3-1-cachyos-x86_64-with-glibc2.36"
+}
