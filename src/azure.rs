@@ -446,6 +446,7 @@ struct HttpResponse {
     status: u16,
     etag: Option<String>,
     content_length: Option<u64>,
+    last_modified: Option<String>,
     body: Vec<u8>,
 }
 
@@ -737,6 +738,7 @@ impl AzureBackend {
             Ok(response) => response,
             Err(ureq::Error::Status(status, response)) => {
                 let etag = response.header("etag").map(str::to_owned);
+                let last_modified = response.header("last-modified").map(str::to_owned);
                 let content_length = response
                     .header("content-length")
                     .and_then(|value| value.parse::<u64>().ok());
@@ -745,6 +747,7 @@ impl AzureBackend {
                     status,
                     etag,
                     content_length,
+                    last_modified,
                     body,
                 });
             }
@@ -759,6 +762,7 @@ impl AzureBackend {
         };
         let status = response.status();
         let etag = response.header("etag").map(str::to_owned);
+        let last_modified = response.header("last-modified").map(str::to_owned);
         let content_length = response
             .header("content-length")
             .and_then(|value| value.parse::<u64>().ok());
@@ -772,6 +776,7 @@ impl AzureBackend {
             status,
             etag,
             content_length,
+            last_modified,
             body,
         })
     }
@@ -945,6 +950,16 @@ impl AzureBackend {
     }
 
     fn list_blobs(&self, prefix: &Key) -> Result<Vec<Key>> {
+        Ok(self
+            .list_blobs_detailed(prefix)?
+            .into_iter()
+            .map(|(key, _)| key)
+            .collect())
+    }
+
+    /// List blobs under `prefix` together with their `Last-Modified` (Unix
+    /// seconds), when the endpoint reports one.
+    fn list_blobs_detailed(&self, prefix: &Key) -> Result<Vec<(Key, Option<i64>)>> {
         let Key::Prefix(kind) = prefix else {
             return Err(Error::invalid_argument(
                 "list_prefix requires a Key::Prefix selector",
@@ -953,7 +968,7 @@ impl AzureBackend {
         let Some(prefix_path) = prefix_for_kind(*kind) else {
             return Ok(Vec::new());
         };
-        let mut out = Vec::new();
+        let mut out: Vec<(Key, Option<i64>)> = Vec::new();
         let mut marker: Option<String> = None;
         loop {
             let mut query: Vec<(String, String)> = vec![
@@ -987,12 +1002,15 @@ impl AzureBackend {
                     continue;
                 };
                 let relative = full.strip_prefix(prefix_path).unwrap_or(&full);
-                out.push(
-                    classify_relative(*kind, relative).unwrap_or_else(|| Key::Other {
-                        kind: *kind,
-                        name: full.clone(),
-                    }),
-                );
+                let key = classify_relative(*kind, relative).unwrap_or_else(|| Key::Other {
+                    kind: *kind,
+                    name: full.clone(),
+                });
+                let modified = xml_values(&block, "Last-Modified")
+                    .into_iter()
+                    .next()
+                    .and_then(|value| parse_rfc1123_secs(&value));
+                out.push((key, modified));
             }
             let next = xml_values(&text, "NextMarker")
                 .into_iter()
@@ -1003,7 +1021,7 @@ impl AzureBackend {
                 None => break,
             }
         }
-        out.sort();
+        out.sort_by(|left, right| left.0.cmp(&right.0));
         Ok(out)
     }
 
@@ -1838,13 +1856,28 @@ impl BlobPlane for AzureBackend {
         self.list_blobs(prefix)
     }
 
-    fn clean_stale(&mut self, _grace_secs: u64) -> Result<()> {
-        // There is no staging namespace: every upload is atomic under its final
-        // key. The only `tmp/` blobs are capability-probe keys, which a crashed
-        // process can leave behind; the writer lock is held here, so deleting
-        // all of them is safe.
-        let keys = self.list_blobs(&Key::prefix(KeyKind::Tmp))?;
-        for key in keys {
+    fn clean_stale(&mut self, grace_secs: u64) -> Result<()> {
+        // Every upload is atomic under its final key, so the only `tmp/` blobs
+        // are capability-probe keys. That does **not** make them disposable:
+        // an optimistic (MW2) open runs concurrently with other writers, and a
+        // live writer's probe lives under `tmp/` for the duration of its open.
+        // Deleting it made the second create-once probe succeed and a healthy
+        // endpoint look as though it ignored `If-None-Match: *` (X13/N14,
+        // caught by four concurrent Rust writers against Azurite). Honour the
+        // grace window the caller already passes: only an entry older than it
+        // is swept, and an entry whose age cannot be established is kept.
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_secs() as i64)
+            .unwrap_or(0);
+        let keys = self.list_blobs_detailed(&Key::prefix(KeyKind::Tmp))?;
+        for (key, modified) in keys {
+            let Some(modified) = modified else {
+                continue;
+            };
+            if grace_secs > 0 && now.saturating_sub(modified) < grace_secs as i64 {
+                continue;
+            }
             let _ = self.delete_blob(&key);
         }
         Ok(())
@@ -1994,11 +2027,32 @@ impl CommitPlane for AzureBackend {
         self.list_blobs(prefix)
     }
 
-    fn modified(&self, _key: &Key) -> Result<Option<SystemTime>> {
-        // Azure returns `Last-Modified` as an RFC 1123 string, and this crate has
-        // no date parser. The store does not depend on it; returning `None` is
-        // honest rather than approximating.
-        Ok(None)
+    fn modified(&self, key: &Key) -> Result<Option<SystemTime>> {
+        // `Last-Modified` is an HTTP-date; the parser is [`parse_rfc1123_secs`].
+        // The GC age gate needs this to tell a stale candidate from a blob a
+        // concurrent writer is still using, and before X13/N14 it was `None`, so
+        // a sweep with a non-zero grace could never reclaim anything on Azure.
+        let name = Self::object_name(key)?;
+        let response = self.request("HEAD", Some(&name), &[], &[], &[])?;
+        match response.status {
+            200 => Ok(response
+                .last_modified
+                .as_deref()
+                .and_then(parse_rfc1123_secs)
+                .and_then(|seconds| {
+                    u64::try_from(seconds)
+                        .ok()
+                        .and_then(|seconds| UNIX_EPOCH.checked_add(Duration::from_secs(seconds)))
+                })),
+            404 => Ok(None),
+            403 => Err(Error::unauthorized(format!(
+                "Azure denied HEAD `{name}`: {}",
+                response_body(&response.body)
+            ))),
+            status => Err(Error::io(format!(
+                "Azure HEAD `{name}` returned HTTP {status}"
+            ))),
+        }
     }
 
     fn sync_dir(&mut self, _key: &Key) -> Result<()> {
@@ -2343,8 +2397,8 @@ impl StorageBackend for AzureBackend {
         BlobPlane::exists(self, key)
     }
 
-    fn modified(&self, _key: &Key) -> Result<Option<SystemTime>> {
-        Ok(None)
+    fn modified(&self, key: &Key) -> Result<Option<SystemTime>> {
+        <AzureBackend as CommitPlane>::modified(self, key)
     }
 
     fn init_layout(&mut self) -> Result<()> {
@@ -2663,6 +2717,52 @@ fn now_ns() -> i64 {
         .map(|duration| duration.as_nanos())
         .unwrap_or_default();
     i64::try_from(nanos).unwrap_or(i64::MAX)
+}
+
+/// Parse an HTTP-date (`Thu, 13 Nov 2026 09:21:03 GMT`) into Unix seconds.
+///
+/// Only the exact shape Azure emits is accepted. Any other shape yields
+/// `None`, and the caller keeps an entry whose age it cannot establish rather
+/// than deleting a possibly live probe.
+fn parse_rfc1123_secs(text: &str) -> Option<i64> {
+    const MONTHS: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    let text = text.trim();
+    let rest = text.split_once(", ").map(|(_, rest)| rest).unwrap_or(text);
+    let mut parts = rest.split(' ');
+    let day: i64 = parts.next()?.parse().ok()?;
+    let month_name = parts.next()?;
+    let month = MONTHS.iter().position(|name| *name == month_name)? as i64 + 1;
+    let year: i64 = parts.next()?.parse().ok()?;
+    let mut clock = parts.next()?.split(':');
+    let hour: i64 = clock.next()?.parse().ok()?;
+    let minute: i64 = clock.next()?.parse().ok()?;
+    let second: i64 = clock.next()?.parse().ok()?;
+    if parts.next() != Some("GMT") {
+        return None;
+    }
+    if !(1..=31).contains(&day)
+        || !(0..=23).contains(&hour)
+        || !(0..=59).contains(&minute)
+        || !(0..=60).contains(&second)
+    {
+        return None;
+    }
+    let days = days_from_civil(year, month as u32, day as u32);
+    Some(days * 86_400 + hour * 3_600 + minute * 60 + second)
+}
+
+/// Howard Hinnant's `days_from_civil` (proleptic Gregorian), the inverse of
+/// [`civil_from_days`].
+fn days_from_civil(year: i64, month: u32, day: u32) -> i64 {
+    let y = if month <= 2 { year - 1 } else { year };
+    let era = if y >= 0 { y } else { y - 399 } / 400;
+    let yoe = y - era * 400;
+    let month = month as i64;
+    let doy = (153 * (if month > 2 { month - 3 } else { month + 9 }) + 2) / 5 + day as i64 - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
 }
 
 fn unique_counter() -> u64 {
