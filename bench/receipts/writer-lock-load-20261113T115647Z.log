@@ -1,0 +1,495 @@
+writer_lock court stamp=20261113T115647Z iterations=25 load=8 threads=8 uid=0
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2303:9
+     |
+2303 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2355:13
+     |
+2355 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7652:18
+     |
+7652 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 15 warnings (run `cargo fix --lib -p weftfs` to apply 13 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5816:8
+     |
+5816 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5823:8
+     |
+5823 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5840:7
+     |
+5840 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5842:4
+     |
+5842 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5875:4
+     |
+5875 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+  Executable tests/writer_lock.rs (.docker-cache/target-rust/debug/deps/writer_lock-5611b31cd2a87e1d)
+binary=.docker-cache/target-rust/debug/deps/writer_lock-5611b31cd2a87e1d
+load: 8 busy processes started
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+
+running 9 tests
+test another_process_holding_the_lock_refuses_this_one ... ok
+test a_second_live_writer_is_still_refused ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+
+
+running 9 tests
+test a_second_live_writer_is_still_refused ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 9 tests
+test a_second_live_writer_is_still_refused ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test a_second_live_writer_is_still_refused ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test a_second_live_writer_is_still_refused ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+
+running 9 tests
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test a_second_live_writer_is_still_refused ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+
+running 9 tests
+test a_second_live_writer_is_still_refused ... ok
+test a_legacy_flock_holder_blocks_the_shipped_writer ... ok
+test flock_fallback_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test legacy_flock_close_only_is_blocked_by_a_forked_child ... ok
+test ofd_close_only_is_also_blocked_by_a_forked_child ... ok
+test another_process_holding_the_lock_refuses_this_one ... ok
+test the_shipped_writer_blocks_a_legacy_flock_holder ... ok
+test ofd_with_explicit_unlock_is_not_blocked_by_a_forked_child ... ok
+test store_reopens_under_concurrent_forks ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+
+RESULT iterations=25 passed=25 failed=0
