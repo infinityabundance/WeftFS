@@ -1450,6 +1450,18 @@ fn measure_a(
         let mut page_hash = Vec::new();
         let mut descriptor_parse = Vec::new();
         let mut descriptor_root = Vec::new();
+        // The irreducible payload step of a *raw* representation of exactly
+        // these bytes: one allocation and one copy. It is the floor a future
+        // raw payload codec would face, measured on the same page, and it is
+        // labelled as a floor rather than as a shipped representation.
+        let mut raw_copy = Vec::new();
+        for _ in 0..8 {
+            let started = Instant::now();
+            let mut joined = vec![0u8; bytes.len()];
+            joined.copy_from_slice(bytes);
+            raw_copy.push(started.elapsed());
+            std::hint::black_box(&joined);
+        }
         for _ in 0..8 {
             let parsed =
                 weftcodec::frame::Frame::parse(&frame19, &limits).map_err(|err| err.to_string())?;
@@ -1502,9 +1514,10 @@ fn measure_a(
                 "mode19_page_hash_only": latency_summary(&page_hash),
                 "mode19_descriptor_parse": latency_summary(&descriptor_parse),
                 "mode19_descriptor_root": latency_summary(&descriptor_root),
+                "raw_payload_copy_only": latency_summary(&raw_copy),
                 "mode19_frame_bytes": frame19.len(),
                 "mode12_frame_bytes": frame12.len(),
-                "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash and the descriptor identity from each other",
+                "note": "in-memory decode of the same page; isolates the provenance descriptor from I/O, and splits the payload decode, the reconstructed-page hash, the descriptor identity and a raw-copy floor from each other",
             }),
         );
     }
@@ -1902,20 +1915,33 @@ fn expected_output_digest(
     sha256_hex(&buffer)
 }
 
+/// What one recovery pass did, with the manifest identity the W arm resolved.
+struct RecoveryOutcome {
+    outputs: u64,
+    logical: u64,
+    buffer: Vec<u8>,
+    demanded: Vec<u8>,
+    /// Checkpoint manifest loads inside this pass (W only).
+    manifest_loads: u64,
+    /// The manifest root the W arm's one load produced.
+    manifest_root: Option<Hash32>,
+}
+
 /// One dependency-aware recovery pass, exactly as the contract demands it.
 ///
 /// Factored out so the instrumented attribution pass runs the *same* work on
-/// the same store: `samples` receives one duration per output, and the return
-/// value is `(outputs, logical_bytes, buffer, demanded_subset)`.
+/// the same store: `samples` receives one duration per output.
 fn recovery_pass(
     arm: Arm,
     store: &Store,
     samples: &mut Vec<Duration>,
-) -> Result<(u64, u64, Vec<u8>, Vec<u8>), String> {
+) -> Result<RecoveryOutcome, String> {
     let mut outputs = 0u64;
     let mut logical = 0u64;
     let mut buffer = Vec::new();
     let mut demanded: Vec<u8> = Vec::new();
+    let mut manifest_loads = 0u64;
+    let mut manifest_root = None;
     match arm {
         Arm::N => {
             for index in 0..TENSORS {
@@ -2012,17 +2038,32 @@ fn recovery_pass(
             outputs += 1;
         }
         Arm::W => {
-            let manifest = store
-                .load_checkpoint("ckpt")
+            // Resolve the checkpoint manifest once and reuse it for every
+            // demanded tensor. The per-tensor verification is unchanged
+            // (`restore_named_tensor_with_manifest` runs the same checks as
+            // `restore_named_tensor_at`); what stops being paid is the same
+            // ~51 KiB manifest blob read six times.
+            let loaded = store
+                .load_checkpoint_manifest("ckpt")
                 .map_err(|err| format!("W checkpoint manifest: {err}"))?;
+            manifest_loads = 1;
+            manifest_root = Some(loaded.manifest_root);
             for index in NEEDED {
                 let name = format!("t{index:03}");
-                manifest
+                loaded
+                    .manifest
                     .tensor(&name)
                     .map_err(|err| format!("W checkpoint has no `{name}`: {err}"))?;
                 let t = Instant::now();
                 let restored = store
-                    .restore_named_tensor_at(None, "ckpt", &name, None, None)
+                    .restore_named_tensor_with_manifest(
+                        None,
+                        "ckpt",
+                        &loaded.manifest,
+                        &name,
+                        None,
+                        None,
+                    )
                     .map_err(|err| format!("W restore `{name}`: {err}"))?;
                 samples.push(t.elapsed());
                 buffer.extend_from_slice(&restored.bytes);
@@ -2049,7 +2090,14 @@ fn recovery_pass(
             outputs += 1;
         }
     }
-    Ok((outputs, logical, buffer, demanded))
+    Ok(RecoveryOutcome {
+        outputs,
+        logical,
+        buffer,
+        demanded,
+        manifest_loads,
+        manifest_root,
+    })
 }
 
 fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
@@ -2060,7 +2108,13 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
     let before = store.backend_stats();
     let started = Instant::now();
 
-    let (outputs, logical, buffer, demanded) = recovery_pass(arm, &store, &mut samples)?;
+    let outcome = recovery_pass(arm, &store, &mut samples)?;
+    let (outputs, logical, buffer, demanded) = (
+        outcome.outputs,
+        outcome.logical,
+        outcome.buffer,
+        outcome.demanded,
+    );
 
     let wall = started.elapsed();
     let after = store.backend_stats();
@@ -2073,7 +2127,8 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
         phase_profile::begin();
         let ledger_started = Instant::now();
         let mut ignored = Vec::new();
-        let (ledger_outputs, ledger_logical, _, _) = recovery_pass(arm, &store, &mut ignored)?;
+        let ledger_outcome = recovery_pass(arm, &store, &mut ignored)?;
+        let (ledger_outputs, ledger_logical) = (ledger_outcome.outputs, ledger_outcome.logical);
         let ledger_wall = ledger_started.elapsed();
         let snapshot = phase_profile::finish();
         let mut phases = JsonMap::new();
@@ -2152,6 +2207,8 @@ fn measure_b(arm: Arm, work: &Path) -> Result<(Json, Json), String> {
         "requests": (after.reads + after.range_reads)
             .saturating_sub(before.reads + before.range_reads),
         "latency": latency_summary(&samples),
+        "manifest_loads": outcome.manifest_loads,
+        "manifest_root": outcome.manifest_root.map(|root| root.to_hex()),
         "causal_closure": closure,
         "ledger": ledger,
     });
@@ -2735,6 +2792,15 @@ fn assemble(args: &Args) -> Result<(), String> {
                     .collect::<Vec<f64>>(),
             ),
         );
+        metrics.insert(
+            "recovery_manifest_loads".to_owned(),
+            spread(
+                &rows
+                    .iter()
+                    .filter_map(|row| pick(row, &["b", "recovery", "manifest_loads"]))
+                    .collect::<Vec<f64>>(),
+            ),
+        );
 
         // Per-variant probe detail, aggregated across repetitions.
         let mut variants = JsonMap::new();
@@ -3087,6 +3153,25 @@ fn assemble(args: &Args) -> Result<(), String> {
         "every arm refused after one activation was removed".to_owned(),
     );
 
+    // W resolves the checkpoint manifest once per recovery pass and reuses it
+    // for every demanded tensor. This is an assertion about the arm's code
+    // path, not a performance claim: a regression to a per-tensor manifest
+    // load would show up here before it showed up in the byte count.
+    let w_manifest_loads = arms
+        .get("W")
+        .and_then(|row| row.get("metrics"))
+        .and_then(|metrics| metrics.get("recovery_manifest_loads"))
+        .and_then(|value| value.get("max"))
+        .and_then(Json::as_f64)
+        .unwrap_or(0.0);
+    push(
+        "w_recovery_loads_the_manifest_once",
+        w_manifest_loads == 1.0,
+        format!(
+            "W checkpoint manifest loads per recovery pass: {w_manifest_loads} (max across reps)"
+        ),
+    );
+
     let recompute_exact = ["N", "M", "W"].iter().all(|arm| {
         phases
             .iter()
@@ -3289,6 +3374,7 @@ fn assemble(args: &Args) -> Result<(), String> {
     let mut decode_page_hash: Vec<f64> = Vec::new();
     let mut decode_descriptor_parse: Vec<f64> = Vec::new();
     let mut decode_descriptor_root: Vec<f64> = Vec::new();
+    let mut decode_raw_copy: Vec<f64> = Vec::new();
     for row in &phases {
         if row.get("arm").and_then(Json::as_str) != Some("W") {
             continue;
@@ -3304,6 +3390,7 @@ fn assemble(args: &Args) -> Result<(), String> {
             ("mode19_page_hash_only", &mut decode_page_hash),
             ("mode19_descriptor_parse", &mut decode_descriptor_parse),
             ("mode19_descriptor_root", &mut decode_descriptor_root),
+            ("raw_payload_copy_only", &mut decode_raw_copy),
         ] {
             if let Some(value) = diag
                 .and_then(|d| d.get(path))
@@ -3316,10 +3403,21 @@ fn assemble(args: &Args) -> Result<(), String> {
     }
     let d12 = median(&decode12);
     let d19 = median(&decode19);
+    let planes_p50 = median(&decode_planes);
+    let raw_copy_p50 = median(&decode_raw_copy);
+    let page_bytes = PAGE_BYTES as f64;
+    // bytes per microsecond is megabytes per second for decimal MB.
+    let mb_per_s = |micros: f64| {
+        if micros > 0.0 {
+            page_bytes / micros
+        } else {
+            0.0
+        }
+    };
     let provenance_overhead = json!({
         "mode12_decode_p50_us": d12,
         "mode19_decode_p50_us": d19,
-        "mode19_planes_p50_us": median(&decode_planes),
+        "mode19_planes_p50_us": planes_p50,
         "mode19_page_hash_p50_us": median(&decode_page_hash),
         "mode19_descriptor_parse_p50_us": median(&decode_descriptor_parse),
         "mode19_descriptor_root_p50_us": median(&decode_descriptor_root),
@@ -3327,6 +3425,26 @@ fn assemble(args: &Args) -> Result<(), String> {
         "note": "in-memory decode of the same page, same payload codec; isolates the \
                  provenance descriptor from I/O and from the payload codec, and splits the \
                  payload decode from the reconstructed-page hash and the descriptor identity",
+    });
+
+    // ---- Representation cost on the same pages, and the floor a raw payload
+    // would face. The shipped wire format fixes `huffman-canonical-v1` for
+    // modes 9-19, so no raw representation exists to measure end to end; what
+    // is measured here is the payload step of each: the shipped Huffman plane
+    // decode, and one allocation plus one copy of exactly the same page bytes.
+    // It is labelled a floor and is never a claim about a shipped codec.
+    let representation = json!({
+        "page_bytes": PAGE_BYTES,
+        "huffman_canonical_p50_us": planes_p50,
+        "huffman_canonical_mb_per_s": mb_per_s(planes_p50),
+        "raw_copy_floor_p50_us": raw_copy_p50,
+        "raw_copy_floor_mb_per_s": mb_per_s(raw_copy_p50),
+        "huffman_over_raw_copy": if raw_copy_p50 > 0.0 { planes_p50 / raw_copy_p50 } else { 0.0 },
+        "note": "payload step only, measured in memory on the same page and the same bytes; \
+                 the shipped representation is huffman-canonical-v1 byte planes; the raw-copy \
+                 row is the irreducible payload step of a raw payload representation, not a \
+                 shipped codec, and the provenance checks (page hash, descriptor parse, \
+                 descriptor identity) are excluded from both rows and listed beside them",
     });
 
     let checks_ok = checks
@@ -3388,6 +3506,7 @@ fn assemble(args: &Args) -> Result<(), String> {
         "arms": Json::Object(arms),
         "fast_path": fast_path,
         "provenance_overhead": provenance_overhead,
+        "representation": representation,
         "losses": losses,
         "raw": phases,
         "checks": checks,
@@ -3404,6 +3523,10 @@ fn assemble(args: &Args) -> Result<(), String> {
              rebuilds its index by scanning (available, untested)",
             "live cloud backends; this court is the local POSIX data plane",
             "timing, size or access-pattern privacy of the salt",
+            "a raw or direct-byte payload representation for provenance-bound pages: the wire \
+             format fixes huffman-canonical-v1 byte planes for modes 9-19, so the fast path in \
+             this receipt is the shipped codec; the raw-copy floor is reported beside it rather \
+             than substituted for it",
         ],
         "scope": "single host, one backend, OOM-protected Docker court. Not a cloud, fleet, media \
                   or power-loss claim.",

@@ -1,10 +1,20 @@
-# Context Advantage Court — frozen contract (R26, version 1)
+# Context Advantage Court — frozen contract (R26, version 2)
 
 This contract is written and committed **before** the court is run. It fixes the
 arms, the invariants, the metric definitions, the declared tolerance for
 fast-path neutrality, and the conditions that falsify the claim. Nothing here is
 edited after a measurement; a changed rule is a new contract version and a new
 receipt.
+
+**v2 change log (R28, 2026-11-13).** One number was wrong in v1 §3 C3: it said
+`1.25 ×` while the tolerance the harness declares and enforces in its receipt
+(`fast_path.declared.bytes_ratio_max`) is **`1.10 ×`**, which is the value every
+run since R26 has been gated on. The v2 change is a correction of that
+typographical inconsistency in favour of the stricter, already-enforced number;
+it tightens nothing at measurement time and loosens nothing. No arm, invariant,
+metric, phase, gate or tolerance was changed, and the R26 and R27 receipts remain
+valid under this text. See `bench/RESULTS-context-advantage.md` §6 for the
+recorded reconciliation.
 
 The court exists because of programme rule 14: the product is the context plane,
 and a capability claim is only made when it beats **a strong application-level
@@ -184,7 +194,7 @@ the 8 S0 pages, N/M/W.
 
 * **C1** W fast-path p50 ≤ **2.0 ×** N fast-path p50.
 * **C2** W fast-path p95 ≤ **2.5 ×** N fast-path p95.
-* **C3** W backend bytes read per fast-path request ≤ **1.25 ×** N.
+* **C3** W backend bytes read per fast-path request ≤ **1.10 ×** N.
 * **C4** W returns byte-exact pages on every fast-path read.
 
 If any of C1–C3 is violated, the number is published as measured and the
