@@ -498,6 +498,25 @@ pub struct RestoredTensorBytes {
     pub report: RestoredTensor,
 }
 
+/// A checkpoint manifest loaded once, with the identities a caller can pin.
+///
+/// Loading a manifest is the expensive part of resolving a named tensor: the
+/// blob is read and hashed by the content-addressed object path and the
+/// canonical WCB is decoded and re-encoded once. A serving loop that restores
+/// several tensors from the same checkpoint loads the manifest once and hands
+/// it to [`Store::restore_named_tensor_with_manifest`], which performs exactly
+/// the per-tensor verification [`Store::restore_named_tensor_at`] performs.
+#[derive(Clone, Debug)]
+pub struct LoadedCheckpointManifest {
+    /// Checkpoint name this manifest was resolved for.
+    pub name: String,
+    /// Object id of the manifest blob (its content address).
+    pub manifest_id: Hash32,
+    /// `H("weft/checkpoint/manifest/v1", canonical bytes)`.
+    pub manifest_root: Hash32,
+    pub manifest: CheckpointManifest,
+}
+
 /// Result of a restore.
 #[derive(Clone, Debug)]
 pub struct CheckpointRestoreReport {
@@ -2293,6 +2312,28 @@ fn checked_product(values: &[u64]) -> Result<u64> {
     })
 }
 
+/// Finish a loaded manifest: it must name the checkpoint it was resolved for,
+/// and its root is derived here rather than taken from the caller.
+fn loaded_checkpoint(
+    name: &str,
+    manifest_id: Hash32,
+    manifest: CheckpointManifest,
+) -> Result<LoadedCheckpointManifest> {
+    if manifest.name != name {
+        return Err(Error::corrupt(format!(
+            "checkpoint manifest at `{name}` names checkpoint `{}`",
+            manifest.name
+        )));
+    }
+    let manifest_root = manifest.root()?;
+    Ok(LoadedCheckpointManifest {
+        name: name.to_owned(),
+        manifest_id,
+        manifest_root,
+        manifest,
+    })
+}
+
 fn row_major_strides(shape: &[u64]) -> Vec<u64> {
     let mut strides = vec![1u64; shape.len()];
     for axis in (0..shape.len().saturating_sub(1)).rev() {
@@ -2943,6 +2984,102 @@ impl Store {
             }
             None => self.load_checkpoint(checkpoint)?,
         };
+        self.restore_manifest_tensor(
+            &manifest,
+            checkpoint,
+            tensor_name,
+            region,
+            topology,
+            state.as_ref(),
+            snapshot,
+        )
+    }
+
+    /// Restore exactly one named tensor's payload from a manifest the caller
+    /// already loaded.
+    ///
+    /// This is the same operation as [`Store::restore_named_tensor_at`] with
+    /// the manifest read lifted out, for a caller that restores several tensors
+    /// from one checkpoint: the manifest is resolved, verified and decoded once
+    /// instead of once per tensor, and the backend byte count stops paying for
+    /// the same ~51 KiB blob six times.
+    ///
+    /// **No verification is weakened.** The per-tensor checks are the same code
+    /// ([`Store::restore_manifest_tensor`]): every shard is read through the
+    /// content-addressed object path, its content root and its own logical root
+    /// are recomputed and compared with the manifest, the assembled tensor root
+    /// is compared with the manifest, and a requested topology root is
+    /// recomputed and compared. The manifest itself is the value
+    /// [`Store::load_checkpoint_manifest`] returned: its blob was read through
+    /// the same verifying path and decoded with the strict canonical check, and
+    /// its `name` must name `checkpoint`. A forged manifest cannot make the
+    /// store return bytes that do not hash to the stored shard content roots,
+    /// because those roots are checked against the bytes actually returned.
+    pub fn restore_named_tensor_with_manifest(
+        &self,
+        snapshot: Option<Hash32>,
+        checkpoint: &str,
+        manifest: &CheckpointManifest,
+        tensor_name: &str,
+        region: Option<&Region>,
+        topology: Option<&RestoreTopology>,
+    ) -> Result<RestoredTensorBytes> {
+        if region.is_some() && topology.is_some() {
+            return Err(Error::invalid_argument(
+                "a region restore cannot be verified against a full-tensor topology",
+            ));
+        }
+        if manifest.name != checkpoint {
+            return Err(Error::corrupt(format!(
+                "checkpoint manifest names `{}`, not `{checkpoint}`",
+                manifest.name
+            )));
+        }
+        let state = match snapshot {
+            Some(commit) => Some(self.state_at(commit)?),
+            None => None,
+        };
+        self.restore_manifest_tensor(
+            manifest,
+            checkpoint,
+            tensor_name,
+            region,
+            topology,
+            state.as_ref(),
+            snapshot,
+        )
+    }
+
+    /// Load one checkpoint manifest once, with its content address and root.
+    pub fn load_checkpoint_manifest(&self, name: &str) -> Result<LoadedCheckpointManifest> {
+        let (manifest_id, manifest) = self.load_checkpoint_with_id(name)?;
+        loaded_checkpoint(name, manifest_id, manifest)
+    }
+
+    /// Load one checkpoint manifest once, resolved against a pinned snapshot.
+    pub fn load_checkpoint_manifest_at(
+        &self,
+        snapshot: Hash32,
+        name: &str,
+    ) -> Result<LoadedCheckpointManifest> {
+        let state = self.state_at(snapshot)?;
+        let (manifest_id, manifest) =
+            self.load_checkpoint_with_id_at(&state, Some(snapshot), name)?;
+        loaded_checkpoint(name, manifest_id, manifest)
+    }
+
+    /// The per-tensor verification shared by both restore entry points.
+    #[allow(clippy::too_many_arguments)]
+    fn restore_manifest_tensor(
+        &self,
+        manifest: &CheckpointManifest,
+        checkpoint: &str,
+        tensor_name: &str,
+        region: Option<&Region>,
+        topology: Option<&RestoreTopology>,
+        state: Option<&State>,
+        snapshot: Option<Hash32>,
+    ) -> Result<RestoredTensorBytes> {
         let tensor = manifest.tensor(tensor_name)?;
         let limits = Limits::default();
         let restored = self.restore_tensor(
@@ -2951,7 +3088,7 @@ impl Store {
             region,
             topology,
             &limits,
-            state.as_ref(),
+            state,
             snapshot,
             false,
             &crate::parallel::TileDecodeOptions::default(),
