@@ -74,7 +74,8 @@ fi
 command -v docker >/dev/null 2>&1 || skip "no docker CLI on PATH"
 docker info >/dev/null 2>&1 || skip "no reachable docker daemon"
 
-fixture="$repo_root/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors"
+fixture="${WEFT_AUG_FIXTURE:-$repo_root/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors}"
+fixture_sha256="${WEFT_AUG_FIXTURE_SHA256:-fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe}"
 [[ -f "$fixture" ]] || skip "fixture $fixture is not present (the court refuses to substitute a different container)"
 
 if [[ "$mode" == "minio" ]]; then
@@ -89,10 +90,12 @@ if [[ "$reduced" == "1" ]]; then
   include_embedding=0
   label="reduced"
 else
-  max_others=100
-  include_embedding=1
-  label="full"
+  max_others="${WEFT_AUG_MAX_OTHERS:-100}"
+  include_embedding="${WEFT_AUG_INCLUDE_EMBEDDING:-1}"
+  label="${WEFT_AUG_LABEL:-full}"
 fi
+fixture_name="$(basename "$fixture")"
+fixture_container="${fixture/#$repo_root//work}"
 
 work="$repo_root/.docker-cache/augmentation-$mode-$stamp"
 receipt="bench/receipts/augmentation-$mode-$stamp.json"
@@ -118,7 +121,8 @@ if [[ "$mode" == "local" ]]; then
   echo "augmentation_court: local POSIX backend, label=$label, subset=max_others:$max_others include_embedding:$include_embedding reps=$reps configs=$configs" >&2
   scripts/docker-court.sh bench \
     "cd /work && $trace_env cargo run --release --quiet --example augmentation_bench -- run \
-       --fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors \
+       --fixture $fixture_container \
+       --fixture-sha256 $fixture_sha256 \
        --work /work/.docker-cache/augmentation-local-$stamp \
        --out $receipt --log $log \
        --backend local --chunk-size 1048576 \
@@ -251,7 +255,8 @@ else
   echo "augmentation_court: the MinIO container is restarted between cells; its tmpfs does not release deleted-but-open bytes until the process restarts, so one container cannot hold several clean configurations. Write and restore for one cell both happen before its restart." >&2
 
   run_harness prepare prepare \
-    --fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors \
+    --fixture $fixture_container \
+    --fixture-sha256 $fixture_sha256 \
     --work "$work_container" \
     --max-others "$max_others" --include-embedding "$include_embedding"
 

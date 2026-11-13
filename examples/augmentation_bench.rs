@@ -1110,6 +1110,78 @@ fn config_suffix(key: &str) -> &str {
     key.split_once('-').map(|(_, suffix)| suffix).unwrap_or("")
 }
 
+/// How a published row is reproduced: the shipped default, a flag, or a
+/// harness composition that has no single CLI verb.
+///
+/// This is emitted into every `configurations.<row>` entry of the contract
+/// receipt. It exists so a reader never has to infer from prose which row is
+/// the product's default and which is an ablation or an API-level frontier.
+fn config_reproduction(config: &str) -> Json {
+    let suffix = config_suffix(config);
+    if !suffix.is_empty() {
+        return json!({
+            "row": config,
+            "label": format!("ablation suffix `{suffix}`"),
+            "shipped_default": false,
+            "requires_flag": true,
+            "reproduces_with": format!(
+                "the harness ablation suffix `{suffix}`; it is not a shipped default, and the receipt row records the exact composition"
+            ),
+        });
+    }
+    match config_base(config) {
+        "A" => json!({
+            "row": config,
+            "label": "native durable write",
+            "shipped_default": true,
+            "requires_flag": false,
+            "reproduces_with": "the backend's own per-object durable path; no WeftFS code in the data or control path, and no WeftFS flag",
+        }),
+        "N" => json!({
+            "row": config,
+            "label": "native + application manifest (supplementary)",
+            "shipped_default": false,
+            "requires_flag": true,
+            "reproduces_with": "the harness `--with-native-app` composition: plain files plus a JSON manifest, provenance record and explicit key-set context; it is a supplementary baseline, not a WeftFS CLI verb",
+        }),
+        "B" => json!({
+            "row": config,
+            "label": "protocol pass-through",
+            "shipped_default": false,
+            "requires_flag": true,
+            "reproduces_with": "`weftfs checkpoint write --write-policy fast --fast-codec raw` (raw representation, store protocol and metadata)",
+        }),
+        "C" => json!({
+            "row": config,
+            "label": "codec",
+            "shipped_default": true,
+            "requires_flag": false,
+            "reproduces_with": "`weftfs checkpoint write` with no flags: WritePolicy::Planned and the shipped two-stage candidate set (raw, zstd-3/zstd-19 gate, FLOAT_TENSOR)",
+        }),
+        "D" => json!({
+            "row": config,
+            "label": "protocol",
+            "shipped_default": false,
+            "requires_flag": true,
+            "reproduces_with": "B's raw write plus the harness protocol composition (project attribute, snapshot, Context Root over `select attrs.project == \"augmentation\"`, one `weft.provenance.v1` record); the store APIs are shipped, the combination is harness-level",
+        }),
+        "E" => json!({
+            "row": config,
+            "label": "combined",
+            "shipped_default": false,
+            "requires_flag": true,
+            "reproduces_with": "C's planned write plus D's protocol composition; the store APIs are shipped, the combination is harness-level",
+        }),
+        other => json!({
+            "row": config,
+            "label": format!("unknown row `{other}`"),
+            "shipped_default": false,
+            "requires_flag": true,
+            "reproduces_with": format!("row `{other}`; the harness records its composition"),
+        }),
+    }
+}
+
 /// A configuration key that this harness can write or restore.
 fn is_weftfs_config(key: &str) -> bool {
     CONFIGS.contains(&config_base(key))
@@ -3195,6 +3267,11 @@ fn assemble(
                 "least_contended_rep": best["rep"],
                 "strategies_stable_across_reps": strategies_stable,
                 "all_restores_exact": all_exact,
+                // Required by the operator directive: every published row says
+                // whether it is reachable from a shipped default or needs an
+                // explicit flag, so a reader cannot mistake an ablation or a
+                // harness composition for the product's default path.
+                "reproduction": config_reproduction(config),
                 // The crash proxy runs once per arm, on rep 1, so this is a
                 // single result per arm and not a repetition statistic.
                 "crash": samples
@@ -3443,7 +3520,7 @@ fn assemble(
             "logical_bytes": "exact source tensor payload bytes in the subset",
             "reps": "every arm runs once per repetition and the arms are interleaved with a one-position rotation; the receipt publishes every repetition's raw phase JSON and the min/p50/p95/max of every mandatory metric",
             "representative_rep": "`configurations.X.write`/`.restore`/`.summary` are the median-wall repetition; `summary_least_contended` and `deltas_vs_A_least_contended` use the minimum-wall repetition",
-            "default_note": "A/B/C/D/E/N in this receipt are the shipped defaults of their rows unless the key carries a `-suffix`; no row here requires a non-default flag to reproduce",
+            "default_note": "every `configurations.<row>.reproduction` records `shipped_default`, `requires_flag` and `reproduces_with`. Only `A` (the backend's own path) and `C` (the unmodified planned checkpoint write) are shipped defaults; `B`, `D`, `E` and `N` require explicit flags or harness composition, and any key carrying a `-suffix` is an ablation.",
         },
     })
 }
