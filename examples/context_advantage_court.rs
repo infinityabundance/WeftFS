@@ -3351,8 +3351,9 @@ fn assemble(args: &Args) -> Result<(), String> {
         if w_backend > m_backend {
             losses.push(format!(
                 "W reads {:.2}x M's backend bytes for the identical recovery output set \
-                 ({:.0} vs {:.0} B): the shipped per-tensor restore re-loads the checkpoint \
-                 manifest on every call",
+                 ({:.0} vs {:.0} B): the checkpoint path reads per-shard tensor metadata to \
+                 verify each shard's content root and logical root, which M's flat manifest \
+                 does not carry, and the manifest is loaded once per pass",
                 w_backend / m_backend.max(1e-9),
                 w_backend,
                 m_backend
