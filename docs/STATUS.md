@@ -10401,3 +10401,54 @@ widened** and that the local row remains the primary result.
   second row is one loopback server (not a cloud, fleet, media or power-loss
   court); `raw-le-v1` remains unimplemented so its latency is unknown; the
   local gate still fails and is not re-framed.
+
+## Plan reprioritisation — EKBLOOM `E1–E6`/`X22` moved to the front of the backlog (2026-11-13)
+
+At operator request the optional EKBLOOM representation trials were moved to the
+front of the executable backlog. **No code, format, court, contract or receipt
+changed; nothing was measured; and no performance, storage, latency, throughput
+or resource number is claimed in this entry.** The deliverable is
+[`docs/EKBLOOM-PLAN.md`](EKBLOOM-PLAN.md) plus a forward pointer in
+[`docs/PROGRAM.md`](PROGRAM.md) §E.
+
+* **What the plan contains.** Position and framing under rules 13–14; a precise
+  inventory of what already exists in the tree; the EKBLOOM revision it was
+  written against (`infinityabundance/EKBLOOM`
+  `8275a41b72c17abdc55bf74b82f319876e587ba0` on `main`, crate `ekbloom` 0.7.3,
+  checksum `1c56ae95…5da4`); verbatim quotations of EKBLOOM's own claims with
+  URLs, separated from "WeftFS has measured", which is **nothing** — WeftFS has
+  never executed EKBLOOM; a falsifiable gate per subphase with its declared
+  axis, court, receipt pattern, win and null result; a dependency-ordered
+  sequence whose first step is the cheapest decisive falsifier; the
+  contract-first requirement; explicit non-claims; and the condition that
+  retires the experiment.
+* **Id collision recorded, not papered over.** `docs/PROGRAM.md` §E already uses
+  `E1`–`E7` for strategic pillars, so the executable subphases are written
+  `EKB-E1` … `EKB-E6` and `EKB-X22`, each mapped to the operator's label.
+* **Operator text not in the tree.** The backlog line the operator quoted
+  (`E1–E6/X22 — optional EKBLOOM/DSFB trials retained explicitly …`) does not
+  occur anywhere in this repository. A full-tree search for `EKBLOOM`, `DSFB`,
+  `X22`, `E1–E6` and `E1-E6` finds only the `AGENTS.md` positioning paragraph,
+  **six** negative non-claims about time travel (`README.md` F3, `NOTES.md`,
+  `verification/README.md`, `docs/PROGRAM.md` A4, `docs/STATUS.md` twice), and
+  unrelated `0x22` bytes in test fixtures and store manifests. The line is
+  treated as operator-supplied and quoted as such. `DSFB` is not located in this
+  repository or in the three EKBLOOM documents read.
+* **Prior pre-registered.** The plan records, before any measurement, the
+  prediction that EKBLOOM loses the space, hot-read, cold-read, decode and
+  sequential axes on real weights and may win only bounded-step exact small
+  reads at a declared retained footprint. The reasoning cites EKBLOOM's own
+  `LIMITATIONS.md`/`E2E.md` and the WeftFS R5 entropy-coder court (receipt
+  `entropy-coder-20261106T065154Z`), by stamp rather than by number.
+* **What was deliberately not touched.** `README.md` keeps its F3 row
+  unchanged: the row's only EKBLOOM sentence is a negative non-claim that is
+  still true, so the condition for editing it was not met. `docs/claims.json`
+  and `docs/perf-numbers.json` are unchanged, because adding a claim entry
+  would make the generated claims count in this file's header block stale and
+  neither file gains a number from a plan that measures nothing. No dependency,
+  payload mode, `CostClass` row, court or receipt was added.
+* **Not done.** `bench/CONTRACTS-ekbloom.md` does not exist yet and **must** be
+  committed before the first measurement; `EKB-E1` has not been run; the
+  MSRV consequence of a normal `ekbloom` dependency (this crate declares 1.77,
+  the published crate 1.89) is recorded as an operator decision rather than
+  resolved here.

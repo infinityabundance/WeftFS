@@ -53,6 +53,30 @@ evidence.
 | E6 | Guarantees: bit-identical cross-impl CI, machine-checked invariants, resource-in-identity, zero silent degradation, public AI workload court | all | **partial** — F9 model-checks the commit/recovery abstraction in TLA+ (corrected model pass; flawed model counterexample) and adds a QEMU VM power-cut proxy plus a block-layer lying-disk matrix (`blkdebug-20261104T072008Z.json`: dm-flakey silent drop 5/5 lost, dm-flakey EIO 5/5 fail-closed, snapshot total drop 5/5, blkdebug mount-blocked 10/10). No refinement proof; checkpoint/GC/capability/selector/multi-writer invariants remain test-only. Physical power loss, host page-cache loss, and full CI remain outstanding. |
 | E7 | Adoption surfaces: checkpoint+delta format, dataset versioning/subset materialization, agent memory, experiment reproducibility | E3–E5 | **partial, no adoption claim** — the store-backed Buck2 CAS (D1), the simulated agent-memory replay (D2), and the CPU PyTorch DCP / JAX-Orbax adapters exist with receipts; dataset versioning and subset materialization are absent, and no upstream project has adopted any surface (`docs/AI-STORAGE-AUGMENTATION.md` integration matrix). |
 
+### EKBLOOM representation trials (reprioritised 2026-11-13)
+
+The `E1`–`E7` above are **strategic pillars**, not the executable backlog items
+the operator calls `E1`–`E6/X22`. That operator-supplied line — *"E1–E6/X22 —
+optional EKBLOOM/DSFB trials retained explicitly, under their original
+falsifiable gates, without being silently discarded or promoted into core
+prerequisites"* — does not occur anywhere in this repository, so no in-tree
+acceptance text exists to quote. To keep one id from meaning two things, the
+executable subphases are written `EKB-E1` … `EKB-E6` and `EKB-X22` in
+[`docs/EKBLOOM-PLAN.md`](EKBLOOM-PLAN.md).
+
+**2026-11-13 — reprioritised at operator request.** The EKBLOOM trials move to
+the front of the executable backlog. No other item is dropped, merged away or
+silently postponed: the ordering of §A–§E here and of F0–F9 below is unchanged,
+and no format, court, receipt or claim changes. Nothing is implemented and
+nothing is measured. The plan names the EKBLOOM revision it was written against
+(`infinityabundance/EKBLOOM` `8275a41b72c17abdc55bf74b82f319876e587ba0`, crate
+`ekbloom` 0.7.3), the falsifiable gate and declared axis for each subphase, the
+court and receipt pattern for each, and the null result that retires the
+experiment. EKBLOOM remains a space-for-speed experiment that enters the
+representation portfolio only if it wins a declared axis (rule 14); it is not a
+prerequisite for anything, and no court here compares it with a mature
+filesystem (rule 13).
+
 ## Implementation order (each stage ends with tests and a receipt)
 
 1. **F0 — Program foundation:** normative `WEFT-CONTEXT-ROOT.md`,
