@@ -1,0 +1,91 @@
+{
+  "checks": {
+    "large_frames_identical": true,
+    "large_rss_ratio_oneshot_over_stream": 2.492,
+    "large_wall_ratio_stream_over_oneshot": 0.783,
+    "small_frames_identical": true,
+    "small_rss_ratio_oneshot_over_stream": 2.472,
+    "small_wall_ratio_stream_over_oneshot": 0.809
+  },
+  "court": {
+    "cpus": 4,
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "pids": 1024,
+    "tmpfs": "1g",
+    "weftcodec_revision": "7c8dac37867626a4c45273933c8c99927a58728e",
+    "weftfs_revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  "generated_utc": "20261113T113138Z",
+  "label": "single host, warm page cache, real public tensors; not a fleet/media claim",
+  "log": "bench/receipts/mode9-stream-20261113T113138Z.log",
+  "measures": {
+    "large-analysis": {
+      "frame_bytes": 726141127,
+      "frame_sha256": "13c22325bf8a03ac766025876e493c75ee3d8b5a7e60595b2f121b5a47a65934",
+      "logical_bytes": 1089994752,
+      "mb_per_s_median": 4051.741,
+      "peak_rss_kib_median": 3856,
+      "reps": 3,
+      "wall_ms_median": 269.019,
+      "wall_ms_min": 267.13
+    },
+    "large-oneshot": {
+      "frame_bytes": 726141127,
+      "frame_sha256": "52ebbe4eeff2d6906efd3a67261f00014f939233f0297b5d7959b64f59ddea0e",
+      "logical_bytes": 1089994752,
+      "mb_per_s_median": 558.82,
+      "peak_rss_kib_median": 1776132,
+      "reps": 3,
+      "wall_ms_median": 1950.528,
+      "wall_ms_min": 1916.916
+    },
+    "large-stream": {
+      "frame_bytes": 726141127,
+      "frame_sha256": "52ebbe4eeff2d6906efd3a67261f00014f939233f0297b5d7959b64f59ddea0e",
+      "logical_bytes": 1089994752,
+      "mb_per_s_median": 714.052,
+      "peak_rss_kib_median": 712720,
+      "reps": 3,
+      "wall_ms_median": 1526.492,
+      "wall_ms_min": 1522.836
+    },
+    "small-analysis": {
+      "frame_bytes": 180547519,
+      "frame_sha256": "e0031e331494103b06714f8ff38f182851efb87e1307ec3c68b3bbf86076ecb1",
+      "logical_bytes": 272269312,
+      "mb_per_s_median": 4011.148,
+      "peak_rss_kib_median": 3812,
+      "reps": 3,
+      "wall_ms_median": 67.878,
+      "wall_ms_min": 65.896
+    },
+    "small-oneshot": {
+      "frame_bytes": 180547519,
+      "frame_sha256": "7cd07b64b0e9666032305e174f09dbd264c7e6be3bb7f4f632d49b0ae79dea76",
+      "logical_bytes": 272269312,
+      "mb_per_s_median": 569.502,
+      "peak_rss_kib_median": 444652,
+      "reps": 3,
+      "wall_ms_median": 478.083,
+      "wall_ms_min": 476.832
+    },
+    "small-stream": {
+      "frame_bytes": 180547519,
+      "frame_sha256": "7cd07b64b0e9666032305e174f09dbd264c7e6be3bb7f4f632d49b0ae79dea76",
+      "logical_bytes": 272269312,
+      "mb_per_s_median": 704.35,
+      "peak_rss_kib_median": 179896,
+      "reps": 3,
+      "wall_ms_median": 386.554,
+      "wall_ms_min": 385.227
+    }
+  },
+  "reps": 3,
+  "result": "pass",
+  "schema": "weft-mode9-stream-court-v1"
+}

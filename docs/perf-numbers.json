@@ -61,6 +61,10 @@
   {
    "id": "azure-mw2-negative",
    "title": "Azure MW2 court, retained negative run (1 s sweep grace)"
+  },
+  {
+   "id": "scale7b",
+   "title": "X04 7B ingestion and streaming mode 9"
   }
  ],
  "numbers": [
@@ -8492,6 +8496,1046 @@
    "stamp": "20261113T103700Z",
    "revision_path": "revisions.weftfs",
    "revision": "103dd99c7fd9d23345589ffc484ab5f43223729b"
+  },
+  {
+   "key": "scale7b.mode9.small_logical",
+   "label": "0.5B embedding logical bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-oneshot.logical_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_frame",
+   "label": "0.5B embedding mode-9 frame bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-oneshot.frame_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_oneshot_ms",
+   "label": "0.5B embedding one-shot encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-oneshot.wall_ms_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_oneshot_rss",
+   "label": "0.5B embedding one-shot peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-oneshot.peak_rss_kib_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_stream_ms",
+   "label": "0.5B embedding streamed encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-stream.wall_ms_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_stream_rss",
+   "label": "0.5B embedding streamed peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-stream.peak_rss_kib_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_rss_ratio",
+   "label": "0.5B embedding peak-RSS ratio one-shot/streamed",
+   "unit": "x",
+   "group": "scale7b",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "checks.small_rss_ratio_oneshot_over_stream",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_wall_ratio",
+   "label": "0.5B embedding wall ratio streamed/one-shot",
+   "unit": "x",
+   "group": "scale7b",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "checks.small_wall_ratio_stream_over_oneshot",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_logical",
+   "label": "7B lm_head logical bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-oneshot.logical_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_frame",
+   "label": "7B lm_head mode-9 frame bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-oneshot.frame_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_oneshot_ms",
+   "label": "7B lm_head one-shot encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-oneshot.wall_ms_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_oneshot_rss",
+   "label": "7B lm_head one-shot peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-oneshot.peak_rss_kib_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_stream_ms",
+   "label": "7B lm_head streamed encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-stream.wall_ms_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_stream_rss",
+   "label": "7B lm_head streamed peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-stream.peak_rss_kib_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_rss_ratio",
+   "label": "7B lm_head peak-RSS ratio one-shot/streamed",
+   "unit": "x",
+   "group": "scale7b",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "checks.large_rss_ratio_oneshot_over_stream",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_wall_ratio",
+   "label": "7B lm_head wall ratio streamed/one-shot",
+   "unit": "x",
+   "group": "scale7b",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "checks.large_wall_ratio_stream_over_oneshot",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_analysis_ms",
+   "label": "7B lm_head streamed counting-pass wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-analysis.wall_ms_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_analysis_mbs",
+   "label": "7B lm_head streamed counting-pass throughput",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-analysis.mb_per_s_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.large_analysis_rss",
+   "label": "7B lm_head streamed counting-pass peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.large-analysis.peak_rss_kib_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.mode9.small_analysis_ms",
+   "label": "0.5B embedding streamed counting-pass wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+   "path": "measures.small-analysis.wall_ms_median",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T113138Z",
+   "revision": "62845b63ecb596428ac574f5613220224866ea6c"
+  },
+  {
+   "key": "scale7b.planned.wall_ms",
+   "label": "planned 7B checkpoint write wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.mb_s",
+   "label": "planned 7B checkpoint write throughput",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.rss_kib",
+   "label": "planned 7B checkpoint process peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.cgroup_peak",
+   "label": "planned 7B checkpoint cgroup memory peak",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.cgroup_memory_peak_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.store_bytes",
+   "label": "planned 7B checkpoint store bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.verify_ms",
+   "label": "planned 7B in-process verify --full wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.profile.verify.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.publish_ms",
+   "label": "planned 7B blob publication wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.profile.blob_publish.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.encode_ms",
+   "label": "planned 7B encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.profile.encode.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.mode9_ms",
+   "label": "planned 7B mode-9 encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.profile.encode_float_tensor.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.sync_ms",
+   "label": "planned 7B durability barrier",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.profile.backend_sync.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.shards",
+   "label": "planned 7B shard objects",
+   "unit": "objects",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.shard_objects",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.planned.reprs",
+   "label": "planned 7B codec representations",
+   "unit": "representations",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+   "path": "phases.planned.report.verify.checked_representations",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T104950Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.wall_ms",
+   "label": "streamed 7B ingest wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.mb_s",
+   "label": "streamed 7B ingest throughput",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.rss_kib",
+   "label": "streamed 7B ingest process peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.store_bytes",
+   "label": "streamed 7B ingest store bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.mode9_count",
+   "label": "streamed 7B ingest mode-9 tensors",
+   "unit": "tensors",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.strategies.float-tensor",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.zstd",
+   "label": "streamed 7B ingest ZSTD tensors",
+   "unit": "tensors",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.strategies.zstd",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.raw",
+   "label": "streamed 7B ingest raw tensors",
+   "unit": "tensors",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.strategies.raw",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.verify_ms",
+   "label": "streamed 7B in-process verify --full wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.profile.verify.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.publish_ms",
+   "label": "streamed 7B blob publication wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.profile.blob_publish.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.ingest.mode9_ms",
+   "label": "streamed 7B mode-9 encode wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+   "path": "phases.ingest_streamed.report.profile.encode_float_tensor.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105331Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.before.ingest_exit",
+   "label": "pre-X04 per-tensor planned ingest exit status",
+   "unit": "status",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.ingest.exit",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.flat_ms",
+   "label": "pre-X04 fast-raw flat write wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.flat.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.flat_rss",
+   "label": "pre-X04 fast-raw flat write peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.flat.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.flat_store",
+   "label": "pre-X04 fast-raw flat store bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.flat.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.packed_ms",
+   "label": "pre-X04 fast-raw packed write wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.packed.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.packed_rss",
+   "label": "pre-X04 fast-raw packed write peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.packed.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.packed_store",
+   "label": "pre-X04 fast-raw packed store bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.packed.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.segments",
+   "label": "pre-X04 catalog segment publications",
+   "unit": "publishes",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.packed.report.pack_stats.catalog_segment_publishes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.before.root_publishes",
+   "label": "pre-X04 catalog root publications",
+   "unit": "publishes",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+   "path": "phases.packed.report.pack_stats.catalog_root_publishes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261110T213731Z",
+   "revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  {
+   "key": "scale7b.packed.wall_ms",
+   "label": "packed 7B write wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.mb_s",
+   "label": "packed 7B write throughput",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.rss_kib",
+   "label": "packed 7B write process peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.store_bytes",
+   "label": "packed 7B store bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.packed_bytes",
+   "label": "packed 7B pack object bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.packed_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.members",
+   "label": "packed 7B catalogued members",
+   "unit": "members",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.packed_members",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.packs",
+   "label": "packed 7B sealed packs",
+   "unit": "packs",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.sealed_packs",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.flat_members",
+   "label": "packed 7B flat members",
+   "unit": "members",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.flat_members",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.flat_bytes",
+   "label": "packed 7B flat member bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.flat_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.segments",
+   "label": "packed 7B catalog segment publications",
+   "unit": "publishes",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.catalog_segment_publishes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.packed.root_publishes",
+   "label": "packed 7B catalog root publications",
+   "unit": "publishes",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.packed.report.pack_stats.catalog_root_publishes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.catalog.bytes",
+   "label": "packed 7B catalog bytes on disk",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.catalog.report.catalog_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.catalog.files",
+   "label": "packed 7B catalog segment files",
+   "unit": "files",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.catalog.report.catalog_files",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.catalog.store_bytes",
+   "label": "packed 7B store bytes (catalog phase)",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.catalog.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore1.ms",
+   "label": "7B restore wall, 1 worker",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_1.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore1.mbs",
+   "label": "7B restore throughput, 1 worker",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_1.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore1.rss",
+   "label": "7B restore peak RSS, 1 worker",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_1.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore4.ms",
+   "label": "7B restore wall, 4 workers",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_4.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore4.mbs",
+   "label": "7B restore throughput, 4 workers",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_4.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore4.rss",
+   "label": "7B restore peak RSS, 4 workers",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_4.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore8.ms",
+   "label": "7B restore wall, 8 workers",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_8.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore8.mbs",
+   "label": "7B restore throughput, 8 workers",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_8.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.restore8.rss",
+   "label": "7B restore peak RSS, 8 workers",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+   "path": "phases.restore_8.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T105851Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.flat.wall_ms",
+   "label": "fast-raw flat 7B write wall",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+   "path": "phases.flat.report.wall_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T110624Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.flat.mb_s",
+   "label": "fast-raw flat 7B write throughput",
+   "unit": "MB/s",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+   "path": "phases.flat.report.mb_per_s",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T110624Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.flat.writes",
+   "label": "fast-raw flat 7B backend writes",
+   "unit": "writes",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+   "path": "phases.flat.report.backend.writes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T110624Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.flat.sync_ms",
+   "label": "fast-raw flat 7B durability barrier",
+   "unit": "ms",
+   "group": "scale7b",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+   "path": "phases.flat.report.profile.backend_sync.total_ms",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T110624Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.flat.rss_kib",
+   "label": "fast-raw flat 7B write peak RSS",
+   "unit": "KiB",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+   "path": "phases.flat.report.peak_rss_kib",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T110624Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "scale7b.flat.store_bytes",
+   "label": "fast-raw flat 7B store bytes",
+   "unit": "B",
+   "group": "scale7b",
+   "format": "int",
+   "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+   "path": "phases.flat.report.store_bytes",
+   "stamp_path": "generated_utc",
+   "revision_path": "court.weftfs_revision",
+   "stamp": "20261113T110624Z",
+   "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
   }
  ],
  "blocks": [
@@ -11993,6 +13037,260 @@
    "file": "docs/PERF-NUMBERS.md",
    "kind": "catalog",
    "group": "azure-mw2-negative"
+  },
+  {
+   "id": "scale7b-mode9",
+   "file": "bench/RESULTS-scale-7b-x04.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Byte identity.** Both real tensors encode to the same frame either way: the"
+    },
+    {
+     "template": "{{scale7b.mode9.small_logical}} B Qwen2.5-0.5B embedding to {{scale7b.mode9.small_frame}} B, and the"
+    },
+    {
+     "template": "{{scale7b.mode9.large_logical}} B Qwen2.5-7B `lm_head` to {{scale7b.mode9.large_frame}} B."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**Qwen2.5-0.5B embedding**: one-shot **{{scale7b.mode9.small_oneshot_ms}} ms** at"
+    },
+    {
+     "template": "**{{scale7b.mode9.small_oneshot_rss}} KiB** peak RSS; streamed **{{scale7b.mode9.small_stream_ms}} ms** at"
+    },
+    {
+     "template": "**{{scale7b.mode9.small_stream_rss}} KiB** \u2014 **{{scale7b.mode9.small_rss_ratio}}\u00d7** less memory and"
+    },
+    {
+     "template": "**{{scale7b.mode9.small_wall_ratio}}\u00d7** the one-shot wall."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**Qwen2.5-7B `lm_head`**: one-shot **{{scale7b.mode9.large_oneshot_ms}} ms** at"
+    },
+    {
+     "template": "**{{scale7b.mode9.large_oneshot_rss}} KiB**; streamed **{{scale7b.mode9.large_stream_ms}} ms** at"
+    },
+    {
+     "template": "**{{scale7b.mode9.large_stream_rss}} KiB** \u2014 **{{scale7b.mode9.large_rss_ratio}}\u00d7** less memory and"
+    },
+    {
+     "template": "**{{scale7b.mode9.large_wall_ratio}}\u00d7** the one-shot wall."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**Counting pass only** (histogram + content hash + exact frame length): the 1.09 GB tensor"
+    },
+    {
+     "template": "in **{{scale7b.mode9.large_analysis_ms}} ms** (**{{scale7b.mode9.large_analysis_mbs}} MB/s**) at"
+    },
+    {
+     "template": "**{{scale7b.mode9.large_analysis_rss}} KiB** peak RSS; the 272 MB tensor in"
+    },
+    {
+     "template": "**{{scale7b.mode9.small_analysis_ms}} ms**."
+    }
+   ]
+  },
+  {
+   "id": "scale7b-planned",
+   "file": "bench/RESULTS-scale-7b-x04.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Planned 8-way checkpoint write (339 tensors, {{scale7b.planned.shards}} shard objects):** wall"
+    },
+    {
+     "template": "**{{scale7b.planned.wall_ms}} ms** ({{scale7b.planned.mb_s}} MB/s of source bytes), process peak"
+    },
+    {
+     "template": "**{{scale7b.planned.rss_kib}} KiB**, cgroup peak {{scale7b.planned.cgroup_peak}} B (the court limit, page"
+    },
+    {
+     "template": "cache), store **{{scale7b.planned.store_bytes}} B**."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "Of that wall, `verify --full` is **{{scale7b.planned.verify_ms}} ms**, publication"
+    },
+    {
+     "template": "**{{scale7b.planned.publish_ms}} ms**, encoding **{{scale7b.planned.encode_ms}} ms** (mode 9"
+    },
+    {
+     "template": "{{scale7b.planned.mode9_ms}} ms) and the commit's durability barrier **{{scale7b.planned.sync_ms}} ms**."
+    },
+    {
+     "template": "`verify --full` checks {{scale7b.planned.shards}} objects and {{scale7b.planned.reprs}} representations."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**Whole-tensor streamed ingest (`ingest --stream`), the same 339 tensors:** wall"
+    },
+    {
+     "template": "**{{scale7b.ingest.wall_ms}} ms** ({{scale7b.ingest.mb_s}} MB/s), process peak **{{scale7b.ingest.rss_kib}} KiB**,"
+    },
+    {
+     "template": "store **{{scale7b.ingest.store_bytes}} B**, mix {{scale7b.ingest.mode9_count}} mode 9 /"
+    },
+    {
+     "template": "{{scale7b.ingest.zstd}} ZSTD / {{scale7b.ingest.raw}} raw. `verify --full` is"
+    },
+    {
+     "template": "**{{scale7b.ingest.verify_ms}} ms** of that wall, publication **{{scale7b.ingest.publish_ms}} ms** and"
+    },
+    {
+     "template": "mode-9 encoding **{{scale7b.ingest.mode9_ms}} ms**."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**The recorded starting point** (`scale-7b-20261110T213731Z`): per-tensor planned ingest"
+    },
+    {
+     "template": "**exit {{scale7b.before.ingest_exit}}**, fast-raw flat **{{scale7b.before.flat_ms}} ms** /"
+    },
+    {
+     "template": "**{{scale7b.before.flat_rss}} KiB** at **{{scale7b.before.flat_store}} B**, fast-raw packed"
+    },
+    {
+     "template": "**{{scale7b.before.packed_ms}} ms** / {{scale7b.before.packed_rss}} KiB at **{{scale7b.before.packed_store}} B**"
+    },
+    {
+     "template": "with **{{scale7b.before.segments}}** catalog segment publishes and"
+    },
+    {
+     "template": "**{{scale7b.before.root_publishes}}** root publications."
+    }
+   ]
+  },
+  {
+   "id": "scale7b-catalog",
+   "file": "bench/RESULTS-scale-7b-x04.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**After (this change).** Packed 7B write: wall **{{scale7b.packed.wall_ms}} ms** ({{scale7b.packed.mb_s}} MB/s),"
+    },
+    {
+     "template": "process peak **{{scale7b.packed.rss_kib}} KiB**, store **{{scale7b.packed.store_bytes}} B** for"
+    },
+    {
+     "template": "**{{scale7b.packed.packed_bytes}} B** of packed data: **{{scale7b.packed.members}}** members in"
+    },
+    {
+     "template": "**{{scale7b.packed.packs}}** packs, catalog **{{scale7b.catalog.bytes}} B** in **{{scale7b.catalog.files}}**"
+    },
+    {
+     "template": "segment files, **{{scale7b.packed.segments}}** segment"
+    },
+    {
+     "template": "publications and **{{scale7b.packed.root_publishes}}** root publication."
+    },
+    {
+     "template": "{{scale7b.packed.flat_members}} members ({{scale7b.packed.flat_bytes}} B) bypassed packing because they"
+    },
+    {
+     "template": "exceed the member threshold; the catalog phase's own read of the store reports"
+    },
+    {
+     "template": "{{scale7b.catalog.store_bytes}} B."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**Before (R12).** Packed 7B write: wall **{{scale7b.before.packed_ms}} ms**, peak"
+    },
+    {
+     "template": "**{{scale7b.before.packed_rss}} KiB**, store **{{scale7b.before.packed_store}} B**,"
+    },
+    {
+     "template": "**{{scale7b.before.segments}}** segment publishes and **{{scale7b.before.root_publishes}}** root"
+    },
+    {
+     "template": "publications \u2014 +51.16 % bytes over the source, quoted from that receipt's own analysis."
+    }
+   ]
+  },
+  {
+   "id": "scale7b-restore",
+   "file": "bench/RESULTS-scale-7b-x04.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Restores from the packed store, all with `sha256_match: true` against the source container:"
+    },
+    {
+     "template": "1 worker **{{scale7b.restore1.mbs}} MB/s** ({{scale7b.restore1.ms}} ms, {{scale7b.restore1.rss}} KiB peak);"
+    },
+    {
+     "template": "4 workers **{{scale7b.restore4.mbs}} MB/s** ({{scale7b.restore4.ms}} ms, {{scale7b.restore4.rss}} KiB);"
+    },
+    {
+     "template": "8 workers **{{scale7b.restore8.mbs}} MB/s** ({{scale7b.restore8.ms}} ms, {{scale7b.restore8.rss}} KiB)."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "Fast-raw **flat** write for comparison: **{{scale7b.flat.wall_ms}} ms** at {{scale7b.flat.mb_s}} MB/s,"
+    },
+    {
+     "template": "{{scale7b.flat.writes}} backend writes, **{{scale7b.flat.sync_ms}} ms** of it in the single durability"
+    },
+    {
+     "template": "barrier, peak **{{scale7b.flat.rss_kib}} KiB**, store **{{scale7b.flat.store_bytes}} B**."
+    }
+   ]
+  },
+  {
+   "id": "scale7b-status",
+   "file": "docs/STATUS.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "X04 (2026-11-13): bounded 7B ingestion. The planned 8-way 7B checkpoint write runs in"
+    },
+    {
+     "template": "**{{scale7b.planned.wall_ms}} ms** with a **{{scale7b.planned.rss_kib}} KiB** process peak and publishes"
+    },
+    {
+     "template": "**{{scale7b.planned.store_bytes}} B**; the whole-tensor streamed ingest fits the same court at"
+    },
+    {
+     "template": "**{{scale7b.ingest.rss_kib}} KiB**; the packed store is **{{scale7b.packed.store_bytes}} B** with a"
+    },
+    {
+     "template": "**{{scale7b.catalog.bytes}} B** catalog (**{{scale7b.packed.segments}}** segment publications,"
+    },
+    {
+     "template": "{{scale7b.before.segments}} before); restore is **{{scale7b.restore4.mbs}} MB/s** at 4 workers; and the"
+    },
+    {
+     "template": "streaming mode-9 encoder is **{{scale7b.mode9.large_rss_ratio}}\u00d7** smaller and"
+    },
+    {
+     "template": "**{{scale7b.mode9.large_wall_ratio}}\u00d7** the one-shot wall on a 1.09 GB tensor."
+    }
+   ]
+  },
+  {
+   "id": "perf-catalog-scale7b",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "scale7b"
   }
  ]
 }

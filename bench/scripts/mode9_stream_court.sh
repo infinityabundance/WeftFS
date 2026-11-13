@@ -43,8 +43,9 @@ if ! scripts/docker-court.sh bench \
   exit 1
 fi
 
-cmd="B=/work/.docker-cache/target-rust/release/examples/mode9_stream_bench;"
-cmd+=" W=$work_c; mkdir -p \$W;"
+cmd="W=$work_c; mkdir -p \$W;"
+cmd+=" env | grep -E '^WEFT_(COURT|REPO)_' > \$W/court.env;"
+cmd+=" B=/work/.docker-cache/target-rust/release/examples/mode9_stream_bench;"
 for pair in "Qwen2.5-0.5B-Instruct.safetensors model.embed_tokens.weight small" \
             "Qwen2.5-7B-Instruct.safetensors lm_head.weight large"; do
   set -- $pair
@@ -107,12 +108,32 @@ for label in ("small", "large"):
         checks[f"{label}_rss_ratio_oneshot_over_stream"] = round(one["peak_rss_kib_median"] / stream["peak_rss_kib_median"], 3)
         checks[f"{label}_wall_ratio_stream_over_oneshot"] = round(stream["wall_ms_median"] / one["wall_ms_median"], 3)
 
+court_env = {}
+court_env_path = os.path.join(work, "court.env")
+if os.path.exists(court_env_path):
+    for line in open(court_env_path):
+        if "=" in line:
+            key, value = line.rstrip("\n").split("=", 1)
+            court_env[key] = value
+
 data = {
     "schema": "weft-mode9-stream-court-v1",
     "generated_utc": stamp,
     "reps": reps,
     "label": "single host, warm page cache, real public tensors; not a fleet/media claim",
-    "court": {"kind": "bench", "memory": "3g", "swap": "3g", "pids": 1024, "cpus": 4, "tmpfs": "1g"},
+    "court": {
+        "kind": "bench",
+        "memory": "3g",
+        "memory_swap": "3g",
+        "pids": 1024,
+        "cpus": 4,
+        "tmpfs": "1g",
+        "image": court_env.get("WEFT_COURT_IMAGE"),
+        "image_id": court_env.get("WEFT_COURT_IMAGE_ID"),
+        "kernel": court_env.get("WEFT_COURT_KERNEL"),
+        "weftfs_revision": court_env.get("WEFT_REPO_WEFTFS"),
+        "weftcodec_revision": court_env.get("WEFT_REPO_WEFTCODEC"),
+    },
     "measures": measures,
     "checks": checks,
     "result": "pass" if all(checks.get(f"{label}_frames_identical") for label in ("small", "large")) else "fail",

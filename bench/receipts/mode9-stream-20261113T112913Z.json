@@ -1,0 +1,91 @@
+{
+  "checks": {
+    "large_frames_identical": true,
+    "large_rss_ratio_oneshot_over_stream": 2.492,
+    "large_wall_ratio_stream_over_oneshot": 0.775,
+    "small_frames_identical": true,
+    "small_rss_ratio_oneshot_over_stream": 2.473,
+    "small_wall_ratio_stream_over_oneshot": 0.798
+  },
+  "court": {
+    "cpus": 4,
+    "image": null,
+    "image_id": null,
+    "kernel": null,
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "pids": 1024,
+    "tmpfs": "1g",
+    "weftcodec_revision": null,
+    "weftfs_revision": null
+  },
+  "generated_utc": "20261113T112913Z",
+  "label": "single host, warm page cache, real public tensors; not a fleet/media claim",
+  "log": "bench/receipts/mode9-stream-20261113T112913Z.log",
+  "measures": {
+    "large-analysis": {
+      "frame_bytes": 726141127,
+      "frame_sha256": "13c22325bf8a03ac766025876e493c75ee3d8b5a7e60595b2f121b5a47a65934",
+      "logical_bytes": 1089994752,
+      "mb_per_s_median": 4064.427,
+      "peak_rss_kib_median": 3872,
+      "reps": 3,
+      "wall_ms_median": 268.179,
+      "wall_ms_min": 267.154
+    },
+    "large-oneshot": {
+      "frame_bytes": 726141127,
+      "frame_sha256": "52ebbe4eeff2d6906efd3a67261f00014f939233f0297b5d7959b64f59ddea0e",
+      "logical_bytes": 1089994752,
+      "mb_per_s_median": 545.909,
+      "peak_rss_kib_median": 1775748,
+      "reps": 3,
+      "wall_ms_median": 1996.661,
+      "wall_ms_min": 1936.681
+    },
+    "large-stream": {
+      "frame_bytes": 726141127,
+      "frame_sha256": "52ebbe4eeff2d6906efd3a67261f00014f939233f0297b5d7959b64f59ddea0e",
+      "logical_bytes": 1089994752,
+      "mb_per_s_median": 704.572,
+      "peak_rss_kib_median": 712504,
+      "reps": 3,
+      "wall_ms_median": 1547.032,
+      "wall_ms_min": 1525.888
+    },
+    "small-analysis": {
+      "frame_bytes": 180547519,
+      "frame_sha256": "e0031e331494103b06714f8ff38f182851efb87e1307ec3c68b3bbf86076ecb1",
+      "logical_bytes": 272269312,
+      "mb_per_s_median": 4030.031,
+      "peak_rss_kib_median": 3800,
+      "reps": 3,
+      "wall_ms_median": 67.56,
+      "wall_ms_min": 67.549
+    },
+    "small-oneshot": {
+      "frame_bytes": 180547519,
+      "frame_sha256": "7cd07b64b0e9666032305e174f09dbd264c7e6be3bb7f4f632d49b0ae79dea76",
+      "logical_bytes": 272269312,
+      "mb_per_s_median": 567.477,
+      "peak_rss_kib_median": 444556,
+      "reps": 3,
+      "wall_ms_median": 479.789,
+      "wall_ms_min": 476.43
+    },
+    "small-stream": {
+      "frame_bytes": 180547519,
+      "frame_sha256": "7cd07b64b0e9666032305e174f09dbd264c7e6be3bb7f4f632d49b0ae79dea76",
+      "logical_bytes": 272269312,
+      "mb_per_s_median": 710.885,
+      "peak_rss_kib_median": 179744,
+      "reps": 3,
+      "wall_ms_median": 383.001,
+      "wall_ms_min": 382.88
+    }
+  },
+  "reps": 3,
+  "result": "pass",
+  "schema": "weft-mode9-stream-court-v1"
+}

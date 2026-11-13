@@ -1,0 +1,145 @@
+scale_7b_court: stamp=20261113T110624Z memory=3g
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme1n1p1  1.3T  1.3T   32G  98% /mnt/1tb_kingston
+scale_7b_court: verified Qwen2.5-7B-Instruct.safetensors sha256=5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1 size=15231272088
++ exec docker run --rm --init --name weft-bench-court-3490633 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=cbfe86f6c90a448e591ac062af1b36c5acdd4d10 -e WEFT_REPO_WEFTFS_GO=44d20e7bd948067dede66dfded82aa9a0bead60e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_PHASE_PROFILE=1 -e 'WEFT_SCALE_PHASES=flat verify_flat' --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo build --release --example scale_7b'
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2303:9
+     |
+2303 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2355:13
+     |
+2355 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7652:18
+     |
+7652 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: field `0` is never read
+    --> src/packs.rs:1277:13
+     |
+1277 |     Catalog(Arc<Segment>),
+     |     ------- ^^^^^^^^^^^^
+     |     |
+     |     field in this variant
+     |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+     |
+1277 -     Catalog(Arc<Segment>),
+1277 +     Catalog(()),
+     |
+
+warning: `weftfs` (lib) generated 16 warnings (run `cargo fix --lib -p weftfs` to apply 13 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.06s
+scale_7b_court: build exit=0
+=== phase court_env ===
+scale_7b_court: env | grep -E '^WEFT_(COURT|REPO)_' > /work/.docker-cache/scale-7b-20261113T110624Z/court.env
+scale_7b_court: phase court_env exit=0
++ exec docker run --rm --init --name weft-bench-court-3490883 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=cbfe86f6c90a448e591ac062af1b36c5acdd4d10 -e WEFT_REPO_WEFTFS_GO=44d20e7bd948067dede66dfded82aa9a0bead60e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_PHASE_PROFILE=1 -e 'WEFT_SCALE_PHASES=flat verify_flat' --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && set +e; env | grep -E '\''^WEFT_(COURT|REPO)_'\'' > /work/.docker-cache/scale-7b-20261113T110624Z/court.env; s=$?; cat /sys/fs/cgroup/memory.peak > '\''/work/.docker-cache/scale-7b-20261113T110624Z/court_env.cgroup_peak'\'' 2>/dev/null || true; chmod -R a+rwX '\''/work/.docker-cache/scale-7b-20261113T110624Z'\'' 2>/dev/null || true; exit $s'
+scale_7b_court: flat headroom ok (33553821696 B free, needs 32231272088 B)
+=== phase flat ===
+scale_7b_court: /work/.docker-cache/target-rust/release/examples/scale_7b checkpoint --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --source-sha256 5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1 --store /work/.docker-cache/scale-7b-20261113T110624Z/flat-store --name qwen7b --shards 8 --axis 0 --write-policy fast --fast-codec raw --fresh --out /work/.docker-cache/scale-7b-20261113T110624Z/flat.json --max-ingest-bytes 1610612736
+scale_7b_court: phase flat exit=0
+scale_7b_court: phase flat wrote flat.json
++ exec docker run --rm --init --name weft-bench-court-3491110 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=cbfe86f6c90a448e591ac062af1b36c5acdd4d10 -e WEFT_REPO_WEFTFS_GO=44d20e7bd948067dede66dfded82aa9a0bead60e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_PHASE_PROFILE=1 -e 'WEFT_SCALE_PHASES=flat verify_flat' --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && set +e; /work/.docker-cache/target-rust/release/examples/scale_7b checkpoint --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --source-sha256 5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1 --store /work/.docker-cache/scale-7b-20261113T110624Z/flat-store --name qwen7b --shards 8 --axis 0 --write-policy fast --fast-codec raw --fresh --out /work/.docker-cache/scale-7b-20261113T110624Z/flat.json --max-ingest-bytes 1610612736; s=$?; cat /sys/fs/cgroup/memory.peak > '\''/work/.docker-cache/scale-7b-20261113T110624Z/flat.cgroup_peak'\'' 2>/dev/null || true; chmod -R a+rwX '\''/work/.docker-cache/scale-7b-20261113T110624Z'\'' 2>/dev/null || true; exit $s'
+{"axis":0,"backend":{"bytes_read":15303837180,"bytes_written":15247335585,"range_reads":1,"reads":247122,"writes":236263},"checkpoint_id":"d062ea21ed90b4ad7f1eee573ff2637272c3259fe73db04807a262f90ba3be4d","complete":true,"deterministic_seed":"5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a","fast_codec":"raw","generation":2,"head":"8cd86ce5171c3214c65bf778aeb3da5a8732061e7625f25eeb1d41af7ffda2ad","manifest_id":"5300434ffea75cea9c593c4fe0d17c8600ca314d6bec30877d5e6d3deae200b0","manifest_root":"d69ed79cb95db8e7e9608a2a8d192959c2dc704dee8e41513cfa7c441d2df663","max_ingest_bytes":1610612736,"mb_per_s":19.43,"name":"qwen7b","pack_stats":null,"packed":false,"peak_rss_kib":349608,"phase":"checkpoint","profile":{"backend_sync":{"max_ms":464189.029212,"mean_ms":464189.029212,"nested_in":"manifest_commit","p50_ms":464189.029212,"p95_ms":464189.029212,"p99_ms":464189.029212,"sections":1,"total_ms":464189.029212},"blob_hash_manifest":{"max_ms":0.027521,"mean_ms":0.0027572583855510506,"nested_in":null,"p50_ms":0.000691,"p95_ms":0.007354,"p99_ms":0.008836,"sections":2713,"total_ms":7.480442},"blob_hash_object":{"max_ms":0.190515,"mean_ms":0.010602261827788935,"nested_in":null,"p50_ms":0.01049,"p95_ms":0.011351,"p99_ms":0.012643,"sections":233539,"total_ms":2476.041625},"blob_io_manifest":{"max_ms":1.391345,"mean_ms":0.1414770663472171,"nested_in":null,"p50_ms":0.103683,"p95_ms":0.443758,"p99_ms":0.76121,"sections":2713,"total_ms":383.827281},"blob_io_object":{"max_ms":9.368721,"mean_ms":0.15068024735054958,"nested_in":null,"p50_ms":0.064831,"p95_ms":0.524929,"p99_ms":0.838654,"sections":233539,"total_ms":35189.714286},"blob_publish":{"max_ms":3533.521666,"mean_ms":1.268375245796861,"nested_in":null,"p50_ms":0.022712,"p95_ms":10.482823,"p99_ms":15.57712,"sections":236252,"total_ms":299656.18857},"digest":{"max_ms":178.402028,"mean_ms":0.027856234790203216,"nested_in":null,"p50_ms":0.012133,"p95_ms":0.014066,"p99_ms":0.022692,"sections":239303,"total_ms":6666.080554},"encode":{"max_ms":0.022462,"mean_ms":0.0017181412241887906,"nested_in":null,"p50_ms":0.001292,"p95_ms":0.003747,"p99_ms":0.004518,"sections":2712,"total_ms":4.659599},"index_attest":{"max_ms":2.673652,"mean_ms":2.673652,"nested_in":"index_segment","p50_ms":2.673652,"p95_ms":2.673652,"p99_ms":2.673652,"sections":1,"total_ms":2.673652},"index_segment":{"max_ms":30.685519,"mean_ms":17.3225465,"nested_in":null,"p50_ms":30.685519,"p95_ms":30.685519,"p99_ms":30.685519,"sections":2,"total_ms":34.645093},"manifest_commit":{"max_ms":464200.900731,"mean_ms":464200.900731,"nested_in":null,"p50_ms":464200.900731,"p95_ms":464200.900731,"p99_ms":464200.900731,"sections":1,"total_ms":464200.900731},"manifest_decode":{"max_ms":1.161757,"mean_ms":0.03548117987467748,"nested_in":null,"p50_ms":0.01096,"p95_ms":0.102872,"p99_ms":0.131525,"sections":2713,"total_ms":96.260441},"source_read":{"max_ms":35.626077,"mean_ms":0.5193521632251721,"nested_in":null,"p50_ms":0.017843,"p95_ms":1.483789,"p99_ms":4.646379,"sections":3051,"total_ms":1584.54345},"verify":{"max_ms":42028.367715,"mean_ms":42028.367715,"nested_in":null,"p50_ms":42028.367715,"p95_ms":42028.367715,"p99_ms":42028.367715,"sections":1,"total_ms":42028.367715}},"reported_source_sha256":"5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1","shard_objects":2712,"shard_strategy":"tensor-sharded","shards":8,"source":"/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors","source_bytes":15231272088,"source_sha256":"5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1","status":"ok","store_bytes":15247327175,"tensors":339,"total_element_bytes":15231233024,"verify":{"checked_chunks":233539,"checked_manifests":2713,"checked_objects":2713,"checked_representations":0,"full":true,"generation":2,"ok":true,"problems":[]},"wall_ms":783916.165,"write_policy":"fast"}
+=== phase verify_flat ===
+scale_7b_court: /work/.docker-cache/target-rust/release/examples/scale_7b verify --store /work/.docker-cache/scale-7b-20261113T110624Z/flat-store --out /work/.docker-cache/scale-7b-20261113T110624Z/verify_flat.json
+scale_7b_court: phase verify_flat exit=0
+scale_7b_court: phase verify_flat wrote verify_flat.json
++ exec docker run --rm --init --name weft-bench-court-3491602 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=cbfe86f6c90a448e591ac062af1b36c5acdd4d10 -e WEFT_REPO_WEFTFS_GO=44d20e7bd948067dede66dfded82aa9a0bead60e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_PHASE_PROFILE=1 -e 'WEFT_SCALE_PHASES=flat verify_flat' --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && set +e; /work/.docker-cache/target-rust/release/examples/scale_7b verify --store /work/.docker-cache/scale-7b-20261113T110624Z/flat-store --out /work/.docker-cache/scale-7b-20261113T110624Z/verify_flat.json; s=$?; cat /sys/fs/cgroup/memory.peak > '\''/work/.docker-cache/scale-7b-20261113T110624Z/verify_flat.cgroup_peak'\'' 2>/dev/null || true; chmod -R a+rwX '\''/work/.docker-cache/scale-7b-20261113T110624Z'\'' 2>/dev/null || true; exit $s'
+{"generation":2,"phase":"verify","status":"ok","store_bytes":15247327175,"verify":{"checked_chunks":233539,"checked_manifests":2713,"checked_objects":2713,"checked_representations":0,"full":true,"generation":2,"ok":true,"problems":[]},"wall_ms":38623.247}
+scale_7b_court: done -> /mnt/1tb_kingston/WeftFS/bench/receipts/scale-7b-20261113T110624Z.json

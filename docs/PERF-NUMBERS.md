@@ -771,6 +771,98 @@ opt-in MW2 transaction API. Azurite is not Azure. The positive receipt is
 | `azm2n.scenarios_passed` | 7 | scenarios | Retained negative run scenarios passed | `bench/receipts/azure-mw2-20261113T103700Z.json` | 20261113T103700Z | 103dd99c7fd9 |
 <!-- END GENERATED:perf-catalog-azure-mw2-negative -->
 
+## X04 7B ingestion and streaming mode 9
+
+Every number below comes from `bench/RESULTS-scale-7b.md`'s receipts. The
+`scale7b.before.*` rows are the **pre-X04** starting point and carry that
+receipt's older revision; every other row is measured on the code revision named
+in its own row.
+
+<!-- BEGIN GENERATED:perf-catalog-scale7b (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `scale7b.mode9.small_logical` | 272,269,312 | B | 0.5B embedding logical bytes | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_frame` | 180,547,519 | B | 0.5B embedding mode-9 frame bytes | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_oneshot_ms` | 478.083 | ms | 0.5B embedding one-shot encode wall | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_oneshot_rss` | 444,652 | KiB | 0.5B embedding one-shot peak RSS | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_stream_ms` | 386.554 | ms | 0.5B embedding streamed encode wall | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_stream_rss` | 179,896 | KiB | 0.5B embedding streamed peak RSS | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_rss_ratio` | 2.472 | x | 0.5B embedding peak-RSS ratio one-shot/streamed | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_wall_ratio` | 0.809 | x | 0.5B embedding wall ratio streamed/one-shot | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_logical` | 1,089,994,752 | B | 7B lm_head logical bytes | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_frame` | 726,141,127 | B | 7B lm_head mode-9 frame bytes | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_oneshot_ms` | 1,950.528 | ms | 7B lm_head one-shot encode wall | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_oneshot_rss` | 1,776,132 | KiB | 7B lm_head one-shot peak RSS | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_stream_ms` | 1,526.492 | ms | 7B lm_head streamed encode wall | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_stream_rss` | 712,720 | KiB | 7B lm_head streamed peak RSS | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_rss_ratio` | 2.492 | x | 7B lm_head peak-RSS ratio one-shot/streamed | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_wall_ratio` | 0.783 | x | 7B lm_head wall ratio streamed/one-shot | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_analysis_ms` | 269.019 | ms | 7B lm_head streamed counting-pass wall | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_analysis_mbs` | 4,051.7 | MB/s | 7B lm_head streamed counting-pass throughput | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.large_analysis_rss` | 3,856 | KiB | 7B lm_head streamed counting-pass peak RSS | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.mode9.small_analysis_ms` | 67.878 | ms | 0.5B embedding streamed counting-pass wall | `bench/receipts/mode9-stream-20261113T113138Z.json` | 20261113T113138Z | 62845b63ecb5 |
+| `scale7b.planned.wall_ms` | 119,174.9 | ms | planned 7B checkpoint write wall | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.mb_s` | 127.8 | MB/s | planned 7B checkpoint write throughput | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.rss_kib` | 442,672 | KiB | planned 7B checkpoint process peak RSS | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.cgroup_peak` | 3,221,225,472 | B | planned 7B checkpoint cgroup memory peak | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.store_bytes` | 10,160,456,499 | B | planned 7B checkpoint store bytes | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.verify_ms` | 51,767.2 | ms | planned 7B in-process verify --full wall | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.publish_ms` | 29,984.4 | ms | planned 7B blob publication wall | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.encode_ms` | 16,797.0 | ms | planned 7B encode wall | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.mode9_ms` | 6,949.9 | ms | planned 7B mode-9 encode wall | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.sync_ms` | 12,523.8 | ms | planned 7B durability barrier | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.shards` | 2,712 | objects | planned 7B shard objects | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.planned.reprs` | 2,032 | representations | planned 7B codec representations | `bench/receipts/scale-7b-20261113T104950Z.json` | 20261113T104950Z | cbfe86f6c90a |
+| `scale7b.ingest.wall_ms` | 220,047.8 | ms | streamed 7B ingest wall | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.mb_s` | 69.2 | MB/s | streamed 7B ingest throughput | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.rss_kib` | 2,873,124 | KiB | streamed 7B ingest process peak RSS | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.store_bytes` | 10,162,716,887 | B | streamed 7B ingest store bytes | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.mode9_count` | 240 | tensors | streamed 7B ingest mode-9 tensors | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.zstd` | 59 | tensors | streamed 7B ingest ZSTD tensors | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.raw` | 40 | tensors | streamed 7B ingest raw tensors | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.verify_ms` | 49,296.1 | ms | streamed 7B in-process verify --full wall | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.publish_ms` | 139,191.0 | ms | streamed 7B blob publication wall | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.ingest.mode9_ms` | 14,398.4 | ms | streamed 7B mode-9 encode wall | `bench/receipts/scale-7b-20261113T105331Z.json` | 20261113T105331Z | cbfe86f6c90a |
+| `scale7b.before.ingest_exit` | 137 | status | pre-X04 per-tensor planned ingest exit status | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.flat_ms` | 1,406,533.6 | ms | pre-X04 fast-raw flat write wall | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.flat_rss` | 173,032 | KiB | pre-X04 fast-raw flat write peak RSS | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.flat_store` | 15,247,327,175 | B | pre-X04 fast-raw flat store bytes | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.packed_ms` | 1,088,654.1 | ms | pre-X04 fast-raw packed write wall | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.packed_rss` | 287,420 | KiB | pre-X04 fast-raw packed write peak RSS | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.packed_store` | 23,023,484,778 | B | pre-X04 fast-raw packed store bytes | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.segments` | 148,694 | publishes | pre-X04 catalog segment publications | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.before.root_publishes` | 911 | publishes | pre-X04 catalog root publications | `bench/receipts/scale-7b-20261110T213731Z.json` | 20261110T213731Z | 118015f364d0 |
+| `scale7b.packed.wall_ms` | 258,071.4 | ms | packed 7B write wall | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.mb_s` | 59.0 | MB/s | packed 7B write throughput | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.rss_kib` | 404,812 | KiB | packed 7B write process peak RSS | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.store_bytes` | 15,274,042,488 | B | packed 7B store bytes | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.packed_bytes` | 15,242,664,309 | B | packed 7B pack object bytes | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.members` | 236,237 | members | packed 7B catalogued members | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.packs` | 911 | packs | packed 7B sealed packs | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.flat_members` | 17 | members | packed 7B flat members | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.flat_bytes` | 2,721,040 | B | packed 7B flat member bytes | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.segments` | 256 | publishes | packed 7B catalog segment publications | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.packed.root_publishes` | 1 | publishes | packed 7B catalog root publications | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.catalog.bytes` | 26,707,069 | B | packed 7B catalog bytes on disk | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.catalog.files` | 256 | files | packed 7B catalog segment files | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.catalog.store_bytes` | 15,274,042,488 | B | packed 7B store bytes (catalog phase) | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore1.ms` | 43,452.9 | ms | 7B restore wall, 1 worker | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore1.mbs` | 350.5 | MB/s | 7B restore throughput, 1 worker | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore1.rss` | 2,254,132 | KiB | 7B restore peak RSS, 1 worker | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore4.ms` | 39,276.1 | ms | 7B restore wall, 4 workers | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore4.mbs` | 387.8 | MB/s | 7B restore throughput, 4 workers | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore4.rss` | 2,433,784 | KiB | 7B restore peak RSS, 4 workers | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore8.ms` | 40,303.3 | ms | 7B restore wall, 8 workers | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore8.mbs` | 377.9 | MB/s | 7B restore throughput, 8 workers | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.restore8.rss` | 2,511,704 | KiB | 7B restore peak RSS, 8 workers | `bench/receipts/scale-7b-20261113T105851Z.json` | 20261113T105851Z | cbfe86f6c90a |
+| `scale7b.flat.wall_ms` | 783,916.2 | ms | fast-raw flat 7B write wall | `bench/receipts/scale-7b-20261113T110624Z.json` | 20261113T110624Z | cbfe86f6c90a |
+| `scale7b.flat.mb_s` | 19.4 | MB/s | fast-raw flat 7B write throughput | `bench/receipts/scale-7b-20261113T110624Z.json` | 20261113T110624Z | cbfe86f6c90a |
+| `scale7b.flat.writes` | 236,263 | writes | fast-raw flat 7B backend writes | `bench/receipts/scale-7b-20261113T110624Z.json` | 20261113T110624Z | cbfe86f6c90a |
+| `scale7b.flat.sync_ms` | 464,189.0 | ms | fast-raw flat 7B durability barrier | `bench/receipts/scale-7b-20261113T110624Z.json` | 20261113T110624Z | cbfe86f6c90a |
+| `scale7b.flat.rss_kib` | 349,608 | KiB | fast-raw flat 7B write peak RSS | `bench/receipts/scale-7b-20261113T110624Z.json` | 20261113T110624Z | cbfe86f6c90a |
+| `scale7b.flat.store_bytes` | 15,247,327,175 | B | fast-raw flat 7B store bytes | `bench/receipts/scale-7b-20261113T110624Z.json` | 20261113T110624Z | cbfe86f6c90a |
+<!-- END GENERATED:perf-catalog-scale7b -->
+
 ## Historical quotations
 
 These are retained because documents quote them as the measurement of their

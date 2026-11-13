@@ -1,0 +1,113 @@
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme1n1p1  1.3T  1.3T   32G  98% /mnt/1tb_kingston
++ exec docker run --rm --init --name weft-bench-court-3494597 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=cbfe86f6c90a448e591ac062af1b36c5acdd4d10 -e WEFT_REPO_WEFTFS_GO=44d20e7bd948067dede66dfded82aa9a0bead60e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo build --release --example mode9_stream_bench'
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2303:9
+     |
+2303 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2355:13
+     |
+2355 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7652:18
+     |
+7652 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 15 warnings (run `cargo fix --lib -p weftfs` to apply 13 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.03s
++ exec docker run --rm --init --name weft-bench-court-3494841 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=cbfe86f6c90a448e591ac062af1b36c5acdd4d10 -e WEFT_REPO_WEFTFS_GO=44d20e7bd948067dede66dfded82aa9a0bead60e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; B=/work/.docker-cache/target-rust/release/examples/mode9_stream_bench; W=/work/.docker-cache/mode9-stream-20261113T112350Z; mkdir -p $W; $B --phase oneshot --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-oneshot-1.json >/dev/null 2>&1 || echo FAIL small oneshot 1; $B --phase stream --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-stream-1.json >/dev/null 2>&1 || echo FAIL small stream 1; $B --phase analysis --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-analysis-1.json >/dev/null 2>&1 || echo FAIL small analysis 1; $B --phase oneshot --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-oneshot-2.json >/dev/null 2>&1 || echo FAIL small oneshot 2; $B --phase stream --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-stream-2.json >/dev/null 2>&1 || echo FAIL small stream 2; $B --phase analysis --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-analysis-2.json >/dev/null 2>&1 || echo FAIL small analysis 2; $B --phase oneshot --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-oneshot-3.json >/dev/null 2>&1 || echo FAIL small oneshot 3; $B --phase stream --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-stream-3.json >/dev/null 2>&1 || echo FAIL small stream 3; $B --phase analysis --source /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors --tensor model.embed_tokens.weight --out $W/small-analysis-3.json >/dev/null 2>&1 || echo FAIL small analysis 3; $B --phase oneshot --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-oneshot-1.json >/dev/null 2>&1 || echo FAIL large oneshot 1; $B --phase stream --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-stream-1.json >/dev/null 2>&1 || echo FAIL large stream 1; $B --phase analysis --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-analysis-1.json >/dev/null 2>&1 || echo FAIL large analysis 1; $B --phase oneshot --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-oneshot-2.json >/dev/null 2>&1 || echo FAIL large oneshot 2; $B --phase stream --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-stream-2.json >/dev/null 2>&1 || echo FAIL large stream 2; $B --phase analysis --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-analysis-2.json >/dev/null 2>&1 || echo FAIL large analysis 2; $B --phase oneshot --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-oneshot-3.json >/dev/null 2>&1 || echo FAIL large oneshot 3; $B --phase stream --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-stream-3.json >/dev/null 2>&1 || echo FAIL large stream 3; $B --phase analysis --source /work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors --tensor lm_head.weight --out $W/large-analysis-3.json >/dev/null 2>&1 || echo FAIL large analysis 3; chmod -R a+rwX $W'
+chmod: changing permissions of '/work/.docker-cache/mode9-stream-20261113T112350Z': Operation not permitted
+mode9_stream_court: done -> /mnt/1tb_kingston/WeftFS/bench/receipts/mode9-stream-20261113T112350Z.json

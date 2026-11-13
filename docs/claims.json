@@ -147,7 +147,7 @@
  {
   "id": "release_v050_mode11_ratio",
   "claim": "The v0.5.0 release note states the verified WEIGHT_DELTA ratio (7.87x on its synthetic pair).",
-  "value": "7.87×",
+  "value": "7.87\u00d7",
   "locations": [
    "docs/RELEASE-v0.5.0.md"
   ],
@@ -526,7 +526,7 @@
  {
   "id": "p2_delta_restore_loss",
   "claim": "The results and status state the measured fine-tune delta decode slowdown.",
-  "value": "44.0×",
+  "value": "44.0\u00d7",
   "locations": [
    "bench/RESULTS-float-tensor-real.md",
    "docs/STATUS.md"
@@ -1119,7 +1119,7 @@
  {
   "id": "writeback_p50_gain",
   "claim": "README.md and docs/STATUS.md record the measured Rust merkle write-back p50 gain.",
-  "value": "27.3 ms to 8.8 µs",
+  "value": "27.3 ms to 8.8 \u00b5s",
   "locations": [
    "README.md",
    "docs/STATUS.md"
@@ -1141,7 +1141,7 @@
  {
   "id": "tensor_tiles_100row_speedup",
   "claim": "STATUS and the Q2 results record the measured 100-row slice speedup.",
-  "value": "10.8×",
+  "value": "10.8\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-tensor-tiles.md"
@@ -1152,7 +1152,7 @@
  {
   "id": "tensor_tiles_1row_speedup",
   "claim": "STATUS and the Q2 results record the measured 1-row slice speedup.",
-  "value": "40.4×",
+  "value": "40.4\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-tensor-tiles.md"
@@ -1194,7 +1194,7 @@
  {
   "id": "mode15_reserved16",
   "claim": "docs/WRITE-YOUR-OWN-DECODER.md records the reserved mode range after modes 17-20 were allocated.",
-  "value": "Mode values 21–127",
+  "value": "Mode values 21\u2013127",
   "locations": [
    "docs/WRITE-YOUR-OWN-DECODER.md"
   ],
@@ -1630,7 +1630,7 @@
  {
   "id": "q1_writeback_rust",
   "claim": "the Rust 4 KiB overwrite p50 with write-back is recorded.",
-  "value": "7.46 µs",
+  "value": "7.46 \u00b5s",
   "locations": [
    "docs/RELEASE-v0.8.0.md",
    "README.md"
@@ -1641,7 +1641,7 @@
  {
   "id": "q1_writeback_go",
   "claim": "the Go 4 KiB overwrite p50 with write-back is recorded.",
-  "value": "10.61 µs",
+  "value": "10.61 \u00b5s",
   "locations": [
    "docs/RELEASE-v0.8.0.md",
    "README.md"
@@ -1685,7 +1685,7 @@
  {
   "id": "q1_group_commit_p99",
   "claim": "the group-commit tail loss is recorded.",
-  "value": "611–804 ms",
+  "value": "611\u2013804 ms",
   "locations": [
    "docs/RELEASE-v0.8.0.md"
   ],
@@ -1880,7 +1880,7 @@
  {
   "id": "q5_save_slowdown",
   "claim": "the save slowdown is recorded.",
-  "value": "141×",
+  "value": "141\u00d7",
   "locations": [
    "docs/RELEASE-v0.8.0.md",
    "README.md"
@@ -2394,7 +2394,7 @@
  {
   "id": "sparse_delta_dense_loss",
   "claim": "The dense fine-tune loss is published, not hidden.",
-  "value": "1.94× (loss)",
+  "value": "1.94\u00d7 (loss)",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -2579,8 +2579,8 @@
  },
  {
   "id": "python_reader_all_modes",
-  "claim": "The Python reader implements every allocated mode 0–18; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
-  "value": "mode 0–18",
+  "claim": "The Python reader implements every allocated mode 0\u201318; modes 19 and 20 are allocated but not implemented and are rejected UnsupportedMode.",
+  "value": "mode 0\u201318",
   "locations": [
    "docs/STATUS.md",
    "docs/CONFORMANCE.md",
@@ -2613,7 +2613,7 @@
  {
   "id": "python_random_differential_frames",
   "claim": "The randomized differential compares at least 2,000 frames per AI mode against the Rust CLI.",
-  "value": "2,000 frames per mode 9–16",
+  "value": "2,000 frames per mode 9\u201316",
   "locations": [
    "docs/CONFORMANCE.md",
    "python/README.md"
@@ -4464,7 +4464,7 @@
  {
   "id": "r22_ring_slower_than_positional",
   "claim": "bench/RESULTS-threefs.md and docs/STATUS.md publish that the ring path is 1.127x slower than positional reads in the conformance court.",
-  "value": "1.127×",
+  "value": "1.127\u00d7",
   "locations": [
    "bench/RESULTS-threefs.md",
    "docs/STATUS.md"
@@ -5045,7 +5045,7 @@
  {
   "id": "simd_huffman_speedup",
   "claim": "docs/STATUS.md records the in-process Huffman kernel speedup and the absence of an absolute win.",
-  "value": "1.07–1.10x",
+  "value": "1.07\u20131.10x",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -5343,7 +5343,7 @@
  {
   "id": "family_region_read",
   "claim": "A 1-row region read under the access-pattern plan is 454x cheaper on the qwen family.",
-  "value": "454×",
+  "value": "454\u00d7",
   "locations": [
    "bench/RESULTS-family-lifecycle.md"
   ],
@@ -5353,7 +5353,7 @@
  {
   "id": "family_f32_loss",
   "claim": "The F32 base checkpoint is published as 1.20x the independent zstd -19 baseline.",
-  "value": "1.20×",
+  "value": "1.20\u00d7",
   "locations": [
    "bench/RESULTS-family-lifecycle.md"
   ],
@@ -5413,7 +5413,7 @@
  {
   "id": "kvcap_cached_cost",
   "claim": "A cached capability check costs about 33 us at p50 on a 1 KiB page.",
-  "value": "33.0 / 42.1 µs",
+  "value": "33.0 / 42.1 \u00b5s",
   "locations": [
    "docs/KV-CACHE-GOVERNANCE.md"
   ],
@@ -5423,7 +5423,7 @@
  {
   "id": "kvcap_full_cost",
   "claim": "Re-verifying the envelope per read costs about 81 us at p50 on a 1 KiB page.",
-  "value": "81.2 / 96.6 µs",
+  "value": "81.2 / 96.6 \u00b5s",
   "locations": [
    "docs/KV-CACHE-GOVERNANCE.md"
   ],
@@ -5463,7 +5463,7 @@
  {
   "id": "threefs_plane_usrbio",
   "claim": "The note records the shim court's measured USRBIO slowdown.",
-  "value": "1.127×",
+  "value": "1.127\u00d7",
   "locations": [
    "docs/THREEFS-CONTEXT-PLANE.md"
   ],
@@ -5473,7 +5473,7 @@
  {
   "id": "threefs_plane_experiment",
   "claim": "The note names the eight-step cluster experiment required before any 3FS claim.",
-  "value": "Only after steps 1–8",
+  "value": "Only after steps 1\u20138",
   "locations": [
    "docs/THREEFS-CONTEXT-PLANE.md"
   ],
@@ -5915,7 +5915,7 @@
  {
   "id": "transcode_write_policy_cpu",
   "claim": "Fast write policy removes 6.5-7.6x of encode CPU on the Qwen pair.",
-  "value": "6.5–7.6×",
+  "value": "6.5\u20137.6\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-write-policy.md"
@@ -5956,7 +5956,7 @@
  {
   "id": "transcode_adapter_dcp",
   "claim": "DCP save-pause speedup with the fast policy.",
-  "value": "12.06×",
+  "value": "12.06\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-write-policy.md"
@@ -5967,7 +5967,7 @@
  {
   "id": "transcode_adapter_orbax",
   "claim": "Orbax handler save-pause speedup with the fast policy.",
-  "value": "10.62×",
+  "value": "10.62\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-write-policy.md"
@@ -5978,7 +5978,7 @@
  {
   "id": "transcode_remaining_deficit",
   "claim": "Remaining Orbax OCDBT save deficit with the fast policy on the same fixture.",
-  "value": "4.12×",
+  "value": "4.12\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-write-policy.md"
@@ -6963,7 +6963,7 @@
  {
   "id": "s13b_floor_warm_validation",
   "claim": "docs/STATUS.md and bench/RESULTS-parent-graph.md record the nine-checkpoint warm restore validation range.",
-  "value": "778.2–793.3 ms",
+  "value": "778.2\u2013793.3 ms",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-parent-graph.md"
@@ -6996,7 +6996,7 @@
  {
   "id": "s13b_floor_error",
   "claim": "docs/STATUS.md and bench/RESULTS-parent-graph.md record the all-independent floor cold-cache error.",
-  "value": "−11.8 %",
+  "value": "\u221211.8 %",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-parent-graph.md"
@@ -7441,7 +7441,7 @@
  {
   "id": "threefs_deployed_latency_conditional",
   "claim": "docs/THREEFS-CONTEXT-PLANE.md conditions deployed-cluster latency conclusions on the unrun experiment in section 6.",
-  "value": "unrun experiment in §6",
+  "value": "unrun experiment in \u00a76",
   "locations": [
    "docs/THREEFS-CONTEXT-PLANE.md"
   ],
@@ -8146,7 +8146,7 @@
  {
   "id": "engram_incremental_win",
   "claim": "STATUS and the results doc state the incremental update win.",
-  "value": "7.97×",
+  "value": "7.97\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-engram.md"
@@ -8157,7 +8157,7 @@
  {
   "id": "engram_zstd_loss_size",
   "claim": "STATUS and the results doc publish the whole-table size loss to one ZSTD frame.",
-  "value": "25.7×",
+  "value": "25.7\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-engram.md"
@@ -8168,7 +8168,7 @@
  {
   "id": "engram_zstd_loss_decode",
   "claim": "STATUS and the results doc publish the whole-table decode loss to one ZSTD frame.",
-  "value": "10.8×",
+  "value": "10.8\u00d7",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-engram.md"
@@ -8297,7 +8297,7 @@
  {
   "id": "transport_parse_table",
   "claim": "STATUS and the results doc publish the header+table parse medians for 1/8/64 sections.",
-  "value": "0.541 / 0.551 / 0.681 µs",
+  "value": "0.541 / 0.551 / 0.681 \u00b5s",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-transport.md"
@@ -8404,7 +8404,7 @@
  {
   "id": "r9_planner_floor_residual",
   "claim": "The all-independent floor is 16.02 percent under-predicted and published as a residual.",
-  "value": "−14.96 %",
+  "value": "\u221214.96 %",
   "locations": [
    "bench/RESULTS-planner-v2.md",
    "docs/STATUS.md",
@@ -8518,7 +8518,7 @@
  {
   "id": "r10_pack_speedup_3b_8_ranks",
   "claim": "Packed publication cut the 3B fast-raw 8-rank checkpoint save to the stated wall time.",
-  "value": "412,384.2 → 145,692.7 ms",
+  "value": "412,384.2 \u2192 145,692.7 ms",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -8527,7 +8527,7 @@
  {
   "id": "r10_pack_speedup_0_5b_sequential",
   "claim": "Packed publication cut the 0.5B fast-raw sequential checkpoint save to the stated wall time.",
-  "value": "108,889.2 → 29,008.0 ms",
+  "value": "108,889.2 \u2192 29,008.0 ms",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -8536,7 +8536,7 @@
  {
   "id": "r10_pack_loss_zstd",
   "claim": "Packed publication is published as a loss for the zstd-1 split-path saves.",
-  "value": "0.67×/0.77×",
+  "value": "0.67\u00d7/0.77\u00d7",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -8752,7 +8752,7 @@
  {
   "id": "training_goodput_loss",
   "claim": "The training-goodput results state a WeftFS completion that is 22.1x local DCP.",
-  "value": "22.1×",
+  "value": "22.1\u00d7",
   "locations": [
    "docs/STATUS.md",
    "docs/PYTORCH-DCP.md",
@@ -8947,7 +8947,7 @@
  {
   "id": "paper_claim_list",
   "claim": "The paper carries numbered falsifiable claims C1-C7.",
-  "value": "C7 — The augmentation cost surface",
+  "value": "C7 \u2014 The augmentation cost surface",
   "locations": [
    "docs/PAPER.md"
   ],
@@ -8967,7 +8967,7 @@
  {
   "id": "rfc_reserved_mode",
   "claim": "The RFC index states the current reserved-mode boundary.",
-  "value": "21–127",
+  "value": "21\u2013127",
   "locations": [
    "docs/RFC.md",
    "docs/WRITE-YOUR-OWN-DECODER.md"
@@ -9032,7 +9032,7 @@
  {
   "id": "python_per_mode_skips",
   "claim": "CONFORMANCE states the Python skips for mode 18 per mode.",
-  "value": "18 → 17",
+  "value": "18 \u2192 17",
   "locations": [
    "docs/CONFORMANCE.md"
   ],
@@ -9203,7 +9203,7 @@
  {
   "id": "checkpoint_hint_shortcircuit",
   "claim": "docs/STATUS.md records that a caller-pinned strategy no longer encodes unchoosable candidates.",
-  "value": "Rust `encode` fell 29.7 → 5.8 ms per",
+  "value": "Rust `encode` fell 29.7 \u2192 5.8 ms per",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -9263,7 +9263,7 @@
  {
   "id": "index_chain_cache_receipt",
   "claim": "docs/STATUS.md cites the post-change index-chain receipt.",
-  "value": "…T025745Z`): delta commit **p50 1.178 → 0.695 ms**",
+  "value": "\u2026T025745Z`): delta commit **p50 1.178 \u2192 0.695 ms**",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -9403,7 +9403,7 @@
  {
   "id": "checkpoint_latency_final",
   "claim": "bench/RESULTS-checkpoint-latency.md states the final measured p50 and that 20 ms was not reached.",
-  "value": "**444.1 → 37.7 ms p50 (11.8x) with the planned policy,",
+  "value": "**444.1 \u2192 37.7 ms p50 (11.8x) with the planned policy,",
   "locations": [
    "bench/RESULTS-checkpoint-latency.md"
   ],
@@ -10902,8 +10902,8 @@
  },
  {
   "id": "r21_pipeline_g3",
-  "claim": "G3 (durable write wall ≤ 672 ms, 2x the native comparator) is met by the shipped pipeline: 623.3 ms least-contended and 653.9 ms median at 4 encode workers.",
-  "value": "G3 (≤ 672 ms) is met",
+  "claim": "G3 (durable write wall \u2264 672 ms, 2x the native comparator) is met by the shipped pipeline: 623.3 ms least-contended and 653.9 ms median at 4 encode workers.",
+  "value": "G3 (\u2264 672 ms) is met",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-parallel-pipeline.md"
@@ -10968,8 +10968,8 @@
  },
  {
   "id": "r21_amdahl_embedding",
-  "claim": "Inter-tensor parallelism is exhausted: going from four to eight workers buys 11.2 ms on the minimum (623.3 → 612.1) and nothing on the median, because one tensor's own encode is 448.8–468.1 ms of the 623.3 ms wall.",
-  "value": "448.8–468.1 ms",
+  "claim": "Inter-tensor parallelism is exhausted: going from four to eight workers buys 11.2 ms on the minimum (623.3 \u2192 612.1) and nothing on the median, because one tensor's own encode is 448.8\u2013468.1 ms of the 623.3 ms wall.",
+  "value": "448.8\u2013468.1 ms",
   "locations": [
    "docs/STATUS.md",
    "bench/RESULTS-parallel-pipeline.md"
@@ -11653,8 +11653,8 @@
  },
  {
   "id": "ekb_prediction_confirmed",
-  "claim": "The docs/EKBLOOM-PLAN.md §4.0 pre-registered prediction is recorded as confirmed on the axes the trial measured.",
-  "value": "§4.0 prediction was confirmed",
+  "claim": "The docs/EKBLOOM-PLAN.md \u00a74.0 pre-registered prediction is recorded as confirmed on the axes the trial measured.",
+  "value": "\u00a74.0 prediction was confirmed",
   "locations": [
    "bench/RESULTS-ekbloom.md",
    "docs/STATUS.md"
@@ -11664,7 +11664,7 @@
  },
  {
   "id": "ekb_retired",
-  "claim": "The line retires under docs/EKBLOOM-PLAN.md §8.2: no payload mode, no planner slot, no ekbloom dependency.",
+  "claim": "The line retires under docs/EKBLOOM-PLAN.md \u00a78.2: no payload mode, no planner slot, no ekbloom dependency.",
   "value": "no payload mode, no planner slot, no `ekbloom` dependency",
   "locations": [
    "bench/RESULTS-ekbloom.md",
@@ -11787,6 +11787,117 @@
   "value": "parse_rfc1123_secs",
   "locations": [
    "bench/RESULTS-azure-mw2.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "x04_mode9_stream_identity",
+  "claim": "The streaming mode-9 encoder is byte-identical to the one-shot encoder, proved over dtypes, sizes, windows and 290 real tensors.",
+  "value": "every_real_qwen_tensor_streams_byte_identically",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_mode9_stream_court",
+  "claim": "The mode-9 streaming court compares the two encoders' frames and fails on any difference.",
+  "value": "mode9-stream-20261113T113138Z.json",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/mode9-stream-20261113T113138Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_slice_stream_plan_identity",
+  "claim": "The slice and streamed planned writers publish byte-identical store trees, head, ObjectId, logical root and strategy.",
+  "value": "streamed_plan_identity",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "x04_planned_7b_ingest",
+  "claim": "A planned 8-way 7B checkpoint write of all 339 tensors completes inside the unchanged 3 GiB court and verifies --full.",
+  "value": "scale-7b-20261113T104950Z.json",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261113T104950Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_streamed_whole_tensor_ingest",
+  "claim": "The whole-tensor planned ingest of the 7B container fits the unchanged 3 GiB court through the bounded source writer.",
+  "value": "scale-7b-20261113T105331Z.json",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261113T105331Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_catalog_deferral",
+  "claim": "The packed plane publishes the catalog once per flush; the same pack layout and the same final catalog are produced.",
+  "value": "the_catalog_is_published_once_per_flush_and_ends_identical",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "x04_packed_identity_7b",
+  "claim": "A flat and a packed fast-raw 7B write publish the same head, manifest root and checkpoint id.",
+  "value": "8cd86ce5171c3214c65bf778aeb3da5a8732061e7625f25eeb1d41af7ffda2ad",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_packed_7b_store",
+  "claim": "The packed 7B store, catalog accounting and restores at 1/4/8 workers are recorded with exact-source checks.",
+  "value": "scale-7b-20261113T105851Z.json",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261113T105851Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_flat_7b_store",
+  "claim": "The flat fast-raw 7B write and its verify --full are recorded; the write is dominated by one durability barrier.",
+  "value": "scale-7b-20261113T110624Z.json",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261113T110624Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_before_oom_retained",
+  "claim": "The pre-X04 per-tensor planned ingest OOM failure is retained as the starting point, not deleted.",
+  "value": "exit 137",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
+  ],
+  "receipt": "bench/receipts/scale-7b-20261110T213731Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x04_not_in_verify_all",
+  "claim": "The 7B court is deliberately not registered in verify-all because it needs about 31 GB of free disk beside the corpus.",
+  "value": "not** registered in `scripts/verify-all.sh`",
+  "locations": [
+   "bench/RESULTS-scale-7b-x04.md"
   ],
   "receipt": null,
   "kind": "present"

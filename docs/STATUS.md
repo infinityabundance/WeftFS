@@ -10804,3 +10804,58 @@ the lock until it execs; that window belongs to the forking process and is the
 same for every mechanism. The claim audit is now enforced for committed-ness
 and declared supersession only; it cannot detect a receipt that supports a
 different number than the prose cites, which remains a review duty.
+
+## Subphase X04 — bounded 7B ingestion, streaming mode 9, and the catalog cost (2026-11-13)
+
+**Scope.** Three defects measured in `scale-7b-20261110T213731Z`: a 1.09 GB
+tensor could not be encoded by the planner at 3 GiB, the packed plane wrote
++51.16 % metadata, and no planned 7B write had ever been attempted. This
+subphase fixes all three without changing a frozen byte: the new encoders are
+byte-identical schedules, and the full-store identity court compares every file.
+
+**Code.** `WeftCodec` `7c8dac3` adds `ByteSource`,
+`encode_float_tensor_stream` (bounded histogram/hash pass, then a bounded
+emission pass into the exactly-sized frame buffer) and `encode_zstd_stream`
+(chunked frames only), plus `frame::encode_preamble` so the streaming assembler
+shares the header/table code. Parent `cbfe86f` adds
+`Store::prepare_tensor_object_streamed` / `write_tensor_file_from_source`, the
+streamed `two_stage::analyse_source`, and the N15 catalog deferral in the packed
+plane. `62845b6` adds the mode-9 streaming court.
+
+**Identity.** `WeftCodec/tests/mode9_streaming.rs` 9/9: five dtypes, twelve
+element counts, five window sizes and all 290 real Qwen2.5-0.5B tensors encode
+byte-identically. `tests/streamed_plan_identity.rs` 2/2: the slice and streamed
+planned writers publish **identical store trees**, head, ObjectId, logical root
+and strategy over four dtype/scale cases at two windows. `tests/packs.rs` 15/15,
+including one catalog publication per flush with the same final root and flat/
+packed heads equal. Flat and packed 7B writes publish the same head
+`8cd86ce5…`.
+
+**Measured** (unchanged 3 GiB / 3 GiB / 1024 pids / 4 cpus court; real
+Qwen2.5-7B-Instruct, 15,231,272,088 B, 339 tensors).
+
+<!-- BEGIN GENERATED:scale7b-status (scripts/perf_numbers.py) -->
+X04 (2026-11-13): bounded 7B ingestion. The planned 8-way 7B checkpoint write runs in
+**119,174.9 ms** with a **442,672 KiB** process peak and publishes
+**10,160,456,499 B**; the whole-tensor streamed ingest fits the same court at
+**2,873,124 KiB**; the packed store is **15,274,042,488 B** with a
+**26,707,069 B** catalog (**256** segment publications,
+148,694 before); restore is **387.8 MB/s** at 4 workers; and the
+streaming mode-9 encoder is **2.492×** smaller and
+**0.783×** the one-shot wall on a 1.09 GB tensor.
+<!-- END GENERATED:scale7b-status -->
+
+**Losses.** `verify --full` is the memory peak for a whole-tensor store, not the
+write (the generated row above is that peak; the per-tensor row in
+`scale-7b-20261113T105331Z`, stamp `20261113T105331Z`, revision
+`cbfe86f6c90a448e591ac062af1b36c5acdd4d10`, is lower). Flat fast-raw is several
+times slower than packed and its wall is dominated by one durability barrier
+over every chunk file (both walls are generated above). Flat peak RSS rose from
+the pre-X04 receipt's peak (173,032 KiB in `scale-7b-20261110T213731Z`, stamp
+`20261110T213731Z`, revision `118015f364d05cc51af5d978a28bf469913303ae`) to the
+generated value with no attributable cause; packed RSS rose for the deferred
+catalog entries. No Go parity, no power-loss, fleet, cloud or serving claim. The
+7B court is **not** in `verify-all` (it needs about 31 GB of free disk beside the
+corpus).
+
+**Analysis:** [`bench/RESULTS-scale-7b.md`](../bench/RESULTS-scale-7b.md).

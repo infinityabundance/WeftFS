@@ -1,5 +1,10 @@
 # R12 increment 1 — 7B scale
 
+> **X04 (2026-11-13) follow-up.** The bounded/streaming ingest, the streaming
+> mode-9 encoder and the catalog-amplification fix are measured in
+> [`RESULTS-scale-7b-x04.md`](RESULTS-scale-7b-x04.md). This document is the R12
+> starting point and is retained unchanged.
+
 **Corpus: the real Qwen/Qwen2.5-7B-Instruct checkpoint.** Not synthetic.
 
 The hub publishes four `model-0000N-of-00004.safetensors` shards. They were
