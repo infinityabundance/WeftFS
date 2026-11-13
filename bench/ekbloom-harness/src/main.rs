@@ -542,28 +542,46 @@ fn ekbloom_round_trip(
 // Shipped-planner footprint (E2 arm)
 // ---------------------------------------------------------------------------
 
+/// Bytes of one content-addressed blob.
+///
+/// Frames written by the tensor and codec representations are published as
+/// `BlobKind::Manifest` (under `manifests/`), while raw chunks are
+/// `BlobKind::Object` (under `objects/`). The locator therefore resolves either
+/// namespace and fails closed when neither exists, rather than reporting a
+/// silently smaller footprint.
+fn referenced_blob_bytes(store: &Store, hash: Hash32) -> Result<u64, String> {
+    let hex = hash.to_hex();
+    for namespace in ["manifests", "objects"] {
+        let path = store.root().join(namespace).join(&hex[0..2]).join(&hex);
+        if let Ok(meta) = fs::metadata(&path) {
+            return Ok(meta.len());
+        }
+    }
+    Err(format!(
+        "referenced blob {hex} is in neither manifests/ nor objects/"
+    ))
+}
+
 fn object_footprint(store: &Store, object: Hash32) -> Result<u64, String> {
     let record = store
         .object_meta(object)
         .map_err(|err| format!("object_meta: {err}"))?;
     let manifest_file = weftfs::recovery::manifest_path(store.root(), record.content);
-    let mut paths: BTreeSet<PathBuf> = BTreeSet::new();
-    paths.insert(manifest_file);
+    let mut total = fs::metadata(&manifest_file)
+        .map_err(|err| format!("stat {}: {err}", manifest_file.display()))?
+        .len();
     let manifest = weftfs::recovery::read_manifest(store.root(), record.content)
         .map_err(|err| format!("read_manifest: {err}"))?;
     if let Some(representation) = &manifest.representation {
         if let Some(frame) = representation.frame {
-            paths.insert(weftfs::recovery::object_path(store.root(), frame));
+            total += referenced_blob_bytes(store, frame)?;
         }
     }
+    let mut counted: BTreeSet<Hash32> = BTreeSet::new();
     for chunk in &manifest.chunks {
-        paths.insert(weftfs::recovery::object_path(store.root(), chunk.hash));
-    }
-    let mut total = 0u64;
-    for path in paths {
-        total += fs::metadata(&path)
-            .map_err(|err| format!("stat {}: {err}", path.display()))?
-            .len();
+        if counted.insert(chunk.hash) {
+            total += referenced_blob_bytes(store, chunk.hash)?;
+        }
     }
     Ok(total)
 }
