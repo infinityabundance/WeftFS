@@ -120,6 +120,14 @@ jobs:
     # `--features fuse` is NOT built here: those suites need /dev/fuse and the
     # court image, and they run in `scripts/verify-all.sh` (`rust_fuse`).
     #
+    # Known flake, disclosed rather than hidden: `tests/quota.rs::
+    # usage_survives_reopen_and_still_denies` and the distributed writer
+    # interlock can fail when a forked-but-not-yet-exec'd child still holds the
+    # `flock(2)` used by the single-writer lock (STATUS, 2026-11-08; the root
+    # fix is OFD locks and is not done). The suite passed in this session, but a
+    # red run here should be re-run once before it is believed. The tests are
+    # not filtered out: that would hide a real writer-lock defect.
+    #
     # Local court equivalent:
     #   scripts/docker-court.sh rust "cargo test --all-targets"
     #   scripts/docker-court.sh rust "cd WeftCodec && cargo test --all-targets"
