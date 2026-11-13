@@ -10,6 +10,12 @@
 //! description for the whole window. That is the window measured by
 //! `examples/lock_probe.rs` (519/2,000 spurious `Busy` for plain `flock`,
 //! 592/2,000 for OFD close-only, 0/2,000 with an explicit unlock).
+//!
+//! The two-process test at the end is the other half of the contract: a lock
+//! held by a different process is still refused, and the kernel releases it
+//! when that process dies. After `fork(2)` the child calls only
+//! async-signal-safe functions (syscalls, `mem::zeroed`, `_exit`), so it cannot
+//! deadlock on an allocator lock held by a sibling test thread.
 
 use std::fs::{self, File, OpenOptions};
 use std::io;
@@ -202,6 +208,11 @@ fn a_second_live_writer_is_still_refused() {
     let first = WriterLock::acquire(&path).expect("first writer");
     let err = WriterLock::acquire(&path).expect_err("second writer must be refused");
     assert_eq!(err.class(), Class::Busy);
+    assert!(
+        err.message()
+            .starts_with("store is locked by another writer"),
+        "the Busy text is part of the contract: {err}"
+    );
     drop(first);
     let second = WriterLock::acquire(&path).expect("lock is free after drop");
     drop(second);
@@ -239,6 +250,71 @@ fn the_shipped_writer_blocks_a_legacy_flock_holder() {
     drop(lock);
     flock_try(&legacy).expect("legacy lock succeeds after the shipped writer drops");
     unsafe { libc::flock(legacy.as_raw_fd(), libc::LOCK_UN) };
+}
+
+/// Two-process exclusion: a *different* process holds both mechanisms on its
+/// own open file description, this process is refused `Busy`, and the kernel
+/// releases the lock when the holder is killed. The child runs only
+/// async-signal-safe calls after `fork`.
+#[test]
+fn another_process_holding_the_lock_refuses_this_one() {
+    let dir = tempdir().unwrap();
+    let path = scratch(dir.path(), "LOCK");
+    // Opened before the fork so the child needs no allocation.
+    let shared = {
+        use std::os::unix::fs::OpenOptionsExt;
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .custom_flags(libc::O_CLOEXEC)
+            .open(&path)
+            .expect("open LOCK")
+    };
+    let mut fds = [0i32; 2];
+    assert_eq!(unsafe { libc::pipe(fds.as_mut_ptr()) }, 0, "pipe failed");
+    let (read_fd, write_fd) = (fds[0], fds[1]);
+    let pid = unsafe { libc::fork() };
+    assert!(pid >= 0, "fork failed: {}", io::Error::last_os_error());
+    if pid == 0 {
+        // Child: no allocation after fork, no unwinding.
+        unsafe {
+            libc::close(read_fd);
+            let flock_ok = libc::flock(shared.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) == 0;
+            let mut record: libc::flock = std::mem::zeroed();
+            record.l_type = libc::F_WRLCK as libc::c_short;
+            record.l_whence = libc::SEEK_SET as libc::c_short;
+            record.l_start = 0;
+            record.l_len = 0;
+            let ofd_ok = libc::fcntl(shared.as_raw_fd(), libc::F_OFD_SETLK, &mut record) == 0;
+            let report: u8 = u8::from(flock_ok && ofd_ok);
+            libc::write(write_fd, &report as *const u8 as *const libc::c_void, 1);
+            // Hold the open file description until the parent closes the pipe
+            // (EOF) or kills us.
+            let mut byte = [0u8; 1];
+            libc::read(read_fd, byte.as_mut_ptr() as *mut libc::c_void, 1);
+            libc::_exit(0);
+        }
+    }
+    // The lock belongs to the open file description; the child is a second
+    // reference to it, so dropping the parent's descriptor is not what releases
+    // it.
+    drop(shared);
+    unsafe { libc::close(write_fd) };
+    let mut report = [0u8; 1];
+    let read = unsafe { libc::read(read_fd, report.as_mut_ptr() as *mut libc::c_void, 1) };
+    assert_eq!(read, 1, "the child did not report");
+    assert_eq!(report[0], 1, "the child failed to take both locks");
+
+    let err = WriterLock::acquire(&path).expect_err("another process holds the lock");
+    assert_eq!(err.class(), Class::Busy);
+
+    unsafe {
+        libc::kill(pid, libc::SIGKILL);
+        libc::close(read_fd);
+        libc::waitpid(pid, std::ptr::null_mut(), 0);
+    }
+    let lock = WriterLock::acquire(&path).expect("the kernel releases a dead holder's lock");
+    assert_eq!(lock.mechanism(), LockMechanism::OpenFileDescription);
 }
 
 /// The store-level regression: repeated init/drop/reopen while a sibling

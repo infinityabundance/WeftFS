@@ -10719,11 +10719,16 @@ explicit unlock is the part that removes the `fork`-inheritance window: OFD
 alone is inherited exactly like `flock` and would not have fixed the historical
 flake. Mixed-version exclusion is symmetric (the shipped writer blocks a
 legacy `flock` holder and vice versa); `flock(2)` remains the documented
-fallback on `EINVAL`. WeftFS-Go holds the same two locks and unlocks both
-(`WeftFS-Go/store/lock.go`, `lock_linux.go`, `store/lock_inheritance_test.go`),
-so no Go change was needed. The false "known flake" caveat was removed from
-`ci.yml` and replaced with the true account; the runner stays non-root and the
-suites are not filtered.
+fallback on `EINVAL`. The court now also asserts the historical `Busy` text
+(`a_second_live_writer_is_still_refused`) and proves real cross-process
+exclusion with a child that holds both mechanisms on its own open file
+description: this process is refused `Busy`, and the kernel releases the lock
+when the holder is `SIGKILL`ed
+(`another_process_holding_the_lock_refuses_this_one`). WeftFS-Go holds the
+same two locks and unlocks both (`WeftFS-Go/store/lock.go`, `lock_linux.go`,
+`store/lock_inheritance_test.go`), so no Go change was needed. The false
+"known flake" caveat was removed from `ci.yml` and replaced with the true
+account; the runner stays non-root and the suites are not filtered.
 
 ### Defect B — claims cited a receipt that was never committed
 
