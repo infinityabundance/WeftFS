@@ -138,8 +138,8 @@ Rust all-targets **807** passed / 0 failed; FUSE all-targets
 **850** passed / 0 failed / 2 ignored
 (the two pre-existing kernel/`CAP_SETUID` tests); WeftCodec **290** passed.
 The conformance manifest holds **420** vectors (aggregate
-`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); the claims manifest holds **1,054** entries and
-`scripts/check-claims.sh` passes; `scripts/perf_numbers.py --check` passes.
+`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); the claims manifest is audited by
+`scripts/check-claims.sh`; `scripts/perf_numbers.py --check` passes.
 <!-- END GENERATED:release-v141-verify -->
 
 ## Artifacts and registry state
