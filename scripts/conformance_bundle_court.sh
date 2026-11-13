@@ -41,6 +41,24 @@ image="weft/fuse-court:1"
 docker image inspect "$image" >/dev/null 2>&1 \
   || skip "court image $image is not present (build it with scripts/docker-court.sh fuse true)"
 
+# ---- committed corpus ------------------------------------------------------
+# The court image has no git, so `package-conformance.sh` cannot prove that the
+# corpus it copies is committed. The same gate runs here, on the host, against
+# the working tree that is mounted into the court: a vector that exists only in
+# this tree would be absent from a clone and the bundle's revisions would not
+# contain the corpus it ships.
+# shellcheck source=scripts/lib-tracked.sh
+source "$repo_root/scripts/lib-tracked.sh"
+untracked_corpus=0
+while IFS= read -r rel; do
+  [ -n "$rel" ] || continue
+  weft_require_tracked "$rel" "conformance_bundle" || untracked_corpus=$((untracked_corpus + 1))
+done < <(find conformance WeftCodec/conformance/v1 -type f -print | LC_ALL=C sort -u)
+if [ "$untracked_corpus" -ne 0 ]; then
+  fail "$untracked_corpus untracked conformance file(s); commit the corpus before packaging"
+fi
+echo "$prefix: committed corpus ok (conformance/ and WeftCodec/conformance/v1)" >&2
+
 stamp="${WEFT_STAMP:-${WEFT_COMPAT_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}}"
 version="$(sed -n 's/^version = "\([0-9][^"]*\)"/\1/p' Cargo.toml | head -1)"
 [[ -n "$version" ]] || fail "cannot read version from Cargo.toml"

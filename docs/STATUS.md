@@ -10953,6 +10953,7 @@ so a local pass and a fresh-checkout pass agree.
 | `docs/perf-numbers.json` receipt | **no** — Defect A | yes |
 | `docs/perf-numbers.json` `count_of` source and generated file | no | yes |
 | `conformance/manifest.json` and its vectors/mirrors | only via a stale manifest (the generator walks the tree) | yes, with the file named |
+| `conformance` packaging (`scripts/package-conformance.sh`) | no: it copied whatever was in `conformance/` and `WeftCodec/conformance/v1`; the court image has no git, so the in-court check cannot run | yes: the script refuses an untracked staged file where git exists, and `scripts/conformance_bundle_court.sh` runs the same gate on the host before entering the court (a probe file in `conformance/fuzz/v1` is refused there) |
 | `bench/bundles/` (`scripts/package-receipts.sh`) | yes: a dirty or untracked work tree in any of the four repositories aborts packaging; `--allow-dirty` is an explicit override | unchanged |
 | spec-drift export list | only via the missing-mirror report | yes, directly |
 | `scripts/verify-receipts.sh` | not applicable: it reads the extracted bundle and checks revisions with `git cat-file`, never working-tree evidence | unchanged |
@@ -10961,6 +10962,8 @@ so a local pass and a fresh-checkout pass agree.
 **Residual.** The tracked rule answers "is it committed", not "does it support
 the number": a receipt committed at the wrong revision, or a claim whose prose
 disagrees with its receipt, is still a review duty. Guards skip the rule outside
-a git work tree by design. `git status --porcelain` does not list ignored files,
-so a receipt moved under an ignore pattern would escape `package-receipts.sh`
-(no such pattern exists today).
+a git work tree by design; the packaging court records `worktree=unknown`
+because its image has no git, which is why the bundle gate also runs on the
+host. `git status --porcelain` does not list ignored files, so a receipt moved
+under an ignore pattern would escape `package-receipts.sh` (no such pattern
+exists today).

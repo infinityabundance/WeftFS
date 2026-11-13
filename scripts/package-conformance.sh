@@ -68,6 +68,29 @@ cp -R python/weftcodec "$STAGE/python/weftcodec"
 find "$STAGE/python" -type d -name '__pycache__' -prune -exec rm -rf {} +
 find "$STAGE/python" -name '*.pyc' -delete
 
+# ---- committed-corpus gate ------------------------------------------------
+# The bundle is evidence, so a vector that exists only in the author's working
+# tree must not enter it: a clone would not have that file and the bundle would
+# cite a revision that does not contain the corpus it ships.
+# `lib-tracked.sh` resolves the nearest enclosing repository, so
+# WeftCodec/conformance/... is checked against WeftCodec's own index.
+# shellcheck source=scripts/lib-tracked.sh
+source "$ROOT/scripts/lib-tracked.sh"
+if ! command -v git >/dev/null 2>&1; then
+  # Be loud rather than silently passing: the packaging court image has no git,
+  # and scripts/conformance_bundle_court.sh runs this same gate on the host.
+  echo "conformance bundle: note: git is unavailable here; the committed-corpus gate is skipped" >&2
+fi
+corpus_untracked=0
+while IFS= read -r staged; do
+  rel="${staged#"$STAGE"/}"
+  weft_require_tracked "$rel" "conformance bundle" || corpus_untracked=$((corpus_untracked + 1))
+done < <(find "$STAGE/conformance" "$STAGE/WeftCodec/conformance" -type f -print | LC_ALL=C sort)
+if [ "$corpus_untracked" -ne 0 ]; then
+  echo "refusing to package: $corpus_untracked untracked conformance file(s)" >&2
+  exit 1
+fi
+
 # ---- revisions -----------------------------------------------------------
 : > "$STAGE/REVISIONS.txt"
 for entry in "WeftFS:.:WEFT_REPO_WEFTFS" "WeftCodec:WeftCodec:WEFT_REPO_WEFTCODEC" "WeftCodec-Go:WeftCodec-Go:WEFT_REPO_WEFTCODEC_GO" "WeftFS-Go:WeftFS-Go:WEFT_REPO_WEFTFS_GO"; do
