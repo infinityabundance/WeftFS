@@ -30,7 +30,9 @@
    "sha256": "9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0"
   },
   "twine_check": "PASSED for both artifacts",
-  "source": "scripts/pypi-publish-inner.sh --dry-run in the python court, 2026-11-13T01:16Z"
+  "source": "scripts/pypi-publish-inner.sh --dry-run in the python court, 2026-11-13T01:16Z",
+  "court_tests": "437 passed, 70 skipped in the python court",
+  "long_description_source": "python/README.md (read at build time; a wheel cannot contain its own digest)"
  },
  "python_140_live": {
   "wheel": {
@@ -66,7 +68,8 @@
   "fetched_utc": "2026-11-13T01:08Z"
  },
  "crates_141": {
-  "dry_run": null,
+  "weftcodec_dry_run": "pass: 528 files packaged, 2.9 MiB compressed, package verified (rust court)",
+  "weftfs_dry_run": "blocked: weftcodec 1.4.1 is not in the crates.io index until the real publish; scripts/publish-crates.sh publishes weftcodec first, waits, then publishes weftfs",
   "published": null
  },
  "ghcr_141": null
