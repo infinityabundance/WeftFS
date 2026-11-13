@@ -463,6 +463,14 @@ loss (efficiency falls with N). Receipt
 | `build141.pypi.wheel_bytes` | 115,889 | B | 1.4.1 pypi-build wheel size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
 | `build141.pypi.sdist_sha` | 93a0b8c8c320f8d3316152c2bdc1b797f4869fcb2116dbbb825953b8942286a1 | text | 1.4.1 pypi-build sdist sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
 | `build141.pypi.sdist_bytes` | 157,012 | B | 1.4.1 pypi-build sdist size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `writer_lock.clean.iterations` | 60 | runs | Writer-lock suite repetitions (root, no load) | `bench/receipts/writer-lock-20261113T115631Z.json` | 20261113T115631Z | b6bc44feaeb7 |
+| `writer_lock.clean.failed` | 0 | failures | Writer-lock suite failures (root, no load) | `bench/receipts/writer-lock-20261113T115631Z.json` | 20261113T115631Z | b6bc44feaeb7 |
+| `writer_lock.loaded.iterations` | 25 | runs | Writer-lock suite repetitions beside CPU load | `bench/receipts/writer-lock-load-20261113T115647Z.json` | 20261113T115647Z | b6bc44feaeb7 |
+| `writer_lock.loaded.load` | 8 | processes | Busy CPU processes beside the loaded repetitions | `bench/receipts/writer-lock-load-20261113T115647Z.json` | 20261113T115647Z | b6bc44feaeb7 |
+| `writer_lock.loaded.failed` | 0 | failures | Writer-lock suite failures beside CPU load | `bench/receipts/writer-lock-load-20261113T115647Z.json` | 20261113T115647Z | b6bc44feaeb7 |
+| `writer_lock.nonroot.iterations` | 10 | runs | Writer-lock suite repetitions as a non-root uid | `bench/receipts/writer-lock-nonroot-20261113T115713Z.json` | 20261113T115713Z | b6bc44feaeb7 |
+| `writer_lock.nonroot.uid` | 1001 | — | uid the non-root repetitions ran as | `bench/receipts/writer-lock-nonroot-20261113T115713Z.json` | 20261113T115713Z | b6bc44feaeb7 |
+| `writer_lock.nonroot.failed` | 0 | failures | Writer-lock suite failures as a non-root uid | `bench/receipts/writer-lock-nonroot-20261113T115713Z.json` | 20261113T115713Z | b6bc44feaeb7 |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Context Advantage Court (R26)

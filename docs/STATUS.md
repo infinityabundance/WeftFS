@@ -10859,3 +10859,108 @@ catalog entries. No Go parity, no power-loss, fleet, cloud or serving claim. The
 corpus).
 
 **Analysis:** [`bench/RESULTS-scale-7b.md`](../bench/RESULTS-scale-7b.md).
+
+## Subphase X05 — committed evidence, and a lock test that does not race its child (2026-11-13)
+
+**Defect A: a second manifest cited a receipt that was never committed.**
+CI run 43408465922 (`documentation and conformance guards`) printed
+`perf_numbers: missing receipt bench/receipts/checkpoint-queue-bound-after-20261112T043000Z.json`
+and failed. `docs/perf-numbers.json` is a manifest that cites receipts, and it
+did not inherit the committed-file rule that `scripts/check-claims.sh` had just
+gained for `docs/claims.json`; the defect class is the same, in the second place
+it can occur.
+
+The whole manifest was audited, not just the named entry: every `receipt`, every
+`count_of` source and every generated file was compared with `git ls-files`. One
+path was untracked — the one CI named. Before committing it, its declared values
+were compared field by field with the receipt: stamp `20261112T043000Z`,
+revision `1d716632…`, and `bound_sweep.rows[interval_steps=1, max_outstanding=2]`
+carries `loop_wall_ms_median`, `completion_warm.p50_ms` and
+`completion_warm.p95_ms`. The generated text already matched those values, so no
+region was regenerated and no number changed; the receipt and its `.log` are now
+committed.
+
+**The guard that makes the class impossible.** `scripts/tracked_evidence.py`
+(Python) and `scripts/lib-tracked.sh` (shell) answer one question — is this path
+committed? — and resolve the **nearest enclosing repository**, so a file inside
+`WeftCodec/`, `WeftCodec-Go/` or `WeftFS-Go/` is checked against that
+repository's index rather than the parent's gitlink. The rule is wired into
+`perf_numbers.py` (receipts, `count_of` sources, generated files),
+`check-claims.sh` (locations, the manifest), `check-spec-drift.sh` (parent and
+exported spec/schema files), `check_conformance_coverage.py` (manifest, vectors,
+fixture members, mirrors) and `check_long_description.py`. Outside a git work
+tree every guard skips the rule, so an exported tarball and the conformance
+bundle still verify.
+
+`scripts/untracked_evidence_demo.sh` creates an uncommitted copy for each guard
+and requires the guard to refuse it; it prints `PASS` for all four and leaves
+nothing behind. `scripts/perf_numbers_untracked_demo.sh` reproduces Defect A
+exactly: on the tree before the receipt was committed, `--check` failed with
+`… exists but is not tracked by git in …; an untracked file is not evidence (a
+fresh checkout would not have it)`. The guard set in CI did not change.
+
+**Defect B: the two-process lock test raced its own holder.**
+`tests/writer_lock.rs::another_process_holding_the_lock_refuses_this_one` closed
+the child's `read_fd` and then called `read(read_fd, …)` to hold the open file
+description open. The read failed `EBADF`, so the holder called `_exit(0)`
+immediately after reporting success, and the parent's probe raced the kernel
+releasing the lock. When the parent won the race the test passed; when the exit
+won it failed at `tests/writer_lock.rs:308:42`, which is how CI saw it. This is a
+test defect, not an environment difference: the store code refuses the probe
+correctly for as long as the holder lives, and a reduced C reproduction of the
+child reported `EBADF` for the hold read in every iteration and saw the parent
+acquire the lock only in the iterations where the holder had already exited
+(the reproduction is local, not committed).
+
+The fix is explicit synchronisation, with no sleeps, no polling and no retries.
+The holder takes `flock(2)`, then `F_OFD_SETLK`, reports a fixed record (phase,
+acquired, both `errno`s), and blocks in `poll(2)` on a control pipe it keeps
+open. The parent accepts that record, pings the control pipe, and waits for a
+second record that can only be written from the blocked state; every read has a
+`poll(2)` deadline, and a holder that dies is reported with its exit status
+instead of hanging. Only then does the parent probe the store. The assertions
+are unchanged: `Busy` with the historical `store is locked by another writer`
+text, and acquisition after `SIGKILL`. `with_forked_child`, used by the other
+four probes in the file, lost its fixed `usleep` in the same way: the child now
+blocks until the parent releases it after the probe, so the window is the probe
+and not a duration a loaded runner can overrun. Re-injecting the
+close-before-read defect fails deterministically at the liveness round-trip.
+
+**Evidence.** `bench/scripts/writer_lock_court.sh` repeats the suite and writes
+a receipt under the standard court limits; the receipts and their logs are
+committed. The court is standalone and is not in `verify-all`.
+
+<!-- BEGIN GENERATED:writer-lock-status (scripts/perf_numbers.py) -->
+X05 (2026-11-13): the writer-lock suite was repeated **60** times at `--test-threads=8`
+with **0** failures; **25** times beside
+8 busy CPU processes with **0** failures; and
+**10** times as uid 1001 with
+**0** failures.
+<!-- END GENERATED:writer-lock-status -->
+
+The four sibling suites (`quota`, `writer_fencing`, `multiwriter`,
+`distributed_semantics`) pass in the same court, both as uid 0 and as uid 1001.
+
+**Task C: the other guards that consume evidence.** "Fails closed" here means
+the guard refuses a file that exists in the working tree but is not committed,
+so a local pass and a fresh-checkout pass agree.
+
+| Guard | Fails closed on untracked input before | after |
+| --- | --- | --- |
+| `docs/claims.json` cited receipts | yes (r22 fix) | yes |
+| `docs/claims.json` locations and manifest | no | yes |
+| `docs/superseded-receipts.json` receipt, target, `declared_in`, registry | yes | yes |
+| `docs/perf-numbers.json` receipt | **no** — Defect A | yes |
+| `docs/perf-numbers.json` `count_of` source and generated file | no | yes |
+| `conformance/manifest.json` and its vectors/mirrors | only via a stale manifest (the generator walks the tree) | yes, with the file named |
+| `bench/bundles/` (`scripts/package-receipts.sh`) | yes: a dirty or untracked work tree in any of the four repositories aborts packaging; `--allow-dirty` is an explicit override | unchanged |
+| spec-drift export list | only via the missing-mirror report | yes, directly |
+| `scripts/verify-receipts.sh` | not applicable: it reads the extracted bundle and checks revisions with `git cat-file`, never working-tree evidence | unchanged |
+| long description (`python/README.md`) | only at the clone (the file is absent) | yes, directly |
+
+**Residual.** The tracked rule answers "is it committed", not "does it support
+the number": a receipt committed at the wrong revision, or a claim whose prose
+disagrees with its receipt, is still a review duty. Guards skip the rule outside
+a git work tree by design. `git status --porcelain` does not list ignored files,
+so a receipt moved under an ignore pattern would escape `package-receipts.sh`
+(no such pattern exists today).

@@ -9536,6 +9536,110 @@
    "revision_path": "court.weftfs_revision",
    "stamp": "20261113T110624Z",
    "revision": "cbfe86f6c90a448e591ac062af1b36c5acdd4d10"
+  },
+  {
+   "key": "writer_lock.clean.iterations",
+   "label": "Writer-lock suite repetitions (root, no load)",
+   "unit": "runs",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-20261113T115631Z.json",
+   "path": "iterations",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115631Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.clean.failed",
+   "label": "Writer-lock suite failures (root, no load)",
+   "unit": "failures",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-20261113T115631Z.json",
+   "path": "failed",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115631Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.loaded.iterations",
+   "label": "Writer-lock suite repetitions beside CPU load",
+   "unit": "runs",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-load-20261113T115647Z.json",
+   "path": "iterations",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115647Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.loaded.load",
+   "label": "Busy CPU processes beside the loaded repetitions",
+   "unit": "processes",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-load-20261113T115647Z.json",
+   "path": "load_procs",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115647Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.loaded.failed",
+   "label": "Writer-lock suite failures beside CPU load",
+   "unit": "failures",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-load-20261113T115647Z.json",
+   "path": "failed",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115647Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.nonroot.iterations",
+   "label": "Writer-lock suite repetitions as a non-root uid",
+   "unit": "runs",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-nonroot-20261113T115713Z.json",
+   "path": "iterations",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115713Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.nonroot.uid",
+   "label": "uid the non-root repetitions ran as",
+   "unit": "",
+   "group": "verification",
+   "format": "text",
+   "receipt": "bench/receipts/writer-lock-nonroot-20261113T115713Z.json",
+   "path": "court.uid",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115713Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
+  },
+  {
+   "key": "writer_lock.nonroot.failed",
+   "label": "Writer-lock suite failures as a non-root uid",
+   "unit": "failures",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/writer-lock-nonroot-20261113T115713Z.json",
+   "path": "failed",
+   "stamp_path": "stamp",
+   "stamp": "20261113T115713Z",
+   "revision_path": "court.revision_weftfs",
+   "revision": "b6bc44feaeb7431fd6f67e96bc2ca2fc402d10ec"
   }
  ],
  "blocks": [
@@ -13291,6 +13395,28 @@
    "file": "docs/PERF-NUMBERS.md",
    "kind": "catalog",
    "group": "scale7b"
+  },
+  {
+   "id": "writer-lock-status",
+   "file": "docs/STATUS.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "X05 (2026-11-13): the writer-lock suite was repeated **{{writer_lock.clean.iterations}}** times at `--test-threads=8`"
+    },
+    {
+     "template": "with **{{writer_lock.clean.failed}}** failures; **{{writer_lock.loaded.iterations}}** times beside"
+    },
+    {
+     "template": "{{writer_lock.loaded.load}} busy CPU processes with **{{writer_lock.loaded.failed}}** failures; and"
+    },
+    {
+     "template": "**{{writer_lock.nonroot.iterations}}** times as uid {{writer_lock.nonroot.uid}} with"
+    },
+    {
+     "template": "**{{writer_lock.nonroot.failed}}** failures."
+    }
+   ]
   }
  ]
 }
