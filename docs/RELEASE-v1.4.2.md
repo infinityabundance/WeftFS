@@ -118,7 +118,7 @@ FUSE all-targets **850** passed / 0 failed /
 2 ignored (the two pre-existing kernel/`CAP_SETUID` tests);
 WeftCodec **290** passed. The conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`);
-**1,087** claims are audited; `scripts/check-claims.sh`,
+**1,099** claims are audited; `scripts/check-claims.sh`,
 `scripts/perf_numbers.py --check`, spec drift, the conformance manifest/coverage
 and the new `long_description` court all pass.
 <!-- END GENERATED:release-v142-verify -->

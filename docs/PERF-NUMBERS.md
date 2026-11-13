@@ -401,7 +401,7 @@ loss (efficiency falls with N). Receipt
 | `verify.revision` | 52da9888f3726e6af5c364af7707fd98574fc954 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,087 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,099 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
@@ -654,6 +654,77 @@ carried in the same receipt and **failed**; `claim_holds` is false.
 | `ca.m.req_per_read` | 2.0 | requests | M backend requests per fast-path read (local POSIX) | `bench/receipts/context-advantage-20261113T072921Z.json` | 20261113T072921Z | ad263816cbbc |
 | `ca.w.req_per_read` | 2.0 | requests | W backend requests per fast-path read (local POSIX) | `bench/receipts/context-advantage-20261113T072921Z.json` | 20261113T072921Z | ad263816cbbc |
 <!-- END GENERATED:perf-catalog-context-advantage -->
+
+## EKBLOOM trial (retired)
+
+One host, one local POSIX backend, one process, warm page cache. `EKB-E1`
+(boundary) passed; `EKB-E2` (space) and `EKB-E3` (bounded random access) were
+lost; the line retired under `docs/EKBLOOM-PLAN.md` §8.2. `EKB-E4`, `EKB-E5`
+and `EKB-E6` were not run. Receipts `ekbloom-20261113T081205Z`,
+`ekbloom-space-20261113T081552Z` and `ekbloom-read-20261113T083231Z`; analysis
+[`bench/RESULTS-ekbloom.md`](../bench/RESULTS-ekbloom.md).
+
+<!-- BEGIN GENERATED:perf-catalog-ekbloom (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `ekb.e1.objects` | 580 | objects | E1 objects round-tripped | `bench/receipts/ekbloom-20261113T081205Z.json` | 20261113T081205Z | bc75d63b68e8 |
+| `ekb.e1.exact` | 580 | objects | E1 objects restored byte-exactly | `bench/receipts/ekbloom-20261113T081205Z.json` | 20261113T081205Z | bc75d63b68e8 |
+| `ekb.e1.refused` | 0 | objects | E1 objects refused for memory_bound | `bench/receipts/ekbloom-20261113T081205Z.json` | 20261113T081205Z | bc75d63b68e8 |
+| `ekb.e1.logical_bytes` | 1,976,131,072 | B | E1 declared element bytes | `bench/receipts/ekbloom-20261113T081205Z.json` | 20261113T081205Z | bc75d63b68e8 |
+| `ekb.e1.peak_kib` | 776,292 | KiB | E1 process peak RSS | `bench/receipts/ekbloom-20261113T081205Z.json` | 20261113T081205Z | bc75d63b68e8 |
+| `ekb.e2.objects` | 98 | objects | E2 objects (both containers) | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.logical_bytes` | 852,852,736 | B | E2 raw element bytes | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.body` | 662,410,464 | B | E2 aggregate EKBLOOM container bytes | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.planned` | 566,677,130 | B | E2 aggregate shipped-planner bytes | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.losses` | 98 | objects | E2 per-object losses | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.wins` | 0 | objects | E2 per-object wins | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.exact` | 98 | objects | E2 objects exact on both arms | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.largest_loss` | 30,522,289 | B | E2 largest single per-object loss | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.ratio` | 1.168938 | × | E2 EKBLOOM bytes over shipped-planner bytes | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e2.over_pct` | 16.89 | % | E2 EKBLOOM bytes above the shipped planner | `bench/receipts/ekbloom-space-20261113T081552Z.json` | 20261113T081552Z | f64287c95475 |
+| `ekb.e3.objects` | 14 | objects | E3 selected objects | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.logical_bytes` | 583,077,888 | B | E3 declared logical bytes | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.w_foot` | 400,293,613 | B | E3 W (mode-15 tiles) retained footprint | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.a_foot` | 583,083,071 | B | E3 A (raw + manifest + index) retained footprint | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.e_foot` | 458,840,944 | B | E3 E (EKBLOOM containers) retained footprint | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.p95_w` | 6,495,913 | ns | E3 W pooled p95 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.p95_a` | 2,634 | ns | E3 A pooled p95 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.p95_e` | 222,636 | ns | E3 E pooled p95 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.p95_best` | 2,634 | ns | E3 best baseline pooled p95 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.samples_1` | 784 | reads | E3 reads in the 1 B class | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.samples_4096` | 560 | reads | E3 reads in the 4,096 B class | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.samples_65536` | 560 | reads | E3 reads in the 65,536 B class | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.samples_pooled` | 1,904 | reads | E3 pooled reads per arm | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.exact_w` | 1,904 | reads | E3 exact reads, W | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.exact_a` | 1,904 | reads | E3 exact reads, A | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.exact_e` | 1,904 | reads | E3 exact reads, E | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.backend_w_bytes` | 544,033.8 | B | E3 backend bytes per read, W | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.backend_a_bytes` | 20,480.4 | B | E3 backend bytes per read, A | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.backend_e_bytes` | 37,934.3 | B | E3 backend bytes per read, E | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.backend_w_reqs` | 18.84 | requests | E3 backend requests per read, W | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.backend_a_reqs` | 1.00 | requests | E3 backend requests per read, A | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.backend_e_reqs` | 2.00 | requests | E3 backend requests per read, E | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.e_over_w` | 1.14626 | × | E3 E footprint over W footprint | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.e_over_a` | 0.78692 | × | E3 E footprint over A footprint | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.p95_e_over_best` | 84.52 | × | E3 E p95 over the best baseline p95 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.p95_w_over_e` | 29.18 | × | E3 W p95 over E p95 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.exact_total` | 5,712 | reads | E3 exact reads across all three arms | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_00` | 24 | requests | E3 engine-probe requests, selected tensor 00 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_01` | 8 | requests | E3 engine-probe requests, selected tensor 01 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_02` | 24 | requests | E3 engine-probe requests, selected tensor 02 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_03` | 24 | requests | E3 engine-probe requests, selected tensor 03 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_04` | 8 | requests | E3 engine-probe requests, selected tensor 04 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_05` | 24 | requests | E3 engine-probe requests, selected tensor 05 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_06` | 24 | requests | E3 engine-probe requests, selected tensor 06 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_07` | 24 | requests | E3 engine-probe requests, selected tensor 07 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_08` | 8 | requests | E3 engine-probe requests, selected tensor 08 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_09` | 24 | requests | E3 engine-probe requests, selected tensor 09 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_10` | 24 | requests | E3 engine-probe requests, selected tensor 10 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_11` | 8 | requests | E3 engine-probe requests, selected tensor 11 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_12` | 24 | requests | E3 engine-probe requests, selected tensor 12 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_req_13` | 24 | requests | E3 engine-probe requests, selected tensor 13 | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+| `ekb.e3.probe_requests` | 272 | requests | E3 in-memory Engine probe requests | `bench/receipts/ekbloom-read-20261113T083231Z.json` | 20261113T083231Z | ef2aa0a3a21a |
+<!-- END GENERATED:perf-catalog-ekbloom -->
 
 ## Historical quotations
 

@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,087** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,099** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -10452,3 +10452,72 @@ or resource number is claimed in this entry.** The deliverable is
   MSRV consequence of a normal `ekbloom` dependency (this crate declares 1.77,
   the published crate 1.89) is recorded as an operator decision rather than
   resolved here.
+
+## Subphase X22 — the EKBLOOM line retires: E1 pass, E2 loss, E3 loss (2026-11-13)
+
+The optional EKBLOOM representation trial was executed at operator request and
+ended in a published null result. **E1 passed; E2 lost; E3 lost; E4/E5 not run.**
+The verdict, the method, every loss and the reproduction commands are in
+[`bench/RESULTS-ekbloom.md`](../bench/RESULTS-ekbloom.md); the frozen contract is
+[`bench/CONTRACTS-ekbloom.md`](../bench/CONTRACTS-ekbloom.md) (version 1 for
+E1/E2, version 2 §9 for E3), and the plan is
+[`docs/EKBLOOM-PLAN.md`](EKBLOOM-PLAN.md).
+
+* **What ran.** `EKB-E1` (boundary, exactness, resource bound) passed on the
+  pinned crate: every object of both declared containers restored byte-exactly,
+  the crate's own deep verifier accepted every container, no object was refused
+  for `memory_bound`, and no court limit was raised. Receipt
+  `bench/receipts/ekbloom-20261113T081205Z.json` (stamp `20261113T081205Z`,
+  WeftFS `bc75d63b68e8`).
+* **E2 (space) lost.** EKBLOOM's aggregate `.ekb` container is materially larger
+  than the shipped planner's own footprint for the same bytes, with no per-object
+  win on the declared class-sampled set; the receipt publishes the aggregates,
+  the per-object table and the ratio. Receipt
+  `bench/receipts/ekbloom-space-20261113T081552Z.json` (stamp
+  `20261113T081552Z`, WeftFS `f64287c95475`).
+* **E3 (bounded random access) lost on both declared conditions.** Its retained
+  footprint was larger than the shipped mode-15 tiled representation (though
+  smaller than the raw baseline), and its pooled p95 was far outside the
+  tolerance borrowed from `bench/CONTRACTS-context-advantage.md` §3 C2, even
+  though it was faster than the tiled store on that statistic. The bounded-step
+  mechanism itself was real: the in-memory `Engine` probe decoded every request
+  exactly with no positioning-bound violation. A working mechanism is not a
+  portfolio win, and the results document says so. Receipt
+  `bench/receipts/ekbloom-read-20261113T083231Z.json` (stamp
+  `20261113T083231Z`, WeftFS `ef2aa0a3a21a`).
+* **The §4.0 prediction was confirmed on the measured axes.** EKBLOOM lost space
+  and did not produce a portfolio win on the one axis it was allowed to win. The
+  decode and sequential predictions were never tested because retirement fired
+  first, and they are not claimed either way.
+* **Retirement under plan §8.2.** Both portfolio axes are lost, so the line
+  retires: no payload mode, no planner slot, no `ekbloom` dependency. No format,
+  wire value, cost row, conformance vector, store path or shipped source file
+  references the experiment. The harness, runner, contract, plan, receipts and
+  results document stay as the reproduction path.
+* **Dependency graph verified, not asserted.** At `563348e`, inside the rust
+  court, `cargo tree -e normal --offline` and
+  `cargo metadata --format-version 1 --offline` were run. `cargo tree -e normal` contains no `ekbloom`, and `cargo metadata` contains no
+  `ekbloom`. The harness
+  crate is excluded from the workspace in the root `Cargo.toml`.
+* **E4 and E5 were not run.** `EKB-E4` (whole-object decode) and `EKB-E5`
+  (write pause) are conditional on an E2/E3 win; they were skipped by the
+  retirement rule and remain unmeasured. `EKB-E6` and the Go/vector work were
+  not attempted. No receipt, partial run or number implies a pass or a failure
+  for them.
+* **No shipped code or format changed**, so `scripts/verify-all.sh` was **not**
+  rerun and the cited aggregate is unchanged
+  (`bench/receipts/verify-20261113T033408Z.json`). The only host gates run were
+  `scripts/perf_numbers.py --check` and `scripts/check-claims.sh`, both after
+  regeneration; the dependency check ran in the rust court.
+* **Claims and numbers.** The verdict claims are in `docs/claims.json` with the
+  three receipt stamps and revisions; the published figures are generated from
+  the receipts by `scripts/perf_numbers.py` and catalogued in
+  [`docs/PERF-NUMBERS.md`](PERF-NUMBERS.md). No number in the results document
+  is hand-written.
+* **Residual.** One host, one local POSIX backend, warm page cache and a
+  process-cold first pass; no fleet, cloud, media, power-loss, GPU or serving
+  claim. No mature filesystem was measured (rule 13). The contract's stated
+  expected sample counts did not match the achieved counts because its own
+  `L >= len` rule excludes rank-1 tensors from the larger region classes; the
+  gate uses the pooled p95 and is unaffected, and the receipt records the
+  arithmetic.

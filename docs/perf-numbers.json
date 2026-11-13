@@ -49,6 +49,10 @@
   {
    "id": "context-advantage-s3",
    "title": "Context Advantage Court, second backend (R29): one loopback MinIO process, arms N/M/W, seven interleaved repetitions"
+  },
+  {
+   "id": "ekbloom",
+   "title": "EKBLOOM trial (EKB-E1/E2/E3): retired, retained receipts"
   }
  ],
  "numbers": [
@@ -7364,6 +7368,707 @@
    "stamp": "20261113T073016Z",
    "revision_path": "environment.revisions.WeftFS",
    "revision": "ad263816cbbc4965471c159b4bf783a15d48650c"
+  },
+  {
+   "key": "ekb.e1.objects",
+   "label": "E1 objects round-tripped",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-20261113T081205Z.json",
+   "path": "summary.objects",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081205Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "bc75d63b68e87de8ca60dd1703d9c8121e90af93"
+  },
+  {
+   "key": "ekb.e1.exact",
+   "label": "E1 objects restored byte-exactly",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-20261113T081205Z.json",
+   "path": "summary.exact_objects",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081205Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "bc75d63b68e87de8ca60dd1703d9c8121e90af93"
+  },
+  {
+   "key": "ekb.e1.refused",
+   "label": "E1 objects refused for memory_bound",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-20261113T081205Z.json",
+   "path": "summary.refused_objects",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081205Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "bc75d63b68e87de8ca60dd1703d9c8121e90af93"
+  },
+  {
+   "key": "ekb.e1.logical_bytes",
+   "label": "E1 declared element bytes",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-20261113T081205Z.json",
+   "path": "selection.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081205Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "bc75d63b68e87de8ca60dd1703d9c8121e90af93"
+  },
+  {
+   "key": "ekb.e1.peak_kib",
+   "label": "E1 process peak RSS",
+   "unit": "KiB",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-20261113T081205Z.json",
+   "path": "summary.process_peak_rss_kib",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081205Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "bc75d63b68e87de8ca60dd1703d9c8121e90af93"
+  },
+  {
+   "key": "ekb.e2.objects",
+   "label": "E2 objects (both containers)",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "selection.objects",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.logical_bytes",
+   "label": "E2 raw element bytes",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.raw_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.body",
+   "label": "E2 aggregate EKBLOOM container bytes",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.body_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.planned",
+   "label": "E2 aggregate shipped-planner bytes",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.planned_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.losses",
+   "label": "E2 per-object losses",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.per_object_losses",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.wins",
+   "label": "E2 per-object wins",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.per_object_wins",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.exact",
+   "label": "E2 objects exact on both arms",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.objects_exact_both_arms",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.largest_loss",
+   "label": "E2 largest single per-object loss",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+   "path": "aggregate.largest_loss.bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T081552Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "f64287c95475fc87c592e232c0a3abd8c3dc1be3"
+  },
+  {
+   "key": "ekb.e2.ratio",
+   "label": "E2 EKBLOOM bytes over shipped-planner bytes",
+   "unit": "\u00d7",
+   "group": "ekbloom",
+   "format": "fixed:6",
+   "expr": "{ekb.e2.body} / {ekb.e2.planned}"
+  },
+  {
+   "key": "ekb.e2.over_pct",
+   "label": "E2 EKBLOOM bytes above the shipped planner",
+   "unit": "%",
+   "group": "ekbloom",
+   "format": "fixed:2",
+   "expr": "({ekb.e2.body} - {ekb.e2.planned}) / {ekb.e2.planned} * 100"
+  },
+  {
+   "key": "ekb.e3.objects",
+   "label": "E3 selected objects",
+   "unit": "objects",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "selection.objects",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.logical_bytes",
+   "label": "E3 declared logical bytes",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "selection.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.w_foot",
+   "label": "E3 W (mode-15 tiles) retained footprint",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "footprint.W.retained_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.a_foot",
+   "label": "E3 A (raw + manifest + index) retained footprint",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "footprint.A.retained_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.e_foot",
+   "label": "E3 E (EKBLOOM containers) retained footprint",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "footprint.E.retained_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.p95_w",
+   "label": "E3 W pooled p95",
+   "unit": "ns",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "gate.p95_W_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.p95_a",
+   "label": "E3 A pooled p95",
+   "unit": "ns",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "gate.p95_A_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.p95_e",
+   "label": "E3 E pooled p95",
+   "unit": "ns",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "gate.p95_E_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.p95_best",
+   "label": "E3 best baseline pooled p95",
+   "unit": "ns",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "gate.p95_best_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.samples_1",
+   "label": "E3 reads in the 1 B class",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "sample_counts.actual_by_class.1",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.samples_4096",
+   "label": "E3 reads in the 4,096 B class",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "sample_counts.actual_by_class.4096",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.samples_65536",
+   "label": "E3 reads in the 65,536 B class",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "sample_counts.actual_by_class.65536",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.samples_pooled",
+   "label": "E3 pooled reads per arm",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "sample_counts.actual_pooled",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.exact_w",
+   "label": "E3 exact reads, W",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "exactness.W.exact",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.exact_a",
+   "label": "E3 exact reads, A",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "exactness.A.exact",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.exact_e",
+   "label": "E3 exact reads, E",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "exactness.E.exact",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.backend_w_bytes",
+   "label": "E3 backend bytes per read, W",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "backend.W.bytes_per_read",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.backend_a_bytes",
+   "label": "E3 backend bytes per read, A",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "backend.A.bytes_per_read",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.backend_e_bytes",
+   "label": "E3 backend bytes per read, E",
+   "unit": "B",
+   "group": "ekbloom",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "backend.E.bytes_per_read",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.backend_w_reqs",
+   "label": "E3 backend requests per read, W",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "backend.W.requests_per_read",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.backend_a_reqs",
+   "label": "E3 backend requests per read, A",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "backend.A.requests_per_read",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.backend_e_reqs",
+   "label": "E3 backend requests per read, E",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "backend.E.requests_per_read",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.e_over_w",
+   "label": "E3 E footprint over W footprint",
+   "unit": "\u00d7",
+   "group": "ekbloom",
+   "format": "fixed:5",
+   "expr": "{ekb.e3.e_foot} / {ekb.e3.w_foot}"
+  },
+  {
+   "key": "ekb.e3.e_over_a",
+   "label": "E3 E footprint over A footprint",
+   "unit": "\u00d7",
+   "group": "ekbloom",
+   "format": "fixed:5",
+   "expr": "{ekb.e3.e_foot} / {ekb.e3.a_foot}"
+  },
+  {
+   "key": "ekb.e3.p95_e_over_best",
+   "label": "E3 E p95 over the best baseline p95",
+   "unit": "\u00d7",
+   "group": "ekbloom",
+   "format": "fixed:2",
+   "expr": "{ekb.e3.p95_e} / {ekb.e3.p95_best}"
+  },
+  {
+   "key": "ekb.e3.p95_w_over_e",
+   "label": "E3 W p95 over E p95",
+   "unit": "\u00d7",
+   "group": "ekbloom",
+   "format": "fixed:2",
+   "expr": "{ekb.e3.p95_w} / {ekb.e3.p95_e}"
+  },
+  {
+   "key": "ekb.e3.exact_total",
+   "label": "E3 exact reads across all three arms",
+   "unit": "reads",
+   "group": "ekbloom",
+   "format": "int",
+   "expr": "{ekb.e3.exact_w} + {ekb.e3.exact_a} + {ekb.e3.exact_e}"
+  },
+  {
+   "key": "ekb.e3.probe_req_00",
+   "label": "E3 engine-probe requests, selected tensor 00",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.0.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_01",
+   "label": "E3 engine-probe requests, selected tensor 01",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.1.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_02",
+   "label": "E3 engine-probe requests, selected tensor 02",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.2.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_03",
+   "label": "E3 engine-probe requests, selected tensor 03",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.3.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_04",
+   "label": "E3 engine-probe requests, selected tensor 04",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.4.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_05",
+   "label": "E3 engine-probe requests, selected tensor 05",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.5.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_06",
+   "label": "E3 engine-probe requests, selected tensor 06",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.6.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_07",
+   "label": "E3 engine-probe requests, selected tensor 07",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.7.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_08",
+   "label": "E3 engine-probe requests, selected tensor 08",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.8.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_09",
+   "label": "E3 engine-probe requests, selected tensor 09",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.9.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_10",
+   "label": "E3 engine-probe requests, selected tensor 10",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.10.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_11",
+   "label": "E3 engine-probe requests, selected tensor 11",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.11.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_12",
+   "label": "E3 engine-probe requests, selected tensor 12",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.12.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_req_13",
+   "label": "E3 engine-probe requests, selected tensor 13",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+   "path": "rows.13.requests",
+   "stamp_path": "stamp",
+   "stamp": "20261113T083231Z",
+   "revision_path": "revisions.weftfs",
+   "revision": "ef2aa0a3a21a7a7e88a45c85d9e8fb949672b602"
+  },
+  {
+   "key": "ekb.e3.probe_requests",
+   "label": "E3 in-memory Engine probe requests",
+   "unit": "requests",
+   "group": "ekbloom",
+   "format": "int",
+   "expr": "{ekb.e3.probe_req_00} + {ekb.e3.probe_req_01} + {ekb.e3.probe_req_02} + {ekb.e3.probe_req_03} + {ekb.e3.probe_req_04} + {ekb.e3.probe_req_05} + {ekb.e3.probe_req_06} + {ekb.e3.probe_req_07} + {ekb.e3.probe_req_08} + {ekb.e3.probe_req_09} + {ekb.e3.probe_req_10} + {ekb.e3.probe_req_11} + {ekb.e3.probe_req_12} + {ekb.e3.probe_req_13}"
   }
  ],
  "blocks": [
@@ -10572,6 +11277,230 @@
      "template": "So the design stays specified and unimplemented. The strongest statement the programme can make about hot-page representations is the one already in \u00a76.2\u2013\u00a76.3: the payload codec the wire format fixes is the cost, and on the local row it is the whole cost. If a later court measures a page-hot workload with free bytes **and** a decode-dominated critical path whose floor is inside tolerance, `raw-le-v1` becomes worth building, and its own court \u2014 design step 5 \u2014 would be the thing that decides it. Nothing in this session claims it would win."
     }
    ]
+  },
+  {
+   "id": "ekbloom-verdict",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**Verdict: retired.** Three gates ran. `EKB-E1` (boundary, exactness and resource bound) **passed** on **{{ekb.e1.exact}}/{{ekb.e1.objects}}** objects with **{{ekb.e1.refused}}** refused and no limit breach. `EKB-E2` (space) was **lost**: EKBLOOM's aggregate container is **{{ekb.e2.ratio}}\u00d7** the shipped planner's own footprint, with **{{ekb.e2.losses}}** per-object losses and **{{ekb.e2.wins}}** wins. `EKB-E3` (bounded random access) was **lost** on both declared conditions: its retained footprint is **{{ekb.e3.e_over_w}}\u00d7** the shipped tiled representation, and its pooled p95 is **{{ekb.e3.p95_e_over_best}}\u00d7** the best baseline's. Under `docs/EKBLOOM-PLAN.md` \u00a78.2, two lost portfolio axes retire the line: no payload mode, no planner slot, no `ekbloom` dependency."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "That is the whole result. The bounded-step mechanism itself worked \u2014 see \u00a75 \u2014 but a working mechanism is not a portfolio win, and this document keeps the two apart everywhere. A retire verdict is a **successful** `EKB-X22` under `docs/EKBLOOM-PLAN.md` \u00a74.8; leaving the verdict open would have been the failure mode."
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-selection",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Gate | Objects | Logical bytes | Selection rule |"
+    },
+    {
+     "template": "|---|---:|---:|---|"
+    },
+    {
+     "template": "| `EKB-E1` | {{ekb.e1.objects}} | {{ekb.e1.logical_bytes}} | every tensor of both containers, ascending name order (contract \u00a73.1) |"
+    },
+    {
+     "template": "| `EKB-E2` | {{ekb.e2.objects}} | {{ekb.e2.logical_bytes}} | every k-th tensor per `(dtype, shape)` class, `k = ceil(class_size / 8)` (contract \u00a73.2) |"
+    },
+    {
+     "template": "| `EKB-E3` | {{ekb.e3.objects}} | {{ekb.e3.logical_bytes}} | the lexicographically smallest tensor per shape class, both containers independently (contract \u00a79.2) |"
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-e1",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Check | Result | Evidence |"
+    },
+    {
+     "template": "|---|---|---|"
+    },
+    {
+     "template": "| `C1_build` | pass | the pinned crate built from the court's lock; no substitution |"
+    },
+    {
+     "template": "| `C2_round_trip` | pass | {{ekb.e1.exact}}/{{ekb.e1.objects}} objects restored byte-exactly; {{ekb.e1.refused}} refused for `memory_bound` |"
+    },
+    {
+     "template": "| `C3_upstream_verifier` | pass | `ekbloom::verify_deep` accepted every container the crate wrote |"
+    },
+    {
+     "template": "| `C4_resource` | pass | no cgroup OOM kill, no `pids.events max` event, no limit raised; process peak {{ekb.e1.peak_kib}} KiB |"
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-e2",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Measure | EKBLOOM | Shipped planner | Ratio |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| aggregate retained bytes | {{ekb.e2.body}} | {{ekb.e2.planned}} | {{ekb.e2.ratio}}\u00d7 |"
+    },
+    {
+     "template": "| raw element bytes (reference floor) | \u2014 | {{ekb.e2.logical_bytes}} | \u2014 |"
+    },
+    {
+     "template": "| per-object wins / losses | {{ekb.e2.wins}} / {{ekb.e2.losses}} | \u2014 | \u2014 |"
+    },
+    {
+     "template": "| largest single per-object loss | {{ekb.e2.largest_loss}} | \u2014 | \u2014 |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "EKBLOOM's aggregate body is **{{ekb.e2.over_pct}} %** above the shipped planner's footprint. Both arms restored every object byte-exactly ({{ekb.e2.exact}}/{{ekb.e2.objects}}), so this is a size loss, not an exactness failure."
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-e3-footprint",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Arm | Retained footprint |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| W \u2014 WeftFS mode-15 `TENSOR_TILED` region reads | {{ekb.e3.w_foot}} B |"
+    },
+    {
+     "template": "| A \u2014 raw payload + manifest + index | {{ekb.e3.a_foot}} B |"
+    },
+    {
+     "template": "| E \u2014 EKBLOOM `.ekb` containers | {{ekb.e3.e_foot}} B |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "G2 requires E strictly below **both** W and A. E is **{{ekb.e3.e_over_w}}\u00d7** W (larger) and **{{ekb.e3.e_over_a}}\u00d7** A (smaller). The condition fails because the shipped tiled representation, not the raw baseline, is the smaller footprint."
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-e3-latency",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Arm | Pooled p95 |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| W | {{ekb.e3.p95_w}} ns |"
+    },
+    {
+     "template": "| A | {{ekb.e3.p95_a}} ns |"
+    },
+    {
+     "template": "| E | {{ekb.e3.p95_e}} ns |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "With `p95_best = min(p95_W, p95_A)` = {{ekb.e3.p95_best}} ns (A), E's p95 is **{{ekb.e3.p95_e_over_best}}\u00d7** the best baseline \u2014 far outside the borrowed tolerance \u2014 while still being **{{ekb.e3.p95_w_over_e}}\u00d7** faster than W on the same statistic. The second fact is real and does not satisfy the gate: W is not the p95 baseline."
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-samples",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Measure | Value |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| timed reads per arm | {{ekb.e3.samples_pooled}} |"
+    },
+    {
+     "template": "| reads in the 1 B / 4,096 B / 65,536 B class | {{ekb.e3.samples_1}} / {{ekb.e3.samples_4096}} / {{ekb.e3.samples_65536}} |"
+    },
+    {
+     "template": "| exact reads, W / A / E | {{ekb.e3.exact_w}} / {{ekb.e3.exact_a}} / {{ekb.e3.exact_e}} |"
+    },
+    {
+     "template": "| exact reads, all arms together | {{ekb.e3.exact_total}} |"
+    },
+    {
+     "template": "| backend bytes per read, W / A / E | {{ekb.e3.backend_w_bytes}} / {{ekb.e3.backend_a_bytes}} / {{ekb.e3.backend_e_bytes}} |"
+    },
+    {
+     "template": "| backend requests per read, W / A / E | {{ekb.e3.backend_w_reqs}} / {{ekb.e3.backend_a_reqs}} / {{ekb.e3.backend_e_reqs}} |"
+    },
+    {
+     "template": "| in-memory `Engine` probe requests, every one exact | {{ekb.e3.probe_requests}} |"
+    }
+   ]
+  },
+  {
+   "id": "ekbloom-losses",
+   "file": "bench/RESULTS-ekbloom.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**`EKB-E2` is lost on space.** EKBLOOM's aggregate container is **{{ekb.e2.ratio}}\u00d7** the shipped planner's footprint and loses **every** object: **{{ekb.e2.losses}}** losses, **{{ekb.e2.wins}}** wins, and **{{ekb.e2.largest_loss}} B** at the single worst object (the Instruct embedding). A tie would also have been a loss for portfolio purposes; this is not even a tie."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**`EKB-E3` is lost on footprint.** EKBLOOM's retained footprint was **{{ekb.e3.e_over_w}}\u00d7 W** \u2014 larger than WeftFS mode-15 tiling \u2014 and **{{ekb.e3.e_over_a}}\u00d7 A**, smaller only than the raw baseline. EKBLOOM's own claim is a footprint claim at non-evicting hot access, so losing footprint to the representation WeftFS already ships removes the premise of the claim on this corpus."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**`EKB-E3` is lost on p95.** EKBLOOM's pooled p95 was **{{ekb.e3.p95_e_over_best}}\u00d7 A**, the raw-plus-manifest-plus-index baseline, against the declared non-inferiority tolerance, while being **{{ekb.e3.p95_w_over_e}}\u00d7 faster than W** on the same statistic. That is why the baseline matters: the application-level baseline, not the tiled store, is the thing a bounded small read has to beat or match, and it does not."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**E's read is not free.** E fetched **{{ekb.e3.backend_e_bytes}} B** per read over **{{ekb.e3.backend_e_reqs}}** requests against A's **{{ekb.e3.backend_a_bytes}} B** over **{{ekb.e3.backend_a_reqs}}**; its container open validates by streaming the body, and that I/O is reported separately and excluded from read latency by contract \u00a79.4. Neither fact re-frames the gate; both explain why an encoded bounded read is slower than a direct `pread` of the requested range."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "**The mechanism itself was real.** The in-memory `Engine` probe decoded **{{ekb.e3.probe_requests}}** requests exactly \u2014 every one of them \u2014 with **no positioning-bound violation**: the receipt's `C_engine_bound` check passes, and for each request `read_counted_steps` stayed within `worst_case_steps_for`. EKBLOOM's bounded step count is a genuine property of the codec. **The mechanism working is not the same as the portfolio winning**, and this document does not convert one into the other: the bounded read was exact and bounded, and it was still larger than the tiled representation and far slower than the raw baseline."
+    }
+   ]
+  },
+  {
+   "id": "perf-catalog-ekbloom",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "ekbloom"
   }
  ]
 }

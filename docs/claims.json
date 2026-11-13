@@ -11568,5 +11568,137 @@
   ],
   "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
   "kind": "present"
+ },
+ {
+  "id": "ekb_e1_pass",
+  "claim": "EKB-E1 (boundary, exactness and resource bound) passed on the pinned crate, on every object of the declared corpus.",
+  "value": "E1 passed",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/ekbloom-20261113T081205Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "ekb_e2_loss",
+  "claim": "EKB-E2 (space) was lost: the published aggregate body is larger than the shipped planner's footprint and no object won.",
+  "value": "E2 lost",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/ekbloom-space-20261113T081552Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "ekb_e3_loss",
+  "claim": "EKB-E3 (bounded random access) was lost on footprint and on p95, both declared conditions.",
+  "value": "E3 lost",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "ekb_e4_e5_not_run",
+  "claim": "EKB-E4 and EKB-E5 were skipped by the retirement rule, not evaluated.",
+  "value": "E4/E5 not run",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "ekb_e4_e5_unmeasured",
+  "claim": "EKB-E4 and EKB-E5 remain unmeasured, with no receipt and no implied pass or failure.",
+  "value": "remain unmeasured",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "ekb_prediction_confirmed",
+  "claim": "The docs/EKBLOOM-PLAN.md §4.0 pre-registered prediction is recorded as confirmed on the axes the trial measured.",
+  "value": "§4.0 prediction was confirmed",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "ekb_retired",
+  "claim": "The line retires under docs/EKBLOOM-PLAN.md §8.2: no payload mode, no planner slot, no ekbloom dependency.",
+  "value": "no payload mode, no planner slot, no `ekbloom` dependency",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/ekbloom-read-20261113T083231Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "ekb_no_shipped_dependency",
+  "claim": "The retired crate is absent from the shipped dependency graph, verified by running the resolvers in the rust court.",
+  "value": "`cargo tree -e normal` contains no `ekbloom`",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "ekb_not_core_prerequisite",
+  "claim": "EKBLOOM is explicitly not a core prerequisite for any programme item.",
+  "value": "EKBLOOM is **not** a core prerequisite",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/EKBLOOM-PLAN.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "ekb_e4_not_passed_absent",
+  "claim": "No document claims EKB-E4 passed.",
+  "value": "E4 passed",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "absent"
+ },
+ {
+  "id": "ekb_e5_not_passed_absent",
+  "claim": "No document claims EKB-E5 passed.",
+  "value": "E5 passed",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "absent"
+ },
+ {
+  "id": "ekb_filesystem_comparison_absent",
+  "claim": "No document compares EKBLOOM against a mature filesystem (rule 13).",
+  "value": "EKBLOOM is faster than ext4",
+  "locations": [
+   "bench/RESULTS-ekbloom.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "absent"
  }
 ]
