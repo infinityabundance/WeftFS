@@ -393,31 +393,31 @@ loss (efficiency falls with N). Receipt
 <!-- BEGIN GENERATED:perf-catalog-verification (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `verify.courts` | 46 | courts | Courts in the cited aggregate | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
-| `verify.passed` | 46 | courts | Courts passed | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
-| `verify.failed` | 0 | courts | Courts failed | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
-| `verify.skipped` | 0 | courts | Courts skipped | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
-| `verify.stamp` | 20261113T022751Z | text | Aggregate stamp | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
-| `verify.revision` | e67e63186456d8d0915204baa19d65013a6bb281 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.courts` | 47 | courts | Courts in the cited aggregate | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
+| `verify.passed` | 47 | courts | Courts passed | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
+| `verify.failed` | 0 | courts | Courts failed | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
+| `verify.skipped` | 0 | courts | Courts skipped | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
+| `verify.stamp` | 20261113T033408Z | text | Aggregate stamp | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
+| `verify.revision` | 52da9888f3726e6af5c364af7707fd98574fc954 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,046 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,054 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
-| `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
-| `tests.rust_store_binaries` | 170 | tests | Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
-| `tests.rust_fuse_passed` | 850 | tests | FUSE all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
-| `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
-| `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
-| `tests.rust_codec_passed` | 290 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
+| `tests.rust_store_binaries` | 170 | tests | Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
+| `tests.rust_fuse_passed` | 850 | tests | FUSE all-targets tests passed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
+| `tests.rust_fuse_failed` | 0 | tests | FUSE all-targets tests failed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
+| `tests.rust_fuse_ignored` | 2 | tests | FUSE all-targets tests ignored | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
+| `tests.rust_codec_passed` | 290 | tests | WeftCodec all-targets tests passed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |
 | `artifacts.wheel_bytes` | 115,851 | B | wheel size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.wheel_sha` | 9b6ff9bbfc92a195408bf411661208a92c6a739d6f7f1b0b8207bb5304464928 | text | wheel sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_bytes` | 156,977 | B | sdist size | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
 | `artifacts.sdist_sha` | cc86abd96365390259b63d585b982698eee4ddafa24ec4ea69ea170a5c388295 | text | sdist sha256 | `bench/receipts/release-artifacts-20261112T233126Z.json` | 20261112T233126Z | — |
-| `build.wheel_sha` | 92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
-| `build.wheel_bytes` | 115,889 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
-| `build.sdist_sha` | 773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
-| `build.sdist_bytes` | 156,971 | B | sdist size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.wheel_sha` | 92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06 | — | 1.4.1 wheel sha256 (GitHub release asset build) | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.wheel_bytes` | 115,889 | B | 1.4.1 wheel size (GitHub release asset build) | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.sdist_sha` | 773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2 | — | 1.4.1 sdist sha256 (GitHub release asset build) | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
+| `build.sdist_bytes` | 156,971 | B | 1.4.1 sdist size (GitHub release asset build) | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.pypi.wheel_sha` | 41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6 | — | wheel sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.pypi.wheel_bytes` | 115,851 | B | wheel size | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
 | `live.pypi.sdist_sha` | 2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0 | — | sdist sha256 | `bench/receipts/release-artifacts-20261113T011500Z.json` | 20261113T011500Z | 610ce131598b |
@@ -435,6 +435,34 @@ loss (efficiency falls with N). Receipt
 | `tests.v140.rust_fuse_failed` | 0 | tests | v1.4.0 FUSE all-targets failed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
 | `tests.v140.rust_fuse_ignored` | 2 | tests | v1.4.0 FUSE all-targets ignored | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
 | `tests.v140.rust_codec_passed` | 290 | tests | v1.4.0 Rust codec all-targets passed | `bench/receipts/verify-20261112T223540Z.tests.json` | 68f10f4da63532d2526d82feb5fc7727fc17573278a0d05dd317559c29cf84fa | bench/receip |
+| `verify.v141.courts` | 46 | courts | v1.4.1 Courts in the cited aggregate | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.v141.passed` | 46 | courts | v1.4.1 Courts passed | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.v141.failed` | 0 | courts | v1.4.1 Courts failed | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.v141.skipped` | 0 | courts | v1.4.1 Courts skipped | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.v141.stamp` | 20261113T022751Z | text | v1.4.1 Aggregate stamp | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `verify.v141.revision` | e67e63186456d8d0915204baa19d65013a6bb281 | text | v1.4.1 Aggregate WeftFS revision | `bench/receipts/verify-20261113T022751Z.json` | 20261113T022751Z | e67e63186456 |
+| `tests.v141.rust_store_passed` | 807 | tests | v1.4.1 Rust all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.v141.rust_store_binaries` | 170 | tests | v1.4.1 Rust all-targets test-result lines (one per binary) | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.v141.rust_fuse_passed` | 850 | tests | v1.4.1 FUSE all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.v141.rust_fuse_failed` | 0 | tests | v1.4.1 FUSE all-targets tests failed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.v141.rust_fuse_ignored` | 2 | tests | v1.4.1 FUSE all-targets tests ignored | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `tests.v141.rust_codec_passed` | 290 | tests | v1.4.1 WeftCodec all-targets tests passed | `bench/receipts/verify-20261113T022751Z.tests.json` | da84a5061ff4bc25c205c2d5817f9f9f63a6978824e374a7cb4d0a60727d2c0e | bench/receip |
+| `artifacts142.wheel_sha` | 787cc6ca203ea6a6c6285551281833de44b826946968ba3faf3b3d2d9ef2b022 | text | v1.4.2 wheel sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `artifacts142.wheel_bytes` | 115,685 | B | v1.4.2 wheel size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `artifacts142.sdist_sha` | ab214bffced0312f0f50fb3a1929a68c2163e32493f9a159821a9ea78b39ae78 | text | v1.4.2 sdist sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `artifacts142.sdist_bytes` | 156,563 | B | v1.4.2 sdist size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.first.wheel_sha` | 74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176 | text | 1.4.1 first-build wheel sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.first.wheel_bytes` | 115,540 | B | 1.4.1 first-build wheel size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.first.sdist_sha` | 9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0 | text | 1.4.1 first-build sdist sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.first.sdist_bytes` | 156,293 | B | 1.4.1 first-build sdist size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.second.wheel_sha` | 92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06 | text | 1.4.1 second-build wheel sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.second.wheel_bytes` | 115,889 | B | 1.4.1 second-build wheel size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.second.sdist_sha` | 773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2 | text | 1.4.1 second-build sdist sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.second.sdist_bytes` | 156,971 | B | 1.4.1 second-build sdist size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.pypi.wheel_sha` | 73cd3422ec7267b9876ad48458682e6d7dede24a53b4c33c76d50dc8613b4f32 | text | 1.4.1 pypi-build wheel sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.pypi.wheel_bytes` | 115,889 | B | 1.4.1 pypi-build wheel size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.pypi.sdist_sha` | 93a0b8c8c320f8d3316152c2bdc1b797f4869fcb2116dbbb825953b8942286a1 | text | 1.4.1 pypi-build sdist sha256 | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
+| `build141.pypi.sdist_bytes` | 157,012 | B | 1.4.1 pypi-build sdist size | `bench/receipts/release-artifacts-20261113T045609Z.json` | 20261113T045609Z | 52da9888f372 |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Historical quotations

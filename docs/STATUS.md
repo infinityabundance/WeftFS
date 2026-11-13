@@ -1,15 +1,15 @@
-# Implementation status — 2026-11-13 (v1.4.1 released)
+# Implementation status — 2026-11-13 (v1.4.2 released)
 
 <!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
-**At a glance (generated from receipts).** v1.4.1 is released. The cited aggregate is
-`bench/receipts/verify-20261113T022751Z.json` — **46/46** courts pass,
-0 failed, 0 skipped — at WeftFS `e67e63186456d8d0915204baa19d65013a6bb281`.
+**At a glance (generated from receipts).** v1.4.2 is released. The cited aggregate is
+`bench/receipts/verify-20261113T033408Z.json` — **47/47** courts pass,
+0 failed, 0 skipped — at WeftFS `52da9888f3726e6af5c364af7707fd98574fc954`.
 The shipped planned write is **974.1 ms** least-contended /
 1,175.3 ms p50 at **282,106,049 B** (33.53 % below
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,046** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,054** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -23,8 +23,9 @@ receipts by `scripts/perf_numbers.py` into the block above and into
 when any generated number drifts from its receipt. Everything below the block
 is a chronological log of subphases, retained verbatim: each entry is a
 **historical quotation** written at the receipt and revision it names, not a
-statement about the current tree. The v1.4.1 note with every loss and every
-non-claim is [`docs/RELEASE-v1.4.1.md`](RELEASE-v1.4.1.md); the previous note is
+statement about the current tree. The v1.4.2 note with every loss and every
+non-claim is [`docs/RELEASE-v1.4.2.md`](RELEASE-v1.4.2.md); the previous notes are
+[`docs/RELEASE-v1.4.1.md`](RELEASE-v1.4.1.md) and
 [`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md), then
 [`docs/RELEASE-v1.3.0.md`](RELEASE-v1.3.0.md),
 [`docs/RELEASE-v1.2.0.md`](RELEASE-v1.2.0.md) and
@@ -9979,3 +9980,49 @@ write is now durability-bound, not encode-bound.
     `bench/receipts/release-artifacts-20261113T032500Z.json`. The aggregate
     receipt for the release tree is `verify-20261113T022751Z.json`
     (**46/46**, at `e67e631`).
+
+- 2026-11-13 (v1.4.2, packaging correctness): the wheel long description no
+  longer describes its own publication. `python/README.md` is baked into the
+  wheel at build time, and every release so far wrote a block about its own
+  upload state — the live 1.4.0 text said PyPI served 1.2.0 and that 1.4.0 was
+  "not uploaded"; the live 1.4.1 text said PyPI served 1.4.0 and pointed
+  elsewhere for the 1.4.1 hashes. That sentence is false the instant the
+  artifact is uploaded, so the class is removed, not reworded.
+  * `python/README.md`: install commands are unpinned; one stable paragraph says
+    the package is published on PyPI and crates.io and sends the reader to the
+    project pages and `docs/RELEASE-v*.md` for the current version, sizes and
+    hashes; the file names no version and no digest. The
+    `python-readme-current` generated block and its manifest entry are deleted.
+  * `scripts/check_long_description.py` + `scripts/check_long_description_court.sh`
+    fail closed on version-pinned installs, local-artifact/wheel installs,
+    "PyPI serves …", upload-state claims, a version literal bound to
+    `weftcodec`, and any 64-hex digest; the three stable statements are
+    required. Registered in `scripts/verify-all.sh` as the `long_description`
+    court with the aggregate's explicit skip semantics. Demonstration (old text
+    fails, new text passes) in
+    `bench/receipts/long-description-court-20261113T045732Z.json`.
+  * 1.4.1 reality recorded: `weftcodec 1.4.1` exists as three builds —
+    `74779b5c…` (named at tag `v1.4.1`), `92efd39d…` (GitHub release assets) and
+    `73cd3422…` (the PyPI wheel; sdist `93a0b8c8…`, uploaded
+    2026-11-13T03:29Z). Python builds here are not bit-reproducible. Digests,
+    sizes, build sources and fetch times are in
+    `bench/receipts/release-artifacts-20261113T045609Z.json`, and both release
+    notes print a three-build table instead of one "the" digest.
+  * Versions 1.4.2 in `Cargo.toml`, `WeftCodec/Cargo.toml`,
+    `python/pyproject.toml`, `python/weftcodec/__init__.py` and the Go
+    provenance tool version. Wheel and sdist built once in the python court and
+    `twine check`-clean; the wheel `METADATA` description is byte-identical to
+    `python/README.md`. `cargo publish --dry-run` packages and verifies
+    `weftcodec 1.4.2`; the `weftfs` dry run cannot resolve it from the index
+    until it is published (same publish-order blocker as 1.4.0/1.4.1).
+  * Aggregate: `bench/receipts/verify-20261113T033408Z.json` — 47/47 courts
+    pass, 0 failed, 0 skipped, at WeftFS `52da9888f372` (stamp
+    20261113T033408Z, review of the release-candidate tree). `perf_numbers`
+    `--check`, claims, spec drift and the conformance manifest/coverage are
+    green on the final documentation tree; the docs commit follows the measured
+    tree and changes no code.
+  * Not claimed: no format, protocol, code path or measurement changed; no
+    upload of 1.4.2 to PyPI or crates.io was performed by this session; the
+    1.4.0/1.4.1 descriptions stay wrong until 1.4.2 is uploaded; the guard is a
+    rule set, not a proof; no power-loss, media, fleet, cloud, GPU or live
+    Azure/AWS/GCS claim.

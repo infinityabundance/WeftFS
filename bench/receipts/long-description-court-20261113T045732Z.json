@@ -1,0 +1,87 @@
+{
+ "schema": "weft.long_description_court.v1",
+ "generated_utc": "20261113T045732Z",
+ "label": "The long-description guard rejects the pre-fix python/README.md and accepts the corrected one",
+ "environment": {
+  "court": "host-only (no Docker, no compilation, no network), the same contract as the claims, conformance manifest and perf_numbers checks",
+  "python": "Python 3.14.10",
+  "limits": "not a container court; the check reads one file"
+ },
+ "checker": {
+  "file": "scripts/check_long_description.py",
+  "sha256": "723d7e892b1a5e7125ca37461ec6bbac801fedb4edb74eff29406425df1d9e8a",
+  "rules": [
+   "pinned-install",
+   "local-artifact-install",
+   "wheel-path-install",
+   "registry-serves",
+   "upload-state",
+   "package-version",
+   "digest-literal"
+  ],
+  "required": [
+   "unpinned-install",
+   "pypi-project-url",
+   "crates-crate-url"
+  ]
+ },
+ "demonstration": {
+  "old_text": {
+   "source": "git show eee9a23:python/README.md (the file before commit f28335d)",
+   "sha256": "f58209c301987a6497998d34210dab3feeb6dd08ee89c5048a4abf27c3de9cf2",
+   "command": "python3 scripts/check_long_description.py --file .docker-cache/old-readme.md",
+   "exit_code": 1,
+   "violations": 12,
+   "violation_rules": [
+    "pinned-install",
+    "registry-serves",
+    "package-version",
+    "digest-literal",
+    "missing-pypi-project-url",
+    "missing-crates-crate-url"
+   ],
+   "output_file": "bench/receipts/long-description-court-20261113T045732Z.old.log"
+  },
+  "new_text": {
+   "source": "python/README.md at WeftFS 52da9888f3726e6af5c364af7707fd98574fc954",
+   "sha256": "3e589c7c40e9cc067faf1199f14bff52e542d737f8b713af0da64ce95a6b2fee",
+   "command": "bash scripts/check_long_description_court.sh",
+   "exit_code": 0,
+   "violations": 0,
+   "output": "long_description: OK (python/README.md, 239 lines, 7 rules, 3 required statements)",
+   "output_file": "bench/receipts/long-description-court-20261113T045732Z.new.log"
+  }
+ },
+ "built_artifact_check": {
+  "wheel": "python/dist/weftcodec-1.4.2-py3-none-any.whl",
+  "wheel_metadata_description_sha256": "3e589c7c40e9cc067faf1199f14bff52e542d737f8b713af0da64ce95a6b2fee",
+  "python_readme_sha256": "3e589c7c40e9cc067faf1199f14bff52e542d737f8b713af0da64ce95a6b2fee",
+  "byte_identical": true,
+  "contains_pypi_serves": false,
+  "contains_pinned_install": false,
+  "contains_64_hex_digest": false
+ },
+ "live_artifact_check": {
+  "source": "https://pypi.org/pypi/weftcodec/1.4.1/json (the artifact readers currently get)",
+  "fetched_utc": "2026-11-13T04:56:06Z",
+  "wheel_sha256": "73cd3422ec7267b9876ad48458682e6d7dede24a53b4c33c76d50dc8613b4f32",
+  "long_description_contains_pypi_serves": true,
+  "long_description_contains_pinned_install": true,
+  "note": "the live 1.4.1 description would fail the guard; the guard's job is to stop that class from being written again"
+ },
+ "registered_court": {
+  "file": "scripts/verify-all.sh",
+  "label": "long_description",
+  "wrapper": "scripts/check_long_description_court.sh",
+  "skip_semantics": "exit 78 with one printed 'long_description: skip <reason>' when the host has no Python >= 3.8; the aggregate records a skip, never a pass"
+ },
+ "aggregate": {
+  "receipt": "bench/receipts/verify-20261113T033408Z.json",
+  "long_description_court": "pass",
+  "note": "the aggregate that ran before this demonstration receipt was written; the court result is unchanged because the check reads python/README.md, which this receipt does not modify"
+ },
+ "not_claimed": [
+  "the guard is a rule set, not a proof: it rejects the patterns listed above, not every possible false sentence about the project",
+  "no network check is performed by the court; the live 1.4.1 observation above was made once, by hand, and is recorded with its fetch time"
+ ]
+}

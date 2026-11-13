@@ -79,7 +79,9 @@ excluded from every claim.
   only as a historical quotation naming its receipt stamp and revision.
 * `python/README.md` no longer says PyPI serves 1.2.0 or that 1.4.0 was not
   uploaded. 1.4.0 is live; the file now says what PyPI serves and where the
-  artifact hashes live.
+  artifact hashes live. *(Superseded by v1.4.2, which removes every
+  version-specific publication statement from the long description: an artifact
+  cannot describe its own upload state.)*
 * `docs/RELEASE-v1.4.0.md` no longer says "Nothing was uploaded"; the live
   registry state is recorded there and in the artifact receipt.
 * `scripts/publish-pypi.sh` no longer deletes an operator-supplied
@@ -136,7 +138,7 @@ Rust all-targets **807** passed / 0 failed; FUSE all-targets
 **850** passed / 0 failed / 2 ignored
 (the two pre-existing kernel/`CAP_SETUID` tests); WeftCodec **290** passed.
 The conformance manifest holds **420** vectors (aggregate
-`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); the claims manifest holds **1,046** entries and
+`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); the claims manifest holds **1,054** entries and
 `scripts/check-claims.sh` passes; `scripts/perf_numbers.py --check` passes.
 <!-- END GENERATED:release-v141-verify -->
 
@@ -144,17 +146,19 @@ The conformance manifest holds **420** vectors (aggregate
 
 <!-- BEGIN GENERATED:release-v141-artifacts (scripts/perf_numbers.py) -->
 Built in the python court from the release tree and checked with `twine check`
-(both pass):
+(both pass). Three distinct 1.4.1 builds exist. A Python rebuild here is not
+bit-reproducible, so each row names what produced it and where a reader gets it:
 
-| file | size | sha256 |
-|---|---:|---|
-| `weftcodec-1.4.1-py3-none-any.whl` | 115,889 B | `92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06` |
-| `weftcodec-1.4.1.tar.gz` | 156,971 B | `773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2` |
+| build | where a reader gets it | wheel size | wheel sha256 | sdist size | sdist sha256 |
+|---|---|---:|---|---:|---|
+| tagged release note | nowhere: superseded before upload, never attached | 115,540 B | `74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176` | 156,293 B | `9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0` |
+| GitHub release asset | the `v1.4.1` release assets | 115,889 B | `92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06` | 156,971 B | `773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2` |
+| PyPI | `pip install weftcodec==1.4.1` | 115,889 B | `73cd3422ec7267b9876ad48458682e6d7dede24a53b4c33c76d50dc8613b4f32` | 157,012 B | `93a0b8c8c320f8d3316152c2bdc1b797f4869fcb2116dbbb825953b8942286a1` |
 
-The exact registry state, including upload times and checksums, is in
-`bench/receipts/release-artifacts-20261113T011500Z.json`. If a PyPI token is
-available the same artifacts are uploaded and the live JSON API is re-read; if it
-is not, the receipt names that blocker and no upload is claimed.
+All three, the PyPI upload times and the GitHub asset digests are recorded in
+`bench/receipts/release-artifacts-20261113T045609Z.json` (stamp
+20261113T045609Z, revision 52da9888f372).
+No row is presented as "the" 1.4.1 artifact.
 
 Previously live: `weftcodec 1.4.0` wheel `41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6`
 (115,851 B) and sdist `2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0`
@@ -215,23 +219,40 @@ per image: `weftfs` `sha256:717683c1…f1f46`, `weftcodec`
 `sha256:4c6f8586…ee886`, `weftcodec-go` `sha256:80239779…e592f`,
 `weftfs-go` `sha256:b36e36d6…48c27`. A rebuild is not bit-reproducible.
 
-**PyPI 1.4.1 is not published.** No token was available to the release session
-(no `PYPI_TOKEN`, no `WEFT_PYPI_TOKEN_FILE`, no `.docker-cache/.pypi-token`), so
-`scripts/publish-pypi.sh` refused with `publish-pypi: no token available`. PyPI
-still serves `weftcodec 1.4.0` with the live long description that this release
-corrects; the 1.4.1 wheel and sdist are built, `twine check`-clean and attached
-to the GitHub release. `scripts/publish-pypi.sh` no longer deletes an
-operator-supplied token file, so an operator can now point
-`WEFT_PYPI_TOKEN_FILE` at a persistent file and upload without the script
-removing it.
+**PyPI 1.4.1: as written at the release session, not published — corrected in
+v1.4.2.** At the time this note was written, no token was available to the
+release session (no `PYPI_TOKEN`, no `WEFT_PYPI_TOKEN_FILE`, no
+`.docker-cache/.pypi-token`), so `scripts/publish-pypi.sh` refused with
+`publish-pypi: no token available`, and PyPI still served `weftcodec 1.4.0`.
+**A later upload did happen:** PyPI now serves `weftcodec 1.4.1` (wheel and
+sdist uploaded 2026-11-13T03:29Z), and those are a *third* build with different
+digests from the ones in this note and from the GitHub release assets. See the
+generated table above and `bench/receipts/release-artifacts-20261113T045609Z.json`.
+`scripts/publish-pypi.sh` no longer deletes an operator-supplied token file, so
+an operator can point `WEFT_PYPI_TOKEN_FILE` at a persistent file and upload
+without the script removing it.
 
-**Artifact-hash note.** The generated artifact table earlier in this file was
-written at the tag and names the first 1.4.1 build. `python/README.md` is the
-long description, so it must not name the wheel's own digest; removing that
-self-reference changed the description and therefore the next build. The
-attached GitHub-release assets are the **final** build — wheel
-`92efd39d2e4732081dccfccb19c2f2849ff427e9f38d6aed9226624d5ceed06` (115,889 B)
-and sdist `773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2`
-(156,971 B) — and those hashes are the authoritative ones in
-`bench/receipts/release-artifacts-20261113T032500Z.json`. A rebuild is not
-bit-reproducible; the attached asset and the receipt win.
+**Artifact-hash note (rewritten in v1.4.2).** This section previously named one
+1.4.1 build as "the authoritative" artifact. That was wrong: `weftcodec 1.4.1`
+exists as three distinct builds, and no single digest describes all of them. The
+generated table above now names each build, what produced it and where a reader
+gets it:
+
+* the **tagged release note** build was built from the release tree and is what
+the artifact table in this file named at tag `v1.4.1`; it was superseded
+before it was attached or uploaded, so it is now available from no source;
+* the **GitHub release asset** build is what the `v1.4.1` release carries;
+* the **PyPI** build is what `pip install weftcodec==1.4.1` downloads.
+
+The first-to-second difference is a content change: the long description
+stopped naming the wheel's own digest, and removing that self-reference changed
+the next build. The second-to-third difference is build non-reproducibility
+only: the source tree and the long description are the same. A Python build here
+is not bit-reproducible, so every artifact is identified by digest.
+
+All three build digests, their sizes, the PyPI upload times and the GitHub asset
+digests are recorded in
+`bench/receipts/release-artifacts-20261113T045609Z.json`. The 1.4.2 release
+removes the self-describing paragraph from `python/README.md` entirely and adds
+a court that rejects that class of statement; see
+[`RELEASE-v1.4.2.md`](RELEASE-v1.4.2.md).

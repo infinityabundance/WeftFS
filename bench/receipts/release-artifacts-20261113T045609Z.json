@@ -1,0 +1,165 @@
+{
+ "schema": "weft.release_artifacts.v1",
+ "generated_utc": "20261113T045609Z",
+ "label": "v1.4.2 packaging-correction release: its artifacts, the three 1.4.1 builds, and the live registry state observed on 2026-11-13",
+ "revisions": {
+  "WeftFS": "52da9888f3726e6af5c364af7707fd98574fc954",
+  "WeftCodec": "75f08634824d3f6fe1561a1c523e97f390e85391",
+  "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e",
+  "WeftFS-Go": "7f55d11a7a66a5c6e542e345d06539d801281a4c",
+  "aggregate_verify": "bench/receipts/verify-20261113T033408Z.json"
+ },
+ "environment": {
+  "court": "weft/python-court:1 (build, twine check) and weft/rust-court:1 (cargo publish --dry-run)",
+  "limits": "memory 3g == swap, 4 cpus, pids 1024, bounded /tmp, no-new-privileges, cap-drop=ALL",
+  "host_builds": "none; the wheel, sdist, twine checks and both cargo dry runs ran in the courts"
+ },
+ "python_142": {
+  "version": "1.4.2",
+  "wheel": {
+   "name": "weftcodec-1.4.2-py3-none-any.whl",
+   "size_bytes": 115685,
+   "sha256": "787cc6ca203ea6a6c6285551281833de44b826946968ba3faf3b3d2d9ef2b022"
+  },
+  "sdist": {
+   "name": "weftcodec-1.4.2.tar.gz",
+   "size_bytes": 156563,
+   "sha256": "ab214bffced0312f0f50fb3a1929a68c2163e32493f9a159821a9ea78b39ae78"
+  },
+  "twine_check": "PASSED for both artifacts",
+  "long_description": {
+   "source": "python/README.md",
+   "source_sha256": "3e589c7c40e9cc067faf1199f14bff52e542d737f8b713af0da64ce95a6b2fee",
+   "source_bytes": 9790,
+   "wheel_metadata_description_sha256": "3e589c7c40e9cc067faf1199f14bff52e542d737f8b713af0da64ce95a6b2fee",
+   "wheel_metadata_description_matches_source": true,
+   "sdist_readme_sha256": "3e589c7c40e9cc067faf1199f14bff52e542d737f8b713af0da64ce95a6b2fee",
+   "contains_pypi_serves": false,
+   "contains_pinned_install": false,
+   "contains_64_hex_digest": false
+  },
+  "built_by": "scripts/publish-pypi.sh --dry-run in the python court",
+  "note": "built once at the revision above and not rebuilt after the release-note commit; Python builds in this environment are not bit-reproducible"
+ },
+ "cargo_142": {
+  "weftcodec_dry_run": "pass: 528 files packaged, 8.8 MiB (2.9 MiB compressed), package verified in the rust court",
+  "weftfs_dry_run": "blocked: failed to select a version for the requirement `weftcodec = \"^1.4.2\"`; candidate versions found which didn't match: 1.4.1, 1.4.0, 1.3.0, ...; location searched: crates.io index. The real run publishes weftcodec first, waits for the index, then publishes weftfs.",
+  "published": null
+ },
+ "python_141_builds": [
+  {
+   "label": "tagged-release-note build",
+   "wheel": {
+    "name": "weftcodec-1.4.1-py3-none-any.whl",
+    "size_bytes": 115540,
+    "sha256": "74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176"
+   },
+   "sdist": {
+    "name": "weftcodec-1.4.1.tar.gz",
+    "size_bytes": 156293,
+    "sha256": "9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0"
+   },
+   "build_source": "built in the python court from the v1.4.1 release tree before python/README.md stopped naming the 1.4.1 digests",
+   "recorded_in": [
+    "docs/RELEASE-v1.4.1.md as committed at tag v1.4.1 (WeftFS abe4d989bb1e52524c7956ac850c2dece78617ca)",
+    "bench/receipts/release-artifacts-20261113T032500Z.json (superseded_build)"
+   ],
+   "where_a_reader_gets_it": "nowhere: it is superseded, was never on PyPI, and is not attached to the GitHub release"
+  },
+  {
+   "label": "github-release-asset build",
+   "wheel": {
+    "name": "weftcodec-1.4.1-py3-none-any.whl",
+    "size_bytes": 115889,
+    "sha256": "92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06"
+   },
+   "sdist": {
+    "name": "weftcodec-1.4.1.tar.gz",
+    "size_bytes": 156971,
+    "sha256": "773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2"
+   },
+   "build_source": "rebuilt in the python court after the long description stopped naming the 1.4.1 digests",
+   "recorded_in": [
+    "bench/receipts/release-artifacts-20261113T011500Z.json",
+    "bench/receipts/release-artifacts-20261113T032500Z.json",
+    "GitHub release v1.4.1 assets, observed with `gh release view v1.4.1 --repo infinityabundance/WeftFS --json assets`"
+   ],
+   "where_a_reader_gets_it": "https://github.com/infinityabundance/WeftFS/releases/download/v1.4.1/weftcodec-1.4.1-py3-none-any.whl"
+  },
+  {
+   "label": "pypi build",
+   "wheel": {
+    "name": "weftcodec-1.4.1-py3-none-any.whl",
+    "size_bytes": 115889,
+    "sha256": "73cd3422ec7267b9876ad48458682e6d7dede24a53b4c33c76d50dc8613b4f32",
+    "uploaded_utc": "2026-11-13T03:29:41.967171Z"
+   },
+   "sdist": {
+    "name": "weftcodec-1.4.1.tar.gz",
+    "size_bytes": 157012,
+    "sha256": "93a0b8c8c320f8d3316152c2bdc1b797f4869fcb2116dbbb825953b8942286a1",
+    "uploaded_utc": "2026-11-13T03:29:43.684111Z"
+   },
+   "build_source": "the upload performed after the GitHub release; the bytes differ from the attached assets although the source tree and the long description are the same",
+   "recorded_in": [
+    "https://pypi.org/pypi/weftcodec/1.4.1/json"
+   ],
+   "where_a_reader_gets_it": "pip install weftcodec==1.4.1"
+  }
+ ],
+ "live_registry_state": {
+  "pypi_141": {
+   "api": "https://pypi.org/pypi/weftcodec/1.4.1/json",
+   "fetched_utc": "2026-11-13T04:56:06Z",
+   "last_serial": 43587785,
+   "wheel_sha256": "73cd3422ec7267b9876ad48458682e6d7dede24a53b4c33c76d50dc8613b4f32",
+   "wheel_size_bytes": 115889,
+   "sdist_sha256": "93a0b8c8c320f8d3316152c2bdc1b797f4869fcb2116dbbb825953b8942286a1",
+   "sdist_size_bytes": 157012,
+   "yanked": false,
+   "long_description_contains_pypi_serves": true,
+   "long_description_contains_pinned_install": true,
+   "note": "the live 1.4.1 long description is the pre-fix text; 1.4.2 replaces it on upload"
+  },
+  "pypi_142": {
+   "api": "https://pypi.org/pypi/weftcodec/1.4.2/json",
+   "fetched_utc": "2026-11-13T04:55:55Z",
+   "status": 404,
+   "note": "not uploaded by this session, by instruction"
+  },
+  "crates_142": {
+   "api": "https://crates.io/api/v1/crates/weftcodec/1.4.2",
+   "fetched_utc": "2026-11-13T04:55:59Z",
+   "status": 404,
+   "note": "not published by this session, by instruction"
+  },
+  "github_141_assets": {
+   "source": "gh release view v1.4.1 --repo infinityabundance/WeftFS --json assets",
+   "fetched_utc": "2026-11-13T04:55:59Z",
+   "wheel": {
+    "name": "weftcodec-1.4.1-py3-none-any.whl",
+    "size_bytes": 115889,
+    "sha256": "92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06",
+    "created_utc": "2026-11-13T03:26:00Z"
+   },
+   "sdist": {
+    "name": "weftcodec-1.4.1.tar.gz",
+    "size_bytes": 156971,
+    "sha256": "773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2",
+    "created_utc": "2026-11-13T03:26:00Z"
+   }
+  },
+  "tag_141": {
+   "name": "v1.4.1",
+   "tag_object": "7633b7f044b4caab6188589cefd36717965079c0",
+   "commit": "abe4d989bb1e52524c7956ac850c2dece78617ca"
+  }
+ },
+ "nonreproducibility": "Python builds in this environment are not bit-reproducible: the same source tree and the same long description can produce different wheel and sdist bytes and therefore different SHA-256 values. weftcodec 1.4.1 exists as three distinct builds. No digest in this receipt is presented as 'the' 1.4.1 artifact: each entry names the build, what produced it, and where a reader gets it.",
+ "not_claimed": [
+  "weftcodec 1.4.2 and weftfs 1.4.2 are not uploaded to PyPI or crates.io by this receipt; the coordinator uploads and then records the live state",
+  "no live Azure, AWS or GCS account was exercised",
+  "no physical power loss, host page-cache loss, RAPL energy, GPU, fleet or multi-node claim",
+  "GitHub asset times and PyPI upload times are service observations, not reproducibility proofs"
+ ]
+}
