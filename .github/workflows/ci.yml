@@ -120,17 +120,30 @@ jobs:
     # `--features fuse` is NOT built here: those suites need /dev/fuse and the
     # court image, and they run in `scripts/verify-all.sh` (`rust_fuse`).
     #
-    # Known flake, disclosed rather than hidden: `tests/quota.rs::
-    # usage_survives_reopen_and_still_denies` and the distributed writer
-    # interlock can fail when a forked-but-not-yet-exec'd child still holds the
-    # `flock(2)` used by the single-writer lock (STATUS, 2026-11-08; the root
-    # fix is OFD locks and is not done). The suite passed in this session, but a
-    # red run here should be re-run once before it is believed. The tests are
-    # not filtered out: that would hide a real writer-lock defect.
+    # The runner is deliberately **non-root** (uid 1001). That is coverage, not
+    # an accident: the first real run of this workflow failed two CLI quota
+    # tests because they configured a budget for principal `0:0` and then wrote
+    # without naming a principal, so they only passed where the process was
+    # root (the Docker court). `quota show` also defaulted to `0:0` instead of
+    # the caller. Both are fixed and covered by
+    # `cli_quota_show_defaults_to_the_caller` and
+    # `cli_quota_budget_applies_only_to_the_configured_principal`; the suite is
+    # also run under a non-root uid in the court with `WEFT_COURT_UID=1001`.
+    # Do not run this job as root and do not filter those tests: that would hide
+    # the defect class again.
+    #
+    # The single-writer lock is not a known flake. It is `F_OFD_SETLK` plus a
+    # compatibility `flock(2)`, both released explicitly before the descriptor
+    # closes (src/writer_lock.rs, tests/writer_lock.rs); that removes the
+    # fork-inheritance window that used to make a concurrent reopen return
+    # `Busy`. An earlier comment here claimed the OFD fix was outstanding; it
+    # landed in 580444c and the first real run shows the lock suites green.
     #
     # Local court equivalent:
     #   scripts/docker-court.sh rust "cargo test --all-targets"
     #   scripts/docker-court.sh rust "cd WeftCodec && cargo test --all-targets"
+    #   WEFT_COURT_UID=1001 WEFT_COURT_GID=1001 scripts/docker-court.sh rust \
+    #     "cd /work && cargo test --test quota"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -156,7 +169,7 @@ jobs:
           {
             echo '### rust-test'
             echo 'Local reproduction: `scripts/docker-court.sh rust "cargo test --all-targets"` and `scripts/docker-court.sh rust "cd WeftCodec && cargo test --all-targets"`'
-            echo 'Observed at 1bc5177: 173 suites / 819 passed / 0 failed (root), 45 suites / 290 passed / 0 failed (codec).'
+            echo 'The runner is non-root on purpose: see the job comment. Current counts are in the aggregate verification receipt, not here.'
           } >> "$GITHUB_STEP_SUMMARY"
 
   go-test:
@@ -231,6 +244,14 @@ jobs:
     # `jq` nor a Python interpreter, so `scripts/verify-all.sh` runs them on the
     # host as well. A stock runner has both.
     #
+    # `check-claims.sh` also requires every cited receipt to be committed (an
+    # untracked receipt is not evidence: that is how four claims and 66
+    # generated numbers came to cite a receipt that was never in the tree) and
+    # requires each citation of a receipt registered in
+    # `docs/superseded-receipts.json` to declare `superseded_by` or a
+    # `supersession_note`. Both are checked here because a fresh checkout is
+    # the only place the first rule can actually be observed.
+    #
     # Local host commands (no Docker):
     #   bash scripts/check-claims.sh
     #   python3 scripts/perf_numbers.py --check
@@ -267,7 +288,7 @@ jobs:
           {
             echo '### guards'
             echo 'Local reproduction: the six commands in this job, run on the host (no Docker).'
-            echo 'Observed at 1bc5177: claims 1099 entries OK; perf_numbers 644 numbers / 94 blocks OK; spec drift 60/60 OK; long_description OK; conformance manifest 420 entries OK; coverage OK.'
+            echo 'Counts are generated from receipts into docs/PERF-NUMBERS.md; this summary does not restate them.'
           } >> "$GITHUB_STEP_SUMMARY"
 
   model:

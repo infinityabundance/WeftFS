@@ -19,6 +19,14 @@ historical release claim). A claim that only held at a historical revision is
 marked **historical**, not silently rewritten. A claim that did not match its
 receipt was corrected in place.
 
+Since the first real CI run (2026-11-13) two properties are machine-checked by
+`scripts/check-claims.sh` rather than left to review: a cited receipt must be
+committed (an untracked receipt is not evidence), and a claim citing a receipt
+registered in [`superseded-receipts.json`](superseded-receipts.json) must carry
+`superseded_by` naming the registered successor or a `supersession_note`
+explaining why the claim still holds. A claim that is a historical quotation
+should therefore say so in the manifest, not only in prose.
+
 The audit found **ten current-state README claims that did not match their evidence**
 and two material claims in other documents. All corrections are listed in §3.
 

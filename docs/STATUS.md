@@ -10657,3 +10657,142 @@ writer opens with `--writer-mode optimistic`.
 * **Not proven.** No live Azure/GCS/S3 run; process faults only, not power loss;
   S4 is the fenced *lease* (MW1) and not two MW2 committers racing; no
   per-operation latency is claimed.
+
+## CI defect closure: the first real workflow run (2026-11-13)
+
+The first run of `.github/workflows/ci.yml` on a stock runner
+(`43398242038`, head `3f9f327`) failed two blocking jobs. Both are closed at
+the root here. Nothing about the on-disk format, the wire format, or the
+writer-lock contract changed.
+
+### Defect A — the quota CLI tests were root-only, not a writer-lock flake
+
+The `rust-test` job failed on `cli_quota_denial_is_non_disclosing` and
+`cli_quota_show_is_limited_to_the_callers_principal`, at the assertions that a
+256 KiB write is refused and that a small write is charged. The CI comment and
+the earlier status note attributed this to the `flock(2)`/`fork` window; **that
+attribution was wrong**, and the run itself refutes it: every writer-lock suite
+(`usage_survives_reopen_and_still_denies`, the distributed interlock, the MW2
+courts) was green in the same job.
+
+Root cause, in two parts:
+
+* `weftfs create` (like every write verb) defaults the object owner and the
+  charged quota principal to the **invoking process's real uid/gid**
+  (`current_ids()`, read from `/proc/self/status`). The Docker court runs as
+  root, so the ambient principal was `0:0` and matched the `--quota 0:0:...`
+  policy. A stock GitHub runner runs as uid 1001, the write was charged to
+  `1001:1001`, which has no configured budget (a budget is per-principal and
+  opt-in), so it was admitted; and usage looked empty to a `0:0` query. The two
+  tests therefore encoded an environment assumption, not a lock defect.
+* `weftfs quota show` additionally defaulted `--uid`/`--gid` to `0:0` instead
+  of the caller, so an unprivileged caller was shown a principal that was not
+  theirs (and root's counters) — a real defect against the documented
+  "show the caller's own usage" contract, independent of the tests.
+
+Reproduced before the fix, in the rust court, by making the caller explicit
+(the same thing a non-root runner does implicitly): with
+`--quota 0:0:4096:100`, `create --uid 1001 --gid 1001` of a 256 KiB file
+exited 0, `quota show --uid 0 --gid 0` reported zero bytes and zero objects,
+and `quota show --uid 1001 --gid 1001` reported the write. That is exactly the
+pair of CI assertions that failed.
+
+The fix: `quota show` resolves an omitted `--uid`/`--gid` to the caller
+(`src/main.rs`), so the command now means what it says on any host; the two
+CLI tests name the principal they are writing as (`--uid 0 --gid 0`), so they
+no longer depend on the ambient identity. Two tests pin the behaviour:
+`cli_quota_show_defaults_to_the_caller` (an implicit query equals an explicit
+query for the caller, and a non-root caller does not see root's counters) and
+`cli_quota_budget_applies_only_to_the_configured_principal` (the semantic the
+old tests relied on). `scripts/docker-court.sh` gained `WEFT_COURT_UID`/
+`WEFT_COURT_GID` (validated, default `0:0`, no limit affected) because a court
+cannot `setuid` under `cap-drop=ALL`; the quota suite is run under a non-root
+uid to prove the independence. Mutation-checked: restoring the old
+`quota show` default makes `cli_quota_show_defaults_to_the_caller` fail under
+uid 1001 with `left: "0:0", right: "1001:1001"`, and the fixed tree passes.
+
+**Writer lock (Task A of the brief), verified not changed.** The single-writer
+lock is already `F_OFD_SETLK` plus a compatibility `flock(2)`, both released
+explicitly before the descriptor closes (`src/writer_lock.rs`; landed in
+`580444c`, documented in `docs/FENCING.md` §9 and `docs/PLANES.md` §6). The
+explicit unlock is the part that removes the `fork`-inheritance window: OFD
+alone is inherited exactly like `flock` and would not have fixed the historical
+flake. Mixed-version exclusion is symmetric (the shipped writer blocks a
+legacy `flock` holder and vice versa); `flock(2)` remains the documented
+fallback on `EINVAL`. WeftFS-Go holds the same two locks and unlocks both
+(`WeftFS-Go/store/lock.go`, `lock_linux.go`, `store/lock_inheritance_test.go`),
+so no Go change was needed. The false "known flake" caveat was removed from
+`ci.yml` and replaced with the true account; the runner stays non-root and the
+suites are not filtered.
+
+### Defect B — claims cited a receipt that was never committed
+
+The `guards` job failed because `docs/claims.json` cited
+`bench/receipts/r22-pareto-20261112T230000Z.json`, which existed only in the
+authoring working tree. The R22 group in `docs/perf-numbers.json` cited it for
+every number it generates. `check-claims.sh` only tested that the
+file existed, so it passed locally and failed on a fresh checkout.
+
+The file was the genuine `weft.write_cost_ablation.v1` receipt for the claims
+(`result: pass`, every check true). Its values were re-read against the claim
+text before committing: the frontier row's least-contended and median wall,
+the footprint, the native anchor and the ratio, the one-token-per-worker
+control, and the pack-plane row all match. It is committed as-is; no receipt
+was edited to fit a claim.
+
+The supersession audit found that the guard had a second blind spot: a claim
+could cite a receipt its own results document labels superseded. Three were
+named by the brief and confirmed, plus two earlier verification aggregates
+cited by historical claims. Each decision (all recorded as fields on the claim
+itself):
+
+* **Re-pointed** where the value is present in the current receipt:
+  `r9_index_rewritten_rows` (row-level -> element-level index chain);
+  `s13_chain_data_bytes`, `s13_optimizer_data_bytes`,
+  `s13_break_even_restart2`, `s13_dp_matches_oracle`,
+  `s13_corpus_step1000_sha` (S13 -> S13b parent graph);
+  `trajectory_gc_reclaim` (the only trajectory claim reading the field the
+  defect corrupted, and the corrected receipt records the same value).
+  `claim_audit_current_receipt` also had the wrong receipt for its own value
+  and was re-pointed.
+* **Kept with `superseded_by`** where only the historical receipt records the
+  value: `s13_parent_graph_receipt`, `s13_chain_worst_restore`,
+  `s13_optimizer_worst_restore` -> the S13b receipt; the four `r120_*`
+  release-note claims and `r130_aggregate_revision` -> the current aggregate.
+* **Kept with `supersession_note`** where the receipt is the only measurement
+  of the run and the defect did not touch the field read: the nine remaining
+  trajectory size/restore/exactness/depth claims, each naming
+  `bench/RESULTS-gc-accounting.md` and the corrected receipt. Their values
+  were re-derived from the receipt, not taken from prose (the zstd baseline
+  sums, the synthetic `final + Σ zstd19(XOR)` figure and the per-tensor
+  exactness count all reproduce exactly).
+
+`docs/superseded-receipts.json` makes the seven supersessions machine-readable
+(successor, reason, and the document that declares it). `check-claims.sh` now
+also requires every cited receipt to be **committed** and every citation of a
+registered superseded receipt to declare `superseded_by` (matching the
+registry) or a `supersession_note`. Prose is deliberately not scanned: a
+window scan on this tree produced false positives for three receipts that are
+explicitly cited. Negative tests were run against the live manifest (untracked
+receipt, missing note, wrong successor) and each fails with a named
+`CLAIM MISMATCH`.
+
+### Gates actually run for this entry
+
+`scripts/docker-court.sh rust "cargo test --test quota"` and the same suite as
+uid 1001; `cargo test --test writer_lock`; the full `cargo test --all-targets`;
+`cargo test --test distributed_semantics`; WeftFS-Go
+`go test -race ./store/...`; `bash scripts/check-claims.sh`;
+`python3 scripts/perf_numbers.py --check`; `bash scripts/check-spec-drift.sh`;
+the long-description, conformance-manifest and conformance-coverage guards.
+`scripts/verify-all.sh` was **not** rerun, so the cited aggregate stays
+`verify-20261113T033408Z.json`; no receipt was produced or altered for this
+entry and no performance number is claimed.
+
+Residual and stated plainly: the GitHub workflow has not been re-run, so the
+green result is local court evidence, not a CI result. A process killed
+without running `Drop` still leaves a forked-but-not-yet-exec'd child holding
+the lock until it execs; that window belongs to the forking process and is the
+same for every mechanism. The claim audit is now enforced for committed-ness
+and declared supersession only; it cannot detect a receipt that supports a
+different number than the prose cites, which remains a review duty.

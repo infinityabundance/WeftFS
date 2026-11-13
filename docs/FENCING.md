@@ -302,3 +302,21 @@ by passing a duplicate of the open file description to a child through
   mixed-version exclusion both ways, live-handle refusal, and a 200-iteration
   store reopen under concurrent forks.
 * `WeftFS-Go/store/lock_inheritance_test.go` 5/5.
+
+### CI evidence (2026-11-13): the lock was not the CI failure
+
+The first real `.github/workflows/ci.yml` run failed its `rust-test` job on two
+CLI quota tests. The CI comment at the time blamed a `flock(2)`/`fork` window
+and claimed the OFD fix was outstanding; both statements were wrong. The run
+itself shows every lock-dependent suite green, including
+`usage_survives_reopen_and_still_denies`, the distributed writer interlock and
+the MW2 courts. The actual cause was an environment assumption in those tests:
+they configured a quota for principal `0:0` and then wrote without naming a
+principal, which only passes where the process is root. `quota show` also
+defaulted to `0:0` rather than the caller. See `docs/STATUS.md`, "CI defect
+closure", for the reproduction and the fix.
+
+The lock contract in this section is unchanged and remains as described: OFD
+primary, compatibility `flock` for mixed versions, explicit unlock before
+close, `flock` fallback on `EINVAL`. No process was given two live handles and
+no limit, format or on-disk byte changed.
