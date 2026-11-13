@@ -1026,6 +1026,7 @@ def scenario_s7():
         stop_proxy(proxy)
         cases.append({"tag": tag, "mode": mode, "proxy": proxy_mode})
     scenario["cases"] = cases
+    scenario_snapshot(scenario, container("s7d"), "s7d")
     return finish(scenario)
 
 
@@ -1100,6 +1101,7 @@ def scenario_s8():
             payload,
         )
     scenario["parity"] = parity
+    scenario_snapshot(scenario, c, "s8m")
     return finish(scenario)
 
 
