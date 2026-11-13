@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,130** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,140** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -19,6 +19,8 @@ the receipt and revision they were written at.
 ## 2026-11-13 (T012/N13 aged-store index court, X02 DCP completion, X03 guards)
 
 <!-- BEGIN GENERATED:status-t012 (scripts/perf_numbers.py) -->
+Aged-store index court (generated): 10k generations publishes at 0.1 ms p50 with 8,388,211 B of index for 1,363,694 B of data; 1M generations publishes at 5.8 ms p50 with 837,228,211 B of index and 2,752,788 KiB peak RSS. A 100k-object store carries 0 checkpoint state manifests and its cold open is 2,295.5 ms; the 50k-object cell is refused at generation 229.
+DCP completion (generated): shipped plan 39.78 ms p50 / 40.39 ms p95, 3.65 ms better than the forced oracle encoder (43.43 ms p50); the 20 ms target is not reached.
 <!-- END GENERATED:status-t012 -->
 
 

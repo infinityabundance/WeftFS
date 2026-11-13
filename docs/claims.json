@@ -11902,144 +11902,245 @@
   "receipt": null,
   "kind": "present"
  },
-{
+ {
   "id": "x06_one_budget",
   "claim": "One `StageBudget` admits tensor, shard and tile workers on restore and the encode workers on write; the observed active-worker high-water mark never exceeds the cap in the X06 court.",
   "value": "observed 1/2/4/8 active workers at caps 1/2/4/8, every configuration byte-identical",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-budget-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x06_oversize_completes",
   "claim": "A restore request larger than the whole byte budget runs alone and completes.",
   "value": "8 oversized admissions, 2,097,752 bytes restored, verify clean",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-budget-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x06_recommended_default",
   "claim": "The measured budgeted-restore default is two shard workers and max(1, cap/2) tensor workers.",
   "value": "RestorePipelineOptions::budgeted",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-budget-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x07_active_cap",
   "claim": "The read pool caps simultaneously active handles and the observed high-water mark never exceeds it; 0 is the unbounded control arm.",
   "value": "cap 64 default, asserted by observed_max_active_handles",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/handle-cap-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x07_cap_cost",
   "claim": "At 128 concurrent readers the cap binds and costs about a factor of four; at or below the cap it costs nothing measurable.",
   "value": "see generated block in RESULTS-resource-courts.md",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/handle-cap-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x07_go_parity",
   "claim": "Go had the same unbounded active-handle path; it now has the same cap and an explicit control arm test.",
   "value": "WeftFS-Go store/read_pool_active_test.go",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/packed-races-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x08_invariant",
   "claim": "A concurrent packed-store reader never sees a catalog entry without its pack, a pack without durable bytes, a reclaimed live root, or bytes failing their digest.",
   "value": "stated in tests/packed_races.rs and the receipt",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/packed-races-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "x08_scenarios",
   "claim": "Five Rust scenarios and two cross-language races end with `verify --full` clean and every live root exact.",
   "value": "5 Rust tests, 2 Go cross-language tests",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/packed-races-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "n08_decode_dominant",
   "claim": "A compressed checkpoint restore is dominated by the mode-9 payload decode; manifest I/O, content verification and the per-tensor SHA-256 are one to two orders of magnitude smaller.",
   "value": "phases in the restore-cost receipt",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "n08_no_copy_not_a_win",
   "claim": "Removing the whole-tensor read copy is not measurable at 100 x 1 MiB and is not claimed as a win.",
   "value": "268.4 ms (no copy) vs 268.0 ms (copy control)",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "n08_worker_sha_not_a_win",
   "claim": "Moving the report SHA-256 from the ordered writer to the decode worker is not measurable at four workers and is not claimed as a win.",
   "value": "268.4 ms (worker SHA) vs 268.1 ms (writer SHA)",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "n08_dominant_tensor_shard_parallel",
   "claim": "A single 64 MiB tensor restores 1.72x faster with two shard workers than with one.",
   "value": "657.7 ms -> 381.4 ms",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/restore-cost-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "n09_cross_stage",
   "claim": "One budget is shared by a budgeted restore and the shipped encode pipeline; observed high-water marks never exceed the cap and neither stage is starved.",
   "value": "all four caps, maintenance admitted every round",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/stage-budget-20261113T125506Z.json",
   "kind": "present"
-},
-{
+ },
+ {
   "id": "n09_overlap_not_a_win",
   "claim": "Overlapping encode and restore is not uniformly faster: 1.02x sequential at cap 4 and 0.88x at cap 8.",
   "value": "published as a loss",
   "locations": [
-    "bench/RESULTS-resource-courts.md"
+   "bench/RESULTS-resource-courts.md"
   ],
   "receipt": "bench/receipts/stage-budget-20261113T125506Z.json",
   "kind": "present"
-}
+ },
+ {
+  "id": "dcp_completion_target_missed",
+  "claim": "The DCP completion target of 20 ms is measured and not reached; the receipt states the achieved p50/p95 and the durability control.",
+  "value": "dcp-latency-20261113T214500Z.json",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md"
+  ],
+  "receipt": "bench/receipts/dcp-latency-20261113T214500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "aged_court_implementation",
+  "claim": "The aged-store index court exists as an example harness and a host court.",
+  "value": "index_aged_bench",
+  "locations": [
+   "examples/index_aged_bench.rs",
+   "scripts/index_aged_court.sh"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T211436Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "aged_court_registered",
+  "claim": "The reduced aged-store court and the DCP completion court are registered in the aggregate with receipts.",
+  "value": "index_aged_court.sh",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/index-aged-court-20261113T211521Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "aged_1m_generations",
+  "claim": "The 1M-generation cell passes the oracle, GC and forged-segment checks.",
+  "value": "1M generations",
+  "locations": [
+   "bench/RESULTS-incremental-index.md"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T170022Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "aged_live100k_no_checkpoint",
+  "claim": "A 100k-object store carries zero checkpoint state manifests.",
+  "value": "cannot checkpoint at all",
+  "locations": [
+   "bench/RESULTS-incremental-index.md"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T211521Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "aged_50k_refused",
+  "claim": "The 50k live-object cell is refused at generation 229 with a WCB item-count LimitExceeded; the receipt and log are retained.",
+  "value": "50,000 live objects",
+  "locations": [
+   "bench/RESULTS-incremental-index.md"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T213345Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "index_value_edge_rust",
+  "claim": "The Rust WFX3 reader accepts a short value-target edge at the tail of a relation row.",
+  "value": "bounded_count(1)",
+  "locations": [
+   "src/index_chain.rs"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T211436Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "index_value_edge_go",
+  "claim": "The Go WFX3 reader accepts a short value-target edge at the tail of a relation row.",
+  "value": "boundedCount(1)",
+  "locations": [
+   "WeftFS-Go/index/chain.go"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T211436Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "index_value_edge_test",
+  "claim": "A regression test covers the value-target tail segment in Go.",
+  "value": "TestFullSegmentWithValueTargetTailResolves",
+  "locations": [
+   "WeftFS-Go/index/index_test.go"
+  ],
+  "receipt": "bench/receipts/index-aged-20261113T211436Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "dcp_durability_control",
+  "claim": "After an acknowledged save the helper is SIGKILLed and the checkpoint verifies from a new process.",
+  "value": "SIGKILLed",
+  "locations": [
+   "bench/RESULTS-dcp-metadata.md"
+  ],
+  "receipt": "bench/receipts/dcp-latency-20261113T214500Z.json",
+  "kind": "present"
+ }
 ]

@@ -201,6 +201,7 @@ def run(args):
     return {
         "schema": "weft.dcp-completion.v1",
         "stamp": args.stamp or utc_stamp(),
+        "revision": os.environ.get("WEFT_REPO_WEFTFS", "unknown"),
         "reference_arm": "reference (oracle encoder, forced)",
         "measured_arm": "auto (shipped metadata plan)",
         "interleaved": True,

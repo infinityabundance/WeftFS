@@ -379,14 +379,24 @@ control in the same receipt: a save is acknowledged, the helper process is
 SIGKILLed, and the checkpoint is verified by a new process (169/169 tensors).
 
 <!-- BEGIN GENERATED:x02-dcp-table (scripts/perf_numbers.py) -->
+| measurement | value (ms) |
+|---|---:|
+| shipped (auto) completion p50 / p95 | 39.78 / 40.39 |
+| oracle (reference) completion p50 | 43.43 |
+| plan advantage p50 | 3.65 |
+| client top-level accounted | 33.12 |
+| Rust top-level accounted | 17.86 |
 <!-- END GENERATED:x02-dcp-table -->
 
-**The 20 ms target is not reached.** The metadata encoder is no longer the
-problem: the plan removes about 4 ms of the reference arm's completion. The
-dominant term is the tensor write handoff inside `client.write_request`
-(about 26 ms of 40.6), of which about 15 ms is Rust work (zstd encode 5.9 ms,
-digest 3.0, blob publish 2.0, index segment 2.9, manifest commit 0.5) and the
-rest is the client's safetensors staging plus the memfd/socket round trip.
-`metadata_commit` (the deferred final publication) is 3.6 ms and the DCP
-framework's own plan/drain is about 6 ms. Closing the gap needs a different
-tensor handoff and a parallel encoder; an encoder tweak cannot reach it.
+**The 20 ms target is not reached.**
+
+<!-- BEGIN GENERATED:x02-dcp-prose (scripts/perf_numbers.py) -->
+The metadata encoder is no longer the problem: the plan removes 3.65 ms of the
+reference arm's completion (43.43 ms p50 against 39.78 ms). The dominant
+remaining term is the tensor write handoff inside the write request: Rust spends
+5.89 ms encoding (zstd), 3.00 ms digesting,
+1.93 ms publishing blobs, 2.72 ms on the index segment and
+3.33 ms on the final metadata commit; the rest of the write request is
+the client's safetensors staging and the memfd/socket round trip. Closing the gap to 20 ms
+needs a different tensor handoff and a parallel encoder; an encoder tweak cannot reach it.
+<!-- END GENERATED:x02-dcp-prose -->

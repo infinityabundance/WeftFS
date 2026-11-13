@@ -579,6 +579,14 @@ and `index-aged-20261113T213345Z.failure.log` (50k live objects, first refused
 commit at generation 229).
 
 <!-- BEGIN GENERATED:aged-index-table (scripts/perf_numbers.py) -->
+| cell | publish p50 / p99 (ms) | index / data bytes | index ppm of data | peak RSS (KiB) | cold open p50 (ms) | open, no segments (ms) | relation / tag / attr-eq p50 (ms) | checkpoints |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10k generations, 64 live | 0.1 / 0.1 | 8,388,211 / 1,363,694 | 6,151,095 | 42,444 | 0.9 | 0.9 | 0.1 / 0.0 / 0.0 | 39 |
+| 100k generations, 64 live | 0.1 / 0.2 | 83,732,350 / 13,542,317 | 6,183,015 | 369,632 | 2.3 | 2.4 | 0.2 / 0.0 / 0.0 | not recorded (predates the field) |
+| 1M generations, 64 live | 5.8 / 8.7 | 837,228,211 / 135,536,969 | 6,177,121 | 2,752,788 | 1.4 | 1.4 | 0.2 / 0.0 / 0.0 | not recorded (predates the field) |
+| 10k live, 300 commits | 4.4 / 8.6 | 22,665,633 / 7,049,428 | 3,215,244 | 167,984 | 113.1 | 111.9 | 12.9 / 15.3 / 2.9 | 1 |
+| 100k live, 200 commits | 111.2 / 154.0 | 179,365,984 / 16,788,890 | 10,683,612 | 1,015,940 | 2,295.5 | 2,261.2 | 797.9 / 2,839.8 / 53.2 | 0 |
+| 50k live (refused) | 47.2 / 61.9 | 90,081,674 / 8,388,890 | 10,738,211 | 403,036 | n/a | n/a | n/a | refused at generation 229 |
 <!-- END GENERATED:aged-index-table -->
 
 Correctness at every passing cell: the persisted index's ordered answers equal
@@ -596,8 +604,8 @@ and Go's scan oracle (PASS, 3.19 s).
 Three defects were found and fixed at the root, not re-framed:
 
 1. `State::apply_ops` cloned the whole state per commit, so replay and group
-   commits were O(state). A journal of the touched slots replaced it (10k live
-   objects: cold open 642 -> 210 ms on the same fixture).
+   commits were O(state). A journal of the touched slots replaced it; the 10k
+   live-object cell's cold open is in the table above.
 2. The WFX3 reader required `edgeCount * 32` remaining bytes for a relation
    row; a value target is one kind byte plus its payload, so any segment whose
    last relation row held such an edge was refused and rebuilt on every reopen
@@ -615,8 +623,8 @@ encoded with the codec's default 1,000,000-item bound, and
 10k) while 100,000 objects alone already exceed the bound. With entries and
 relations the first checkpoint is refused at 50,000 live objects. A
 100,000-object store therefore cannot checkpoint at all
-(`checkpoints = 0` above); the target 1M attempt additionally exceeded 3 GiB
-during seeding. This is a limit, not an index defect: correctness is unchanged
+(`checkpoints = 0` above); the target 1M attempt additionally exceeded the court's memory
+limit during seeding. This is a limit, not an index defect: correctness is unchanged
 (the index rebuilds), but bounded open and checkpoint roots are unavailable. A
 sharded or separately-bounded state manifest is the fix and is not implemented
 here.
