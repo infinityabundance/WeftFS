@@ -3285,6 +3285,10 @@ fn assemble(args: &Args) -> Result<(), String> {
     // same page in memory (W only). Reported, not a gate.
     let mut decode12: Vec<f64> = Vec::new();
     let mut decode19: Vec<f64> = Vec::new();
+    let mut decode_planes: Vec<f64> = Vec::new();
+    let mut decode_page_hash: Vec<f64> = Vec::new();
+    let mut decode_descriptor_parse: Vec<f64> = Vec::new();
+    let mut decode_descriptor_root: Vec<f64> = Vec::new();
     for row in &phases {
         if row.get("arm").and_then(Json::as_str) != Some("W") {
             continue;
@@ -3293,19 +3297,21 @@ fn assemble(args: &Args) -> Result<(), String> {
             .get("a")
             .and_then(|a| a.get("diagnostics"))
             .and_then(|d| d.get("decode_only"));
-        if let Some(value) = diag
-            .and_then(|d| d.get("mode12"))
-            .and_then(|m| m.get("p50_us"))
-            .and_then(Json::as_f64)
-        {
-            decode12.push(value);
-        }
-        if let Some(value) = diag
-            .and_then(|d| d.get("mode19"))
-            .and_then(|m| m.get("p50_us"))
-            .and_then(Json::as_f64)
-        {
-            decode19.push(value);
+        for (path, into) in [
+            ("mode12", &mut decode12),
+            ("mode19", &mut decode19),
+            ("mode19_planes_only", &mut decode_planes),
+            ("mode19_page_hash_only", &mut decode_page_hash),
+            ("mode19_descriptor_parse", &mut decode_descriptor_parse),
+            ("mode19_descriptor_root", &mut decode_descriptor_root),
+        ] {
+            if let Some(value) = diag
+                .and_then(|d| d.get(path))
+                .and_then(|m| m.get("p50_us"))
+                .and_then(Json::as_f64)
+            {
+                into.push(value);
+            }
         }
     }
     let d12 = median(&decode12);
@@ -3313,9 +3319,14 @@ fn assemble(args: &Args) -> Result<(), String> {
     let provenance_overhead = json!({
         "mode12_decode_p50_us": d12,
         "mode19_decode_p50_us": d19,
+        "mode19_planes_p50_us": median(&decode_planes),
+        "mode19_page_hash_p50_us": median(&decode_page_hash),
+        "mode19_descriptor_parse_p50_us": median(&decode_descriptor_parse),
+        "mode19_descriptor_root_p50_us": median(&decode_descriptor_root),
         "ratio": if d12 > 0.0 { d19 / d12 } else { 0.0 },
         "note": "in-memory decode of the same page, same payload codec; isolates the \
-                 provenance descriptor from I/O and from the payload codec",
+                 provenance descriptor from I/O and from the payload codec, and splits the \
+                 payload decode from the reconstructed-page hash and the descriptor identity",
     });
 
     let checks_ok = checks
