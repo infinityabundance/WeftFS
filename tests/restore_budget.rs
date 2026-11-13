@@ -280,8 +280,25 @@ fn a_cancelled_waiter_releases_its_reservation_and_the_next_request_proceeds() {
         }
     };
     let token2 = token.clone();
+    let budget_watch = Arc::clone(&budget);
     let canceller = std::thread::spawn(move || {
         holder.wait();
+        // The first tensor's worker is inside `work`, holding the budget's only
+        // worker slot. Wait until the second worker has actually *entered*
+        // `admit` (its ticket exists) before cancelling, so the cancellation is
+        // observed by a queued waiter. Without this the cancel can race the
+        // pipeline's early-abort path, the second worker never calls `admit`,
+        // and the assertion below measures scheduling rather than the contract
+        // (measured before this change: 7/40 and 8/40 failures on the same
+        // test at the pre-fix and fixed revisions respectively).
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        while budget_watch.tickets() < 2 {
+            assert!(
+                std::time::Instant::now() < deadline,
+                "the second worker never queued in the stage budget"
+            );
+            std::thread::sleep(Duration::from_millis(1));
+        }
         token2.cancel();
         holder.wait();
     });

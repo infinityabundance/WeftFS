@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # Court: the stage-budget admission contract (X06/N09 defect fix, X31).
 #
-# The two shipped `stage_budget` tests this court pins were broken: an oversize
+# The shipped `stage_budget` tests this court pins were broken: an oversize
 # admission never blocked other requests, and one test joined a waiter whose
-# bytes were held until after the join. A concurrency primitive that can hang is
-# a product defect, so the evidence is a repetition count at several thread
-# counts with a per-run `timeout` (a hang is a recorded timeout, not a stall).
+# bytes were held until after the join. Fixing oversize exclusivity then exposed
+# a second, real deadlock in the ordered restore pipeline, whose budget
+# admission was not in input order. A concurrency primitive that can hang is a
+# product defect, so the evidence is a repetition count at several thread counts
+# with a per-run `timeout` (a hang is a recorded timeout, not a stall).
 #
 # Usage:
 #   scripts/stage_budget_court.sh [--reps N]
 #
 # Environment:
-#   WEFT_STAGE_BUDGET_REPS   repetitions per thread count (default 30)
+#   WEFT_STAGE_BUDGET_REPS   repetitions per configuration (default 30)
 #
 # Writes `bench/receipts/stage-budget-fix-<stamp>.json` and a `.log` beside it.
 # The repetitions run in the rust court at the unchanged hard limits
@@ -72,13 +74,18 @@ note() { printf '%s\n' "$*" | tee -a "$log" >&2; }
 note "stage_budget_court: stamp $stamp revision $revision reps $reps"
 
 overall=0
-for threads in 8 2 1; do
-  note "stage_budget_court: --test-threads=$threads reps=$reps"
+# The unit module at three thread caps, then the ordered-pipeline integration
+# suite at four (its own worker width; it is the path where the second defect
+# appeared).
+for config in "stage_budget:8" "stage_budget:2" "stage_budget:1" "restore_budget:4"; do
+  filter="${config%%:*}"
+  threads="${config##*:}"
+  note "stage_budget_court: filter=$filter --test-threads=$threads reps=$reps"
   if ! scripts/docker-court.sh rust \
-    "cd /work && bash bench/scripts/stage_budget_repeat.sh $threads $reps /work/$work/threads-$threads.tsv 120" \
+    "cd /work && bash bench/scripts/stage_budget_repeat.sh $filter $threads $reps /work/$work/threads-$filter-$threads.tsv 120" \
     >>"$log" 2>&1; then
     overall=1
-    note "stage_budget_court: FAIL at --test-threads=$threads"
+    note "stage_budget_court: FAIL filter=$filter --test-threads=$threads"
   fi
 done
 
@@ -92,16 +99,22 @@ stamp, revision, go_revision, kernel, docker_server, image_id, work, receipts, r
 requested = int(reps)
 
 configs = []
-total_runs = 0
-total_failed = 0
-total_timeouts = 0
 missing = []
-test_count = None
-for threads in (8, 2, 1):
-    path = os.path.join(work, f"threads-{threads}.tsv")
+totals = {
+    "stage_budget": {"runs": 0, "failed": 0, "timeouts": 0, "tests": None},
+    "restore_budget": {"runs": 0, "failed": 0, "timeouts": 0, "tests": None},
+}
+for filter_name, threads in (
+    ("stage_budget", 8),
+    ("stage_budget", 2),
+    ("stage_budget", 1),
+    ("restore_budget", 4),
+):
+    path = os.path.join(work, f"threads-{filter_name}-{threads}.tsv")
     rows = []
+    tests = None
     if not os.path.exists(path):
-        missing.append(threads)
+        missing.append(f"{filter_name}:{threads}")
     else:
         with open(path) as handle:
             for line in handle:
@@ -109,7 +122,7 @@ for threads in (8, 2, 1):
                 if not line:
                     continue
                 if line.startswith("#tests\t"):
-                    test_count = int(line.split("\t")[1])
+                    tests = int(line.split("\t")[1])
                     continue
                 iteration, rc, elapsed = line.split("\t")
                 rows.append(
@@ -118,22 +131,29 @@ for threads in (8, 2, 1):
     passed = sum(1 for row in rows if row["rc"] == 0)
     failed = len(rows) - passed
     timeouts = sum(1 for row in rows if row["rc"] == 124)
-    total_runs += len(rows)
-    total_failed += failed
-    total_timeouts += timeouts
+    if tests is not None:
+        totals[filter_name]["tests"] = tests
+    totals[filter_name]["runs"] += len(rows)
+    totals[filter_name]["failed"] += failed
+    totals[filter_name]["timeouts"] += timeouts
     configs.append(
         {
+            "filter": filter_name,
             "test_threads": threads,
             "requested_runs": requested,
             "runs": len(rows),
             "passed": passed,
             "failed": failed,
             "timeouts": timeouts,
+            "tests": tests,
             "max_elapsed_ms": max((row["elapsed_ms"] for row in rows), default=0),
             "rows": rows,
         }
     )
 
+total_runs = sum(entry["runs"] for entry in totals.values())
+total_failed = sum(entry["failed"] for entry in totals.values())
+total_timeouts = sum(entry["timeouts"] for entry in totals.values())
 complete = not missing and all(config["runs"] == requested for config in configs)
 result = "pass" if complete and total_failed == 0 and total_timeouts == 0 else "fail"
 
@@ -144,8 +164,15 @@ receipt = {
     "revision": revision,
     "result": result,
     "reps": requested,
-    "test_count": test_count,
+    "test_count": totals["stage_budget"]["tests"],
+    "restore_test_count": totals["restore_budget"]["tests"],
     "configs": configs,
+    "stage_budget_runs": totals["stage_budget"]["runs"],
+    "stage_budget_failed": totals["stage_budget"]["failed"],
+    "stage_budget_timeouts": totals["stage_budget"]["timeouts"],
+    "restore_budget_runs": totals["restore_budget"]["runs"],
+    "restore_budget_failed": totals["restore_budget"]["failed"],
+    "restore_budget_timeouts": totals["restore_budget"]["timeouts"],
     "total_runs": total_runs,
     "failed": total_failed,
     "timeouts": total_timeouts,
@@ -172,6 +199,7 @@ receipt = {
         "oversize_failure": "a_byte_request_larger_than_the_budget_runs_alone_and_completes panicked: the normal waiter was granted after 41.358 us while the oversize admission was still live (the assertion required >= 25 ms)",
         "reservation_hang": "releasing_workers_keeps_the_byte_reservation did not terminate; `timeout 25 cargo test ... --exact` exited 124",
         "fifo_hole": "a cancelled non-head waiter left the cursor on a ticket nobody owned; a public-API reproduction at 0a7beb7 failed with `worker did not finish in 5s: FIFO hole`",
+        "pipeline_deadlock": "after oversize exclusivity landed at a6ac2b2, the ordered restore pipeline could admit a later tensor's oversize grant before an earlier tensor's admission; the writer then waited on the earlier tensor forever. Measured 6 hangs in 150 runs of `restore_budget` at `--test-threads=4`; 0 in 150 after index-ordered admission. Evidence log: bench/receipts/stage-budget-prefix-pipeline-hang-20261113T221305Z.log",
         "logs": [
             f"bench/receipts/stage-budget-prefix-oversize-{stamp}.log",
             f"bench/receipts/stage-budget-prefix-hang-{stamp}.log",

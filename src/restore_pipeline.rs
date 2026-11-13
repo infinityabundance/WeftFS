@@ -35,7 +35,10 @@
 //!   outstanding, so the peak is at most
 //!   `max_inflight_bytes + largest oversized tensor`. The reservation is the
 //!   declared logical size, so it bounds staging and queue depth, not a
-//!   decoder's transient allocator use.
+//!   decoder's transient allocator use. When a shared
+//!   [`crate::stage_budget::StageBudget`] is supplied, its `admit` call is also
+//!   made in input order, so the budget's FIFO cannot hold a later tensor while
+//!   the writer waits for an earlier one.
 //! * **One worker means the old path.** A request that resolves to one
 //!   effective worker decodes and writes one tensor at a time, in order, with
 //!   exactly one tensor staged.
@@ -324,6 +327,7 @@ where
         normal_bytes: 0,
         inflight_tasks: 0,
         next_to_reserve: 0,
+        next_to_admit: 0,
         slots: (0..inputs.len()).map(|_| None).collect(),
         oversized_at: None,
         live_workers: effective,
@@ -377,6 +381,18 @@ where
                         Reserve::Granted(granted) => granted,
                         Reserve::Abandoned => break,
                     };
+                    // The shared budget is acquired in input order too. A
+                    // later tensor must never hold the budget's only grant
+                    // while the writer waits for an earlier one: that earlier
+                    // one would be blocked in admission, the writer would
+                    // never consume the later one, and it would never release.
+                    let budgeted = options.budget.is_some();
+                    if budgeted && !await_admit_turn(&queue, &cv, index) {
+                        let mut guard = lock(&queue);
+                        release_held(&mut guard, granted.oversized, reserve);
+                        cv.notify_all();
+                        break;
+                    }
                     if let Err(err) = &sizes[index] {
                         let mut guard = lock(&queue);
                         release_held(&mut guard, granted.oversized, reserve);
@@ -388,6 +404,10 @@ where
                             admission: None,
                         });
                         cv.notify_all();
+                        drop(guard);
+                        if budgeted {
+                            finish_admit_turn(&queue, &cv, index);
+                        }
                         continue;
                     }
                     observed_bytes.fetch_max(granted.bytes, Ordering::Relaxed);
@@ -402,27 +422,35 @@ where
                     // cap covers every thread this tensor will run. Nested
                     // runners inside `work` do not admit again.
                     let mut admission = match &options.budget {
-                        Some(budget) => match budget.admit(
-                            options.stage,
-                            options.group_width(),
-                            reserve,
-                            options.cancel.as_deref(),
-                        ) {
-                            Ok(admission) => Some(admission),
-                            Err(err) => {
-                                let mut guard = lock(&queue);
-                                release_held(&mut guard, granted.oversized, reserve);
-                                guard.slots[index] = Some(Pending {
-                                    oversized: granted.oversized,
-                                    held: false,
-                                    size: 0,
-                                    outcome: Err(err),
-                                    admission: None,
-                                });
-                                cv.notify_all();
-                                continue;
+                        Some(budget) => {
+                            let outcome = budget.admit(
+                                options.stage,
+                                options.group_width(),
+                                reserve,
+                                options.cancel.as_deref(),
+                            );
+                            // Release the turn as soon as `admit` returns: the
+                            // next index may then admit, in order, and no
+                            // worker ever waits for a turn while the writer
+                            // waits for it.
+                            finish_admit_turn(&queue, &cv, index);
+                            match outcome {
+                                Ok(admission) => Some(admission),
+                                Err(err) => {
+                                    let mut guard = lock(&queue);
+                                    release_held(&mut guard, granted.oversized, reserve);
+                                    guard.slots[index] = Some(Pending {
+                                        oversized: granted.oversized,
+                                        held: false,
+                                        size: 0,
+                                        outcome: Err(err),
+                                        admission: None,
+                                    });
+                                    cv.notify_all();
+                                    continue;
+                                }
                             }
-                        },
+                        }
                         None => None,
                     };
                     let _group = admission
@@ -743,6 +771,14 @@ struct Queue<U> {
     /// always gets its turn (the in-order consumer cannot deadlock against
     /// published-but-unwritten results held by later tasks).
     next_to_reserve: usize,
+    /// Shared-budget admission also happens in input order. Only the task whose
+    /// index is `next_to_admit` may call [`StageBudget::admit`]; it advances
+    /// when that call returns. This makes the budget's FIFO the writer's
+    /// cursor order. Without it a later tensor could hold the budget's only
+    /// grant (for example an oversize grant) while the writer waits for an
+    /// earlier tensor that is still blocked in admission: the later holder is
+    /// never consumed, so it never releases, and the earlier one never admits.
+    next_to_admit: usize,
     /// Published results, indexed by input position.
     slots: Vec<Option<Pending<U>>>,
     /// One oversized reservation is decoding or waiting to be written.
@@ -784,6 +820,30 @@ fn cancelled(options: &RestorePipelineOptions) -> bool {
 fn claim(next: &AtomicUsize, len: usize) -> Option<usize> {
     let index = next.fetch_add(1, Ordering::Relaxed);
     (index < len).then_some(index)
+}
+
+/// Wait until this task may call the shared budget's `admit`.
+///
+/// Returns `false` when the writer aborted the pipeline; the caller must then
+/// leave without admitting (and without releasing a turn it does not own).
+fn await_admit_turn<U>(queue: &Mutex<Queue<U>>, cv: &Condvar, index: usize) -> bool {
+    let mut guard = lock(queue);
+    while !guard.aborted && guard.next_to_admit != index {
+        guard = cv
+            .wait(guard)
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+    }
+    !guard.aborted
+}
+
+/// Release the admit turn so the next input index may admit.
+fn finish_admit_turn<U>(queue: &Mutex<Queue<U>>, cv: &Condvar, index: usize) {
+    let mut guard = lock(queue);
+    if guard.next_to_admit == index {
+        guard.next_to_admit = index.saturating_add(1);
+    }
+    drop(guard);
+    cv.notify_all();
 }
 
 fn release_held<U>(queue: &mut Queue<U>, oversized: bool, reserved: usize) {
@@ -872,3 +932,98 @@ const _: fn() = || {
     fn assert_sync<T: Sync>() {}
     assert_sync::<Store>();
 };
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Barrier;
+    use std::thread;
+    use std::time::Duration;
+
+    fn empty_queue() -> Queue<()> {
+        Queue {
+            inflight_bytes: 0,
+            normal_bytes: 0,
+            inflight_tasks: 0,
+            next_to_reserve: 0,
+            next_to_admit: 0,
+            slots: (0..3).map(|_| None).collect(),
+            oversized_at: None,
+            live_workers: 3,
+            aborted: false,
+        }
+    }
+
+    #[test]
+    fn the_budget_admission_turn_follows_input_order() {
+        let queue = Arc::new(Mutex::new(empty_queue()));
+        let cv = Arc::new(Condvar::new());
+        let order = Arc::new(Mutex::new(Vec::new()));
+        let barrier = Arc::new(Barrier::new(4));
+        let mut handles = Vec::new();
+        // Spawned in reverse so ticket order cannot come from spawn order.
+        for index in [2usize, 1, 0] {
+            let queue = Arc::clone(&queue);
+            let cv = Arc::clone(&cv);
+            let order = Arc::clone(&order);
+            let barrier = Arc::clone(&barrier);
+            handles.push(thread::spawn(move || {
+                barrier.wait();
+                assert!(await_admit_turn(&queue, &cv, index));
+                order
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+                    .push(index);
+                thread::sleep(Duration::from_millis(10));
+                finish_admit_turn(&queue, &cv, index);
+            }));
+        }
+        barrier.wait();
+        for handle in handles {
+            handle.join().unwrap();
+        }
+        assert_eq!(
+            *order
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner()),
+            vec![0, 1, 2]
+        );
+    }
+
+    #[test]
+    fn a_waiting_worker_does_not_hold_the_queue_lock() {
+        let queue = Arc::new(Mutex::new(empty_queue()));
+        let cv = Arc::new(Condvar::new());
+        let waiter = {
+            let queue = Arc::clone(&queue);
+            let cv = Arc::clone(&cv);
+            thread::spawn(move || await_admit_turn(&queue, &cv, 1))
+        };
+        thread::sleep(Duration::from_millis(20));
+        // The writer must be able to take the lock while index 1 waits.
+        {
+            let guard = lock(&queue);
+            assert_eq!(guard.next_to_admit, 0);
+            assert!(!guard.aborted);
+        }
+        {
+            let mut guard = lock(&queue);
+            guard.aborted = true;
+        }
+        cv.notify_all();
+        assert!(!waiter.join().unwrap());
+    }
+
+    #[test]
+    fn releasing_a_turn_unblocks_the_next_index() {
+        let queue = Arc::new(Mutex::new(empty_queue()));
+        let cv = Arc::new(Condvar::new());
+        assert!(await_admit_turn(&queue, &cv, 0));
+        finish_admit_turn(&queue, &cv, 0);
+        assert!(await_admit_turn(&queue, &cv, 1));
+        finish_admit_turn(&queue, &cv, 1);
+        assert!(await_admit_turn(&queue, &cv, 2));
+        finish_admit_turn(&queue, &cv, 2);
+        assert_eq!(lock(&queue).next_to_admit, 3);
+    }
+}
