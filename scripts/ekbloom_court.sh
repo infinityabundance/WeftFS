@@ -37,12 +37,12 @@ USAGE
 }
 
 phase=""
-for arg in "$@"; do
-  case "$arg" in
-    --phase=*) phase="${arg#--phase=}" ;;
-    --phase) echo "--phase needs a value (use --phase=boundary)" >&2; exit 64 ;;
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --phase) [[ $# -ge 2 ]] || { echo "--phase needs a value" >&2; exit 64; }; phase="$2"; shift 2 ;;
+    --phase=*) phase="${1#--phase=}"; shift ;;
     -h|--help) usage ;;
-    *) echo "unknown argument '$arg'" >&2; usage ;;
+    *) echo "unknown argument '$1'" >&2; usage ;;
   esac
 done
 [[ -n "$phase" ]] || usage

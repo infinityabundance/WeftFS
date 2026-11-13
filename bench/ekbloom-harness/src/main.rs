@@ -246,6 +246,8 @@ struct Refusal {
 
 struct Arm {
     name: &'static str,
+    repo: String,
+    upstream_file: String,
     file: PathBuf,
     expected_bytes: u64,
     expected_sha256: String,
@@ -276,12 +278,30 @@ fn load_corpus(manifest_path: &Path, corpus_dir: &Path) -> Result<Vec<VerifiedAr
         let entry = pair.get(key).ok_or_else(|| Skip {
             reason: format!("corpus manifest has no pair.{key}"),
         })?;
-        let file_name = entry
+        let repo = entry
+            .get("repo")
+            .and_then(Value::as_str)
+            .ok_or_else(|| Skip {
+                reason: format!("corpus manifest pair.{key}.repo is missing"),
+            })?
+            .to_owned();
+        let upstream_file = entry
             .get("file")
             .and_then(Value::as_str)
             .ok_or_else(|| Skip {
                 reason: format!("corpus manifest pair.{key}.file is missing"),
-            })?;
+            })?
+            .to_owned();
+        // Local naming convention used by the neighbouring courts
+        // (`scripts/s3_court.sh`, `scripts/demo-training-ready.sh`): the corpus
+        // directory names a container by its Hugging Face repo basename. The
+        // manifest's `file` field is the upstream filename and is recorded, but
+        // it is not used to locate the local copy, so a stray upstream-named
+        // file can never be silently picked up.
+        let local_name = format!(
+            "{}.safetensors",
+            repo.rsplit('/').next().unwrap_or(repo.as_str())
+        );
         let size = entry
             .get("size")
             .and_then(Value::as_u64)
@@ -296,7 +316,9 @@ fn load_corpus(manifest_path: &Path, corpus_dir: &Path) -> Result<Vec<VerifiedAr
             })?;
         arms.push(Arm {
             name,
-            file: corpus_dir.join(file_name),
+            repo,
+            upstream_file,
+            file: corpus_dir.join(local_name),
             expected_bytes: size,
             expected_sha256: sha.to_owned(),
         });
@@ -729,6 +751,8 @@ fn base_receipt(args: &Args, phase: &str, arms: &[VerifiedArm], corpus_dir: &Pat
         .map(|arm| {
             json!({
                 "arm": arm.arm.name,
+                "repo": arm.arm.repo,
+                "upstream_file": arm.arm.upstream_file,
                 "file": arm.arm.file.display().to_string(),
                 "expected_bytes": arm.arm.expected_bytes,
                 "measured_bytes": arm.file.file_bytes,
