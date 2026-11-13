@@ -9956,3 +9956,26 @@ write is now durability-bound, not encode-bound.
     `weftcodec 1.4.1` (528 files); the `weftfs` dry run is blocked on publish
     order as in 1.4.0. PyPI upload needs a token; none was available to this
     session, and the exact blocker is recorded rather than papered over.
+
+- 2026-11-13 (v1.4.1 release): merged and tagged in all four repositories.
+  WeftFS `abe4d989bb1e` (tag `v1.4.1`), WeftCodec `60f32fce1bb9`,
+  WeftCodec-Go `20c320c91056`, WeftFS-Go `67fb2fc7a690`; all four `staging`
+  and `main` trees pushed, all four tags pushed (they drive GHCR), and four
+  GitHub releases created. The WeftFS release carries the 1.4.1 wheel and
+  sdist.
+  * crates.io: `weftcodec 1.4.1` checksum `a83e08ef…4283f` (3,020,483 B) and
+    `weftfs 1.4.1` checksum `85870e61…ad73c` (1,850,794 B), both yanked false,
+    published in order (weftcodec then weftfs).
+  * GHCR: `:v1.4.1` and `:latest` verified for all four images and identical
+    per image — `weftfs` `717683c1…f1f46`, `weftcodec` `4c6f8586…ee886`,
+    `weftcodec-go` `80239779…e592f`, `weftfs-go` `b36e36d6…48c27`.
+  * PyPI: **not published**, exact blocker `publish-pypi: no token available`.
+    PyPI still serves 1.4.0 with the stale long description that this release
+    corrects. The built 1.4.1 wheel (`74779b5c…b176`, 115,540 B) and sdist
+    (`9fa6cfb6…79a0`, 156,293 B) are attached to the GitHub release, and
+    `scripts/publish-pypi.sh` now leaves an operator-supplied token file
+    intact.
+  * Post-tag observation receipt:
+    `bench/receipts/release-artifacts-20261113T032500Z.json`. The aggregate
+    receipt for the release tree is `verify-20261113T022751Z.json`
+    (**46/46**, at `e67e631`).

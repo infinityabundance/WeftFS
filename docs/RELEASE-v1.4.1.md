@@ -186,3 +186,41 @@ Previously live: `weftcodec 1.4.0` wheel `41ad31b43326feb86ef9cc2cac6b5d4f369e19
 * [`docs/PERF-NUMBERS.md`](PERF-NUMBERS.md) — every published number with its
   receipt, stamp and revision.
 * [`docs/RELEASE-v1.4.0.md`](RELEASE-v1.4.0.md) — the previous release.
+
+## Published state (post-tag observation)
+
+Recorded in `bench/receipts/release-artifacts-20261113T032500Z.json`.
+
+| Repo | Merge commit | Tag |
+|---|---|---|
+| WeftFS | `abe4d989bb1e52524c7956ac850c2dece78617ca` | `v1.4.1` |
+| WeftCodec | `60f32fce1bb9408b6434942501d67d948d58c87f` | `v1.4.1` |
+| WeftCodec-Go | `20c320c91056db6a8c6c940f4ce345c08c60dd83` | `v1.4.1` |
+| WeftFS-Go | `67fb2fc7a69017eb93789e446e4a608de9ee495b` | `v1.4.1` |
+
+GitHub releases: [WeftFS](https://github.com/infinityabundance/WeftFS/releases/tag/v1.4.1),
+[WeftCodec](https://github.com/infinityabundance/WeftCodec/releases/tag/v1.4.1),
+[WeftCodec-Go](https://github.com/infinityabundance/WeftCodec-Go/releases/tag/v1.4.1),
+[WeftFS-Go](https://github.com/infinityabundance/WeftFS-Go/releases/tag/v1.4.1).
+The WeftFS release carries the wheel and sdist as assets.
+
+crates.io published `weftcodec 1.4.1` (checksum
+`a83e08ef4db2ec68b7f28ad28aa622f23d873fdc65d6c74cd2d20c6c0014283f`,
+3,020,483 B) and `weftfs 1.4.1` (checksum
+`85870e61e5e7d4c1cf75ad9ed126fd6eacfc77be7315b59a129c31e711ead73c`,
+1,850,794 B), both `yanked=false`.
+
+GHCR `:v1.4.1` and `:latest` were read live and are the same image-index digest
+per image: `weftfs` `sha256:717683c1…f1f46`, `weftcodec`
+`sha256:4c6f8586…ee886`, `weftcodec-go` `sha256:80239779…e592f`,
+`weftfs-go` `sha256:b36e36d6…48c27`. A rebuild is not bit-reproducible.
+
+**PyPI 1.4.1 is not published.** No token was available to the release session
+(no `PYPI_TOKEN`, no `WEFT_PYPI_TOKEN_FILE`, no `.docker-cache/.pypi-token`), so
+`scripts/publish-pypi.sh` refused with `publish-pypi: no token available`. PyPI
+still serves `weftcodec 1.4.0` with the live long description that this release
+corrects; the 1.4.1 wheel and sdist are built, `twine check`-clean and attached
+to the GitHub release. `scripts/publish-pypi.sh` no longer deletes an
+operator-supplied token file, so an operator can now point
+`WEFT_PYPI_TOKEN_FILE` at a persistent file and upload without the script
+removing it.
