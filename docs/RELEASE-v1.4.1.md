@@ -148,8 +148,8 @@ Built in the python court from the release tree and checked with `twine check`
 
 | file | size | sha256 |
 |---|---:|---|
-| `weftcodec-1.4.1-py3-none-any.whl` | 115,540 B | `74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176` |
-| `weftcodec-1.4.1.tar.gz` | 156,293 B | `9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0` |
+| `weftcodec-1.4.1-py3-none-any.whl` | 115,889 B | `92efd39d2e4732081dccfccbb19c2f2849ff427e9f38d6aed9226624d5ceed06` |
+| `weftcodec-1.4.1.tar.gz` | 156,971 B | `773c317d216b252be36dc6b07d5a1add8ba80c14faf46c7e510011180ec196e2` |
 
 The exact registry state, including upload times and checksums, is in
 `bench/receipts/release-artifacts-20261113T011500Z.json`. If a PyPI token is

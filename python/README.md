@@ -25,12 +25,11 @@ are optional and are only imported by their adapter modules.
 **Published.** PyPI serves `weftcodec 1.4.0` (wheel sha256
 `41ad31b43326feb86ef9cc2cac6b5d4f369e19fe6d9ce0da80203c940ff9d3c6`, 115,851 B; sdist sha256
 `2fd174fc74ba4bba3c2d1dff241c9eeb9f4f002dd25af994b48f04ae201e69c0`, 156,858 B), so `pip install weftcodec==1.4.0`
-works. The 1.4.1 artifacts are rebuilt from this tree in the python court and
-`twine check`-clean: wheel `74779b5c26feaaf0dbb70c909d48221a699cc4e91abd5fbd6c1eed7782bcb176` (115,540 B), sdist
-`9fa6cfb62062754e13db98708dd32727b9d046dd6ab5896569216958097b79a0` (156,293 B). Exact live registry state is in
-`bench/receipts/release-artifacts-20261113T011500Z.json` and
-`docs/RELEASE-v1.4.1.md`; this file is the long description, so a wheel cannot
-contain its own digest.
+works. The 1.4.1 wheel and sdist are rebuilt from this tree in the python
+court and `twine check`-clean; their hashes are recorded in
+`bench/receipts/release-artifacts-20261113T032500Z.json` and
+`docs/RELEASE-v1.4.1.md`, not here, because this file is the wheel's long
+description and a wheel cannot contain its own digest.
 <!-- END GENERATED:python-readme-current -->
 
 ## Usage
