@@ -301,6 +301,22 @@ pub struct TensorPipelineStats {
     /// Total writeback-thread busy time across passes (overlapped with encode
     /// and publication, so it is not a wall).
     pub writeback_ms: f64,
+    // ---- durability model (N04) ----
+    /// How a durable publication is expressed on this backend:
+    /// `"file-barrier"` (the backend can be told to `fsync` published files,
+    /// so the early-barrier overlap applies) or `"provider-ack"` (a remote
+    /// object store: the `PUT` returned after the provider accepted the bytes
+    /// and there is no file to barrier).
+    pub durability_model: &'static str,
+    /// Whether the early-barrier drain can do anything on this backend.
+    pub early_barrier_applicable: bool,
+    /// Bytes whose durability is the provider's acknowledgement of their
+    /// publication. Zero on a file-barrier backend, where the commit's own
+    /// barrier is what makes the group durable.
+    pub provider_acknowledged_bytes: u64,
+    /// Times the publisher reached `publish_sync_bytes`. On a provider-ack
+    /// backend this only rotates a counter; it never issues a barrier.
+    pub publish_sync_kicks: u64,
     /// Encode and publication intervals, for a reader that wants to plot them.
     pub encode_intervals: Vec<StageInterval>,
     pub publish_intervals: Vec<StageInterval>,
@@ -369,6 +385,12 @@ impl Store {
                 worker_bytes: options.worker_bytes,
                 publish_sync_bytes: options.publish_sync_bytes,
                 candidate_parallel_min_bytes: options.candidate_parallel_min_bytes,
+                durability_model: if self.backend_durability_is_provider_ack() {
+                    "provider-ack"
+                } else {
+                    "file-barrier"
+                },
+                early_barrier_applicable: !self.backend_durability_is_provider_ack(),
                 ..TensorPipelineStats::default()
             };
             stats.reservation_bound_bytes = options.reservation_bound_bytes(0);
@@ -382,6 +404,19 @@ impl Store {
             .map(|tensor| tensor.byte_len)
             .max()
             .unwrap_or(0);
+        // N04: ask the open backend how a durable publication is expressed. A
+        // remote object store has no published file to drain, so the early
+        // barrier is inapplicable and must not be reported as if it ran; its
+        // `PUT` acknowledgement is the durability point. The ordering rule is
+        // identical either way: every blob is published before the caller's
+        // commit record, and a crash before that record leaves unreferenced
+        // blobs, never a dangling commit entry.
+        let provider_ack = self.backend_durability_is_provider_ack();
+        let durability_model = if provider_ack {
+            "provider-ack"
+        } else {
+            "file-barrier"
+        };
         let started = Instant::now();
         let shared = Mutex::new(Shared::new(tensors.len()));
         let cv = Condvar::new();
@@ -399,6 +434,8 @@ impl Store {
         let oversize_publish = AtomicUsize::new(0);
 
         let writeback = Writeback::new();
+        let provider_acked_ns = AtomicUsize::new(0);
+        let publish_sync_kicks = AtomicUsize::new(0);
         std::thread::scope(|scope| {
             // ---- reader -------------------------------------------------
             {
@@ -659,6 +696,8 @@ impl Store {
                 let wait_publish_idle_ns = &wait_publish_idle_ns;
                 let oversize_publish = &oversize_publish;
                 let writeback = &writeback;
+                let provider_acked_ns = &provider_acked_ns;
+                let publish_sync_kicks = &publish_sync_kicks;
                 scope.spawn(move || {
                     let mut since_sync: u64 = 0;
                     loop {
@@ -737,19 +776,28 @@ impl Store {
                             since_sync = since_sync.saturating_add(resident as u64);
                             if since_sync >= options.publish_sync_bytes {
                                 since_sync = 0;
-                                // Drain the batch's file list under the backend
-                                // lock (cheap) and hand the `fsync`s to the
-                                // writeback thread.
-                                match self.take_published_blob_writeback_files() {
-                                    Ok(files) if files.is_empty() => {}
-                                    Ok(files) => {
-                                        let mut state = lock_wb(writeback);
-                                        state.queue.push_back(files);
-                                        writeback.cv.notify_all();
-                                    }
-                                    Err(err) => {
-                                        fail(shared, cv, index, err);
-                                        return;
+                                publish_sync_kicks.fetch_add(1, Ordering::Relaxed);
+                                if provider_ack {
+                                    // The provider acknowledged this publication
+                                    // when `publish_encoded_tensor` returned.
+                                    // There is no file to `fsync`, so record the
+                                    // acknowledged bytes and claim no barrier.
+                                    provider_acked_ns.fetch_add(resident, Ordering::Relaxed);
+                                } else {
+                                    // Drain the batch's file list under the
+                                    // backend lock (cheap) and hand the
+                                    // `fsync`s to the writeback thread.
+                                    match self.take_published_blob_writeback_files() {
+                                        Ok(files) if files.is_empty() => {}
+                                        Ok(files) => {
+                                            let mut state = lock_wb(writeback);
+                                            state.queue.push_back(files);
+                                            writeback.cv.notify_all();
+                                        }
+                                        Err(err) => {
+                                            fail(shared, cv, index, err);
+                                            return;
+                                        }
                                     }
                                 }
                             }
@@ -884,6 +932,10 @@ impl Store {
             writeback_passes: writeback.passes,
             writeback_files: writeback.files,
             writeback_ms: writeback.ns as f64 / 1.0e6,
+            durability_model,
+            early_barrier_applicable: !provider_ack,
+            provider_acknowledged_bytes: provider_acked_ns.load(Ordering::Relaxed) as u64,
+            publish_sync_kicks: publish_sync_kicks.load(Ordering::Relaxed) as u64,
             encode_intervals,
             publish_intervals,
         };

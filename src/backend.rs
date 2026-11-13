@@ -788,6 +788,24 @@ impl BackendKind {
         }
     }
 
+    /// Whether a durable blob write is the **provider's acknowledgement** rather
+    /// than a local file system barrier.
+    ///
+    /// Decided by the plane the pipeline publishes into: the blob plane for a
+    /// split store, the inner backend for a packed store. A local commit plane
+    /// does not turn remote blob publications into file barriers.
+    pub fn blobs_are_provider_acked(&self) -> bool {
+        match self {
+            BackendKind::S3 { .. } | BackendKind::Gcs { .. } | BackendKind::Azure { .. } => true,
+            BackendKind::Split { blobs, .. } => blobs.blobs_are_provider_acked(),
+            BackendKind::Packed { inner, .. } => inner.blobs_are_provider_acked(),
+            BackendKind::Local
+            | BackendKind::Object
+            | BackendKind::Posix { .. }
+            | BackendKind::ThreeFs { .. } => false,
+        }
+    }
+
     /// Construct the backend rooted at `root`.
     pub fn open(&self, root: impl AsRef<Path>) -> Result<Box<dyn StorageBackend + Send>> {
         let root = root.as_ref().to_path_buf();
@@ -818,17 +836,23 @@ impl BackendKind {
                 blob_root,
             } => {
                 let blob_path = blob_root.as_deref().unwrap_or(&root);
-                Box::new(CompositeBackend::new(
-                    blobs.open_blob_plane(blob_path)?,
-                    commits.open_commit_plane(&root)?,
-                    format!("{}-blobs/{}-commits", blobs.label(), commits.label()),
-                ))
+                Box::new(
+                    CompositeBackend::new(
+                        blobs.open_blob_plane(blob_path)?,
+                        commits.open_commit_plane(&root)?,
+                        format!("{}-blobs/{}-commits", blobs.label(), commits.label()),
+                    )
+                    .with_provider_ack(blobs.blobs_are_provider_acked()),
+                )
             }
-            BackendKind::Packed { .. } => Box::new(CompositeBackend::new(
-                self.open_blob_plane(&root)?,
-                self.open_commit_plane(&root)?,
-                self.describe(),
-            )),
+            BackendKind::Packed { .. } => Box::new(
+                CompositeBackend::new(
+                    self.open_blob_plane(&root)?,
+                    self.open_commit_plane(&root)?,
+                    self.describe(),
+                )
+                .with_provider_ack(self.blobs_are_provider_acked()),
+            ),
         })
     }
 
@@ -1067,6 +1091,23 @@ pub trait StorageBackend: Send {
     /// Declared capabilities (cloned so a backend may revise them after a
     /// publication-primitive probe).
     fn capabilities(&self) -> Capabilities;
+
+    /// Whether `durable_fsync` is satisfied by the **provider's acknowledgement**
+    /// rather than by a local file system barrier.
+    ///
+    /// This is the distinction a write-path optimisation must not blur. A POSIX
+    /// backend can be told to `fsync` a *file* early and the caller keeps the
+    /// obligation to `fsync` before the commit record; a remote object backend
+    /// has no file to barrier, and its `PUT` already returned only after the
+    /// provider accepted the object. Reporting a file barrier there would be
+    /// fiction, so the pipeline reports the provider-acknowledgement model
+    /// instead and counts the bytes the provider acknowledged.
+    ///
+    /// Default: file barriers (the local and immutable-object namespaces, which
+    /// publish with `fsync(2)` / `link(2)`).
+    fn durability_is_provider_ack(&self) -> bool {
+        false
+    }
 
     /// Read at most `len` bytes starting at `offset`. Returns fewer bytes at
     /// end of object. `offset` beyond the object is an error.
@@ -3312,6 +3353,7 @@ pub struct CompositeBackend {
     blobs: Box<dyn crate::planes::BlobPlane + Send>,
     commits: Box<dyn crate::planes::CommitPlane + Send>,
     description: String,
+    provider_ack: bool,
 }
 
 impl CompositeBackend {
@@ -3326,7 +3368,15 @@ impl CompositeBackend {
             blobs,
             commits,
             description,
+            provider_ack: false,
         }
+    }
+
+    /// Declare that durable **blob** publication is the blob plane's provider
+    /// acknowledgement. Default: local file barriers.
+    pub fn with_provider_ack(mut self, provider_ack: bool) -> CompositeBackend {
+        self.provider_ack = provider_ack;
+        self
     }
 
     /// The routing rule, stated once.
@@ -3370,6 +3420,10 @@ impl StorageBackend for CompositeBackend {
                 blobs.publication, commits.publication
             ),
         }
+    }
+
+    fn durability_is_provider_ack(&self) -> bool {
+        self.provider_ack
     }
 
     fn read(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>> {

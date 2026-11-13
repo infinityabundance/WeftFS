@@ -1651,6 +1651,12 @@ impl StorageBackend for S3Backend {
         S3Backend::capabilities()
     }
 
+    /// S3 durability is the provider's acknowledgement of the `PUT`; there is no
+    /// file for the court to `fsync` and none is claimed.
+    fn durability_is_provider_ack(&self) -> bool {
+        true
+    }
+
     fn read(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>> {
         if len == 0 {
             return Ok(Vec::new());

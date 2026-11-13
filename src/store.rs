@@ -1555,6 +1555,21 @@ impl Store {
             .unwrap_or_else(|_| self.backend_kind.capabilities())
     }
 
+    /// Whether a durable publication is the backend's *provider acknowledgement*
+    /// rather than a local file system barrier.
+    ///
+    /// The planned writer's early-barrier overlap only exists for a backend that
+    /// can be told to `fsync` a published file before the commit record. A
+    /// remote object backend has no such file: its `PUT` returns after the
+    /// provider accepted the bytes, so there is nothing to drain early and no
+    /// barrier may be claimed. Read from the open backend, not from the
+    /// configuration, so a probed capability (a split store's actual blob plane)
+    /// is what the writer reports.
+    pub fn backend_durability_is_provider_ack(&self) -> bool {
+        self.with_backend(|backend| Ok(backend.durability_is_provider_ack()))
+            .unwrap_or_else(|_| self.backend_kind.blobs_are_provider_acked())
+    }
+
     /// Physical I/O counters for receipts and tests.
     pub fn backend_stats(&self) -> BackendStats {
         let control = self

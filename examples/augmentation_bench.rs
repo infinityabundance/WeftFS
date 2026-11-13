@@ -1706,10 +1706,17 @@ fn pipeline_stats_json(stats: &weftfs::tensor_pipeline::TensorPipelineStats) -> 
             "cpu_tokens": stats.cpu_token_wait_ms,
         },
         "early_barrier": {
+            "applicable": stats.early_barrier_applicable,
             "passes": stats.writeback_passes,
             "files": stats.writeback_files,
             "busy_ms": stats.writeback_ms,
-            "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record",
+            "publish_sync_kicks": stats.publish_sync_kicks,
+            "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+        },
+        "durability": {
+            "model": stats.durability_model,
+            "provider_acknowledged_bytes": stats.provider_acknowledged_bytes,
+            "note": "provider-ack means the backend's PUT returned after the provider accepted the bytes; it is not a media or power-loss guarantee",
         },
         "source": "Store::prepare_tensor_group_pipelined (R21); every field is measured, never estimated",
     })

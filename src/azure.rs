@@ -2144,6 +2144,12 @@ impl StorageBackend for AzureBackend {
         AzureBackend::capabilities()
     }
 
+    /// Azure Blob durability is the provider's acknowledgement of the `Put Blob`
+    /// (or conditional write); there is no local file barrier to claim.
+    fn durability_is_provider_ack(&self) -> bool {
+        true
+    }
+
     fn read(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>> {
         if len == 0 {
             return Ok(Vec::new());
