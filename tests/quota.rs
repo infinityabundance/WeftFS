@@ -404,6 +404,28 @@ fn run(store: &Path, args: &[&str]) -> Output {
     command.output().expect("run weftfs")
 }
 
+/// The real uid/gid of this test process, read the way the CLI reads its own.
+/// Every write command defaults its owner and its quota principal to these,
+/// so a test that configures a budget for a fixed principal must say which
+/// principal it is writing as — otherwise it only passes when run as root.
+fn caller_ids() -> (u64, u64) {
+    let text = fs::read_to_string("/proc/self/status").unwrap_or_default();
+    let mut uid = 0;
+    let mut gid = 0;
+    for line in text.lines() {
+        if let Some(rest) = line.strip_prefix("Uid:") {
+            if let Some(first) = rest.split_whitespace().next() {
+                uid = first.parse().unwrap_or(0);
+            }
+        } else if let Some(rest) = line.strip_prefix("Gid:") {
+            if let Some(first) = rest.split_whitespace().next() {
+                gid = first.parse().unwrap_or(0);
+            }
+        }
+    }
+    (uid, gid)
+}
+
 fn ok(store: &Path, args: &[&str]) -> Output {
     let output = run(store, args);
     assert!(
@@ -438,7 +460,12 @@ fn cli_quota_show_is_limited_to_the_callers_principal() {
             "init",
         ],
     );
-    ok(&store, &["create", "/a.txt", "--text", "alpha"]);
+    ok(
+        &store,
+        &[
+            "create", "/a.txt", "--uid", "0", "--gid", "0", "--text", "alpha",
+        ],
+    );
 
     let own = json(
         &store,
@@ -498,7 +525,19 @@ fn cli_quota_show_is_limited_to_the_callers_principal() {
         &["--json", "quota", "show", "--uid", "0", "--gid", "0"],
     );
     assert_eq!(rebuilt["used_objects"], 0);
-    ok(&store, &["create", "/after-reset.txt", "--text", "after"]);
+    ok(
+        &store,
+        &[
+            "create",
+            "/after-reset.txt",
+            "--uid",
+            "0",
+            "--gid",
+            "0",
+            "--text",
+            "after",
+        ],
+    );
     let after_reset = json(
         &store,
         &["--json", "quota", "show", "--uid", "0", "--gid", "0"],
@@ -515,7 +554,16 @@ fn cli_quota_denial_is_non_disclosing() {
     fs::write(&body, vec![0x44u8; 256 * 1024]).unwrap();
     let output = run(
         &store,
-        &["create", "/big.bin", "--file", body.to_str().unwrap()],
+        &[
+            "create",
+            "/big.bin",
+            "--uid",
+            "0",
+            "--gid",
+            "0",
+            "--file",
+            body.to_str().unwrap(),
+        ],
     );
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -530,4 +578,103 @@ fn cli_quota_denial_is_non_disclosing() {
     }
     let info = json(&store, &["--json", "info"]);
     assert_eq!(info["objects"], 1, "only the namespace root exists");
+}
+
+/// `quota show` with no `--uid`/`--gid` must report the *caller*, not root.
+///
+/// This is the regression for the first real CI run: the two CLI quota tests
+/// configured a budget for `0:0` and then wrote without naming a principal.
+/// In the Docker court the process is root, so they passed; on a stock GitHub
+/// runner the process is uid/gid 1001, the write was attributed to 1001:1001
+/// (which has no budget), and both tests failed. The command defaults were
+/// `0:0` for `quota show` and "the process's real ids" for every write, so a
+/// non-root caller read a principal that was not theirs.
+#[test]
+fn cli_quota_show_defaults_to_the_caller() {
+    let dir = tempdir().unwrap();
+    let store = dir.path().join("store");
+    let (uid, gid) = caller_ids();
+    let spec = format!("{uid}:{gid}:1048576:100");
+    ok(&store, &["--quota", spec.as_str(), "init"]);
+    // No --uid/--gid: the owner and the charged principal are the caller.
+    ok(&store, &["create", "/a.txt", "--text", "alpha"]);
+
+    let implicit = json(&store, &["--json", "quota", "show"]);
+    assert_eq!(implicit["principal"], format!("{uid}:{gid}"));
+    assert_eq!(implicit["configured"], true);
+    assert_eq!(implicit["used_objects"], 1);
+    assert!(implicit["used_bytes"].as_u64().unwrap() > 0);
+
+    let explicit = json(
+        &store,
+        &[
+            "--json",
+            "quota",
+            "show",
+            "--uid",
+            &uid.to_string(),
+            "--gid",
+            &gid.to_string(),
+        ],
+    );
+    assert_eq!(
+        explicit, implicit,
+        "the default must be the caller's own view"
+    );
+
+    // Root's counters are not the caller's, and are not disclosed as if they
+    // were. When the caller *is* root the two views are the same principal.
+    if (uid, gid) != (0, 0) {
+        let root = json(
+            &store,
+            &["--json", "quota", "show", "--uid", "0", "--gid", "0"],
+        );
+        assert_eq!(root["principal"], "0:0");
+        assert_eq!(root["used_objects"], 0);
+        assert_eq!(root["used_bytes"], 0);
+    }
+}
+
+/// A budget constrains only the principal it names. This is the semantic the
+/// original tests accidentally depended on: running as root made `0:0` the
+/// caller. Naming a different principal explicitly shows that an unconfigured
+/// principal is unconstrained and that usage is attributed per principal.
+#[test]
+fn cli_quota_budget_applies_only_to_the_configured_principal() {
+    let dir = tempdir().unwrap();
+    let store = dir.path().join("store");
+    ok(&store, &["--quota", "0:0:4096:100", "init"]);
+    let body = dir.path().join("big.bin");
+    fs::write(&body, vec![0x44u8; 256 * 1024]).unwrap();
+
+    // 4242:4242 has no budget, so the same write is admitted and charged to it.
+    ok(
+        &store,
+        &[
+            "create",
+            "/other.bin",
+            "--uid",
+            "4242",
+            "--gid",
+            "4242",
+            "--file",
+            body.to_str().unwrap(),
+        ],
+    );
+    let other = json(
+        &store,
+        &["--json", "quota", "show", "--uid", "4242", "--gid", "4242"],
+    );
+    assert_eq!(other["configured"], false);
+    assert_eq!(other["used_objects"], 1);
+    assert!(other["used_bytes"].as_u64().unwrap() > 0);
+
+    // The configured principal's counters were not touched by another one.
+    let root = json(
+        &store,
+        &["--json", "quota", "show", "--uid", "0", "--gid", "0"],
+    );
+    assert_eq!(root["configured"], true);
+    assert_eq!(root["used_objects"], 0);
+    assert_eq!(root["used_bytes"], 0);
 }

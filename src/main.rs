@@ -1097,12 +1097,15 @@ enum SnapshotCommand {
 #[derive(Subcommand)]
 enum QuotaCommand {
     /// Show the caller's own usage and configured budget only. Usage of other
-    /// principals is never disclosed.
+    /// principals is never disclosed. `--uid`/`--gid` default to the invoking
+    /// process's real ids, exactly like every write command; they used to
+    /// default to 0:0, which reported the wrong principal (and root's
+    /// counters) to a non-root caller.
     Show {
-        #[arg(long, default_value_t = 0)]
-        uid: u64,
-        #[arg(long, default_value_t = 0)]
-        gid: u64,
+        #[arg(long)]
+        uid: Option<u64>,
+        #[arg(long)]
+        gid: Option<u64>,
         /// Show the tenant budget instead of the POSIX principal.
         #[arg(long)]
         tenant: Option<String>,
@@ -3054,7 +3057,16 @@ fn run(cli: Cli) -> Result<()> {
                 let store = open_store(&store, OpenMode::ReadOnly, policy)?;
                 let principal = match tenant {
                     Some(name) => QuotaPrincipal::Tenant(name),
-                    None => QuotaPrincipal::Posix { uid, gid },
+                    None => {
+                        // "the caller's own usage" must mean the real caller on
+                        // any host, not uid 0: a test or service running
+                        // unprivileged read the wrong principal otherwise.
+                        let (default_uid, default_gid) = current_ids();
+                        QuotaPrincipal::Posix {
+                            uid: uid.unwrap_or(default_uid),
+                            gid: gid.unwrap_or(default_gid),
+                        }
+                    }
                 };
                 if let Some(problem) = store.quota_problem() {
                     return Err(Error::corrupt(format!(
