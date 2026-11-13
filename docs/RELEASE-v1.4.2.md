@@ -146,7 +146,8 @@ Built once at WeftFS `52da9888f372` and not rebuilt after this note
 was committed. The wheel's `METADATA` description is byte-identical to
 `python/README.md` and contains no registry-state sentence, no pinned install
 version and no 64-hex digest. Python builds here are not bit-reproducible, so this
-table is the build that will be uploaded, not a reproducibility proof. Receipt:
+table is the build this note records, not a reproducibility proof. An upload that
+rebuilds it must record the new digests separately. Receipt:
 `bench/receipts/release-artifacts-20261113T045609Z.json`.
 <!-- END GENERATED:release-v142-artifacts -->
 
