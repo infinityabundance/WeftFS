@@ -60,6 +60,27 @@ default. Source: `bench/receipts/augmentation-local-20261113T004000Z.json` (stam
 revision 0a01606e2654).
 <!-- END GENERATED:readme-current-result -->
 
+> **How to read this page (dated 2026-11-13).** The block above is the current
+> shipped result: one receipt,
+> `bench/receipts/augmentation-local-20261113T004000Z.json` at stamp
+> `20261113T004503Z` and revision `0a01606e2654`. The larger write ratios
+> further down — including the headline of *What's new in v1.4.0* — are
+> **historical self-improvements** measured on the bounded prepare/publish
+> pipeline (`bench/RESULTS-pareto.md`, receipt
+> `bench/receipts/r22-pareto-20261112T230000Z.json`, recorded revision
+> `ccc6d695b114`). They are retained as immutable evidence at their own stamp;
+> they are not the shipped default and not a current claim. Release state:
+> `v1.4.2` is the newest tag in all four repositories. The parent repository's
+> `staging` continues past its tag; in each subproject, `staging` is the branch
+> the tagged `main` merge came from, so `main` is a few merge commits ahead
+> there. Registry state at this date —
+> observed, not assumed: PyPI serves `weftcodec 1.4.2`, crates.io serves
+> `weftcodec 1.4.2` and `weftfs 1.4.2` (none yanked), and all four GitHub
+> repositories publish a `v1.4.2` release; the artifact digests and the live
+> state are recorded in [`docs/RELEASE-v1.4.2.md`](docs/RELEASE-v1.4.2.md).
+> The "PyPI remains unpublished" sentences in the v1.1.0–v1.3.0 sections
+> describe their own releases, were true then, and are retained as history.
+
 <!-- BEGIN GENERATED:readme-context-advantage (scripts/perf_numbers.py) -->
 ## The flagship: a context advantage on one backend, with and without it
 
