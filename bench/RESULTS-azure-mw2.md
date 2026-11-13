@@ -19,11 +19,11 @@ The counted results below are emitted from the receipt by
 ## 1. Verdict
 
 <!-- BEGIN GENERATED:azure-mw2-verdict (scripts/perf_numbers.py) -->
-**Verdict: the emulator court passes.** All **8/8** scenarios and all **167/167** checks pass (0 failures) on the pinned Azurite emulator, with a **31.2 s** court wall and a **52,457,472 B** cgroup memory peak. Every scenario is a mixed Rust/Go writer experiment through the opt-in MW2 transaction API; the default remains MW1.
+**Verdict: the emulator court passes.** All **8/8** scenarios and all **167/167** checks pass (0 failures) on the pinned Azurite emulator, with a **34.3 s** court wall and a **52,301,824 B** cgroup memory peak. Every scenario is a mixed Rust/Go writer experiment through the opt-in MW2 transaction API; the default remains MW1.
 <!-- END GENERATED:azure-mw2-verdict -->
 
-Receipt: `bench/receipts/azure-mw2-20261113T101500Z.json` (stamp
-`20261113T101500Z`, WeftFS revision `352a4d32ac770124e0ab4ded7ca3a7370bb63d2f`,
+Receipt: `bench/receipts/azure-mw2-20261113T103500Z.json` (stamp
+`20261113T103500Z`, WeftFS revision `103dd99c7fd9d23345589ffc484ab5f43223729b`,
 WeftFS-Go `61ac5c96a61a7b41d0608fc4a1a747e5642750b8`). Pinned emulator:
 `mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37`
 (release 3.35.0, image id `sha256:03f7cb26ef2cda2c06ec6760c91975a85460e7bb63277a0df5c9f1d02071ead3`).
@@ -32,7 +32,7 @@ WeftFS-Go `61ac5c96a61a7b41d0608fc4a1a747e5642750b8`). Pinned emulator:
 to 1 s — shorter than a writer's prepare-to-publish interval — a GC pass running
 concurrently with mixed writers reclaims prepared blobs and a committed
 generation becomes unreadable. Receipt
-`bench/receipts/azure-mw2-20261113T101700Z.json` (same two revisions, one
+`bench/receipts/azure-mw2-20261113T103700Z.json` (same two revisions, one
 variable changed) records exactly that. It is evidence that the age gate is
 load-bearing, and it is not a pass.
 
@@ -63,7 +63,10 @@ load-bearing, and it is not a pass.
   and proves the exact state with `verify --full` rather than by arithmetic on
   gaps.
 * **S2 — conflicting mixed-language writers.** Six rounds, one Rust and one Go
-  transaction writing the *same* name with different bytes, started together.
+  transaction writing the *same* name with different bytes. Both processes open
+  and prepare, then pause, so both have observed the same head when the race is
+  released; a slow open could otherwise skip a generation for a reason
+  unrelated to the property under test.
   Each round has exactly one winner, the loser reports a typed `Conflict` (never
   a silent success), the winner's bytes are exactly present, and the head
   advances by exactly one generation. No round ends with both or neither.

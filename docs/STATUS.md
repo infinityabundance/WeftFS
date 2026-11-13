@@ -10623,8 +10623,8 @@ writer opens with `--writer-mode optimistic`.
   cross-language verification plus deterministic parity. The counted table is
   generated from the receipt in
   [`bench/RESULTS-azure-mw2.md`](../bench/RESULTS-azure-mw2.md).
-  Positive receipt `azure-mw2-20261113T101500Z.json` at WeftFS `352a4d3` /
-  WeftFS-Go `61ac5c9`: every scenario and every check passed.
+  Positive receipt `azure-mw2-20261113T103500Z.json` at WeftFS `103dd99` /
+  WeftFS-Go `a6c1c60`: every scenario and every check passed.
 * **Defect 1 (S1, first run), fixed at the root.** Both Azure `tmp/` sweeps
   deleted every blob under `tmp/` and ignored the grace argument, assuming the
   writer lock was held. An optimistic open holds none, so concurrent writers
@@ -10642,7 +10642,7 @@ writer opens with `--writer-mode optimistic`.
 * **Negative result retained.** With the sweep grace at 1 s — shorter than a
   transaction's prepare-to-publish interval — a concurrent pass reclaims
   prepared blobs and a committed generation becomes unreadable. Receipt
-  `azure-mw2-20261113T101700Z.json`, same two revisions, one variable changed.
+  `azure-mw2-20261113T103700Z.json`, same two revisions, one variable changed.
   The court therefore ages its garbage past a 10 s window instead of relaxing
   any check, and the results document states the operational contract: size
   `gc_grace_secs` above transaction latency, or collect while quiescent. MW2 GC
