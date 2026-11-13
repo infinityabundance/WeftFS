@@ -21,6 +21,15 @@ integration) and `EKB-X22` (verdict) — are declared in
 The court script refuses them with `not implemented in this subphase` and a
 non-zero exit rather than reporting a success it did not measure.
 
+### Version 2 amendment (EKB-E3 region reads)
+
+**v2 adds §9 only.** EKB-E1 and EKB-E2 above are unchanged, including their
+tensor sets, numbers, verdicts and receipts. The paragraph above that places
+`EKB-E3` out of scope applies to contract version 1; under version 2, `EKB-E3`
+is graded by §9, which was committed before the first E3 measurement. `EKB-E4`,
+`EKB-E5`, `EKB-E6` and `EKB-X22` remain out of scope and are still refused by
+the court with `not implemented in this subphase` and a non-zero exit.
+
 **Related:** [`docs/EKBLOOM-PLAN.md`](../docs/EKBLOOM-PLAN.md) (gates and the
 pre-registered prediction), `bench/CONTRACTS-context-advantage.md` (contract
 precedent), `bench/RESULTS-context-advantage.md` (the precedent that a failed
@@ -388,3 +397,209 @@ tracked document only through `docs/perf-numbers.json` and
 * A `pass` on E1 and a `loss` on E2 is a complete, publishable result: the
   boundary is feasible and the space axis is lost. It is not a partial success of
   the portfolio argument.
+
+---
+
+## 9. `EKB-E3` (version 2) — bounded random access at a declared footprint
+
+This section was committed **before** the first E3 measurement. It fixes the three
+arms, the tensor and region selection rules, the workload, the timing and
+footprint definitions, the sample counts, the gate and its tolerance, and the
+retirement consequence. No part of it may be widened, retuned or re-scoped after
+the receipt exists; a changed rule is a new contract version and a new receipt,
+with the earlier one retained.
+
+### 9.1 The three arms
+
+One backend: the local POSIX data plane, in the rust court, under the unchanged
+limits. Each arm gets its own fresh root directory. The source tensor bytes and
+the logical byte ranges are identical for all three arms.
+
+* **W — WeftFS mode-15 `TENSOR_TILED` region read.** Each selected tensor is
+  written through the shipped `Store::write_tensor_file_with_spec` with
+  `TensorWriteSpec { strategy_hint: Some(TensorStrategy::TensorTiled),
+  tile_shape: Some(..), .. }`, inside one `Store::group` so the whole set is one
+  commit. The tile shape is declared by rank: `[128]` for a rank-1 tensor and
+  `[128, 128]` for a rank-2 tensor. Every selected shape divides that grid (the
+  selection rule in §9.2 guarantees it). A read is
+  `Store::read_tensor_region_with_options_and_stats` with
+  `TileDecodeOptions::default()` (one worker, the default in-flight bound). The
+  read handle is a read-only `Store` with the default `Options`: no decoded-object
+  cache (`cache_bytes = 0`) and no single-flight, exactly as the context-advantage
+  court holds them constant. The shipped API returns the exact region bytes; the
+  harness slices the requested byte range from the minimal row-aligned covering
+  region (declared over-read, never a different logical range).
+* **A — the strong application-level baseline.** The exact element bytes of every
+  selected tensor are stored **raw** (no decode, no compression) in one
+  `payload.raw` file, in ascending tensor-name order, each record starting at the
+  next 8-byte boundary (zero padding). Beside it are a canonical JSON manifest
+  (`weft.ekbloom-read-baseline.v1`: payload file, alignment, total payload bytes,
+  and per tensor name/dtype/shape/offset/length/SHA-256, sorted by name) and a
+  canonical JSON index (`weft.ekbloom-read-index.v1`: name/offset/length, sorted
+  by name). Both are read and validated once at open, then held in memory. A read
+  is one `pread` of exactly the requested byte range into a reused buffer. A is
+  not crippled: it is the ordinary "raw bytes plus a manifest and an index"
+  application, which is O(1) positioning at 1.0x raw.
+* **E — EKBLOOM bounded positional read.** One `.ekb` container per selected
+  tensor, built with the pinned crate's own entry point and a manifested profile
+  that provides a bounded cold path:
+  `ekbloom::create_auto(bytes, ManifestationProfile::Sparse { interval: 1024 })`.
+  This is the crate's own restart geometry (`docs/BUDGET-GUIDE.md` §2,
+  "Checkpoint K"), not a WeftFS tuning parameter. The read handle is
+  `ekbloom::FileBody::open(&container)` once; a read is
+  `FileBody::read(ReadRequest { offset, length })`. `FileBody` is the crate's
+  file-backed reader: it keeps parsed offsets and performs `pread`-style reads of
+  only the bytes a request needs, charging one central `ReadLedger`. The gating E
+  arm is this file-backed path, not an in-memory engine. If `FileBody::read`
+  cannot serve a range on a container EKBLOOM wrote, that is a typed E loss and
+  the exact error is recorded; no whole-object decode is substituted.
+
+E is additionally probed once per tensor, **outside every timed region**, with the
+in-memory `ekbloom::Engine` planned from the same body at an unbounded budget.
+That probe records the crate's claimed `worst_case_steps_for` and the actual
+`read_counted_steps` positioning for each request. It is supporting evidence, not
+the gating read path: `FileBody` does not expose a machine-step counter, so the
+gating path's actual positioning is evidenced by its `fetched_reads`,
+`fetched_bytes` and `fetched_encoded_bytes` deltas.
+
+### 9.2 Tensor selection (numeric, declared before measurement)
+
+Group the tensors of each container by `(dtype, shape)`. Within each group take
+the **lexicographically smallest tensor name**. Applied independently to the base
+and instruct containers, this yields **14 objects** (7 shape classes x 2
+containers), 583,077,888 logical bytes in total. It is a different, smaller set
+than E2's §3.2 set on purpose: E3 measures a per-read mechanism, and one
+representative of every shape class keeps all three arms inside the court's
+unchanged 3 GiB while covering every geometry. The selection depends only on the
+container headers, never on a result.
+
+Every selected shape divides its declared tile grid (`[128]` for rank 1,
+`[128, 128]` for rank 2). If a container's headers ever produced a selected shape
+that did not divide, the tensor is excluded and named; it is never padded or
+silently resized.
+
+### 9.3 The workload
+
+For a selected tensor of `L` element bytes, three **region classes** are used:
+`1`, `4,096` and `65,536` bytes. A class of length `len` is measured only when
+`L >= len`; otherwise it is reported `ineligible` for that tensor and is not
+silently clamped. For each eligible `(tensor, class)`, the eight offsets are
+
+```
+offset_i = floor(i * (L - len) / 7),  i = 0..7
+```
+
+which includes the first possible start (0) and the last possible start
+(`L - len`). Offsets are byte offsets into the tensor's canonical row-major
+element bytes.
+
+**Repetitions and rotation.** Seven repetitions. Repetition 0 is the
+**cold-first** pass: the first timed pass over the handles after construction,
+with no warm-up. Repetitions 1-6 are **warm**: one untimed full pass over the
+same sequence precedes them. "Cold" here is **process-cold**, not media-cold: the
+court cannot drop the host page cache, and the data was just written during
+construction. No media or power-loss claim is made. Within each repetition the
+three arms run in an order rotated by one position per repetition
+(`[W,A,E]`, `[A,E,W]`, `[E,W,A]`, ...); the order of every repetition is recorded.
+Inside one arm the order is tensors by ascending name, classes by ascending
+length (`1`, `4,096`, `65,536`), offsets by ascending value.
+
+**Samples.** With no refusal the expected counts per arm are 784 samples for the
+1-byte class, 672 for 4,096 bytes, 672 for 65,536 bytes, and 2,128 pooled. A p99
+is reported only when the pooled count is at least 2,000 and the per-class count
+is at least 500. Percentiles are nearest-rank. The raw per-read samples are
+retained in the receipt.
+
+### 9.4 What is timed and what is counted
+
+* **Timed:** only the single read call, `Instant` around it, in nanoseconds.
+  Allocations performed *inside* the arm's API are part of the measurement (W and
+  E return a fresh `Vec`; A reads into a reused buffer). Construction, encoding,
+  opening, warm-up and exactness comparison are outside the timed region and are
+  reported as observations.
+* **Backend bytes and requests:**
+  * W: `Store::backend_stats()` deltas around the read (`reads`, `range_reads`,
+    `bytes_read`), plus the `TileDecodeStats` tile count.
+  * A: counted by the harness: one `pread` per read, exactly the requested
+    length in bytes.
+  * E: `FileBody::fetched_reads()`, `fetched_bytes()` and
+    `fetched_encoded_bytes()` deltas. `FileBody::open` validates the container by
+    streaming it; that open-time I/O is reported separately from
+    `/proc/self/io` `rchar` around the open and the container's physical length,
+    and is never added to a read's latency.
+* **Retained footprint:** after every handle is dropped, the harness sums the
+  sizes of all **regular files** under each arm's root. Directory metadata and
+  block-size rounding are excluded for all three arms, equally.
+  * W: the whole store tree — `FORMAT`, `LOCK`, `superblock`, `commits/`,
+    `objects/`, `manifests/`, `indexes/`, `refs/` and any catalog.
+  * A: `payload.raw` + `manifest.json` + `index.json`.
+  * E: every `.ekb` container.
+  A per-top-level breakdown is recorded so a reader can see what is included.
+
+### 9.5 The gate, declared now
+
+E3 **passes** if and only if all of the following hold on the receipt:
+
+* **G1 exactness.** Every read on every arm returns bytes identical to the
+  source tensor slice, verified by `memcmp` and SHA-256. Any mismatch fails that
+  arm and the phase is not a pass.
+* **G2 footprint.** `E_bytes < W_bytes` **and** `E_bytes < A_bytes`, strictly.
+  This is the "declared retained footprint" of EKBLOOM's own claim.
+* **G3 non-inferiority on p95.** With `p95_best = min(p95_W, p95_A)` over the
+  pooled samples, the integer comparison
+
+  ```
+  2 * p95_E_ns <= 5 * p95_best_ns
+  ```
+
+  must hold, i.e. E's p95 is at most **2.5x** the better baseline's p95. The
+  factor is **borrowed, not invented**: `bench/CONTRACTS-context-advantage.md`
+  §3 (`C — fast-path neutrality`), **C2**, "W fast-path p95 <= **2.5 x** N
+  fast-path p95". This tolerance was declared by the executor before
+  measurement and is flagged for operator veto in `docs/EKBLOOM-PLAN.md`
+  §9 item 1 (`E3 gate shape`); it is not a silently chosen number.
+* **G4 resource.** No cgroup OOM kill, no `pids.events max` event, no process
+  RSS abort, no court limit raised.
+
+If a precondition is missing (no corpus, no crate, no build), the court skips or
+fails closed with the existing semantics; it never fabricates a row and never
+relaxes a limit. A typed refusal on an arm (for example a body above the E1
+contract's 3x logical cap) is a **loss** for E3 with the refusal recorded, not a
+pass and not a silence.
+
+**Non-gating observations.** A strict latency win by E is reported as an
+observation and does **not** substitute for G2 or G3. Conversely, a per-class
+latency loss, or a loss on one class, does not by itself kill E3 if G1-G4 hold for
+the pooled population. Per-class p50/p95/p99, open/construction costs, CPU and
+RSS are observations. **No other threshold is introduced**: no throughput target,
+no bytes-per-read target, no CPU or memory target.
+
+### 9.6 Determinism and receipt
+
+W writes are seeded deterministically from the tensor name, A is a pure function
+of the bytes, and the EKBLOOM encoder is deterministic for the same input and
+profile; a repeated run must reproduce every retained size and every exactness
+result. The receipt records a digest over the per-object retained sizes and
+content hashes so two runs can be compared. It also records, per arm: the
+construction wall and encode time (observational), the retained footprint and
+its breakdown, the pooled and per-class latency statistics, the raw samples, the
+backend byte/request aggregates, the exactness result, and any refusal.
+
+Receipt: `bench/receipts/ekbloom-read-<stamp>.json`; log beside it. Schema
+`weft.ekbloom-court.v1`, `phase: "read"`, contract version 2.
+
+### 9.7 Retirement rule (restated)
+
+If E3 is lost, the EKBLOOM line retires under `docs/EKBLOOM-PLAN.md` §8.2: no
+payload mode, no planner slot, no dependency. `EKB-X22` publishes the null result
+in `bench/RESULTS-ekbloom.md` and in `docs/claims.json`; this section's status
+line is the verdict, not a softening of it.
+
+### 9.8 Explicit non-claims for E3
+
+One host, one local POSIX backend, one process, warm page cache and a
+process-cold first pass; not a fleet, cloud, media, power-loss, GPU or serving
+claim. No mature filesystem is compared (rule 13). Nothing here says a capability
+is impossible elsewhere (rule 14). The E3 result is about these 14 real
+Qwen2.5-0.5B and Qwen2.5-0.5B-Instruct tensors, in this court, at the declared
+footprint and p95 tolerance; it is not a general codec or general storage claim.
