@@ -1,0 +1,285 @@
+# WeftFS ordinary CI — cheap, deterministic pull-request gates.
+#
+# WHAT RUNS HERE (must fit a stock ubuntu runner and finish in minutes):
+#   rust-fmt      cargo fmt --all --check                      (non-blocking; see TODO)
+#   rust-clippy   cargo clippy --all-targets -- -D warnings     (non-blocking; see TODO)
+#   rust-test     cargo test --all-targets, plus the WeftCodec crate's own tests
+#   go-test       WeftCodec-Go and WeftFS-Go: gofmt, vet, CGO=0 build, go test -race
+#   guards        claims, perf numbers, spec drift, conformance manifest+coverage,
+#                 long description
+#   model         bounded TLA+ check (workflow_dispatch only)
+#
+# WHAT DELIBERATELY DOES NOT RUN HERE — the Docker courts stay explicit:
+#   `scripts/verify-all.sh` (47 courts), the S3/MinIO, Ceph RGW, Azure/Azurite,
+#   fake-GCS and 3FS courts, the 7B / context-advantage / augmentation / EKBLOOM
+#   benches, the 100,000-iteration crash torture, POSIX torture, the power-loss
+#   VM courts, and every FUSE suite. They need /dev/fuse, sidecar containers,
+#   multi-GiB corpora or hours of wall time, and each writes a receipt at a named
+#   revision. They are run locally, never on a shared runner:
+#       scripts/docker-court.sh <rust|go|fuse|bench|tla|vm|python> "<command>"
+#       bash scripts/verify-all.sh
+#   That is deliberate: a GitHub runner is not the environment any receipt was
+#   produced in, and a green CI run is not court evidence.
+#
+# Each job names the exact local command it mirrors, so a maintainer can
+# reproduce it. The Docker-court command is the authoritative form; the CI job
+# runs the same binary invocation on a stock toolchain.
+#
+# Action pins: every `uses:` is a full commit SHA resolved from the action's own
+# repository with `gh api repos/<owner>/<repo>/tags` on 2026-11-13, with the
+# released tag in the trailing comment. SHAs were verified from this
+# environment; the workflow itself could NOT be executed here (GitHub Actions
+# is not runnable from the development host), so this file is syntax-checked
+# and every command in it was run locally in the Docker courts. It has never
+# had a run to report.
+#
+# Least privilege: read-only contents, no secrets, no `pull_request_target`.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rust-fmt:
+    name: "rust fmt (non-blocking: pre-existing drift)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # TODO(rustfmt-clean): at WeftFS 1bc5177 `cargo fmt --all --check` reports
+    # 73 hunks across 30 files (root crate plus WeftCodec path dependency).
+    # Reformatting them is a large unrelated diff and would touch
+    # `src/store.rs`, so this job reports the drift without blocking a merge.
+    # Remove `continue-on-error` once the tree is clean.
+    #
+    # Local court equivalent (the bare command fails in the shipped court image
+    # only because `weft/rust-court:1` does not install the rustup components):
+    #   scripts/docker-court.sh rust "rustup component add rustfmt && cargo fmt --all --check"
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+      - name: Show toolchain
+        run: rustc --version && cargo --version
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+      - name: cargo fmt --all --check
+        run: cargo fmt --all --check
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### rust-fmt'
+            echo 'Local reproduction: `scripts/docker-court.sh rust "rustup component add rustfmt && cargo fmt --all --check"`'
+            echo 'Status: non-blocking; 73 hunks / 30 files open at 1bc5177.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  rust-clippy:
+    name: "rust clippy (non-blocking: pre-existing warnings)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # TODO(clippy-clean): at WeftFS 1bc5177 `cargo clippy --all-targets` reports
+    # 214 warnings and one deny-by-default lint error in `tests/packs.rs:356`
+    # (`round * 0` is always zero). `-D warnings` therefore fails; this job
+    # records the drift without blocking. Do not mass-rewrite lints here.
+    #
+    # Local court equivalent:
+    #   scripts/docker-court.sh rust "rustup component add clippy && cargo clippy --all-targets -- -D warnings"
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+      - name: Install clippy
+        run: rustup component add clippy
+      - name: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### rust-clippy'
+            echo 'Local reproduction: `scripts/docker-court.sh rust "rustup component add clippy && cargo clippy --all-targets -- -D warnings"`'
+            echo 'Status: non-blocking; 214 warnings + 1 deny-by-default lint error open at 1bc5177.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  rust-test:
+    name: rust test (store + codec crates, no FUSE feature)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # `--features fuse` is NOT built here: those suites need /dev/fuse and the
+    # court image, and they run in `scripts/verify-all.sh` (`rust_fuse`).
+    #
+    # Local court equivalent:
+    #   scripts/docker-court.sh rust "cargo test --all-targets"
+    #   scripts/docker-court.sh rust "cd WeftCodec && cargo test --all-targets"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: cargo-registry-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'WeftCodec/Cargo.lock') }}
+          restore-keys: |
+            cargo-registry-${{ runner.os }}-
+      - name: Show toolchain
+        run: rustc --version && cargo --version
+      - name: cargo test --all-targets (WeftFS store core)
+        run: cargo test --all-targets
+      - name: cargo test --all-targets (WeftCodec crate)
+        run: cargo test --all-targets --manifest-path WeftCodec/Cargo.toml
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### rust-test'
+            echo 'Local reproduction: `scripts/docker-court.sh rust "cargo test --all-targets"` and `scripts/docker-court.sh rust "cd WeftCodec && cargo test --all-targets"`'
+            echo 'Observed at 1bc5177: 173 suites / 819 passed / 0 failed (root), 45 suites / 290 passed / 0 failed (codec).'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  go-test:
+    name: go test (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [WeftCodec-Go, WeftFS-Go]
+    # `WeftFS-Go/fusefs` is NOT run here: its tests mount a FUSE filesystem and
+    # need /dev/fuse and fusermount, which a stock runner does not reliably
+    # provide. That suite runs in the fuse court (`go_store_and_fuse` in
+    # `scripts/verify-all.sh`). The store/model/index/cmd packages are the
+    # on-disk-format suites and run here.
+    #
+    # Local court equivalent:
+    #   scripts/docker-court.sh go "cd WeftCodec-Go && gofmt -l . && go vet ./... && CGO_ENABLED=0 go build ./... && go test -race ./..."
+    #   scripts/docker-court.sh go "cd WeftFS-Go && gofmt -l . && go vet ./... && CGO_ENABLED=0 go build ./... && go test -race ./store/... ./model/... ./index/... ./cmd/..."
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: ${{ matrix.project }}/go.mod
+          cache-dependency-path: ${{ matrix.project }}/go.sum
+      - name: gofmt -l (fails on any unformatted file)
+        shell: bash
+        working-directory: ${{ matrix.project }}
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "unformatted Go files:"
+            echo "$unformatted"
+            exit 1
+          fi
+      - name: go vet
+        working-directory: ${{ matrix.project }}
+        run: go vet ./...
+      - name: go build (CGO disabled)
+        working-directory: ${{ matrix.project }}
+        env:
+          CGO_ENABLED: "0"
+        run: go build ./...
+      - name: go test -race
+        shell: bash
+        working-directory: ${{ matrix.project }}
+        run: |
+          if [ "${{ matrix.project }}" = "WeftFS-Go" ]; then
+            go test -race ./store/... ./model/... ./index/... ./cmd/...
+          else
+            go test -race ./...
+          fi
+      - name: Job summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### go-test ${{ matrix.project }}"
+            echo 'Local reproduction: `scripts/docker-court.sh go "cd ${{ matrix.project }} && gofmt -l . && go vet ./... && CGO_ENABLED=0 go build ./... && go test -race ..."`'
+            echo 'Observed at 1bc5177: WeftCodec-Go all packages pass under -race; WeftFS-Go store/model/index/cmd pass under -race (fusefs is court-only).'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  guards:
+    name: documentation and conformance guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # These are host-only gates by design: the Docker court images have neither
+    # `jq` nor a Python interpreter, so `scripts/verify-all.sh` runs them on the
+    # host as well. A stock runner has both.
+    #
+    # Local host commands (no Docker):
+    #   bash scripts/check-claims.sh
+    #   python3 scripts/perf_numbers.py --check
+    #   bash scripts/check-spec-drift.sh
+    #   bash scripts/check_long_description_court.sh
+    #   bash scripts/gen-conformance-manifest.sh --check
+    #   bash scripts/check-conformance-coverage.sh
+    #
+    # There is no `scripts/check-commit-identity.sh` in this tree at 1bc5177,
+    # so no such step is invoked. The identity rule is enforced by each
+    # repository's local `user.name`/`user.email` and the global pre-commit
+    # hook, not by a checked-in script.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+      - name: Show tools
+        run: jq --version && python3 --version && git --version
+      - name: claims manifest (docs/claims.json)
+        run: bash scripts/check-claims.sh
+      - name: performance numbers are generated from receipts
+        run: python3 scripts/perf_numbers.py --check
+      - name: specification export drift
+        run: bash scripts/check-spec-drift.sh
+      - name: wheel long description makes no publication claim
+        run: bash scripts/check_long_description_court.sh
+      - name: conformance manifest is current
+        run: bash scripts/gen-conformance-manifest.sh --check
+      - name: conformance coverage has no gaps
+        run: bash scripts/check-conformance-coverage.sh
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### guards'
+            echo 'Local reproduction: the six commands in this job, run on the host (no Docker).'
+            echo 'Observed at 1bc5177: claims 1099 entries OK; perf_numbers 644 numbers / 94 blocks OK; spec drift 60/60 OK; long_description OK; conformance manifest 420 entries OK; coverage OK.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  model:
+    name: bounded TLA+ model (manual dispatch only)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 90
+    # Not a pull-request gate: `scripts/run_tla.sh` builds the `weft/tla-court:1`
+    # image and runs five bounded TLC models, up to 600 s each by default. It
+    # writes a receipt under bench/receipts/. Run it deliberately.
+    #
+    # Local court equivalent: `scripts/run_tla.sh` (it self-dispatches into
+    # `scripts/docker-court.sh tla "bash scripts/run_tla.sh"`).
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Docker version
+        run: docker version
+      - name: bounded TLA+ model check
+        run: bash scripts/run_tla.sh
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo '### model'
+            echo 'Local reproduction: `bash scripts/run_tla.sh`'
+            echo 'Bounded TLC runs only; not a proof.'
+          } >> "$GITHUB_STEP_SUMMARY"
