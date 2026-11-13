@@ -636,3 +636,23 @@ version **before** the next measurement, never after a receipt exists.
      receipts and are deliberately not restated here (rule 12). E3–E6 and X22
      remain open; §8.2 retires the experiment only when **both** E2 and E3 are
      lost, so an E2 loss ends the space axis and nothing else.
+
+   * **2026-11-13 — EKB-E3 executed; the EKBLOOM line retires.** E3 (bounded
+     random access) was **lost** on both declared conditions: E's retained
+     footprint was not strictly below both baselines, and its pooled p95 was
+     outside the declared non-inferiority tolerance of the better baseline. The
+     bounded-step property itself held — the in-memory `Engine` probe decoded
+     every request exactly with no positioning-bound violation — but the
+     surviving axis did not transfer to a win. Evidence:
+     `bench/receipts/ekbloom-read-20261113T083231Z.json` (read, revision
+     `ef2aa0a`) with its `.log` beside it; the contract is
+     `bench/CONTRACTS-ekbloom.md` §9 (version 2). The numbers live in the receipt
+     and are deliberately not restated here (rule 12). The receipt also records
+     a contract-arithmetic defect in §9.3's stated expected sample counts: they
+     assumed every selected tensor was eligible for every region class, while
+     the contract's own `L >= len` rule excludes the rank-1 tensors from the two
+     larger classes; the pooled p99 is therefore ineligible and every per-class
+     p99 is eligible. The gate uses the pooled p95 and is unaffected. Under
+     §8.2, **E2 and E3 are both lost, so the experiment retires**: no payload
+     mode, no planner slot, no dependency. E4/E5/E6 are not run; `EKB-X22` owns
+     `bench/RESULTS-ekbloom.md`, `docs/claims.json` and the retirement record.
