@@ -220,3 +220,96 @@ reported, because it would be an unvalidated logical publish.
 * a low-latency conditional publication path that does not re-read the chain on
   every retry;
 * Go parity for S3/GCS MW2, Azure MW2, and a generic checkpoint transaction.
+
+## 12. MW3 design as implemented (T020)
+
+MW3 is **opt-in** (`--writer-mode sharded`), **additive**, and **Rust-only on
+the local commit plane**. It changes no MW1 or MW2 byte. The normative contract
+is `spec/WEFT-MULTIWRITER.md` §15; this section is the implementation map.
+
+### 12.1 The unit and its identity
+
+A domain is a canonical `weft.domain.v1` record `{name, kind, scope}` and
+`DomainId = H("weft/domain/v1", WCB(record))`. The identity is derived and
+stable; a rename is a new domain. A domain is a *publication* boundary, not a
+naming convention, so a transaction cannot drift into another domain by
+changing a path prefix.
+
+### 12.2 Keys and layout
+
+| logical | physical |
+|---|---|
+| domain head | `domains/<DomainId hex>/superblock` (two 4096-byte MW1 slots) |
+| domain commit | `domains/<DomainId hex>/commits/<g>.commit` |
+| domain publication lock | `domains/<DomainId hex>/LOCK.publish` |
+| discovery record | `domains.root` |
+| blobs | `objects/`, `manifests/`, packs, indexes — **global**, content-addressed |
+
+`Key::{DomainSuperblock, DomainCommit, DomainIndex, DomainLink}` carry these
+through `StorageBackend`, so a backend that cannot address them answers
+`supports_domain_heads() == false` and a sharded open is refused rather than
+downgraded. The head image is the frozen MW1 slot encoding byte for byte; the
+commit is the frozen commit record under a per-domain generation.
+
+### 12.3 Publication
+
+The existing MW1/MW2 publication path is **reused, not reimplemented**:
+`Store::try_publish_staged` → `publish_commit_optimistic` with the domain's
+commit key and `publish_domain_head_conditional`. The create-once commit
+record, the conditional head compare-and-swap, the conflict table, quota,
+authorization and the transaction record all run unchanged. The only additions
+are (a) the domain keys and (b) `begin_domain_publication`, which takes an OFD
+lock on the **domain's** publication file. A single global publication lock
+would reproduce the exact serialisation MW3 exists to remove.
+
+### 12.4 Discovery: per-domain registration, not a global CAS
+
+`domains.root` is a canonical `weft.domains.v1` record with a monotonic epoch.
+It changes **only when a domain is first registered**, in one compare-and-swap
+that requires the observed epoch. Publication never touches it. The rejected
+alternative was one discovery CAS per commit: that is a single publication
+point again, and the R4 measurement (efficiency 0.0045 at N=32) is what it
+looks like. The price of the choice is that discovery is eventually complete:
+a reader that knows its domains reads the heads directly, and a reader that
+lost the record can rebuild it by listing `domains/`.
+
+### 12.5 Read view
+
+`Store::capture_read_view` reads each declared domain head **once**, in the
+declared order, and returns `{pairs, view_root}` with
+`capture_kind = "sequential"`. This is a capture. It is not a global
+linearizable point, not a consistent cut and not a cross-domain snapshot; the
+spec's isolation sentence says so normatively. `write_view_pin` stores a
+`weft.view.pin.v1` record as a content-addressed blob so the capture is
+auditable; it is not a retention guarantee in this prototype.
+
+### 12.6 Refusals
+
+| request | class | where |
+|---|---|---|
+| grouped transaction over ≥2 domains | `CrossDomain` | `Store::execute_transaction_across` |
+| handle publishing into another domain | `CrossDomain` | `Store::execute_transaction_in` |
+| sharded open on a non-local plane | `UnsupportedVersion` | `open_impl_mode` |
+| single/optimistic open on a sharded store | `UnsupportedVersion` | `ensure_writer_policy` / read-only policy probe |
+| GC on a sharded store | `UnsupportedVersion` | `Store::gc` |
+| missing domain in a view | `NotFound` naming the DomainId | `capture_read_view` |
+
+### 12.7 Deliberate prototype limits
+
+Domain commits are `weftfs.commit.v1` (no index attestation; the handle records
+the reason). GC is refused rather than run per domain. `weft.domain.link.v1`
+is specified, not implemented. Transaction ids are store-global. Go has no MW3
+surface. Every limit is in `bench/RESULTS-mw3.md` §5.
+
+### 12.8 Code map (MW3 and T021)
+
+| path | role |
+|---|---|
+| `src/mw3.rs` | domain record/ID, discovery record, view, view pin |
+| `src/store.rs` | `open_domain_with_options_and_backend`, `register_domain`, `discover_domains`, `capture_read_view`, `write_view_pin`, `verify_domain`, per-domain keys, domain GC refusal |
+| `src/backend.rs` | `Key::Domain*`, `load_domain_head`, `publish_domain_head_conditional`, `ensure_domain_layout`, `begin_domain_publication`, `list_domain_commits` |
+| `src/mw2.rs` | `WriterMode::Sharded`, `touched_keys`/`changed_keys`, jittered backoff |
+| `src/main.rs` | `--domain`, `mw3 register`, `mw3 list`, `mw3 capture`, `mw3 pin` |
+| `tests/mw3.rs` | 10 semantics/refusal tests |
+| `examples/mw2_writer.rs`, `examples/mw3_compact.rs` | process-per-writer and compact-client drivers |
+| `scripts/mw3_court.sh` | the three courts and their receipts |

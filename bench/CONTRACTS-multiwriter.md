@@ -91,3 +91,45 @@ is a different measurement and must not be spliced into these tables.
 `bench/receipts/bench-multiwriter-<UTC>.json`, schema
 `weftfs.multiwriter.bench/1`, with one row per configuration and the exact
 fields above. The raw log is beside it and its sha256 is in the receipt.
+
+## 7. MW3, T021 and T027 courts (added 2026-11-14)
+
+These are separate courts with their own receipts and their own driver; they
+do not modify §§1–6, and no row from them is spliced into the MW2 tables.
+
+* **MW3 (`scripts/mw3_court.sh`, `bench/receipts/mw3-<stamp>.json`).** One
+  conflict domain per writer; each writer is a process with its own sharded
+  handle. Distributions: `disjoint` (distinct names, N = 1, 2, 4, 8, 16, 32)
+  and `same-domain` (every writer targets `hot.bin` in one domain with create
+  semantics, N = 2, 8, 32, ten transactions per writer). Counts: N ≤ 8 → 500
+  transactions per writer; N = 16 → 200; N = 32 → 100. Each domain is verified
+  with `--domain ... verify --full`; the global verifier must refuse. The
+  receipt records throughput, efficiency, p50/p95/p99, retry amplification,
+  reads/commit, gap commits read, conflicts and RSS. No cross-domain atomicity
+  is requested; that refusal is a unit test, not a benchmark.
+* **T021 (`bench/receipts/mw2-retry-<stamp>.json`).** The frozen §2 local
+  disjoint fixture at N=32 only (32 processes, seven transactions each,
+  `checkpoint_interval = 0`), with two arms: `before` is a release build of the
+  tree at the subphase's start revision (a `git archive`, same `WeftCodec`
+  sources), `after` is the measured tree. Three repetitions per arm,
+  **interleaved**, and the comparison uses each arm's median. Reported:
+  reads/commit, p50/p95/p99, throughput, retry amplification, gap commits read,
+  intervening-commit cache hits, and max consecutive retries. The baseline
+  binary path is passed in `WEFT_MW3_BEFORE` and named in the receipt; without
+  it the receipt contains the after arm only and says so.
+* **T027 (`bench/receipts/writer-scale-<stamp>.json`).** The compact client
+  `examples/mw3_compact.rs`: N writer **threads in one process**, each with its
+  own handle and domain, N = 8, 16, 32, 64, 128, 256, 512, 1024, five to fifty
+  transactions per writer. At N ≥ 512 every worker is **held after spawning**,
+  so the peak thread count is real and the court's pid bound is measured (a
+  refused spawn is recorded). One 32-writer cell uses one process per writer
+  and exists only to prove that path still works. Reported: throughput,
+  p50/p95/p99, max consecutive retries, peak RSS and RSS per writer, max
+  head-state rows per writer, threads spawned, spawn failures, and the timeout
+  return code.
+
+The environment is the same hard-limited bench court as §4. Every court is one
+host, one local namespace, warm cache, and makes no fleet, cloud, media,
+power-loss, Go-parity or cross-domain-atomicity claim. `scripts/verify-all.sh`
+runs the reduced configuration as the `mw3` court; a court that cannot run
+prints one `mw3: skip <reason>` line and exits 78.

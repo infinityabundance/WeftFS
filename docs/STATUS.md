@@ -9,12 +9,41 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,160** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,176** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
+
+## 2026-11-14 (T019-T021/T027: MW3 conflict domains, incremental rebase, writer envelope)
+
+<!-- BEGIN GENERATED:mw3-status (scripts/perf_numbers.py) -->
+MW3 (generated): disjoint domain writers reach **57,143 tx/s** at N=16 against **10,417 tx/s** at N=1, with **3.04** backend reads per commit and **0** intervening commits read. Same-domain N=32: **1** winner, **319** typed conflicts, p99 **0.119 ms** (stamp 20261114T025943Z, revision d2a8b7e1993c).
+T021 (generated): MW2 N=32 reads/commit **61.15 → 30.71** (**-49.8 %**), p99 **187.1 → 102.6 ms** (**-45.2 %**), throughput **872 → 1,427 tx/s**; the intervening-commit cache recorded **0** hits, so the win is jittered fair backoff, not the cache (stamp 20261114T025943Z, revision d2a8b7e1993c).
+T027 (generated): **1,017** of 1024 writer threads spawn under `--hold` (**7** refused by the court's pid bound), peak RSS **111,428 KiB** = **112,195 B/writer**; peak aggregate **66,656 tx/s** at N=16 (stamp 20261114T025943Z, revision d2a8b7e1993c).
+<!-- END GENERATED:mw3-status -->
+
+Normative contract: `spec/WEFT-MULTIWRITER.md` §15 (`weft.multiwriter/v2`),
+exported to all three submodule mirrors. MW3 is opt-in (`--writer-mode
+sharded`), additive, Rust-only, and local-plane-only; MW1 remains the default
+and MW2's frozen bytes are untouched. `tests/mw3.rs` 10/10 covers domain
+identity and discovery idempotence, independent heads, same-domain
+single-winner (deterministic and threaded), MW1/MW2 refusal, cross-domain
+refusal, GC refusal, chain replay, corrupt-chunk detection and a missing-domain
+view. T021 changes no protocol transition: only the retry delay distribution,
+an explicit touched-key set, a bounded intervening-commit cache and
+`RebaseStats`. The bounded TLA model was **not** re-run; no abstract transition
+changed.
+
+Not claimed, and listed in `bench/RESULTS-mw3.md` §5: cross-domain atomicity
+(`Class::CrossDomain`), coordinated cross-domain GC (GC is refused on a sharded
+store), index attestation on domain commits, a `weft.domain.link.v1` writer,
+Go MW3 parity, per-domain transaction ids, multi-node/fleet, physical power
+loss, and a global linearizable view. The MW3 disjoint curve is non-monotonic at
+N=8 and N=32 because 32 processes share four vCPUs; the T027 high-N tail is
+thread scheduling, and at 1024 held writers the court's pid limit — not the
+protocol — refuses the remaining threads.
 
 ## 2026-11-13 (T012/N13 aged-store index court, X02 DCP completion, X03 guards)
 

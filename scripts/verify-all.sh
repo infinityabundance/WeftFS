@@ -289,6 +289,12 @@ run_orchestrated_court object_pipeline object_pipeline_court \
 
 # T030/T038/T081: a real deployed Ceph 19.2.0 (mon+mgr+OSD+MDS) with CephFS
 # mounted by ceph-fuse in a second hard-limited container, and the same
+# MW3 conflict domains, the T021 rebase and the T027 writer envelope (T020/T021/
+# T027). Reduced configuration: N=1/4/32 disjoint, same-domain N=8/32, compact
+# 8/32/256/1024, one T021 after arm. The full court is scripts/mw3_court.sh. A
+# court that cannot run prints `mw3: skip <reason>` and exits 78.
+run_orchestrated_court mw3 mw3 bash scripts/mw3_verify_court.sh
+
 # A/N/B/C/D/E court rooted on that mount. The aggregate uses the frozen reduced
 # subset with seven repetitions; the full published court is
 # `augmentation-cephfs-20261114T040000Z.json`, cited in

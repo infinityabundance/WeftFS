@@ -224,8 +224,10 @@ not a linearizability proof.
     [`RESULTS-azure-mw2.md`](RESULTS-azure-mw2.md) (X13/N14).
 13. **FUSE and generic checkpoint publication are still MW1.** No MW2 claim
     for file mutations or a checkpoint set.
-14. **MW3 is not implemented.** No conflict domains, no multi-writer GC
-    protocol, no distributed scalability.
+14. **MW3 was not implemented at R4.** It is now specified and prototyped
+    (T020) as an opt-in, Rust-only, local-plane writer mode; see
+    [`RESULTS-mw3.md`](RESULTS-mw3.md). The R4 rows above are unchanged and are
+    not spliced with the MW3 rows.
 15. **No physical power loss.** The failure court is a process-fault proxy; the
     earlier device-model courts remain the only lying-disk evidence and are not
     repeated here.
@@ -259,3 +261,29 @@ before the final driver and are **not** used for any published number.
 * `bench/receipts/bench-multiwriter-20261109T144351Z.log` (no receipt): the
   harness aborted while parsing a writer summary; the receipt was never
   written, so none is cited.
+
+## 10. T020/T021/T027 (2026-11-14)
+
+The MW3 conflict-domain prototype, the T021 rebase change and the T027 writer
+envelope are measured in their own courts and reported in
+[`RESULTS-mw3.md`](RESULTS-mw3.md). The receipts are
+`mw3-20261114T025943Z.json`, `mw2-retry-20261114T025943Z.json` and
+`writer-scale-20261114T025943Z.json` at WeftFS `d2a8b7e1`. This section is a
+pointer, not a second copy of the numbers: the R4 tables above were not re-run
+and nothing here replaces them.
+
+Headline, stated qualitatively so the generated numbers stay in one place:
+
+* disjoint MW3 writers in separate domains commit with no conflicts, no
+  retries and flat read amplification; the same-domain case is exactly MW2's
+  one-winner-plus-typed-conflicts result;
+* T021 reduces MW2's N=32 reads per commit and p99 materially; the mechanism
+  is jittered fair backoff, not the intervening-commit cache (which measured
+  zero hits); the residual cost is the single head, which MW3 removes;
+* T027 shows where the court, not the protocol, binds: four vCPUs saturate the
+  aggregate around the 16–32 writer range, and the 1024-pid limit refuses
+  held threads at the 1024-writer cell.
+
+Every loss — no cross-domain atomicity, no coordinated GC, no index
+attestation on domain commits, Rust-only, no `weft.domain.link.v1` writer,
+store-global transaction ids — is listed in `RESULTS-mw3.md` §5.
