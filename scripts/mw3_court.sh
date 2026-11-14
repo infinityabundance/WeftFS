@@ -119,7 +119,7 @@ rows = [json.load(open(p)) for p in sorted(glob.glob(os.path.join(root, "w*.json
 committed = sum(r.get("committed", 0) for r in rows)
 conflicts = sum(r.get("conflicts", 0) for r in rows)
 attempts = sum(r.get("attempts", 0) for r in rows)
-spans = [r.get("wall_ms", 0) for r in rows]
+spans = [r.get("elapsed_ms", 0) for r in rows]
 # End-to-end includes every writer's process start; `steady` is the widest
 # writer span, i.e. the window in which the writers actually overlapped.
 steady_ms = max(spans) if spans else 0
