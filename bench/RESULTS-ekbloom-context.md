@@ -141,10 +141,10 @@ because every miss also reads a manifested slot through EKBLOOM.
 <!-- END GENERATED:ekbloom-context-g1 -->
 
 Every M and E verdict agreed with W on every request in every repetition:
-verdict **and** reason. The sensitivity control produced
-**<!-- generated inline see G1 block -->** false acceptances on the same
-stream, so the stream and the oracle can detect an insufficient key. That
-control is the evidence that G1 is not vacuous.
+verdict **and** reason. The sensitivity control produced a nonzero
+false-acceptance count on the same stream (table above), so the stream and the
+oracle can detect an insufficient key. That control is the evidence that G1 is
+not vacuous.
 
 ### G2 — p99 margin: **fails**
 
@@ -328,3 +328,10 @@ declared >4,096-distinct-decisions pressure condition, and the 10 % arena
 reserve that keeps E at or below M's retained bytes. They were made before any
 receipt existed. The contract's gates, margin, request count, bucket shares and
 retirement rule were never changed.
+
+One reproducibility note is editorial, not a rule change: the contract writes
+the stream seed mnemonically as `0xEKB10C0DE5EED0001 + repetition`. `K` is not
+a hexadecimal digit and that literal would overflow `u64`, so the runner uses
+the concrete `0x67B10C0DE5EED001 + repetition`
+(`scripts/ekbloom_context_court.sh`). The seed is still fixed per repetition,
+identical for every arm, and recorded in the receipt's methodology.

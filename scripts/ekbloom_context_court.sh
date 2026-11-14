@@ -28,6 +28,25 @@ skip() {
   exit 78
 }
 
+# A court container can skip too (for example, when the pinned crate cannot be
+# resolved offline). `docker-court.sh` propagates the container's exit status,
+# so a 78 is a skip and must stay a skip: print the reason the container
+# reported and exit 78, instead of reporting the container as a failure. Any
+# other status is a hard failure.
+court_failure() {
+  local rc="$1" phase_name="$2" path="$3"
+  if [[ "$rc" -eq 78 ]]; then
+    local reason
+    reason="$(grep -h '^ekbloom_context_court: skip ' "$path" | tail -1 | sed 's/^ekbloom_context_court: skip //' || true)"
+    [[ -z "$reason" ]] && reason="the court container skipped without a printed reason"
+    echo "ekbloom_context_court: skip $reason" >&2
+    exit 78
+  fi
+  echo "ekbloom_context_court: $phase_name failed; tail of $path follows" >&2
+  tail -40 "$path" >&2 || true
+  exit 1
+}
+
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
@@ -165,12 +184,12 @@ echo "ekbloom_context_court: rows /work/$ROWS" >&2
 RUNNER
   chmod +x "$runner"
 
-  if ! scripts/docker-court.sh bench \
+  rc=0
+  scripts/docker-court.sh bench \
     "cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=$stamp REPS=$reps LABEL=$label RECEIPT=$receipt LOG=$log ROWS=$rows LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-$stamp.json bash .docker-cache/$(basename "$work")/decisions.sh" \
-    >>"$work/run.log" 2>&1; then
-    echo "ekbloom_context_court: decisions failed; tail of $work/run.log follows" >&2
-    tail -40 "$work/run.log" >&2 || true
-    exit 1
+    >>"$work/run.log" 2>&1 || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    court_failure "$rc" decisions "$work/run.log"
   fi
 fi
 
@@ -187,12 +206,12 @@ $H scale --out "/work/$SCALE" --work "$W/scale" --sizes 1000,100000,1000000 || e
 echo "ekbloom_context_court: scale receipt /work/$SCALE" >&2
 RUNNER
   chmod +x "$runner"
-  if ! scripts/docker-court.sh bench \
+  rc=0
+  scripts/docker-court.sh bench \
     "cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=$stamp SCALE=$scale_receipt bash .docker-cache/$(basename "$work")/scale.sh" \
-    >>"$work/run.log" 2>&1; then
-    echo "ekbloom_context_court: scale failed; tail of $work/run.log follows" >&2
-    tail -40 "$work/run.log" >&2 || true
-    exit 1
+    >>"$work/run.log" 2>&1 || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    court_failure "$rc" scale "$work/run.log"
   fi
 fi
 
@@ -216,12 +235,12 @@ $H lifecycle --store "$store" --fixture "$F" --work "$W/lifecycle" --out "/work/
 rm -rf "$store"
 RUNNER
   chmod +x "$runner"
-  if ! scripts/docker-court.sh bench \
+  rc=0
+  scripts/docker-court.sh bench \
     "cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=$stamp LIFECYCLE=$lifecycle_receipt bash .docker-cache/$(basename "$work")/lifecycle.sh" \
-    >>"$work/run.log" 2>&1; then
-    echo "ekbloom_context_court: lifecycle failed; tail of $work/run.log follows" >&2
-    tail -40 "$work/run.log" >&2 || true
-    exit 1
+    >>"$work/run.log" 2>&1 || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    court_failure "$rc" lifecycle "$work/run.log"
   fi
 fi
 
