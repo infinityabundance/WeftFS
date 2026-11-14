@@ -193,8 +193,10 @@ Azure in both languages, and the Go half is now verified — see
 [`docs/STATUS.md`](docs/STATUS.md)). The head sequence is checked by a TLA+
 model and finite-history tests; it is not backed by a machine-checked
 linearizability proof. FUSE file mutations and generic
-checkpoint publication remain MW1. **MW3** — distributed scalable publication
-with conflict domains — is not implemented and not claimed. The normative
+checkpoint publication remain MW1. **MW3** — causal conflict domains with
+independent per-domain heads — is an opt-in, Rust-only, local-plane prototype
+(`--writer-mode sharded`); it is not a fleet or multi-node claim, and Go has no
+MW3 surface. The normative
 contract is [`spec/WEFT-MULTIWRITER.md`](spec/WEFT-MULTIWRITER.md); the design,
 backend tradeoffs, and every loss are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](docs/MULTIWRITER-ARCHITECTURE.md) and
@@ -943,8 +945,10 @@ Non-claims: the release note's “Still not claimed” and [`docs/STATUS.md`](do
    via `--writer-mode optimistic` on the explicit transaction API —
    `local`/`object`/`3fs`/`s3`/`azure` in Rust, `local`/`object`/`azure` in Go;
    GCS is refused — and not on FUSE mutations or generic checkpoint
-   publication. **MW3** (conflict domains, sharded heads) is not implemented
-   and not claimed. See [`docs/FENCING.md`](docs/FENCING.md) and
+   publication. **MW3** (causal conflict domains with independent per-domain
+   heads) is an opt-in, Rust-only prototype on the local commit plane; it is
+   not a fleet claim and Go has no MW3 surface. See
+   [`docs/FENCING.md`](docs/FENCING.md) and
    [`spec/WEFT-MULTIWRITER.md`](spec/WEFT-MULTIWRITER.md).
 
 ## Container images

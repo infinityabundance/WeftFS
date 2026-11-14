@@ -173,15 +173,20 @@ Scope in R4:
   The headline loss is scaling: efficiency 0.44 at N=2 and 0.0050 at N=32 on
   the local backend, because there is still exactly one publication point.
 
-### MW3 — distributed scalable publication
+### MW3 — causal conflict domains
 
-**Status: not implemented. Not claimed.**
+**Status: an opt-in, Rust-only, single-host prototype** (`--writer-mode
+sharded`, local commit plane). It gives each conflict domain its own head and
+commit chain, so writers in different domains never contend. See
+[`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md) §15 and
+[`bench/RESULTS-mw3.md`](../bench/RESULTS-mw3.md).
 
-There is no consensus protocol, no multi-node commit protocol, no
-linearizable cross-node namespace, no coordinated multi-writer GC, and no
-fleet evidence. Every distributed court in this repository runs on one host,
-usually against one MinIO or Ceph RGW instance. A multi-node or fleet claim
-would require a different publication protocol and a different court.
+There is still no consensus protocol, no multi-node commit protocol, no
+linearizable cross-node namespace, no cross-domain atomicity, no coordinated
+multi-writer GC, and no fleet evidence. Every distributed court in this
+repository runs on one host, usually against one MinIO or Ceph RGW instance. A
+multi-node or fleet claim would require a different publication protocol and a
+different court.
 
 ## 5. Supported guarantees per backend
 
@@ -277,10 +282,12 @@ executable specification usable; it is not the integration mechanism.
 * **No live AWS, Google Cloud, or Azure run.** No credential or bucket was
   available. MinIO and Ceph RGW are real S3-compatible servers; `fake-gcs-server`
   and Azurite are emulators.
-* **No MW3 claim.** MW3 (distributed scalable publication, conflict domains,
-  multi-node ordering) is not implemented. MW2 is opt-in and bounded to the
-  transaction API on the backends listed in §4; it is not a distributed
-  consensus protocol.
+* **No multi-node or fleet MW3 claim.** MW3 conflict domains exist as an
+  opt-in, Rust-only prototype on the local commit plane, measured on one host.
+  There is no multi-node ordering, no consensus, no cross-domain atomicity and
+  no coordinated multi-writer GC. MW2 is opt-in and bounded to the transaction
+  API on the backends listed in §4; neither level is a distributed consensus
+  protocol.
 * **No distributed multi-writer, multi-node, or fleet operation.** MW2 is
   independent processes against **one** store on one host (or one MinIO/Ceph
   endpoint); MW1 writers remain exclusive by design. Distributed courts are one

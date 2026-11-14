@@ -303,12 +303,6 @@ run_orchestrated_court object_pipeline object_pipeline_court \
 
 # T030/T038/T081: a real deployed Ceph 19.2.0 (mon+mgr+OSD+MDS) with CephFS
 # mounted by ceph-fuse in a second hard-limited container, and the same
-# MW3 conflict domains, the T021 rebase and the T027 writer envelope (T020/T021/
-# T027). Reduced configuration: N=1/4/32 disjoint, same-domain N=8/32, compact
-# 8/32/256/1024, one T021 after arm. The full court is scripts/mw3_court.sh. A
-# court that cannot run prints `mw3: skip <reason>` and exits 78.
-run_orchestrated_court mw3 mw3 bash scripts/mw3_verify_court.sh
-
 # A/N/B/C/D/E court rooted on that mount. The aggregate uses the frozen reduced
 # subset with seven repetitions; the full published court is
 # `augmentation-cephfs-20261114T040000Z.json`, cited in
@@ -317,6 +311,16 @@ run_orchestrated_court mw3 mw3 bash scripts/mw3_verify_court.sh
 # 78; the aggregate records a skip, never a pass.
 run_orchestrated_court cephfs cephfs_court \
   env WEFT_CEPHFS_STAMP="$stamp" bash scripts/cephfs_court.sh --reduced
+
+# T020/T021/T027: MW3 conflict domains, the T021 rebase and the T027 writer
+# envelope. Reduced configuration: N=1/4/32 disjoint (400 commits each),
+# same-domain N=8/32, compact 8/32/256/1024, and the T021 after arm only (a
+# fresh checkout has no build of the start revision). The full court, with the
+# T021 baseline and seven runs, is `scripts/mw3_court.sh`; the merged evidence
+# is cited in `bench/RESULTS-mw3.md`. A court that cannot run prints exactly one
+# `mw3: skip <reason>` line and exits 78; the aggregate records a skip, never a
+# pass.
+run_orchestrated_court mw3 mw3 bash scripts/mw3_verify_court.sh
 
 # R26 Context Advantage Court: one backend at a time, three arms — the backend
 # alone, a strong application-level metadata baseline, and the WeftFS context

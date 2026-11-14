@@ -8,7 +8,9 @@ Results and losses: [`bench/RESULTS-multiwriter.md`](../bench/RESULTS-multiwrite
 (independent committers) is opt-in (`--writer-mode optimistic`) and implemented
 for the explicit transaction API on the `local`, `object`, `3fs`, and `s3`
 commit planes in Rust, and on `local`/`object` in Go. FUSE file mutations and
-generic checkpoint publication are still MW1. MW3 is not implemented.
+generic checkpoint publication are still MW1. MW3 (causal conflict domains with
+independent per-domain heads) is an **opt-in, Rust-only, local-plane
+prototype** — `--writer-mode sharded`, §12 below; Go has no MW3 surface.
 
 ## 1. The shape of the protocol
 
@@ -209,17 +211,20 @@ reported, because it would be an unvalidated logical publish.
 | `scripts/multiwriter_court.sh`, `scripts/multiwriter_failure_court.sh`, `scripts/bench_multiwriter.sh`, `scripts/multiwriter_s3_court.sh` | courts |
 | `verification/tla/WeftMultiWriter*.tla` | bounded model |
 
-## 11. Residual work toward MW3
+## 11. Residual work after MW3
 
-* conflict domains / sharded heads so independent transactions stop contending
-  on one publication point;
-* a shared multi-mount / multi-writer daemon instead of one process per writer;
-* a coordinated multi-writer GC protocol;
+* a shared multi-mount / multi-writer daemon instead of one process per writer,
+  and one shared decoded cache so the per-handle memory bound composes;
+* a coordinated multi-writer GC protocol (GC is refused on a sharded store);
+* cross-domain atomic publication, which needs a two-phase record and a
+  recovery court that do not exist here;
 * a multi-node court with a real quorum or consensus substrate and a fleet
   throughput claim;
-* a low-latency conditional publication path that does not re-read the chain on
-  every retry;
-* Go parity for S3/GCS MW2, Azure MW2, and a generic checkpoint transaction.
+* a publication path that does not need to re-read another writer's chain —
+  MW3 gives each writer its own head, which removes the case rather than the
+  cost;
+* Go parity for S3/GCS MW2, Azure MW2, MW3, and a generic checkpoint
+  transaction.
 
 ## 12. MW3 design as implemented (T020)
 
@@ -269,9 +274,12 @@ It changes **only when a domain is first registered**, in one compare-and-swap
 that requires the observed epoch. Publication never touches it. The rejected
 alternative was one discovery CAS per commit: that is a single publication
 point again, and the R4 measurement (efficiency 0.0045 at N=32) is what it
-looks like. The price of the choice is that discovery is eventually complete:
-a reader that knows its domains reads the heads directly, and a reader that
-lost the record can rebuild it by listing `domains/`.
+looks like. Each entry carries the derived `head_key`
+(`domains/<DomainId hex>/superblock`) and the record is checked against it on
+decode, so the record **maps a domain to its head object**; the head value is
+read fresh (`discover_heads`, `weftfs mw3 list`) and never cached in the record.
+The price of the choice is that discovery is eventually complete: a reader may
+need one retry or a directory listing to see a domain registered concurrently.
 
 ### 12.5 Read view
 
@@ -298,18 +306,20 @@ auditable; it is not a retention guarantee in this prototype.
 
 Domain commits are `weftfs.commit.v1` (no index attestation; the handle records
 the reason). GC is refused rather than run per domain. `weft.domain.link.v1`
-is specified, not implemented. Transaction ids are store-global. Go has no MW3
-surface. Every limit is in `bench/RESULTS-mw3.md` §5.
+records lineage only: a successor has one create-once record naming its
+predecessor(s), and the protocol never copies or chooses data. Transaction ids
+are store-global. Go has no MW3 surface. A sharded store has no crash court of
+its own. Every limit is in `bench/RESULTS-mw3.md` §5.
 
 ### 12.8 Code map (MW3 and T021)
 
 | path | role |
 |---|---|
-| `src/mw3.rs` | domain record/ID, discovery record, view, view pin |
-| `src/store.rs` | `open_domain_with_options_and_backend`, `register_domain`, `discover_domains`, `capture_read_view`, `write_view_pin`, `verify_domain`, per-domain keys, domain GC refusal |
+| `src/mw3.rs` | domain record/ID, discovery record with the derived head key, read view, view pin, domain link |
+| `src/store.rs` | `open_domain_with_options_and_backend`, `register_domain`, `discover_domains`, `discover_heads`, `capture_read_view`, `write_view_pin`, `write_domain_link`, `domain_link`, `verify_domain`, per-domain keys, domain GC refusal |
 | `src/backend.rs` | `Key::Domain*`, `load_domain_head`, `publish_domain_head_conditional`, `ensure_domain_layout`, `begin_domain_publication`, `list_domain_commits` |
 | `src/mw2.rs` | `WriterMode::Sharded`, `touched_keys`/`changed_keys`, jittered backoff |
-| `src/main.rs` | `--domain`, `mw3 register`, `mw3 list`, `mw3 capture`, `mw3 pin` |
-| `tests/mw3.rs` | 10 semantics/refusal tests |
+| `src/main.rs` | `--domain`, `mw3 register`, `mw3 list` (with heads), `mw3 capture`, `mw3 pin`, `mw3 link` |
+| `tests/mw3.rs` | 13 semantics/refusal/lineage tests |
 | `examples/mw2_writer.rs`, `examples/mw3_compact.rs` | process-per-writer and compact-client drivers |
-| `scripts/mw3_court.sh` | the three courts and their receipts |
+| `scripts/mw3_court.sh`, `scripts/mw3_merge_runs.py`, `scripts/mw3_verify_court.sh` | the courts, the median merge, and the aggregate wrapper |

@@ -266,24 +266,29 @@ before the final driver and are **not** used for any published number.
 
 The MW3 conflict-domain prototype, the T021 rebase change and the T027 writer
 envelope are measured in their own courts and reported in
-[`RESULTS-mw3.md`](RESULTS-mw3.md). The receipts are
-`mw3-20261114T025943Z.json`, `mw2-retry-20261114T025943Z.json` and
-`writer-scale-20261114T025943Z.json` at WeftFS `d2a8b7e1`. This section is a
-pointer, not a second copy of the numbers: the R4 tables above were not re-run
-and nothing here replaces them.
+[`RESULTS-mw3.md`](RESULTS-mw3.md). The evidence is seven full-profile runs
+(stamps `20261114T065404Z`…`20261114T065524Z`) at WeftFS `2dc840e`, merged into
+`mw3-merged-20261114T070000Z.json`, `writer-scale-merged-20261114T070000Z.json`
+and `mw2-retry-runs-20261114T070000Z.json`. This section is a pointer, not a
+second copy of the numbers: the R4 tables above were not re-run and nothing
+here replaces them.
 
 Headline, stated qualitatively so the generated numbers stay in one place:
 
 * disjoint MW3 writers in separate domains commit with no conflicts, no
-  retries and flat read amplification; the same-domain case is exactly MW2's
+  retries and flat read amplification up to the CPU count; beyond it the
+  aggregate plateaus and the tail grows. The same-domain case is exactly MW2's
   one-winner-plus-typed-conflicts result;
-* T021 reduces MW2's N=32 reads per commit and p99 materially; the mechanism
-  is jittered fair backoff, not the intervening-commit cache (which measured
-  zero hits); the residual cost is the single head, which MW3 removes;
+* T021's **p99** falls in every run and repetition; its **reads/commit** result
+  is bimodal, one of seven runs regresses, and against the published R4 figure
+  it is parity rather than a fall. The mechanism is jittered fair backoff, not
+  the intervening-commit cache, which measured zero hits. The residual cost is
+  the single head; MW3 removes the case rather than the cost;
 * T027 shows where the court, not the protocol, binds: four vCPUs saturate the
-  aggregate around the 16–32 writer range, and the 1024-pid limit refuses
-  held threads at the 1024-writer cell.
+  aggregate, and the 1024-pid limit refuses held threads in the 1024-writer
+  cell. No writer starves.
 
 Every loss — no cross-domain atomicity, no coordinated GC, no index
-attestation on domain commits, Rust-only, no `weft.domain.link.v1` writer,
-store-global transaction ids — is listed in `RESULTS-mw3.md` §5.
+attestation on domain commits, Rust-only, lineage without a data merge,
+store-global transaction ids, no crash court for a sharded store — is listed in
+`RESULTS-mw3.md` §5.

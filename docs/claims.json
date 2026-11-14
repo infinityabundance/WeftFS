@@ -7385,8 +7385,8 @@
  },
  {
   "id": "ai_augmentation_mw3_not_implemented",
-  "claim": "docs/AI-STORAGE-AUGMENTATION.md states there is no consensus or multi-node commit protocol (MW3).",
-  "value": "There is no consensus protocol, no multi-node commit protocol",
+  "claim": "docs/AI-STORAGE-AUGMENTATION.md states there is no consensus or multi-node commit protocol, including for MW3.",
+  "value": "There is still no consensus protocol, no multi-node commit protocol",
   "locations": [
    "docs/AI-STORAGE-AUGMENTATION.md"
   ],
@@ -7656,8 +7656,8 @@
  },
  {
   "id": "multiwriter_mw3_not_claimed",
-  "claim": "STATUS states MW3 is not implemented and not claimed.",
-  "value": "MW3 is not implemented and not claimed",
+  "claim": "STATUS records that MW3 was not implemented at R4 and annotates it as superseded by the 2026-11-14 opt-in Rust prototype.",
+  "value": "MW3 was not implemented and not claimed",
   "locations": [
    "docs/STATUS.md"
   ],
@@ -7733,8 +7733,8 @@
  },
  {
   "id": "multiwriter_architecture_doc",
-  "claim": "The architecture document names the publication contract and the MW3 residual.",
-  "value": "Residual work toward MW3",
+  "claim": "The architecture document names the publication contract and the post-MW3 residual.",
+  "value": "Residual work after MW3",
   "locations": [
    "docs/MULTIWRITER-ARCHITECTURE.md"
   ],
@@ -9681,8 +9681,8 @@
  },
  {
   "id": "r14_readme_mw3_not_claimed",
-  "claim": "README rule 6 states MW3 is not implemented and not claimed.",
-  "value": "**MW3** (conflict domains,",
+  "claim": "README engineering rule 6 states MW3 is an opt-in Rust-only prototype, not a fleet claim, and Go has no MW3 surface.",
+  "value": "**MW3** (causal conflict domains with independent per-domain",
   "locations": [
    "README.md"
   ],
@@ -12490,7 +12490,7 @@
  {
   "id": "t021_tla_not_rerun",
   "claim": "The bounded TLA model was not re-run for T021 because no abstract transition changed.",
-  "value": "The model was **not** re-run for T021",
+  "value": "The bounded TLA model was **not** re-run",
   "locations": [
    "bench/RESULTS-mw3.md"
   ],
@@ -12502,7 +12502,7 @@
  {
   "id": "t027_pid_bound",
   "claim": "At 1024 held writers the court's pid limit, not the protocol, refuses further threads.",
-  "value": "refuses further threads at 1024 names",
+  "value": "cgroup limit, not a protocol limit",
   "locations": [
    "bench/RESULTS-mw3.md"
   ],
@@ -12682,6 +12682,102 @@
    "bench/RESULTS-context-plane-verifier.md"
   ],
   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_discovery_head_key",
+  "claim": "The MW3 discovery record maps each domain to the derived key of its head object.",
+  "value": "`head_key` is the derived address",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_link_record_implemented",
+  "claim": "The domain link record has a canonical derived identity and is implemented as create-once lineage.",
+  "value": "LinkId = H(\"weft/domain/link/v1\"",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_no_data_merge",
+  "claim": "A split, supersede or merge records lineage only; the protocol performs no data merge.",
+  "value": "Lineage, not merge.",
+  "locations": [
+   "bench/RESULTS-mw3.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_t020_plateau",
+  "claim": "Disjoint MW3 scaling is published as a plateau beyond the CPU count, not as unbounded scaling.",
+  "value": "**plateaus** at roughly the N=1 rate",
+  "locations": [
+   "bench/RESULTS-mw3.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_t021_read_count_not_stable",
+  "claim": "The T021 read-amplification result is declared bimodal and not a stable claim.",
+  "value": "is therefore not a stable claim",
+  "locations": [
+   "bench/RESULTS-mw3.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_t021_gate_not_met",
+  "claim": "The T021 read-amplification gate is recorded as not met against the published R4 figure.",
+  "value": "**not met** \u2014 parity against R4",
+  "locations": [
+   "bench/RESULTS-mw3.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_t027_cache_bound_does_not_compose",
+  "claim": "The per-handle cache ceiling is recorded as not composing across writers.",
+  "value": "the per-handle cache ceiling does not compose",
+  "locations": [
+   "bench/RESULTS-mw3.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
+  "kind": "present"
+ },
+ {
+  "id": "mw3_mw1_is_default",
+  "claim": "STATUS records MW1 as the default and MW3 as opt-in.",
+  "value": "MW3 is opt-in (`--writer-mode",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/mw3-merged-20261114T070000Z.json",
+  "stamp": "20261114T070000Z",
+  "revision": "2dc840e13dda3b099bcd1911be1defead8512eca",
   "kind": "present"
  }
 ]

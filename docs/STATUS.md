@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,190** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,198** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -99,31 +99,47 @@ non-claims, not omissions hidden behind prose.
 ## 2026-11-14 (T019-T021/T027: MW3 conflict domains, incremental rebase, writer envelope)
 
 <!-- BEGIN GENERATED:mw3-status (scripts/perf_numbers.py) -->
-MW3 (generated): disjoint domain writers reach **57,143 tx/s** at N=16 against **10,417 tx/s** at N=1, with **3.04** backend reads per commit and **0** intervening commits read. Same-domain N=32: **1** winner, **319** typed conflicts, p99 **0.119 ms** (stamp 20261114T025943Z, revision d2a8b7e1993c).
-T021 (generated): MW2 N=32 reads/commit **61.15 → 30.71** (**-49.8 %**), p99 **187.1 → 102.6 ms** (**-45.2 %**), throughput **872 → 1,427 tx/s**; the intervening-commit cache recorded **0** hits, so the win is jittered fair backoff, not the cache (stamp 20261114T025943Z, revision d2a8b7e1993c).
-T027 (generated): **1,017** of 1024 writer threads spawn under `--hold` (**7** refused by the court's pid bound), peak RSS **111,428 KiB** = **112,195 B/writer**; peak aggregate **66,656 tx/s** at N=16 (stamp 20261114T025943Z, revision d2a8b7e1993c).
+MW3 (generated): disjoint domain writers reach **56,140 tx/s** at N=8 against **11,111 tx/s** at N=1 (**0.632** efficiency), then plateau at four vCPUs; every disjoint cell reports **3.04** backend reads per commit and **0** intervening commits read. Same-domain N=32: **1** winner, **319** typed conflicts, p99 **0.465 ms** (stamp 20261114T070000Z, revision 2dc840e13dda).
+T021 (generated): across 7 court runs MW2 N=32 reads/commit **68.90 → 32.22** and p99 **206.3 → 104.7 ms**; p99 fell in **7 of 7** runs and reads/commit in **6 of 7**, so the read count is not a stable claim; the published R4 figure was **31.39** reads/commit (stamp 20261114T070000Z, revision 2dc840e13dda).
+T027 (generated): **1,018** of 1024 writer threads spawn under `--hold` (**6** refused by the court's pid bound), peak RSS **110,784 KiB** = **111,437 B/writer**; **0** writers ever retried; peak aggregate **64,730 tx/s** at N=16 (stamp 20261114T070000Z, revision 2dc840e13dda).
 <!-- END GENERATED:mw3-status -->
 
 Normative contract: `spec/WEFT-MULTIWRITER.md` §15 (`weft.multiwriter/v2`),
 exported to all three submodule mirrors. MW3 is opt-in (`--writer-mode
 sharded`), additive, Rust-only, and local-plane-only; MW1 remains the default
-and MW2's frozen bytes are untouched. `tests/mw3.rs` 10/10 covers domain
-identity and discovery idempotence, independent heads, same-domain
-single-winner (deterministic and threaded), MW1/MW2 refusal, cross-domain
-refusal, GC refusal, chain replay, corrupt-chunk detection and a missing-domain
-view. T021 changes no protocol transition: only the retry delay distribution,
+and MW2's frozen bytes are untouched. `tests/mw3.rs` 13/13 covers domain
+identity and discovery idempotence, the discovery record resolving each domain
+to its live head, independent heads, same-domain single-winner (deterministic
+and threaded), MW1/MW2 refusal, cross-domain refusal, GC refusal, chain replay,
+corrupt-chunk detection, a missing-domain view, and the create-once lineage
+record. T021 changes no protocol transition: only the retry delay distribution,
 an explicit touched-key set, a bounded intervening-commit cache and
 `RebaseStats`. The bounded TLA model was **not** re-run; no abstract transition
 changed.
 
+This entry was verified after the WIP checkpoint `f8f352b`. Two things in that
+checkpoint were wrong and are corrected rather than carried forward: the MW3
+unit test `view_root_separates_domains_and_generations` failed (it asked a read
+view to name one domain twice, which the protocol refuses), and the T021
+figures were a single court run whose after arm contained a 67.1 reads/commit
+outlier. The tables now come from **seven runs** with a merge receipt; one of
+the seven still regresses on reads/commit and it is published. T019 also gained
+the two surfaces its acceptance named: the discovery record now carries the
+derived `head_key` of each domain (resolved live by `discover_heads` and
+`weftfs mw3 list`), and `weft.domain.link.v1` is implemented as create-once
+lineage rather than specified-only.
+
+The gate verdicts are `bench/RESULTS-mw3.md` §6. T020's scaling is real up to
+the CPU count and is published as a plateau beyond it; T021's p99 result is
+stable across every repetition and its reads/commit result is **not** (parity
+with the published R4 figure, a fall only against the same-session baseline);
+T027's pid limit, not the protocol, refuses threads at 1024 writers.
+
 Not claimed, and listed in `bench/RESULTS-mw3.md` §5: cross-domain atomicity
 (`Class::CrossDomain`), coordinated cross-domain GC (GC is refused on a sharded
-store), index attestation on domain commits, a `weft.domain.link.v1` writer,
-Go MW3 parity, per-domain transaction ids, multi-node/fleet, physical power
-loss, and a global linearizable view. The MW3 disjoint curve is non-monotonic at
-N=8 and N=32 because 32 processes share four vCPUs; the T027 high-N tail is
-thread scheduling, and at 1024 held writers the court's pid limit — not the
-protocol — refuses the remaining threads.
+store), index attestation on domain commits, Go MW3 parity, per-domain
+transaction ids, a data merge (lineage only), multi-node/fleet, physical power
+loss, a crash court for a sharded store, and a global linearizable view.
 
 ## 2026-11-13 (T012/N13 aged-store index court, X02 DCP completion, X03 guards)
 
@@ -167,7 +183,9 @@ default writer level is still **MW1 — many producers, one committer**. The pre
 claim that MW2 and MW3 are absent is now split: a bounded, opt-in **MW2**
 transaction protocol exists for the explicit transaction API on
 `local`/`object`/`3fs`/`s3`/`azure` in Rust and on `local`/`object`/`azure` in
-Go (GCS refused `UnsupportedVersion`); **MW3 is not implemented and not claimed.** The
+Go (GCS refused `UnsupportedVersion`); **MW3 was not implemented and not claimed
+at R4** *(superseded 2026-11-14: MW3 is an opt-in, Rust-only, local-plane
+prototype — see the T019–T027 entry at the top of this file)*. The
 normative contract is [`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md);
 the design, backend tradeoffs and every loss are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md) and
@@ -7115,8 +7133,9 @@ is not a performance claim.
 
 ## Subphase R4 — multi-writer (2026-11-09)
 
-**Declared level: MW1 is the default; MW2 is implemented and opt-in; MW3 is not
-implemented and not claimed.** The normative contract is
+**Declared level at R4: MW1 is the default; MW2 is implemented and opt-in; MW3
+was not implemented and not claimed.** *(Superseded 2026-11-14 for MW3 only; the
+MW2 statement still holds.)* The normative contract is
 [`spec/WEFT-MULTIWRITER.md`](../spec/WEFT-MULTIWRITER.md). The design and
 backend tradeoffs are in
 [`docs/MULTIWRITER-ARCHITECTURE.md`](MULTIWRITER-ARCHITECTURE.md); the frozen
@@ -7241,8 +7260,11 @@ optimistic publishers; there is no physical power loss, no fleet, and no MW3.
 * Code revisions: WeftFS `b0bcbc5` (protocol, courts, benchmark), WeftFS-Go
   `f46b351`; aggregate at `a3256af`.
 
-### What remains for MW3
+### What remained for MW3 at R4
 
+*(2026-11-14: the conflict-domain item is now an opt-in Rust prototype —
+`spec/WEFT-MULTIWRITER.md` §15 — and the remaining items are listed in
+`bench/RESULTS-mw3.md` §5 and `docs/MULTIWRITER-ARCHITECTURE.md` §11.)*
 Conflict domains or sharded heads so independent transactions stop contending
 on one publication point; a shared multi-writer daemon instead of one process
 per writer; a coordinated multi-writer GC protocol; a multi-node court with a
@@ -8399,7 +8421,8 @@ Registration adds no measurement and re-runs no package:
   record at the tag.
 * No physical power loss, host-cache loss, GPU, fleet, or live-cloud claim.
 * `Go` still lacks the parent-graph planner, the KV prefix tier, Ed25519
-  envelope verification, and MW2 on `azure`; MW3 is not implemented.
+  envelope verification, and MW2 on `azure`; MW3 was not implemented at that
+  release (an opt-in Rust prototype landed 2026-11-14).
 
 ## Subphase R12b — checkpoint completion latency (2026-11-11)
 

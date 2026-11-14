@@ -16,9 +16,6 @@
 # `scripts/mw3_court.sh` with WEFT_MW3_PROFILE=full.
 set -Eeuo pipefail
 
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$root"
-
 if [[ "$(uname -m)" != "x86_64" ]]; then
   echo "mw3: skip unsupported architecture $(uname -m)"
   exit 78
@@ -31,6 +28,9 @@ if ! docker info >/dev/null 2>&1; then
   echo "mw3: skip no docker daemon"
   exit 78
 fi
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$root"
 
 exec bash scripts/docker-court.sh bench \
   "cd /work && WEFT_MW3_PROFILE=reduced bash scripts/mw3_court.sh"

@@ -99,14 +99,23 @@ do not modify §§1–6, and no row from them is spliced into the MW2 tables.
 
 * **MW3 (`scripts/mw3_court.sh`, `bench/receipts/mw3-<stamp>.json`).** One
   conflict domain per writer; each writer is a process with its own sharded
-  handle. Distributions: `disjoint` (distinct names, N = 1, 2, 4, 8, 16, 32)
+  handle. Distributions: `disjoint` (distinct names, N = 1, 2, 4, 8, 16, 32, 64)
   and `same-domain` (every writer targets `hot.bin` in one domain with create
-  semantics, N = 2, 8, 32, ten transactions per writer). Counts: N ≤ 8 → 500
-  transactions per writer; N = 16 → 200; N = 32 → 100. Each domain is verified
-  with `--domain ... verify --full`; the global verifier must refuse. The
-  receipt records throughput, efficiency, p50/p95/p99, retry amplification,
-  reads/commit, gap commits read, conflicts and RSS. No cross-domain atomicity
+  semantics, N = 2, 8, 32, ten transactions per writer). Disjoint cells use a
+  **fixed 400 transactions per writer** so the cells differ only in writer
+  count; N = 64 is 64 processes, inside the 1024-pid court. Each domain is
+  verified with `--domain ... verify --full`; the global verifier must refuse.
+  The receipt records throughput (end-to-end and the overlapping writer
+  window), efficiency, p50/p95/p99, retry amplification, reads/commit, gap
+  commits read, backend requests, conflicts and RSS. No cross-domain atomicity
   is requested; that refusal is a unit test, not a benchmark.
+* **Repetition and merge.** One full-profile court is cheap (about ten
+  seconds), so the evidence is **seven runs at one revision**, merged by
+  `scripts/mw3_merge_runs.py` into a median receipt that records min/max spread
+  per numeric field and names every source receipt with its sha256. The merge
+  refuses receipts from different revisions, schemas or row sets, and
+  recomputes every ratio from the merged values. A single run's delta is never
+  published as the result.
 * **T021 (`bench/receipts/mw2-retry-<stamp>.json`).** The frozen §2 local
   disjoint fixture at N=32 only (32 processes, seven transactions each,
   `checkpoint_interval = 0`), with two arms: `before` is a release build of the
@@ -115,16 +124,22 @@ do not modify §§1–6, and no row from them is spliced into the MW2 tables.
   **interleaved**, and the comparison uses each arm's median. Reported:
   reads/commit, p50/p95/p99, throughput, retry amplification, gap commits read,
   intervening-commit cache hits, and max consecutive retries. The baseline
-  binary path is passed in `WEFT_MW3_BEFORE` and named in the receipt; without
-  it the receipt contains the after arm only and says so.
+  binary path is passed in `WEFT_MW3_BEFORE` and its revision in
+  `WEFT_MW3_BEFORE_REV`; the receipt records both the revision and the sha256
+  of the baseline binary. Without them the receipt contains the after arm only
+  and says so. Multiple runs are merged by `scripts/mw3_merge_runs.py
+  --schema retry-runs`, which keeps **every run's own pair** and adds the
+  median across runs, so a regression in one run cannot be averaged away.
 * **T027 (`bench/receipts/writer-scale-<stamp>.json`).** The compact client
   `examples/mw3_compact.rs`: N writer **threads in one process**, each with its
-  own handle and domain, N = 8, 16, 32, 64, 128, 256, 512, 1024, five to fifty
-  transactions per writer. At N ≥ 512 every worker is **held after spawning**,
-  so the peak thread count is real and the court's pid bound is measured (a
-  refused spawn is recorded). One 32-writer cell uses one process per writer
-  and exists only to prove that path still works. Reported: throughput,
-  p50/p95/p99, max consecutive retries, peak RSS and RSS per writer, max
+  own handle and domain, N = 8, 16, 32, 64, 128, 256, 512, 1024, ten to fifty
+  transactions per writer (reported as `commits/writer` so unlike cells are
+  never compared). At N ≥ 512 every worker is **held after spawning**, so the
+  peak thread count is real and the court's pid bound is measured (a refused
+  spawn is recorded and makes the cell `ok = false`). One 32-writer cell uses
+  one process per writer and exists only to prove that path still works.
+  Reported: throughput, p50/p95/p99, per-writer and maximum consecutive
+  retries, writers that ever retried, peak RSS and RSS per writer, max
   head-state rows per writer, threads spawned, spawn failures, and the timeout
   return code.
 
