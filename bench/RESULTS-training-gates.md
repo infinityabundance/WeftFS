@@ -163,8 +163,15 @@ Save p50: WeftFS session **30.429 ms**, WeftFS fast **30.167 ms**, OCDBT **29.79
 A second independent run of the same court:
 
 <!-- BEGIN GENERATED:tg-baselines-repeat (scripts/perf_numbers.py) -->
-Repeat run: WeftFS fast **30.033 ms**, OCDBT **30.079 ms**, native DCP **9.939 ms**.
 <!-- END GENERATED:tg-baselines-repeat -->
+
+Attacks applied: one persistent service per session, the reusable DCP
+metadata plan, container retention disabled for the session arm, and the fast
+write policy measured as a size-for-latency floor. Attacks not applied:
+batching several checkpoints into one commit (each checkpoint is a separate
+durable object with its own acknowledgement), and an in-store metadata stream
+that would remove the prepare round trip. Those are the two candidate paths to
+the unmet target; neither is claimed.
 
 Losses: the 20 ms target is not met. The native DCP writer is faster than every
 WeftFS arm. WeftFS and OCDBT are within a fraction of a millisecond of each
