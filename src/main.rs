@@ -65,6 +65,11 @@ struct Cli {
     /// Machine-readable JSON output.
     #[arg(long, global = true)]
     json: bool,
+    /// Write `weftfs.commit.v1` records and no advisory index segment. This is
+    /// the format a pre-v2 reader can decode; the default attests the index in
+    /// `weftfs.commit.v2`.
+    #[arg(long = "no-attest-indexes", global = true)]
+    no_attest_indexes: bool,
     /// Fixture clock override for every generated mtime and commit timestamp.
     #[arg(long, global = true, value_name = "NS")]
     fixed_timestamp_ns: Option<i64>,
@@ -334,6 +339,22 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
+enum ModeCommand {
+    /// Print the writer mode the store records (an absent record means `single`).
+    Show,
+    /// Migrate the recorded writer mode with one compare-and-swap.
+    Migrate {
+        #[arg(long, value_name = "single|optimistic|sharded")]
+        from: String,
+        #[arg(long, value_name = "single|optimistic|sharded")]
+        to: String,
+        /// Quiescence window: the published head must not move for this long.
+        #[arg(long, default_value_t = 250, value_name = "MS")]
+        quiesce_ms: u64,
+    },
+}
+
+#[derive(Subcommand)]
 enum Mw3Command {
     /// Register a conflict domain (one compare-and-swap on the discovery
     /// record; nothing is enabled silently).
@@ -384,6 +405,12 @@ fn parse_domain_id(text: &str) -> Result<weftfs::Hash32> {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Writer-mode identity: show the recorded mode, or migrate it explicitly
+    /// (`spec/WEFT-MULTIWRITER.md` §16). No dual active authority exists.
+    Mode {
+        #[command(subcommand)]
+        command: ModeCommand,
+    },
     /// MW3 conflict domains: register, discover, and capture a read view.
     Mw3 {
         #[command(subcommand)]
@@ -1862,6 +1889,8 @@ struct OpenPolicy {
     cache_bytes: u64,
     cache_entries: usize,
     writer_mode: weftfs::mw2::WriterMode,
+    /// Write `weftfs.commit.v1` records (no index attestation).
+    no_attest_indexes: bool,
     /// MW3: the conflict domain this handle is bound to, if any.
     domain: Option<weftfs::Hash32>,
 }
@@ -1889,6 +1918,7 @@ impl OpenPolicy {
             cache_bytes: self.cache_bytes,
             cache_entries: self.cache_entries,
             writer_mode: self.writer_mode,
+            attest_indexes: !self.no_attest_indexes,
             ..Options::default()
         }
     }
@@ -2049,6 +2079,7 @@ fn run(cli: Cli) -> Result<()> {
     let Cli {
         store,
         json,
+        no_attest_indexes,
         fixed_timestamp_ns,
         representation,
         backend,
@@ -2138,6 +2169,7 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
         writer_mode: weftfs::mw2::WriterMode::parse(&writer_mode)?,
+        no_attest_indexes,
         domain: match domain.as_deref() {
             Some(text) => Some(parse_domain_id(text)?),
             None => None,
@@ -2248,6 +2280,7 @@ fn run(cli: Cli) -> Result<()> {
         }
     };
     match command {
+        Command::Mode { command } => run_mode(&store, json, policy, command),
         Command::Mw3 { command } => run_mw3(&store, json, policy, command),
         Command::Init {
             uid,
@@ -2268,6 +2301,7 @@ fn run(cli: Cli) -> Result<()> {
                 content_identity: policy.content_identity,
                 codec_min_bytes: policy.codec_min_bytes,
                 quotas: policy.quotas.clone(),
+                attest_indexes: !policy.no_attest_indexes,
                 ..Options::default()
             };
             let store = Store::init_with_backend(&store, options, policy.kind()?)?;
@@ -4156,6 +4190,96 @@ fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Res
             domain,
         ),
         None => Store::open_with_options_and_backend(path, mode, policy.options(), policy.kind()?),
+    }
+}
+
+/// `weftfs mode ...`: show or explicitly migrate the recorded writer mode.
+///
+/// `show` reads the `writers` control record; an absent record is `single`.
+/// `migrate` opens the store in the recorded mode (so the mode check that
+/// refuses every mismatched open applies to the migration too), then performs
+/// one compare-and-swap on the record. A refused transition is a typed error,
+/// never a silent change.
+fn run_mode(
+    store_path: &PathBuf,
+    json: bool,
+    mut policy: OpenPolicy,
+    command: ModeCommand,
+) -> Result<()> {
+    match command {
+        ModeCommand::Show => {
+            // A read-only handle in `sharded` mode opens every store, including
+            // one partitioned into domains (where a global reader is refused).
+            policy.writer_mode = weftfs::mw2::WriterMode::Sharded;
+            policy.domain = None;
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let recorded = store.recorded_writer_mode()?;
+            let mode = recorded.unwrap_or(weftfs::mw2::WriterMode::Single);
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "ok": true,
+                        "recorded": recorded.map(|mode| mode.as_str()),
+                        "effective": mode.as_str(),
+                        "record_present": recorded.is_some(),
+                    })
+                );
+            } else {
+                println!("{}", mode.as_str());
+            }
+            Ok(())
+        }
+        ModeCommand::Migrate {
+            from,
+            to,
+            quiesce_ms,
+        } => {
+            let from = weftfs::mw2::WriterMode::parse(&from)?;
+            let to = weftfs::mw2::WriterMode::parse(&to)?;
+            policy.writer_mode = weftfs::mw2::WriterMode::Sharded;
+            policy.domain = None;
+            let probe = open_store(store_path, OpenMode::ReadOnly, policy.clone())?;
+            let recorded = probe
+                .recorded_writer_mode()?
+                .unwrap_or(weftfs::mw2::WriterMode::Single);
+            drop(probe);
+            if recorded != from {
+                return Err(Error::unsupported_version(format!(
+                    "store records `{}`, not the `{}` the migration named",
+                    recorded.as_str(),
+                    from.as_str()
+                )));
+            }
+            // A `sharded` writable handle is accepted on a sharded store; the
+            // migration then CASes the record. Open in the recorded mode so the
+            // ordinary mode check is part of the transition.
+            policy.writer_mode = if recorded == weftfs::mw2::WriterMode::Single {
+                weftfs::mw2::WriterMode::Single
+            } else {
+                recorded
+            };
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let applied = store.migrate_writer_mode(
+                from,
+                to,
+                std::time::Duration::from_millis(quiesce_ms),
+            )?;
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "ok": true,
+                        "from": from.as_str(),
+                        "to": applied.as_str(),
+                        "quiesce_ms": quiesce_ms,
+                    })
+                );
+            } else {
+                println!("{} -> {}", from.as_str(), applied.as_str());
+            }
+            Ok(())
+        }
     }
 }
 

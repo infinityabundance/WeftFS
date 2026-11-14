@@ -1457,6 +1457,21 @@ impl Store {
             )));
         }
         if mode == OpenMode::ReadWrite {
+            // Mode identity is checked *before* the exclusive writer lock is
+            // taken. A single-writer open that would be refused anyway must not
+            // first take a lock the store's recorded mode does not permit, and
+            // the refusal must name the mode rather than surface as `Busy`.
+            if let Some(stored) = crate::mw2::WriterMode::policy(&*backend)? {
+                if stored != writer_mode {
+                    return Err(Error::unsupported_version(format!(
+                        "store writer mode is `{}`; this handle requested `{}`. Writer modes \
+                         are not mixed. Use --writer-mode {} or a separate store.",
+                        stored.as_str(),
+                        writer_mode.as_str(),
+                        stored.as_str()
+                    )));
+                }
+            }
             if writer_mode != crate::mw2::WriterMode::Single {
                 // MW2/MW3: no exclusive writer. The publication lock is taken
                 // for the short publication critical section only.
@@ -2175,6 +2190,168 @@ impl Store {
     /// The handle identity recorded in the history.
     pub fn history_handle(&self) -> &str {
         &self.history_handle
+    }
+
+    /// The writer mode recorded in the store, if any. An absent record means
+    /// `single` (MW1).
+    pub fn recorded_writer_mode(&self) -> Result<Option<crate::mw2::WriterMode>> {
+        self.with_backend(|backend| crate::mw2::WriterMode::policy(backend))
+    }
+
+    /// Explicitly migrate the store's recorded writer mode (T028).
+    ///
+    /// **One compare-and-swap** on the `writers` record is the only
+    /// publication: before it the store is `from`, after it the store is `to`,
+    /// and there is no instant at which two modes are both recorded. A crash
+    /// before the CAS leaves `from`; a crash after it leaves `to`. The caller
+    /// then reopens normally, and the recorded mode decides what is allowed.
+    ///
+    /// Allowed transitions:
+    /// * `single` -> `optimistic` (the same state a first optimistic open
+    ///   creates, made explicit);
+    /// * `optimistic` -> `sharded` (adding conflict domains).
+    ///
+    /// Refused with a typed error, never approximated:
+    /// * any downgrade (`optimistic`/`sharded` -> `single`);
+    /// * `sharded` -> `optimistic`;
+    /// * `single` -> `sharded` (a global head cannot be promoted into a domain
+    ///   automatically; register a domain and publish an explicit link);
+    /// * `optimistic` -> `sharded` on a plane without per-domain heads.
+    ///
+    /// Quiescence: a live prepared transaction blocks the migration (`Busy`,
+    /// naming the transaction), and `quiesce` must pass with the published head
+    /// unchanged. That is a **one-host heuristic**, not a barrier: a writer that
+    /// is idle for the whole window and publishes afterwards is not detected.
+    /// The residual risk is stated in `spec/WEFT-MULTIWRITER.md` §16.4.
+    pub fn migrate_writer_mode(
+        &mut self,
+        from: crate::mw2::WriterMode,
+        to: crate::mw2::WriterMode,
+        quiesce: std::time::Duration,
+    ) -> Result<crate::mw2::WriterMode> {
+        self.require_writable()?;
+        if self.group_depth != 0 {
+            return Err(Error::invalid_argument(
+                "a writer-mode migration cannot run inside a group commit",
+            ));
+        }
+        let recorded = self
+            .recorded_writer_mode()?
+            .unwrap_or(crate::mw2::WriterMode::Single);
+        if recorded != from {
+            return Err(Error::unsupported_version(format!(
+                "store writer mode is `{}`, not `{}`; a migration must name the mode the store \
+                 actually records",
+                recorded.as_str(),
+                from.as_str()
+            )));
+        }
+        if from == to {
+            return Ok(recorded);
+        }
+        match (from, to) {
+            (crate::mw2::WriterMode::Single, crate::mw2::WriterMode::Optimistic) => {}
+            (crate::mw2::WriterMode::Optimistic, crate::mw2::WriterMode::Sharded) => {
+                if !self
+                    .with_backend(|backend| Ok(backend.supports_domain_heads()))
+                    .unwrap_or(false)
+                {
+                    return Err(Error::unsupported_version(
+                        "this commit plane has no per-domain heads; `sharded` is refused rather \
+                         than downgraded to a global head",
+                    ));
+                }
+            }
+            (crate::mw2::WriterMode::Single, crate::mw2::WriterMode::Sharded) => {
+                return Err(Error::unsupported_version(
+                    "a global (MW1) head cannot be promoted into an MW3 conflict domain \
+                     automatically; register a domain with `weftfs mw3 register`, publish the \
+                     state into it explicitly, and record the lineage with `weftfs mw3 link`",
+                ))
+            }
+            (_, crate::mw2::WriterMode::Single) => {
+                return Err(Error::unsupported_version(format!(
+                    "downgrading `{}` to `single` is refused: the recorded mode is what prevents \
+                     a single-writer binary from believing it is the only authority on a store \
+                     that has run independent committers",
+                    from.as_str()
+                )))
+            }
+            _ => {
+                return Err(Error::unsupported_version(format!(
+                    "the migration `{}` -> `{}` is not supported; MW3 domains are not a superset \
+                     of a global head",
+                    from.as_str(),
+                    to.as_str()
+                )))
+            }
+        }
+
+        // A live prepared transaction blocks the transition: it was prepared
+        // against the old mode and may publish under it after the record moved.
+        let tx_keys =
+            self.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Tx)))?;
+        let mut live = Vec::new();
+        for key in tx_keys {
+            let bytes = self.with_backend(|backend| backend.read_all(&key))?;
+            let record = crate::mw2::decode_tx_record(&bytes)?;
+            if record.state == crate::mw2::TxRecordState::Prepared {
+                live.push(record.id);
+            }
+        }
+        if !live.is_empty() {
+            live.sort();
+            return Err(Error::busy(format!(
+                "{} prepared transaction(s) are unfinished ({}); resolve them by transaction id \
+                 before migrating the writer mode",
+                live.len(),
+                live.join(", ")
+            )));
+        }
+
+        // Head stability over the quiescence window (one host; see the note).
+        if !quiesce.is_zero() {
+            let before = self.with_backend(|backend| backend.load_published_head())?;
+            std::thread::sleep(quiesce);
+            let after = self.with_backend(|backend| backend.load_published_head())?;
+            if before != after {
+                return Err(Error::busy(
+                    "the published head advanced during the migration's quiescence window; \
+                     quiesce the committers and retry",
+                ));
+            }
+        }
+        crash_point("mode_after_validate");
+
+        let bytes = crate::mw2::encode_writers_record(
+            to,
+            concat!("weftfs ", env!("CARGO_PKG_VERSION")),
+            self.wall_ns(),
+        )?;
+        let current = match self.with_backend(|backend| backend.read_all(&Key::writers())) {
+            Ok(bytes) => Some(bytes),
+            Err(err) if err.class() == Class::NotFound => None,
+            Err(err) => return Err(err),
+        };
+        let token = current.as_deref().map(crate::planes::control_token);
+        let result = self.with_backend_mut(|backend| {
+            backend.begin_publication()?;
+            let out = backend.compare_and_swap(&Key::writers(), token.as_deref(), &bytes);
+            let _ = backend.end_publication();
+            out
+        });
+        match result {
+            Ok(()) => {}
+            Err(err) if err.class() == Class::Busy => {
+                return Err(Error::busy(
+                    "the writer-mode record changed during the migration; reopen and retry",
+                ))
+            }
+            Err(err) => return Err(err),
+        }
+        self.options.writer_mode = to;
+        crash_point("mode_after_cas");
+        Ok(to)
     }
 
     /// Re-derive the R8 read layers from `self.options`.
