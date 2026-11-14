@@ -571,3 +571,31 @@ fn batch_put_publishes_one_commit_and_is_all_or_nothing() {
     assert_eq!(store.kv_prefix_list().unwrap().len(), 25);
     assert!(store.kv_prefix("good-in-failing-batch").is_err());
 }
+
+#[test]
+fn duplicate_boundary_keys_build_a_loadable_index() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), options()).unwrap();
+    let tokens = kv_token_ids(77, 16);
+    // The same token chain stored under two names with different page bytes:
+    // one identity and one chain root, two records. The index is keyed by that
+    // pair, so the build must attest the de-duplicated set or it produces a
+    // root that can never load.
+    put_with_seed(&mut store, "twin-a", &tokens, None, 0, 1);
+    put_with_seed(&mut store, "twin-b", &tokens, None, 0, 2);
+    let report = store.kv_index_build().unwrap();
+    assert_eq!(report.entries, 1, "one boundary key, two records");
+    let status = store.kv_index_status().unwrap();
+    assert!(status.valid, "{status:?}");
+    let found = store.kv_prefix_lookup_indexed(&request(&tokens)).unwrap();
+    match found {
+        KvLookup::Reusable { record, .. } => {
+            let ids: Vec<Hash32> = ["twin-a", "twin-b"]
+                .iter()
+                .map(|name| store.kv_prefix(name).unwrap().id().unwrap())
+                .collect();
+            assert!(ids.contains(&record.id().unwrap()));
+        }
+        other => panic!("expected a reusable prefix, got {other:?}"),
+    }
+}

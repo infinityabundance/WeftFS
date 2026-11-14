@@ -1,0 +1,10 @@
+## pip install --no-deps --target /tmp/sglang-nodeps sglang
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+## import sglang (deps absent)
+    from sglang.srt.utils.hf_transformers_patches import apply_all as _apply_hf_patches
+  File "/tmp/sglang-nodeps/sglang/srt/utils/__init__.py", line 2, in <module>
+    from sglang.srt.utils.common import *
+  File "/tmp/sglang-nodeps/sglang/srt/utils/common.py", line 85, in <module>
+    import orjson
+ModuleNotFoundError: No module named 'orjson'

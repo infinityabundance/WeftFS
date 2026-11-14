@@ -322,6 +322,13 @@ fn main() {
 
     let receipt = json!({
         "schema": "weft.kv.grants.bench.v1",
+        "stamp": std::env::var("WEFT_STAMP").unwrap_or_else(|_| "unknown".to_owned()),
+        "revisions": {
+            "WeftFS": std::env::var("WEFT_REPO_WEFTFS").unwrap_or_else(|_| "unknown".to_owned()),
+            "WeftFS-Go": std::env::var("WEFT_REPO_WEFTFS_GO").unwrap_or_else(|_| "unknown".to_owned()),
+            "WeftCodec": std::env::var("WEFT_REPO_WEFTCODEC").unwrap_or_else(|_| "unknown".to_owned()),
+            "WeftCodec-Go": std::env::var("WEFT_REPO_WEFTCODEC_GO").unwrap_or_else(|_| "unknown".to_owned()),
+        },
         "label": "KV page batching and verified-session grant cache; no engine, one host, synthetic pages",
         "fixture": {
             "prefixes": PREFIXES,

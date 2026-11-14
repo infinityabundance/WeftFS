@@ -808,7 +808,15 @@ impl Store {
                 || segment.generation != reference.generation
                 || segment.entries.len() as u64 != reference.entries
             {
-                self.kv_index_note("kv index segment does not match its root reference".to_owned());
+                self.kv_index_note(format!(
+                    "kv index segment does not match its root reference (kind {:?}/{:?}, gen {}/{}, entries {}/{})",
+                    segment.kind,
+                    reference.kind,
+                    segment.generation,
+                    reference.generation,
+                    segment.entries.len(),
+                    reference.entries
+                ));
                 self.bump_kv_index(|stats| stats.rejects += 1);
                 return None;
             }
@@ -939,7 +947,21 @@ impl Store {
                 entries.len()
             )));
         }
-        let base = KvIndexSegment::encode(SegmentKind::Base, generation, &entries)?;
+        // Two prefixes can legitimately share a boundary key (same identity and
+        // the same token chain: the same logical prefix stored under two names).
+        // The index is keyed by that pair, so the stored set — not the input
+        // list — is what the root must attest. Sorting and de-duplicating here
+        // keeps the encode, the count and the accumulator consistent; without
+        // it a build over duplicate keys produces a root that can never load.
+        let live: Vec<KvIndexEntry> = {
+            let mut sorted = entries.clone();
+            sorted.sort_by_key(|entry| entry.key());
+            sorted.reverse();
+            sorted.dedup_by(|a, b| a.key() == b.key());
+            sorted.reverse();
+            sorted
+        };
+        let base = KvIndexSegment::encode(SegmentKind::Base, generation, &live)?;
         if base.len() as u64 > MAX_KV_INDEX_BYTES {
             return Err(Error::limit_exceeded(format!(
                 "kv index base segment is {} bytes, above the {MAX_KV_INDEX_BYTES} bound",
@@ -947,11 +969,6 @@ impl Store {
             )));
         }
         let base_digest = identity::h(DOMAIN_KV_INDEX_SEGMENT, &base[..base.len() - 32]);
-        let live: Vec<KvIndexEntry> = {
-            let mut sorted = entries.clone();
-            sorted.sort_by_key(|entry| entry.key());
-            sorted
-        };
         let root = KvIndexRoot {
             generation,
             head,

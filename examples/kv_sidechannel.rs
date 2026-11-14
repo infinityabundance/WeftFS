@@ -523,6 +523,13 @@ fn main() {
 
     let receipt = json!({
         "schema": "weft.kv.sidechannel.v1",
+        "stamp": std::env::var("WEFT_STAMP").unwrap_or_else(|_| "unknown".to_owned()),
+        "revisions": {
+            "WeftFS": std::env::var("WEFT_REPO_WEFTFS").unwrap_or_else(|_| "unknown".to_owned()),
+            "WeftFS-Go": std::env::var("WEFT_REPO_WEFTFS_GO").unwrap_or_else(|_| "unknown".to_owned()),
+            "WeftCodec": std::env::var("WEFT_REPO_WEFTCODEC").unwrap_or_else(|_| "unknown".to_owned()),
+            "WeftCodec-Go": std::env::var("WEFT_REPO_WEFTCODEC_GO").unwrap_or_else(|_| "unknown".to_owned()),
+        },
         "label": "KV side-channel and tenant-security court; in-process, one host, synthetic pages",
         "samples_per_arm": samples,
         "default": default,

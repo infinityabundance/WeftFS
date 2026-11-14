@@ -1,0 +1,98 @@
+{
+  "schema": "weft.kv.go_parity.v1",
+  "label": "WeftFS-Go KV prefix parity: tier, scope checks, Ed25519 verification, bidirectional handoff, per-page cost",
+  "stamp": "20261114T131500Z",
+  "revisions": {
+    "WeftFS": "660d31c5d9b6ee7dc40ae71599328d41634e92a8",
+    "WeftFS-Go": "6ca4c42e19ee480b15359d152aef60513683a7a5"
+  },
+  "court": {
+    "rust_image": "weft/rust-court:1",
+    "rust_image_id": "sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb",
+    "go_image": "weft/go-court:1",
+    "go_image_id": "sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "swap": "3g",
+    "pids": 1024,
+    "cpus": 4,
+    "tmp": "1g"
+  },
+  "rust_oracle": {
+    "path": "weftfs (built with `cargo build --release --bin weftfs`, no fuse feature)",
+    "note": "the fuse build needs libfuse3, absent from the go court; the oracle is the non-fuse binary"
+  },
+  "tests": [
+    {
+      "name": "TestKvPrefixTierRoundTripsAndRevokes",
+      "result": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "name": "TestKvBatchIsOneCommitAndAllOrNothing",
+      "result": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "name": "TestKvPrefixGetVerifiesEd25519InGo",
+      "result": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "name": "TestKvPrefixCrossLanguageReadsBothWays",
+      "result": "PASS",
+      "seconds": 0.01
+    },
+    {
+      "name": "TestKvGoCost",
+      "result": "PASS",
+      "seconds": 3.23
+    }
+  ],
+  "test_count": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ed25519": {
+    "decision": "implemented, not merely bounded",
+    "mechanism": "Store.KvPrefixGetVerified loads the stored signed envelope blob and verifies it with WeftCodec-Go capability.Verify (Go standard library crypto/ed25519), then builds the scope with auth.NewCapability.",
+    "trusted_verifier_boundary_retained": "Store.KvPrefixGet still accepts an already-verified *auth.Capability; that is the historical Go boundary and is labelled as such in the source.",
+    "negative_cases": [
+      "tampered blob refused",
+      "grant with unrelated roots refused",
+      "foreign tenant refused",
+      "expired grant refused",
+      "no capability refused"
+    ],
+    "cross_language": "a Go-signed grant is verified by Rust (kv get --envelope) and a Rust-written prefix is read by Go with a Go-verified grant"
+  },
+  "cost": {
+    "alloc_bytes_per_read_prefix": 208488,
+    "alloc_bytes_per_write_prefix": 439616,
+    "generation": 6,
+    "label": "Go per-page cost: batched publication and scoped reads; one host",
+    "one_batch_write_ms": 0.166,
+    "read_page_bytes": 512,
+    "read_per_prefix_ms": 0.133,
+    "read_reps": 200,
+    "schema": "weft.kv.go.cost.v1",
+    "single_write_per_prefix_us": 388.695,
+    "single_write_wall_ms": 99.506,
+    "write_bytes": 4194304,
+    "write_commits": 1,
+    "write_pages": 8192,
+    "write_per_page_us": 361.668,
+    "write_wall_ms": 2962.787
+  },
+  "mutual_exclusion": {
+    "identical_record_bytes": "Go ParseKvPrefixRecord round-trips Rust records and recomputes the same canonical bytes and id; the cross test reads a Rust-written record and a Go-written record is read by Rust",
+    "identical_lookup_verdicts": "Go reproduces the exact compatibility rule; the same token sequence matches and a one-token drift does not"
+  },
+  "non_claims": [
+    "no Go index (T063 persisted index is Rust-only); Go lookup is the oracle scan",
+    "no Go mode-19 or mode-15 writer",
+    "one host, synthetic pages, warm cache; no fleet/cloud claim",
+    "the per-page cost is a single-process measurement, not a service SLO"
+  ]
+}
