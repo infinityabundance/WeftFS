@@ -249,6 +249,13 @@ per lookup at every size. The 1M table fit the court. **Largest size run:
 1,000,000 keys.** No size was skipped; the quadratic baseline's ceiling is the
 measured 64k row.
 
+The EKBLOOM lookup column is the pinned crate's **file-backed
+`OpenObject::read_into`** path — the pessimistic, persisted path a cold reader
+would use. E itself reads through the bounded `Engine` on a resident body; its
+per-lookup cost is not isolated in this phase and is folded into E's request
+latency in §3. The measured gap therefore describes the file-backed path and is
+**not** a lower bound for the engine.
+
 ### 5.3 The call boundary
 
 `OpenObject::read_into` exists, but its file-backed dispatch tries checkpoint
@@ -295,7 +302,7 @@ generation is collectable at any time.
 4. **The manifestation costs construction.** **3,433.2 ms** over **306** rebuilds in the measured run, all outside request latency and reported separately. A service rebuilding at that cadence would pay that CPU.
 5. **The manifest's hit path allocates.** E allocates **84,342 B/request** versus W's **25,485 B** and M-LRU's **13,902 B** because the pinned crate's engine fell back to `read_counted`; the caller-buffer API does not by itself remove the allocation.
 6. **`first_conflict` does not scale.** **398.56 ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **29.249 ms** at 1,000,000 keys.
-7. **The conventional index wins the lookup axis at every size.** The gap is **82.2×** at 1k, **54.4×** at 100k and **59.5×** at 1M; the manifestation's persistence does not close it in this workload.
+7. **On the file-backed path, the conventional index wins the lookup axis at every size.** The gap is **82.2×** at 1k, **54.4×** at 100k and **59.5×** at 1M; the manifestation's persistence does not close it in this workload. The gating engine path is not separately microbenchmarked.
 8. **E avoids fewer evaluations than M.** E's reuse avoided **32,491** evaluations against M-LRU's **33,751**: the manifestation displaces cache budget and then pays its own lookup on a cache miss.
 <!-- END GENERATED:ekbloom-context-losses -->
 

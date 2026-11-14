@@ -23270,7 +23270,7 @@
      "template": "6. **`first_conflict` does not scale.** **{{ekbctx.quad.64k}} ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **{{ekbctx.scale.1m.bounded}} ms** at 1,000,000 keys."
     },
     {
-     "template": "7. **The conventional index wins the lookup axis at every size.** The gap is **{{ekbctx.scale.1k.gap}}\u00d7** at 1k, **{{ekbctx.scale.100k.gap}}\u00d7** at 100k and **{{ekbctx.scale.1m.gap}}\u00d7** at 1M; the manifestation's persistence does not close it in this workload."
+     "template": "7. **On the file-backed path, the conventional index wins the lookup axis at every size.** The gap is **{{ekbctx.scale.1k.gap}}\u00d7** at 1k, **{{ekbctx.scale.100k.gap}}\u00d7** at 100k and **{{ekbctx.scale.1m.gap}}\u00d7** at 1M; the manifestation's persistence does not close it in this workload. The gating engine path is not separately microbenchmarked."
     },
     {
      "template": "8. **E avoids fewer evaluations than M.** E's reuse avoided **{{ekbctx.e.avoided}}** evaluations against M-LRU's **{{ekbctx.m.lru.avoided}}**: the manifestation displaces cache budget and then pays its own lookup on a cache miss."
