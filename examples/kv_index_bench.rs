@@ -29,8 +29,7 @@ use std::time::Instant;
 use serde_json::{json, Value as Json};
 use weftfs::identity::Hash32;
 use weftfs::kv_index::{
-    entries_accumulator, KvIndexEntry, KvIndexEntryKind, KvIndexRoot, KvIndexSegment,
-    KvIndexSegmentRef, SegmentKind,
+    entries_accumulator, KvIndexEntry, KvIndexEntryKind, KvIndexSegmentRef, SegmentKind,
 };
 use weftfs::kv_prefix::{
     kv_page_bytes, kv_token_ids, KvLookup, KvPrefixBatchItem, KvPrefixRequest, KvPrefixSpec,
@@ -181,8 +180,22 @@ fn count_files(path: &Path) -> u64 {
     total
 }
 
+/// A populate failure that still reports how many prefixes were durably
+/// written before it. The distinction matters: a rung *requested* at 20,000
+/// prefixes that dies at 11,776 has a ceiling of 11,776, not 20,000, and
+/// reporting the request as the ceiling would be a false scale claim.
+#[derive(Debug)]
+struct PopulateFailure {
+    written: u64,
+    note: String,
+}
+
 /// Populate `count` prefixes in batches of [`BATCH`] (one commit per batch).
-fn populate(store: &mut Store, count: u64, page_seed_base: u64) -> std::result::Result<f64, String> {
+fn populate(
+    store: &mut Store,
+    count: u64,
+    page_seed_base: u64,
+) -> std::result::Result<f64, PopulateFailure> {
     let started = Instant::now();
     let spec = spec();
     let mut next = 0u64;
@@ -204,7 +217,10 @@ fn populate(store: &mut Store, count: u64, page_seed_base: u64) -> std::result::
             .collect();
         store
             .kv_prefix_put_batch_seeded(&items, 0, 0, &[0x5A; 32])
-            .map_err(|err| format!("batch put at {next}: {err}"))?;
+            .map_err(|err| PopulateFailure {
+                written: next,
+                note: format!("batch put at {next}: {err}"),
+            })?;
         next = end;
     }
     Ok(started.elapsed().as_secs_f64() * 1000.0)
@@ -245,6 +261,8 @@ struct LadderRow {
     row: Json,
     ok: bool,
     note: String,
+    /// Prefixes durably written when a populate failure stopped the rung.
+    achieved: Option<u64>,
 }
 
 /// One rung: build a fresh store of `count` prefixes and measure everything.
@@ -256,6 +274,7 @@ fn ladder_rung(root: &Path, count: u64) -> LadderRow {
             row: json!({"n": count}),
             ok: false,
             note: "cannot create fixture directory".to_owned(),
+            achieved: None,
         };
     }
     let mut store = match Store::init(&dir, options()) {
@@ -265,17 +284,24 @@ fn ladder_rung(root: &Path, count: u64) -> LadderRow {
                 row: json!({"n": count}),
                 ok: false,
                 note: format!("store init failed: {err}"),
+                achieved: None,
             }
         }
     };
     let populate_ms = match populate(&mut store, count, 10_000) {
         Ok(ms) => ms,
-        Err(note) => {
+        Err(failure) => {
             let _ = std::fs::remove_dir_all(&dir);
             return LadderRow {
-                row: json!({"n": count, "class": "end-to-end"}),
+                row: json!({
+                    "n": count,
+                    "class": "end-to-end",
+                    "achieved": failure.written,
+                    "note": failure.note,
+                }),
                 ok: false,
-                note,
+                note: failure.note,
+                achieved: Some(failure.written),
             };
         }
     };
@@ -292,6 +318,7 @@ fn ladder_rung(root: &Path, count: u64) -> LadderRow {
                 row: json!({"n": count, "populate_ms": round(populate_ms)}),
                 ok: false,
                 note: format!("index build failed: {err}"),
+                achieved: None,
             };
         }
     };
@@ -348,6 +375,7 @@ fn ladder_rung(root: &Path, count: u64) -> LadderRow {
         row: json_row,
         ok: true,
         note: String::new(),
+        achieved: None,
     }
 }
 
@@ -611,7 +639,11 @@ fn main() {
     for count in &ladder_sizes {
         let rung = ladder_rung(&dir, *count);
         if !rung.ok {
-            ceiling = Some(json!({"n": count, "note": rung.note}));
+            ceiling = Some(json!({
+                "requested": count,
+                "achieved": rung.achieved,
+                "note": rung.note,
+            }));
             ladder.push(rung.row);
             break;
         }
