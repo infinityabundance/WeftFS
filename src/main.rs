@@ -1323,6 +1323,20 @@ enum CheckpointCommand {
         /// Shard axis for `--topology` / `--layout sharded`.
         #[arg(long, default_value_t = 0)]
         axis: u32,
+        /// Restore only the destination extents this rank owns under
+        /// `--topology N --axis A` (rank-directed restore). Requires
+        /// `--rank-out DIR`; mutually exclusive with `--import`,
+        /// `--load-receipt`, and `--first-needed`.
+        #[arg(long, value_name = "R")]
+        rank: Option<u32>,
+        /// Directory receiving one decoded payload file per tensor for
+        /// `--rank` (the file name is the tensor name, `/` replaced by `__`).
+        #[arg(long = "rank-out", value_name = "DIR")]
+        rank_out: Option<PathBuf>,
+        /// Print the rank-directed plan (extents, predicted stored shards,
+        /// byte arithmetic) without reading payload.
+        #[arg(long = "plan-only")]
+        plan_only: bool,
         /// Physical layout to verify through: row-major, column-major, blocked,
         /// sharded.
         #[arg(long, value_name = "LAYOUT")]
@@ -4704,6 +4718,9 @@ fn run_checkpoint(
             range,
             topology,
             axis,
+            rank,
+            rank_out,
+            plan_only,
             layout,
             block_shape,
             host_out,
@@ -4727,6 +4744,143 @@ fn run_checkpoint(
             }
             let restore_topology =
                 build_restore_topology(topology, axis, layout.as_deref(), block_shape.as_deref())?;
+            if plan_only && rank.is_none() {
+                return Err(Error::invalid_argument("--plan-only requires --rank"));
+            }
+            if let Some(rank) = rank {
+                if tensor.is_some()
+                    || range.is_some()
+                    || import
+                    || load_receipt.is_some()
+                    || first_needed.is_some()
+                {
+                    return Err(Error::invalid_argument(
+                        "--rank is a standalone mode: it cannot be combined with \
+                         --tensor/--range/--import/--load-receipt/--first-needed",
+                    ));
+                }
+                let topology_value = restore_topology.clone().ok_or_else(|| {
+                    Error::invalid_argument("--rank requires --topology N (sharded)")
+                })?;
+                if !matches!(topology_value, RestoreTopology::Sharded { .. }) {
+                    return Err(Error::invalid_argument(
+                        "--rank requires a sharded topology (--topology N --axis A)",
+                    ));
+                }
+                let store = open_store(store_path, OpenMode::ReadOnly, policy.clone())?;
+                if plan_only {
+                    let plan = store.plan_rank_restore(&name, &topology_value, rank)?;
+                    if json {
+                        print_json(&json!({
+                            "checkpoint": plan.checkpoint,
+                            "manifest_root": plan.manifest_root.to_hex(),
+                            "axis": plan.axis,
+                            "shards": plan.shards,
+                            "rank": plan.rank,
+                            "needed_bytes": plan.needed_bytes,
+                            "stored_shard_bytes": plan.stored_shard_bytes,
+                            "tensors": plan.tensors.iter().map(|tensor| json!({
+                                "name": tensor.name,
+                                "dtype": tensor.dtype,
+                                "full_shape": tensor.full_shape,
+                                "start": tensor.start,
+                                "end": tensor.end,
+                                "shape": tensor.shape,
+                                "needed_bytes": tensor.needed_bytes,
+                                "stored_shards": tensor.stored_shards,
+                                "stored_shard_bytes": tensor.stored_shard_bytes,
+                            })).collect::<Vec<_>>(),
+                            "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+                        }));
+                    } else {
+                        println!("checkpoint={}", plan.checkpoint);
+                        println!(
+                            "rank={} of {} on axis {}",
+                            plan.rank, plan.shards, plan.axis
+                        );
+                        println!("tensors={}", plan.tensors.len());
+                        println!("needed_bytes={}", plan.needed_bytes);
+                        println!("stored_shard_bytes={}", plan.stored_shard_bytes);
+                    }
+                    return Ok(());
+                }
+                let out_dir = rank_out
+                    .clone()
+                    .ok_or_else(|| Error::invalid_argument("--rank requires --rank-out DIR"))?;
+                fs::create_dir_all(&out_dir)
+                    .map_err(|err| Error::io(format!("{}: {err}", out_dir.display())))?;
+                let mut written: Vec<(String, u64)> = Vec::new();
+                let report = store.restore_checkpoint_rank(
+                    &name,
+                    &topology_value,
+                    rank,
+                    None,
+                    |row, bytes| {
+                        let file_name = format!("{}.bin", row.name.replace('/', "__"));
+                        let path = out_dir.join(&file_name);
+                        fs::write(&path, bytes)
+                            .map_err(|err| Error::io(format!("{}: {err}", path.display())))?;
+                        written.push((file_name, bytes.len() as u64));
+                        Ok(())
+                    },
+                )?;
+                let amplification = if report.needed_bytes == 0 {
+                    None
+                } else {
+                    Some(report.backend_bytes_read as f64 / report.needed_bytes as f64)
+                };
+                if json {
+                    print_json(&json!({
+                        "checkpoint": report.checkpoint,
+                        "manifest_root": report.manifest_root.to_hex(),
+                        "axis": report.axis,
+                        "shards": report.shards,
+                        "rank": report.rank,
+                        "needed_bytes": report.needed_bytes,
+                        "stored_shard_bytes": report.stored_shard_bytes,
+                        "representation_bytes": report.representation_bytes,
+                        "backend_bytes_read": report.backend_bytes_read,
+                        "store_reads": report.store_reads,
+                        "read_amplification": amplification,
+                        "fetched_set_matches_plan": report.fetched_set_matches_plan,
+                        "tensors": report.tensors.iter().zip(written.iter()).map(|(row, (file, bytes))| json!({
+                            "name": row.name,
+                            "file": file,
+                            "bytes": bytes,
+                            "start": row.start,
+                            "end": row.end,
+                            "shape": row.shape,
+                            "needed_bytes": row.needed_bytes,
+                            "predicted_shards": row.predicted_shards,
+                            "shard_indices": row.shard_indices,
+                            "representation_bytes": row.representation_bytes,
+                            "backend_bytes_read": row.backend_bytes_read,
+                            "store_reads": row.store_reads,
+                            "read_amplification": if row.needed_bytes == 0 { None } else {
+                                Some(row.backend_bytes_read as f64 / row.needed_bytes as f64)
+                            },
+                            "content_root": row.content_root.to_hex(),
+                            "sha256": hex::encode(row.sha256),
+                        })).collect::<Vec<_>>(),
+                        "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+                        "peak_rss_kib": peak_rss_kib(),
+                    }));
+                } else {
+                    println!("checkpoint={}", report.checkpoint);
+                    println!(
+                        "rank={} of {} on axis {}",
+                        report.rank, report.shards, report.axis
+                    );
+                    println!("tensors={}", report.tensors.len());
+                    println!("needed_bytes={}", report.needed_bytes);
+                    println!("backend_bytes_read={}", report.backend_bytes_read);
+                    println!(
+                        "fetched_set_matches_plan={}",
+                        report.fetched_set_matches_plan
+                    );
+                }
+                return Ok(());
+            }
             let region = match range.as_deref() {
                 Some(text) => Some(parse_checkpoint_region(text)?),
                 None => None,

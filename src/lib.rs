@@ -104,9 +104,10 @@ pub use calibration::{
     MeasurementOptions, MeasurementOutcome, RowOrigin,
 };
 pub use checkpoint::{
-    CheckpointManifest, CheckpointRestoreOptions, CheckpointRestoreReport, CheckpointShard,
-    CheckpointTensor, CheckpointWriteOptions, CheckpointWriteReport, LoadedCheckpointManifest,
-    RestoreTopology, ShardStrategy, WrittenTensor,
+    plan_rank_restore_manifest, CheckpointManifest, CheckpointRestoreOptions,
+    CheckpointRestoreReport, CheckpointShard, CheckpointTensor, CheckpointWriteOptions,
+    CheckpointWriteReport, LoadedCheckpointManifest, RankRestorePlan, RankRestoreReport,
+    RankRestoreTensor, RankRestoredTensor, RestoreTopology, ShardStrategy, WrittenTensor,
 };
 pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
 pub use cost_model::{CostClass, CostModelKind, CostTable};

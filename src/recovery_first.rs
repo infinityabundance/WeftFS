@@ -265,13 +265,11 @@ impl Store {
                 "recovery-first dependency depth exceeds the codec bound",
             ));
         }
-        let manifest =
-            self.read_manifest_keyed(content)?;
+        let manifest = self.read_manifest_keyed(content)?;
         let mut deepest = depth;
         if let Some(representation) = &manifest.representation {
             for dependency in &representation.dependencies {
-                deepest =
-                    deepest.max(self.dependency_depth_of_content(*dependency, depth + 1)?);
+                deepest = deepest.max(self.dependency_depth_of_content(*dependency, depth + 1)?);
             }
         }
         Ok(deepest)
@@ -457,6 +455,7 @@ fn restored_row(
         full_root_verified: verified,
         shard_roots_verified: verified,
         topology_root: None,
+        shard_indices: Vec::new(),
         sha256: safetensors::sha256(bytes),
     })
 }

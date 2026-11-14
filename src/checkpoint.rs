@@ -484,6 +484,9 @@ pub struct RestoredTensor {
     pub shard_roots_verified: bool,
     /// Root recomputed through the requested physical topology.
     pub topology_root: Option<Hash32>,
+    /// Indices of the stored shards actually read (region restores only; empty
+    /// for a whole-tensor restore, whose `shards_read` counts them).
+    pub shard_indices: Vec<u32>,
     pub sha256: Sha256Digest,
 }
 
@@ -496,6 +499,104 @@ pub struct RestoredTensor {
 pub struct RestoredTensorBytes {
     pub bytes: Vec<u8>,
     pub report: RestoredTensor,
+}
+
+/// One tensor's destination slice for one rank of a target topology.
+///
+/// This is pure arithmetic over the checkpoint manifest; reading it fetches no
+/// payload. It exists so a rank can state exactly which logical coordinates it
+/// owns before it asks the store for anything.
+#[derive(Clone, Debug)]
+pub struct RankRestoreTensor {
+    pub name: String,
+    pub dtype: String,
+    /// Logical shape stored in the checkpoint.
+    pub full_shape: Vec<u64>,
+    /// Full-tensor start of this rank's destination extents.
+    pub start: Vec<u64>,
+    /// Full-tensor end (exclusive) of this rank's destination extents.
+    pub end: Vec<u64>,
+    /// `end - start`; the shape this rank materialises.
+    pub shape: Vec<u64>,
+    /// Logical payload bytes this rank owns (`shape` under the stored dtype).
+    pub needed_bytes: u64,
+    /// Stored shard indices whose slab intersects the destination extents.
+    pub stored_shards: Vec<u32>,
+    /// Sum of `byte_len` over `stored_shards` (canonical element bytes of the
+    /// stored representation, before any compression).
+    pub stored_shard_bytes: u64,
+}
+
+/// A rank's complete destination plan for one checkpoint and target topology.
+#[derive(Clone, Debug)]
+pub struct RankRestorePlan {
+    pub checkpoint: String,
+    pub manifest_root: Hash32,
+    /// Target topology; must be `Sharded`.
+    pub topology: RestoreTopology,
+    pub axis: u32,
+    pub shards: u32,
+    pub rank: u32,
+    /// In container (`source_offset`) order.
+    pub tensors: Vec<RankRestoreTensor>,
+    /// Sum of `needed_bytes`; the logical bytes this rank must materialise.
+    pub needed_bytes: u64,
+    /// Sum of `stored_shard_bytes`; the canonical bytes of every stored shard
+    /// the arithmetic says this rank must touch.
+    pub stored_shard_bytes: u64,
+}
+
+/// One tensor restored by a rank-directed restore.
+#[derive(Clone, Debug)]
+pub struct RankRestoredTensor {
+    pub name: String,
+    pub dtype: String,
+    pub start: Vec<u64>,
+    pub end: Vec<u64>,
+    pub shape: Vec<u64>,
+    /// Logical bytes this rank owns.
+    pub needed_bytes: u64,
+    /// Stored shard indices predicted by the arithmetic.
+    pub predicted_shards: Vec<u32>,
+    /// Stored shard indices actually read, in ascending order.
+    pub shard_indices: Vec<u32>,
+    /// Canonical element bytes of the shards actually read.
+    pub representation_bytes: u64,
+    /// Backend bytes attributed to this tensor (object + manifest reads).
+    pub backend_bytes_read: u64,
+    /// Backend read requests attributed to this tensor.
+    pub store_reads: u64,
+    /// `BLAKE3("weft/chunk/v1", region bytes)`; the identity of what this rank
+    /// materialised. The store cannot compare it with the manifest, because the
+    /// manifest records whole-tensor roots only; a court proves it against a
+    /// full restore.
+    pub content_root: Hash32,
+    /// SHA-256 of the region bytes (same convenience field as a full restore).
+    pub sha256: Sha256Digest,
+}
+
+/// Result of a rank-directed restore.
+#[derive(Clone, Debug)]
+pub struct RankRestoreReport {
+    pub checkpoint: String,
+    pub manifest_root: Hash32,
+    pub axis: u32,
+    pub shards: u32,
+    pub rank: u32,
+    pub tensors: Vec<RankRestoredTensor>,
+    /// Logical bytes this rank owns.
+    pub needed_bytes: u64,
+    /// Canonical element bytes of the stored shards the plan predicted.
+    pub stored_shard_bytes: u64,
+    /// Canonical element bytes of the stored shards actually read.
+    pub representation_bytes: u64,
+    /// Backend bytes read over the whole rank restore, including the one
+    /// manifest read before the first tensor.
+    pub backend_bytes_read: u64,
+    pub store_reads: u64,
+    /// True when, for every tensor, the fetched shard set equals the arithmetic
+    /// prediction. A false value is a defect, never a tolerated outcome.
+    pub fetched_set_matches_plan: bool,
 }
 
 /// A checkpoint manifest loaded once, with the identities a caller can pin.
@@ -2439,6 +2540,11 @@ struct RestoredBytes {
     bytes: Vec<u8>,
     shape: Vec<u64>,
     shards_read: usize,
+    /// Indices of the stored shards actually read. Empty for a whole-tensor
+    /// restore (the caller counts it); populated for a region restore so a
+    /// rank-directed restore can compare the fetched set with the arithmetic
+    /// prediction.
+    shard_indices: Vec<u32>,
     units_touched: u64,
     full_root_verified: bool,
     shard_roots_verified: bool,
@@ -2558,6 +2664,7 @@ fn restored_tensor_report(tensor: &CheckpointTensor, restored: RestoredBytes) ->
         full_root_verified: restored.full_root_verified,
         shard_roots_verified: restored.shard_roots_verified,
         topology_root: restored.topology_root,
+        shard_indices: restored.shard_indices,
         sha256: safetensors::sha256(&restored.bytes),
     }
 }
@@ -2860,6 +2967,7 @@ impl Store {
                     full_root_verified: restored.full_root_verified,
                     shard_roots_verified: restored.shard_roots_verified,
                     topology_root: restored.topology_root,
+                    shard_indices: restored.shard_indices.clone(),
                     // The pre-N08 control arm hashes on the ordered writer.
                     sha256: if hash_tensors && Self::writer_sha_control() {
                         crate::phase_profile::timed(crate::phase_profile::Phase::Digest, || {
@@ -2895,18 +3003,18 @@ impl Store {
     }
 
     /// The pre-N08 control arm: compute the report's per-tensor SHA-256 on the
-/// ordered writer instead of the decode worker (N08).
-///
-/// `WEFT_RESTORE_WRITER_SHA=1` selects it. Both arms hash identical bytes and
-/// produce identical reports; only where the work happens differs.
-fn writer_sha_control() -> bool {
-    matches!(
-        std::env::var("WEFT_RESTORE_WRITER_SHA").as_deref(),
-        Ok("1") | Ok("true")
-    )
-}
+    /// ordered writer instead of the decode worker (N08).
+    ///
+    /// `WEFT_RESTORE_WRITER_SHA=1` selects it. Both arms hash identical bytes and
+    /// produce identical reports; only where the work happens differs.
+    fn writer_sha_control() -> bool {
+        matches!(
+            std::env::var("WEFT_RESTORE_WRITER_SHA").as_deref(),
+            Ok("1") | Ok("true")
+        )
+    }
 
-/// Validate the restore request, load the manifest, and derive the output
+    /// Validate the restore request, load the manifest, and derive the output
     /// header. Shared by the sequential, the pipelined, and the load-receipt
     /// restores so none of them can disagree about what "exact" means.
     fn restore_prologue(
@@ -3024,6 +3132,133 @@ fn writer_sha_control() -> bool {
         )
     }
 
+    /// Compute one rank's destination extents and the stored shards they
+    /// intersect. Pure arithmetic: no payload is read.
+    ///
+    /// The destination split is the writer's: `shape[axis]` must divide by
+    /// `shards`, and a shape that does not is the same typed `NonCanonical`
+    /// refusal the writer emits ("no silent padding").
+    pub fn plan_rank_restore(
+        &self,
+        name: &str,
+        topology: &RestoreTopology,
+        rank: u32,
+    ) -> Result<RankRestorePlan> {
+        self.plan_rank_restore_tensor(name, topology, rank, None)
+    }
+
+    /// [`Store::plan_rank_restore`] restricted to one named tensor.
+    pub fn plan_rank_restore_tensor(
+        &self,
+        name: &str,
+        topology: &RestoreTopology,
+        rank: u32,
+        only: Option<&str>,
+    ) -> Result<RankRestorePlan> {
+        let manifest = self.load_checkpoint(name)?;
+        let manifest_root = manifest.root()?;
+        plan_rank_restore_manifest(name, manifest_root, &manifest, topology, rank, only)
+    }
+
+    /// Restore only the tensors/regions one destination rank owns.
+    ///
+    /// Each tensor is read through the shipped region path, so only stored
+    /// shard objects whose slab intersects this rank's destination extents are
+    /// fetched. The sink receives exact decoded bytes one tensor at a time in
+    /// container order, so the caller never holds more than one tensor.
+    ///
+    /// Verification is the region path's: every read shard entry must still
+    /// resolve to the recorded object id, the object's whole-frame content root
+    /// is re-checked by the verifying object read, and a tile/addressed region
+    /// verifies its units. The region bytes are **not** compared with the
+    /// whole-tensor manifest root, because a single rank owns a slice; the
+    /// report carries the region content root so a court can compare it with a
+    /// full restore's slice. `fetched_set_matches_plan` asserts the arithmetic.
+    pub fn restore_checkpoint_rank<F>(
+        &self,
+        name: &str,
+        topology: &RestoreTopology,
+        rank: u32,
+        only: Option<&str>,
+        mut sink: F,
+    ) -> Result<RankRestoreReport>
+    where
+        F: FnMut(&RankRestoredTensor, &[u8]) -> Result<()>,
+    {
+        let (manifest_id, manifest) = self.load_checkpoint_with_id(name)?;
+        let manifest_root = manifest.root()?;
+        let _ = manifest_id;
+        let plan =
+            plan_rank_restore_manifest(name, manifest_root, &manifest, topology, rank, only)?;
+        let before_all = self.backend_stats();
+        let mut rows = Vec::with_capacity(plan.tensors.len());
+        let mut fetched_set_matches_plan = true;
+        let mut representation_bytes = 0u64;
+        for planned in &plan.tensors {
+            let region = Region::new(planned.start.clone(), planned.end.clone());
+            let before = self.backend_stats();
+            let restored = self.restore_manifest_tensor(
+                &manifest,
+                name,
+                &planned.name,
+                Some(&region),
+                None,
+                None,
+                None,
+            )?;
+            let after = self.backend_stats();
+            let delta = after.delta_since(&before);
+            let mut shard_indices = restored.report.shard_indices.clone();
+            shard_indices.sort_unstable();
+            let representation_bytes_tensor: u64 = {
+                let tensor = manifest.tensor(&planned.name)?;
+                tensor
+                    .shards
+                    .iter()
+                    .filter(|shard| shard_indices.contains(&shard.index))
+                    .map(|shard| shard.byte_len)
+                    .sum()
+            };
+            if shard_indices != planned.stored_shards {
+                fetched_set_matches_plan = false;
+            }
+            representation_bytes += representation_bytes_tensor;
+            let row = RankRestoredTensor {
+                name: planned.name.clone(),
+                dtype: planned.dtype.clone(),
+                start: planned.start.clone(),
+                end: planned.end.clone(),
+                shape: restored.report.shape.clone(),
+                needed_bytes: planned.needed_bytes,
+                predicted_shards: planned.stored_shards.clone(),
+                shard_indices,
+                representation_bytes: representation_bytes_tensor,
+                backend_bytes_read: delta.bytes_read,
+                store_reads: delta.reads + delta.range_reads,
+                content_root: restored.report.restored_content_root,
+                sha256: restored.report.sha256,
+            };
+            sink(&row, &restored.bytes)?;
+            rows.push(row);
+        }
+        let after_all = self.backend_stats();
+        let delta = after_all.delta_since(&before_all);
+        Ok(RankRestoreReport {
+            checkpoint: name.to_owned(),
+            manifest_root,
+            axis: plan.axis,
+            shards: plan.shards,
+            rank: plan.rank,
+            tensors: rows,
+            needed_bytes: plan.needed_bytes,
+            stored_shard_bytes: plan.stored_shard_bytes,
+            representation_bytes,
+            backend_bytes_read: delta.bytes_read,
+            store_reads: delta.reads + delta.range_reads,
+            fetched_set_matches_plan,
+        })
+    }
+
     /// Restore exactly one named tensor's payload from a manifest the caller
     /// already loaded.
     ///
@@ -3137,6 +3372,7 @@ fn writer_sha_control() -> bool {
             full_root_verified: restored.full_root_verified,
             shard_roots_verified: restored.shard_roots_verified,
             topology_root: restored.topology_root,
+            shard_indices: restored.shard_indices,
             sha256: safetensors::sha256(&restored.bytes),
         };
         Ok(RestoredTensorBytes {
@@ -3471,6 +3707,7 @@ fn writer_sha_control() -> bool {
                     bytes,
                     shape: tensor.shape.clone(),
                     shards_read: verified,
+                    shard_indices: Vec::new(),
                     units_touched: units_touched.max(verified as u64),
                     full_root_verified: true,
                     shard_roots_verified: true,
@@ -3488,6 +3725,7 @@ fn writer_sha_control() -> bool {
                 let axis = tensor.shards[0].axis as usize;
                 let plane = tensor.shape[axis] / u64::from(tensor.shards[0].shards);
                 let mut shards_read = 0usize;
+                let mut shard_indices = Vec::new();
                 let mut units_touched = 0u64;
                 for shard in &tensor.shards {
                     let slab_start = u64::from(shard.index) * plane;
@@ -3565,6 +3803,7 @@ fn writer_sha_control() -> bool {
                         element_bytes,
                     )?;
                     shards_read += 1;
+                    shard_indices.push(shard.index);
                     units_touched += read.units_touched as u64;
                 }
                 let content_root = identity::content_hash(&out);
@@ -3572,6 +3811,7 @@ fn writer_sha_control() -> bool {
                     bytes: out,
                     shape: extent,
                     shards_read,
+                    shard_indices,
                     units_touched,
                     full_root_verified: false,
                     shard_roots_verified: false,
@@ -3746,6 +3986,175 @@ pub fn checkpoint_manifest_at(
     Ok(store
         .load_checkpoint_with_id_at(&state, Some(snapshot), name)?
         .1)
+}
+
+/// The rank-directed arithmetic, factored out so a court can price a plan
+/// without opening the payload path.
+pub fn plan_rank_restore_manifest(
+    checkpoint: &str,
+    manifest_root: Hash32,
+    manifest: &CheckpointManifest,
+    topology: &RestoreTopology,
+    rank: u32,
+    only: Option<&str>,
+) -> Result<RankRestorePlan> {
+    let (axis, shards) = match topology {
+        RestoreTopology::Sharded { axis, shards } => (*axis, *shards),
+        _ => {
+            return Err(Error::invalid_argument(
+                "a rank-directed restore requires a sharded target topology",
+            ))
+        }
+    };
+    if shards == 0 {
+        return Err(Error::invalid_argument(
+            "a sharded topology needs at least one shard",
+        ));
+    }
+    if rank >= shards {
+        return Err(Error::invalid_argument(format!(
+            "rank {rank} is outside a {shards}-way topology"
+        )));
+    }
+    let mut order: Vec<&CheckpointTensor> = manifest.tensors.iter().collect();
+    order.sort_by_key(|tensor| tensor.source_offset);
+    if let Some(only) = only {
+        order.retain(|tensor| tensor.name == only);
+        if order.is_empty() {
+            return Err(Error::not_found(format!(
+                "checkpoint has no tensor `{only}`"
+            )));
+        }
+    }
+    let mut tensors = Vec::with_capacity(order.len());
+    let mut needed_bytes = 0u64;
+    let mut stored_shard_bytes = 0u64;
+    for tensor in order {
+        let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::unsupported_version(format!(
+                "tensor `{}` dtype `{}` has no physical layout",
+                tensor.name, tensor.dtype
+            ))
+        })?;
+        let axis_index = axis as usize;
+        if axis_index >= tensor.shape.len() {
+            // A rank-1 tensor has no axis to split along. Every destination
+            // rank needs the whole tensor (replication), so the plan says so
+            // instead of inventing an axis or silently dropping the tensor.
+            let needed = tensor.element_bytes;
+            let (stored, stored_bytes) =
+                predicted_stored_shards(tensor, &vec![0u64; tensor.shape.len()], &tensor.shape)?;
+            needed_bytes += needed;
+            stored_shard_bytes += stored_bytes;
+            tensors.push(RankRestoreTensor {
+                name: tensor.name.clone(),
+                dtype: tensor.dtype.clone(),
+                full_shape: tensor.shape.clone(),
+                start: vec![0u64; tensor.shape.len()],
+                end: tensor.shape.clone(),
+                shape: tensor.shape.clone(),
+                needed_bytes: needed,
+                stored_shards: stored,
+                stored_shard_bytes: stored_bytes,
+            });
+            continue;
+        }
+        // Reuse the writer's arithmetic so a non-divisible split is the same
+        // typed refusal, with the tensor named.
+        let shard_shape = tc::shard_shape(&tensor.shape, axis, shards, rank).map_err(|err| {
+            let err = Error::from(err);
+            Error::new(
+                err.class(),
+                format!(
+                    "tensor `{}` shape {:?} cannot be split {}-way on axis {} \
+                     (no silent padding): {}",
+                    tensor.name, tensor.shape, shards, axis, err
+                ),
+            )
+        })?;
+        let plane = tensor.shape[axis_index] / u64::from(shards);
+        let mut start = vec![0u64; tensor.shape.len()];
+        let mut end = tensor.shape.clone();
+        start[axis_index] = u64::from(rank) * plane;
+        end[axis_index] = start[axis_index] + plane;
+        let needed = tc::payload_len(checked_product(&shard_shape)?, physical)?;
+        let (stored, stored_bytes) = predicted_stored_shards(tensor, &start, &end)?;
+        needed_bytes += needed;
+        stored_shard_bytes += stored_bytes;
+        tensors.push(RankRestoreTensor {
+            name: tensor.name.clone(),
+            dtype: tensor.dtype.clone(),
+            full_shape: tensor.shape.clone(),
+            start,
+            end,
+            shape: shard_shape,
+            needed_bytes: needed,
+            stored_shards: stored,
+            stored_shard_bytes: stored_bytes,
+        });
+    }
+    Ok(RankRestorePlan {
+        checkpoint: checkpoint.to_owned(),
+        manifest_root,
+        topology: topology.clone(),
+        axis,
+        shards,
+        rank,
+        tensors,
+        needed_bytes,
+        stored_shard_bytes,
+    })
+}
+
+/// Stored shard indices whose slab along the stored split axis intersects the
+/// destination extents `[start, end)`.
+fn predicted_stored_shards(
+    tensor: &CheckpointTensor,
+    start: &[u64],
+    end: &[u64],
+) -> Result<(Vec<u32>, u64)> {
+    let first = tensor
+        .shards
+        .first()
+        .ok_or_else(|| Error::corrupt(format!("tensor `{}` has no shards", tensor.name)))?;
+    let stored_axis = first.axis as usize;
+    let stored_shards = first.shards;
+    if stored_shards == 0 || stored_axis >= tensor.shape.len() {
+        return Err(Error::corrupt(format!(
+            "tensor `{}` has an invalid stored split (axis {}, {} shards)",
+            tensor.name, first.axis, first.shards
+        )));
+    }
+    let plane = tensor.shape[stored_axis] / u64::from(stored_shards);
+    let mut indices = Vec::new();
+    let mut bytes = 0u64;
+    let mut shards: Vec<&CheckpointShard> = tensor.shards.iter().collect();
+    shards.sort_by_key(|shard| shard.index);
+    for shard in shards {
+        if shard.axis != first.axis || shard.shards != first.shards {
+            return Err(Error::corrupt(format!(
+                "tensor `{}` mixes stored splits: shard {} is {}-way on axis {} but \
+                 shard {} is {}-way on axis {}",
+                tensor.name,
+                shard.index,
+                shard.shards,
+                shard.axis,
+                first.index,
+                first.shards,
+                first.axis,
+            )));
+        }
+        let slab_start = u64::from(shard.index) * plane;
+        let slab_end = slab_start + plane;
+        let lo = start[stored_axis].max(slab_start);
+        let hi = end[stored_axis].min(slab_end);
+        if lo < hi {
+            indices.push(shard.index);
+            bytes += shard.byte_len;
+        }
+    }
+    Ok((indices, bytes))
 }
 
 /// Full verification of a checkpoint: every shard decoded, every per-shard and
