@@ -258,11 +258,9 @@ latency in §3. The measured gap therefore describes the file-backed path and is
 
 ### 5.3 The call boundary
 
-`OpenObject::read_into` exists, but its file-backed dispatch tries checkpoint
-replay before the directly-addressable core; on this body the plan exposed no
-resident surface (`manifest_resident_surface = false`), so the engine's
-`read_into` fell through to `read_counted`. The allocation counter shows the
-cost:
+The harness exercises the crate's caller-buffer path (`Engine::read_into` on a
+`ReadyObject` over an in-memory body), which is what the contract asks for. The
+allocation counter shows the cost is **not** removed:
 
 <!-- BEGIN GENERATED:ekbloom-context-alloc (scripts/perf_numbers.py) -->
 | Arm | allocations/request | bytes/request | allocation calls | allocated bytes | requests |
@@ -275,9 +273,13 @@ cost:
 E allocates more per request than M and, because the manifest path allocates
 internally, more bytes per request than W. The 208-byte key area and the
 64-byte slot are read into caller buffers, but the pinned crate's internal
-dispatch still allocates. A future implementation that exposes a resident
-slice for this profile would remove that allocation; this court did not find
-one.
+dispatch still allocates. The harness computes a per-arm
+`manifest_resident_surface` flag in its run output, but the assemble step does
+not carry that flag into the receipt and the work directory is cleaned up, so
+the flag is **not** a preserved receipt field: the counted-read fallback is an
+inference from the allocation profile and the pinned source, not a recorded
+observation. A future implementation that exposes a resident slice for this
+profile might remove the allocation; this court did not establish one.
 
 ## 6. Lifecycle: the manifestation is collectable and never load-bearing
 
@@ -300,7 +302,7 @@ generation is collectable at any time.
 2. **E's p50 is worse than M's.** E is **1.60×** M's p50 (18.19 µs vs 11.39 µs): the manifest consumes cache budget and its lookup costs more than a cache probe.
 3. **E's retained bytes are not free.** The final manifestation is **417,176 B**; E retains **1,001,392 B** in total versus M's **1,048,576 B**. E stays under the budget only by giving the cache less than M has, and a manifest entry is larger than a cache entry.
 4. **The manifestation costs construction.** **3,433.2 ms** over **306** rebuilds in the measured run, all outside request latency and reported separately. A service rebuilding at that cadence would pay that CPU.
-5. **The manifest's hit path allocates.** E allocates **84,342 B/request** versus W's **25,485 B** and M-LRU's **13,902 B** because the pinned crate's engine fell back to `read_counted`; the caller-buffer API does not by itself remove the allocation.
+5. **The manifest's hit path allocates.** E allocates **84,342 B/request** versus W's **25,485 B** and M-LRU's **13,902 B**; the caller-buffer API does not by itself remove the allocation, and the counted-read fallback is inferred rather than recorded because the receipt does not carry the harness's resident-surface flag.
 6. **`first_conflict` does not scale.** **398.56 ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **29.249 ms** at 1,000,000 keys.
 7. **On the file-backed path, the conventional index wins the lookup axis at every size.** The gap is **82.2×** at 1k, **54.4×** at 100k and **59.5×** at 1M; the manifestation's persistence does not close it in this workload. The gating engine path is not separately microbenchmarked.
 8. **E avoids fewer evaluations than M.** E's reuse avoided **32,491** evaluations against M-LRU's **33,751**: the manifestation displaces cache budget and then pays its own lookup on a cache miss.

@@ -23264,7 +23264,7 @@
      "template": "4. **The manifestation costs construction.** **{{ekbctx.e.build_ms}} ms** over **{{ekbctx.e.builds}}** rebuilds in the measured run, all outside request latency and reported separately. A service rebuilding at that cadence would pay that CPU."
     },
     {
-     "template": "5. **The manifest's hit path allocates.** E allocates **{{ekbctx.e.allocb_per_req}} B/request** versus W's **{{ekbctx.w.allocb_per_req}} B** and M-LRU's **{{ekbctx.m.lru.allocb_per_req}} B** because the pinned crate's engine fell back to `read_counted`; the caller-buffer API does not by itself remove the allocation."
+     "template": "5. **The manifest's hit path allocates.** E allocates **{{ekbctx.e.allocb_per_req}} B/request** versus W's **{{ekbctx.w.allocb_per_req}} B** and M-LRU's **{{ekbctx.m.lru.allocb_per_req}} B**; the caller-buffer API does not by itself remove the allocation, and the counted-read fallback is inferred rather than recorded because the receipt does not carry the harness's resident-surface flag."
     },
     {
      "template": "6. **`first_conflict` does not scale.** **{{ekbctx.quad.64k}} ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **{{ekbctx.scale.1m.bounded}} ms** at 1,000,000 keys."
