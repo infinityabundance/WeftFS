@@ -67,7 +67,7 @@ use crate::backend::{BackendStats, Key, RangeRead};
 use crate::error::{Error, Result};
 use crate::identity::{self, Hash32};
 use crate::packs::PackReclaim;
-use crate::planes::{BlobCapabilities, BlobPlane, BlobProbe};
+use crate::planes::{BlobCapabilities, BlobPlane};
 
 /// Envelope magic.
 pub const ENCRYPTION_MAGIC: &[u8; 6] = b"WEFTE1";

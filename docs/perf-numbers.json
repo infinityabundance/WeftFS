@@ -141,6 +141,10 @@
   {
    "id": "n07",
    "title": "N07 strict two-axis Pareto and eligible policy set"
+  },
+  {
+   "id": "encryption",
+   "title": "T079 optional encryption at rest: plain, convergent and random cost on one fixture, seven interleaved repetitions"
   }
  ],
  "numbers": [
@@ -23048,6 +23052,483 @@
    "stamp": "2026-11-14T21:48:11Z",
    "revision_path": "repositories.0.revision",
    "revision": "2b93e5faafbe6c944fdc28113128dcefa2444804"
+  },
+  {
+   "key": "enc.fixture.logical_b",
+   "label": "Encryption court fixture, logical bytes",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "fixture.logical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.fixture.big_b",
+   "label": "Encryption court fixture, large file",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "fixture.big_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.reps",
+   "label": "Interleaved repetitions per arm",
+   "unit": "reps",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.reps",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.write_ms",
+   "label": "plain: write wall median",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.write_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.read_ms",
+   "label": "plain: read wall median",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.read_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.wcpu_ms",
+   "label": "plain: write CPU median (user+sys)",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.write_cpu_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.rcpu_ms",
+   "label": "plain: read CPU median (user+sys)",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.read_cpu_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.foot_b",
+   "label": "plain: physical footprint",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.physical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.objects",
+   "label": "plain: stored object files",
+   "unit": "objects",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.object_files",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.written_b",
+   "label": "plain: backend bytes written",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.backend_bytes_written_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plain.read_b",
+   "label": "plain: backend bytes read",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.plain.backend_bytes_read_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.write_ms",
+   "label": "convergent: write wall median",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.write_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.read_ms",
+   "label": "convergent: read wall median",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.read_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.wcpu_ms",
+   "label": "convergent: write CPU median (user+sys)",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.write_cpu_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.rcpu_ms",
+   "label": "convergent: read CPU median (user+sys)",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.read_cpu_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.foot_b",
+   "label": "convergent: physical footprint",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.physical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.objects",
+   "label": "convergent: stored object files",
+   "unit": "objects",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.object_files",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.written_b",
+   "label": "convergent: backend bytes written",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.backend_bytes_written_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv.read_b",
+   "label": "convergent: backend bytes read",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.convergent.backend_bytes_read_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.write_ms",
+   "label": "random: write wall median",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.write_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.read_ms",
+   "label": "random: read wall median",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.read_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.wcpu_ms",
+   "label": "random: write CPU median (user+sys)",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.write_cpu_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.rcpu_ms",
+   "label": "random: read CPU median (user+sys)",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.read_cpu_ms_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.foot_b",
+   "label": "random: physical footprint",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.physical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.objects",
+   "label": "random: stored object files",
+   "unit": "objects",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.object_files",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.written_b",
+   "label": "random: backend bytes written",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.backend_bytes_written_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.rand.read_b",
+   "label": "random: backend bytes read",
+   "unit": "B",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "summary.random.backend_bytes_read_median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.conv_write_ratio",
+   "label": "Convergent write wall as a multiple of plain",
+   "unit": "x",
+   "group": "encryption",
+   "format": "ratio:2",
+   "expr": "{enc.conv.write_ms} / {enc.plain.write_ms}"
+  },
+  {
+   "key": "enc.conv_read_ratio",
+   "label": "Convergent read wall as a multiple of plain",
+   "unit": "x",
+   "group": "encryption",
+   "format": "ratio:2",
+   "expr": "{enc.conv.read_ms} / {enc.plain.read_ms}"
+  },
+  {
+   "key": "enc.rand_write_ratio",
+   "label": "Random write wall as a multiple of plain",
+   "unit": "x",
+   "group": "encryption",
+   "format": "ratio:2",
+   "expr": "{enc.rand.write_ms} / {enc.plain.write_ms}"
+  },
+  {
+   "key": "enc.rand_read_ratio",
+   "label": "Random read wall as a multiple of plain",
+   "unit": "x",
+   "group": "encryption",
+   "format": "ratio:2",
+   "expr": "{enc.rand.read_ms} / {enc.plain.read_ms}"
+  },
+  {
+   "key": "enc.foot_overhead_pct",
+   "label": "Envelope footprint over plain",
+   "unit": "%",
+   "group": "encryption",
+   "format": "pct:3",
+   "expr": "({enc.conv.foot_b} - {enc.plain.foot_b}) / {enc.plain.foot_b} * 100"
+  },
+  {
+   "key": "enc.conv_cpu_overhead_ms",
+   "label": "Convergent write CPU over plain",
+   "unit": "ms",
+   "group": "encryption",
+   "format": "fixed:1",
+   "expr": "{enc.conv.wcpu_ms} - {enc.plain.wcpu_ms}"
+  },
+  {
+   "key": "enc.plane.seal_conv_mib_s",
+   "label": "Plane seal throughput, convergent",
+   "unit": "MiB/s",
+   "group": "encryption",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "plane.modes.convergent.seal_mib_per_s",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plane.open_conv_mib_s",
+   "label": "Plane open throughput, convergent",
+   "unit": "MiB/s",
+   "group": "encryption",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "plane.modes.convergent.open_mib_per_s",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plane.seal_rand_mib_s",
+   "label": "Plane seal throughput, random",
+   "unit": "MiB/s",
+   "group": "encryption",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "plane.modes.random.seal_mib_per_s",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.plane.open_rand_mib_s",
+   "label": "Plane open throughput, random",
+   "unit": "MiB/s",
+   "group": "encryption",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "plane.modes.random.open_mib_per_s",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.passed",
+   "label": "Encryption court checks passed",
+   "unit": "checks",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "passed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+  },
+  {
+   "key": "enc.failed",
+   "label": "Encryption court checks failed",
+   "unit": "checks",
+   "group": "encryption",
+   "format": "int",
+   "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+   "path": "failed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T235500Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
   }
  ],
  "blocks": [
@@ -28874,6 +29355,145 @@
     },
     {
      "template": "* Repetitions: **{{mwt024.stress_runs}}** suite runs in **{{mwt024.stress_arms}}** arms - **{{mwt024.stress_runs_threads8}}** at eight-way test threads, **{{mwt024.stress_runs_load}}** beside busy-loop CPU competition, **{{mwt024.stress_runs_singlecpu}}** with the court CPU quota lowered to one - **{{mwt024.stress_failures}}** failures, **{{mwt024.stress_timeouts}}** timeouts."
+    }
+   ]
+  },
+  {
+   "id": "encryption-verdict",
+   "file": "bench/RESULTS-encryption.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "All **{{enc.passed}}** checks pass with **{{enc.failed}}** failures: every raw row restored every"
+    },
+    {
+     "template": "object byte-exactly, and every arm's physical footprint was identical across its"
+    },
+    {
+     "template": "{{enc.reps}} repetitions. The four dedup facts (convergent equality, random"
+    },
+    {
+     "template": "inequality, convergent idempotent republish, random conflicting republish) are"
+    },
+    {
+     "template": "checks in the same receipt."
+    }
+   ]
+  },
+  {
+   "id": "encryption-table",
+   "file": "docs/ENCRYPTION.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/encryption-20261114T235500Z.json",
+    "array": "summary",
+    "order": [
+     "plain",
+     "convergent",
+     "random"
+    ],
+    "columns": [
+     {
+      "header": "row",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "write median ms",
+      "path": "write_ms_median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "read median ms",
+      "path": "read_ms_median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write CPU ms",
+      "path": "write_cpu_ms_median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "read CPU ms",
+      "path": "read_cpu_ms_median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "physical_bytes",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "objects",
+      "path": "object_files",
+      "format": "int",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261114T235500Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "7f85d5cfb5ca9af146db67628491731591e856f6"
+   }
+  },
+  {
+   "id": "encryption-headline",
+   "file": "docs/ENCRYPTION.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "On this fixture the convergent envelope costs **{{enc.conv_write_ratio}}x** the plain"
+    },
+    {
+     "template": "write wall and **{{enc.conv_read_ratio}}x** the plain read wall; the random envelope"
+    },
+    {
+     "template": "costs **{{enc.rand_write_ratio}}x** and **{{enc.rand_read_ratio}}x**. Physical footprint"
+    },
+    {
+     "template": "rises by **{{enc.foot_overhead_pct}} %** in both modes and the object count is the"
+    },
+    {
+     "template": "same in all three arms (**{{enc.plain.objects}}**), which is the leak: the blob name"
+    },
+    {
+     "template": "is the plaintext hash whichever mode is chosen. The plane itself seals at"
+    },
+    {
+     "template": "**{{enc.plane.seal_conv_mib_s}} MiB/s** and opens at **{{enc.plane.open_conv_mib_s}} MiB/s**"
+    },
+    {
+     "template": "(convergent) on one core of the bench court; seven interleaved repetitions,"
+    },
+    {
+     "template": "medians, warm page cache. Source: `{{enc.conv.write_ms|receipt}}`"
+    },
+    {
+     "template": "(stamp {{enc.conv.write_ms|stamp}}, revision {{enc.conv.write_ms|revision}})."
+    }
+   ]
+  },
+  {
+   "id": "encryption-plane",
+   "file": "bench/RESULTS-encryption.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| mode | seal MiB/s | open MiB/s |"
+    },
+    {
+     "template": "|---|---:|---:|"
+    },
+    {
+     "template": "| `convergent` | {{enc.plane.seal_conv_mib_s}} | {{enc.plane.open_conv_mib_s}} |"
+    },
+    {
+     "template": "| `random` | {{enc.plane.seal_rand_mib_s}} | {{enc.plane.open_rand_mib_s}} |"
     }
    ]
   }
