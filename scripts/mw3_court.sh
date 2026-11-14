@@ -171,6 +171,9 @@ row = {
 }
 print(json.dumps(row, sort_keys=True))
 PY
+  # The row is complete; the court /tmp is a 1 GiB tmpfs, so free the store
+  # before the next cell.
+  rm -rf "$dir"
 }
 
 mw3_rows="$work/mw3-rows.ndjson"
@@ -236,6 +239,7 @@ doc.update({
 })
 print(json.dumps(doc, sort_keys=True))
 PY
+  rm -rf "$dir"
 done
 # A real-process subset proves the process-per-writer path is not required and
 # is not what the high counts use.
@@ -283,6 +287,7 @@ print(json.dumps({
     "rss_sum_kib": sum(r.get("peak_rss_kib", 0) for r in rows),
 }, sort_keys=True))
 PY
+rm -rf "$dir"
 
 # ---------------------------------------------------------------------------
 # T021: MW2 before/after at N=32.
@@ -345,6 +350,7 @@ print(json.dumps({
     "rss_sum_kib": sum(r.get("peak_rss_kib", 0) for r in rows),
 }, sort_keys=True))
 PY
+  rm -rf "$dir"
 }
 # Interleaved repetitions: the arms alternate so page-cache warmth and CPU
 # state cannot silently favour one of them.
