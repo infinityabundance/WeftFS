@@ -16,6 +16,98 @@ court; the entries below this block are a chronological log of subphases, quoted
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
 
+## 2026-11-14 (T072/T074/T078/T079/T071: artifact API, producer auth, revocation epochs, encryption, RFC gaps)
+
+**Deliverables.**
+
+* **T072 one artifact API, no mount.** `src/artifact_api.rs` adds
+  `ContextPlane` with `resolve`, `plan`, `materialize`, `verify`, `pin`,
+  `release` and `transaction`, all snapshot-scoped (a call either names a
+  snapshot or returns a result labelled provisional; nothing inside a pinned
+  context follows the head). `pin`/`release` are real retention effects through
+  the GC epoch/retention path, not a parallel registry. `python/weftcodec/artifact_api.py`
+  is a thin binding over the CLI; `python/weftcodec/dcp.py` and
+  `python/weftcodec/orbax.py` call it by default (`artifact_api=False` keeps the
+  legacy path solely so the court can compare), and
+  `examples/agent_state_consumer.py` is the third consumer. The court asserts a
+  checkpoint resolved through the API is byte-identical to the same checkpoint
+  read through the old adapter path. API and error classes in
+  `docs/ARTIFACT-API.md`; results in `bench/RESULTS-artifact-api.md`.
+* **T074 producer attestations with key lifecycle.** `src/producer_auth.rs`:
+  canonical `weft.producer.attest.v1` record (producer identity, run id, tool
+  and version, input content roots, output checkpoint root, determinism class)
+  with the signature outside the signed body; a key set with rotation entries
+  and a revoked-key list; verification reports which key signed and whether it
+  was valid at the signing epoch, and a revoked key fails closed. Cross-language:
+  Rust signs and Go plus the clean-room `verifier/producer_attest.py` verify;
+  Go signs and Rust verifies. Adversarial court covers invalid signer,
+  corrupted input root, mismatched output root, revoked key, key rotated after
+  signing, and a valid signature whose declared inputs do not match the store's
+  objects. **Limit stated in the document and the claims: a signature
+  authenticates a declaration, not that the computation ran.**
+  `docs/PRODUCER-ATTESTATION.md`, `bench/RESULTS-producer-auth.md`.
+* **T078 revocation epochs and deny-before-decode.** `src/revocation_epoch.rs`
+  replaces the caller-supplied revocation set with a monotonic epoch record and
+  a freshness contract; a client whose observation is older than the store's
+  epoch or its window is refused with `StaleEpoch` and must refresh — it may
+  not fall back to the head. Authorization and revocation are checked before
+  any object byte is fetched or decoded, and a denial discloses neither
+  existence, size nor count. Adversarial court: revocation racing a read, a
+  client pinned to a stale epoch, a revocation arriving mid-session, revocation
+  of one tenant while another reads the same deduplicated content, and a
+  forged/rolled-back record. **Enforcement boundary stated:** this is not a
+  gossip protocol; the epoch is read from the store's control plane and is
+  enforced by that store — a tenant whose cache never refreshes is bounded by
+  its declared freshness window, not by a global push. `docs/REVOCATION-EPOCH.md`,
+  `bench/RESULTS-revocation-epoch.md`.
+* **T079 optional encryption at rest.** `src/encryption.rs` wraps the blob plane
+  in a ChaCha20-Poly1305 envelope (96-byte header, 64 KiB blocks, per-block
+  AAD); frozen codec frames are untouched and an opened envelope yields the
+  exact published bytes. Two dedup policies: `convergent` (deterministic
+  ciphertext, physical dedup kept, equality visible) and `random` (fresh nonce,
+  ciphertext equality removed). Key file with rotation and revocation; a wrong
+  key makes the newest state unopenable and the open is refused rather than
+  served from an older generation. The measured cost and the leak are published
+  in `docs/ENCRYPTION.md` §4 and §7: **the blob name is the plaintext content
+  hash in every mode**, so random mode removes ciphertext equality but not the
+  equality an observer of the namespace can see; convergent adds a
+  plaintext-hash confirm/deny oracle. Neither mode is claimed to give
+  confidentiality **and** cross-tenant dedup.
+* **T071 RFC package gaps.** `spec/ERROR-CLASSES.md` publishes the shipped
+  registry (Rust `Class`, Go `werr.Kind`, per-language availability) and
+  reconciles RFC §13: `SnapshotMissing` and `CapabilityRevoked` are shipped;
+  `UnsupportedProfile` and `Incompatible` map onto shipped classes;
+  `Unproven`, `TransformationRequired` and `MaterializationIncomplete` stay
+  proposed and unimplemented, each with the reason it must not be folded into an
+  existing string. `docs/IMPLEMENTER-WALKTHROUGH.md` gives the reading order,
+  the vector commands, the clean-room verifier as a differential and negative
+  oracle, the check order that decides a class, and what may not be concluded.
+  `docs/DRIVER-BOUNDARY.md` states what a `BlobPlane`/`CommitPlane` adapter must
+  implement, what a capability probe can and cannot establish (`durable_fsync`
+  is an attestation, not a measurement), and ten things a driver must never
+  infer. `spec/README.md` links all three. Spec mirrors: WeftCodec `c5cae0d`,
+  WeftCodec-Go `0db8016`, WeftFS-Go `71a9338`.
+
+**Evidence.** Receipts `artifact-api-20261114T224431Z`,
+`producer-auth-20261114T225327Z`, `revocation-epoch-20261114T225925Z`,
+`encryption-20261114T235500Z` (with their `.log` files), plus the retained
+failures listed in each results document. Four courts are registered in
+`scripts/verify-all.sh` (`artifact_api`, `producer_auth`, `revocation_epoch`,
+`encryption`), each with its own exit-78 skip path. `docs/ENCRYPTION.md` and
+`bench/RESULTS-encryption.md` publish their numbers through
+`docs/perf-numbers.json` (rule 12).
+
+**Losses and limits, stated plainly.** The artifact API is Rust plus a Python
+binding; Go has no `ContextPlane`. The Python consumers import a CLI per call,
+so their latency is process-dominated and is not a performance claim. Producer
+attestations authenticate declarations only. Revocation epochs are enforced by
+the store that holds them; there is no global gossip, no clock-skew defence and
+no per-tenant push. Encryption covers blob bodies only: commit records, refs
+and the superblock remain plaintext, so namespace, sizes and the operation log
+are not hidden; no per-tenant keys; no independent cryptographic review; no Go
+or Python envelope. The measured envelope cost is one host, one container,
+tmpfs and warm cache.
+
 ## 2026-11-14 (T063/T065/T067/T068/X17: KV context plane)
 
 **Deliverables.** A persisted, generation-coupled KV prefix index

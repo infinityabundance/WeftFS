@@ -387,6 +387,34 @@ run_orchestrated_court mode_migration mode_migration_court \
 run_orchestrated_court fuse_mw2 fuse_mw2_court \
   bash scripts/fuse_mw2_court.sh
 
+# T072 artifact API: one Rust `ContextPlane` surface (resolve, plan, materialize,
+# verify, pin, release, transaction), its thin Python binding, and the three
+# consumers that use the same functions (DCP, Orbax, an agent-state consumer).
+# The court also asserts byte-identity between a checkpoint resolved through the
+# API and the same checkpoint read through the legacy adapter path. It needs
+# torch in the Python court and, for the Orbax half, a jax/orbax tree, so it
+# prints `artifact_api: skip <reason>` and exits 78 when either is absent.
+run_orchestrated_court artifact_api artifact_api \
+  env WEFT_STAMP="$stamp" bash scripts/artifact_api_court.sh
+
+# T074 producer attestations: signed `weft.producer.attest.v1` records, key
+# rotation and revocation, adversarial refusals and cross-language verification
+# (Rust signs, Go and the clean-room Python verifier check it; and the reverse).
+# Skip path: no Docker/daemon.
+run_orchestrated_court producer_auth producer_auth \
+  env WEFT_STAMP="$stamp" bash scripts/producer_auth_court.sh
+
+# T078 revocation epochs: the monotonic epoch record, stale-client refusal,
+# tenant scoping and deny-before-decode. Needs Docker only.
+run_orchestrated_court revocation_epoch revocation_epoch \
+  env WEFT_STAMP="$stamp" bash scripts/revocation_epoch_court.sh
+
+# T079 encryption at rest: the blob-plane AEAD envelope, both dedup policies and
+# the interleaved plain/convergent/random cost bench. Runs in the bench court;
+# skip path: non-x86_64, no Docker/daemon.
+run_orchestrated_court encryption encryption \
+  env WEFT_STAMP="$stamp" bash scripts/encryption_court.sh
+
 # R26 Context Advantage Court: one backend at a time, three arms — the backend
 # alone, a strong application-level metadata baseline, and the WeftFS context
 # plane — interleaved with the arm order rotated per repetition. This court is
