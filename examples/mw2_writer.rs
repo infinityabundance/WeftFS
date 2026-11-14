@@ -323,6 +323,10 @@ fn options(mode: WriterMode, now: i64) -> Options {
         checkpoint_interval: 0,
         ..Options::default()
     };
+    // Court hook for compatibility runs: write `weftfs.commit.v1` records.
+    if std::env::var_os("WEFT_NO_ATTEST_INDEXES").is_some() {
+        options.attest_indexes = false;
+    }
     // Court hook: a shorter sweep grace lets the GC scenario reclaim data it
     // has just made unreachable. Inert unless the court sets it.
     if let Ok(text) = std::env::var("WEFT_MW2_GC_GRACE_SECS") {
