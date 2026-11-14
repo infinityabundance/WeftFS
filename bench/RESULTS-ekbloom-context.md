@@ -376,11 +376,14 @@ Two facts were established after the measured runs and are recorded rather
 than papered over.
 
 1. Contract §5.5 lists `subject digest`, `contract roots` and `page digests`
-   inside the receipt's `fixture` block. The frozen receipts instead carry the
-   fixture counts, event indices, page and region sizes, the base-store head,
-   and `methodology.fixture_heads_seen` — which proves that every arm in a run
-   shared exactly one base head. The per-subject digests are **absent** from
-   the measured receipts and cannot be added without rewriting evidence.
+   inside the receipt's `fixture` block, and `manifest_read_bytes` per arm. The
+   frozen receipts instead carry the fixture counts, event indices, page and
+   region sizes, the base-store head, and `methodology.fixture_heads_seen` —
+   which proves that every arm in a run shared exactly one base head — plus
+   manifest read **counts**. The per-subject digests and the manifest read-byte
+   totals are **absent** from the measured receipts and cannot be added without
+   rewriting evidence. The read sizes themselves are fixed by the declared
+   layout (64-byte slot, 208-byte key area).
 2. `scripts/ekbloom_context_fixture_probe.sh` (receipt
    `bench/receipts/ekbloom-context-fixture-20261114T080934Z.json`) builds the
    fixture twice at one revision and shows the builder is **not
