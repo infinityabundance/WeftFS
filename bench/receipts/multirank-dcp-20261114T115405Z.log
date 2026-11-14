@@ -1,0 +1,121 @@
+multirank court: clean 4-rank publish
+multirank court: fault worker_pre
+W1114 11:54:09.685000 38 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 40 closing signal SIGTERM
+W1114 11:54:09.686000 38 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 42 closing signal SIGTERM
+W1114 11:54:09.686000 38 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 43 closing signal SIGTERM
+E1114 11:54:09.693000 38 site-packages/torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: -9) local_rank: 1 (pid: 41) of binary: /usr/local/bin/python3.12
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 384, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+====================================================
+python/courts/multirank_dcp.py FAILED
+----------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-11-14_11:54:09
+  host      : 07d5aa783891
+  rank      : 0 (local_rank: 0)
+  exitcode  : -15 (pid: 40)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 40
+[2]:
+  time      : 2026-11-14_11:54:09
+  host      : 07d5aa783891
+  rank      : 2 (local_rank: 2)
+  exitcode  : -15 (pid: 42)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 42
+[3]:
+  time      : 2026-11-14_11:54:09
+  host      : 07d5aa783891
+  rank      : 3 (local_rank: 3)
+  exitcode  : -15 (pid: 43)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 43
+----------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-11-14_11:54:09
+  host      : 07d5aa783891
+  rank      : 1 (local_rank: 1)
+  exitcode  : -9 (pid: 41)  (SIGKILL)
+  error_file: <N/A>
+  traceback : Signal 9 (SIGKILL) received by PID 41
+====================================================
+torchrun fault=worker_pre exit=1
+multirank court: fault coordinator_pre
+W1114 11:54:11.274000 61 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 64 closing signal SIGTERM
+W1114 11:54:11.275000 61 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 65 closing signal SIGTERM
+W1114 11:54:11.275000 61 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 66 closing signal SIGTERM
+E1114 11:54:11.290000 61 site-packages/torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: -9) local_rank: 0 (pid: 63) of binary: /usr/local/bin/python3.12
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 384, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+====================================================
+python/courts/multirank_dcp.py FAILED
+----------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-11-14_11:54:11
+  host      : 07d5aa783891
+  rank      : 1 (local_rank: 1)
+  exitcode  : -15 (pid: 64)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 64
+[2]:
+  time      : 2026-11-14_11:54:11
+  host      : 07d5aa783891
+  rank      : 2 (local_rank: 2)
+  exitcode  : -15 (pid: 65)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 65
+[3]:
+  time      : 2026-11-14_11:54:11
+  host      : 07d5aa783891
+  rank      : 3 (local_rank: 3)
+  exitcode  : -15 (pid: 66)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 66
+----------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-11-14_11:54:11
+  host      : 07d5aa783891
+  rank      : 0 (local_rank: 0)
+  exitcode  : -9 (pid: 63)  (SIGKILL)
+  error_file: <N/A>
+  traceback : Signal 9 (SIGKILL) received by PID 63
+====================================================
+torchrun fault=coordinator_pre exit=1
+multirank court: fault during_publish
+torchrun fault=during_publish exit=0
+multirank court: retry after faults (new tag)
+multirank court: 4-rank load into 4->2, 4->1, 4->8

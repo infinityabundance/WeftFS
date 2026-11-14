@@ -1,0 +1,274 @@
+{
+  "schema": "weft.multirank-dcp.v1",
+  "stamp": "20261114T115405Z",
+  "generated_at": "2026-11-14T11:54:16Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cpu_only": true,
+    "single_host": true,
+    "backend": "gloo",
+    "ranks": 4,
+    "note": "localhost gloo, CPU only; no GPU, multi-host, or fleet claim"
+  },
+  "revision": {
+    "weftfs": "f776d11f47b394f124b5f16e39c6ab2bb8575506",
+    "weftcodec": "34f76203229ed22bfad7495963d84977c6627d27"
+  },
+  "method": {
+    "publish": "each rank writes its own tensor slices; rank 0 reassembles and issues one checkpoint write (one commit)",
+    "load": "each destination rank uses checkpoint restore --rank/--rank-out (T053)",
+    "faults": "SIGKILL of a worker before its fragment, of rank 0 after all fragments, and of the publishing CLI during publication"
+  },
+  "publish": {
+    "phase": "save",
+    "tag": "multi",
+    "fault": "none",
+    "ranks": 4,
+    "published": true,
+    "write_ms": 546.103,
+    "source_bytes": 1661184,
+    "shard_objects": 168,
+    "verified": true,
+    "verify_stdout": "{\n  \"checkpoint\": \"multi\",\n  \"tensors_verified\": 42\n}"
+  },
+  "faults": {
+    "worker_pre": {
+      "torchrun_result": null,
+      "visible_checkpoints": [
+        "multi"
+      ],
+      "published": false,
+      "no_checkpoint": true
+    },
+    "coordinator_pre": {
+      "torchrun_result": null,
+      "visible_checkpoints": [
+        "multi"
+      ],
+      "published": false,
+      "no_checkpoint": true
+    },
+    "during_publish": {
+      "torchrun_result": {
+        "phase": "save",
+        "tag": "fault-during_publish",
+        "fault": "during_publish",
+        "ranks": 4,
+        "published": false,
+        "visible_checkpoints": [
+          "multi"
+        ],
+        "published_cli_returncode": -9
+      },
+      "visible_checkpoints": [
+        "multi"
+      ],
+      "published": false,
+      "no_checkpoint": true
+    }
+  },
+  "retry": {
+    "phase": "save",
+    "tag": "retry",
+    "fault": "none",
+    "ranks": 4,
+    "published": true,
+    "write_ms": 85.891,
+    "source_bytes": 1661184,
+    "shard_objects": 168,
+    "verified": true,
+    "verify_stdout": "{\n  \"checkpoint\": \"retry\",\n  \"tensors_verified\": 42\n}"
+  },
+  "load": {
+    "rows": [
+      {
+        "topology": 2,
+        "rank": 0,
+        "tensors": 42,
+        "needed_bytes": 828864,
+        "backend_bytes_read": 988965,
+        "representation_bytes": 828864,
+        "read_amplification": 1.1931571403752605,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 1,
+        "rank": 0,
+        "tensors": 42,
+        "needed_bytes": 1657728,
+        "backend_bytes_read": 1977726,
+        "representation_bytes": 1657728,
+        "read_amplification": 1.1930340803798933,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 0,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494502,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3864083854528606,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 4,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494321,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3855349007798625,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 2,
+        "rank": 1,
+        "tensors": 42,
+        "needed_bytes": 828864,
+        "backend_bytes_read": 988761,
+        "representation_bytes": 828864,
+        "read_amplification": 1.1929110203845263,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 1,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494502,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3864083854528606,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 5,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494321,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3855349007798625,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 2,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494463,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3862201760481816,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 6,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494440,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3861091807582424,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 3,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494463,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3862201760481816,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      },
+      {
+        "topology": 8,
+        "rank": 7,
+        "tensors": 42,
+        "needed_bytes": 207216,
+        "backend_bytes_read": 494440,
+        "representation_bytes": 414432,
+        "read_amplification": 2.3861091807582424,
+        "fetched_set_matches_plan": true,
+        "mismatched_tensors": [],
+        "exact": true
+      }
+    ],
+    "by_topology": {
+      "2": {
+        "ranks": 2,
+        "needed_bytes": 1657728,
+        "backend_bytes_read": 1977726,
+        "representation_bytes": 1657728,
+        "mismatched": [],
+        "read_amplification": 1.1930340803798933,
+        "representation_amplification": 1.0
+      },
+      "1": {
+        "ranks": 1,
+        "needed_bytes": 1657728,
+        "backend_bytes_read": 1977726,
+        "representation_bytes": 1657728,
+        "mismatched": [],
+        "read_amplification": 1.1930340803798933,
+        "representation_amplification": 1.0
+      },
+      "8": {
+        "ranks": 8,
+        "needed_bytes": 1657728,
+        "backend_bytes_read": 3955452,
+        "representation_bytes": 3315456,
+        "mismatched": [],
+        "read_amplification": 2.3860681607597867,
+        "representation_amplification": 2.0
+      }
+    },
+    "stored_shards": 4,
+    "expected_representation_amplification": "max(1, target_shards / 4): a target finer than the stored split makes several destination ranks fetch the same stored shard",
+    "full_reshuffle_needed": false,
+    "note": "the rank-directed path fetches only intersecting stored shards; no rank materialises the full container"
+  },
+  "checks": {
+    "publish_ok": true,
+    "verify_ok": true,
+    "shard_objects": true,
+    "fault_worker_pre_no_checkpoint": true,
+    "fault_coordinator_pre_no_checkpoint": true,
+    "fault_during_publish_no_checkpoint": true,
+    "retry_publishes": true,
+    "load_all_ranks_exact": true,
+    "load_fetched_set_matches_plan": true,
+    "load_representation_amplification_matches_arithmetic": true
+  },
+  "losses": [
+    "The four ranks contribute through a shared host staging directory; the store publication itself is one process. This is not an N-way parallel store writer.",
+    "The model is built deterministically by every rank, so the court can verify any slice locally; it is not a distributed-training accuracy claim.",
+    "SIGKILL is a process fault; the host page cache is not dropped.",
+    "A target topology finer than the stored split (8 ranks over a 4-way checkpoint) makes two destination ranks fetch the same stored shard; the measured representation amplification is 2.0 and is published."
+  ],
+  "result": "pass"
+}
