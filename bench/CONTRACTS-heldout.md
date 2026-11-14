@@ -74,6 +74,11 @@ For each `(strategy, dtype)` pair the fit produces:
    a backend cost, not a codec cost).
 5. **Restore overhead** `o` (ns/tensor): least-squares intercept of per-tensor
    read wall against logical bytes, pooled.
+6. **Write overhead** `w` (ns/object): the median residual of measured
+   per-object write wall minus `(encode + publish)` for that object. It covers
+   the metadata commit, superblock publication and object bookkeeping that one
+   object-at-a-time publication pays and that no per-byte rate predicts. It is
+   a fitted constant, not a per-family fudge: one value, from the FIT split.
 
 A strategy with no FIT observation is **not predicted**. It is reported as
 `unpredicted` and excluded from that family's choice comparison; it is never
