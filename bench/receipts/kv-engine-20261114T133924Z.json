@@ -1,0 +1,293 @@
+{
+  "court": {
+    "bench_image": "weft/bench-court:1",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": 1024,
+    "python_image": "weft/python-court:1",
+    "swap": "3g",
+    "tmp": "1g"
+  },
+  "court_replay": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g"
+  },
+  "decision": {
+    "best_policy_by_total_regret": "always_reuse",
+    "declared_prefill_fixed_ns": 2000000,
+    "declared_prefill_ns_per_token": 120000,
+    "grid_per_token_us": [
+      10,
+      50,
+      120,
+      500
+    ],
+    "limitation": "the fixture's prefixes are 512 tokens, so every point on the declared grid is far above break-even; the grid shows the policy is insensitive in this regime, it does not locate a crossover.",
+    "measured_break_even_per_token_us": {
+      "note": "reuse is cheaper than recompute whenever the per-token prefill cost exceeds (measured lookup + measured get) / tokens. Measured, not declared.",
+      "value": 2.127
+    },
+    "note": "regret is computed against an oracle that knows the measured reuse cost and the hypothetical recompute cost in the same row. Only the reuse cost and the local token hashing are measured; every recompute number is the declared/hypothetical prefill model.",
+    "rows": [
+      {
+        "always_recompute_regret_ms": 11329.816,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 10
+      },
+      {
+        "always_recompute_regret_ms": 49217.816,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 50
+      },
+      {
+        "always_recompute_regret_ms": 115521.816,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 120
+      },
+      {
+        "always_recompute_regret_ms": 475457.816,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 500
+      }
+    ]
+  },
+  "engine_attempt": {
+    "attempts_raw": {
+      "gpu_devices": {
+        "command": "sh -c ls /dev/nvidia* 2>&1",
+        "elapsed_seconds": 0.001,
+        "exit_code": 2,
+        "tail": "ls: cannot access '/dev/nvidia*': No such file or directory\n",
+        "timeout_seconds": 30
+      },
+      "pip": {
+        "command": "/usr/local/bin/python3 -m pip --version",
+        "elapsed_seconds": 0.088,
+        "exit_code": 0,
+        "tail": "pip 25.0.1 from /usr/local/lib/python3.12/site-packages/pip (python 3.12)\n",
+        "timeout_seconds": 30
+      },
+      "python": {
+        "command": "/usr/local/bin/python3 --version",
+        "elapsed_seconds": 0.001,
+        "exit_code": 0,
+        "tail": "Python 3.12.16\n",
+        "timeout_seconds": 30
+      },
+      "sglang_full": {
+        "command": "/usr/local/bin/python3 -m pip install --no-cache-dir --target /tmp/sglang-full sglang",
+        "elapsed_seconds": 171.206,
+        "exit_code": 1,
+        "tail": ".0 MB 6.5 MB/s eta 0:00:00\nDownloading openai-2.8.0-py3-none-any.whl (1.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.0/1.0 MB 2.4 MB/s eta 0:00:00\nDownloading openai_harmony-0.0.4-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.0/3.0 MB 2.8 MB/s eta 0:00:00\nDownloading outlines-0.1.11-py3-none-any.whl (87 kB)\nDownloading quack_kernels-0.6.5-py3-none-any.whl (729 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 729.6/729.6 kB 3.5 MB/s eta 0:00:00\nDownloading sentencepiece-0.2.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.4/1.4 MB 3.5 MB/s eta 0:00:00\nDownloading sgl_deep_ep-0.1.2.post1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (15.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 15.4/15.4 MB 3.9 MB/s eta 0:00:00\nDownloading sgl_deep_gemm-0.2.3.post2-py3-none-manylinux2014_x86_64.whl (4.7 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 4.7/4.7 MB 5.0 MB/s eta 0:00:00\nDownloading sgl_flash_mla-1.0.0-cp310-abi3-manylinux2014_x86_64.whl (9.9 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 9.9/9.9 MB 4.6 MB/s eta 0:00:00\nDownloading sglang_kernel-0.4.10-cp310-abi3-manylinux2014_x86_64.whl (373.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 373.0/373.0 MB 6.5 MB/s eta 0:00:00\nDownloading soundfile-0.13.1-py2.py3-none-manylinux_2_28_x86_64.whl (1.3 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.3/1.3 MB 12.1 MB/s eta 0:00:00\nDownloading tilelang-0.1.12-cp38-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (50.5 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 50.5/50.5 MB 16.7 MB/s eta 0:00:00\nDownloading timm-1.0.25-py3-none-any.whl (2.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 2.6/2.6 MB 24.3 MB/s eta 0:00:00\nDownloading tml_renderers-0.1.0-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.7 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 4.7/4.7 MB 22.7 MB/s eta 0:00:00\nDownloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.4/3.4 MB 25.2 MB/s eta 0:00:00\nDownloading torch-2.14.1-cp312-cp312-manylinux_2_28_x86_64.whl (554.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501         449.1/554.6 MB 9.4 MB/s eta 0:00:12\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n",
+        "timeout_seconds": 600
+      },
+      "sglang_nodeps": {
+        "command": "/usr/local/bin/python3 -m pip install --no-cache-dir --no-deps --target /tmp/sglang-nodeps sglang",
+        "elapsed_seconds": 7.506,
+        "exit_code": 0,
+        "tail": "Collecting sglang\n  Downloading sglang-0.5.23-cp312-cp312-manylinux_2_34_x86_64.whl.metadata (29 kB)\nDownloading sglang-0.5.23-cp312-cp312-manylinux_2_34_x86_64.whl (39.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 39.0/39.0 MB 27.8 MB/s eta 0:00:00\nInstalling collected packages: sglang\nSuccessfully installed sglang-0.5.23\nWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.\n",
+        "timeout_seconds": 600
+      },
+      "sglang_nodeps_import": {
+        "command": "/usr/local/bin/python3 -c import sys; sys.path.insert(0,'/tmp/sglang-nodeps'); import sglang; print(sglang.__version__)",
+        "elapsed_seconds": 0.181,
+        "exit_code": 1,
+        "tail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/tmp/sglang-nodeps/sglang/__init__.py\", line 21, in <module>\n    from sglang.srt.utils.hf_transformers_patches import apply_all as _apply_hf_patches\n  File \"/tmp/sglang-nodeps/sglang/srt/utils/__init__.py\", line 2, in <module>\n    from sglang.srt.utils.common import *\n  File \"/tmp/sglang-nodeps/sglang/srt/utils/common.py\", line 85, in <module>\n    import orjson\nModuleNotFoundError: No module named 'orjson'\n",
+        "timeout_seconds": 120
+      },
+      "tmp_free_mib_after_vllm_full": 1024,
+      "tmp_free_mib_before_sglang_full": 1024,
+      "tmp_free_mib_before_sglang_nodeps": 1024,
+      "tmp_free_mib_before_vllm_full": 1024,
+      "tmp_free_mib_before_vllm_nodeps": 1024,
+      "tmp_free_mib_initial": 1024,
+      "vllm_full": {
+        "command": "/usr/local/bin/python3 -m pip install --no-cache-dir --target /tmp/vllm-full vllm",
+        "elapsed_seconds": 66.385,
+        "exit_code": 1,
+        "tail": "Downloading compressed_tensors-0.17.0-py3-none-any.whl (211 kB)\nDownloading depyf-0.20.0-py3-none-any.whl (39 kB)\nDownloading flashinfer_python-0.7.2.post1-py3-none-any.whl (62.1 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 62.1/62.1 MB 22.5 MB/s eta 0:00:00\nDownloading humming_kernels-0.1.19-cp310-abi3-manylinux_2_28_x86_64.whl (556 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 556.0/556.0 kB 48.6 MB/s eta 0:00:00\nDownloading lark-1.2.2-py3-none-any.whl (111 kB)\nDownloading lm_format_enforcer-0.11.3-py3-none-any.whl (45 kB)\nDownloading numba-0.65.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (3.8 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.8/3.8 MB 20.7 MB/s eta 0:00:00\nDownloading nvidia_cutlass_dsl-4.8.0-py3-none-any.whl (10 kB)\nDownloading nvtx-0.2.15-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 806.2/806.2 kB 23.5 MB/s eta 0:00:00\nDownloading outlines_core-0.2.14-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 2.3/2.3 MB 21.1 MB/s eta 0:00:00\nDownloading pynvvideocodec-2.0.4-cp312-cp312-manylinux_2_28_x86_64.whl (43.2 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 43.2/43.2 MB 23.2 MB/s eta 0:00:00\nDownloading quack_kernels-0.6.5-py3-none-any.whl (729 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 729.6/729.6 kB 34.9 MB/s eta 0:00:00\nDownloading tilelang-0.1.12-cp38-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (50.5 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 50.5/50.5 MB 23.3 MB/s eta 0:00:00\nDownloading tokenspeed_mla-2.0.3-py3-none-any.whl (238 kB)\nDownloading torch-2.14.0-cp312-cp312-manylinux_2_28_x86_64.whl (554.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 554.6/554.6 MB 24.9 MB/s eta 0:00:00\nDownloading torchaudio-2.11.0-cp312-cp312-manylinux_2_28_x86_64.whl (1.8 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.8/1.8 MB 28.1 MB/s eta 0:00:00\nDownloading torchvision-0.29.0-cp312-cp312-manylinux_2_28_x86_64.whl (7.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 7.4/7.4 MB 26.5 MB/s eta 0:00:00\nDownloading xgrammar-0.2.8-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.3 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2578         1.0/1.3 MB 12.3 MB/s eta 0:00:01\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n",
+        "timeout_seconds": 600
+      },
+      "vllm_nodeps": {
+        "command": "/usr/local/bin/python3 -m pip install --no-cache-dir --no-deps --target /tmp/vllm-nodeps vllm",
+        "elapsed_seconds": 15.481,
+        "exit_code": 1,
+        "tail": "Collecting vllm\n  Downloading vllm-0.33.0-cp38-abi3-manylinux_2_28_x86_64.whl.metadata (11 kB)\nDownloading vllm-0.33.0-cp38-abi3-manylinux_2_28_x86_64.whl (336.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 336.4/336.4 MB 24.9 MB/s eta 0:00:00\nInstalling collected packages: vllm\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n",
+        "timeout_seconds": 600
+      },
+      "vllm_nodeps_import": {
+        "command": "/usr/local/bin/python3 -c import sys; sys.path.insert(0,'/tmp/vllm-nodeps'); import vllm; print(vllm.__version__)",
+        "elapsed_seconds": 0.006,
+        "exit_code": 1,
+        "tail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'vllm'\n",
+        "timeout_seconds": 120
+      },
+      "vllm_versions": {
+        "command": "/usr/local/bin/python3 -m pip index versions vllm",
+        "elapsed_seconds": 0.348,
+        "exit_code": 0,
+        "tail": "vllm (0.33.0)\nAvailable versions: 0.33.0, 0.32.0, 0.31.0, 0.30.0, 0.29.0, 0.28.0, 0.27.1, 0.27.0, 0.26.0, 0.25.1, 0.25.0, 0.24.0, 0.23.0, 0.22.1, 0.22.0, 0.21.0, 0.20.2, 0.20.1, 0.20.0, 0.19.1, 0.19.0, 0.18.1, 0.18.0, 0.17.1, 0.17.0, 0.16.0, 0.15.1, 0.15.0, 0.14.1, 0.14.0, 0.13.0, 0.12.0, 0.11.2, 0.11.1, 0.11.0, 0.10.2, 0.10.1.1, 0.10.1, 0.10.0, 0.9.2, 0.9.1, 0.9.0.1, 0.9.0, 0.8.5.post1, 0.8.5, 0.8.4, 0.8.3, 0.8.2, 0.8.1, 0.8.0, 0.7.3, 0.7.2, 0.7.1, 0.7.0, 0.6.6.post1, 0.6.6, 0.6.5, 0.6.4.post1, 0.6.4, 0.6.3.post1, 0.6.3, 0.6.2, 0.6.1.post2, 0.6.1.post1, 0.6.1, 0.6.0, 0.5.5, 0.5.4, 0.5.3.post1, 0.5.3, 0.5.2, 0.5.1, 0.5.0.post1, 0.5.0, 0.4.3, 0.4.2, 0.4.1, 0.3.3, 0.3.1, 0.3.0, 0.2.7, 0.2.6, 0.2.5, 0.2.4, 0.2.3, 0.2.2, 0.2.1.post1, 0.2.0, 0.1.7, 0.1.6, 0.1.5, 0.1.4, 0.1.3, 0.1.2, 0.1.1, 0.1.0, 0.0.1\nWARNING: pip index is currently an experimental command. It may be removed/changed in a future release without prior warning.\n",
+        "timeout_seconds": 120
+      }
+    },
+    "conclusion": "no inference engine could be installed and imported inside the unchanged court limits",
+    "court_limits": {
+      "cpus": "4",
+      "gpu_devices": "none: ls /dev/nvidia* -> No such file or directory",
+      "kernel": "7.3.3-1-cachyos",
+      "memory": "3g",
+      "pids": 1024,
+      "swap": "3g"
+    },
+    "result": "no inference engine could run in the court",
+    "sglang": {
+      "captured": ".0 MB 6.5 MB/s eta 0:00:00\nDownloading openai-2.8.0-py3-none-any.whl (1.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.0/1.0 MB 2.4 MB/s eta 0:00:00\nDownloading openai_harmony-0.0.4-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.0/3.0 MB 2.8 MB/s eta 0:00:00\nDownloading outlines-0.1.11-py3-none-any.whl (87 kB)\nDownloading quack_kernels-0.6.5-py3-none-any.whl (729 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 729.6/729.6 kB 3.5 MB/s eta 0:00:00\nDownloading sentencepiece-0.2.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.4/1.4 MB 3.5 MB/s eta 0:00:00\nDownloading sgl_deep_ep-0.1.2.post1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (15.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 15.4/15.4 MB 3.9 MB/s eta 0:00:00\nDownloading sgl_deep_gemm-0.2.3.post2-py3-none-manylinux2014_x86_64.whl (4.7 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 4.7/4.7 MB 5.0 MB/s eta 0:00:00\nDownloading sgl_flash_mla-1.0.0-cp310-abi3-manylinux2014_x86_64.whl (9.9 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 9.9/9.9 MB 4.6 MB/s eta 0:00:00\nDownloading sglang_kernel-0.4.10-cp310-abi3-manylinux2014_x86_64.whl (373.0 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 373.0/373.0 MB 6.5 MB/s eta 0:00:00\nDownloading soundfile-0.13.1-py2.py3-none-manylinux_2_28_x86_64.whl (1.3 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.3/1.3 MB 12.1 MB/s eta 0:00:00\nDownloading tilelang-0.1.12-cp38-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (50.5 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 50.5/50.5 MB 16.7 MB/s eta 0:00:00\nDownloading timm-1.0.25-py3-none-any.whl (2.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 2.6/2.6 MB 24.3 MB/s eta 0:00:00\nDownloading tml_renderers-0.1.0-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.7 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 4.7/4.7 MB 22.7 MB/s eta 0:00:00\nDownloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.4/3.4 MB 25.2 MB/s eta 0:00:00\nDownloading torch-2.14.1-cp312-cp312-manylinux_2_28_x86_64.whl (554.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501         449.1/554.6 MB 9.4 MB/s eta 0:00:12\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n",
+      "commands": [
+        "/usr/local/bin/python3 -m pip install --no-cache-dir --no-deps --target /tmp/sglang-nodeps sglang",
+        "/usr/local/bin/python3 -c import sys; sys.path.insert(0,'/tmp/sglang-nodeps'); import sglang; print(sglang.__version__)",
+        "/usr/local/bin/python3 -m pip install --no-cache-dir --target /tmp/sglang-full sglang"
+      ],
+      "import_error": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/tmp/sglang-nodeps/sglang/__init__.py\", line 21, in <module>\n    from sglang.srt.utils.hf_transformers_patches import apply_all as _apply_hf_patches\n  File \"/tmp/sglang-nodeps/sglang/srt/utils/__init__.py\", line 2, in <module>\n    from sglang.srt.utils.common import *\n  File \"/tmp/sglang-nodeps/sglang/srt/utils/common.py\", line 85, in <module>\n    import orjson\nModuleNotFoundError: No module named 'orjson'",
+      "no_deps_install": "sglang --no-deps exit 0",
+      "with_deps_error": "ERROR: Could not install packages due to an OSError: [Errno 28] No space left on device"
+    },
+    "vllm": {
+      "captured": "Downloading compressed_tensors-0.17.0-py3-none-any.whl (211 kB)\nDownloading depyf-0.20.0-py3-none-any.whl (39 kB)\nDownloading flashinfer_python-0.7.2.post1-py3-none-any.whl (62.1 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 62.1/62.1 MB 22.5 MB/s eta 0:00:00\nDownloading humming_kernels-0.1.19-cp310-abi3-manylinux_2_28_x86_64.whl (556 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 556.0/556.0 kB 48.6 MB/s eta 0:00:00\nDownloading lark-1.2.2-py3-none-any.whl (111 kB)\nDownloading lm_format_enforcer-0.11.3-py3-none-any.whl (45 kB)\nDownloading numba-0.65.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (3.8 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.8/3.8 MB 20.7 MB/s eta 0:00:00\nDownloading nvidia_cutlass_dsl-4.8.0-py3-none-any.whl (10 kB)\nDownloading nvtx-0.2.15-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 806.2/806.2 kB 23.5 MB/s eta 0:00:00\nDownloading outlines_core-0.2.14-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 2.3/2.3 MB 21.1 MB/s eta 0:00:00\nDownloading pynvvideocodec-2.0.4-cp312-cp312-manylinux_2_28_x86_64.whl (43.2 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 43.2/43.2 MB 23.2 MB/s eta 0:00:00\nDownloading quack_kernels-0.6.5-py3-none-any.whl (729 kB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 729.6/729.6 kB 34.9 MB/s eta 0:00:00\nDownloading tilelang-0.1.12-cp38-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (50.5 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 50.5/50.5 MB 23.3 MB/s eta 0:00:00\nDownloading tokenspeed_mla-2.0.3-py3-none-any.whl (238 kB)\nDownloading torch-2.14.0-cp312-cp312-manylinux_2_28_x86_64.whl (554.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 554.6/554.6 MB 24.9 MB/s eta 0:00:00\nDownloading torchaudio-2.11.0-cp312-cp312-manylinux_2_28_x86_64.whl (1.8 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 1.8/1.8 MB 28.1 MB/s eta 0:00:00\nDownloading torchvision-0.29.0-cp312-cp312-manylinux_2_28_x86_64.whl (7.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 7.4/7.4 MB 26.5 MB/s eta 0:00:00\nDownloading xgrammar-0.2.8-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.3 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2578         1.0/1.3 MB 12.3 MB/s eta 0:00:01\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n",
+      "command": "/usr/local/bin/python3 -m pip install --no-cache-dir --target /tmp/vllm-full vllm",
+      "error": "ERROR: Could not install packages due to an OSError: [Errno 28] No space left on device",
+      "no_deps_command": "/usr/local/bin/python3 -m pip install --no-cache-dir --no-deps --target /tmp/vllm-nodeps vllm",
+      "no_deps_error": "ERROR: Could not install packages due to an OSError: [Errno 28] No space left on device",
+      "no_deps_outcome": "exit 1; then `import vllm` exit 1",
+      "outcome": "exit 1",
+      "reason": "downloaded wheels total 727.0 MiB before unpacking (flashinfer_python-0.7.2.post1, numba-0.65.0, outlines_core-0.2.14, pynvvideocodec-2.0.4, tilelang-0.1.12, torch-2.14.0, torchaudio-2.11.0, torchvision-0.29.0, xgrammar-0.2.8)",
+      "tmp_free_mib_after": 1024,
+      "tmp_free_mib_before": 1024
+    },
+    "what_would_be_needed": [
+      "a court image that already contains a CPU-capable engine AND its runtime (torch, tokenizers, the model loader), so no install happens at run time",
+      "or a tmpfs larger than 1 GiB for /tmp; the court's limits are not raised here",
+      "a model that fits the 3 GiB memory bound alongside the engine"
+    ]
+  },
+  "fixture": {
+    "build_ms": 512.398,
+    "index_build_ms": 2.355,
+    "index_entries": 64,
+    "mix": {
+      "exact": 1400,
+      "extension": 300,
+      "model_drift": 100,
+      "token_drift": 200
+    },
+    "requests": 2000,
+    "shape": {
+      "bytes_per_page_all_layers": 16384,
+      "head_dim": 32,
+      "kv_heads": 2,
+      "layers": 2,
+      "page_rows": 64
+    },
+    "shared_prefixes": 64
+  },
+  "label": "inference-engine attempt and engine-shaped trace replay over real KV prefix records",
+  "measured": {
+    "index_stats": {
+      "fallbacks": 0,
+      "loads": 1,
+      "lookups": 2000,
+      "notes": [],
+      "probes": 17200,
+      "rejected_candidates": 0,
+      "rejects": 0
+    },
+    "indexed_mismatches": 0,
+    "lookup_indexed": {
+      "mean_us": 189.911,
+      "p50_us": 199.924,
+      "p95_us": 240.639,
+      "p99_us": 247.692,
+      "samples": 2000
+    },
+    "lookup_scan_exact_only": {
+      "mean_us": 7173.886,
+      "p50_us": 7138.292,
+      "p95_us": 7385.423,
+      "p99_us": 7816.568,
+      "samples": 1400
+    },
+    "reuse_get": {
+      "mean_us": 907.167,
+      "p50_us": 889.059,
+      "p95_us": 1018.36,
+      "p99_us": 1174.271,
+      "samples": 1700
+    },
+    "reuse_logical_bytes": 222822400,
+    "reuse_requests": 1700,
+    "token_chain_hash_local": {
+      "mean_us": 87.915,
+      "p50_us": 81.593,
+      "p95_us": 122.378,
+      "p99_us": 124.162,
+      "samples": 2000
+    }
+  },
+  "non_claims": [
+    "no inference engine ran; this is trace replay, and the recompute axis is hypothetical",
+    "no TTFT, tokens/s, hit-rate or engine-cache claim against vLLM, SGLang or LMCache",
+    "no GPU claim; the court has no /dev/nvidia*",
+    "one host, synthetic trace, warm page cache"
+  ],
+  "numbers": {
+    "derived_from_measurement": [
+      "decision.measured_break_even_per_token_us"
+    ],
+    "engine_measured": [],
+    "hypothetical": [
+      "decision.declared_prefill_fixed_ns",
+      "decision.declared_prefill_ns_per_token",
+      "decision.grid_per_token_us",
+      "decision.rows[*].always_reuse_regret_ms",
+      "decision.rows[*].always_recompute_regret_ms",
+      "decision.rows[*].declared_model_regret_ms",
+      "decision.rows[*].oracle_reuse_requests"
+    ],
+    "measured": [
+      "measured.lookup_indexed",
+      "measured.lookup_scan_exact_only",
+      "measured.reuse_get",
+      "measured.token_chain_hash_local",
+      "measured.reuse_logical_bytes",
+      "measured.reuse_requests",
+      "measured.indexed_mismatches",
+      "fixture.build_ms",
+      "fixture.index_build_ms"
+    ],
+    "note": "No TTFT, tokens/s, hit rate or engine cache comparison exists here: no engine ran. The regret grid is a decision analysis over a hypothetical prefill cost; only the reuse costs are observed."
+  },
+  "result": "blocked-no-engine; trace replay completed",
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "211be289709bf1e763b8597c40756d4db5b69bea",
+    "WeftFS-Go": "2272a316813ec276c6e80f5eb3e48ea8d2e2cfd8"
+  },
+  "schema": "weft.kv.engine.v1",
+  "stamp": "20261114T133924Z"
+}
