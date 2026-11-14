@@ -33,7 +33,7 @@ gcc via build-essential). The compile gate is `scripts/check-context-plane-heade
 and its two translator units.
 
 `conformance/REQUIREMENTS.md` expands RFC §15 into **38 requirements**. Of these,
-**11** are exercised in full by the frozen corpus, **7** only in part, and **20**
+**16** are exercised in full by the frozen corpus, **8** only in part, and **14**
 require new corpus or new implementation work; each row names the existing
 vector paths and the missing fixtures.
 

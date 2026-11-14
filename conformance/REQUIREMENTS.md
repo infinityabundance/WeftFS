@@ -119,11 +119,12 @@ second manifest.
 | G6 cross-backend | R32–R33 | none in the portable corpus | Two-store migration and lifecycle vectors |
 | G7 ABI/independent | R34–R38 | R34 compile-only; R36 verifier; R38 manifest | A binary implementation; ABI negotiation tests; a deliberately faulty implementation |
 
-**Honest count.** Of the 38 requirements above, **11** are exercised in full by
-the current frozen corpus (R01–R07, R11–R14, R17–R21), **7** are exercised only
-in part (R08, R10, R15, R19, R28, R30, R34/R38 compile-and-run evidence), and
-**20** require new corpus or new implementation work. A requirement listed as
-"partial" is not a pass: it names exactly what the corpus does not yet say.
+**Honest count.** Of the 38 requirements above, **16** are exercised in full by
+the current frozen corpus (R01–R07, R11–R14, R17–R21), **8** are exercised only
+in part (R08, R10, R15, R28, R30, R34, R36, R38), and **14** require new corpus
+or new implementation work (R09, R16, R22–R27, R29, R31–R33, R35, R37). A
+requirement listed as "partial" is not a pass: it names exactly what the corpus
+does not yet say.
 
 ## 4. What the current corpus already covers (by kind)
 
