@@ -132,9 +132,11 @@ and not a product change.
 | one contiguous pack + in-file index | One `fdatasync` makes the whole pack durable, but members and index share one barrier; a torn append is visible unless an external record names a verified length. The store's pack plane adds exactly that catalog and commit ordering. |
 
 R22's shipped row is the first variant. The second and third are compared as
-layouts, not adopted as store formats. Crash and GC for the *shipped* plane are
-re-proved in the same session by the court's three-phase crash proxy and by
-`tests/packed_races.rs` (5/5) and `tests/packs.rs` (15/15).
+layouts, not adopted as store formats. Crash and GC for the *shipped* plane are re-proved by the N01 court's
+three-phase crash proxy (a different session, same row) and by
+`tests/packed_races.rs` (5/5) and `tests/packs.rs` (15/15). The N02 court itself
+is a device/acknowledgement probe and does not publish a store, so it makes no
+crash claim of its own.
 
 ## 5. Losses and non-claims
 
