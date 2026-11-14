@@ -17776,6 +17776,38 @@
    "revision": "29ae91d0ec452ea33f8fcd42180d2b7900a8272a"
   },
   {
+   "key": "ekbctx.w.avoided",
+   "label": "W evaluations avoided by reuse",
+   "unit": "",
+   "group": "ekbloom-context",
+   "format": "int",
+   "expr": "{ekbctx.w.requests} - {ekbctx.w.evals}"
+  },
+  {
+   "key": "ekbctx.m.lru.avoided",
+   "label": "M-LRU evaluations avoided by reuse",
+   "unit": "",
+   "group": "ekbloom-context",
+   "format": "int",
+   "expr": "{ekbctx.m.lru.requests} - {ekbctx.m.lru.evals}"
+  },
+  {
+   "key": "ekbctx.m.tf.avoided",
+   "label": "M-W-TinyLFU evaluations avoided by reuse",
+   "unit": "",
+   "group": "ekbloom-context",
+   "format": "int",
+   "expr": "{ekbctx.w.requests} - {ekbctx.m.tf.evals}"
+  },
+  {
+   "key": "ekbctx.e.avoided",
+   "label": "E evaluations avoided by reuse",
+   "unit": "",
+   "group": "ekbloom-context",
+   "format": "int",
+   "expr": "{ekbctx.e.requests} - {ekbctx.e.evals}"
+  },
+  {
    "key": "ekbctx.m.lru.alloc_per_req",
    "label": "M-LRU allocations per request",
    "unit": "",
@@ -23167,6 +23199,31 @@
    ]
   },
   {
+   "id": "ekbloom-context-avoided",
+   "file": "bench/RESULTS-ekbloom-context.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Arm | evaluations performed | evaluations avoided by reuse |"
+    },
+    {
+     "template": "|---|---:|---:|"
+    },
+    {
+     "template": "| W | {{ekbctx.w.evals}} | {{ekbctx.w.avoided}} |"
+    },
+    {
+     "template": "| M-LRU | {{ekbctx.m.lru.evals}} | {{ekbctx.m.lru.avoided}} |"
+    },
+    {
+     "template": "| M-W-TinyLFU | {{ekbctx.m.tf.evals}} | {{ekbctx.m.tf.avoided}} |"
+    },
+    {
+     "template": "| E | {{ekbctx.e.evals}} | {{ekbctx.e.avoided}} |"
+    }
+   ]
+  },
+  {
    "id": "ekbloom-context-lifecycle",
    "file": "bench/RESULTS-ekbloom-context.md",
    "kind": "lines",
@@ -23214,6 +23271,9 @@
     },
     {
      "template": "7. **The conventional index wins the lookup axis at every size.** The gap is **{{ekbctx.scale.1k.gap}}\u00d7** at 1k, **{{ekbctx.scale.100k.gap}}\u00d7** at 100k and **{{ekbctx.scale.1m.gap}}\u00d7** at 1M; the manifestation's persistence does not close it in this workload."
+    },
+    {
+     "template": "8. **E avoids fewer evaluations than M.** E's reuse avoided **{{ekbctx.e.avoided}}** evaluations against M-LRU's **{{ekbctx.m.lru.avoided}}**: the manifestation displaces cache budget and then pays its own lookup on a cache miss."
     }
    ]
   }

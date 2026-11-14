@@ -127,6 +127,19 @@ and trims its p99. E's p50 is worse than M's because its manifest consumes
 budget that the cache would otherwise hold, and its p99 is several times M's
 because every miss also reads a manifested slot through EKBLOOM.
 
+Reuse is measured as **evaluation work avoided**: a request served from the
+cache or the manifestation performs no rule evaluation, so
+`avoided = requests − evaluations`. W reuses nothing.
+
+<!-- BEGIN GENERATED:ekbloom-context-avoided (scripts/perf_numbers.py) -->
+| Arm | evaluations performed | evaluations avoided by reuse |
+|---|---:|---:|
+| W | 72,000 | 0 |
+| M-LRU | 38,249 | 33,751 |
+| M-W-TinyLFU | 38,249 | 33,751 |
+| E | 39,509 | 32,491 |
+<!-- END GENERATED:ekbloom-context-avoided -->
+
 ## 4. The gates
 
 ### G1 — zero incorrect acceptances: **holds**
@@ -283,6 +296,7 @@ generation is collectable at any time.
 5. **The manifest's hit path allocates.** E allocates **84,342 B/request** versus W's **25,485 B** and M-LRU's **13,902 B** because the pinned crate's engine fell back to `read_counted`; the caller-buffer API does not by itself remove the allocation.
 6. **`first_conflict` does not scale.** **398.56 ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **29.249 ms** at 1,000,000 keys.
 7. **The conventional index wins the lookup axis at every size.** The gap is **82.2×** at 1k, **54.4×** at 100k and **59.5×** at 1M; the manifestation's persistence does not close it in this workload.
+8. **E avoids fewer evaluations than M.** E's reuse avoided **32,491** evaluations against M-LRU's **33,751**: the manifestation displaces cache budget and then pays its own lookup on a cache miss.
 <!-- END GENERATED:ekbloom-context-losses -->
 
 ## 8. Non-claims
@@ -345,3 +359,31 @@ a hexadecimal digit and that literal would overflow `u64`, so the runner uses
 the concrete `0x67B10C0DE5EED001 + repetition`
 (`scripts/ekbloom_context_court.sh`). The seed is still fixed per repetition,
 identical for every arm, and recorded in the receipt's methodology.
+
+### Recorded deviation: fixture digests and cross-run determinism
+
+Two facts were established after the measured runs and are recorded rather
+than papered over.
+
+1. Contract §5.5 lists `subject digest`, `contract roots` and `page digests`
+   inside the receipt's `fixture` block. The frozen receipts instead carry the
+   fixture counts, event indices, page and region sizes, the base-store head,
+   and `methodology.fixture_heads_seen` — which proves that every arm in a run
+   shared exactly one base head. The per-subject digests are **absent** from
+   the measured receipts and cannot be added without rewriting evidence.
+2. `scripts/ekbloom_context_fixture_probe.sh` (receipt
+   `bench/receipts/ekbloom-context-fixture-20261114T080934Z.json`) builds the
+   fixture twice at one revision and shows the builder is **not
+   byte-reproducible across runs**: the fixture JSON and the base head differ.
+   The cause is in the shipped store, not the court: `Store::write_kv_prov_page`
+   creates the page through `Store::create_file`, whose ObjectId seed is
+   `identity::os_random_32`; the subject scope records use `create_file_seeded`
+   and are stable, but every page id, and every root derived from it, moves.
+
+Every comparison in this court is therefore **within-run**: one arm's store is a
+byte-identical copy of the base store the other arms receive in the same
+repetition, and all arms replay the identical generated request stream. That is
+what G1, G3 and G4 test, and what the latency comparison measures. Cross-run
+byte identity is **not** claimed. The reduced registration run is an independent
+fixture instance that independently reached the same structural verdict, not a
+byte replay of the full run.

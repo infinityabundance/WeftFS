@@ -11329,3 +11329,14 @@ receipt. The same commit corrected the runner's failure path: a container exit
 78 is now propagated as a skip carrying the container's own reason, where it
 previously became a hard failure with the reason left in `run.log`. The
 measurement path, arms, gates and budget are untouched.
+
+Two deviations are recorded in the results document rather than hidden. The
+frozen receipts do not carry the per-subject, per-contract and per-page digests
+that contract §5.5 listed; they carry the counts, event indices, page and
+region sizes, the base head and `fixture_heads_seen`. And a tracked probe
+(`bench/receipts/ekbloom-context-fixture-20261114T080934Z.json`) shows the
+fixture builder is not byte-reproducible across runs: `write_kv_prov_page`
+creates each page through `Store::create_file`, whose ObjectId seed is
+`os_random_32`. Every arm within a repetition still shares one base head and one
+request stream, so the comparison is within-run and valid; cross-run byte
+identity is not claimed.

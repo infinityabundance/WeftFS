@@ -1,0 +1,20 @@
+{
+  "schema": "weft.ekbloom_context.fixture_probe.v1",
+  "receipt_for": "fixture determinism only; not a gate measurement",
+  "generated_utc": "20261114T080934Z",
+  "revision": "b89a5e0aabe7ed7e3763f454cb9315fd9470e39d",
+  "ekbloom": {
+    "crate": "ekbloom 0.7.3",
+    "checksum": "1c56ae95137ee95cdd8a3c26006aec3281752b23c150a5243152e2370e965da4"
+  },
+  "contract_sha256": "39c00844d1e192b6d34382cfdafc7001596842c97f33e8b341e9628a6a9484e3",
+  "method": "two consecutive `prepare` runs in one bench container, same revision, same image, same fixed timestamps",
+  "probe": {
+    "fixture_json_sha256_a": "0c4fb53d97427fa5ee1683ec0bf5167613d8343a00a5f8277232f3c34de1c1fa",
+    "fixture_json_sha256_b": "a7278f7db8131d6add66086299a01b366869432b7e6a05ca3d335f3b3d2ae4d2",
+    "fixture_json_identical": false,
+    "base_head_a": "e9b04d3a90d599bf65be838ac2eade7be3f637dac6b26b05a4548565925a3373",
+    "base_head_b": "8ed6b18326c9b5cb1760831209a4403c4e65b465ce5e7c69c0ff989aee24377c"
+  },
+  "interpretation": "the fixture builder is not byte-reproducible across runs: the KV page writer uses Store::create_file, whose ObjectId seed comes from os_random_32, so page ids and every root derived from them differ per run. Within one court run every arm shares one base head (receipt methodology.fixture_heads_seen), so the comparison is sound; cross-run byte identity is not claimed."
+}
