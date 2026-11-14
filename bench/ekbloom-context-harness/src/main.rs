@@ -1019,7 +1019,8 @@ fn cmd_assemble(args: &Args) -> Result<(), String> {
     let mut log = BufWriter::new(File::create(&log_path).map_err(|e| e.to_string())?);
     writeln!(
         log,
-        "CHECK rows_complete pass 9 reps x 8000 requests per arm"
+        "CHECK rows_complete pass {reps} reps x {} requests per arm",
+        fixture::REQUESTS
     )
     .ok();
     writeln!(
@@ -1309,7 +1310,6 @@ fn cmd_lifecycle(args: &Args) -> Result<(), String> {
     });
     write_json_atomic(&out, &result)
 }
-
 
 // ---------------------------------------------------------------------------
 // scale
