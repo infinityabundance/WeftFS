@@ -81,9 +81,10 @@ separable from the default on the median (see §5).
 The receipt carries a seeded 10,000-resample bootstrap interval of each row's
 own median wall. It has repeated but **unpaired** cells, so no paired difference
 and no significance claim is made; the generator records that explicitly. The
-rows in the middle of the table are one measurement band: R22 measured a 13 %
+rows in the middle of the table are one measurement band: R22 measured a large
 median shift for the same row between sessions while its least-contended value
-moved 2.5 %. Differences smaller than ~10 % are not treated as real.
+barely moved. Differences smaller than the declared ~10 % band are not treated
+as real.
 
 ## 6. Losses and non-claims
 

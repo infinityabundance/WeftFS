@@ -40,7 +40,7 @@ Receipts:
 | Rust mechanism | Go state after N05 | Evidence |
 |---|---|---|
 | Two-stage analyse → select → materialise | **ported** (`store/two_stage.go`); exact agreement with Go exhaustive | 0 differing strategy / physical size / frame id / manifest id / logical root |
-| Exact mode-9 prediction from the exponent histogram | **not ported**; Go encodes mode 9 and measures it. The frame is identical, so the decision is identical. | mode-9 bytes equal on all 35 tensors both chose mode 9 |
+| Exact mode-9 prediction from the exponent histogram | **not ported**; Go encodes mode 9 and measures it. The frame is identical, so the decision is identical. | mode-9 bytes equal on every tensor both chose as mode 9 |
 | Chunk-parallel ZSTD | **not ported** | Go still encodes chunks sequentially |
 | Grouped publication | **used** (one `BeginGroup`/`CommitGroup` for the 101 tensors) | one group commit; the store still fsyncs each blob immediately |
 | Bounded writer pipeline with CPU-token scheduling | **not ported** | Go encodes and publishes one tensor at a time |

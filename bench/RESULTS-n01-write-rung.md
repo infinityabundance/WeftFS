@@ -100,7 +100,7 @@ So the lane change buys wall time at an identical committed state. The best
 measured lane count (`wb8`) is within a few milliseconds of the shipped 4-lane
 default on the least-contended statistic; the 4-lane default is kept because it
 matches the CPU count and the difference is not separable on the median in this
-session (one 678.0 ms sample against 579.3 ms; the minima are 542.3 and 544.4 ms).
+session: one lane count's median was much worse while its minimum was marginally better, and the minima are within a few milliseconds.
 
 ## 4. The floor, and why 336 ms is not reached
 
@@ -135,9 +135,9 @@ Two changes were considered and **not** made:
 The changed module is not on the checkpoint writer's path
 (`src/checkpoint.rs` never calls `TensorPipelineOptions` or
 `prepare_tensor_group_pipelined`), so these cells are a no-regression check, not
-an equal-treatment comparison. The planned cell is ~1.9× slower than the X04
-session's published value while writing the same bytes; because the changed code
-is unreachable from that phase, it is host variance and is labelled as such.
+an equal-treatment comparison. The planned cell is materially slower than the
+X04 session's published value while writing the same bytes; because the changed
+code is unreachable from that phase, it is host variance and is labelled as such.
 
 ## 6. Losses and non-claims
 

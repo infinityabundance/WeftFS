@@ -13,8 +13,8 @@ bandwidth. Writing the store's own 202 published blob files costs
 | 17 larger files + index | 17 | 149.6 | 563.1 |
 | one contiguous pack + index | 2 | 140.5 | 3,117.2 |
 <!-- END GENERATED:n02-variants -->
-least-contended; the same bytes as 17 files save about 60 %, and one contiguous
-pack with an in-file index saves about the same. The store-level pack plane
+least-contended; the same bytes in fewer, larger files save most of it, and one
+contiguous pack with an in-file index saves about the same. The store-level pack plane
 **does not capture that win**: it is slower than the shipped flat plane because
 sealing and catalog publication are charged to the publisher. The device-level
 comparison clears the 10 % gate with a paired interval; the product change does
@@ -103,8 +103,8 @@ a seeded percentile bootstrap:
 <!-- END GENERATED:n02-paired -->
 
 **Verdict: the winning variant clears the 10 % gate with a paired median of about
-60 % and a bootstrap interval entirely above 10 %.** Two variants tie — 17
-larger files and one contiguous pack — because both remove most of the per-file barrier
+60 % and a bootstrap interval entirely above 10 %.** Two variants tie — the larger-file layout and
+one contiguous pack — because both remove most of the per-file barrier
 count, and the device-level difference between the two file counts is small next
 to the step away from one barrier per published object.
 
