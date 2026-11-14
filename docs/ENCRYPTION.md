@@ -209,22 +209,22 @@ the phase. Reading is warm page cache, so the read row isolates CPU, not media.
 <!-- BEGIN GENERATED:encryption-table (scripts/perf_numbers.py) -->
 | row | write median ms | read median ms | write CPU ms | read CPU ms | footprint B | objects |
 |---|---:|---:|---:|---:|---:|---:|
-| `plain` | 52.4 | 39.3 | 50.7 | 39.1 | 72,574,425 | 1,216 |
-| `convergent` | 93.6 | 77.3 | 92.0 | 77.1 | 72,739,961 | 1,216 |
-| `random` | 93.1 | 64.8 | 91.3 | 64.7 | 72,739,961 | 1,216 |
+| `plain` | 52.6 | 39.1 | 51.5 | 38.9 | 72,574,425 | 1,216 |
+| `convergent` | 93.5 | 77.7 | 92.7 | 77.1 | 72,739,961 | 1,216 |
+| `random` | 91.8 | 64.2 | 90.7 | 64.0 | 72,739,961 | 1,216 |
 <!-- END GENERATED:encryption-table -->
 
 <!-- BEGIN GENERATED:encryption-headline (scripts/perf_numbers.py) -->
-On this fixture the convergent envelope costs **1.79x** the plain
-write wall and **1.97x** the plain read wall; the random envelope
-costs **1.78x** and **1.65x**. Physical footprint
+On this fixture the convergent envelope costs **1.78x** the plain
+write wall and **1.99x** the plain read wall; the random envelope
+costs **1.75x** and **1.64x**. Physical footprint
 rises by **0.228 %** in both modes and the object count is the
 same in all three arms (**1,216**), which is the leak: the blob name
 is the plaintext hash whichever mode is chosen. The plane itself seals at
-**1,630 MiB/s** and opens at **2,138 MiB/s**
+**1,679 MiB/s** and opens at **2,136 MiB/s**
 (convergent) on one core of the bench court; seven interleaved repetitions,
 medians, warm page cache. Source: `bench/receipts/encryption-20261114T234223Z.json`
-(stamp 20261115T001500Z, revision 5f578584702b).
+(stamp 20261114T234223Z, revision 9bd63a51657d).
 <!-- END GENERATED:encryption-headline -->
 
 Interpretation:
