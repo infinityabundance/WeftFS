@@ -22853,6 +22853,84 @@
    "stamp": "20261114T204000Z",
    "revision_path": "revision.WeftFS",
    "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n01.pre.encode_wall_ms",
+   "label": "Pre-change encode wall, one lane",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "path": "pre_change.stages_ms.encode_wall",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n01.pre.publish_wall_ms",
+   "label": "Pre-change publication wall, one lane",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "path": "pre_change.stages_ms.publish_wall",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n01.pre.publish_busy_ms",
+   "label": "Pre-change publication busy, one lane",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "path": "pre_change.stages_ms.publish_busy",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n01.pre.pipeline_wall_ms",
+   "label": "Pre-change pipeline wall, one lane",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "path": "pre_change.stages_ms.pipeline_wall",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n01.pre.reader_ms",
+   "label": "Pre-change reader wall, one lane",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "path": "pre_change.stages_ms.reader",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n01.pre.barrier_busy_ms",
+   "label": "Pre-change early-barrier busy, one lane",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "path": "pre_change.early_barrier.busy_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
   }
  ],
  "blocks": [
@@ -28260,6 +28338,12 @@
     },
     {
      "template": "| native anchor (`A`) | {{n01.native_min_ms}} | \u2014 | \u2014 | \u2014 |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "Pre-change stage split (one lane): encode wall {{n01.pre.encode_wall_ms}} ms, publication wall {{n01.pre.publish_wall_ms}} ms ({{n01.pre.publish_busy_ms}} ms busy), pipeline wall {{n01.pre.pipeline_wall_ms}} ms, reader {{n01.pre.reader_ms}} ms, early barrier {{n01.pre.barrier_busy_ms}} ms busy on one thread."
     }
    ]
   },

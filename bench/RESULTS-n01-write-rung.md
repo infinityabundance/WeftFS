@@ -45,6 +45,8 @@ row is the R21/R22 default with one writeback lane.
 | shipped, four lanes (`C-pipe4`) | 544.4 | 579.3 | 6,113.6 | 282,106,049 |
 | best lane count (`C-pipe4-wb8`) | 542.3 | 678.0 | — | 282,106,049 |
 | native anchor (`A`) | 328.7 | — | — | — |
+
+Pre-change stage split (one lane): encode wall 403.5 ms, publication wall 445.4 ms (388.5 ms busy), pipeline wall 541.7 ms, reader 45.7 ms, early barrier 459.2 ms busy on one thread.
 <!-- END GENERATED:n01-baseline -->
 
 The phase profile of one write (same session, shipped lanes) separates the
