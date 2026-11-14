@@ -4035,15 +4035,15 @@ impl Store {
                     "value": format!("target:{}", target.to_hex()),
                     "read_generation": self.generation,
                 })),
-                Err(err) if err.class() == Class::NotFound => self.emit_history(
-                    serde_json::json!({
+                Err(err) if err.class() == Class::NotFound => {
+                    self.emit_history(serde_json::json!({
                         "event": "read-response",
                         "kind": "lookup",
                         "key": key,
                         "value": serde_json::Value::Null,
                         "read_generation": self.generation,
-                    }),
-                ),
+                    }))
+                }
                 Err(err) => self.emit_history(serde_json::json!({
                     "event": "read-response",
                     "kind": "lookup",
@@ -8161,8 +8161,10 @@ impl Store {
     ) -> Result<crate::mw2::TransactionOutcome> {
         let recording = self.history.is_some();
         if recording {
-            let ops: Vec<serde_json::Value> =
-                transaction_history_ops(tx).into_iter().map(|op| op.to_json()).collect();
+            let ops: Vec<serde_json::Value> = transaction_history_ops(tx)
+                .into_iter()
+                .map(|op| op.to_json())
+                .collect();
             let preconditions: Vec<serde_json::Value> = tx
                 .preconditions
                 .iter()
@@ -8408,6 +8410,372 @@ impl Store {
         stats.max_consecutive_retries = stats
             .max_consecutive_retries
             .max(u64::from(max_consecutive));
+    }
+
+    // ---- T029: FUSE mutation helpers under optimistic publication ---------
+    //
+    // Each helper is one transaction (one commit, MW2 guarantee P2). The
+    // caller's observed state decides the preconditions; a concurrent winner
+    // therefore produces a typed conflict rather than a lost update. Every
+    // helper takes a publication reservation before it publishes blobs and
+    // releases it only after the commit is durable (T024).
+
+    /// The writer mode this handle publishes in.
+    pub fn writer_mode(&self) -> crate::mw2::WriterMode {
+        self.options.writer_mode
+    }
+
+    fn fuse_tx_options() -> crate::mw2::TransactionOptions {
+        crate::mw2::TransactionOptions {
+            max_attempts: 8,
+            ..crate::mw2::TransactionOptions::default()
+        }
+    }
+
+    /// Create a file (object + entry) as one transaction.
+    pub fn txn_create_file(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        bytes: &[u8],
+        mode: u64,
+        uid: u64,
+        gid: u64,
+        attrs: BTreeMap<String, weftcodec::wcb::Value>,
+        seed: &[u8],
+        tx_id: &str,
+    ) -> Result<Hash32> {
+        self.refresh_to_head()?;
+        let reservation = self.reserve_publication(tx_id)?;
+        let (manifest, _, size) = match self.prepare_content(bytes) {
+            Ok(value) => value,
+            Err(err) => {
+                let _ = self.release_reservation(&reservation);
+                return Err(err);
+            }
+        };
+        let object_id = identity::object_id_from_seed(seed);
+        let version = derive_version_id_with_identity(
+            object_id,
+            manifest,
+            size,
+            self.now_ns(),
+            None,
+            weftcodec::context::IdentityMode::BytesOnly,
+            None,
+        )?;
+        let record = ObjectRecord {
+            id: object_id,
+            kind: ObjectKind::File,
+            mode,
+            uid,
+            gid,
+            mtime_ns: self.now_ns(),
+            version,
+            content: manifest,
+            size,
+            attrs,
+        };
+        let entry = EntryRecord {
+            id: derive_entry_id(parent, name)?,
+            parent,
+            name: name.to_vec(),
+            target: object_id,
+        };
+        let mut tx = self.begin_transaction(tx_id)?;
+        {
+            let state = self.current_state();
+            tx.put_object_create(record)?;
+            tx.put_entry_create(entry)?;
+            tx.set_tip(state, object_id, version)?;
+        }
+        let result = self.execute_transaction(&tx, &Self::fuse_tx_options());
+        let released = self.release_reservation(&reservation);
+        match (result, released) {
+            (Ok(_), Ok(())) => Ok(object_id),
+            (Ok(_), Err(err)) => Err(err),
+            (Err(err), _) => Err(err),
+        }
+    }
+
+    /// Replace a file's content with a new version observed at `version`.
+    pub fn txn_overwrite_file(
+        &mut self,
+        object_id: Hash32,
+        bytes: &[u8],
+        tx_id: &str,
+    ) -> Result<()> {
+        self.refresh_to_head()?;
+        let Some(current) = self.state.objects.get(&object_id).cloned() else {
+            return Err(Error::not_found("no such object to overwrite"));
+        };
+        let reservation = self.reserve_publication(tx_id)?;
+        let (manifest, _, size) = match self.prepare_content(bytes) {
+            Ok(value) => value,
+            Err(err) => {
+                let _ = self.release_reservation(&reservation);
+                return Err(err);
+            }
+        };
+        let version = derive_version_id_with_identity(
+            object_id,
+            manifest,
+            size,
+            self.now_ns(),
+            None,
+            weftcodec::context::IdentityMode::BytesOnly,
+            None,
+        )?;
+        let mut record = current;
+        record.content = manifest;
+        record.size = size;
+        record.version = version;
+        record.mtime_ns = self.now_ns();
+        let mut tx = self.begin_transaction(tx_id)?;
+        {
+            let state = self.current_state();
+            tx.put_object(state, record)?;
+            tx.set_tip(state, object_id, version)?;
+        }
+        let result = self.execute_transaction(&tx, &Self::fuse_tx_options());
+        let released = self.release_reservation(&reservation);
+        match (result, released) {
+            (Ok(_), Ok(())) => Ok(()),
+            (Ok(_), Err(err)) => Err(err),
+            (Err(err), _) => Err(err),
+        }
+    }
+
+    /// Remove a directory entry (file or empty directory) as one transaction.
+    ///
+    /// `directory` selects the POSIX check: `false` refuses a directory
+    /// (`EISDIR`), `true` refuses a non-directory (`ENOTDIR`) and any
+    /// non-empty directory (`ENOTEMPTY`). When the removed entry was the last
+    /// name for its object, the object record and its outgoing relations are
+    /// removed in the same transaction, exactly like the MW1 path.
+    pub fn txn_unlink(
+        &mut self,
+        parent: Hash32,
+        name: &[u8],
+        directory: bool,
+        tx_id: &str,
+    ) -> Result<()> {
+        self.refresh_to_head()?;
+        let state = self.state.clone();
+        self.require_dir(parent)?;
+        validate_name_bytes(name)?;
+        let entry_id = derive_entry_id(parent, name)?;
+        let entry = state
+            .entries
+            .get(&entry_id)
+            .cloned()
+            .ok_or_else(|| Error::not_found("no such directory entry"))?;
+        let object = state
+            .objects
+            .get(&entry.target)
+            .ok_or_else(|| Error::not_found("no such object for the directory entry"))?;
+        match (directory, object.kind) {
+            (false, ObjectKind::Dir) => {
+                return Err(Error::is_dir("unlink does not remove directories"))
+            }
+            (true, ObjectKind::Dir) => {
+                if entry.target == State::ROOT_ID {
+                    return Err(Error::invalid_argument("cannot remove the namespace root"));
+                }
+                if state
+                    .entries
+                    .values()
+                    .any(|child| child.parent == entry.target)
+                {
+                    return Err(Error::not_empty("directory is not empty"));
+                }
+            }
+            (true, _) => return Err(Error::not_dir("rmdir requires a directory entry")),
+            (false, _) => {}
+        }
+        let remaining = state
+            .entries
+            .values()
+            .filter(|candidate| candidate.target == entry.target && candidate.id != entry_id)
+            .count();
+        let mut tx = self.begin_transaction(tx_id)?;
+        tx.del_entry(&state, entry_id)?;
+        if remaining == 0 && !self.is_object_pinned(entry.target) {
+            for relation in state
+                .relations
+                .values()
+                .filter(|relation| relation.subject == entry.target)
+            {
+                tx.del_relation(&state, relation.id)?;
+            }
+            tx.delete_object(&state, entry.target)?;
+        }
+        self.execute_transaction(&tx, &Self::fuse_tx_options())?;
+        Ok(())
+    }
+
+    /// Create a hard link (a second entry naming the same object).
+    pub fn txn_link(
+        &mut self,
+        target: Hash32,
+        parent: Hash32,
+        name: &[u8],
+        tx_id: &str,
+    ) -> Result<u64> {
+        self.refresh_to_head()?;
+        let state = self.state.clone();
+        self.require_dir(parent)?;
+        validate_name_bytes(name)?;
+        let object = state
+            .objects
+            .get(&target)
+            .ok_or_else(|| Error::not_found("no such object to link"))?;
+        if object.kind == ObjectKind::Dir {
+            return Err(Error::invalid_argument(
+                "hard links to directories are not allowed",
+            ));
+        }
+        let entry = EntryRecord {
+            id: derive_entry_id(parent, name)?,
+            parent,
+            name: name.to_vec(),
+            target,
+        };
+        let nlink = state
+            .entries
+            .values()
+            .filter(|existing| existing.target == target)
+            .count() as u64
+            + 1;
+        let mut tx = self.begin_transaction(tx_id)?;
+        tx.put_entry_create(entry)?;
+        self.execute_transaction(&tx, &Self::fuse_tx_options())?;
+        Ok(nlink)
+    }
+
+    /// Rename one entry: create the target and remove the source in one commit.
+    ///
+    /// With `replace`, an existing target entry (and its object when that was
+    /// its last name) is removed in the same transaction; without it, a taken
+    /// target is a typed conflict and nothing is published. The POSIX
+    /// replacement rules of the MW1 path are enforced before any publish.
+    pub fn txn_rename(
+        &mut self,
+        old_parent: Hash32,
+        old_name: &[u8],
+        new_parent: Hash32,
+        new_name: &[u8],
+        replace: bool,
+        tx_id: &str,
+    ) -> Result<()> {
+        self.refresh_to_head()?;
+        let state = self.state.clone();
+        self.require_dir(old_parent)?;
+        self.require_dir(new_parent)?;
+        validate_name_bytes(old_name)?;
+        validate_name_bytes(new_name)?;
+        let old_entry_id = derive_entry_id(old_parent, old_name)?;
+        let source = state
+            .entries
+            .get(&old_entry_id)
+            .cloned()
+            .ok_or_else(|| Error::not_found("no such source entry"))?;
+        if old_parent == new_parent && old_name == new_name {
+            return Ok(());
+        }
+        let target = source.target;
+        let target_kind = state
+            .objects
+            .get(&target)
+            .ok_or_else(|| Error::not_found("no such source object"))?
+            .kind;
+        let new_entry_id = derive_entry_id(new_parent, new_name)?;
+        let existing = state.entries.get(&new_entry_id).cloned();
+        let mut delete_ops: Vec<Op> = Vec::new();
+        if let Some(existing) = &existing {
+            if existing.target == target {
+                // Rename between two hard links to the same object is a no-op.
+                return Ok(());
+            }
+            if !replace {
+                return Err(Error::exists("rename destination already exists"));
+            }
+            let dest_kind = state
+                .objects
+                .get(&existing.target)
+                .ok_or_else(|| Error::not_found("no such destination object"))?
+                .kind;
+            match (target_kind, dest_kind) {
+                (ObjectKind::Dir, ObjectKind::Dir) => {
+                    if state
+                        .entries
+                        .values()
+                        .any(|child| child.parent == existing.target)
+                    {
+                        return Err(Error::not_empty(
+                            "rename would replace a non-empty directory",
+                        ));
+                    }
+                }
+                (ObjectKind::Dir, _) => {
+                    return Err(Error::not_dir(
+                        "rename would replace a non-directory with a directory",
+                    ))
+                }
+                (_, ObjectKind::Dir) => {
+                    return Err(Error::is_dir(
+                        "rename would replace a directory with a non-directory",
+                    ))
+                }
+                (_, _) => {}
+            }
+            delete_ops.push(Op::DelEntry(existing.id));
+            let remaining = state
+                .entries
+                .values()
+                .filter(|candidate| {
+                    candidate.target == existing.target && candidate.id != existing.id
+                })
+                .count();
+            if remaining == 0 && !self.is_object_pinned(existing.target) {
+                for relation in state
+                    .relations
+                    .values()
+                    .filter(|relation| relation.subject == existing.target)
+                {
+                    delete_ops.push(Op::DelRelation(relation.id));
+                }
+                delete_ops.push(Op::DeleteObject(existing.target));
+            }
+        }
+        if target_kind == ObjectKind::Dir && state.is_within(target, new_parent) {
+            return Err(Error::invalid_argument(
+                "cannot move a directory into itself or a descendant",
+            ));
+        }
+        let new_entry = EntryRecord {
+            id: new_entry_id,
+            parent: new_parent,
+            name: new_name.to_vec(),
+            target,
+        };
+        let mut tx = self.begin_transaction(tx_id)?;
+        for op in delete_ops {
+            match op {
+                Op::DelEntry(id) => tx.del_entry(&state, id)?,
+                Op::DelRelation(id) => tx.del_relation(&state, id)?,
+                Op::DeleteObject(id) => tx.delete_object(&state, id)?,
+                _ => unreachable!("rename delete set is entries, relations, objects"),
+            }
+        }
+        // `put_entry` validates against the base state: `Entry(existing)` when
+        // replacing, `Absent` when the name was free. A concurrent create of
+        // the same free name therefore wins the race and this transaction
+        // reports a typed conflict instead of a blind overwrite.
+        tx.put_entry(&state, new_entry)?;
+        tx.del_entry(&state, old_entry_id)?;
+        self.execute_transaction(&tx, &Self::fuse_tx_options())?;
+        Ok(())
     }
 
     /// Publish a transaction into an **explicitly named** domain.
@@ -8665,7 +9033,13 @@ impl Store {
     /// per retry; this path is the same replay restricted to the gap. Any
     /// parent mismatch, missing commit, or op failure falls back to the
     /// authoritative full reload, so the fast path can never invent state.
-    fn refresh_to_head(&mut self) -> Result<Vec<u64>> {
+    /// Replay the commits this handle has not yet seen.
+    ///
+    /// Crate-internal because the FUSE optimistic helpers re-derive an
+    /// operation from the newly published head after a lost race (T029). It is
+    /// not part of the public store API: a caller that needs a newer view
+    /// reopens or uses a snapshot.
+    pub(crate) fn refresh_to_head(&mut self) -> Result<Vec<u64>> {
         let plane = self.load_head_from_plane()?;
         let Some((generation, head)) = plane else {
             self.reload_from_plane()?;

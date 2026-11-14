@@ -70,6 +70,16 @@ const O_ACCMODE: i32 = 0o3;
 const O_WRONLY: i32 = 0o1;
 const O_RDWR: i32 = 0o2;
 const O_TRUNC: i32 = 0o1000;
+
+/// T029: optimistic mode rewrites a whole file per `write` call (read, splice,
+/// publish one new version), so it bounds the file it is willing to rewrite.
+const OPTIMISTIC_REWRITE_MAX_BYTES: u64 = 8 * 1024 * 1024;
+
+/// T029: how many times one optimistic FUSE mutation re-reads the published
+/// head after losing a race before it reports `EBUSY`. A conflict is a lost
+/// race, not an error: the operation is re-derived from the newer bytes and
+/// retried with the same transaction id (so an ambiguous retry is idempotent).
+const OPTIMISTIC_ATTEMPTS: u32 = 8;
 const O_APPEND: i32 = 0o2000;
 const O_EXCL: i32 = 0o200;
 
@@ -449,6 +459,26 @@ impl StoreHandle {
     }
 }
 
+/// Deterministic hexadecimal for a byte string (history/transaction seeds).
+fn hex_of(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push_str(&format!("{byte:02x}"));
+    }
+    out
+}
+
+/// A deterministic 32-hex transaction id for one FUSE mutation.
+///
+/// The same operation on the same observed input derives the same id, so a
+/// retry after an ambiguous acknowledgement is resolved by the shipped outcome
+/// lookup instead of duplicating the effect. Different operations differ in
+/// `op` and in the seed's observed fields.
+fn fuse_transaction_id(op: &str, seed: &str) -> String {
+    crate::identity::h("weft/fuse/tx/v1", format!("{op}:{seed}").as_bytes()).to_hex()[..32]
+        .to_owned()
+}
+
 pub struct WeftFuse {
     store: StoreHandle,
     read_only: bool,
@@ -458,6 +488,9 @@ pub struct WeftFuse {
     context: Option<ContextMount>,
     write_back: bool,
     group_commit: bool,
+    /// T029: mutations are published through the MW2 transaction API. Off
+    /// unless the store was opened `--writer-mode optimistic`.
+    optimistic: bool,
     verify_load: bool,
     load_receipt_dir: Option<PathBuf>,
     /// Open group-commit session; `None` while no group is buffering.
@@ -495,6 +528,16 @@ impl WeftFuse {
         let group: Arc<Mutex<Option<GroupSession>>> = Arc::new(Mutex::new(None));
         let group_stop = Arc::new(AtomicBool::new(false));
         let publish_failed = Arc::new(AtomicBool::new(false));
+        let optimistic = match &store {
+            StoreHandle::Exclusive(store) => {
+                let mode = store
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+                    .writer_mode();
+                mode == crate::mw2::WriterMode::Optimistic
+            }
+            StoreHandle::Shared(_) => false,
+        };
         let group_thread = if options.group_commit && !options.read_only && exclusive {
             Some(spawn_group_committer(
                 match &store {
@@ -519,6 +562,7 @@ impl WeftFuse {
             context: options.context.clone(),
             write_back: options.write_back && !options.read_only,
             group_commit: options.group_commit && !options.read_only,
+            optimistic,
             verify_load: options.verify_load,
             load_receipt_dir: options.load_receipt_dir.clone(),
             group,
@@ -613,6 +657,24 @@ impl WeftFuse {
             self.flush_pending(store, fh)?;
         }
         Ok(())
+    }
+
+    /// T029: truncate a file to zero as an optimistic transaction.
+    ///
+    /// A lost race is retried against the newer head with the same transaction
+    /// id; there is no read to re-derive (the target is always empty), so the
+    /// retry is just a re-read of the precondition.
+    fn optimistic_truncate(&self, store: &mut Store, id: Hash32, tx_id: &str) -> Result<()> {
+        let mut attempts: u32 = 0;
+        loop {
+            attempts = attempts.saturating_add(1);
+            match store.txn_overwrite_file(id, b"", tx_id) {
+                Err(err) if err.class() == Class::Conflict && attempts < OPTIMISTIC_ATTEMPTS => {
+                    store.refresh_to_head()?;
+                }
+                other => return other,
+            }
+        }
     }
 
     /// Commit every buffered handle. Used before namespace mutations that can
@@ -1281,6 +1343,16 @@ fn errno(error: &Error) -> i32 {
         Class::InvalidName | Class::InvalidArgument | Class::Parse => libc::EINVAL,
         Class::LimitExceeded => libc::EFBIG,
         Class::Busy => libc::EBUSY,
+        // A lost optimistic race that exhausted the bounded retry budget is a
+        // transient condition, not corruption: report `EBUSY` so a caller can
+        // distinguish it from the `EIO` a genuinely broken store returns.
+        Class::Conflict => libc::EBUSY,
+        // A representation this mode deliberately does not implement (for
+        // example `RENAME_EXCHANGE` under optimistic mutations) is a
+        // documented refusal, so report POSIX `EOPNOTSUPP` rather than `EIO`:
+        // the caller can then tell "not supported here" from "the filesystem
+        // broke".
+        Class::UnsupportedRepresentation => libc::EOPNOTSUPP,
         Class::Io => libc::EIO,
         _ => libc::EIO,
     }
@@ -1409,6 +1481,23 @@ fn init_diagnostics() {
 /// Mount `store` at `mountpoint` and serve until SIGINT/SIGTERM or unmount.
 pub fn run(store: Store, mountpoint: PathBuf, options: MountOptions) -> Result<()> {
     init_diagnostics();
+    // T029: the buffered paths publish outside the transaction API, so they are
+    // incompatible with optimistic publication. Refuse at mount time instead of
+    // silently disabling either mechanism.
+    if store.writer_mode() == crate::mw2::WriterMode::Optimistic {
+        if options.write_back {
+            return Err(Error::invalid_argument(
+                "optimistic (MW2) mutations and --write-back cannot be combined: write-back \
+                 publishes buffered ranges outside the transaction API",
+            ));
+        }
+        if options.group_commit {
+            return Err(Error::invalid_argument(
+                "optimistic (MW2) mutations and --group-commit cannot be combined: a group \
+                 commit publishes one commit outside the per-operation transaction",
+            ));
+        }
+    }
     if std::fs::metadata("/dev/fuse").is_err() {
         return Err(Error::io(
             "cannot open /dev/fuse: the FUSE device is unavailable in this environment",
@@ -1703,13 +1792,10 @@ fn verify_load_file(store: &Store, id: Hash32, receipt_dir: &Path) -> Result<()>
     let path = receipt_dir.join(format!("{}.wcb", id.to_hex()));
     let encoded = receipt.encode()?;
     let tmp = path.with_extension("tmp");
-    std::fs::write(&tmp, &encoded)
-        .map_err(|err| Error::io(format!("{}: {err}", tmp.display())))?;
-    std::fs::rename(&tmp, &path)
-        .map_err(|err| Error::io(format!("{}: {err}", path.display())))?;
+    std::fs::write(&tmp, &encoded).map_err(|err| Error::io(format!("{}: {err}", tmp.display())))?;
+    std::fs::rename(&tmp, &path).map_err(|err| Error::io(format!("{}: {err}", path.display())))?;
     Ok(())
 }
-
 
 impl Filesystem for WeftFuse {
     fn init(
@@ -1717,7 +1803,17 @@ impl Filesystem for WeftFuse {
         _req: &Request<'_>,
         config: &mut KernelConfig,
     ) -> std::result::Result<(), libc::c_int> {
-        let _ = config;
+        if self.optimistic {
+            // O_TRUNC must arrive in `open`/`create`, where the truncation can
+            // be published as one transaction. Without this capability the
+            // kernel sends a separate SETATTR(size=0) before OPEN, which is
+            // indistinguishable from a bare truncate(2) that this mode refuses.
+            // Applied only under optimistic publication: the MW1 path keeps the
+            // exact capability set it had before.
+            config
+                .add_capabilities(fuser::consts::FUSE_ATOMIC_O_TRUNC)
+                .map_err(|_| libc::EIO)?;
+        }
         Ok(())
     }
 
@@ -1823,6 +1919,12 @@ impl Filesystem for WeftFuse {
         _flags: Option<u32>,
         reply: ReplyAttr,
     ) {
+        if self.optimistic {
+            // chmod/chown/utimes mutate an existing object record. A
+            // truncate is reachable through `open(O_TRUNC)`; the rest are
+            // refused rather than published outside a transaction.
+            return reply.error(libc::EOPNOTSUPP);
+        }
         let mut store = match self.store.write() {
             Ok(guard) => guard,
             Err(err) => return reply.error(errno(&err)),
@@ -1938,6 +2040,9 @@ impl Filesystem for WeftFuse {
         _rdev: u32,
         reply: ReplyEntry,
     ) {
+        if self.optimistic {
+            return reply.error(libc::EOPNOTSUPP);
+        }
         let mut store = match self.store.write() {
             Ok(guard) => guard,
             Err(err) => return reply.error(errno(&err)),
@@ -2003,6 +2108,12 @@ impl Filesystem for WeftFuse {
         umask: u32,
         reply: ReplyEntry,
     ) {
+        if self.optimistic {
+            // Directory creation is a logical op the transaction table
+            // does express, but the around-the-op inode bookkeeping is
+            // not part of this subphase; refuse rather than half-implement.
+            return reply.error(libc::EOPNOTSUPP);
+        }
         let mut store = match self.store.write() {
             Ok(guard) => guard,
             Err(err) => return reply.error(errno(&err)),
@@ -2073,7 +2184,37 @@ impl Filesystem for WeftFuse {
         if let Err(err) = self.begin_grouped_mutation(&mut store) {
             return reply.error(errno(&err));
         }
-        match store.unlink(parent_id, name.as_bytes()) {
+        let unlinked = if self.optimistic {
+            let seed = format!(
+                "{}:{}:{}:{}",
+                std::process::id(),
+                parent_id.to_hex(),
+                hex_of(name.as_bytes()),
+                store.generation()
+            );
+            let mut attempts: u32 = 0;
+            loop {
+                attempts = attempts.saturating_add(1);
+                match store.txn_unlink(
+                    parent_id,
+                    name.as_bytes(),
+                    false,
+                    &fuse_transaction_id("unlink", &seed),
+                ) {
+                    Err(err)
+                        if err.class() == Class::Conflict && attempts < OPTIMISTIC_ATTEMPTS =>
+                    {
+                        if let Err(err) = store.refresh_to_head() {
+                            break Err(err);
+                        }
+                    }
+                    other => break other,
+                }
+            }
+        } else {
+            store.unlink(parent_id, name.as_bytes())
+        };
+        match unlinked {
             Ok(()) => {
                 if let Err(err) = self.finish_grouped_mutation(&mut store) {
                     return reply.error(errno(&err));
@@ -2108,7 +2249,37 @@ impl Filesystem for WeftFuse {
         if let Err(err) = self.begin_grouped_mutation(&mut store) {
             return reply.error(errno(&err));
         }
-        match store.rmdir(parent_id, name.as_bytes()) {
+        let removed = if self.optimistic {
+            let seed = format!(
+                "{}:{}:{}:{}",
+                std::process::id(),
+                parent_id.to_hex(),
+                hex_of(name.as_bytes()),
+                store.generation()
+            );
+            let mut attempts: u32 = 0;
+            loop {
+                attempts = attempts.saturating_add(1);
+                match store.txn_unlink(
+                    parent_id,
+                    name.as_bytes(),
+                    true,
+                    &fuse_transaction_id("rmdir", &seed),
+                ) {
+                    Err(err)
+                        if err.class() == Class::Conflict && attempts < OPTIMISTIC_ATTEMPTS =>
+                    {
+                        if let Err(err) = store.refresh_to_head() {
+                            break Err(err);
+                        }
+                    }
+                    other => break other,
+                }
+            }
+        } else {
+            store.rmdir(parent_id, name.as_bytes())
+        };
+        match removed {
             Ok(()) => {
                 if let Err(err) = self.finish_grouped_mutation(&mut store) {
                     return reply.error(errno(&err));
@@ -2156,7 +2327,44 @@ impl Filesystem for WeftFuse {
         if let Err(err) = self.begin_grouped_mutation(&mut store) {
             return reply.error(errno(&err));
         }
-        let result = if flags & RENAME_EXCHANGE != 0 {
+        let result = if self.optimistic {
+            if flags & RENAME_EXCHANGE != 0 {
+                Err(Error::unsupported_representation(
+                    "RENAME_EXCHANGE is refused under optimistic (MW2) mutations: it swaps two                      names in one step, which the transaction table does not express",
+                ))
+            } else {
+                let seed = format!(
+                    "{}:{}:{}:{}:{}:{}",
+                    std::process::id(),
+                    old_parent.to_hex(),
+                    hex_of(name.as_bytes()),
+                    new_parent.to_hex(),
+                    hex_of(newname.as_bytes()),
+                    store.generation()
+                );
+                let mut attempts: u32 = 0;
+                loop {
+                    attempts = attempts.saturating_add(1);
+                    match store.txn_rename(
+                        old_parent,
+                        name.as_bytes(),
+                        new_parent,
+                        newname.as_bytes(),
+                        flags & RENAME_NOREPLACE == 0,
+                        &fuse_transaction_id("rename", &seed),
+                    ) {
+                        Err(err)
+                            if err.class() == Class::Conflict && attempts < OPTIMISTIC_ATTEMPTS =>
+                        {
+                            if let Err(err) = store.refresh_to_head() {
+                                break Err(err);
+                            }
+                        }
+                        other => break other,
+                    }
+                }
+            }
+        } else if flags & RENAME_EXCHANGE != 0 {
             store.rename_exchange(old_parent, name.as_bytes(), new_parent, newname.as_bytes())
         } else if flags & RENAME_NOREPLACE != 0 {
             store.rename_no_replace(old_parent, name.as_bytes(), new_parent, newname.as_bytes())
@@ -2208,7 +2416,27 @@ impl Filesystem for WeftFuse {
         if let Err(err) = self.begin_grouped_mutation(&mut store) {
             return reply.error(errno(&err));
         }
-        match store.link(id, new_parent, newname.as_bytes()) {
+        let linked = if self.optimistic {
+            let seed = format!(
+                "{}:{}:{}:{}:{}",
+                std::process::id(),
+                id.to_hex(),
+                new_parent.to_hex(),
+                hex_of(newname.as_bytes()),
+                store.generation()
+            );
+            store
+                .txn_link(
+                    id,
+                    new_parent,
+                    newname.as_bytes(),
+                    &fuse_transaction_id("link", &seed),
+                )
+                .map(|_| ())
+        } else {
+            store.link(id, new_parent, newname.as_bytes())
+        };
+        match linked {
             Ok(()) => {
                 let state = self.state(&store);
                 match self.attr_for(&mut table, state, &Node::Object(id), ino) {
@@ -2243,6 +2471,9 @@ impl Filesystem for WeftFuse {
         target: &Path,
         reply: ReplyEntry,
     ) {
+        if self.optimistic {
+            return reply.error(libc::EOPNOTSUPP);
+        }
         let mut store = match self.store.write() {
             Ok(guard) => guard,
             Err(err) => return reply.error(errno(&err)),
@@ -2350,7 +2581,20 @@ impl Filesystem for WeftFuse {
             if let Err(err) = self.begin_grouped_mutation(&mut store) {
                 return reply.error(errno(&err));
             }
-            if let Err(err) = store.truncate(object_id.unwrap(), 0) {
+            let truncated = if self.optimistic {
+                let id = object_id.unwrap();
+                let seed = format!(
+                    "{}:{}:{}",
+                    std::process::id(),
+                    id.to_hex(),
+                    store.generation()
+                );
+                self.optimistic_truncate(&mut store, id, &fuse_transaction_id("truncate", &seed))
+            } else {
+                store.truncate(object_id.unwrap(), 0).map(|_| ())
+            };
+            if let Err(err) = truncated {
+                eprintln!("weftfs: optimistic open(O_TRUNC) failed for {ino}: {err}");
                 let _ = self.finish_grouped_mutation(&mut store);
                 return reply.error(errno(&err));
             }
@@ -2456,7 +2700,16 @@ impl Filesystem for WeftFuse {
                     } else {
                         None
                     };
-                    (record.content, record.size, token)
+                    if self.optimistic {
+                        // T029 snapshot isolation: an open handle reads the
+                        // version it opened, even after a concurrent overwrite
+                        // publishes a newer one. `handle.content`/`handle.size`
+                        // are refreshed by this process's own optimistic writes,
+                        // so a reader-writer handle still sees its own bytes.
+                        (handle.content, handle.size, token)
+                    } else {
+                        (record.content, record.size, token)
+                    }
                 }
                 None => (handle.content, handle.size, None),
             }
@@ -2557,6 +2810,76 @@ impl Filesystem for WeftFuse {
             return reply.error(libc::EFBIG);
         }
         drop(handles);
+        // ---- optimistic (MW2): read-modify-write one whole-file version ----
+        //
+        // A range write is not a transaction primitive: the transaction table
+        // has no partial-object op. Under optimistic publication the safe
+        // composition is to read the current content, splice the range, and
+        // publish a new object version with the observed version as the
+        // precondition. A concurrent winner therefore produces
+        // `Conflict(ObjectChanged)`, never a lost update. The cost is a
+        // whole-file rewrite per call and a hard size bound.
+        if self.optimistic {
+            let end = offset.saturating_add(data.len() as u64);
+            if end > OPTIMISTIC_REWRITE_MAX_BYTES {
+                eprintln!(
+                    "weftfs: optimistic write refused: {end} bytes exceeds the {}-byte whole-file rewrite bound",
+                    OPTIMISTIC_REWRITE_MAX_BYTES
+                );
+                return reply.error(libc::E2BIG);
+            }
+            let seed = format!(
+                "{}:{}:{}:{}:{}",
+                std::process::id(),
+                id.to_hex(),
+                offset,
+                data.len(),
+                crate::identity::content_hash(data).to_hex()
+            );
+            let tx_id = fuse_transaction_id("write", &seed);
+            let mut attempts: u32 = 0;
+            let mut next = Vec::new();
+            loop {
+                attempts = attempts.saturating_add(1);
+                // Re-read from the published head on every attempt: a lost
+                // race means this handle's snapshot is stale, and the whole
+                // point of the rewrite is to splice into the *current* bytes.
+                if let Err(err) = store.refresh_to_head() {
+                    return reply.error(errno(&err));
+                }
+                next = match store.read_object(id) {
+                    Ok(bytes) => bytes,
+                    Err(err) => return reply.error(errno(&err)),
+                };
+                if next.len() < end as usize {
+                    next.resize(end as usize, 0);
+                }
+                next[offset as usize..end as usize].copy_from_slice(data);
+                match store.txn_overwrite_file(id, &next, &tx_id) {
+                    Ok(()) => break,
+                    Err(err)
+                        if err.class() == Class::Conflict && attempts < OPTIMISTIC_ATTEMPTS =>
+                    {
+                        continue;
+                    }
+                    Err(err) => {
+                        eprintln!(
+                            "weftfs: optimistic write failed at offset {offset} ({} bytes) after {attempts} attempt(s): {err}",
+                            data.len()
+                        );
+                        return reply.error(errno(&err));
+                    }
+                }
+            }
+            if let Some(handle) = self.handles.lock().unwrap().get_mut(&fh) {
+                handle.size = next.len() as u64;
+                if let Some(record) = self.state(&store).objects.get(&id) {
+                    handle.content = record.content;
+                }
+            }
+            self.inodes.lock().unwrap().bump_generation(ino);
+            return reply.written(data.len() as u32);
+        }
         // ---- write-back: buffer per handle, commit at flush/fsync/release --
         if self.write_back {
             let full = {
@@ -2924,6 +3247,9 @@ impl Filesystem for WeftFuse {
         position: u32,
         reply: ReplyEmpty,
     ) {
+        if self.optimistic {
+            return reply.error(libc::EOPNOTSUPP);
+        }
         if position != 0 {
             return reply.error(libc::EINVAL);
         }
@@ -3195,6 +3521,50 @@ impl Filesystem for WeftFuse {
         }
         let (id, created) = match existing {
             Some(id) => (id, false),
+            None if self.optimistic => {
+                let seed = format!(
+                    "{}:{}:{}",
+                    std::process::id(),
+                    parent_id.to_hex(),
+                    hex_of(bytes)
+                );
+                let tx_id = fuse_transaction_id("create", &seed);
+                let mut attempts: u32 = 0;
+                loop {
+                    attempts = attempts.saturating_add(1);
+                    match store.txn_create_file(
+                        parent_id,
+                        bytes,
+                        b"",
+                        perm,
+                        req.uid() as u64,
+                        req.gid() as u64,
+                        BTreeMap::new(),
+                        seed.as_bytes(),
+                        &tx_id,
+                    ) {
+                        Ok(id) => break (id, true),
+                        Err(err)
+                            if err.class() == Class::Conflict && attempts < OPTIMISTIC_ATTEMPTS =>
+                        {
+                            // Another writer created the same name (or changed
+                            // the parent) first. Re-read, and if the name now
+                            // exists this open is an ordinary open of it, not
+                            // an error, unless O_EXCL was requested.
+                            if let Err(err) = store.refresh_to_head() {
+                                return reply.error(errno(&err));
+                            }
+                            if let Ok(id) = self.state(&store).lookup(parent_id, bytes) {
+                                if flags & O_EXCL != 0 {
+                                    return reply.error(libc::EEXIST);
+                                }
+                                break (id, false);
+                            }
+                        }
+                        Err(err) => return reply.error(errno(&err)),
+                    }
+                }
+            }
             None => {
                 let id = match store.create_file(
                     parent_id,
@@ -3225,7 +3595,18 @@ impl Filesystem for WeftFuse {
         if created && flags & O_TRUNC != 0 {
             // A newly created file is already empty; no extra commit.
         } else if flags & O_TRUNC != 0 {
-            if let Err(err) = store.truncate(id, 0) {
+            let truncated = if self.optimistic {
+                let seed = format!(
+                    "{}:{}:{}",
+                    std::process::id(),
+                    id.to_hex(),
+                    store.generation()
+                );
+                self.optimistic_truncate(&mut store, id, &fuse_transaction_id("truncate", &seed))
+            } else {
+                store.truncate(id, 0).map(|_| ())
+            };
+            if let Err(err) = truncated {
                 return reply.error(errno(&err));
             }
         }
@@ -3316,6 +3697,9 @@ impl Filesystem for WeftFuse {
         mode: i32,
         reply: ReplyEmpty,
     ) {
+        if self.optimistic {
+            return reply.error(libc::EOPNOTSUPP);
+        }
         if offset < 0 || length < 0 {
             return reply.error(libc::EINVAL);
         }
@@ -3487,6 +3871,9 @@ impl Filesystem for WeftFuse {
         flags: u32,
         reply: ReplyWrite,
     ) {
+        if self.optimistic {
+            return reply.error(libc::EOPNOTSUPP);
+        }
         if flags != 0 || offset_in < 0 || offset_out < 0 {
             return reply.error(libc::EINVAL);
         }
