@@ -39,6 +39,7 @@ The command fails closed on any violation.
 ## 2. The strict set
 
 <!-- BEGIN GENERATED:n07-strict (scripts/perf_numbers.py) -->
+**3 points**: the native anchor (332.0 ms, largest), the level-19-off row (575.9 ms, 282,106,049 B), and the 1 MiB pack row (282,102,521 B, slowest). The shipped default (592.6 ms) is dominated.
 <!-- END GENERATED:n07-strict -->
 
 The strict set is small because the measurements are: the native anchor is
@@ -49,6 +50,7 @@ fastest and largest; the level-19-off row is faster at the same bytes; the
 ## 3. The eligible set
 
 <!-- BEGIN GENERATED:n07-eligible (scripts/perf_numbers.py) -->
+**2 points**: the native anchor and `C-pipe4-sync16` (**582.0 ms** at 282,106,049 B). The level-19-off row is excluded by policy; the pack rows by plane; the exhaustive planner as a control.
 <!-- END GENERATED:n07-eligible -->
 
 The level-19-off row is excluded by policy: disabling the level-19 gate wins on
@@ -61,11 +63,19 @@ separable from the default on the median (see §5).
 ## 4. The frontier points and their policy status
 
 <!-- BEGIN GENERATED:n07-table (scripts/perf_numbers.py) -->
+| point | min ms | footprint B | set |
+|---|---:|---:|---|
+| native anchor | 332.0 | 424,439,296 | strict + eligible (comparator) |
+| level-19-off | 575.9 | 282,106,049 | strict (ineligible by policy) |
+| 1 MiB pack | 962.7 | 282,102,521 | strict (ineligible by plane) |
+| `C-pipe4-sync16` | 582.0 | 282,106,049 | eligible |
+| shipped default | 592.6 | 282,106,049 | neither (dominated) |
 <!-- END GENERATED:n07-table -->
 
 ## 5. Confidence
 
 <!-- BEGIN GENERATED:n07-confidence (scripts/perf_numbers.py) -->
+25 rows are classified; 0 are single-run. Each row carries a bootstrap interval from its own repetitions in the output receipt, and the receipt states that no paired statistic exists for this unpaired data.
 <!-- END GENERATED:n07-confidence -->
 
 The receipt carries a seeded 10,000-resample bootstrap interval of each row's

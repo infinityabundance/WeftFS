@@ -11,6 +11,8 @@ running, and that lane was the longest non-overlappable term. Running the same
 barriers on a bounded lane pool makes the tail shorter than the encode chain, so
 it is now hidden. The rung is **not met**: the shipped row lands at
 <!-- BEGIN GENERATED:n01-headline (scripts/perf_numbers.py) -->
+**544.4 ms** least-contended / **579.3 ms** median (p95 4,705.5 ms, p99 6,113.6 ms; native 328.7 ms), at 282,106,049 B.
+That is **1.66×** the native wall and **6.55 %** better on the least-contended statistic than the one-lane row (582.6 ms / 608.7 ms median).
 <!-- END GENERATED:n01-headline -->
 least-contended against a 336 ms target. The remaining floor is named in §4 and
 is no longer durability.
@@ -37,6 +39,12 @@ p99 come from the same seven samples and are published unchanged. The pre-change
 row is the R21/R22 default with one writeback lane.
 
 <!-- BEGIN GENERATED:n01-baseline (scripts/perf_numbers.py) -->
+| row | min ms | median ms | p99 ms | footprint B |
+|---|---:|---:|---:|---:|
+| pre-change, one lane (`C-pipe4-wb1`) | 582.6 | 608.7 | 11,300.6 | 282,106,049 |
+| shipped, four lanes (`C-pipe4`) | 544.4 | 579.3 | 6,113.6 | 282,106,049 |
+| best lane count (`C-pipe4-wb8`) | 542.3 | 678.0 | — | 282,106,049 |
+| native anchor (`A`) | 328.7 | — | — | — |
 <!-- END GENERATED:n01-baseline -->
 
 The phase profile of one write (same session, shipped lanes) separates the
@@ -46,6 +54,9 @@ early barrier are I/O work; `index_segment` and `manifest_commit` are the
 control plane.
 
 <!-- BEGIN GENERATED:n01-split (scripts/perf_numbers.py) -->
+* `blob_publish` 297.8 ms; `encode` 606.0 ms of CPU across workers; `analyse` 160.2 ms; `digest` 71.2 ms (thread-additive, so these are not a wall partition).
+* control plane: `index_segment` 4.4 ms, `manifest_commit` 5.0 ms.
+* early barrier: 209.3 ms busy across lanes, overlapped with encode and publication.
 <!-- END GENERATED:n01-split -->
 
 The publication ledger is exact: 186 manifest blobs + 16 object blobs, one file
@@ -70,11 +81,19 @@ what the footprint and the roots depend on.
 ## 3. The result
 
 <!-- BEGIN GENERATED:n01-result (scripts/perf_numbers.py) -->
+| statistic | one lane (pre) | four lanes (shipped) | eight lanes |
+|---|---:|---:|---:|
+| least-contended ms | 582.6 | 544.4 | 542.3 |
+| median ms | 608.7 | 579.3 | 678.0 |
+| p99 ms | 11,300.6 | 6,113.6 | — |
+| footprint B | 282,106,049 | 282,106,049 | 282,106,049 |
+The shipped row is **1.66×** native (328.7 ms); the change is **6.55 %** on the minimum and **4.83 %** on the median.
 <!-- END GENERATED:n01-result -->
 
 Identity, on the same fixture and seed:
 
 <!-- BEGIN GENERATED:n01-identity (scripts/perf_numbers.py) -->
+101 output content roots, the representation-choice map, the physical byte count, footprint and generation are **identical** for 1 and 8 lanes; only the ObjectIds differ, because the harness derives each object seed from the configuration name.
 <!-- END GENERATED:n01-identity -->
 
 So the lane change buys wall time at an identical committed state. The best
@@ -86,6 +105,7 @@ session (one 678.0 ms sample against 579.3 ms; the minima are 542.3 and 544.4 ms
 ## 4. The floor, and why 336 ms is not reached
 
 <!-- BEGIN GENERATED:n01-floor (scripts/perf_numbers.py) -->
+On the least-contended shipped repetition the critical path is reader **43.1 ms** + encode wall **380.8 ms** + publisher finish tail **40.4 ms** + commit **10.0 ms** = **474.4 ms**. The early barrier is 209.3 ms of work hidden under that path.
 <!-- END GENERATED:n01-floor -->
 
 The tail that dominated R22 is now hidden: the barrier's busy time is shorter
@@ -96,9 +116,9 @@ states, which is an encoder problem, not a durability one.
 
 Two changes were considered and **not** made:
 
-* **Packing the blob plane** changes the footprint (measured `282,102,521 B` for
-  `pack1m` against `282,106,049 B`) and is slower for this workload; N02 measures
-  the device-level win and the store-level loss.
+* **Packing the blob plane** changes the footprint (the N02 store-level table
+  names both numbers) and is slower for this workload; N02 measures the
+  device-level win and the store-level loss.
 * **A seal/catalog lane** would move pack sealing off the publisher, but the
   pack plane is not the shipped representation and its footprint differs, so it
   cannot satisfy this gate's "footprint and every root unchanged" clause.
@@ -106,6 +126,10 @@ Two changes were considered and **not** made:
 ## 5. No regression on the 7B cells
 
 <!-- BEGIN GENERATED:n01-7b (scripts/perf_numbers.py) -->
+| reduced 7B cell | wall ms |
+|---|---:|
+| planned, 8-way streaming | 225,682.3 |
+| fast-raw, 8-way streaming | 761,198.5 |
 <!-- END GENERATED:n01-7b -->
 
 The changed module is not on the checkpoint writer's path
@@ -118,6 +142,8 @@ is unreachable from that phase, it is host variance and is labelled as such.
 ## 6. Losses and non-claims
 
 <!-- BEGIN GENERATED:n01-losses (scripts/perf_numbers.py) -->
+* The rung is not met: 544.4 ms against 336 ms, and 579.3 ms at the median.
+* p95 is 4,705.5 ms and p99 6,113.6 ms; the host stalled in several repetitions and the raw samples are in the receipt.
 <!-- END GENERATED:n01-losses -->
 
 * Single host, one writer, local POSIX backend, warm page cache; no media,

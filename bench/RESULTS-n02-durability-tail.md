@@ -7,6 +7,11 @@ unchanged limits (`3 GiB` memory == swap, `1024` pids, `4` CPUs, bounded
 **Headline.** The tail is real and it is per-file barrier latency, not block
 bandwidth. Writing the store's own 202 published blob files costs
 <!-- BEGIN GENERATED:n02-variants (scripts/perf_numbers.py) -->
+| layout | files | min ms | median ms |
+|---|---:|---:|---:|
+| per-object (shipped) | 202 | 368.3 | 7,405.3 |
+| 17 larger files + index | 17 | 149.6 | 563.1 |
+| one contiguous pack + index | 2 | 140.5 | 3,117.2 |
 <!-- END GENERATED:n02-variants -->
 least-contended; the same bytes as 17 files save about 60 %, and one contiguous
 pack with an in-file index saves about the same. The store-level pack plane
@@ -36,6 +41,17 @@ publication, so it is not added to the path. The residual is the harness loop
 and the prepare prologue.
 
 <!-- BEGIN GENERATED:n02-account (scripts/perf_numbers.py) -->
+| term | ms |
+|---|---:|
+| init | 20.3 |
+| reader | 44.0 |
+| encode wall | 415.9 |
+| publisher finish tail | 109.6 |
+| commit | 10.1 |
+| footprint walk | 0.7 |
+| **accounted** | **600.6** |
+| **measured wall** | **614.7** |
+| residual | 14.1 (2.299 %) |
 <!-- END GENERATED:n02-account -->
 
 Closure check: the six terms sum to the accounted total, and
@@ -48,6 +64,8 @@ The I/O cross-check compares the store's own publication ledger with the bytes
 the probe copied, and the barrier counts the store actually issued:
 
 <!-- BEGIN GENERATED:n02-io (scripts/perf_numbers.py) -->
+* published blob payload: **281,981,457 B**; backend bytes written: **282,118,555 B**. The difference is the control plane and source/probe writes, itemised in the receipt.
+* barriers the store issued: **213** file barriers and **161** directory barriers.
 <!-- END GENERATED:n02-io -->
 
 The difference between backend bytes and blob payload is the control plane
@@ -58,12 +76,18 @@ bound and are not used to claim device throughput.
 
 ## 2. Fewer larger files versus one contiguous pack
 
-All three variants write the *same* 281,981,457 bytes — the store's own published
-blob ranges — on the same device, with the same acknowledgement contract: every
-byte written, one `fdatasync` per file, one directory `fsync`. Nothing is
-transcoded before acknowledgement.
+All three variants write the *same* payload — the store's own published blob
+ranges, whose byte count is in the generated I/O block above — on the same
+device, with the same acknowledgement contract: every byte written, one
+`fdatasync` per file, one directory `fsync`. Nothing is transcoded before
+acknowledgement.
 
 <!-- BEGIN GENERATED:n02-variants-b (scripts/perf_numbers.py) -->
+| layout | files | min ms | median ms |
+|---|---:|---:|---:|
+| per-object (shipped) | 202 | 368.3 | 7,405.3 |
+| 17 larger files + index | 17 | 149.6 | 563.1 |
+| one contiguous pack + index | 2 | 140.5 | 3,117.2 |
 <!-- END GENERATED:n02-variants-b -->
 
 The unpaired distributions are contaminated: the host stalled for seconds in
@@ -72,17 +96,25 @@ used as the gate. The gate statistic is **paired** within each repetition, with
 a seeded percentile bootstrap:
 
 <!-- BEGIN GENERATED:n02-paired (scripts/perf_numbers.py) -->
+| layout | paired median saving | bootstrap 95 % interval |
+|---|---:|---|
+| 17 larger files + index | 60.80 % | 54.67 % .. 92.40 % |
+| one contiguous pack + index | 60.82 % | 56.95 % .. 63.17 % |
 <!-- END GENERATED:n02-paired -->
 
 **Verdict: the winning variant clears the 10 % gate with a paired median of about
 60 % and a bootstrap interval entirely above 10 %.** Two variants tie — 17
-larger files and one contiguous pack — because both remove the per-file barrier
-count, and the device-level difference between 17 and 2 files is small next to
-the 202 → 17 step.
+larger files and one contiguous pack — because both remove most of the per-file barrier
+count, and the device-level difference between the two file counts is small next
+to the step away from one barrier per published object.
 
 ## 3. What the store-level pack plane does with that win
 
 <!-- BEGIN GENERATED:n02-store-level (scripts/perf_numbers.py) -->
+| store-level row | min ms | footprint B |
+|---|---:|---:|
+| flat plane (`C-pipe4`) | 597.7 | 282,106,049 |
+| 1 MiB pack plane (`C-pipe4-pack1m`) | 1,221.3 | 282,102,473 |
 <!-- END GENERATED:n02-store-level -->
 
 The pack plane is **not** the same experiment: it seals members into

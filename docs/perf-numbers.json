@@ -22472,12 +22472,12 @@
    "unit": "KiB",
    "group": "n05",
    "format": "int",
-   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "receipt": "bench/receipts/n05-go-exhaustive-20261114T203000Z.json",
    "stamp_path": "stamp",
    "stamp": "20261114T203000Z",
    "revision_path": "revision.WeftFS",
    "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
-   "path": "go_selector.peak_rss_kib"
+   "path": "peak_rss_kib"
   },
   {
    "key": "n05.rust.wall_ms",
@@ -22834,6 +22834,23 @@
    "path": "method.tensors",
    "stamp_path": "stamp",
    "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.pack1m.min_ms",
+   "label": "1 MiB pack row least-contended wall",
+   "unit": "ms",
+   "group": "n07",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "list": "points",
+   "where": {
+    "config": "C-pipe4-pack1m"
+   },
+   "select_path": "wall_min_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
    "revision_path": "revision.WeftFS",
    "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
   }
@@ -28604,7 +28621,7 @@
      "template": "| level-19-off | {{n07.t19off.min_ms}} | {{n01.footprint_b}} | strict (ineligible by policy) |"
     },
     {
-     "template": "| 1 MiB pack | {{n02.store.pack1m_min_ms}} | {{n07.pack1m.footprint_b}} | strict (ineligible by plane) |"
+     "template": "| 1 MiB pack | {{n07.pack1m.min_ms}} | {{n07.pack1m.footprint_b}} | strict (ineligible by plane) |"
     },
     {
      "template": "| `C-pipe4-sync16` | {{n07.sync16.min_ms}} | {{n01.footprint_b}} | eligible |"
@@ -28621,6 +28638,25 @@
    "rows": [
     {
      "template": "{{n07.points.count}} rows are classified; {{n07.single_run.count}} are single-run. Each row carries a bootstrap interval from its own repetitions in the output receipt, and the receipt states that no paired statistic exists for this unpaired data."
+    }
+   ]
+  },
+  {
+   "id": "n01-n07-status",
+   "file": "docs/STATUS.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* N01 shipped {{n01.post.min_ms}} / {{n01.post.median_ms}} ms (min/median) against one-lane {{n01.pre.min_ms}} / {{n01.pre.median_ms}} ms; 336 ms not met; non-overlappable floor {{n01.floor.floor_ms}} ms."
+    },
+    {
+     "template": "* N02 paired saving {{n02.fewer.saving_pct}} % [{{n02.fewer.ci_low_pct}}, {{n02.fewer.ci_high_pct}}]; store-level pack {{n02.store.pack1m_min_ms}} ms vs flat {{n02.store.pipe4_min_ms}} ms."
+    },
+    {
+     "template": "* N05 Go {{n05.go.speedup}}x ({{n05.go.exhaustive_ms}} -> {{n05.go.twostage_ms}} ms); {{n05.agree.divergent}} divergent tensors of {{n05.points_total}}."
+    },
+    {
+     "template": "* N07 strict set {{n07.strict.count}} points, eligible set {{n07.eligible.count}} points, {{n07.points.count}} rows classified."
     }
    ]
   }

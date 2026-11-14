@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,282** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,304** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11564,3 +11564,60 @@ per-repetition raw metrics in its receipt. No frame, manifest, commit, index,
 identity or store byte changed. Claims: 1280. `perf_numbers`: the four new
 receipts feed generated regions in `bench/RESULTS-heldout.md`. The aggregate
 verification receipt is unchanged until it is rerun.
+
+- 2026-11-14 (N01/N02/N05/N07): four gates decided; every one is published as a
+  mixed or negative result rather than smoothed. Parent `staging` `6d79c4c`
+  (code + harnesses, evidence `00d1046`), WeftFS-Go `a8e8e7a`; not pushed.
+  * **N01 (write rung).** The early barrier now runs its per-file `fdatasync`s on
+    1-8 lanes (default `min(available_parallelism, 4)`), each file still
+    barriered exactly once and the commit barrier unchanged. On the frozen
+    101-tensor fixture this moves the least-contended wall from the one-lane row
+    to the shipped row; identity is proved at 101 content roots, the
+    representation map, physical bytes, footprint and generation. **336 ms is not
+    reached**: the generated numbers are below, and the remaining
+    non-overlappable term is the embedding's read + encode chain, not durability.
+    The 7B reduced planned/fast-raw cells were re-run (planned ~1.9x the X04
+    session on an unchanged output; the changed module is not on that path) and
+    the packed-race court passed 5/5. Receipts `r22-pareto-20261114T195000Z`,
+    `n01-write-rung-20261114T195000Z`, `n01-phase-split-…`, `n01-identity-…`,
+    `scale-7b-20261114T195110Z`; analysis `bench/RESULTS-n01-write-rung.md`.
+  * **N02 (durability tail).** A traced critical path closes with a stated 2.3 %
+    residual; the published blob payload, backend bytes and 213 file / 161
+    directory barriers are cross-checked. The same bytes as 17 files or one
+    contiguous pack save ~60 % (paired bootstrap well above 10 %), but the
+    store-level pack plane is slower (sealing + catalog on the publisher) and
+    changes the footprint, so no product change follows. Receipt
+    `n02-durability-tail-20261114T195000Z`; analysis
+    `bench/RESULTS-n02-durability-tail.md`.
+  * **N05 (Go parity).** The R18 two-stage policy is ported to Go and reproduces
+    Go exhaustive exactly on strategy, physical size, frame id, manifest id and
+    logical root, at 6.61x less wall and the same footprint. Cross-language
+    choices still differ on 50/101 small tensors because Rust links libzstd and
+    Go uses klauspost/compress; mode-9 and raw frames are byte-identical (35/35,
+    16/16) and both stores pass the other's `verify --full`. No Go writer
+    pipeline, chunk-parallel ZSTD, CPU-token scheduler or deferred barrier was
+    ported, and that is reported, not hidden. Receipt
+    `n05-go-parity-20261114T203000Z`; analysis `bench/RESULTS-n05-go-parity.md`.
+  * **N07 (strict Pareto).** `scripts/pareto_strict.py` computes a strict
+    two-axis set and a separately named eligible policy set from the receipt,
+    with an independent quadratic domination check, a byte-identical rerun and a
+    synthetic self-test. R22's "Pareto-optimal" label is withdrawn for dominated
+    rows; the shipped default is dominated on these two axes. Receipt
+    `n07-pareto-strict-20261114T204000Z`; analysis `bench/RESULTS-n07-pareto.md`.
+  * Gates: Rust all-targets 934 passed / 0 failed / 0 ignored; FUSE all-targets
+    985 passed / 0 failed / 2 pre-existing ignored; Go `-race` all packages,
+    gofmt/vet/CGO=0 clean; claims, perf-numbers, spec drift and conformance are
+    run after the documentation commit. `verify-all` was **not** re-run, so the
+    cited aggregate stays `verify-20261114T162327Z` (47/47); the five new courts
+    are registered (see below) and the next aggregate will include them.
+  * New courts: `n01_write_rung` (the shipped lane test and the receipt's own
+    assertions), `n02_durability_tail` (reduced 2-rep probe), `n05_go_parity`
+    (the Go selector test + receipt agreement), `n07_pareto` (generator
+    `--check`), and `pareto_self_test`. All have the exit-78 skip path.
+
+<!-- BEGIN GENERATED:n01-n07-status (scripts/perf_numbers.py) -->
+* N01 shipped 544.4 / 579.3 ms (min/median) against one-lane 582.6 / 608.7 ms; 336 ms not met; non-overlappable floor 474.4 ms.
+* N02 paired saving 60.80 % [54.67, 92.40]; store-level pack 1,221.3 ms vs flat 597.7 ms.
+* N05 Go 6.61x (36,705.3 -> 5,552.7 ms); 50 divergent tensors of 101.
+* N07 strict set 3 points, eligible set 2 points, 25 rows classified.
+<!-- END GENERATED:n01-n07-status -->

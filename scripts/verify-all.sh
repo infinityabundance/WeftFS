@@ -484,6 +484,35 @@ run_orchestrated_court useful_step useful_step_court \
 run_orchestrated_court adapters_receipts adapters_receipts_court \
   scripts/docker-court.sh python "bash bench/scripts/adapters_receipts_court.sh"
 
+# N01 write rung: the lane determinism test plus the published receipt's own
+# assertions. Reduced to those two checks; the full timing court is the cited
+# receipt. A court that cannot run prints `n01_write_rung: skip <reason>` and
+# exits 78 (missing receipt or no cargo).
+run_orchestrated_court n01_write_rung n01_write_rung \
+  env WEFT_N01_STAMP="$stamp" \
+  scripts/court_in_container.sh bench bench/scripts/n01_write_rung_court.sh
+
+# N02 durability tail: the traced account and the three layouts, reduced to two
+# repetitions so the aggregate stays inside its budget. The cited receipt is
+# the seven-repetition standalone run. A court that cannot run prints
+# `n02_durability_tail: skip <reason>` and exits 78.
+run_orchestrated_court n02_durability_tail n02_durability_tail \
+  env WEFT_N02_STAMP="$stamp" WEFT_N02_REPS=2 \
+  scripts/court_in_container.sh bench bench/scripts/n02_durability_tail_court.sh
+
+# N05 Go parity: the Go selector tests plus the published parity receipt's own
+# assertions (exact against Go exhaustive; divergent tensors listed). A court
+# that cannot run prints `n05_go_parity: skip <reason>` and exits 78.
+run_orchestrated_court n05_go_parity n05_go_parity \
+  env WEFT_N05_STAMP="$stamp" \
+  scripts/court_in_container.sh fuse bench/scripts/n05_go_parity_court.sh
+
+# N07 strict Pareto: the generator's independent domination check and its
+# synthetic predicate self-test. Host-only; a host without python3 prints
+# `n07_pareto: skip <reason>` and exits 78.
+run_orchestrated_court n07_pareto n07_pareto \
+  bash scripts/pareto_strict_court.sh
+
 # T060 DCP / OCDBT baselines. One sweep of four repetitions in the aggregate;
 # the cited receipts are `dcp-orbax-baselines-20261114T115820Z.json` and
 # `-115846Z`. A court that cannot run prints

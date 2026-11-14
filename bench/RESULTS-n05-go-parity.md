@@ -8,10 +8,11 @@ OOM-protected courts.
 19/3 ratio, exact mode 9 against the `1/64` gate, and level 19 only when its
 trusted lower bound can beat a measured incumbent. On the fixture it reproduces
 Go's own exhaustive decisions **exactly** — every strategy, physical size, frame
-id, manifest id and logical root — and it is
+id, manifest id and logical root — and it is **materially faster than Go's own
+exhaustive path**:
 <!-- BEGIN GENERATED:n05-speedup (scripts/perf_numbers.py) -->
+**6.61×** faster (36,705.3 ms → 5,552.7 ms) at the identical footprint of 282,079,225 B, with 0 errors.
 <!-- END GENERATED:n05-speedup -->
-faster than the Go exhaustive path at an identical footprint.
 
 Full cross-language agreement on content ids is **not** reached, and cannot be
 with the current encoders: Rust links libzstd and Go uses `klauspost/compress`,
@@ -49,21 +50,36 @@ Receipts:
 ## 2. The measured improvement and the agreement table
 
 <!-- BEGIN GENERATED:n05-result (scripts/perf_numbers.py) -->
+| arm | wall ms | footprint B | peak RSS KiB |
+|---|---:|---:|---:|
+| Rust `C-pipe4` | 604.0 | 282,106,049 | — |
+| Go exhaustive | 36,705.3 | 282,079,225 | 2,323,364 |
+| Go two-stage | 5,552.7 | 282,079,225 | 1,733,116 |
 <!-- END GENERATED:n05-result -->
 
 <!-- BEGIN GENERATED:n05-agreement (scripts/perf_numbers.py) -->
+| comparison | tensors |
+|---|---:|
+| same chosen strategy | 61 / 101 |
+| same strategy **and** physical bytes | 51 |
+| divergent | 50 |
+| both mode 9, bytes equal | 35 / 35 |
+| both raw, bytes equal | 16 / 16 |
+| both zstd, bytes equal | 0 / 10 |
 <!-- END GENERATED:n05-agreement -->
 
 The residual divergences are all small tensors where the two ZSTD encoders
 produce different frame lengths, plus the choice flips that follow from them.
 The full list is in the receipt (`divergences[]`), not summarised away. Example:
-a BF16 layernorm is `1,510 B` at Rust's libzstd level 3 and `1,705 B` at Go's
-mode 9; Go's own zstd frame is larger than its mode-9 frame, so Go chooses mode 9
-while Rust chooses zstd. Both restore the exact tensor.
+on a BF16 layernorm Rust's libzstd frame is smaller than Go's mode-9 frame, while
+Go's own zstd frame is larger than its mode-9 frame; the two implementations
+therefore choose different representations. Both restore the exact tensor.
 
 ## 3. Cross-verification, both directions
 
 <!-- BEGIN GENERATED:n05-cross (scripts/perf_numbers.py) -->
+* Rust `verify --full` over the Go store: `ok=true`.
+* Go `verify --full` over the Rust store: `ok=true`.
 <!-- END GENERATED:n05-cross -->
 
 The two verifies check different raw-chunk and representation counts because the
@@ -86,7 +102,7 @@ Recovery and error classes that were exercised:
 2. **Mode-9 decision path differs in cost**: Go encodes mode 9 to measure it,
    Rust predicts its length. Decisions agree; CPU does not.
 3. **Go publishes per-blob durably**, so its wall includes 202 file barriers
-   that Rust batches. The 6.6× improvement is against Go's *own* exhaustive
+   that Rust batches. The generated speedup is against Go's *own* exhaustive
    path, not a claim that Go matches Rust's wall.
 4. **No bounded pipeline, no chunk-parallel ZSTD, no CPU-token scheduler** in
    Go. These are the remaining parity gaps.
@@ -96,6 +112,8 @@ Recovery and error classes that were exercised:
 ## 5. Losses and non-claims
 
 <!-- BEGIN GENERATED:n05-losses (scripts/perf_numbers.py) -->
+* 50 tensors diverge in representation choice or physical size; every one is listed in the receipt.
+* Go two-stage peak RSS is 1,733,116 KiB against 2,323,364 KiB exhaustive: the selector removes encode work but Go still holds the tensor and its candidates.
 <!-- END GENERATED:n05-losses -->
 
 * Single host, warm page cache, one process per arm; no fleet, cloud, media or
