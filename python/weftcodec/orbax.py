@@ -41,6 +41,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from . import wcb
+from .artifact_api import ArtifactApiError, ArtifactClient
 from .dcp import (
     DEFAULT_CLI,
     DEFAULT_STAGING_BYTES,
@@ -799,6 +800,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         timeout=DEFAULT_TIMEOUT_SECONDS,
         materialization_receipt=None,
         replica="orbax",
+        artifact_api=True,
     ):
         staging_bytes = int(staging_bytes)
         if staging_bytes <= 0:
@@ -815,6 +817,8 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         self._service_cli = _default_cli(weftfs_cli)
         self._service = None
         self._service_root = None
+        self.artifact_api = bool(artifact_api)
+        self._artifact = None
         self._lock = threading.RLock()
         self._last_result = None
         self._materialization_report = None
@@ -844,6 +848,18 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
             )
             self._service_root = root
         return self._service
+
+    def _artifact_source(self, store, store_root, checkpoint):
+        """Route tensor restores through the one artifact API (T072)."""
+        if not self.artifact_api:
+            return store
+        root = os.path.abspath(os.fspath(store_root))
+        if self._artifact is None or getattr(self, "_artifact_root", None) != root:
+            self._artifact = ArtifactClient(
+                root, cli=self._service_cli, timeout=self.timeout
+            )
+            self._artifact_root = root
+        return self._artifact.wrapped(store, checkpoint=checkpoint)
 
     @property
     def stats(self):
@@ -1106,6 +1122,21 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
             service_factory=self._get_service,
         )
         _verify_metadata_manifest(metadata, show)
+        store = self._artifact_source(store, _pointer["store_root"], storage_name)
+        if self._artifact is not None:
+            plan = self._artifact.plan({"checkpoint": storage_name})
+            if not plan.get("complete"):
+                raise ExactnessError(
+                    "artifact plan for %r has missing dependencies: %r"
+                    % (storage_name, plan.get("missing"))
+                )
+            if os.environ.get("WEFT_ARTIFACT_VERIFY") == "1":
+                verification = self._artifact.verify({"checkpoint": storage_name})
+                if not verification.get("ok"):
+                    raise ExactnessError(
+                        "artifact verify refused checkpoint %r: %r"
+                        % (storage_name, verification.get("problems"))
+                    )
         staging_bound = (
             int(restore_args.staging_bytes)
             if restore_args.staging_bytes is not None
@@ -1175,7 +1206,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                         topology=None if shards is None else (shards, axis),
                         expected_size=int(leaf.element_bytes),
                     )
-                except ServiceError as exc:
+                except (ServiceError, ArtifactApiError) as exc:
                     raise self._translate(exc) from exc
                 if tuple(buffer.shape) != leaf.shape:
                     buffer.close()
@@ -1250,6 +1281,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
             **kwargs,
         )
         _verify_metadata_manifest(metadata, show)
+        store = self._artifact_source(store, _pointer["store_root"], storage_name)
         stored = metadata.by_path()
         if path not in stored:
             raise MissingLeaf(
@@ -1277,7 +1309,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                     topology=None if shards is None else (shards, axis),
                     expected_size=int(leaf.element_bytes),
                 )
-            except ServiceError as exc:
+            except (ServiceError, ArtifactApiError) as exc:
                 raise self._translate(exc) from exc
             if tuple(buffer.shape) != leaf.shape:
                 raise ExactnessError(
@@ -1656,12 +1688,20 @@ def _show_from_manifest(descriptor):
 
 
 def _translate_service_error(exc):
-    """Map a typed service error onto this adapter's error hierarchy."""
+    """Map a typed service or artifact-API error onto this error hierarchy."""
     message = str(exc)
-    class_name = getattr(exc, "class_name", "")
+    class_name = getattr(exc, "class_name", None) or getattr(
+        exc, "error_class", ""
+    )
     if class_name == "NotFound":
         return MetadataMissing(message)
-    if class_name in ("Corrupt", "Malformed", "NonCanonical", "DependencyMismatch"):
+    if class_name in (
+        "Corrupt",
+        "Malformed",
+        "NonCanonical",
+        "DependencyMismatch",
+        "SnapshotMissing",
+    ):
         return ExactnessError(message)
     if class_name in ("LimitExceeded", "BudgetExceeded"):
         return StagingLimitExceeded(message)

@@ -23,7 +23,7 @@ use weftcodec::{Region, SemanticPolicy};
 
 use weftfs::artifact_api::{
     ArtifactPlan, ArtifactRef, ArtifactResolution, ArtifactVerification, ContextPlane,
-    Materialized, PinnedView, SnapshotRef,
+    Materialized, SnapshotRef,
 };
 use weftfs::auth::Principal;
 use weftfs::azure::AzureConfig;
@@ -1549,6 +1549,12 @@ enum ArtifactCommand {
         /// Output directory, or `-` for one checkpoint tensor's raw bytes.
         #[arg(long)]
         out: String,
+        /// Verify one tensor through this many shards (sharded topology).
+        #[arg(long)]
+        topology: Option<u32>,
+        /// Shard axis for `--topology`.
+        #[arg(long, default_value_t = 0u32)]
+        axis: u32,
     },
     /// Verify the artifact and, with `--out`, the produced files.
     Verify {
@@ -1561,7 +1567,7 @@ enum ArtifactCommand {
     /// the artifact carries a KV provenance descriptor root).
     Pin {
         #[command(flatten)]
-        artifact: ArtifactSelectorArgs,
+        artifact: ArtifactTargetArgs,
         /// Pin snapshot; required (a provisional head pin would move).
         #[arg(long)]
         snapshot: String,
@@ -1573,7 +1579,7 @@ enum ArtifactCommand {
     /// Release a pin and rebind a durable retention binding to `ephemeral`.
     Release {
         #[command(flatten)]
-        artifact: ArtifactSelectorArgs,
+        artifact: ArtifactTargetArgs,
         #[arg(long)]
         snapshot: String,
     },
@@ -1585,6 +1591,24 @@ enum ArtifactCommand {
         #[arg(long)]
         snapshot: Option<String>,
     },
+}
+
+/// One artifact selector without a snapshot (pin/release name the snapshot
+/// separately, exactly once).
+#[derive(Args)]
+struct ArtifactTargetArgs {
+    /// Stored Context Root name or `weft://` URI.
+    #[arg(long)]
+    root: Option<String>,
+    /// `weft.checkpoint.v1` checkpoint name.
+    #[arg(long)]
+    checkpoint: Option<String>,
+    /// One tensor inside `--checkpoint`.
+    #[arg(long)]
+    tensor: Option<String>,
+    /// Exact store object id (64 hex digits).
+    #[arg(long = "object-id")]
+    object_id: Option<String>,
 }
 
 /// One artifact selector, shared by every verb.
@@ -7096,7 +7120,7 @@ fn run_artifact(
     policy: OpenPolicy,
     command: ArtifactCommand,
 ) -> Result<()> {
-    let mut plane_for = |mode: OpenMode| -> Result<ContextPlane> {
+    let plane_for = |mode: OpenMode| -> Result<ContextPlane> {
         let store = open_store(store_path, mode, policy.clone())?;
         Ok(ContextPlane::from_store(store, Principal::root()))
     };
@@ -7124,10 +7148,17 @@ fn run_artifact(
             let plan = plane.plan(view, &reference)?;
             emit_plan(json, &plan)
         }
-        ArtifactCommand::Materialize { artifact, out } => {
+        ArtifactCommand::Materialize {
+            artifact,
+            out,
+            topology,
+            axis,
+        } => {
             let plane = plane_for(OpenMode::ReadOnly)?;
             let view = resolve_view(&plane, &artifact)?;
             let reference = artifact_ref(&artifact)?;
+            let restore_topology = topology
+                .map(|shards| weftfs::checkpoint::RestoreTopology::Sharded { axis, shards });
             if out == "-" {
                 let (name, tensor) = match &reference {
                     ArtifactRef::Checkpoint {
@@ -7138,7 +7169,34 @@ fn run_artifact(
                         "`--out -` streams one checkpoint tensor; pass --checkpoint and --tensor",
                     )),
                 };
-                let materialized = plane.materialize_tensor(view, &name, &tensor)?;
+                let materialized = match &restore_topology {
+                    Some(topology) => {
+                        plane.materialize_tensor_with_topology(view, &name, &tensor, topology)?
+                    }
+                    None => plane.materialize_tensor(view, &name, &tensor)?,
+                };
+                if json {
+                    // Stdout carries the tensor bytes; the metadata a caller
+                    // needs for its report goes to stderr as one JSON line.
+                    eprintln!(
+                        "{}",
+                        json!({
+                            "ok": true,
+                            "checkpoint": materialized.checkpoint,
+                            "tensor": materialized.tensor,
+                            "bytes": materialized.bytes.len(),
+                            "sha256": hex::encode(materialized.report.sha256),
+                            "content_root": materialized.report.restored_content_root.to_hex(),
+                            "logical_root": materialized.report.full_logical_root.to_hex(),
+                            "topology_root": materialized.report.topology_root.map(|root| root.to_hex()),
+                            "shards_read": materialized.report.shards_read,
+                            "units_touched": materialized.report.units_touched,
+                            "snapshot": materialized.snapshot.to_hex(),
+                            "provisional": materialized.provisional,
+                            "plan_root": materialized.plan_root.to_hex(),
+                        })
+                    );
+                }
                 let mut stdout = std::io::stdout().lock();
                 stdout
                     .write_all(&materialized.bytes)
@@ -7147,6 +7205,12 @@ fn run_artifact(
                     .flush()
                     .map_err(|err| Error::io(format!("cannot flush tensor bytes: {err}")))?;
                 return Ok(());
+            }
+            if restore_topology.is_some() {
+                return Err(Error::invalid_argument(
+                    "--topology applies to the streaming single-tensor form (`--out -`); a \
+                     directory materialization writes each tensor in its stored layout",
+                ));
             }
             let out_path = PathBuf::from(&out);
             match plane.materialize(view, &reference, &out_path)? {
@@ -7181,6 +7245,7 @@ fn run_artifact(
                             "sha256": hex::encode(tensor.report.sha256),
                             "content_root": tensor.report.restored_content_root.to_hex(),
                             "logical_root": tensor.report.full_logical_root.to_hex(),
+                            "topology_root": tensor.report.topology_root.map(|root| root.to_hex()),
                             "snapshot": tensor.snapshot.to_hex(),
                             "provisional": tensor.provisional,
                             "plan_root": tensor.plan_root.to_hex(),
@@ -7340,42 +7405,77 @@ fn parse_snapshot_ref(text: &str) -> Result<SnapshotRef> {
     Ok(SnapshotRef::Name(text.to_owned()))
 }
 
-fn artifact_ref(args: &ArtifactSelectorArgs) -> Result<weftfs::artifact_api::ArtifactRef> {
-    let chosen = [
-        args.root.is_some(),
-        args.checkpoint.is_some(),
-        args.object_id.is_some(),
-    ]
-    .into_iter()
-    .filter(|chosen| *chosen)
-    .count();
+fn artifact_ref(args: &impl ArtifactSelector) -> Result<weftfs::artifact_api::ArtifactRef> {
+    let (root, checkpoint, tensor, object_id) = args.parts();
+    let chosen = [root.is_some(), checkpoint.is_some(), object_id.is_some()]
+        .into_iter()
+        .filter(|chosen| *chosen)
+        .count();
     if chosen != 1 {
         return Err(Error::invalid_argument(
             "exactly one of --root, --checkpoint or --object-id is required",
         ));
     }
-    if args.tensor.is_some() && args.checkpoint.is_none() {
+    if tensor.is_some() && checkpoint.is_none() {
         return Err(Error::invalid_argument("--tensor needs --checkpoint"));
     }
-    if let Some(root) = &args.root {
+    if let Some(root) = root {
         return Ok(weftfs::artifact_api::ArtifactRef::ContextRoot {
             name_or_uri: root.clone(),
         });
     }
-    if let Some(name) = &args.checkpoint {
+    if let Some(name) = checkpoint {
         return Ok(weftfs::artifact_api::ArtifactRef::Checkpoint {
             name: name.clone(),
-            tensor: args.tensor.clone(),
+            tensor: tensor.clone(),
         });
     }
-    let id = args
-        .object_id
+    let id = object_id
         .as_deref()
         .ok_or_else(|| Error::invalid_argument("missing object id"))?;
     Ok(weftfs::artifact_api::ArtifactRef::Object {
         id: Hash32::from_hex(id)
             .map_err(|_| Error::invalid_argument("object id is not a 32-byte hash"))?,
     })
+}
+
+/// The four selector fields shared by `ArtifactSelectorArgs` and
+/// `ArtifactTargetArgs`.
+trait ArtifactSelector {
+    fn parts(
+        &self,
+    ) -> (
+        &Option<String>,
+        &Option<String>,
+        &Option<String>,
+        &Option<String>,
+    );
+}
+
+impl ArtifactSelector for ArtifactSelectorArgs {
+    fn parts(
+        &self,
+    ) -> (
+        &Option<String>,
+        &Option<String>,
+        &Option<String>,
+        &Option<String>,
+    ) {
+        (&self.root, &self.checkpoint, &self.tensor, &self.object_id)
+    }
+}
+
+impl ArtifactSelector for ArtifactTargetArgs {
+    fn parts(
+        &self,
+    ) -> (
+        &Option<String>,
+        &Option<String>,
+        &Option<String>,
+        &Option<String>,
+    ) {
+        (&self.root, &self.checkpoint, &self.tensor, &self.object_id)
+    }
 }
 
 fn json_artifact_ref(value: &serde_json::Value) -> Result<weftfs::artifact_api::ArtifactRef> {

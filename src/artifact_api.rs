@@ -352,6 +352,27 @@ impl ContextPlane {
             view,
             checkpoint,
             tensor,
+            None,
+        )
+    }
+
+    /// Materialize a checkpoint tensor re-expressed under a physical topology
+    /// and verified against the same full logical root.
+    pub fn materialize_tensor_with_topology(
+        &self,
+        view: PinnedView,
+        checkpoint: &str,
+        tensor: &str,
+        topology: &crate::checkpoint::RestoreTopology,
+    ) -> Result<MaterializedTensor> {
+        materialize_tensor_in(
+            &self.store,
+            &self.principal,
+            &self.limits,
+            view,
+            checkpoint,
+            tensor,
+            Some(topology),
         )
     }
 
@@ -376,6 +397,7 @@ impl ContextPlane {
                 view,
                 name,
                 tensor,
+                None,
             )?));
         }
         let entries = match artifact {
@@ -850,6 +872,7 @@ fn materialize_tensor_in(
     view: PinnedView,
     checkpoint: &str,
     tensor: &str,
+    topology: Option<&crate::checkpoint::RestoreTopology>,
 ) -> Result<MaterializedTensor> {
     let plan = plan_artifact(
         store,
@@ -863,7 +886,7 @@ fn materialize_tensor_in(
     )?;
     require_complete_plan(&plan)?;
     let restored =
-        store.restore_named_tensor_at(Some(view.snapshot), checkpoint, tensor, None, None)?;
+        store.restore_named_tensor_at(Some(view.snapshot), checkpoint, tensor, None, topology)?;
     let entry = plan
         .entries
         .iter()

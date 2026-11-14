@@ -56,6 +56,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from . import varint, wcb, wcb_fast
+from .artifact_api import ArtifactApiError, ArtifactClient
 from .errors import LimitExceeded
 from .hashing import content_root
 from .limits import Limits
@@ -3275,6 +3276,7 @@ class WeftStorageReader(_StorageReaderBase):
         import_restored=False,
         materialization_receipt=None,
         replica="dcp",
+        artifact_api=True,
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
@@ -3291,6 +3293,19 @@ class WeftStorageReader(_StorageReaderBase):
             )
         self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
         self._store.requires_store()
+        # T072: resolve and restore through the one artifact API. The legacy
+        # service path is retained behind artifact_api=False so the
+        # equivalence court can compare the two byte-for-byte.
+        self.artifact_api = bool(artifact_api)
+        self._artifact = (
+            ArtifactClient(self.store_root, cli=weftfs_cli, timeout=timeout)
+            if self.artifact_api
+            else None
+        )
+        # A full artifact verification re-reads every tensor. It is exact but
+        # doubles read cost, so it is opt-in (WEFT_ARTIFACT_VERIFY=1) rather than
+        # paid on every metadata read.
+        self.artifact_verify = os.environ.get("WEFT_ARTIFACT_VERIFY") == "1"
         # Opt-in: after a read, bind every restored tensor to a store-derived
         # `weft.materialization.receipt.v1` and run the independent verifier.
         self.materialization_receipt = materialization_receipt or os.environ.get(
@@ -3419,6 +3434,37 @@ class WeftStorageReader(_StorageReaderBase):
             manifest_rows = {
                 row["name"]: row for row in manifest.get("tensors", [])
             }
+            if self._artifact is not None:
+                # The manifest recorded here and the identity the artifact API
+                # resolves must be the same; a disagreement is a typed refusal,
+                # never a best-effort pick.
+                resolution = self._artifact.resolve({"checkpoint": storage_name})
+                if resolution.get("manifest_root") != show["manifest_root"]:
+                    raise ExactnessError(
+                        "artifact API resolved manifest %s, checkpoint service reported %s"
+                        % (
+                            resolution.get("manifest_root"),
+                            show["manifest_root"],
+                        )
+                    )
+                manifest_rows = {
+                    row["name"]: {
+                        "name": row["name"],
+                        "content_root": row["content_root"],
+                        "shape": row.get("shape", []),
+                        "dtype": row.get("dtype"),
+                        "element_bytes": row["bytes"],
+                        "logical_root": row.get("logical_root"),
+                    }
+                    for row in resolution.get("entries", [])
+                }
+                if self.artifact_verify:
+                    verification = self._artifact.verify({"checkpoint": storage_name})
+                    if not verification.get("ok"):
+                        raise ExactnessError(
+                            "artifact verify refused checkpoint %r: %r"
+                            % (storage_name, verification.get("problems"))
+                        )
             metadata_path = "/checkpoints/%s/%s" % (storage_name, DCP_METADATA_NAME)
             blob = None
             exists, _size = service.stat_file(metadata_path)
@@ -3527,9 +3573,21 @@ class WeftStorageReader(_StorageReaderBase):
         if self._storage_name is None:
             raise DcpError("read_data() before read_metadata()")
         service = self._get_service()
+        source = (
+            self._artifact.wrapped(service, checkpoint=self._storage_name)
+            if self._artifact is not None
+            else service
+        )
         manifest_rows = {
             row["name"]: row for row in self._manifest["manifest"].get("tensors", [])
         }
+        if self._artifact is not None:
+            plan = self._artifact.plan({"checkpoint": self._storage_name})
+            if not plan.get("complete"):
+                raise ExactnessError(
+                    "artifact plan for %r has missing dependencies: %r"
+                    % (self._storage_name, plan.get("missing"))
+                )
         unknown = [entry for entry in entries if entry not in manifest_rows]
         if unknown:
             raise InvalidMetadata(
@@ -3542,13 +3600,13 @@ class WeftStorageReader(_StorageReaderBase):
             for entry in sorted(entries):
                 info = self._entry_info(entry)
                 try:
-                    buffer = service.restore_tensor(
+                    buffer = source.restore_tensor(
                         self._storage_name,
                         entry,
                         topology=topology_arg,
                         expected_size=int(manifest_rows[entry]["element_bytes"]),
                     )
-                except ServiceError as exc:
+                except (ServiceError, ArtifactApiError) as exc:
                     raise self._translate(exc) from exc
                 if tuple(buffer.shape) != tuple(info.shape):
                     buffer.close()
@@ -3582,13 +3640,18 @@ class WeftStorageReader(_StorageReaderBase):
 
     @staticmethod
     def _translate(exc):
-        """Map a typed service error onto the adapter's error hierarchy."""
+        """Map a typed service or artifact-API error onto the adapter hierarchy."""
         message = str(exc)
-        if exc.class_name == "NotFound":
+        class_name = getattr(exc, "class_name", None) or getattr(
+            exc, "error_class", None
+        )
+        if class_name == "NotFound":
             return MetadataMissing(message)
-        if exc.class_name in ("Corrupt", "Malformed", "NonCanonical"):
+        if class_name == "SnapshotMissing":
             return ExactnessError(message)
-        if exc.class_name in ("LimitExceeded", "BudgetExceeded"):
+        if class_name in ("Corrupt", "Malformed", "NonCanonical"):
+            return ExactnessError(message)
+        if class_name in ("LimitExceeded", "BudgetExceeded"):
             return StagingLimitExceeded(message)
         return DcpError(message)
 
