@@ -310,16 +310,30 @@ fn cross_domain_requests_are_refused() {
 }
 
 #[test]
-fn gc_is_refused_on_a_sharded_store() {
+fn gc_coordinates_domains_and_refuses_a_domain_bound_handle() {
     let (_dir, path) = new_store();
     let domain = register(&path, "train", DomainKind::CheckpointFamily);
     let mut store = open_domain(&path, domain);
+    // A domain-bound handle has no global head to record an epoch or an
+    // unlinked-record commit against, so it still refuses.
     let err = store.gc(false).unwrap_err();
     assert_eq!(err.class(), Class::UnsupportedVersion, "{err}");
-    // An admin (unbound) sharded handle refuses too.
+
+    // An unbound sharded handle now runs the coordinated T024 pass: every
+    // domain head is a root, and the unlinked-object-record removal it cannot
+    // publish is reported in `problems` rather than silently skipped.
     let mut admin = admin(&path);
-    let err = admin.gc(false).unwrap_err();
-    assert_eq!(err.class(), Class::UnsupportedVersion, "{err}");
+    let report = admin.gc(true).unwrap();
+    assert_eq!(report.domain_heads_marked, 1, "{report:?}");
+    assert!(
+        report
+            .problems
+            .iter()
+            .any(|problem| problem.contains("unlinked-object-record removal is skipped")),
+        "a sharded apply must report the skipped orphan removal: {:?}",
+        report.problems
+    );
+    assert!(admin.verify(true).unwrap().ok);
 }
 
 #[test]

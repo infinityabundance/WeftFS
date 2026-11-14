@@ -448,7 +448,11 @@ mod tests {
             3,
             50,
         );
-        assert_eq!(view.floor_ns, 10);
+        assert_eq!(
+            view.floor_ns,
+            10_i64.saturating_sub(ReservationView::CLOCK_SLACK_NS),
+            "the floor is the earliest live start minus the clock slack"
+        );
         assert_eq!(view.live.len(), 2);
         assert_eq!(view.expired, vec!["c".to_owned()]);
     }

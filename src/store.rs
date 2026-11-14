@@ -13312,7 +13312,9 @@ fn hex_bytes(bytes: &[u8]) -> String {
 fn describe_pre_value(value: &crate::mw2::PreValue) -> serde_json::Value {
     match value {
         crate::mw2::PreValue::Absent => serde_json::json!({"kind": "absent"}),
-        crate::mw2::PreValue::Hash(hash) => serde_json::json!({"kind": "hash", "hash": hash.to_hex()}),
+        crate::mw2::PreValue::Hash(hash) => {
+            serde_json::json!({"kind": "hash", "hash": hash.to_hex()})
+        }
         crate::mw2::PreValue::Entry(record) => serde_json::json!({
             "kind": "entry",
             "entry": record.id.to_hex(),
