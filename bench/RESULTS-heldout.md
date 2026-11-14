@@ -288,6 +288,18 @@ What the table says:
 - The Pareto is descriptive: it was added to the contract after these two
   families were measured, and the contract says so.
 
+### 8.1 Revision disclosure
+
+The receipts name `523c51d` as the revision at run time, because the harness and
+courts were still uncommitted in the working tree when they ran. The harness
+sources were committed unchanged immediately afterwards (`8e23594`), and no
+edit to `examples/heldout_planner.rs`, `examples/two_stage_oracle.rs`,
+`bench/scripts/comparator_court.py` or the court scripts was made after the
+published measurements. The receipts' log digests and the committed scripts can
+be compared to confirm that; the alternative — re-running the 7B held-out pass
+to obtain a receipt whose `revision` equals its own commit — would have been a
+second held-out pass, which the contract forbids.
+
 ## 9. What is not claimed
 
 One host, one container shape (`3g / 4 cpus / 1024 pids`), warm host page cache
