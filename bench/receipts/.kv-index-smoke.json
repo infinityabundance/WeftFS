@@ -1,0 +1,243 @@
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "crash": [
+    {
+      "child_aborted": true,
+      "child_exit_success": false,
+      "child_ms": 589.071,
+      "entries_after_crash": 0,
+      "fault_point": "after-base-segment",
+      "index_present_after_crash": false,
+      "index_valid_after_crash": false,
+      "mismatches": 0,
+      "probes": 3,
+      "rebuild_bytes": 304064,
+      "rebuild_entries": 2000,
+      "rebuild_valid": true
+    },
+    {
+      "child_aborted": true,
+      "child_exit_success": false,
+      "child_ms": 582.594,
+      "entries_after_crash": 2000,
+      "fault_point": "after-root",
+      "index_present_after_crash": true,
+      "index_valid_after_crash": true,
+      "mismatches": 0,
+      "probes": 3,
+      "rebuild_bytes": 304064,
+      "rebuild_entries": 2000,
+      "rebuild_valid": true
+    }
+  ],
+  "end_to_end_ceiling": null,
+  "entry_bytes": 152,
+  "fixture": {
+    "bytes_per_page_all_layers": 16,
+    "dtype": "bf16",
+    "head_dim": 1,
+    "kv_heads": 1,
+    "layers": 1,
+    "model": "synthetic-tiny",
+    "page_rows": 8,
+    "population": "batch of 256 prefixes per commit",
+    "tokens_per_prefix": "32..=96 (4..=12 page-aligned pages)"
+  },
+  "index_only": [
+    {
+      "accumulator": "30aaff8cd9b7c005ab723d20717e1f4a7daa54e47633c6616fcf4d42e4025678",
+      "build_ms": 0.016,
+      "bytes_per_entry": 152.064,
+      "class": "index-only",
+      "decode_ms": 0.048,
+      "encode_ms": 0.07,
+      "n": 1000,
+      "note": "synthetic entries; no store, no records, no page objects",
+      "peak_rss_kib": 198892,
+      "probe": {
+        "max_us": 0.24,
+        "mean_us": 0.115,
+        "min_us": 0.1,
+        "p50_ns": 111,
+        "p50_us": 0.111,
+        "p95_ns": 121,
+        "p95_us": 0.121,
+        "p99_ns": 171,
+        "p99_us": 0.171,
+        "samples": 200
+      },
+      "segment_bytes": 152064
+    }
+  ],
+  "index_only_ceiling": null,
+  "label": "KV prefix index court: end-to-end store rows and index-only scaling rows; no inference engine",
+  "ladder": [
+    {
+      "class": "end-to-end",
+      "commits": 5,
+      "first_indexed_lookup_ms": 0.397,
+      "index_build_ms": 29.304,
+      "index_build_reported_ms": 29.128,
+      "index_bytes": 152064,
+      "index_bytes_per_prefix": 152.064,
+      "index_segments": 1,
+      "lookup_indexed": {
+        "max_us": 378.466,
+        "mean_us": 80.015,
+        "min_us": 40.545,
+        "p50_ns": 73197,
+        "p50_us": 73.197,
+        "p95_ns": 119093,
+        "p95_us": 119.093,
+        "p99_ns": 166831,
+        "p99_us": 166.831,
+        "samples": 200
+      },
+      "lookup_indexed_warm": {
+        "max_us": 162.954,
+        "mean_us": 85.125,
+        "min_us": 38.322,
+        "p50_ns": 77244,
+        "p50_us": 77.244,
+        "p95_ns": 121517,
+        "p95_us": 121.517,
+        "p99_ns": 162954,
+        "p99_us": 162.954,
+        "samples": 50
+      },
+      "lookup_scan": {
+        "max_us": 36217.896,
+        "mean_us": 29835.857,
+        "min_us": 25363.244,
+        "p50_ns": 29354390,
+        "p50_us": 29354.39,
+        "p95_ns": 35055948,
+        "p95_us": 35055.948,
+        "p99_ns": 35958082,
+        "p99_us": 35958.082,
+        "samples": 200
+      },
+      "mismatches": 0,
+      "n": 1000,
+      "peak_rss_kib": 61428,
+      "populate_ms": 610.908,
+      "prefixes": 1000,
+      "reopen_ms": 164.411,
+      "stats": {
+        "deltas_appended": 0,
+        "fallbacks": 0,
+        "loads": 1,
+        "lookups": 51,
+        "notes": [],
+        "probes": 404,
+        "rebuilds": 0,
+        "rejected_candidates": 0,
+        "rejects": 0
+      },
+      "store_bytes": 23824421,
+      "store_files": 18008
+    },
+    {
+      "class": "end-to-end",
+      "commits": 21,
+      "first_indexed_lookup_ms": 1.598,
+      "index_build_ms": 139.387,
+      "index_build_reported_ms": 138.124,
+      "index_bytes": 760064,
+      "index_bytes_per_prefix": 152.013,
+      "index_segments": 1,
+      "lookup_indexed": {
+        "max_us": 1670.467,
+        "mean_us": 111.306,
+        "min_us": 53.089,
+        "p50_ns": 94045,
+        "p50_us": 94.045,
+        "p95_ns": 167422,
+        "p95_us": 167.422,
+        "p99_ns": 283098,
+        "p99_us": 283.098,
+        "samples": 200
+      },
+      "lookup_indexed_warm": {
+        "max_us": 162.784,
+        "mean_us": 102.33,
+        "min_us": 37.92,
+        "p50_ns": 103544,
+        "p50_us": 103.544,
+        "p95_ns": 146093,
+        "p95_us": 146.093,
+        "p99_ns": 162784,
+        "p99_us": 162.784,
+        "samples": 50
+      },
+      "lookup_scan": {
+        "max_us": 188934.082,
+        "mean_us": 156822.883,
+        "min_us": 131351.821,
+        "p50_ns": 155297020,
+        "p50_us": 155297.02,
+        "p95_ns": 184704148,
+        "p95_us": 184704.148,
+        "p99_ns": 188131122,
+        "p99_us": 188131.122,
+        "samples": 200
+      },
+      "mismatches": 0,
+      "n": 5000,
+      "peak_rss_kib": 198892,
+      "populate_ms": 3351.525,
+      "prefixes": 5000,
+      "reopen_ms": 702.173,
+      "stats": {
+        "deltas_appended": 0,
+        "fallbacks": 0,
+        "loads": 1,
+        "lookups": 51,
+        "notes": [],
+        "probes": 400,
+        "rebuilds": 0,
+        "rejected_candidates": 0,
+        "rejects": 0
+      },
+      "store_bytes": 118980291,
+      "store_files": 90029
+    }
+  ],
+  "non_claims": [
+    "no inference engine ran; this is a storage index court",
+    "index-only rows are synthetic and are not end-to-end store results",
+    "one host, one court, warm page cache; no fleet claim",
+    "scan timings are the oracle on the same fixture, not a baseline product"
+  ],
+  "peak_rss_kib": 198892,
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "117fb30eb2b73b59adcad77c7d9d9d9da77a694e",
+    "WeftFS-Go": "76648a414908caad0c4f0d972e2c8433e5a73826"
+  },
+  "revocation": {
+    "entries_after": 1968,
+    "entries_before": 2000,
+    "entry_delta": 32,
+    "index_bytes_after": 310976,
+    "index_bytes_before": 304064,
+    "index_valid_after": false,
+    "prefixes": 2000,
+    "revocation_epoch": 200,
+    "revoke_all_ms": 592.729,
+    "revoke_ms_each": 2.964,
+    "revoked": 200,
+    "revoked_returns_across_both_paths": 0,
+    "unrevoked_neighbour_reusable": true
+  },
+  "schema": "weft.kv.index.bench.v1",
+  "wall_ms": 59096.053
+}

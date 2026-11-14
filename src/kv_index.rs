@@ -233,6 +233,7 @@ impl KvIndexSegment {
     pub fn encode(kind: SegmentKind, generation: u64, entries: &[KvIndexEntry]) -> Result<Vec<u8>> {
         let mut sorted: Vec<&KvIndexEntry> = entries.iter().collect();
         sorted.sort_by_key(|entry| entry.key());
+        sorted.dedup_by_key(|entry| entry.key());
         let mut body = Vec::with_capacity(
             KV_INDEX_HEADER_BYTES + sorted.len() * KV_INDEX_ENTRY_BYTES + KV_INDEX_TRAILER_BYTES,
         );
@@ -678,6 +679,8 @@ pub struct KvIndexBuildReport {
     pub segments: u64,
     pub bytes: u64,
     pub skipped_partial: u64,
+    /// Prefixes skipped because they are revoked and can never be returned.
+    pub skipped_revoked: u64,
     pub removed_segments: u64,
     pub build_ms: f64,
     pub revocation_epoch: u64,
@@ -899,10 +902,20 @@ impl Store {
         let generation = self.generation();
         let head = self.head();
         let revocation_epoch = self.kv_revocation_epoch()?;
+        let revoked = kv_revocation_ids(self)?;
         let mut entries = Vec::with_capacity(prefixes.len());
         let mut identities = std::collections::BTreeSet::new();
         let mut skipped_partial = 0u64;
+        let mut skipped_revoked = 0u64;
         for (_, object_id, record) in &prefixes {
+            let prefix_id = record.id()?;
+            if revoked.contains(&prefix_id) {
+                // A revoked prefix can never be returned, so it is not
+                // indexed: revocation shrinks the index instead of filtering it
+                // on every lookup.
+                skipped_revoked += 1;
+                continue;
+            }
             if record.position_end % record.page_rows != 0 {
                 skipped_partial += 1;
                 continue;
@@ -913,7 +926,7 @@ impl Store {
             entries.push(KvIndexEntry {
                 identity_root,
                 chain_root: record.token_chain_root,
-                record_prefix_id: record.id()?,
+                record_prefix_id: prefix_id,
                 record_object_id: *object_id,
                 position_end: record.position_end,
                 page_count: record.page_count,
@@ -974,6 +987,7 @@ impl Store {
             segments: 1,
             bytes: base.len() as u64,
             skipped_partial,
+            skipped_revoked,
             removed_segments: removed,
             build_ms: started.elapsed().as_secs_f64() * 1000.0,
             revocation_epoch,
@@ -1158,6 +1172,67 @@ impl Store {
         }
         // The entry vector is sorted before encoding, so one boundary key can
         // only appear once; a replace is (removed=1, added=1).
+        self.kv_index_append_delta(generation, previous_head, entries, added, removed);
+    }
+
+    /// Record a whole batch write (many prefixes, one commit) as one delta.
+    pub(crate) fn kv_index_note_batch(
+        &self,
+        generation: u64,
+        previous_head: Hash32,
+        puts: &[(Option<(&KvPrefixRecord, Hash32)>, &KvPrefixRecord, Hash32)],
+    ) {
+        type Slot = (Option<KvIndexEntry>, Option<KvIndexEntry>);
+        let mut slots: BTreeMap<(Hash32, Hash32), Slot> = BTreeMap::new();
+        let indexed = |record: &KvPrefixRecord, object: Hash32| -> Option<KvIndexEntry> {
+            if record.position_end % record.page_rows != 0 {
+                return None;
+            }
+            Some(KvIndexEntry {
+                identity_root: KvPrefixIdentity::of_record(record).root(),
+                chain_root: record.token_chain_root,
+                record_prefix_id: record.id().ok()?,
+                record_object_id: object,
+                position_end: record.position_end,
+                page_count: record.page_count,
+                kind: KvIndexEntryKind::Live,
+            })
+        };
+        for (previous, record, object_id) in puts {
+            if let Some((previous, previous_object)) = previous {
+                if let Some(entry) = indexed(previous, *previous_object) {
+                    let key = entry.key();
+                    slots.entry(key).or_default().0 = Some(entry);
+                }
+            }
+            if let Some(entry) = indexed(record, *object_id) {
+                let key = entry.key();
+                slots.entry(key).or_default().1 = Some(entry);
+            }
+        }
+        let mut entries = Vec::new();
+        let mut added = 0u64;
+        let mut removed = 0u64;
+        for (_, (old, new)) in slots {
+            match (old, new) {
+                (Some(old), Some(new)) if old == new => {}
+                (Some(old), Some(new)) => {
+                    entries.push(old);
+                    entries.push(new);
+                    removed += 1;
+                    added += 1;
+                }
+                (Some(old), None) => {
+                    entries.push(old);
+                    removed += 1;
+                }
+                (None, Some(new)) => {
+                    entries.push(new);
+                    added += 1;
+                }
+                (None, None) => {}
+            }
+        }
         self.kv_index_append_delta(generation, previous_head, entries, added, removed);
     }
 

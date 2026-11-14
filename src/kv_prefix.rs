@@ -583,6 +583,25 @@ pub enum KvLookup {
     Recompute { reasons: Vec<String>, scanned: u64 },
 }
 
+/// One item of a batch prefix write.
+pub struct KvPrefixBatchItem<'a> {
+    pub name: &'a str,
+    pub spec: &'a KvPrefixSpec,
+    pub tokens: &'a [u64],
+    pub parent_name: Option<&'a str>,
+    pub new_page_bytes: &'a [Vec<Vec<u8>>],
+}
+
+/// A prefix write staged inside an open group.
+pub(crate) struct KvPrefixWriteInGroup {
+    pub record: KvPrefixRecord,
+    pub prefix_id: Hash32,
+    pub record_object_id: Hash32,
+    pub new_pages: u64,
+    /// The record the name held before (with its object id), if any.
+    pub previous: Option<(KvPrefixRecord, Hash32)>,
+}
+
 /// Result of a prefix put.
 #[derive(Clone, Debug)]
 pub struct KvPrefixWrite {
@@ -950,9 +969,13 @@ impl Store {
         )
     }
 
-    /// Deterministic form of [`Store::kv_prefix_put`] for fixtures and courts.
+    /// The body of a prefix write, executed **inside an open group**.
+    ///
+    /// It never begins or commits a group: the caller owns the durability
+    /// boundary, which is what lets `kv_prefix_put_batch_seeded` publish many
+    /// prefixes with one commit and one barrier.
     #[allow(clippy::too_many_arguments)]
-    pub fn kv_prefix_put_seeded(
+    fn kv_prefix_write_in_group(
         &mut self,
         name: &str,
         spec: &KvPrefixSpec,
@@ -962,7 +985,7 @@ impl Store {
         uid: u64,
         gid: u64,
         seed: &[u8],
-    ) -> Result<KvPrefixWrite> {
+    ) -> Result<KvPrefixWriteInGroup> {
         self.require_writable()?;
         if name.is_empty() || name.contains('/') || name.contains('\0') {
             return Err(Error::invalid_argument(
@@ -1122,162 +1145,259 @@ impl Store {
             None => None,
         };
 
-        // Everything below is one commit: no partially visible prefix.
+        // One write inside the caller's group: no partially visible prefix.
+        let root = self.resolve_path("/")?;
+        let kv = ensure_dir(self, root, KV_DIR, uid, gid)?;
+        let prefix_dir = ensure_dir(self, kv, KV_PREFIX_DIR, uid, gid)?;
+        let page_dir = ensure_dir(self, kv, KV_PAGE_DIR, uid, gid)?;
+
+        let mut layers: Vec<Vec<Hash32>> = Vec::with_capacity(spec.layer_count as usize);
+        let mut stored_bytes = 0u64;
+        for layer in 0..spec.layer_count {
+            let mut ids: Vec<Hash32> = Vec::with_capacity(page_count as usize);
+            for index in 0..parent_pages {
+                ids.push(parent.as_ref().unwrap().pages[layer as usize][index as usize]);
+            }
+            for offset in 0..new_pages_per_layer as usize {
+                let index = parent_pages + offset as u64;
+                let payload = &new_page_bytes[layer as usize][offset];
+                let input = KvCacheInput {
+                    model: spec.model.clone(),
+                    layer,
+                    session: String::new(),
+                    page_index: index,
+                    page_count,
+                    seq_start: index * spec.page_rows,
+                    seq_end: position_end.min((index + 1) * spec.page_rows),
+                    dtype,
+                    head_count: spec.head_count,
+                    head_dim: spec.head_dim,
+                };
+                let descriptor =
+                    KvDescriptor::from_input(&input, &spec.tenant, payload.len() as u64)?;
+                let descriptor_id = descriptor.id()?;
+                // `stored_page_bytes` is the logical size of the pages this
+                // prefix adds. It is a property of the prefix, not of whether
+                // the page object already existed, so a repeated put produces
+                // the same record id.
+                stored_bytes = stored_bytes.saturating_add(payload.len() as u64);
+                // The page name binds both the descriptor and the exact payload:
+                // two prefixes whose pages share metadata but not bytes must
+                // never alias one object.
+                let page_name = format!(
+                    "p-{}-{}",
+                    descriptor_id.to_hex(),
+                    identity::h(crate::identity::CHUNK_DOMAIN, payload).to_hex()
+                );
+                // Content-addressed reuse: the same descriptor *and* the same
+                // decoded bytes is the same page object. Different bytes under
+                // the same descriptor is a conflict, never a silent share.
+                let object_id = match self.lookup(page_dir, page_name.as_bytes()) {
+                    Ok(existing_id) => {
+                        let existing_bytes = self.read_object(existing_id)?;
+                        let frame = Frame::parse(&existing_bytes, &Limits::default())
+                            .map_err(Error::from)?;
+                        let decoded = kv_cache::decode_kv_page(&frame, &Limits::default())
+                            .map_err(Error::from)?;
+                        if decoded.bytes != *payload {
+                            return Err(Error::conflict(format!(
+                                "kv page `{page_name}` already exists with different bytes"
+                            )));
+                        }
+                        existing_id
+                    }
+                    Err(err) if err.class() == Class::NotFound => {
+                        // The page ObjectId seed is derived from the page
+                        // descriptor id, so two different descriptors can never
+                        // collide on one ObjectId even at the same layer/index.
+                        let page_seed = identity::h("weft/kv/page-seed/v1", &{
+                            let mut data =
+                                Vec::with_capacity(seed.len() + descriptor_id.as_bytes().len());
+                            data.extend_from_slice(seed);
+                            data.extend_from_slice(descriptor_id.as_bytes());
+                            data.extend_from_slice(
+                                identity::h(crate::identity::CHUNK_DOMAIN, payload).as_bytes(),
+                            );
+                            data
+                        });
+                        let written = self.write_kv_page_seeded(
+                            page_dir,
+                            page_name.as_bytes(),
+                            &spec.tenant,
+                            &input,
+                            payload,
+                            uid,
+                            gid,
+                            page_seed.as_bytes(),
+                        )?;
+                        written.object_id
+                    }
+                    Err(err) => return Err(err),
+                };
+                ids.push(object_id);
+            }
+            layers.push(ids);
+        }
+
+        let reused = parent
+            .as_ref()
+            .map(|record| record.page_count * u64::from(record.layer_count))
+            .unwrap_or(0);
+        let record = record_for_id(layers, stored_bytes, reused)?;
+        record.validate_shape()?;
+        let prefix_id = record.id()?;
+        let bytes = record.canonical_bytes()?;
+        let mut attrs = BTreeMap::new();
+        attrs.insert(ATTR_KV_PREFIX.to_owned(), Value::Str(prefix_id.to_hex()));
+        attrs.insert(ATTR_KV_PREFIX_PINNED.to_owned(), Value::Bool(spec.pinned));
+        attrs.insert(
+            ATTR_KV_PREFIX_TENANT.to_owned(),
+            Value::Str(spec.tenant.clone()),
+        );
+        attrs.insert(
+            ATTR_KV_PREFIX_MODEL.to_owned(),
+            Value::Str(spec.model.clone()),
+        );
+        attrs.insert(ATTR_KV_PREFIX_TOKENS.to_owned(), Value::U64(position_end));
+        if existing.is_some() {
+            self.unlink(prefix_dir, name.as_bytes())?;
+        }
+        let record_seed = identity::h("weft/kv/prefix-seed/v1", &{
+            let mut data = Vec::with_capacity(seed.len() + prefix_id.as_bytes().len());
+            data.extend_from_slice(seed);
+            data.extend_from_slice(prefix_id.as_bytes());
+            data
+        });
+        let record_object_id = self.create_file_seeded(
+            prefix_dir,
+            name.as_bytes(),
+            &bytes,
+            0o644,
+            uid,
+            gid,
+            attrs,
+            record_seed.as_bytes(),
+        )?;
+        Ok(KvPrefixWriteInGroup {
+            record,
+            prefix_id,
+            record_object_id,
+            new_pages: new_pages_per_layer * u64::from(spec.layer_count),
+            previous: existing.zip(existing_object),
+        })
+    }
+
+    /// Deterministic form of [`Store::kv_prefix_put`] for fixtures and courts.
+    #[allow(clippy::too_many_arguments)]
+    pub fn kv_prefix_put_seeded(
+        &mut self,
+        name: &str,
+        spec: &KvPrefixSpec,
+        tokens: &[u64],
+        parent_name: Option<&str>,
+        new_page_bytes: &[Vec<Vec<u8>>],
+        uid: u64,
+        gid: u64,
+        seed: &[u8],
+    ) -> Result<KvPrefixWrite> {
+        self.require_writable()?;
         let previous_head = self.head();
-        let ((record, prefix_id, record_object_id), commit) = self.group(|store| {
-            let root = store.resolve_path("/")?;
-            let kv = ensure_dir(store, root, KV_DIR, uid, gid)?;
-            let prefix_dir = ensure_dir(store, kv, KV_PREFIX_DIR, uid, gid)?;
-            let page_dir = ensure_dir(store, kv, KV_PAGE_DIR, uid, gid)?;
-
-            let mut layers: Vec<Vec<Hash32>> = Vec::with_capacity(spec.layer_count as usize);
-            let mut stored_bytes = 0u64;
-            for layer in 0..spec.layer_count {
-                let mut ids: Vec<Hash32> = Vec::with_capacity(page_count as usize);
-                for index in 0..parent_pages {
-                    ids.push(parent.as_ref().unwrap().pages[layer as usize][index as usize]);
-                }
-                for offset in 0..new_pages_per_layer as usize {
-                    let index = parent_pages + offset as u64;
-                    let payload = &new_page_bytes[layer as usize][offset];
-                    let input = KvCacheInput {
-                        model: spec.model.clone(),
-                        layer,
-                        session: String::new(),
-                        page_index: index,
-                        page_count,
-                        seq_start: index * spec.page_rows,
-                        seq_end: position_end.min((index + 1) * spec.page_rows),
-                        dtype,
-                        head_count: spec.head_count,
-                        head_dim: spec.head_dim,
-                    };
-                    let descriptor =
-                        KvDescriptor::from_input(&input, &spec.tenant, payload.len() as u64)?;
-                    let descriptor_id = descriptor.id()?;
-                    // `stored_page_bytes` is the logical size of the pages this
-                    // prefix adds. It is a property of the prefix, not of whether
-                    // the page object already existed, so a repeated put produces
-                    // the same record id.
-                    stored_bytes = stored_bytes.saturating_add(payload.len() as u64);
-                    // The page name binds both the descriptor and the exact
-                    // payload: two prefixes whose pages share metadata but not
-                    // bytes must never alias one object.
-                    let page_name = format!(
-                        "p-{}-{}",
-                        descriptor_id.to_hex(),
-                        identity::h(crate::identity::CHUNK_DOMAIN, payload).to_hex()
-                    );
-                    // Content-addressed reuse: the same descriptor *and* the same
-                    // decoded bytes is the same page object. Different bytes under
-                    // the same descriptor is a conflict, never a silent share.
-                    let object_id = match store.lookup(page_dir, page_name.as_bytes()) {
-                        Ok(existing_id) => {
-                            let existing_bytes = store.read_object(existing_id)?;
-                            let frame = Frame::parse(&existing_bytes, &Limits::default())
-                                .map_err(Error::from)?;
-                            let decoded = kv_cache::decode_kv_page(&frame, &Limits::default())
-                                .map_err(Error::from)?;
-                            if decoded.bytes != *payload {
-                                return Err(Error::conflict(format!(
-                                    "kv page `{page_name}` already exists with different bytes"
-                                )));
-                            }
-                            existing_id
-                        }
-                        Err(err) if err.class() == Class::NotFound => {
-                            // The page ObjectId seed is derived from the page
-                            // descriptor id, so two different descriptors can never
-                            // collide on one ObjectId even at the same layer/index.
-                            let page_seed = identity::h("weft/kv/page-seed/v1", &{
-                                let mut data =
-                                    Vec::with_capacity(seed.len() + descriptor_id.as_bytes().len());
-                                data.extend_from_slice(seed);
-                                data.extend_from_slice(descriptor_id.as_bytes());
-                                data.extend_from_slice(
-                                    identity::h(crate::identity::CHUNK_DOMAIN, payload).as_bytes(),
-                                );
-                                data
-                            });
-                            let written = store.write_kv_page_seeded(
-                                page_dir,
-                                page_name.as_bytes(),
-                                &spec.tenant,
-                                &input,
-                                payload,
-                                uid,
-                                gid,
-                                page_seed.as_bytes(),
-                            )?;
-                            written.object_id
-                        }
-                        Err(err) => return Err(err),
-                    };
-                    ids.push(object_id);
-                }
-                layers.push(ids);
-            }
-
-            let reused = parent
-                .as_ref()
-                .map(|record| record.page_count * u64::from(record.layer_count))
-                .unwrap_or(0);
-            let record = record_for_id(layers, stored_bytes, reused)?;
-            record.validate_shape()?;
-            let prefix_id = record.id()?;
-            let bytes = record.canonical_bytes()?;
-            let mut attrs = BTreeMap::new();
-            attrs.insert(ATTR_KV_PREFIX.to_owned(), Value::Str(prefix_id.to_hex()));
-            attrs.insert(ATTR_KV_PREFIX_PINNED.to_owned(), Value::Bool(spec.pinned));
-            attrs.insert(
-                ATTR_KV_PREFIX_TENANT.to_owned(),
-                Value::Str(spec.tenant.clone()),
-            );
-            attrs.insert(
-                ATTR_KV_PREFIX_MODEL.to_owned(),
-                Value::Str(spec.model.clone()),
-            );
-            attrs.insert(ATTR_KV_PREFIX_TOKENS.to_owned(), Value::U64(position_end));
-            if existing.is_some() {
-                store.unlink(prefix_dir, name.as_bytes())?;
-            }
-            let record_seed = identity::h("weft/kv/prefix-seed/v1", &{
-                let mut data = Vec::with_capacity(seed.len() + prefix_id.as_bytes().len());
-                data.extend_from_slice(seed);
-                data.extend_from_slice(prefix_id.as_bytes());
-                data
-            });
-            let record_object_id = store.create_file_seeded(
-                prefix_dir,
-                name.as_bytes(),
-                &bytes,
-                0o644,
+        let (write, commit) = self.group(|store| {
+            store.kv_prefix_write_in_group(
+                name,
+                spec,
+                tokens,
+                parent_name,
+                new_page_bytes,
                 uid,
                 gid,
-                attrs,
-                record_seed.as_bytes(),
-            )?;
-            Ok((record, prefix_id, record_object_id))
+                seed,
+            )
         })?;
         // After the commit: a one-generation delta segment. A failure here only
         // leaves the index stale; it can never fail or alter the commit.
         self.kv_index_note_put(
             self.generation(),
             previous_head,
-            existing
+            write
+                .previous
                 .as_ref()
-                .zip(existing_object)
-                .map(|(record, object)| (record, object)),
-            &record,
-            record_object_id,
+                .map(|(record, object)| (record, *object)),
+            &write.record,
+            write.record_object_id,
         );
         Ok(KvPrefixWrite {
-            prefix_id,
-            record,
+            prefix_id: write.prefix_id,
+            record: write.record,
             commit,
-            new_pages: new_pages_per_layer * u64::from(spec.layer_count),
-            record_object_id,
+            new_pages: write.new_pages,
+            record_object_id: write.record_object_id,
         })
+    }
+
+    /// Write **many** prefixes in one commit (T065 batching).
+    ///
+    /// The pages and records of every item are staged in memory and published
+    /// by one group commit: one commit record, one superblock slot, one
+    /// durability barrier, and therefore one generation. A failure anywhere
+    /// publishes nothing (the group aborts), so a batch is all-or-nothing.
+    ///
+    /// This amortises the per-prefix publication cost, not the per-page
+    /// descriptor: every page is still its own frozen mode-12 object. Page
+    /// payloads are validated exactly as in the single-prefix path.
+    pub fn kv_prefix_put_batch_seeded(
+        &mut self,
+        items: &[KvPrefixBatchItem<'_>],
+        uid: u64,
+        gid: u64,
+        seed: &[u8],
+    ) -> Result<Vec<KvPrefixWrite>> {
+        self.require_writable()?;
+        if items.is_empty() {
+            return Ok(Vec::new());
+        }
+        let previous_head = self.head();
+        let (writes, commit) = self.group(|store| {
+            let mut writes = Vec::with_capacity(items.len());
+            for item in items {
+                writes.push(store.kv_prefix_write_in_group(
+                    item.name,
+                    item.spec,
+                    item.tokens,
+                    item.parent_name,
+                    item.new_page_bytes,
+                    uid,
+                    gid,
+                    seed,
+                )?);
+            }
+            Ok(writes)
+        })?;
+        // One combined index delta for the whole generation.
+        let puts: Vec<_> = writes
+            .iter()
+            .map(|write| {
+                (
+                    write
+                        .previous
+                        .as_ref()
+                        .map(|(record, object)| (record, *object)),
+                    &write.record,
+                    write.record_object_id,
+                )
+            })
+            .collect();
+        self.kv_index_note_batch(self.generation(), previous_head, &puts);
+        Ok(writes
+            .into_iter()
+            .map(|write| KvPrefixWrite {
+                prefix_id: write.prefix_id,
+                record: write.record,
+                commit,
+                new_pages: write.new_pages,
+                record_object_id: write.record_object_id,
+            })
+            .collect())
     }
 
     /// Load a prefix record by name.

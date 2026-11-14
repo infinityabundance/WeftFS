@@ -496,3 +496,78 @@ fn identity_root_covers_every_compatibility_field() {
     changed.page_rows = 16;
     assert_ne!(changed.root(), root);
 }
+
+#[test]
+fn batch_put_publishes_one_commit_and_is_all_or_nothing() {
+    let dir = tempdir().unwrap();
+    let mut store = Store::init(dir.path(), options()).unwrap();
+    let generation_before = store.generation();
+    let spec = spec();
+    let mut token_sets: Vec<Vec<u64>> = Vec::new();
+    let mut payloads: Vec<Vec<Vec<Vec<u8>>>> = Vec::new();
+    for index in 0..25u64 {
+        let tokens = kv_token_ids(700 + index, 8 + 8 * (index % 4));
+        payloads.push(payload(tokens.len() as u64, 0, 3000 + index));
+        token_sets.push(tokens);
+    }
+    let items: Vec<weftfs::kv_prefix::KvPrefixBatchItem<'_>> = token_sets
+        .iter()
+        .zip(payloads.iter())
+        .enumerate()
+        .map(|(index, (tokens, pages))| weftfs::kv_prefix::KvPrefixBatchItem {
+            name: Box::leak(format!("batch-{index:02}").into_boxed_str()),
+            spec: &spec,
+            tokens,
+            parent_name: None,
+            new_page_bytes: pages,
+        })
+        .collect();
+    let writes = store
+        .kv_prefix_put_batch_seeded(&items, 0, 0, &[0x5A; 32])
+        .unwrap();
+    assert_eq!(writes.len(), 25);
+    assert_eq!(store.generation(), generation_before + 1, "one commit");
+    let heads: std::collections::BTreeSet<Hash32> = writes.iter().map(|w| w.commit).collect();
+    assert_eq!(heads.len(), 1, "every write names the same commit");
+    assert_eq!(store.kv_prefix_list().unwrap().len(), 25);
+    store.kv_index_build().unwrap();
+    assert_eq!(store.kv_index_status().unwrap().entries, 25);
+    for tokens in &token_sets {
+        assert!(matches!(
+            store.kv_prefix_lookup_indexed(&request(tokens)).unwrap(),
+            KvLookup::Reusable { .. }
+        ));
+    }
+
+    // A failing item aborts the whole batch: nothing is published.
+    let generation = store.generation();
+    let bad_tokens = kv_token_ids(9999, 16);
+    let mut bad_pages = payload(16, 0, 1234);
+    bad_pages[0][0].push(0); // wrong page length
+    let good_tokens = kv_token_ids(9998, 16);
+    let good_pages = payload(16, 0, 1235);
+    let failing = vec![
+        weftfs::kv_prefix::KvPrefixBatchItem {
+            name: "good-in-failing-batch",
+            spec: &spec,
+            tokens: &good_tokens,
+            parent_name: None,
+            new_page_bytes: &good_pages,
+        },
+        weftfs::kv_prefix::KvPrefixBatchItem {
+            name: "bad-in-failing-batch",
+            spec: &spec,
+            tokens: &bad_tokens,
+            parent_name: None,
+            new_page_bytes: &bad_pages,
+        },
+    ];
+    assert!(
+        store
+            .kv_prefix_put_batch_seeded(&failing, 0, 0, &[0x5A; 32])
+            .is_err()
+    );
+    assert_eq!(store.generation(), generation, "a failed batch publishes nothing");
+    assert_eq!(store.kv_prefix_list().unwrap().len(), 25);
+    assert!(store.kv_prefix("good-in-failing-batch").is_err());
+}
