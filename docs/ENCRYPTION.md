@@ -238,7 +238,7 @@ Interpretation:
   to every object *and* to every manifest.
 
 Raw rows per repetition, the plane microbench, the equality/republish checks
-and the limits are in `bench/receipts/encryption-20261114T235500Z.json`
+and the limits are in `bench/receipts/encryption-20261115T001500Z.json`
 (+ `.log`) and `bench/RESULTS-encryption.md`.
 
 ## 8. Failure classes

@@ -1,0 +1,468 @@
+{
+  "checks": [
+    {
+      "detail": "every restored object equals the fixture",
+      "name": "plain_exact",
+      "pass": true
+    },
+    {
+      "detail": "the footprint does not depend on the repetition",
+      "name": "plain_footprint_uniform",
+      "pass": true
+    },
+    {
+      "detail": "every restored object equals the fixture",
+      "name": "convergent_exact",
+      "pass": true
+    },
+    {
+      "detail": "the footprint does not depend on the repetition",
+      "name": "convergent_footprint_uniform",
+      "pass": true
+    },
+    {
+      "detail": "every restored object equals the fixture",
+      "name": "random_exact",
+      "pass": true
+    },
+    {
+      "detail": "the footprint does not depend on the repetition",
+      "name": "random_footprint_uniform",
+      "pass": true
+    },
+    {
+      "detail": "0.2281% over plain for the convergent envelope",
+      "name": "convergent_footprint_within_envelope_bound",
+      "pass": true
+    },
+    {
+      "detail": "0.2281% over plain for the random envelope",
+      "name": "random_footprint_within_envelope_bound",
+      "pass": true
+    },
+    {
+      "detail": "plain 1216 objects, convergent 1216 objects",
+      "name": "convergent_keeps_equal_object_names",
+      "pass": true
+    },
+    {
+      "detail": "plain 1216 objects, random 1216 objects: the blob name is the plaintext hash in every mode",
+      "name": "random_keeps_equal_object_names",
+      "pass": true
+    },
+    {
+      "detail": "equal plaintext seals to equal ciphertext under convergent",
+      "name": "convergent_equality",
+      "pass": true
+    },
+    {
+      "detail": "equal plaintext does not seal to equal ciphertext under random",
+      "name": "random_inequality",
+      "pass": true
+    },
+    {
+      "detail": "republish: \"idempotent\"",
+      "name": "convergent_republish_idempotent",
+      "pass": true
+    },
+    {
+      "detail": "republish: \"conflict\"",
+      "name": "random_republish_conflicts",
+      "pass": true
+    }
+  ],
+  "command": "scripts/docker-court.sh bench \"cd /work && bash bench/scripts/encryption_court.sh\"",
+  "court_cpus": "4",
+  "court_image": "weft/bench-court:1",
+  "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+  "court_memory": "3g",
+  "court_pids": "1024",
+  "environment": {
+    "label": "single host, one bench container, tmpfs fixture, warm page cache; no media, power-loss, fleet or cloud claim; the envelope covers blob bodies only",
+    "revisions": {
+      "WeftFS": "5f578584702b14fa21b5733fef6479f513868607"
+    }
+  },
+  "failed": 0,
+  "fixture": {
+    "big_bytes": 67108864,
+    "chunk_size": 65536,
+    "duplicate_bytes": 4194304,
+    "generator": "xorshift64 deterministic fill; synthetic, not model weights",
+    "logical_bytes": 76546048,
+    "small_bytes": 8192,
+    "small_count": 128
+  },
+  "generated_utc": "20261115T001500Z",
+  "host_revision": "5f578584702b14fa21b5733fef6479f513868607",
+  "kernel": "7.3.3-1-cachyos",
+  "limits": [
+    "single host, one container, warm page cache for the read phase",
+    "synthetic fixture; not model weights",
+    "no physical power-loss, device-cache, fleet or cloud claim",
+    "the envelope covers blob bodies only: commit and control records are plaintext",
+    "no claim that encryption hides equality: the blob name is the plaintext hash"
+  ],
+  "method": {
+    "cpu": "getrusage(RUSAGE_SELF) user+sys delta around each phase",
+    "interleaved": "arms run inside every rep in the order plain, convergent, random",
+    "physical": "sum of every file under the store root",
+    "read": "drop, reopen read-only, read and compare every object",
+    "reps": 7,
+    "write": "init + one create per file (each its own commit) + backend stats"
+  },
+  "passed": 14,
+  "plane": {
+    "convergent_republish": "idempotent",
+    "envelope_overhead_bytes_per_object": 112,
+    "equal_plaintext_equal_ciphertext": {
+      "convergent": true,
+      "random": false
+    },
+    "modes": {
+      "convergent": {
+        "ciphertext_bytes": 67116032,
+        "open_cpu_ms": 29.784999999999854,
+        "open_mib_per_s": 2138.269028456084,
+        "open_wall_ms": 29.930752000000002,
+        "seal_cpu_ms": 38.50599999999986,
+        "seal_mib": 64.0,
+        "seal_mib_per_s": 1629.904343970123,
+        "seal_wall_ms": 39.266108
+      },
+      "random": {
+        "ciphertext_bytes": 67116032,
+        "open_cpu_ms": 23.874999999999545,
+        "open_mib_per_s": 2674.9494246476356,
+        "open_wall_ms": 23.925686000000002,
+        "seal_cpu_ms": 37.66199999999981,
+        "seal_mib": 64.0,
+        "seal_mib_per_s": 1695.826806056211,
+        "seal_wall_ms": 37.739703
+      }
+    },
+    "random_republish": "conflict"
+  },
+  "result": "pass",
+  "rows": [
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 40.918000000000006,
+      "read_ms": 45.17226,
+      "rep": 0,
+      "write_cpu_ms": 51.19600000000001,
+      "write_ms": 59.391976
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 76.39699999999993,
+      "read_ms": 76.654035,
+      "rep": 0,
+      "write_cpu_ms": 93.46100000000001,
+      "write_ms": 154.605728
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 64.67700000000002,
+      "read_ms": 64.772283,
+      "rep": 0,
+      "write_cpu_ms": 91.93400000000003,
+      "write_ms": 93.234478
+    },
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 38.83499999999992,
+      "read_ms": 39.179055999999996,
+      "rep": 1,
+      "write_cpu_ms": 51.105999999999995,
+      "write_ms": 52.417065
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 76.67900000000009,
+      "read_ms": 76.909643,
+      "rep": 1,
+      "write_cpu_ms": 91.65600000000006,
+      "write_ms": 93.41152799999999
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 64.73200000000008,
+      "read_ms": 64.90860699999999,
+      "rep": 1,
+      "write_cpu_ms": 90.11299999999994,
+      "write_ms": 91.829038
+    },
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 39.14699999999982,
+      "read_ms": 39.337973,
+      "rep": 2,
+      "write_cpu_ms": 50.64599999999996,
+      "write_ms": 52.720673000000005
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 76.66200000000003,
+      "read_ms": 76.85162399999999,
+      "rep": 2,
+      "write_cpu_ms": 90.96100000000001,
+      "write_ms": 92.94815200000001
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 63.4849999999999,
+      "read_ms": 63.579672,
+      "rep": 2,
+      "write_cpu_ms": 91.08800000000019,
+      "write_ms": 92.742747
+    },
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 37.6759999999997,
+      "read_ms": 38.035858,
+      "rep": 3,
+      "write_cpu_ms": 50.388999999999896,
+      "write_ms": 51.433575000000005
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 77.06799999999998,
+      "read_ms": 77.301756,
+      "rep": 3,
+      "write_cpu_ms": 90.20399999999972,
+      "write_ms": 92.131754
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 63.787000000000035,
+      "read_ms": 63.940476,
+      "rep": 3,
+      "write_cpu_ms": 91.26400000000012,
+      "write_ms": 93.081219
+    },
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 38.6909999999998,
+      "read_ms": 39.10668,
+      "rep": 4,
+      "write_cpu_ms": 50.54300000000012,
+      "write_ms": 51.127742
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 79.24800000000005,
+      "read_ms": 80.300276,
+      "rep": 4,
+      "write_cpu_ms": 94.01299999999992,
+      "write_ms": 94.98087500000001
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 65.09400000000005,
+      "read_ms": 65.2092,
+      "rep": 4,
+      "write_cpu_ms": 90.82099999999991,
+      "write_ms": 92.678256
+    },
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 39.228000000000065,
+      "read_ms": 40.050556,
+      "rep": 5,
+      "write_cpu_ms": 50.728999999999814,
+      "write_ms": 51.421883
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 78.33999999999969,
+      "read_ms": 79.989454,
+      "rep": 5,
+      "write_cpu_ms": 92.2140000000004,
+      "write_ms": 93.831023
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 65.10099999999966,
+      "read_ms": 66.863013,
+      "rep": 5,
+      "write_cpu_ms": 93.3769999999995,
+      "write_ms": 94.376473
+    },
+    {
+      "arm": "plain",
+      "backend_bytes_read": 76912096,
+      "backend_bytes_written": 73115315,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72574425,
+      "read_cpu_ms": 39.42099999999982,
+      "read_ms": 39.984353,
+      "rep": 6,
+      "write_cpu_ms": 52.43899999999985,
+      "write_ms": 53.362274
+    },
+    {
+      "arm": "convergent",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 78.00800000000027,
+      "read_ms": 79.829615,
+      "rep": 6,
+      "write_cpu_ms": 91.99299999999948,
+      "write_ms": 93.602855
+    },
+    {
+      "arm": "random",
+      "backend_bytes_read": 77222352,
+      "backend_bytes_written": 73821635,
+      "exact": true,
+      "object_files": 1216,
+      "physical_bytes": 72739961,
+      "read_cpu_ms": 64.30200000000013,
+      "read_ms": 64.83507900000001,
+      "rep": 6,
+      "write_cpu_ms": 93.5640000000003,
+      "write_ms": 95.989481
+    }
+  ],
+  "schema": "weft.encryption.bench.v1",
+  "stamp": "20261115T001500Z",
+  "summary": {
+    "convergent": {
+      "backend_bytes_read_median": 77222352.0,
+      "backend_bytes_written_median": 73821635.0,
+      "exact": true,
+      "object_files": 1216,
+      "object_files_uniform_across_reps": true,
+      "physical_bytes": 72739961,
+      "physical_bytes_uniform_across_reps": true,
+      "read_cpu_ms_median": 77.06799999999998,
+      "read_ms_median": 77.301756,
+      "reps": 7,
+      "write_cpu_ms_median": 91.99299999999948,
+      "write_ms_median": 93.602855
+    },
+    "plain": {
+      "backend_bytes_read_median": 76912096.0,
+      "backend_bytes_written_median": 73115315.0,
+      "exact": true,
+      "object_files": 1216,
+      "object_files_uniform_across_reps": true,
+      "physical_bytes": 72574425,
+      "physical_bytes_uniform_across_reps": true,
+      "read_cpu_ms_median": 39.14699999999982,
+      "read_ms_median": 39.337973,
+      "reps": 7,
+      "write_cpu_ms_median": 50.728999999999814,
+      "write_ms_median": 52.417065
+    },
+    "random": {
+      "backend_bytes_read_median": 77222352.0,
+      "backend_bytes_written_median": 73821635.0,
+      "exact": true,
+      "object_files": 1216,
+      "object_files_uniform_across_reps": true,
+      "physical_bytes": 72739961,
+      "physical_bytes_uniform_across_reps": true,
+      "read_cpu_ms_median": 64.67700000000002,
+      "read_ms_median": 64.83507900000001,
+      "reps": 7,
+      "write_cpu_ms_median": 91.26400000000012,
+      "write_ms_median": 93.081219
+    }
+  }
+}

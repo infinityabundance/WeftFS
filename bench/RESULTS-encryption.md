@@ -1,15 +1,17 @@
 # T079 — optional encryption at rest: measured cost and the dedup leak
 
 **Date:** 2026-11-14
-**Revision:** WeftFS `7f85d5cf` (the envelope commit is `ab5f1819`; `7f85d5cf`
-adds only this harness and court script).
+**Revision:** WeftFS `5f57858` (the envelope commit is `ab5f181`; the harness
+and court registration follow it, and this is the receipt the registered court
+produces).
 **Court:** `weft/bench-court:1` (`sha256:4c6c41fb…`), kernel `7.3.3-1-cachyos`,
 3 GiB / 4 vCPU / 1024 pids, unchanged hard limits, `tmpfs` fixture.
-**Receipt:** `bench/receipts/encryption-20261114T235500Z.json` (every check
-passes), raw log `bench/receipts/encryption-20261114T235500Z.log`.
-**Superseded, retained, not cited:** `encryption-20261114T233000Z.json`
-(identical measurements, produced from a tree whose harness fixes were not yet
-committed), `encryption-20261114T231500Z.json` (same, and without the
+**Receipt:** `bench/receipts/encryption-20261115T001500Z.json` (every check
+passes), raw log `bench/receipts/encryption-20261115T001500Z.log`.
+**Superseded, retained, not cited:** `encryption-20261114T235500Z.json` and
+`encryption-20261114T233000Z.json` (same measurements and the same checks at
+earlier revisions of the harness; neither is the receipt the registered court
+emits), `encryption-20261114T231500Z.json` (same, and without the
 `environment.revisions` field the numbers generator needs), and
 `encryption-20261114T230000Z.json` (first run: the plane-throughput column was
 mis-scaled by 1024).
@@ -124,6 +126,8 @@ and still leaks equality through the name.
 ## Reproduction
 
 ```bash
+bash scripts/encryption_court.sh      # the registered court: Docker preflight, then the bench court
+# or, already inside the bench court:
 scripts/docker-court.sh bench "cd /work && WEFT_STAMP=<stamp> bash bench/scripts/encryption_court.sh"
 ```
 
