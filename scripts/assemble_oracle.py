@@ -21,16 +21,28 @@ def sha256_file(path):
 
 
 def main():
-    if len(sys.argv) != 7:
+    synthetic_only = len(sys.argv) >= 2 and sys.argv[1] == "--synthetic-only"
+    if synthetic_only:
+        if len(sys.argv) != 6:
+            print(
+                "usage: assemble_oracle.py --synthetic-only OUTPUT STAMP SYNTHETIC LOG",
+                file=sys.stderr,
+            )
+            return 64
+        output, stamp, synthetic_path, log_path = sys.argv[2:6]
+        validate_path = heldout_path = None
+    elif len(sys.argv) != 7:
         print(
             "usage: assemble_oracle.py OUTPUT STAMP SYNTHETIC VALIDATE HELDOUT LOG",
             file=sys.stderr,
         )
         return 64
-    output, stamp, synthetic_path, validate_path, heldout_path, log_path = sys.argv[1:7]
+        return 64
+    else:
+        output, stamp, synthetic_path, validate_path, heldout_path, log_path = sys.argv[1:7]
     synthetic = load(synthetic_path)
-    validate = load(validate_path)
-    heldout = load(heldout_path)
+    validate = load(validate_path) if validate_path else None
+    heldout = load(heldout_path) if heldout_path else None
 
     try:
         revision = subprocess.check_output(
@@ -41,10 +53,14 @@ def main():
 
     strata = {row["stratum"]: row["aggregate"] for row in synthetic["synthetic"]}
     overall = synthetic["overall_aggregate"]
-    real_overall = {
-        "validate": validate["real_aggregate"],
-        "held_out": heldout["real_aggregate"],
-    }
+    real_overall = (
+        {
+            "validate": validate["real_aggregate"],
+            "held_out": heldout["real_aggregate"],
+        }
+        if validate and heldout
+        else {"validate": "not_run", "held_out": "not_run"}
+    )
 
     checks = {
         # N11 gate: the violation rate is present for every stratum, including
@@ -73,6 +89,9 @@ def main():
         "synthetic": synthetic,
         "validate": validate,
         "held_out": heldout,
+        "scope_note": "synthetic strata only; the real validation and held-out catalogues were not requested for this run"
+        if synthetic_only
+        else None,
         "real_aggregate": real_overall,
         "overall": overall,
         "checks": checks,
@@ -90,18 +109,29 @@ def main():
     with open(output, "w") as handle:
         json.dump(receipt, handle, indent=1)
 
-    print(
-        "two_stage_oracle: receipt={} checks={}/{} synthetic_violation_rate={:.4f} "
-        "real_violation_rate={:.4f} real_skip_regret_bytes={}".format(
-            output,
-            receipt["checks_passed"],
-            receipt["checks_total"],
-            overall["violation_rate"],
-            real_overall["validate"]["violation_rate"],
-            real_overall["validate"]["skip_regret_bytes_total"]
-            + real_overall["held_out"]["skip_regret_bytes_total"],
+    if validate and heldout:
+        print(
+            "two_stage_oracle: receipt={} checks={}/{} synthetic_violation_rate={:.4f} "
+            "real_violation_rate={:.4f} real_skip_regret_bytes={}".format(
+                output,
+                receipt["checks_passed"],
+                receipt["checks_total"],
+                overall["violation_rate"],
+                real_overall["validate"]["violation_rate"],
+                real_overall["validate"]["skip_regret_bytes_total"]
+                + real_overall["held_out"]["skip_regret_bytes_total"],
+            )
         )
-    )
+    else:
+        print(
+            "two_stage_oracle: receipt={} checks={}/{} synthetic_violation_rate={:.4f} "
+            "real_catalogues=not_run".format(
+                output,
+                receipt["checks_passed"],
+                receipt["checks_total"],
+                overall["violation_rate"],
+            )
+        )
     return 0
 
 

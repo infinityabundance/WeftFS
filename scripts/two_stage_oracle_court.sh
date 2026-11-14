@@ -28,6 +28,12 @@ for f in "$val" "$hold"; do
   [[ -f "$f" ]] || skip "corpus $f is not present (the court refuses to substitute another container)"
 done
 
+# `WEFT_ORACLE_SYNTHETIC_ONLY=1` runs only the eight declared synthetic strata
+# (fast enough for the aggregate verification court). The real validation and
+# held-out catalogues are part of the standalone court; when they are skipped
+# the receipt says so in `scope.real`.
+synthetic_only="${WEFT_ORACLE_SYNTHETIC_ONLY:-0}"
+
 stamp="${WEFT_ORACLE_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 mkdir -p bench/receipts
 chmod a+rwX bench/receipts 2>/dev/null || true
@@ -51,6 +57,19 @@ cleanup() {
 trap cleanup EXIT
 
 echo "two_stage_oracle: stamp=$stamp strata=8 validate=qwen3b heldout=qwen7b" >&2
+
+if [[ "$synthetic_only" == "1" ]]; then
+  scripts/docker-court.sh bench "\
+cd /work && cargo build --release --quiet --example two_stage_oracle && \
+cargo run --release --quiet --example two_stage_oracle -- \
+  --family synthetic --out $synthetic --work /work/$work_rel/synthetic \
+  --seed 11400714819323198485" \
+    2>&1 | tee "$log"
+  chmod a+rw "$synthetic" "$log" 2>/dev/null || true
+  python3 scripts/assemble_oracle.py --synthetic-only "$receipt" "$stamp" "$synthetic" "$log"
+  chmod a+rw "$receipt" 2>/dev/null || true
+  exit 0
+fi
 
 scripts/docker-court.sh bench "\
 cd /work && cargo build --release --quiet --example two_stage_oracle && \

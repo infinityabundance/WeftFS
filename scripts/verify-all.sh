@@ -415,6 +415,22 @@ run_orchestrated_court context_advantage_s3 context_advantage_court \
   env WEFT_CONTEXT_ADVANTAGE_STAMP="$stamp" \
   bash scripts/context_advantage_court.sh --reduced --backend=s3
 
+# T042/N11 held-out tools, reduced: the eight adversarial strata declared in
+# `bench/CONTRACTS-heldout.md` §5, eight deterministic seeds each, sampled
+# planner against a forced exhaustive oracle. Synthetic-only so the aggregate
+# stays inside its budget; the real validation and held-out catalogues run in
+# the standalone court (`bash scripts/two_stage_oracle_court.sh`) and the
+# published receipt is `two-stage-oracle-20261114T175829Z.json`. The held-out
+# planner (`scripts/heldout_planner_court.sh`), comparator
+# (`scripts/comparator_court.sh`) and paired-statistics
+# (`scripts/paired_stats_court.sh`) courts are standalone only: each needs the
+# 3B/7B containers or ten full A-E repetitions, which do not fit the aggregate's
+# budget. They print `...: skip <reason>` and exit 78 when their corpus or Docker
+# is absent, so a standalone run never silently passes.
+run_orchestrated_court two_stage_oracle two_stage_oracle_court \
+  env WEFT_ORACLE_STAMP="$stamp" WEFT_ORACLE_SYNTHETIC_ONLY=1 \
+  bash scripts/two_stage_oracle_court.sh
+
 # EKBLOOM Context Court: one backend, three arms (W shipped resolver; M exact
 # LRU and W-TinyLFU; E M plus an EKBLOOM-manifested certified decision table),
 # four state-change events, nine interleaved repetitions in the cited receipt.

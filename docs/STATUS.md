@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,261** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,280** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11503,3 +11503,64 @@ are registered in `scripts/verify-all.sh`; the cited aggregate above is
 unchanged until that aggregate is rerun. Rust-only except where noted; no Go
 parity for the epoch protocol, the migration verb, history emission or
 optimistic FUSE mutations. No physical power-loss, media, fleet or cloud claim.
+
+### 2026-11-14 — T042 / N03 / N11 / T041 / T083 / N10: held-out prediction, the sampled-planner oracle, comparators and paired statistics
+
+Frozen contract first: `bench/CONTRACTS-heldout.md` (committed before any
+held-out measurement; its digest is recorded in every receipt). Split — FIT:
+Qwen2.5-0.5B base + pythia-70m step 0; VALIDATE: Qwen2.5-3B base; HELD OUT:
+Qwen2.5-7B-Instruct, measured once. Results: `bench/RESULTS-heldout.md`.
+
+* **Held-out predictive planner (T042).** A model with one byte ratio per
+  (strategy, dtype), per-strategy encode/decode rates, a pooled publish rate and
+  two fitted constants is fitted on the FIT split and applied unchanged.
+  Predictions are formed before the exhaustive plan is consulted. Encoded bytes
+  and cold-restore wall generalise at the median on both evaluation families;
+  **chosen-strategy agreement fails the declared 0.90 gate on both** because a
+  size-blind ratio cannot place the mode-9/ZSTD crossover on small tensors. The
+  write-wall target is **not validated**: one object per durable commit makes
+  the target track the host's `fsync` latency, and two identical passes of the
+  same code moved the family write wall by an order of magnitude. SLA admission
+  (a frozen threshold grid, 10 % margin) accepted three thresholds per family
+  and missed none; that is reported as a weak result, not a win. Gate 1 as
+  frozen also fails, for a benign reason the wording did not anticipate (tensor
+  names repeat across model widths); both the literal gate and the
+  container-level diagnostic are published. Receipt
+  `bench/receipts/heldout-planner-20261114T175023Z.json`; the superseded first
+  pass `174546Z` is retained.
+* **Sampled-vs-exhaustive oracle (N11).** The shipped `TwoStage` planner and a
+  forced `Exhaustive` planner run on the same bytes over eight declared
+  adversarial strata (eight seeds each) and the real tensors. Interval
+  violations are **detected and recovered** by the exhaustive fallback on the
+  strata whose sampled chunks are optimistic. A second class is **undetected**:
+  when the sampled chunks are the incompressible ones, the level-3 candidate is
+  skipped, cannot be measured, and the planner publishes a much larger
+  representation in every seed with no violation and no fallback. Real tensors:
+  zero disagreement. Receipt
+  `bench/receipts/two-stage-oracle-20261114T175829Z.json`; registered in
+  `scripts/verify-all.sh` in synthetic-only form.
+* **Comparators (T041).** Complete stored bytes for native, independent
+  `zstd -19`, `zstd --patch-from -12/-19` and our implementation of a
+  ZipLLM/BitX-style XOR delta on a sparse pair and a dense fine-tune pair. On
+  the sparse pair the XOR delta wins and WeftFS's quoted mode-16 figure loses;
+  on the dense pair `--patch-from` was OOM-killed at the court limit and has no
+  number. ZipNN 0.5.4 does not install (no binary wheel for the court
+  interpreter, no compiler in the court that has `pip`) and ByteCheckpoint 0.0.2
+  cannot run (dependency install OOM; `--no-deps` import fails on `grpc`); both
+  blockers are receipted, and neither comparator is silently omitted. Receipts
+  `bench/receipts/comparators-20261114T182322Z.json`,
+  `comparator-install-probe-20261114T185845Z.json`.
+* **Paired statistics and host control (T083 / N10).** Ten paired repetitions
+  of A/N/B/C/D/E in a seeded shuffled order per repetition, raw values retained,
+  paired percentile bootstrap with a recorded seed, telemetry before and after.
+  The codec/protocol cold-restore orderings mostly survive; **most write-wall
+  orderings do not**, and A versus N is not distinguishable on either axis.
+  Thermals are unreadable on this host and reported as unavailable. No
+  cross-host repeat was possible; none is claimed. Receipt
+  `bench/receipts/paired-stats-20261114T185845Z.json`.
+
+Harness changes are additive: `--order-seed` on the augmentation harness and
+per-repetition raw metrics in its receipt. No frame, manifest, commit, index,
+identity or store byte changed. Claims: 1280. `perf_numbers`: the four new
+receipts feed generated regions in `bench/RESULTS-heldout.md`. The aggregate
+verification receipt is unchanged until it is rerun.

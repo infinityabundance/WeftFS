@@ -32,6 +32,7 @@ and byte caps) was declared before measurement and is applied by rule, not by
 inspecting errors.
 
 <!-- BEGIN GENERATED:heldout-fit (scripts/perf_numbers.py) -->
+Fit: **366** tensors measured across two whole families. Every coefficient below was fitted on those tensors only, before any validation or held-out measurement existed.
 <!-- END GENERATED:heldout-fit -->
 
 **Gate 1, as frozen, fails.** `CONTRACTS-heldout.md` §8 asked that "no tensor
@@ -57,11 +58,15 @@ size for the strategy that was actually chosen, isolating size error) and
 **Validation family.**
 
 <!-- BEGIN GENERATED:heldout-validate (scripts/perf_numbers.py) -->
+**87** tensors, **1,079,083,008** logical bytes. Chosen-strategy agreement with the exhaustive measurement: **0.598**. Conditional encoded-bytes relative error: median **0.0078**, p90 **0.1982**; end-to-end **0.0110** at the median.
+Cold-restore relative error median **0.0770**. Write-wall relative error median **0.9375** (predicted **4,931.4** ms against measured **29,580.9** ms). Family restore predicted **3,236.4** ms against measured **3,149.9** ms. SLAs accepted **3**, missed **0**.
 <!-- END GENERATED:heldout-validate -->
 
 **Held-out family.**
 
 <!-- BEGIN GENERATED:heldout-heldout (scripts/perf_numbers.py) -->
+**38** tensors, **1,512,118,272** logical bytes, measured once. Chosen-strategy agreement **0.895**. Conditional encoded-bytes relative error: median **0.0095**, p95 **0.2592**, max **0.5912**; end-to-end **0.0095** at the median.
+Cold-restore relative error median **0.0478**; write-wall relative error median **0.7718**. Family restore predicted **4,525.7** ms against measured **4,362.1** ms. SLAs accepted **3**, missed **0**.
 <!-- END GENERATED:heldout-heldout -->
 
 ### 2.1 What the numbers say
@@ -98,6 +103,7 @@ the prediction is at most 0.90 × the threshold. A miss is an accepted SLA whose
 measured wall exceeds the threshold.
 
 <!-- BEGIN GENERATED:heldout-sla (scripts/perf_numbers.py) -->
+Validation: accepted **3** of five thresholds, missed **0**. Held-out: accepted **3**, missed **0**.
 <!-- END GENERATED:heldout-sla -->
 
 No accepted SLA missed on either family. That is **not** a strong claim: the
@@ -113,6 +119,8 @@ records the decision stream), and a forced `Exhaustive` plan. The strata are
 the eight declared before measurement, each with eight deterministic seeds.
 
 <!-- BEGIN GENERATED:oracle-summary (scripts/perf_numbers.py) -->
+Synthetic: **19** of **64** tensors had an actual size outside a priced interval (rate **0.2969**). **8** tensors record skip-regret with **8,371,341** bytes of regret, and the mode-9 exact prediction was never violated (**0**).
+`sampled-unlucky`: **8** of **8** undetected, **8,371,341** bytes, **0** violations. `rare-heavy`: **8** of **8** detected, **8** fallbacks, no regret. Real tensors: **0** of **87** (validation) and **0** of **38** (held-out) disagreed with the oracle.
 <!-- END GENERATED:oracle-summary -->
 
 A first version of this court compared `plan_tensor(TwoStage)` with
@@ -152,6 +160,8 @@ they are not in the table. Sparse = pythia-70m step 0 → step 1 (19 changed
 16-bit words). Dense = Qwen2.5-0.5B base → Instruct (a fine-tune).
 
 <!-- BEGIN GENERATED:comparators (scripts/perf_numbers.py) -->
+Sparse pair, newer-container marginal bytes: XNOR **23,406**, patch-from -12 **30,265**, patch-from -19 **275,660**, independent zstd -19 **142,240,032**. Native both containers **563,430,352**; XNOR's complete bytes are **0.5000** of native.
+Dense pair: XNOR **616,702,657**, independent zstd -19 **764,093,099**, native **1,976,195,648**; XNOR's complete bytes are **0.8121** of native. Both `--patch-from` levels were OOM-killed at the court limit and have no number.
 <!-- END GENERATED:comparators -->
 
 Losses and blockers, stated plainly:
@@ -188,6 +198,8 @@ the raw per-repetition values retained in the receipt. Paired percentile
 bootstrap, 10 000 resamples, seeded and recorded.
 
 <!-- BEGIN GENERATED:paired-stats (scripts/perf_numbers.py) -->
+**10** paired repetitions per arm. Native write wall min **325.5** ms, p50 **339.4** ms, p95 **7,354.3** ms; planned write (C) p50 **4,790.2** ms. Cold restore p50: A **360.1** ms, C **1,504.1** ms, E **1,518.1** ms.
+Of the nine claimed orderings, **4** survive the paired bootstrap 95 % confidence interval and **4** paired differences are distinguishable from zero in either direction.
 <!-- END GENERATED:paired-stats -->
 
 ### 6.1 Did the earlier ordering survive?
@@ -252,3 +264,26 @@ bash scripts/paired_stats_court.sh
 python3 scripts/perf_numbers.py --check
 bash scripts/check-claims.sh
 ```
+
+## Claim register
+
+Each line is the machine-checkable anchor for one entry in `docs/claims.json`.
+
+- `claim:t042_contract_frozen_before_measurement` — The held-out split, the model's functional form, the SLA grid and the gates were committed before any held-out number existed.
+- `claim:t042_model_not_refit` — The model digest on the validation receipt equals the one on the held-out receipt; no refit happened after validation.
+- `claim:t042_strategy_agreement_gate_failed` — Chosen-strategy agreement is below the 0.90 gate on both families and the gate is published as false.
+- `claim:t042_bytes_gate_passed` — Conditional encoded-bytes relative error is at or below 10 % at the median on both families.
+- `claim:t042_write_wall_not_validated` — The write-wall target is not validated: two identical passes differed by an order of magnitude on this host.
+- `claim:t042_first_pass_retained` — The superseded first held-out pass is retained and named rather than deleted.
+- `claim:t042_sla_miss_rate_reported` — The SLA receipt publishes accepted count, missed count and miss rate for both families.
+- `claim:n11_undetected_regret_exists` — On the declared adversarial stratum, every seed shows undetected skip-regret with no violation and no fallback.
+- `claim:n11_detected_violations_fall_back` — Detected interval violations fall back to the exhaustive set and end with zero skip-regret.
+- `claim:n11_real_tensors_no_disagreement` — Across the real validation and held-out tensors the sampled planner and the oracle chose the same representation.
+- `claim:t041_complete_stored_bytes` — Comparator arms are compared on complete stored bytes, base plus newer stored form plus every index byte.
+- `claim:t041_weftfs_loses_sparse_xor` — A BitX-style XOR delta stores the sparse pair in fewer complete bytes than the quoted WeftFS mode-16 figure.
+- `claim:t041_patch_from_oom` — Both patch-from levels were killed at the court memory limit on the dense pair and have no number.
+- `claim:t041_zipnn_blocked` — ZipNN 0.5.4 could not be installed in either court and no ZipNN number is claimed.
+- `claim:t041_bytecheckpoint_blocked` — ByteCheckpoint 0.0.2 could not be run in the court and no ByteCheckpoint number is claimed.
+- `claim:t083_n10_randomised_interleaving` — Every local arm ran ten paired repetitions in a seeded shuffled order with raw values retained.
+- `claim:t083_bootstrap_ci` — Paired differences carry a seeded percentile bootstrap 95 % confidence interval.
+- `claim:t083_write_ordering_not_survived` — Most claimed write-wall orderings do not survive the paired bootstrap on this host.

@@ -477,7 +477,7 @@ seven interleaved repetitions. Source:
 | `verify.revision` | 517703200d4837d63233e3ef02c4102f454f9c05 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261114T162327Z.json` | 20261114T162327Z | 517703200d48 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,261 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,280 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 933 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261114T162327Z.tests.json` | 4535601d84f280033d4c053a1f1bd161857277ee356432354702382deb34f501 | bench/receip |
@@ -989,6 +989,93 @@ time. They are not current claims.
 | `hist.r3.ratio` | 73.9 | x | R3 write ratio versus native (historical) | `bench/receipts/augmentation-local-20261109T134132Z.json` | 20261109T134244Z | 2fb4e4b7fa5e |
 | `hist.r3.reduction_pct` | 33.1 | % | R3 storage reduction (historical) | `bench/receipts/augmentation-local-20261109T134132Z.json` | 20261109T134244Z | 2fb4e4b7fa5e |
 <!-- END GENERATED:perf-catalog-history -->
+
+## Held-out predictive planner, oracle, comparators, paired statistics
+
+<!-- BEGIN GENERATED:perf-catalog-heldout (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `heldout.fit.tensors` | 366 | tensors | FIT tensors measured | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.tensors` | 87 | tensors | Validation tensors | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.logical_b` | 1,079,083,008 | bytes | Validation logical bytes | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.agreement` | 0.598 | fraction | Validation chosen-strategy agreement | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.bytes_med` | 0.0078 | fraction | Validation conditional bytes relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.bytes_p90` | 0.1982 | fraction | Validation conditional bytes relative error, p90 | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.bytes_e2e_med` | 0.0110 | fraction | Validation end-to-end bytes relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.restore_med` | 0.0770 | fraction | Validation cold-restore relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.write_med` | 0.9375 | fraction | Validation write-wall relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.write_pred_ms` | 4,931.4 | ms | Validation predicted write wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.write_ms` | 29,580.9 | ms | Validation measured write wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.restore_pred_ms` | 3,236.4 | ms | Validation predicted restore wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.restore_ms` | 3,149.9 | ms | Validation measured restore wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.sla_accepted` | 3 | count | Validation SLAs accepted | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.val.sla_missed` | 0 | count | Validation SLAs missed | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.tensors` | 38 | tensors | Held-out tensors | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.logical_b` | 1,512,118,272 | bytes | Held-out logical bytes | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.agreement` | 0.895 | fraction | Held-out chosen-strategy agreement | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.bytes_med` | 0.0095 | fraction | Held-out conditional bytes relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.bytes_p95` | 0.2592 | fraction | Held-out conditional bytes relative error, p95 | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.bytes_max` | 0.5912 | fraction | Held-out conditional bytes relative error, max | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.bytes_e2e_med` | 0.0095 | fraction | Held-out end-to-end bytes relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.restore_med` | 0.0478 | fraction | Held-out cold-restore relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.write_med` | 0.7718 | fraction | Held-out write-wall relative error, median | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.restore_pred_ms` | 4,525.7 | ms | Held-out predicted restore wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.restore_ms` | 4,362.1 | ms | Held-out measured restore wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.sla_accepted` | 3 | count | Held-out SLAs accepted | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.ho.sla_missed` | 0 | count | Held-out SLAs missed | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+<!-- END GENERATED:perf-catalog-heldout -->
+
+<!-- BEGIN GENERATED:perf-catalog-oracle (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `oracle.tensors` | 64 | tensors | Synthetic tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.violating` | 19 | tensors | Synthetic tensors with an interval violation | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.violation_rate` | 0.2969 | fraction | Synthetic interval-violation rate | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.undetected` | 8 | tensors | Synthetic tensors with undetected skip-regret | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.regret_bytes` | 8,371,341 | bytes | Synthetic skip-regret bytes, total | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.mode9_violations` | 0 | count | Mode-9 exact-prediction violations | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.unlucky.tensors` | 8 | tensors | sampled-unlucky tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.unlucky.violating` | 0 | tensors | sampled-unlucky violating tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.unlucky.undetected` | 8 | tensors | sampled-unlucky undetected skip-regret tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.unlucky.regret_bytes` | 8,371,341 | bytes | sampled-unlucky skip-regret bytes | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.rare.tensors` | 8 | tensors | rare-heavy tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.rare.violating` | 8 | tensors | rare-heavy violating tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.rare.fallbacks` | 8 | tensors | rare-heavy fallback tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.real_validate.tensors` | 87 | tensors | Real validation tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.real_validate.violating` | 0 | tensors | Real validation violating tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.real_heldout.tensors` | 38 | tensors | Real held-out tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+| `oracle.real_heldout.violating` | 0 | tensors | Real held-out violating tensors | `bench/receipts/two-stage-oracle-20261114T175829Z.json` | 20261114T175829Z | 523c51d20c4e |
+<!-- END GENERATED:perf-catalog-oracle -->
+
+<!-- BEGIN GENERATED:perf-catalog-comparators (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `cmp.sparse.native` | 563,430,352 | bytes | Sparse pair: native both containers | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.sparse.z19` | 142,240,032 | bytes | Sparse pair: independent zstd -19 delta | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.sparse.pf12` | 30,265 | bytes | Sparse pair: patch-from -12 delta | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.sparse.pf19` | 275,660 | bytes | Sparse pair: patch-from -19 delta | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.sparse.xnor` | 23,406 | bytes | Sparse pair: XNOR delta | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.sparse.xnor_ratio` | 0.5000 | ratio | Sparse pair: XNOR complete bytes / native | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.dense.native` | 1,976,195,648 | bytes | Dense pair: native both containers | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.dense.z19` | 764,093,099 | bytes | Dense pair: independent zstd -19 delta | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.dense.xnor` | 616,702,657 | bytes | Dense pair: XNOR delta | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+| `cmp.dense.xnor_ratio` | 0.8121 | ratio | Dense pair: XNOR complete bytes / native | `bench/receipts/comparators-20261114T182322Z.json` | 20261114T182322Z | 523c51d20c4e |
+<!-- END GENERATED:perf-catalog-comparators -->
+
+<!-- BEGIN GENERATED:perf-catalog-paired (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `paired.reps` | 10 | reps | Paired repetitions per arm | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.a.min` | 325.5 | ms | Native write wall, least-contended | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.a.p50` | 339.4 | ms | Native write wall, p50 | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.a.p95` | 7,354.3 | ms | Native write wall, p95 | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.c.write_p50` | 4,790.2 | ms | Planned write wall, p50 | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.a.restore_p50` | 360.1 | ms | Native cold restore, p50 | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.c.restore_p50` | 1,504.1 | ms | Planned cold restore, p50 | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.e.restore_p50` | 1,518.1 | ms | Combined cold restore, p50 | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.survive` | 4 | count | Ordering claims that survive a paired bootstrap CI | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+| `paired.distinguishable` | 4 | count | Ordering pairs distinguishable from zero | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
+<!-- END GENERATED:perf-catalog-paired -->
 
 ## Reproduce
 

@@ -13412,5 +13412,195 @@
   ],
   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
   "kind": "absent"
+ },
+ {
+  "id": "t042_contract_frozen_before_measurement",
+  "claim": "The held-out split, the model's functional form, the SLA grid and the gates were committed before any held-out number existed.",
+  "value": "claim:t042_contract_frozen_before_measurement",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t042_model_not_refit",
+  "claim": "The model digest on the validation receipt equals the one on the held-out receipt; no refit happened after validation.",
+  "value": "claim:t042_model_not_refit",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t042_strategy_agreement_gate_failed",
+  "claim": "Chosen-strategy agreement is below the 0.90 gate on both families and the gate is published as false.",
+  "value": "claim:t042_strategy_agreement_gate_failed",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t042_bytes_gate_passed",
+  "claim": "Conditional encoded-bytes relative error is at or below 10 % at the median on both families.",
+  "value": "claim:t042_bytes_gate_passed",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t042_write_wall_not_validated",
+  "claim": "The write-wall target is not validated: two identical passes differed by an order of magnitude on this host.",
+  "value": "claim:t042_write_wall_not_validated",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t042_first_pass_retained",
+  "claim": "The superseded first held-out pass is retained and named rather than deleted.",
+  "value": "claim:t042_first_pass_retained",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t042_sla_miss_rate_reported",
+  "claim": "The SLA receipt publishes accepted count, missed count and miss rate for both families.",
+  "value": "claim:t042_sla_miss_rate_reported",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "n11_undetected_regret_exists",
+  "claim": "On the declared adversarial stratum, every seed shows undetected skip-regret with no violation and no fallback.",
+  "value": "claim:n11_undetected_regret_exists",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "n11_detected_violations_fall_back",
+  "claim": "Detected interval violations fall back to the exhaustive set and end with zero skip-regret.",
+  "value": "claim:n11_detected_violations_fall_back",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "n11_real_tensors_no_disagreement",
+  "claim": "Across the real validation and held-out tensors the sampled planner and the oracle chose the same representation.",
+  "value": "claim:n11_real_tensors_no_disagreement",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t041_complete_stored_bytes",
+  "claim": "Comparator arms are compared on complete stored bytes, base plus newer stored form plus every index byte.",
+  "value": "claim:t041_complete_stored_bytes",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t041_weftfs_loses_sparse_xor",
+  "claim": "A BitX-style XOR delta stores the sparse pair in fewer complete bytes than the quoted WeftFS mode-16 figure.",
+  "value": "claim:t041_weftfs_loses_sparse_xor",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t041_patch_from_oom",
+  "claim": "Both patch-from levels were killed at the court memory limit on the dense pair and have no number.",
+  "value": "claim:t041_patch_from_oom",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t041_zipnn_blocked",
+  "claim": "ZipNN 0.5.4 could not be installed in either court and no ZipNN number is claimed.",
+  "value": "claim:t041_zipnn_blocked",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/comparator-install-probe-20261114T185845Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t041_bytecheckpoint_blocked",
+  "claim": "ByteCheckpoint 0.0.2 could not be run in the court and no ByteCheckpoint number is claimed.",
+  "value": "claim:t041_bytecheckpoint_blocked",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/comparator-install-probe-20261114T185845Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t083_n10_randomised_interleaving",
+  "claim": "Every local arm ran ten paired repetitions in a seeded shuffled order with raw values retained.",
+  "value": "claim:t083_n10_randomised_interleaving",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t083_bootstrap_ci",
+  "claim": "Paired differences carry a seeded percentile bootstrap 95 % confidence interval.",
+  "value": "claim:t083_bootstrap_ci",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t083_write_ordering_not_survived",
+  "claim": "Most claimed write-wall orderings do not survive the paired bootstrap on this host.",
+  "value": "claim:t083_write_ordering_not_survived",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t083_no_cross_host",
+  "claim": "No cross-host repeat was possible and no cross-host claim is made.",
+  "value": "cross-host claim holds",
+  "locations": [
+   "bench/RESULTS-heldout.md"
+  ],
+  "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+  "kind": "absent"
  }
 ]
