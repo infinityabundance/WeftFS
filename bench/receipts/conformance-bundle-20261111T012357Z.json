@@ -1,0 +1,1421 @@
+{
+  "bundle": "bench/bundles/conformance-1.2.0.tar.zst",
+  "bundle_bytes": 1330090,
+  "bundle_file_count": 538,
+  "bundle_sha256": "6c0e5a652d9f17f6874ec3f4bbc905b7b54d0b8df494a2370aceb9f8799d48c4",
+  "checks": {
+    "bundle_contains_manifest_and_vectors": true,
+    "no_skip_is_a_pass": true,
+    "python_second_opinion_passes": true,
+    "python_skips_documented": true,
+    "reference_rust_passes": true,
+    "verify_receipts_passes": true
+  },
+  "environment": {
+    "WEFT_COURT_CPUS": "4",
+    "WEFT_COURT_IMAGE": "weft/fuse-court:1",
+    "WEFT_COURT_IMAGE_ID": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "WEFT_COURT_KERNEL": "7.3.3-1-cachyos",
+    "WEFT_COURT_MEMORY": "3g",
+    "WEFT_COURT_PIDS": "1024",
+    "WEFT_REPO_WEFTCODEC": "301ea653a6d25e9feafa2fb074bfc3545aaf2042",
+    "WEFT_REPO_WEFTCODEC_GO": "6fd2097963299119bb1c21dd48f16d19004ff34d",
+    "WEFT_REPO_WEFTFS": "3b475f7cfa4e16c7b876a0368c0ae76e32d675a5",
+    "WEFT_REPO_WEFTFS_GO": "afbd40303a62e2ab4e5107f52cb2f1874d63f4d3"
+  },
+  "extracted_only": true,
+  "generated_at": "2026-11-11T01:23:57Z",
+  "manifest_aggregate_sha256": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8",
+  "manifest_entries": 420,
+  "non_claims": [
+    "the bundle proves corpus self-sufficiency, not implementation quality",
+    "skips are explicit and are not evidence of a pass",
+    "one host, Docker court, synthetic checks; no fleet or cloud claim"
+  ],
+  "python_second_opinion": {
+    "documented_skips": true,
+    "extracted_only": true,
+    "mode_expectations": {
+      "18": 17,
+      "19": 22,
+      "20": 21
+    },
+    "non_codec_extra_skips": [],
+    "reason": "",
+    "script": "scripts/verify-conformance-python.sh",
+    "status": "executed",
+    "undocumented_reasons": []
+  },
+  "python_skip_reasons": {
+    "Context Root resolution is not implemented by the Python reader": 17,
+    "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader": 29,
+    "WeftQL selector grammar is not implemented by the Python reader": 22,
+    "adversarial verb 'archive-create' is a non-decoder surface": 1,
+    "adversarial verb 'archive-decode' is a non-decoder surface": 4,
+    "adversarial verb 'selector-id' is a non-decoder surface": 2,
+    "capability envelope verification is not implemented by the Python reader": 7,
+    "causal closure identity is not implemented by the Python reader": 10,
+    "composite fixture (use --include-fixtures)": 2,
+    "no Python adapter for vector kind 'engram'": 20,
+    "no Python adapter for vector kind 'float-tiled-streams'": 16,
+    "no Python adapter for vector kind 'kv-prov'": 20,
+    "no Python adapter for vector kind 'transport'": 22,
+    "superseded by 017_unknown_mode_reserved10": 1,
+    "superseded by 017_unknown_mode_reserved11": 1,
+    "superseded by 017_unknown_mode_reserved12": 1,
+    "superseded by 017_unknown_mode_reserved14": 1,
+    "superseded by 017_unknown_mode_reserved16": 1,
+    "superseded by 017_unknown_mode_reserved17": 1,
+    "superseded by 017_unknown_mode_reserved18": 1,
+    "superseded by 017_unknown_mode_reserved19": 1,
+    "superseded by 017_unknown_mode_reserved20": 1,
+    "superseded by 017_unknown_mode_reserved21": 1,
+    "superseded by 017_unknown_mode_reserved8": 1,
+    "superseded by 017_unknown_mode_reserved9": 1,
+    "superseded by 112_reserved_mode_21": 1,
+    "superseded by unknown_mode_reserved15": 1,
+    "weft.checkpoint.v1 manifests are not implemented by the Python reader": 5
+  },
+  "python_skips_per_mode": {
+    "10": 1,
+    "11": 1,
+    "12": 1,
+    "14": 1,
+    "15": 1,
+    "16": 1,
+    "17": 1,
+    "18": 17,
+    "19": 22,
+    "20": 21,
+    "6": 1,
+    "8": 1,
+    "9": 1,
+    "none": 121
+  },
+  "runs": {
+    "python": {
+      "fail": 0,
+      "implementation": "scripts/conformance-adapter-python.sh",
+      "manifest": "conformance/manifest.json",
+      "manifest_aggregate_sha256": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8",
+      "mismatches": [],
+      "pass": 229,
+      "result": "pass",
+      "schema": "weft.conformance.run.v1",
+      "skip": 191,
+      "skips": [
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/010_dependency_cycle_archive.json",
+          "reason": "adversarial verb 'archive-create' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/024_selector_depth_limit.json",
+          "reason": "adversarial verb 'selector-id' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/025_selector_input_limit.json",
+          "reason": "adversarial verb 'selector-id' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/026_archive_entry_count_limit.json",
+          "reason": "adversarial verb 'archive-decode' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/027_archive_non_topological.json",
+          "reason": "adversarial verb 'archive-decode' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/028_archive_entry_count_absurd.json",
+          "reason": "adversarial verb 'archive-decode' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/036_archive_truncated_short.json",
+          "reason": "adversarial verb 'archive-decode' is a non-decoder surface"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/001_valid_envelope.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/002_valid_minimal_envelope.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/101_bad_signature.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/102_wrong_grantee.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/103_expired.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/104_revoked.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/capability/105_non_canonical.json",
+          "reason": "capability envelope verification is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/001_single_parent.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/002_two_parents_unsorted_input.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/003_three_parents.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/004_empty_closure.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/101_unsorted.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/102_duplicate.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/103_closure_missing_parent.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/104_zero_entry.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/105_unknown_schema.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/106_unknown_key.json",
+          "reason": "causal closure identity is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode.json",
+          "reason": "superseded by 017_unknown_mode_reserved8"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved10.json",
+          "reason": "superseded by 017_unknown_mode_reserved11"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved11.json",
+          "reason": "superseded by 017_unknown_mode_reserved12"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved12.json",
+          "reason": "superseded by 017_unknown_mode_reserved14"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved14.json",
+          "reason": "superseded by unknown_mode_reserved15"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json",
+          "reason": "superseded by 017_unknown_mode_reserved16"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json",
+          "reason": "superseded by 017_unknown_mode_reserved17"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json",
+          "reason": "superseded by 017_unknown_mode_reserved18"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved18.json",
+          "reason": "superseded by 017_unknown_mode_reserved19"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json",
+          "reason": "superseded by 017_unknown_mode_reserved20"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved20.json",
+          "reason": "superseded by 017_unknown_mode_reserved21"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved8.json",
+          "reason": "superseded by 017_unknown_mode_reserved9"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved9.json",
+          "reason": "superseded by 017_unknown_mode_reserved10"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/001_root_true.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/002_root_filter_budget.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/003_root_causal_capability.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/004_root_descriptor_escaping.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/005_root_custom_resolver.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/006_root_empty_causal.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/101_unsorted_causal.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/102_duplicate_causal.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/103_zero_snapshot.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/104_selector_id_mismatch.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/105_namespace_mismatch.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/106_bad_namespace.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/107_unknown_schema.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/108_bad_budget_zero.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/109_unknown_ordering.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/110_unknown_key.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/001_engram_bf16_one_group.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/002_engram_fp16_many_groups.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/003_engram_fp32_basic.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/004_engram_empty_supersession.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/005_engram_chain_two.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/006_engram_region_subset.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/101_edges_not_increasing.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/102_last_edge_not_rows.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/103_group_count_mismatch.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/104_group_root_mismatch.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/105_payload_truncated.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/106_payload_hash_mismatch.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/107_supersession_cycle.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/108_supersession_missing.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/109_supersession_incompatible.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/110_unknown_hash_function.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/111_unknown_precision.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/112_reserved_mode_21.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/113_non_canonical_descriptor.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/114_reference_missing.json",
+          "reason": "no Python adapter for vector kind 'engram'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/001_streams_bf16_4x4_n1.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/002_streams_fp32_2x2x2_n2.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/003_streams_bf16_16x16_n4.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/004_streams_f16_2x3_n16.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/101_n_streams_zero.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/102_n_streams_above_bound.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/103_stream_offsets_not_monotonic.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/104_stream_offset_past_payload.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/105_plane_boundary_mismatch.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/106_exponent_stream_shorter_than_table.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/107_tile_root_mismatch.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/108_truncated_stream.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/109_stream_decoded_length_disagrees.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/110_stream_count_without_retable.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/111_unknown_exponent_coder.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/112_logical_root_mismatch.json",
+          "reason": "no Python adapter for vector kind 'float-tiled-streams'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/001_bf16_single_layer.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/002_fp16_adapter_set.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/003_fp32_multi_layer.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/004_empty_adapter_set.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/005_tenant_salt_a.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/006_tenant_salt_b.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/007_extension_dimension.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/008_two_pages.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/101_missing_salt.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/102_unknown_dimension.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/103_duplicate_dimension.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/104_unsorted_extensions.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/105_adapter_root_mismatch.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/106_tokenizer_mismatch.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/107_attention_mismatch.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/108_layout_mismatch.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/109_payload_truncated.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/110_payload_hash_mismatch.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/111_descriptor_non_canonical.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json",
+          "reason": "superseded by 112_reserved_mode_21"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_21.json",
+          "reason": "no Python adapter for vector kind 'kv-prov'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/001_select_true.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/002_select_false.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/003_select_not_false.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/004_select_not_not_true.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/005_select_has_attrs_project.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/006_select_tag_demo.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/008_select_attrs_project_demo.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/009_select_attrs_size_10.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/010_select_attrs_size_1.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/014_select_not_has_attrs_x.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/021_select_attrs_p_null.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json",
+          "reason": "WeftQL selector grammar is not implemented by the Python reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/001_logical_bf16_2x3x4.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/002_logical_f32_3.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/003_logical_i8_2x2.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/201_layout_row_major.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/202_layout_column_major.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/203_layout_blocked.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/204_layout_sharded.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/308_layout_extra_field.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json",
+          "reason": "WEFT-TENSOR layout/shard containers are outside the WeftCodec reader"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/001_align512_single.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/002_align4096_single.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/003_align65536_single.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/004_align4096_eight_sections.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/005_align512_two_roles.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/010_bad_magic.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/011_bad_version.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/012_nonzero_flags.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/013_zero_sections.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/014_wrong_table_offset.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/015_misaligned_offset.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/016_overlapping_sections.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/017_out_of_bounds_section.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/018_duplicate_offsets.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/019_table_count_mismatch.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/020_padding_not_zero.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/021_wrong_section_root.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/022_truncated_container.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/023_mode_mismatch.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/024_disallowed_alignment.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/025_unknown_role.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/transport/026_header_reserved_nonzero.json",
+          "reason": "no Python adapter for vector kind 'transport'"
+        },
+        {
+          "path": "conformance/checkpoint/v1/001_manifest_bf16_1shard.json",
+          "reason": "weft.checkpoint.v1 manifests are not implemented by the Python reader"
+        },
+        {
+          "path": "conformance/checkpoint/v1/101_unknown_schema.json",
+          "reason": "weft.checkpoint.v1 manifests are not implemented by the Python reader"
+        },
+        {
+          "path": "conformance/checkpoint/v1/102_element_bytes_mismatch.json",
+          "reason": "weft.checkpoint.v1 manifests are not implemented by the Python reader"
+        },
+        {
+          "path": "conformance/checkpoint/v1/103_duplicate_tensor.json",
+          "reason": "weft.checkpoint.v1 manifests are not implemented by the Python reader"
+        },
+        {
+          "path": "conformance/checkpoint/v1/104_shard_byte_len_mismatch.json",
+          "reason": "weft.checkpoint.v1 manifests are not implemented by the Python reader"
+        },
+        {
+          "path": "conformance/context/v1/causal_versions.json",
+          "reason": "Context Root resolution is not implemented by the Python reader"
+        },
+        {
+          "path": "conformance/fuzz/v1/seeds.txt",
+          "reason": "composite fixture (use --include-fixtures)"
+        },
+        {
+          "path": "conformance/store/v1",
+          "reason": "composite fixture (use --include-fixtures)"
+        }
+      ],
+      "total": 420
+    },
+    "rust": {
+      "fail": 0,
+      "implementation": "scripts/conformance-adapter-rust.sh",
+      "manifest": "conformance/manifest.json",
+      "manifest_aggregate_sha256": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8",
+      "mismatches": [],
+      "pass": 288,
+      "result": "pass",
+      "schema": "weft.conformance.run.v1",
+      "skip": 132,
+      "skips": [
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/010_dependency_cycle_archive.json",
+          "reason": "adversarial verb 'archive-create' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/026_archive_entry_count_limit.json",
+          "reason": "adversarial verb 'archive-decode' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/027_archive_non_topological.json",
+          "reason": "adversarial verb 'archive-decode' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/028_archive_entry_count_absurd.json",
+          "reason": "adversarial verb 'archive-decode' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/adversarial/036_archive_truncated_short.json",
+          "reason": "adversarial verb 'archive-decode' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/101_unsorted.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/102_duplicate.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/103_closure_missing_parent.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/104_zero_entry.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/105_unknown_schema.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/causal/106_unknown_key.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode.json",
+          "reason": "superseded by 017_unknown_mode_reserved8"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved10.json",
+          "reason": "superseded by 017_unknown_mode_reserved11"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved11.json",
+          "reason": "superseded by 017_unknown_mode_reserved12"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved12.json",
+          "reason": "superseded by 017_unknown_mode_reserved14"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved14.json",
+          "reason": "superseded by unknown_mode_reserved15"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved15.json",
+          "reason": "superseded by 017_unknown_mode_reserved16"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved16.json",
+          "reason": "superseded by 017_unknown_mode_reserved17"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved17.json",
+          "reason": "superseded by 017_unknown_mode_reserved18"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved18.json",
+          "reason": "superseded by 017_unknown_mode_reserved19"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json",
+          "reason": "superseded by 017_unknown_mode_reserved20"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved20.json",
+          "reason": "superseded by 017_unknown_mode_reserved21"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved8.json",
+          "reason": "superseded by 017_unknown_mode_reserved9"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved9.json",
+          "reason": "superseded by 017_unknown_mode_reserved10"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/101_unsorted_causal.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/102_duplicate_causal.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/103_zero_snapshot.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/104_selector_id_mismatch.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/105_namespace_mismatch.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/106_bad_namespace.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/107_unknown_schema.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/108_bad_budget_zero.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/109_unknown_ordering.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/context/110_unknown_key.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/001_engram_bf16_one_group.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/002_engram_fp16_many_groups.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/003_engram_fp32_basic.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/004_engram_empty_supersession.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/005_engram_chain_two.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/006_engram_region_subset.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/101_edges_not_increasing.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/102_last_edge_not_rows.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/103_group_count_mismatch.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/104_group_root_mismatch.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/105_payload_truncated.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/106_payload_hash_mismatch.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/107_supersession_cycle.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/108_supersession_missing.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/109_supersession_incompatible.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/110_unknown_hash_function.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/111_unknown_precision.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/112_reserved_mode_21.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/113_non_canonical_descriptor.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/engram/114_reference_missing.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/001_streams_bf16_4x4_n1.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/002_streams_fp32_2x2x2_n2.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/003_streams_bf16_16x16_n4.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/004_streams_f16_2x3_n16.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/101_n_streams_zero.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/102_n_streams_above_bound.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/103_stream_offsets_not_monotonic.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/104_stream_offset_past_payload.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/105_plane_boundary_mismatch.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/106_exponent_stream_shorter_than_table.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/107_tile_root_mismatch.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/108_truncated_stream.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/109_stream_decoded_length_disagrees.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/110_stream_count_without_retable.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/111_unknown_exponent_coder.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/float-tiled-streams/112_logical_root_mismatch.json",
+          "reason": "kind None has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json",
+          "reason": "superseded by 112_reserved_mode_21"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json",
+          "reason": "tensor subkind 'semantic_root' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json",
+          "reason": "tensor subkind 'semantic_root' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json",
+          "reason": "tensor subkind 'semantic_root' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/105_levels_zero.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/001_null.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/002_true.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/003_false.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/004_u64_zero.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/005_u64_max.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/006_i64_min.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/007_i64_neg_one.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/008_timestamp.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/009_text.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/010_bytes.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/011_array.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/012_map.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/013_non_minimal_varint.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/016_non_text_map_key.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/017_trailing_bytes.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/018_unknown_tag.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/019_truncated_text.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/structured/020_depth_limit.json",
+          "reason": "kind 'wcb' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/201_layout_row_major.json",
+          "reason": "tensor subkind 'tensor_layout' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/202_layout_column_major.json",
+          "reason": "tensor subkind 'tensor_layout' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/203_layout_blocked.json",
+          "reason": "tensor subkind 'tensor_layout' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/204_layout_sharded.json",
+          "reason": "tensor subkind 'tensor_layout' has no adapter"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/308_layout_extra_field.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json",
+          "reason": "record-level reject has no CLI verb in this implementation"
+        },
+        {
+          "path": "conformance/checkpoint/v1/001_manifest_bf16_1shard.json",
+          "reason": "kind 'checkpoint' has no adapter"
+        },
+        {
+          "path": "conformance/checkpoint/v1/101_unknown_schema.json",
+          "reason": "kind 'checkpoint' has no adapter"
+        },
+        {
+          "path": "conformance/checkpoint/v1/102_element_bytes_mismatch.json",
+          "reason": "kind 'checkpoint' has no adapter"
+        },
+        {
+          "path": "conformance/checkpoint/v1/103_duplicate_tensor.json",
+          "reason": "kind 'checkpoint' has no adapter"
+        },
+        {
+          "path": "conformance/checkpoint/v1/104_shard_byte_len_mismatch.json",
+          "reason": "kind 'checkpoint' has no adapter"
+        },
+        {
+          "path": "conformance/context/v1/causal_versions.json",
+          "reason": "context subkind 'causal_versions' has no adapter"
+        },
+        {
+          "path": "conformance/fuzz/v1/seeds.txt",
+          "reason": "composite fixture (use --include-fixtures)"
+        },
+        {
+          "path": "conformance/store/v1",
+          "reason": "composite fixture (use --include-fixtures)"
+        }
+      ],
+      "total": 420
+    }
+  },
+  "schema": "weft.conformance.bundle.v1",
+  "stamp": "20261111T012357Z",
+  "verify_receipts": "pass",
+  "version": "1.2.0"
+}

@@ -116,6 +116,12 @@ pub enum KeyKind {
     Reservation,
     /// `gc/runs/<run id>`: one completed GC run, kept for audit only.
     GcRun,
+    /// `kv-index/<ab>/<hash>`: an immutable KV prefix index segment (T063).
+    /// Always on the blob plane.
+    KvIndex,
+    /// `kv-index.root`: the mutable KV prefix index root control record
+    /// (T063). Always on the commit plane and replaced atomically.
+    KvIndexRoot,
 }
 
 impl KeyKind {
@@ -149,6 +155,8 @@ impl KeyKind {
             KeyKind::GcEpoch => "gc-epoch",
             KeyKind::Reservation => "reservation",
             KeyKind::GcRun => "gc-run",
+            KeyKind::KvIndex => "kv-index",
+            KeyKind::KvIndexRoot => "kv-index-root",
         }
     }
 }
@@ -231,6 +239,12 @@ pub enum Key {
     GcRun {
         run_id: String,
     },
+    /// One immutable KV prefix index segment (`kv-index/<ab>/<hash>`).
+    KvIndex {
+        hash: Hash32,
+    },
+    /// The mutable KV prefix index root record (`kv-index.root`).
+    KvIndexRoot,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -361,6 +375,16 @@ impl Key {
         }
     }
 
+    /// One immutable KV prefix index segment.
+    pub fn kv_index(hash: Hash32) -> Key {
+        Key::KvIndex { hash }
+    }
+
+    /// The mutable KV prefix index root record.
+    pub fn kv_index_root() -> Key {
+        Key::KvIndexRoot
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -393,6 +417,8 @@ impl Key {
             Key::GcEpoch => KeyKind::GcEpoch,
             Key::Reservation { .. } => KeyKind::Reservation,
             Key::GcRun { .. } => KeyKind::GcRun,
+            Key::KvIndex { .. } => KeyKind::KvIndex,
+            Key::KvIndexRoot => KeyKind::KvIndexRoot,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -409,7 +435,8 @@ impl Key {
             Key::Object { hash }
             | Key::Manifest { hash }
             | Key::Pack { hash }
-            | Key::PackCatalog { hash } => Some(hash.to_hex()[0..2].to_owned()),
+            | Key::PackCatalog { hash }
+            | Key::KvIndex { hash } => Some(hash.to_hex()[0..2].to_owned()),
             Key::Index { commit } => Some(commit.to_hex()[0..2].to_owned()),
             Key::DomainSuperblock { domain } | Key::DomainLink { domain } => {
                 Some(domain.to_hex()[0..2].to_owned())
@@ -428,7 +455,8 @@ impl Key {
             | Key::Index { .. }
             | Key::Pack { .. }
             | Key::PackCatalog { .. }
-            | Key::PackCatalogRoot => None,
+            | Key::KvIndex { .. }
+            | Key::KvIndexRoot => None,
             Key::Tx { id } => Some(id),
             Key::Reservation { tx_id } => Some(tx_id),
             Key::GcRun { run_id } => Some(run_id),
@@ -487,6 +515,11 @@ impl Key {
             Key::GcEpoch => "gc/epoch".to_owned(),
             Key::Reservation { tx_id } => format!("gc/reservations/{tx_id}"),
             Key::GcRun { run_id } => format!("gc/runs/{run_id}"),
+            Key::KvIndex { hash } => {
+                let hex = hash.to_hex();
+                format!("kv-index/{}/{hex}", &hex[0..2])
+            }
+            Key::KvIndexRoot => "kv-index.root".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -513,6 +546,7 @@ pub(crate) fn list_prefix_path(kind: KeyKind) -> Option<&'static str> {
         KeyKind::DomainSuperblock => Some("domains/"),
         KeyKind::Reservation => Some("gc/reservations/"),
         KeyKind::GcRun => Some("gc/runs/"),
+        KeyKind::KvIndex => Some("kv-index/"),
         _ => None,
     }
 }
@@ -569,16 +603,16 @@ pub(crate) fn classify_listed_key(kind: KeyKind, relative: &str) -> Option<Key> 
             "journal.v1" => Some(Key::access_journal()),
             _ => None,
         },
-        KeyKind::Pack | KeyKind::PackCatalog => {
+        KeyKind::Pack | KeyKind::PackCatalog | KeyKind::KvIndex => {
             let (shard, name) = relative.split_once('/')?;
             let hash = Hash32::from_lower_hex(name).ok()?;
             if hash.to_hex()[0..2] != *shard {
                 return None;
             }
-            Some(if kind == KeyKind::Pack {
-                Key::pack(hash)
-            } else {
-                Key::pack_catalog(hash)
+            Some(match kind {
+                KeyKind::Pack => Key::pack(hash),
+                KeyKind::PackCatalog => Key::pack_catalog(hash),
+                _ => Key::kv_index(hash),
             })
         }
         _ => None,
@@ -1986,6 +2020,11 @@ impl LocalBackend {
             Key::GcEpoch => self.root.join("gc").join("epoch"),
             Key::Reservation { tx_id } => self.root.join("gc").join("reservations").join(tx_id),
             Key::GcRun { run_id } => self.root.join("gc").join("runs").join(run_id),
+            Key::KvIndex { hash } => {
+                let hex = hash.to_hex();
+                self.root.join("kv-index").join(&hex[0..2]).join(hex)
+            }
+            Key::KvIndexRoot => self.root.join("kv-index.root"),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -2015,6 +2054,7 @@ impl LocalBackend {
             KeyKind::GcEpoch => Some(self.root.join("gc")),
             KeyKind::Reservation => Some(self.root.join("gc").join("reservations")),
             KeyKind::GcRun => Some(self.root.join("gc").join("runs")),
+            KeyKind::KvIndex => Some(self.root.join("kv-index")),
             _ => None,
         }
     }
@@ -2744,6 +2784,13 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
         KeyKind::Tx => Some(Key::tx(name)),
         KeyKind::Reservation => Some(Key::reservation(name)),
         KeyKind::GcRun => Some(Key::gc_run(name)),
+        KeyKind::KvIndex => {
+            let hash = Hash32::from_lower_hex(name).ok()?;
+            if &hash.to_hex()[0..2] != shard {
+                return None;
+            }
+            Some(Key::kv_index(hash))
+        }
         KeyKind::Quota => {
             if name == "quota" {
                 Some(Key::quota())
@@ -2852,6 +2899,8 @@ impl ObjectBackend {
             Key::GcEpoch => "gc-epoch".to_owned(),
             Key::Reservation { tx_id } => format!("gr-{tx_id}"),
             Key::GcRun { run_id } => format!("gg-{run_id}"),
+            Key::KvIndex { hash } => format!("kv-{}", hash.to_hex()),
+            Key::KvIndexRoot => "kv-index.root".to_owned(),
             Key::PackCatalogRoot | Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
     }

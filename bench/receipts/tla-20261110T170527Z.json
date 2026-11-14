@@ -1,0 +1,141 @@
+{
+  "schema": "weftfs.tla.receipt/1",
+  "generated_at": "2026-11-10T17:05:39Z",
+  "run": {
+    "started_at": "2026-11-10T17:05:27Z",
+    "finished_at": "2026-11-10T17:05:39Z",
+    "duration_ms": 12000
+  },
+  "environment": {
+    "court": "weft/tla-court:1",
+    "image_id": "sha256:de042d3c478deec6579b3182ff8dc49e450e4119b20245938c8f8d6c3d6f7916",
+    "kernel": "Linux 494ca7a969b8 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 x86_64 x86_64 GNU/Linux",
+    "java": "Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC",
+    "tla_version": "v1.7.4",
+    "tla2tools_sha256": "936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_cpus": "4",
+    "limit_pids": "1024"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "26366f20c2a0b4c62fdc5b9a3fa0723c96ecd94b"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "ad90835857e95479ac1305fcc16f90ac891a45ca"
+    }
+  ],
+  "models": {
+    "corrected": {
+      "module": "WeftCommit",
+      "spec": "verification/tla/WeftCommit.tla",
+      "config": "verification/tla/WeftCommit.cfg",
+      "constants": {
+        "MaxGen": 8
+      },
+      "invariants": [
+        "TypeOK",
+        "NoPartial",
+        "HighestValid",
+        "NoLostDependency",
+        "Durability",
+        "ReturnedObjectsDurable",
+        "ReplayIdempotent"
+      ],
+      "result": "pass",
+      "states_generated": 615,
+      "distinct_states_found": 591,
+      "search_depth": 68,
+      "output_tail": "Semantic processing of module WeftCommit\nStarting... (2026-11-10 17:05:27)\nComputing initial states...\nFinished computing initial states: 1 distinct state generated at 2026-11-10 17:05:27.\nModel checking completed. No error has been found.\n  Estimates of the probability that TLC did not check all reachable states\n  because two distinct states had the same fingerprint:\n  calculated (optimistic):  val = 7.7E-16\n615 states generated, 591 distinct states found, 0 states left on queue.\nThe depth of the complete state graph search is 68.\nThe average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).\nFinished in 00s at (2026-11-10 17:05:27)"
+    },
+    "flawed": {
+      "module": "WeftCommitBuggy",
+      "spec": "verification/tla/WeftCommitBuggy.tla",
+      "config": "verification/tla/WeftCommitBuggy.cfg",
+      "constants": {
+        "MaxGen": 3
+      },
+      "injection": "recovery trusts the highest commit file, ignoring superblock visibility and CRC",
+      "result": "expected-violation",
+      "violated_invariant": "NoPartial",
+      "states_generated": 32,
+      "distinct_states_found": 29,
+      "search_depth": 9,
+      "counterexample": "Error: The behavior up to this point is:\nState 1: <Initial predicate>\n/\\ phase = \"idle\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 0\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 2: <Start line 83, col 3 to line 92, col 29 of module WeftCommitBuggy>\n/\\ phase = \"objects\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 3: <SyncObjects line 95, col 3 to line 101, col 29 of module WeftCommitBuggy>\n/\\ phase = \"objectsSynced\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 4: <WriteCommit line 104, col 3 to line 108, col 43 of module WeftCommitBuggy>\n/\\ phase = \"commitWritten\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 1\n/\\ commit = <<\"none\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}\n/\\ scan = 3\n/\\ appliedAgain = {}\n/\\ crashed = FALSE\n/\\ returned = {}\n/\\ recovered = 0\n\nState 5: <CrashCommitWrite line 113, col 3 to line 120, col 73 of module WeftCommitBuggy>\n/\\ phase = \"idle\"\n/\\ recoveredAgain = 0\n/\\ applyGen = 1\n/\\ slot = (0 :> 0 @@ 1 :> 0)\n/\\ recoveryDone = FALSE\n/\\ applied = {}\n/\\ pending = 0\n/\\ commit = <<\"torn\", \"none\", \"none\">>\n/\\ againDone = FALSE\n/\\ durableObj = {1, 4}"
+    },
+    "multiwriter_corrected": {
+      "module": "WeftMultiWriter",
+      "spec": "verification/tla/WeftMultiWriter.tla",
+      "config": "verification/tla/WeftMultiWriter.cfg",
+      "constants": {
+        "MaxGen": 2
+      },
+      "invariants": [
+        "TypeOK",
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable",
+        "CommitOrderIsStable"
+      ],
+      "result": "pass",
+      "states_generated": 2690909,
+      "distinct_states_found": 268641,
+      "search_depth": 20,
+      "output_tail": "Computing initial states...\nFinished computing initial states: 1 distinct state generated at 2026-11-10 17:05:28.\nProgress(13) at 2026-11-10 17:05:31: 753,236 states generated (753,236 s/min), 118,747 distinct states found (118,747 ds/min), 40,181 states left on queue.\nModel checking completed. No error has been found.\n  Estimates of the probability that TLC did not check all reachable states\n  because two distinct states had the same fingerprint:\n  calculated (optimistic):  val = 3.5E-8\n  based on the actual fingerprints:  val = 5.7E-9\n2690909 states generated, 268641 distinct states found, 0 states left on queue.\nThe depth of the complete state graph search is 20.\nThe average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 5).\nFinished in 09s at (2026-11-10 17:05:37)"
+    },
+    "multiwriter_flawed_conflict": {
+      "module": "WeftMultiWriterBuggy",
+      "spec": "verification/tla/WeftMultiWriterBuggy.tla",
+      "config": "verification/tla/WeftMultiWriterBuggy.cfg",
+      "constants": {
+        "MaxGen": 2
+      },
+      "injection": "publication and rebase omit the observed-version check (last-writer-wins)",
+      "result": "expected-violation",
+      "violated_invariant": "NoBlindOverwrite",
+      "states_generated": 578,
+      "distinct_states_found": 227,
+      "search_depth": 6,
+      "counterexample": "Error: The behavior up to this point is:\nState 1: <Initial predicate>\n/\\ phase = [c1 |-> \"idle\", c2 |-> \"idle\"]\n/\\ txn = [ c1 |->\n      [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n  c2 |->\n      [ kind |-> \"none\",\n        owner |-> \"c1\",\n        writes |-> {},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 0, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 0\n\nState 2: <Start line 96, col 3 to line 108, col 65 of module WeftMultiWriterBuggy>\n/\\ phase = [c1 |-> \"prepared\", c2 |-> \"idle\"]\n/\\ txn = [ c1 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c1\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ],\n  c2 |->\n      [ kind |-> \"none\",\n        owner |-> \"c1\",\n        writes |-> {},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {\"k1\"}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 0, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 0\n\nState 3: <Start line 96, col 3 to line 108, col 65 of module WeftMultiWriterBuggy>\n/\\ phase = [c1 |-> \"prepared\", c2 |-> \"prepared\"]\n/\\ txn = [ c1 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c1\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ],\n  c2 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c2\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {\"k1\"}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 0, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 0\n\nState 4: <Publish line 147, col 3 to line 160, col 37 of module WeftMultiWriterBuggy>\n/\\ phase = [c1 |-> \"publishing\", c2 |-> \"prepared\"]\n/\\ txn = [ c1 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c1\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ],\n  c2 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c2\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {\"k1\"}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 1, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"txn\", owner |-> \"c1\", writes |-> {\"k1\"}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 1\n\nState 5: <Revalidate line 116, col 3 to line 123, col 53 of module WeftMultiWriterBuggy>\n/\\ phase = [c1 |-> \"publishing\", c2 |-> \"prepared\"]\n/\\ txn = [ c1 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c1\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ],\n  c2 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c2\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {\"k1\"}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 1, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 1]\n/\\ chain = << [kind |-> \"txn\", owner |-> \"c1\", writes |-> {\"k1\"}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 1\n\nState 6: <Publish line 147, col 3 to line 160, col 37 of module WeftMultiWriterBuggy>\n/\\ phase = [c1 |-> \"publishing\", c2 |-> \"publishing\"]"
+    },
+    "multiwriter_flawed_gc": {
+      "module": "WeftMultiWriterGcBuggy",
+      "spec": "verification/tla/WeftMultiWriterGcBuggy.tla",
+      "config": "verification/tla/WeftMultiWriterGcBuggy.cfg",
+      "constants": {
+        "MaxGen": 2
+      },
+      "injection": "GC marks only from the head and ignores a live prepared transaction",
+      "result": "expected-violation",
+      "violated_invariant": "GcNeverReclaimsReachable",
+      "states_generated": 14,
+      "distinct_states_found": 9,
+      "search_depth": 3,
+      "counterexample": "Error: The behavior up to this point is:\nState 1: <Initial predicate>\n/\\ phase = [c1 |-> \"idle\", c2 |-> \"idle\"]\n/\\ txn = [ c1 |->\n      [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n  c2 |->\n      [ kind |-> \"none\",\n        owner |-> \"c1\",\n        writes |-> {},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 0, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 0\n\nState 2: <Start line 95, col 3 to line 107, col 65 of module WeftMultiWriterGcBuggy>\n/\\ phase = [c1 |-> \"prepared\", c2 |-> \"idle\"]\n/\\ txn = [ c1 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c1\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ],\n  c2 |->\n      [ kind |-> \"none\",\n        owner |-> \"c1\",\n        writes |-> {},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {\"k1\"}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {}\n/\\ pending = [c1 |-> 0, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 0\n\nState 3: <GcReclaim line 245, col 3 to line 251, col 46 of module WeftMultiWriterGcBuggy>\n/\\ phase = [c1 |-> \"prepared\", c2 |-> \"idle\"]\n/\\ txn = [ c1 |->\n      [ kind |-> \"txn\",\n        owner |-> \"c1\",\n        writes |-> {\"k1\"},\n        observed |-> [k1 |-> 0] ],\n  c2 |->\n      [ kind |-> \"none\",\n        owner |-> \"c1\",\n        writes |-> {},\n        observed |-> [k1 |-> 0] ] ]\n/\\ readHead = [r1 |-> 0, r2 |-> 0]\n/\\ durableBlob = {}\n/\\ attempts = [c1 |-> 0, c2 |-> 0]\n/\\ deletedBlob = {\"k1\"}\n/\\ pending = [c1 |-> 0, c2 |-> 0]\n/\\ observedHead = [c1 |-> 0, c2 |-> 0]\n/\\ chain = << [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]],\n   [kind |-> \"none\", owner |-> \"c1\", writes |-> {}, observed |-> [k1 |-> 0]] >>\n/\\ crashed = [c1 |-> FALSE, c2 |-> FALSE]\n/\\ acked = [c1 |-> 0, c2 |-> 0]\n/\\ head = 0\n\n14 states generated, 9 distinct states found, 6 states left on queue.\nThe depth of the complete state graph search is 3.\nThe average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).\nFinished in 00s at (2026-11-10 17:05:38)"
+    }
+  },
+  "evidence": {
+    "log": "bench/receipts/tla-20261110T170527Z.log",
+    "log_sha256": "ce51b1fb9dc95dacfe1e5461a8c33034ac4cb470997d6d5d450b8742ecab310a"
+  },
+  "commands": {
+    "court": "scripts/docker-court.sh tla \"bash scripts/run_tla.sh\"",
+    "corrected": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommit.cfg WeftCommit",
+    "flawed": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftCommitBuggy.cfg WeftCommitBuggy",
+    "multiwriter_corrected": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriter.cfg WeftMultiWriter",
+    "multiwriter_flawed_conflict": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriterBuggy.cfg WeftMultiWriterBuggy",
+    "multiwriter_flawed_gc": "java -jar /opt/tla/tla2tools.jar -workers 1 -config WeftMultiWriterGcBuggy.cfg WeftMultiWriterGcBuggy"
+  },
+  "scope": {
+    "model_checked": "bounded TLC run of the abstract state machine only; each run is bounded by TLA_TIMEOUT_SECS",
+    "not_checked": "Rust/Go code refinement, checkpoints, capabilities, physical media, linearizability of a finite run"
+  }
+}

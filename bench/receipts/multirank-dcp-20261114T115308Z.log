@@ -1,0 +1,60 @@
+multirank court: clean 4-rank publish
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/work/python/courts/multirank_dcp.py", line 380, in <module>
+[rank0]:     sys.exit(main())
+[rank0]:              ^^^^^^
+[rank0]:   File "/work/python/courts/multirank_dcp.py", line 373, in main
+[rank0]:     return run_save(args)
+[rank0]:            ^^^^^^^^^^^^^^
+[rank0]:   File "/work/python/courts/multirank_dcp.py", line 175, in run_save
+[rank0]:     import safetensors.numpy
+[rank0]: ModuleNotFoundError: No module named 'safetensors'
+W1114 11:53:09.677000 15 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 18 closing signal SIGTERM
+W1114 11:53:09.677000 15 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 19 closing signal SIGTERM
+W1114 11:53:09.677000 15 site-packages/torch/distributed/elastic/multiprocessing/api.py:1028] Sending process 20 closing signal SIGTERM
+E1114 11:53:09.688000 15 site-packages/torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 1) local_rank: 0 (pid: 17) of binary: /usr/local/bin/python3.12
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 384, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+python/courts/multirank_dcp.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-11-14_11:53:09
+  host      : 9e900ebbc9eb
+  rank      : 1 (local_rank: 1)
+  exitcode  : -15 (pid: 18)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 18
+[2]:
+  time      : 2026-11-14_11:53:09
+  host      : 9e900ebbc9eb
+  rank      : 3 (local_rank: 3)
+  exitcode  : -15 (pid: 20)  (SIGTERM)
+  error_file: <N/A>
+  traceback : Signal 15 (SIGTERM) received by PID 20
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-11-14_11:53:09
+  host      : 9e900ebbc9eb
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 17) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

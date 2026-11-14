@@ -1,0 +1,224 @@
+== multiwriter failure court ==
+kernel: Linux 85133743bd68 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1399:9
+     |
+1399 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1400:9
+     |
+1400 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1401:9
+     |
+1401 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: variable does not need to be mutable
+   --> src/read_pool.rs:227:13
+    |
+227 |         let mut handle = self.acquire()?;
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/read_pool.rs:245:13
+    |
+245 |         let mut handle = self.acquire()?;
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1399:9
+     |
+1399 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1400:9
+     |
+1400 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1401:9
+     |
+1401 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: variable does not need to be mutable
+   --> src/read_pool.rs:227:13
+    |
+227 |         let mut handle = self.acquire()?;
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/read_pool.rs:245:13
+    |
+245 |         let mut handle = self.acquire()?;
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5710:8
+     |
+5710 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5717:8
+     |
+5717 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5734:7
+     |
+5734 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5736:4
+     |
+5736 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5769:4
+     |
+5769 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+# github.com/infinityabundance/WeftFS-Go/store
+store/azureclient.go:208:1: syntax error: unexpected EOF, expected expression

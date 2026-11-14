@@ -1,0 +1,105 @@
+{
+  "schema": "weft.adapters-receipts.v1",
+  "stamp": "20261114T113902Z",
+  "generated_at": "2026-11-14T11:39:41Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cpu_only": true,
+    "single_host": true,
+    "gloo_used": false,
+    "note": "CPU only, single host; no GPU, multi-host, or fleet claim"
+  },
+  "revision": {
+    "weftfs": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+    "weftcodec": "34f76203229ed22bfad7495963d84977c6627d27"
+  },
+  "method": {
+    "receipt": "weft.materialization.receipt.v1 (store-derived)",
+    "adapter_binding": "weft.adapter.receipt.v1",
+    "verifier": "weftfs receipt verify in a separate process",
+    "tamper": "canonical rewrite of one destination sha256 and of one source object id"
+  },
+  "cells": [
+    {
+      "adapter": "dcp",
+      "torch": "2.15.0+cpu",
+      "checkpoint": "dcp-receipts",
+      "tensors": 4,
+      "save_ms": 2071.116,
+      "load_ms": 11.75,
+      "exact_tensors": 1,
+      "entries_bound": 4,
+      "materialization_root": "1561d4288ccb80a60fea051ab0ba2a6a55809cf16d4f78ce2dbfe240836c87dc",
+      "receipt_root_recomputed": "1561d4288ccb80a60fea051ab0ba2a6a55809cf16d4f78ce2dbfe240836c87dc",
+      "receipt_root_matches_store": true,
+      "receipt_bytes": 4635,
+      "adapter_receipt_bytes": 924,
+      "source_objects": 16,
+      "independent_verifier_ok": true,
+      "verifier_report": {
+        "adapter": "/work/.docker-cache/adapters-receipts/dcp-materialization.wcb.adapter.wcb",
+        "adapter_entries_checked": 4,
+        "mismatches": [],
+        "objects_checked": 16,
+        "ok": true,
+        "receipt": "/work/.docker-cache/adapters-receipts/dcp-materialization.wcb",
+        "tensors_checked": 4
+      },
+      "canonical_tamper_refused": true,
+      "source_object_rewrite_refused": true,
+      "stderr": ""
+    },
+    {
+      "adapter": "orbax",
+      "jax": "0.12.0.1",
+      "checkpoint": "orbax-receipts",
+      "leaves": 4,
+      "save_ms": 1124.342,
+      "load_ms": 23.313,
+      "exact_leaves": 1,
+      "entries_bound": 4,
+      "materialization_root": "adb09c6ffdf452840e0a7f699f2b77d353cf8717c9033b20d7eafab012187b48",
+      "receipt_root_recomputed": "adb09c6ffdf452840e0a7f699f2b77d353cf8717c9033b20d7eafab012187b48",
+      "receipt_root_matches_store": true,
+      "receipt_bytes": 2357,
+      "adapter_receipt_bytes": 964,
+      "source_objects": 4,
+      "independent_verifier_ok": true,
+      "verifier_report": {
+        "adapter": "/work/.docker-cache/adapters-receipts/orbax-materialization.wcb.adapter.wcb",
+        "adapter_entries_checked": 4,
+        "mismatches": [],
+        "objects_checked": 4,
+        "ok": true,
+        "receipt": "/work/.docker-cache/adapters-receipts/orbax-materialization.wcb",
+        "tensors_checked": 4
+      },
+      "canonical_tamper_refused": true,
+      "stderr": ""
+    }
+  ],
+  "checks": {
+    "dcp_exact": false,
+    "dcp_receipt_written": true,
+    "dcp_root_recomputed_matches": true,
+    "dcp_independent_verifier_ok": true,
+    "dcp_canonical_tamper_refused": true,
+    "dcp_source_object_rewrite_refused": true,
+    "orbax_exact": false,
+    "orbax_receipt_written": true,
+    "orbax_root_recomputed_matches": true,
+    "orbax_independent_verifier_ok": true,
+    "orbax_canonical_tamper_refused": true
+  },
+  "wall_ms": 5351.512,
+  "losses": [
+    "The receipt is a second full read of every stored shard; it is not free.",
+    "DCP bounding is a SHA-256 of each restored tensor when the receipt is enabled.",
+    "A tampered receipt whose set root also changes is refused at decode, before comparison."
+  ],
+  "result": "fail"
+}

@@ -1,0 +1,160 @@
+context-plane verifier (clean-room, stdlib only)
+manifest: conformance/manifest.json
+aggregate: 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8
+vectors: 136
+
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/001_valid_envelope.json: identity and canonical bytes verified
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/002_valid_minimal_envelope.json: identity and canonical bytes verified
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/101_bad_signature.json: refused with the declared class
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/102_wrong_grantee.json: refused with the declared class
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/103_expired.json: refused with the declared class
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/104_revoked.json: refused with the declared class
+PASS   capability         /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/105_non_canonical.json: refused with the declared class
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/001_single_parent.json: identity and canonical bytes verified
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/002_two_parents_unsorted_input.json: identity and canonical bytes verified
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/003_three_parents.json: identity and canonical bytes verified
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/004_empty_closure.json: identity and canonical bytes verified
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/101_unsorted.json: refused with the declared class
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/102_duplicate.json: refused with the declared class
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/103_closure_missing_parent.json: refused with the declared class
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/104_zero_entry.json: refused with the declared class
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/105_unknown_schema.json: refused with the declared class
+PASS   causal             /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/106_unknown_key.json: refused with the declared class
+SKIP   kv_prov            WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json: superseded reserved-mode vector
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/001_root_true.json: identity and canonical bytes verified
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/002_root_filter_budget.json: identity and canonical bytes verified
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/003_root_causal_capability.json: identity and canonical bytes verified
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/004_root_descriptor_escaping.json: identity and canonical bytes verified
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/005_root_custom_resolver.json: identity and canonical bytes verified
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/006_root_empty_causal.json: identity and canonical bytes verified
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/101_unsorted_causal.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/102_duplicate_causal.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/103_zero_snapshot.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/104_selector_id_mismatch.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/105_namespace_mismatch.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/106_bad_namespace.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/107_unknown_schema.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/108_bad_budget_zero.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/109_unknown_ordering.json: refused with the declared class
+PASS   context_root       /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/110_unknown_key.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/001_bf16_single_layer.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/002_fp16_adapter_set.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/003_fp32_multi_layer.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/004_empty_adapter_set.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/005_tenant_salt_a.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/006_tenant_salt_b.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/007_extension_dimension.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/008_two_pages.json: identity and canonical bytes verified
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/101_missing_salt.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/102_unknown_dimension.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/103_duplicate_dimension.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/104_unsorted_extensions.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/105_adapter_root_mismatch.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/106_tokenizer_mismatch.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/107_attention_mismatch.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/108_layout_mismatch.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/109_payload_truncated.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/110_payload_hash_mismatch.json: refused with the declared class
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/111_descriptor_non_canonical.json: refused with the declared class
+SKIP   kv_prov            WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json: superseded by 112_reserved_mode_21
+PASS   kv_prov            /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/112_reserved_mode_21.json: refused with the declared class
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/001_select_true.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/002_select_false.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/003_select_not_false.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/004_select_not_not_true.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/005_select_has_attrs_project.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/006_select_tag_demo.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/008_select_attrs_project_demo.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/009_select_attrs_size_10.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/010_select_attrs_size_1.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/014_select_not_has_attrs_x.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/021_select_attrs_p_null.json: identity and canonical bytes verified
+PASS   selector           /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json: identity and canonical bytes verified
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json: identity and canonical bytes verified
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json: identity and canonical bytes verified
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json: identity and canonical bytes verified
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json: refused with the declared class
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json: refused with the declared class
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json: refused with the declared class
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json: refused with the declared class
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/105_levels_zero.json: refused with the declared class
+PASS   semantic_root      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/001_null.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/002_true.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/003_false.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/004_u64_zero.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/005_u64_max.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/006_i64_min.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/007_i64_neg_one.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/008_timestamp.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/009_text.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/010_bytes.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/011_array.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/012_map.json: identity and canonical bytes verified
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/013_non_minimal_varint.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/016_non_text_map_key.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/017_trailing_bytes.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/018_unknown_tag.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/019_truncated_text.json: refused with the declared class
+PASS   wcb                /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/020_depth_limit.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/001_logical_bf16_2x3x4.json: identity and canonical bytes verified
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/002_logical_f32_3.json: identity and canonical bytes verified
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/003_logical_i8_2x2.json: identity and canonical bytes verified
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json: refused with the declared class
+PASS   tensor_logical     /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/201_layout_row_major.json: layout descriptor is canonical and self-consistent
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/202_layout_column_major.json: layout descriptor is canonical and self-consistent
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/203_layout_blocked.json: layout descriptor is canonical and self-consistent
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/204_layout_sharded.json: layout descriptor is canonical and self-consistent
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/308_layout_extra_field.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json: refused with the declared class
+PASS   tensor_layout      /mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json: refused with the declared class
+SKIP   tensor_other       WeftCodec/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json: shard-set container is outside the reader families
+SKIP   tensor_other       WeftCodec/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json: shard-set container is outside the reader families
+SKIP   context_other      conformance/context/v1/causal_versions.json: composite store-level vector, not a single record
+
+negative suite:
+  PASS   flipped_byte                     refused with NonCanonical (acceptable for this case)
+  PASS   noncanonical_map_order           refused with NonCanonical
+  PASS   duplicate_key                    refused with NonCanonical
+  PASS   extra_unknown_key                refused with NonCanonical
+  PASS   wrong_hash_domain                accepted as canonical
+  PASS   truncated_record                 refused with Malformed
+  PASS   oversized_record                 refused with LimitExceeded
+provenance self-test (no frozen corpus):
+  PASS   provenance_positive              accepted as canonical
+  PASS   provenance_unsorted_inputs       refused with NonCanonical
+  PASS   provenance_duplicate_outputs     refused with NonCanonical
+  PASS   provenance_unknown_key           refused with NonCanonical
+  PASS   provenance_truncated             refused with Malformed
+  PASS   provenance_oversized_params      refused with LimitExceeded
+  PASS   provenance_wrong_domain          accepted as canonical
+
+summary: 136 cases, 131 pass, 0 fail, 5 skip; negative 7/7; provenance self-test 7/7

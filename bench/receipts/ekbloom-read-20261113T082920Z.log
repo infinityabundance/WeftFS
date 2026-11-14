@@ -1,0 +1,121 @@
+== ekbloom court ==
+phase: read
+stamp: 20261113T082920Z
+kernel: Linux c4e04632bfd8 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/rust-court:1 (sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb)
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+revisions: weftfs=f29bfbc671531566a123c8ad63c9c4280b6081e9 weftfs_go=7f55d11a7a66a5c6e542e345d06539d801281a4c weftcodec=75f08634824d3f6fe1561a1c523e97f390e85391 weftcodec_go=9812d158bf41be85f73ca667f9e2439661d7db2e
+rustc: rustc 1.99.1 (58cf8f9c3 2026-10-13)
+cargo: cargo 1.99.1 (5f94df478 2026-08-27)
+ekbloom: version=0.7.3 lock_checksum=1c56ae95137ee95cdd8a3c26006aec3281752b23c150a5243152e2370e965da4
+== build (cargo build --release --locked) ==
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2249:9
+     |
+2249 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2354:13
+     |
+2354 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 14 warnings (run `cargo fix --lib -p weftfs` to apply 12 suggestions)
+   Compiling ekbloom-harness v0.1.0 (/work/bench/ekbloom-harness)
+    Finished `release` profile [optimized] target(s) in 2.70s
+harness sha256: b5fb48b85c50b7e9f275cfdd9436945cedffd289b15b08237bdbff474655947f
+== run ==
+corpus: arm=base file=.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors bytes=988097824 sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342 header_sha256=a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14 tensors=290
+corpus: arm=instruct file=.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe header_sha256=a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14 tensors=290
+receipt: bench/receipts/ekbloom-read-20261113T082920Z.json
+verdict: loss
+ekbloom_court: receipt=bench/receipts/ekbloom-read-20261113T082920Z.json
+ekbloom_court: log=bench/receipts/ekbloom-read-20261113T082920Z.log

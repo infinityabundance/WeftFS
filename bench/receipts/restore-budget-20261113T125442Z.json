@@ -1,0 +1,1909 @@
+{
+  "checks": {
+    "failed": 0,
+    "ok": true,
+    "passed": 12,
+    "rows": [
+      {
+        "check": "cap1.observed_max_active_within_cap",
+        "detail": "1 <= 1",
+        "ok": true
+      },
+      {
+        "check": "cap1.recommended_default_present",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap1.no_budget_clamp_needed",
+        "detail": "the pipeline clamps the group width before admitting",
+        "ok": true
+      },
+      {
+        "check": "cap2.observed_max_active_within_cap",
+        "detail": "2 <= 2",
+        "ok": true
+      },
+      {
+        "check": "cap2.recommended_default_present",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap2.no_budget_clamp_needed",
+        "detail": "the pipeline clamps the group width before admitting",
+        "ok": true
+      },
+      {
+        "check": "cap4.observed_max_active_within_cap",
+        "detail": "4 <= 4",
+        "ok": true
+      },
+      {
+        "check": "cap4.recommended_default_present",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap4.no_budget_clamp_needed",
+        "detail": "the pipeline clamps the group width before admitting",
+        "ok": true
+      },
+      {
+        "check": "cap8.observed_max_active_within_cap",
+        "detail": "8 <= 8",
+        "ok": true
+      },
+      {
+        "check": "cap8.recommended_default_present",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "cap8.no_budget_clamp_needed",
+        "detail": "the pipeline clamps the group width before admitting",
+        "ok": true
+      }
+    ],
+    "total": 12
+  },
+  "command": "scripts/resource_courts.sh",
+  "data": {
+    "budgeted": {
+      "cap1": {
+        "best": {
+          "effective_widths": [
+            1,
+            1
+          ],
+          "observed_max_active_workers": 1,
+          "shard_threads": 4,
+          "threads": 4,
+          "tile_threads": 4,
+          "wall": {
+            "max_ms": 8.404301,
+            "min_ms": 8.345481,
+            "p50_ms": 8.404301,
+            "p95_ms": 8.404301,
+            "reps": 2,
+            "samples_ms": [
+              8.404301,
+              8.345481
+            ]
+          }
+        },
+        "observed_max_active_workers": 1,
+        "observed_max_inflight_bytes": 262144,
+        "oversized_admissions": 0,
+        "policy": {
+          "max_active_workers": 1,
+          "max_inflight_bytes": 67108864
+        },
+        "recommended_default": {
+          "effective_widths": [
+            1,
+            1
+          ],
+          "shard_threads": 1,
+          "threads": 1,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 8.517312,
+            "min_ms": 8.492355,
+            "p50_ms": 8.517312,
+            "p95_ms": 8.517312,
+            "reps": 2,
+            "samples_ms": [
+              8.517312,
+              8.492355
+            ]
+          }
+        },
+        "rows": [
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.635152,
+              "min_ms": 8.593164,
+              "p50_ms": 8.635152,
+              "p95_ms": 8.635152,
+              "reps": 2,
+              "samples_ms": [
+                8.593164,
+                8.635152
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.600788,
+              "min_ms": 8.336494,
+              "p50_ms": 8.600788,
+              "p95_ms": 8.600788,
+              "reps": 2,
+              "samples_ms": [
+                8.600788,
+                8.336494
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 9.090614,
+              "min_ms": 8.566684,
+              "p50_ms": 9.090614,
+              "p95_ms": 9.090614,
+              "reps": 2,
+              "samples_ms": [
+                8.566684,
+                9.090614
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 9.175744,
+              "min_ms": 8.423296,
+              "p50_ms": 9.175744,
+              "p95_ms": 9.175744,
+              "reps": 2,
+              "samples_ms": [
+                8.423296,
+                9.175744
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 2,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.475594,
+              "min_ms": 8.461276999999999,
+              "p50_ms": 8.475594,
+              "p95_ms": 8.475594,
+              "reps": 2,
+              "samples_ms": [
+                8.461276999999999,
+                8.475594
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.450868,
+              "min_ms": 8.368033,
+              "p50_ms": 8.450868,
+              "p95_ms": 8.450868,
+              "reps": 2,
+              "samples_ms": [
+                8.368033,
+                8.450868
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 9.752232,
+              "min_ms": 8.614885,
+              "p50_ms": 9.752232,
+              "p95_ms": 9.752232,
+              "reps": 2,
+              "samples_ms": [
+                8.614885,
+                9.752232
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 2,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.997922,
+              "min_ms": 8.619714,
+              "p50_ms": 8.997922,
+              "p95_ms": 8.997922,
+              "reps": 2,
+              "samples_ms": [
+                8.619714,
+                8.997922
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 4,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 11.095144,
+              "min_ms": 9.233310999999999,
+              "p50_ms": 11.095144,
+              "p95_ms": 11.095144,
+              "reps": 2,
+              "samples_ms": [
+                11.095144,
+                9.233310999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 4,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.770506000000001,
+              "min_ms": 8.494689999999999,
+              "p50_ms": 8.770506000000001,
+              "p95_ms": 8.770506000000001,
+              "reps": 2,
+              "samples_ms": [
+                8.770506000000001,
+                8.494689999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 9.517984,
+              "min_ms": 8.651482999999999,
+              "p50_ms": 9.517984,
+              "p95_ms": 9.517984,
+              "reps": 2,
+              "samples_ms": [
+                9.517984,
+                8.651482999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 4,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.841718,
+              "min_ms": 8.687561,
+              "p50_ms": 8.841718,
+              "p95_ms": 8.841718,
+              "reps": 2,
+              "samples_ms": [
+                8.841718,
+                8.687561
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 8.751049,
+              "min_ms": 8.633208999999999,
+              "p50_ms": 8.751049,
+              "p95_ms": 8.751049,
+              "reps": 2,
+              "samples_ms": [
+                8.633208999999999,
+                8.751049
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 8.774343,
+              "min_ms": 8.475193,
+              "p50_ms": 8.774343,
+              "p95_ms": 8.774343,
+              "reps": 2,
+              "samples_ms": [
+                8.475193,
+                8.774343
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 4,
+            "wall": {
+              "max_ms": 8.404301,
+              "min_ms": 8.345481,
+              "p50_ms": 8.404301,
+              "p95_ms": 8.404301,
+              "reps": 2,
+              "samples_ms": [
+                8.404301,
+                8.345481
+              ]
+            }
+          }
+        ],
+        "waited": [
+          [
+            "encode",
+            0
+          ],
+          [
+            "codec",
+            0
+          ],
+          [
+            "io",
+            0
+          ],
+          [
+            "restore",
+            120
+          ],
+          [
+            "maintenance",
+            0
+          ]
+        ]
+      },
+      "cap2": {
+        "best": {
+          "effective_widths": [
+            1,
+            1
+          ],
+          "observed_max_active_workers": 2,
+          "shard_threads": 1,
+          "threads": 2,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 4.382177,
+            "min_ms": 4.312677,
+            "p50_ms": 4.382177,
+            "p95_ms": 4.382177,
+            "reps": 2,
+            "samples_ms": [
+              4.382177,
+              4.312677
+            ]
+          }
+        },
+        "observed_max_active_workers": 2,
+        "observed_max_inflight_bytes": 524288,
+        "oversized_admissions": 0,
+        "policy": {
+          "max_active_workers": 2,
+          "max_inflight_bytes": 67108864
+        },
+        "recommended_default": {
+          "effective_widths": [
+            2,
+            1
+          ],
+          "shard_threads": 2,
+          "threads": 1,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 5.23939,
+            "min_ms": 5.022054,
+            "p50_ms": 5.23939,
+            "p95_ms": 5.23939,
+            "reps": 2,
+            "samples_ms": [
+              5.23939,
+              5.022054
+            ]
+          }
+        },
+        "rows": [
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.460415000000001,
+              "min_ms": 8.390063999999999,
+              "p50_ms": 8.460415000000001,
+              "p95_ms": 8.460415000000001,
+              "reps": 2,
+              "samples_ms": [
+                8.460415000000001,
+                8.390063999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 1,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.382177,
+              "min_ms": 4.312677,
+              "p50_ms": 4.382177,
+              "p95_ms": 4.382177,
+              "reps": 2,
+              "samples_ms": [
+                4.382177,
+                4.312677
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 1,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.666909,
+              "min_ms": 4.62946,
+              "p50_ms": 4.666909,
+              "p95_ms": 4.666909,
+              "reps": 2,
+              "samples_ms": [
+                4.666909,
+                4.62946
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 1,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.447158,
+              "min_ms": 4.4131149999999995,
+              "p50_ms": 4.447158,
+              "p95_ms": 4.447158,
+              "reps": 2,
+              "samples_ms": [
+                4.4131149999999995,
+                4.447158
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 2,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.205868,
+              "min_ms": 5.092575999999999,
+              "p50_ms": 5.205868,
+              "p95_ms": 5.205868,
+              "reps": 2,
+              "samples_ms": [
+                5.205868,
+                5.092575999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.980897,
+              "min_ms": 4.763079,
+              "p50_ms": 4.980897,
+              "p95_ms": 4.980897,
+              "reps": 2,
+              "samples_ms": [
+                4.980897,
+                4.763079
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.889946,
+              "min_ms": 4.841326,
+              "p50_ms": 4.889946,
+              "p95_ms": 4.889946,
+              "reps": 2,
+              "samples_ms": [
+                4.841326,
+                4.889946
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 2,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.9789129999999995,
+              "min_ms": 4.872154,
+              "p50_ms": 4.9789129999999995,
+              "p95_ms": 4.9789129999999995,
+              "reps": 2,
+              "samples_ms": [
+                4.9789129999999995,
+                4.872154
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 4,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.0983469999999995,
+              "min_ms": 4.9966669999999995,
+              "p50_ms": 5.0983469999999995,
+              "p95_ms": 5.0983469999999995,
+              "reps": 2,
+              "samples_ms": [
+                5.0983469999999995,
+                4.9966669999999995
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 4,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.290375,
+              "min_ms": 4.909253,
+              "p50_ms": 5.290375,
+              "p95_ms": 5.290375,
+              "reps": 2,
+              "samples_ms": [
+                5.290375,
+                4.909253
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.007766999999999,
+              "min_ms": 4.790681,
+              "p50_ms": 5.007766999999999,
+              "p95_ms": 5.007766999999999,
+              "reps": 2,
+              "samples_ms": [
+                4.790681,
+                5.007766999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 4,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.091855,
+              "min_ms": 4.9164769999999995,
+              "p50_ms": 5.091855,
+              "p95_ms": 5.091855,
+              "reps": 2,
+              "samples_ms": [
+                4.9164769999999995,
+                5.091855
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 4.845724,
+              "min_ms": 4.785271,
+              "p50_ms": 4.845724,
+              "p95_ms": 4.845724,
+              "reps": 2,
+              "samples_ms": [
+                4.785271,
+                4.845724
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 4.849611,
+              "min_ms": 4.84904,
+              "p50_ms": 4.849611,
+              "p95_ms": 4.849611,
+              "reps": 2,
+              "samples_ms": [
+                4.849611,
+                4.84904
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 4,
+            "wall": {
+              "max_ms": 5.273624,
+              "min_ms": 5.079912,
+              "p50_ms": 5.273624,
+              "p95_ms": 5.273624,
+              "reps": 2,
+              "samples_ms": [
+                5.273624,
+                5.079912
+              ]
+            }
+          }
+        ],
+        "waited": [
+          [
+            "encode",
+            0
+          ],
+          [
+            "codec",
+            0
+          ],
+          [
+            "io",
+            0
+          ],
+          [
+            "restore",
+            106
+          ],
+          [
+            "maintenance",
+            0
+          ]
+        ]
+      },
+      "cap4": {
+        "best": {
+          "effective_widths": [
+            2,
+            1
+          ],
+          "observed_max_active_workers": 4,
+          "shard_threads": 2,
+          "threads": 2,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 2.69408,
+            "min_ms": 2.645238,
+            "p50_ms": 2.69408,
+            "p95_ms": 2.69408,
+            "reps": 2,
+            "samples_ms": [
+              2.645238,
+              2.69408
+            ]
+          }
+        },
+        "observed_max_active_workers": 4,
+        "observed_max_inflight_bytes": 786432,
+        "oversized_admissions": 0,
+        "policy": {
+          "max_active_workers": 4,
+          "max_inflight_bytes": 67108864
+        },
+        "recommended_default": {
+          "effective_widths": [
+            2,
+            1
+          ],
+          "shard_threads": 2,
+          "threads": 2,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 2.649266,
+            "min_ms": 2.5164269999999997,
+            "p50_ms": 2.649266,
+            "p95_ms": 2.649266,
+            "reps": 2,
+            "samples_ms": [
+              2.649266,
+              2.5164269999999997
+            ]
+          }
+        },
+        "rows": [
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 8.696408,
+              "min_ms": 8.454043,
+              "p50_ms": 8.696408,
+              "p95_ms": 8.696408,
+              "reps": 2,
+              "samples_ms": [
+                8.696408,
+                8.454043
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 1,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.282912,
+              "min_ms": 4.435687,
+              "p50_ms": 5.282912,
+              "p95_ms": 5.282912,
+              "reps": 2,
+              "samples_ms": [
+                4.435687,
+                5.282912
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 1,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.961771,
+              "min_ms": 2.91893,
+              "p50_ms": 2.961771,
+              "p95_ms": 2.961771,
+              "reps": 2,
+              "samples_ms": [
+                2.961771,
+                2.91893
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 1,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 3.0053710000000002,
+              "min_ms": 2.9802750000000002,
+              "p50_ms": 3.0053710000000002,
+              "p95_ms": 3.0053710000000002,
+              "reps": 2,
+              "samples_ms": [
+                3.0053710000000002,
+                2.9802750000000002
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.090793,
+              "min_ms": 5.0619879999999995,
+              "p50_ms": 5.090793,
+              "p95_ms": 5.090793,
+              "reps": 2,
+              "samples_ms": [
+                5.090793,
+                5.0619879999999995
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.69408,
+              "min_ms": 2.645238,
+              "p50_ms": 2.69408,
+              "p95_ms": 2.69408,
+              "reps": 2,
+              "samples_ms": [
+                2.645238,
+                2.69408
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.8295619999999997,
+              "min_ms": 2.606896,
+              "p50_ms": 2.8295619999999997,
+              "p95_ms": 2.8295619999999997,
+              "reps": 2,
+              "samples_ms": [
+                2.606896,
+                2.8295619999999997
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.9219749999999998,
+              "min_ms": 2.5595079999999997,
+              "p50_ms": 2.9219749999999998,
+              "p95_ms": 2.9219749999999998,
+              "reps": 2,
+              "samples_ms": [
+                2.5595079999999997,
+                2.9219749999999998
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 4,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.172576,
+              "min_ms": 4.99329,
+              "p50_ms": 5.172576,
+              "p95_ms": 5.172576,
+              "reps": 2,
+              "samples_ms": [
+                5.172576,
+                4.99329
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 4,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.758452,
+              "min_ms": 4.746860000000001,
+              "p50_ms": 4.758452,
+              "p95_ms": 4.758452,
+              "reps": 2,
+              "samples_ms": [
+                4.758452,
+                4.746860000000001
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.9048750000000005,
+              "min_ms": 4.865932,
+              "p50_ms": 4.9048750000000005,
+              "p95_ms": 4.9048750000000005,
+              "reps": 2,
+              "samples_ms": [
+                4.865932,
+                4.9048750000000005
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 4,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.134233,
+              "min_ms": 4.8964289999999995,
+              "p50_ms": 5.134233,
+              "p95_ms": 5.134233,
+              "reps": 2,
+              "samples_ms": [
+                5.134233,
+                4.8964289999999995
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              2
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 4.797484,
+              "min_ms": 4.707826,
+              "p50_ms": 4.797484,
+              "p95_ms": 4.797484,
+              "reps": 2,
+              "samples_ms": [
+                4.797484,
+                4.707826
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              2
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 4.899405,
+              "min_ms": 4.865190999999999,
+              "p50_ms": 4.899405,
+              "p95_ms": 4.899405,
+              "reps": 2,
+              "samples_ms": [
+                4.865190999999999,
+                4.899405
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 4,
+            "wall": {
+              "max_ms": 4.916065,
+              "min_ms": 4.897261,
+              "p50_ms": 4.916065,
+              "p95_ms": 4.916065,
+              "reps": 2,
+              "samples_ms": [
+                4.916065,
+                4.897261
+              ]
+            }
+          }
+        ],
+        "waited": [
+          [
+            "encode",
+            0
+          ],
+          [
+            "codec",
+            0
+          ],
+          [
+            "io",
+            0
+          ],
+          [
+            "restore",
+            76
+          ],
+          [
+            "maintenance",
+            0
+          ]
+        ]
+      },
+      "cap8": {
+        "best": {
+          "effective_widths": [
+            2,
+            1
+          ],
+          "observed_max_active_workers": 8,
+          "shard_threads": 2,
+          "threads": 8,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 2.23427,
+            "min_ms": 1.97261,
+            "p50_ms": 2.23427,
+            "p95_ms": 2.23427,
+            "reps": 2,
+            "samples_ms": [
+              2.23427,
+              1.97261
+            ]
+          }
+        },
+        "observed_max_active_workers": 8,
+        "observed_max_inflight_bytes": 786432,
+        "oversized_admissions": 0,
+        "policy": {
+          "max_active_workers": 8,
+          "max_inflight_bytes": 67108864
+        },
+        "recommended_default": {
+          "effective_widths": [
+            2,
+            1
+          ],
+          "shard_threads": 2,
+          "threads": 4,
+          "tile_threads": 1,
+          "wall": {
+            "max_ms": 2.297327,
+            "min_ms": 2.162675,
+            "p50_ms": 2.297327,
+            "p95_ms": 2.297327,
+            "reps": 2,
+            "samples_ms": [
+              2.297327,
+              2.162675
+            ]
+          }
+        },
+        "rows": [
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 1,
+            "shard_threads": 1,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 9.529306,
+              "min_ms": 8.582614000000001,
+              "p50_ms": 9.529306,
+              "p95_ms": 9.529306,
+              "reps": 2,
+              "samples_ms": [
+                8.582614000000001,
+                9.529306
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 2,
+            "shard_threads": 1,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 4.675745999999999,
+              "min_ms": 4.345708999999999,
+              "p50_ms": 4.675745999999999,
+              "p95_ms": 4.675745999999999,
+              "reps": 2,
+              "samples_ms": [
+                4.675745999999999,
+                4.345708999999999
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 1,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 3.053421,
+              "min_ms": 3.004871,
+              "p50_ms": 3.053421,
+              "p95_ms": 3.053421,
+              "reps": 2,
+              "samples_ms": [
+                3.004871,
+                3.053421
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              1,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 1,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.9314839999999998,
+              "min_ms": 2.895006,
+              "p50_ms": 2.9314839999999998,
+              "p95_ms": 2.9314839999999998,
+              "reps": 2,
+              "samples_ms": [
+                2.9314839999999998,
+                2.895006
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.363283,
+              "min_ms": 5.165452,
+              "p50_ms": 5.363283,
+              "p95_ms": 5.363283,
+              "reps": 2,
+              "samples_ms": [
+                5.363283,
+                5.165452
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 4,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.600765,
+              "min_ms": 2.5299929999999997,
+              "p50_ms": 2.600765,
+              "p95_ms": 2.600765,
+              "reps": 2,
+              "samples_ms": [
+                2.600765,
+                2.5299929999999997
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.584344,
+              "min_ms": 2.2198320000000002,
+              "p50_ms": 2.584344,
+              "p95_ms": 2.584344,
+              "reps": 2,
+              "samples_ms": [
+                2.2198320000000002,
+                2.584344
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              1
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 2,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.23427,
+              "min_ms": 1.97261,
+              "p50_ms": 2.23427,
+              "p95_ms": 2.23427,
+              "reps": 2,
+              "samples_ms": [
+                2.23427,
+                1.97261
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 4,
+            "threads": 1,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 5.060676,
+              "min_ms": 5.0051820000000005,
+              "p50_ms": 5.060676,
+              "p95_ms": 5.060676,
+              "reps": 2,
+              "samples_ms": [
+                5.060676,
+                5.0051820000000005
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 4,
+            "threads": 2,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 3.028745,
+              "min_ms": 2.560119,
+              "p50_ms": 3.028745,
+              "p95_ms": 3.028745,
+              "reps": 2,
+              "samples_ms": [
+                2.560119,
+                3.028745
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.971348,
+              "min_ms": 2.6286769999999997,
+              "p50_ms": 2.971348,
+              "p95_ms": 2.971348,
+              "reps": 2,
+              "samples_ms": [
+                2.971348,
+                2.6286769999999997
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              1
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 4,
+            "threads": 8,
+            "tile_threads": 1,
+            "wall": {
+              "max_ms": 2.616104,
+              "min_ms": 2.585877,
+              "p50_ms": 2.616104,
+              "p95_ms": 2.616104,
+              "reps": 2,
+              "samples_ms": [
+                2.585877,
+                2.616104
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              2
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 2,
+            "threads": 2,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 2.9811159999999997,
+              "min_ms": 2.7659640000000003,
+              "p50_ms": 2.9811159999999997,
+              "p95_ms": 2.9811159999999997,
+              "reps": 2,
+              "samples_ms": [
+                2.9811159999999997,
+                2.7659640000000003
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              2,
+              2
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 2,
+            "threads": 4,
+            "tile_threads": 2,
+            "wall": {
+              "max_ms": 2.648113,
+              "min_ms": 2.6105630000000004,
+              "p50_ms": 2.648113,
+              "p95_ms": 2.648113,
+              "reps": 2,
+              "samples_ms": [
+                2.648113,
+                2.6105630000000004
+              ]
+            }
+          },
+          {
+            "effective_widths": [
+              4,
+              2
+            ],
+            "observed_max_active_workers": 8,
+            "shard_threads": 4,
+            "threads": 4,
+            "tile_threads": 4,
+            "wall": {
+              "max_ms": 5.178036,
+              "min_ms": 4.817742,
+              "p50_ms": 5.178036,
+              "p95_ms": 5.178036,
+              "reps": 2,
+              "samples_ms": [
+                4.817742,
+                5.178036
+              ]
+            }
+          }
+        ],
+        "waited": [
+          [
+            "encode",
+            0
+          ],
+          [
+            "codec",
+            0
+          ],
+          [
+            "io",
+            0
+          ],
+          [
+            "restore",
+            34
+          ],
+          [
+            "maintenance",
+            0
+          ]
+        ]
+      }
+    },
+    "control_no_budget": [
+      {
+        "shard_threads": 1,
+        "threads": 1,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 9.204838,
+          "min_ms": 8.963146,
+          "p50_ms": 9.204838,
+          "p95_ms": 9.204838,
+          "reps": 2,
+          "samples_ms": [
+            9.204838,
+            8.963146
+          ]
+        }
+      },
+      {
+        "shard_threads": 1,
+        "threads": 2,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 4.903231,
+          "min_ms": 4.339808,
+          "p50_ms": 4.903231,
+          "p95_ms": 4.903231,
+          "reps": 2,
+          "samples_ms": [
+            4.903231,
+            4.339808
+          ]
+        }
+      },
+      {
+        "shard_threads": 1,
+        "threads": 4,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 3.007195,
+          "min_ms": 2.9282969999999997,
+          "p50_ms": 3.007195,
+          "p95_ms": 3.007195,
+          "reps": 2,
+          "samples_ms": [
+            3.007195,
+            2.9282969999999997
+          ]
+        }
+      },
+      {
+        "shard_threads": 1,
+        "threads": 8,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 3.600244,
+          "min_ms": 3.1148059999999997,
+          "p50_ms": 3.600244,
+          "p95_ms": 3.600244,
+          "reps": 2,
+          "samples_ms": [
+            3.600244,
+            3.1148059999999997
+          ]
+        }
+      },
+      {
+        "shard_threads": 2,
+        "threads": 1,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 5.306466,
+          "min_ms": 5.139754,
+          "p50_ms": 5.306466,
+          "p95_ms": 5.306466,
+          "reps": 2,
+          "samples_ms": [
+            5.306466,
+            5.139754
+          ]
+        }
+      },
+      {
+        "shard_threads": 2,
+        "threads": 2,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 3.128072,
+          "min_ms": 2.6560490000000003,
+          "p50_ms": 3.128072,
+          "p95_ms": 3.128072,
+          "reps": 2,
+          "samples_ms": [
+            3.128072,
+            2.6560490000000003
+          ]
+        }
+      },
+      {
+        "shard_threads": 2,
+        "threads": 4,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 2.380804,
+          "min_ms": 2.1836640000000003,
+          "p50_ms": 2.380804,
+          "p95_ms": 2.380804,
+          "reps": 2,
+          "samples_ms": [
+            2.380804,
+            2.1836640000000003
+          ]
+        }
+      },
+      {
+        "shard_threads": 2,
+        "threads": 8,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 2.156133,
+          "min_ms": 2.147617,
+          "p50_ms": 2.156133,
+          "p95_ms": 2.156133,
+          "reps": 2,
+          "samples_ms": [
+            2.147617,
+            2.156133
+          ]
+        }
+      },
+      {
+        "shard_threads": 4,
+        "threads": 1,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 5.1696,
+          "min_ms": 5.14823,
+          "p50_ms": 5.1696,
+          "p95_ms": 5.1696,
+          "reps": 2,
+          "samples_ms": [
+            5.1696,
+            5.14823
+          ]
+        }
+      },
+      {
+        "shard_threads": 4,
+        "threads": 2,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 2.875158,
+          "min_ms": 2.694982,
+          "p50_ms": 2.875158,
+          "p95_ms": 2.875158,
+          "reps": 2,
+          "samples_ms": [
+            2.694982,
+            2.875158
+          ]
+        }
+      },
+      {
+        "shard_threads": 4,
+        "threads": 4,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 2.230021,
+          "min_ms": 2.1274089999999997,
+          "p50_ms": 2.230021,
+          "p95_ms": 2.230021,
+          "reps": 2,
+          "samples_ms": [
+            2.1274089999999997,
+            2.230021
+          ]
+        }
+      },
+      {
+        "shard_threads": 4,
+        "threads": 8,
+        "tile_threads": 1,
+        "wall": {
+          "max_ms": 2.1452020000000003,
+          "min_ms": 2.131557,
+          "p50_ms": 2.1452020000000003,
+          "p95_ms": 2.1452020000000003,
+          "reps": 2,
+          "samples_ms": [
+            2.1452020000000003,
+            2.131557
+          ]
+        }
+      },
+      {
+        "shard_threads": 2,
+        "threads": 2,
+        "tile_threads": 2,
+        "wall": {
+          "max_ms": 2.7436320000000003,
+          "min_ms": 2.546433,
+          "p50_ms": 2.7436320000000003,
+          "p95_ms": 2.7436320000000003,
+          "reps": 2,
+          "samples_ms": [
+            2.7436320000000003,
+            2.546433
+          ]
+        }
+      },
+      {
+        "shard_threads": 2,
+        "threads": 4,
+        "tile_threads": 2,
+        "wall": {
+          "max_ms": 2.416611,
+          "min_ms": 2.260178,
+          "p50_ms": 2.416611,
+          "p95_ms": 2.416611,
+          "reps": 2,
+          "samples_ms": [
+            2.416611,
+            2.260178
+          ]
+        }
+      },
+      {
+        "shard_threads": 4,
+        "threads": 4,
+        "tile_threads": 4,
+        "wall": {
+          "max_ms": 2.270527,
+          "min_ms": 2.086122,
+          "p50_ms": 2.270527,
+          "p95_ms": 2.270527,
+          "reps": 2,
+          "samples_ms": [
+            2.086122,
+            2.270527
+          ]
+        }
+      }
+    ],
+    "fixture": {
+      "logical_bytes": 786880,
+      "tensor_bytes": 131072,
+      "tensors": 6
+    },
+    "gate": "X06",
+    "peak_rss_kib": 17420,
+    "recommendation": "shard_threads=1, tile_threads=1, and a budget cap equal to the machine's available parallelism: two axes multiply, and the measured best row per cap is the one that keeps the admitted group inside the cap.",
+    "reps": 2,
+    "schema": "weft.restore_budget.v1"
+  },
+  "environment": {
+    "cost_reps": 2,
+    "cost_sizes": "1,10",
+    "court": "scripts/docker-court.sh (rust | bench | fuse)",
+    "docker_server": "29.9.3",
+    "generated_utc": "20261113T125442Z",
+    "host_kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": 1024,
+      "tmpfs": "1g"
+    },
+    "reduced": true,
+    "resource_reps": 2,
+    "revisions": {
+      "WeftFS": "5b49da3fe44d20ec83ea244213c1bda91576ccc2",
+      "WeftFS-Go": "44d20e7bd948067dede66dfded82aa9a0bead60e"
+    }
+  },
+  "gate": "X06",
+  "result": "pass",
+  "schema": "weft.restore_budget.receipt.v1",
+  "stamp": "20261113T125442Z"
+}

@@ -1,0 +1,1614 @@
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "inputs": {
+    "restore_qwen3b_counting_probe0": {
+      "amdahl_cap_speedup": 9.917373104465035,
+      "checkpoint": "qwen3b",
+      "configurations": {
+        "threads_1_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              17365.859,
+              20588.921
+            ],
+            "max_ms": 20588.921,
+            "mean_ms": 18977.39,
+            "min_ms": 17365.859,
+            "p50_ms": 20588.921,
+            "p95_ms": 20588.921,
+            "p99_ms": 20588.921,
+            "samples": 2
+          },
+          "lock": null,
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 355.403,
+          "pipeline": {
+            "decode_sum_ms": 18121.644,
+            "decode_wall_ms": 18121.644,
+            "effective_threads": 1,
+            "observed_max_inflight_bytes": 622329856,
+            "observed_max_inflight_tasks": 1,
+            "oversized_tasks": 1,
+            "requested_threads": 1,
+            "tasks": 434,
+            "total_ms": 20575.539,
+            "transfer_ms": 0.0,
+            "worker_utilisation": 0.881,
+            "write_ms": 2407.126
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 1,
+          "tile_threads": 1
+        },
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              17175.199,
+              19249.223
+            ],
+            "max_ms": 19249.223,
+            "mean_ms": 18212.211,
+            "min_ms": 17175.199,
+            "p50_ms": 19249.223,
+            "p95_ms": 19249.223,
+            "p99_ms": 19249.223,
+            "samples": 2
+          },
+          "lock": null,
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 359.348,
+          "pipeline": {
+            "decode_sum_ms": 36839.097,
+            "decode_wall_ms": 19205.203,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 16,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 434,
+            "total_ms": 19231.595,
+            "transfer_ms": 16744.349,
+            "worker_utilisation": 0.958,
+            "write_ms": 2427.438
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 2,
+          "tile_threads": 1
+        },
+        "threads_4_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              15400.071,
+              16582.101
+            ],
+            "max_ms": 16582.101,
+            "mean_ms": 15991.086,
+            "min_ms": 15400.071,
+            "p50_ms": 16582.101,
+            "p95_ms": 16582.101,
+            "p99_ms": 16582.101,
+            "samples": 2
+          },
+          "lock": null,
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 400.769,
+          "pipeline": {
+            "decode_sum_ms": 60098.295,
+            "decode_wall_ms": 16542.814,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 20,
+            "oversized_tasks": 1,
+            "requested_threads": 4,
+            "tasks": 434,
+            "total_ms": 16567.925,
+            "transfer_ms": 14091.312,
+            "worker_utilisation": 0.907,
+            "write_ms": 2412.453
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 4,
+          "tile_threads": 1
+        },
+        "threads_8_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              16963.399,
+              17844.661
+            ],
+            "max_ms": 17844.661,
+            "mean_ms": 17404.03,
+            "min_ms": 16963.399,
+            "p50_ms": 17844.661,
+            "p95_ms": 17844.661,
+            "p99_ms": 17844.661,
+            "samples": 2
+          },
+          "lock": null,
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 363.835,
+          "pipeline": {
+            "decode_sum_ms": 62136.607,
+            "decode_wall_ms": 16918.516,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 19,
+            "oversized_tasks": 1,
+            "requested_threads": 8,
+            "tasks": 434,
+            "total_ms": 16949.022,
+            "transfer_ms": 14459.051,
+            "worker_utilisation": 0.917,
+            "write_ms": 2432.72
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 8,
+          "tile_threads": 1
+        }
+      },
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 622329856,
+      "lock_probe_enabled": false,
+      "logical_bytes": 6171877376,
+      "open_ms": 646.475,
+      "peak_rss_kib": 1603488,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          2344.722,
+          2431.09
+        ],
+        "max_ms": 2431.09,
+        "mean_ms": 2387.906,
+        "min_ms": 2344.722,
+        "p50_ms": 2431.09,
+        "p95_ms": 2431.09,
+        "p99_ms": 2431.09,
+        "samples": 2
+      },
+      "single_largest_tensor_lock": null,
+      "sink": "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count",
+      "store": ".docker-cache/ckpt-probe"
+    },
+    "restore_qwen3b_counting_probe1": {
+      "amdahl_cap_speedup": 9.917373104465035,
+      "checkpoint": "qwen3b",
+      "configurations": {
+        "threads_1_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              19157.036,
+              20271.726
+            ],
+            "max_ms": 20271.726,
+            "mean_ms": 19714.381,
+            "min_ms": 19157.036,
+            "p50_ms": 20271.726,
+            "p95_ms": 20271.726,
+            "p99_ms": 20271.726,
+            "samples": 2
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 34483.161,
+            "hold": {
+              "count": 212102,
+              "max_ns": 1717422,
+              "mean_ns": 125064.6296357413,
+              "p50_ns": 51436,
+              "p95_ns": 410756,
+              "p99_ns": 677403,
+              "retained_samples": 212102,
+              "total_ns": 26526458075
+            },
+            "hold_share_of_wall": 0.673,
+            "hold_total_ms_over_tensors": 26522.119,
+            "max_demand": 1,
+            "mean_demand": 1.0,
+            "tensor_rows": 434,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.562,
+                "bytes": 2492234848,
+                "decode_cpu_ms": 1281.159,
+                "elapsed_ms": 2924.569,
+                "element_bytes": 622329856,
+                "entries": 19040,
+                "hold_ms": 1642.932,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "wait_ms": 0.477
+              },
+              {
+                "backend_share_of_elapsed": 0.825,
+                "bytes": 180575200,
+                "decode_cpu_ms": 57.873,
+                "elapsed_ms": 330.886,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 272.978,
+                "index": 375,
+                "name": "model.layers.31.mlp.gate_proj.weight",
+                "wait_ms": 0.035
+              },
+              {
+                "backend_share_of_elapsed": 0.821,
+                "bytes": 180575200,
+                "decode_cpu_ms": 58.883,
+                "elapsed_ms": 328.468,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 269.551,
+                "index": 340,
+                "name": "model.layers.28.mlp.up_proj.weight",
+                "wait_ms": 0.035
+              },
+              {
+                "backend_share_of_elapsed": 0.83,
+                "bytes": 180575200,
+                "decode_cpu_ms": 52.125,
+                "elapsed_ms": 305.777,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 253.617,
+                "index": 266,
+                "name": "model.layers.22.mlp.down_proj.weight",
+                "wait_ms": 0.036
+              },
+              {
+                "backend_share_of_elapsed": 0.831,
+                "bytes": 180575200,
+                "decode_cpu_ms": 51.267,
+                "elapsed_ms": 304.156,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 252.853,
+                "index": 264,
+                "name": "model.layers.21.mlp.down_proj.weight",
+                "wait_ms": 0.036
+              },
+              {
+                "backend_share_of_elapsed": 0.805,
+                "bytes": 180575200,
+                "decode_cpu_ms": 60.383,
+                "elapsed_ms": 309.902,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 249.484,
+                "index": 338,
+                "name": "model.layers.28.mlp.down_proj.weight",
+                "wait_ms": 0.034
+              },
+              {
+                "backend_share_of_elapsed": 0.801,
+                "bytes": 180575200,
+                "decode_cpu_ms": 61.586,
+                "elapsed_ms": 308.752,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 247.131,
+                "index": 326,
+                "name": "model.layers.27.mlp.down_proj.weight",
+                "wait_ms": 0.035
+              },
+              {
+                "backend_share_of_elapsed": 0.827,
+                "bytes": 180575200,
+                "decode_cpu_ms": 51.413,
+                "elapsed_ms": 297.252,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 245.804,
+                "index": 231,
+                "name": "model.layers.7.mlp.up_proj.weight",
+                "wait_ms": 0.035
+              },
+              {
+                "backend_share_of_elapsed": 0.802,
+                "bytes": 180575200,
+                "decode_cpu_ms": 60.201,
+                "elapsed_ms": 304.759,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 244.523,
+                "index": 422,
+                "name": "model.layers.35.mlp.down_proj.weight",
+                "wait_ms": 0.036
+              },
+              {
+                "backend_share_of_elapsed": 0.805,
+                "bytes": 180575200,
+                "decode_cpu_ms": 59.036,
+                "elapsed_ms": 303.463,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 244.392,
+                "index": 328,
+                "name": "model.layers.27.mlp.up_proj.weight",
+                "wait_ms": 0.035
+              }
+            ],
+            "threads": [
+              {
+                "entries": 212102,
+                "hold_ns": 26526458075,
+                "thread": 0,
+                "wait_ns": 5319396
+              }
+            ],
+            "wait": {
+              "count": 212102,
+              "max_ns": 90419,
+              "mean_ns": 25.07942405069259,
+              "p50_ns": 20,
+              "p95_ns": 30,
+              "p99_ns": 40,
+              "retained_samples": 212102,
+              "total_ns": 5319396
+            },
+            "wait_share_of_wall": 0.0
+          },
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 322.173,
+          "pipeline": {
+            "decode_sum_ms": 17796.806,
+            "decode_wall_ms": 17796.806,
+            "effective_threads": 1,
+            "observed_max_inflight_bytes": 622329856,
+            "observed_max_inflight_tasks": 1,
+            "oversized_tasks": 1,
+            "requested_threads": 1,
+            "tasks": 434,
+            "total_ms": 20257.768,
+            "transfer_ms": 0.0,
+            "worker_utilisation": 0.879,
+            "write_ms": 2411.521
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 1,
+          "tile_threads": 1
+        },
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              16964.466,
+              18148.892
+            ],
+            "max_ms": 18148.892,
+            "mean_ms": 17556.679,
+            "min_ms": 16964.466,
+            "p50_ms": 18148.892,
+            "p95_ms": 18148.892,
+            "p99_ms": 18148.892,
+            "samples": 2
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 67420.659,
+            "hold": {
+              "count": 212102,
+              "max_ns": 2091290,
+              "mean_ns": 152618.55844357904,
+              "p50_ns": 125565,
+              "p95_ns": 433943,
+              "p99_ns": 671258,
+              "retained_samples": 212102,
+              "total_ns": 32370701483
+            },
+            "hold_share_of_wall": 0.922,
+            "hold_total_ms_over_tensors": 32366.039,
+            "max_demand": 2,
+            "mean_demand": 1.735,
+            "tensor_rows": 434,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.683,
+                "bytes": 2492234848,
+                "decode_cpu_ms": 1272.902,
+                "elapsed_ms": 4014.668,
+                "element_bytes": 622329856,
+                "entries": 19040,
+                "hold_ms": 1771.828,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "wait_ms": 969.937
+              },
+              {
+                "backend_share_of_elapsed": 0.92,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.488,
+                "elapsed_ms": 669.619,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 359.543,
+                "index": 63,
+                "name": "model.layers.13.mlp.gate_proj.weight",
+                "wait_ms": 256.587
+              },
+              {
+                "backend_share_of_elapsed": 0.9,
+                "bytes": 180575200,
+                "decode_cpu_ms": 52.547,
+                "elapsed_ms": 526.927,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 333.479,
+                "index": 74,
+                "name": "model.layers.14.mlp.down_proj.weight",
+                "wait_ms": 140.9
+              },
+              {
+                "backend_share_of_elapsed": 0.915,
+                "bytes": 180575200,
+                "decode_cpu_ms": 57.109,
+                "elapsed_ms": 667.954,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 312.537,
+                "index": 375,
+                "name": "model.layers.31.mlp.gate_proj.weight",
+                "wait_ms": 298.308
+              },
+              {
+                "backend_share_of_elapsed": 0.922,
+                "bytes": 180575200,
+                "decode_cpu_ms": 52.396,
+                "elapsed_ms": 672.577,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 301.796,
+                "index": 62,
+                "name": "model.layers.13.mlp.down_proj.weight",
+                "wait_ms": 318.386
+              },
+              {
+                "backend_share_of_elapsed": 0.886,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.746,
+                "elapsed_ms": 470.612,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 296.953,
+                "index": 340,
+                "name": "model.layers.28.mlp.up_proj.weight",
+                "wait_ms": 119.912
+              },
+              {
+                "backend_share_of_elapsed": 0.884,
+                "bytes": 180575200,
+                "decode_cpu_ms": 54.033,
+                "elapsed_ms": 464.238,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 294.823,
+                "index": 64,
+                "name": "model.layers.13.mlp.up_proj.weight",
+                "wait_ms": 115.382
+              },
+              {
+                "backend_share_of_elapsed": 0.922,
+                "bytes": 180575200,
+                "decode_cpu_ms": 52.173,
+                "elapsed_ms": 670.715,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 294.557,
+                "index": 266,
+                "name": "model.layers.22.mlp.down_proj.weight",
+                "wait_ms": 323.986
+              },
+              {
+                "backend_share_of_elapsed": 0.891,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.223,
+                "elapsed_ms": 488.527,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 290.417,
+                "index": 264,
+                "name": "model.layers.21.mlp.down_proj.weight",
+                "wait_ms": 144.887
+              },
+              {
+                "backend_share_of_elapsed": 0.878,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.346,
+                "elapsed_ms": 438.946,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 286.165,
+                "index": 231,
+                "name": "model.layers.7.mlp.up_proj.weight",
+                "wait_ms": 99.435
+              }
+            ],
+            "threads": [
+              {
+                "entries": 38,
+                "hold_ns": 4662497,
+                "thread": 0,
+                "wait_ns": 1111
+              },
+              {
+                "entries": 62040,
+                "hold_ns": 8978766635,
+                "thread": 1,
+                "wait_ns": 5046798884
+              },
+              {
+                "entries": 43992,
+                "hold_ns": 6616005050,
+                "thread": 2,
+                "wait_ns": 7961179777
+              },
+              {
+                "entries": 50464,
+                "hold_ns": 7761599022,
+                "thread": 3,
+                "wait_ns": 8009548188
+              },
+              {
+                "entries": 55568,
+                "hold_ns": 9009668279,
+                "thread": 4,
+                "wait_ns": 5609457020
+              }
+            ],
+            "wait": {
+              "count": 212102,
+              "max_ns": 11919514,
+              "mean_ns": 125538.58511470896,
+              "p50_ns": 30,
+              "p95_ns": 480962,
+              "p99_ns": 1899980,
+              "retained_samples": 212102,
+              "total_ns": 26626984980
+            },
+            "wait_share_of_wall": 0.758
+          },
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 363.812,
+          "pipeline": {
+            "decode_sum_ms": 34594.593,
+            "decode_wall_ms": 18109.922,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 17,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 434,
+            "total_ms": 18131.961,
+            "transfer_ms": 15645.555,
+            "worker_utilisation": 0.954,
+            "write_ms": 2426.701
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 2,
+          "tile_threads": 1
+        },
+        "threads_4_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              17653.396,
+              17763.73
+            ],
+            "max_ms": 17763.73,
+            "mean_ms": 17708.563,
+            "min_ms": 17653.396,
+            "p50_ms": 17763.73,
+            "p95_ms": 17763.73,
+            "p99_ms": 17763.73,
+            "samples": 2
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 128494.979,
+            "hold": {
+              "count": 212102,
+              "max_ns": 2040683,
+              "mean_ns": 156032.16947034918,
+              "p50_ns": 137848,
+              "p95_ns": 431038,
+              "p99_ns": 658754,
+              "retained_samples": 212102,
+              "total_ns": 33094735209
+            },
+            "hold_share_of_wall": 0.934,
+            "hold_total_ms_over_tensors": 33088.838,
+            "max_demand": 4,
+            "mean_demand": 3.471,
+            "tensor_rows": 434,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.724,
+                "bytes": 2492234848,
+                "decode_cpu_ms": 1278.965,
+                "elapsed_ms": 4634.448,
+                "element_bytes": 622329856,
+                "entries": 19040,
+                "hold_ms": 2152.412,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "wait_ms": 1203.071
+              },
+              {
+                "backend_share_of_elapsed": 0.934,
+                "bytes": 180575200,
+                "decode_cpu_ms": 64.218,
+                "elapsed_ms": 975.513,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 327.241,
+                "index": 375,
+                "name": "model.layers.31.mlp.gate_proj.weight",
+                "wait_ms": 584.053
+              },
+              {
+                "backend_share_of_elapsed": 0.946,
+                "bytes": 180575200,
+                "decode_cpu_ms": 55.889,
+                "elapsed_ms": 1040.962,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 321.173,
+                "index": 340,
+                "name": "model.layers.28.mlp.up_proj.weight",
+                "wait_ms": 663.899
+              },
+              {
+                "backend_share_of_elapsed": 0.932,
+                "bytes": 180575200,
+                "decode_cpu_ms": 69.502,
+                "elapsed_ms": 1027.073,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 297.672,
+                "index": 422,
+                "name": "model.layers.35.mlp.down_proj.weight",
+                "wait_ms": 659.9
+              },
+              {
+                "backend_share_of_elapsed": 0.943,
+                "bytes": 180575200,
+                "decode_cpu_ms": 66.632,
+                "elapsed_ms": 1165.587,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 295.096,
+                "index": 327,
+                "name": "model.layers.27.mlp.gate_proj.weight",
+                "wait_ms": 803.859
+              },
+              {
+                "backend_share_of_elapsed": 0.932,
+                "bytes": 180575200,
+                "decode_cpu_ms": 54.351,
+                "elapsed_ms": 797.112,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 289.14,
+                "index": 171,
+                "name": "model.layers.21.mlp.up_proj.weight",
+                "wait_ms": 453.622
+              },
+              {
+                "backend_share_of_elapsed": 0.933,
+                "bytes": 180575200,
+                "decode_cpu_ms": 54.213,
+                "elapsed_ms": 805.583,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 289.105,
+                "index": 231,
+                "name": "model.layers.7.mlp.up_proj.weight",
+                "wait_ms": 462.265
+              },
+              {
+                "backend_share_of_elapsed": 0.944,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.451,
+                "elapsed_ms": 948.419,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 288.981,
+                "index": 400,
+                "name": "model.layers.33.mlp.up_proj.weight",
+                "wait_ms": 605.988
+              },
+              {
+                "backend_share_of_elapsed": 0.947,
+                "bytes": 180575200,
+                "decode_cpu_ms": 55.329,
+                "elapsed_ms": 1043.158,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 288.877,
+                "index": 112,
+                "name": "model.layers.17.mlp.up_proj.weight",
+                "wait_ms": 698.953
+              },
+              {
+                "backend_share_of_elapsed": 0.937,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.381,
+                "elapsed_ms": 846.235,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 288.591,
+                "index": 291,
+                "name": "model.layers.24.mlp.gate_proj.weight",
+                "wait_ms": 504.263
+              }
+            ],
+            "threads": [
+              {
+                "entries": 38,
+                "hold_ns": 5897247,
+                "thread": 0,
+                "wait_ns": 1284
+              },
+              {
+                "entries": 38568,
+                "hold_ns": 5611965997,
+                "thread": 7,
+                "wait_ns": 9923424710
+              },
+              {
+                "entries": 26024,
+                "hold_ns": 4152613524,
+                "thread": 8,
+                "wait_ns": 10369188486
+              },
+              {
+                "entries": 19264,
+                "hold_ns": 3088012329,
+                "thread": 9,
+                "wait_ns": 11808454466
+              },
+              {
+                "entries": 22176,
+                "hold_ns": 3743003002,
+                "thread": 10,
+                "wait_ns": 11058839573
+              },
+              {
+                "entries": 36464,
+                "hold_ns": 5284316617,
+                "thread": 11,
+                "wait_ns": 10201339508
+              },
+              {
+                "entries": 18704,
+                "hold_ns": 2970386516,
+                "thread": 12,
+                "wait_ns": 12345783121
+              },
+              {
+                "entries": 24384,
+                "hold_ns": 3828625821,
+                "thread": 13,
+                "wait_ns": 10594594097
+              },
+              {
+                "entries": 26480,
+                "hold_ns": 4409914156,
+                "thread": 14,
+                "wait_ns": 10564768240
+              }
+            ],
+            "wait": {
+              "count": 212102,
+              "max_ns": 32911733,
+              "mean_ns": 409550.09139470634,
+              "p50_ns": 31,
+              "p95_ns": 1700997,
+              "p99_ns": 6262451,
+              "retained_samples": 212102,
+              "total_ns": 86866393485
+            },
+            "wait_share_of_wall": 2.453
+          },
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 349.614,
+          "pipeline": {
+            "decode_sum_ms": 64501.422,
+            "decode_wall_ms": 17575.635,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 20,
+            "oversized_tasks": 1,
+            "requested_threads": 4,
+            "tasks": 434,
+            "total_ms": 17637.714,
+            "transfer_ms": 15170.1,
+            "worker_utilisation": 0.914,
+            "write_ms": 2411.658
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 4,
+          "tile_threads": 1
+        },
+        "threads_8_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              19888.251,
+              24569.449
+            ],
+            "max_ms": 24569.449,
+            "mean_ms": 22228.85,
+            "min_ms": 19888.251,
+            "p50_ms": 24569.449,
+            "p95_ms": 24569.449,
+            "p99_ms": 24569.449,
+            "samples": 2
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 165999.51,
+            "hold": {
+              "count": 212102,
+              "max_ns": 24826409,
+              "mean_ns": 199002.9701228654,
+              "p50_ns": 141004,
+              "p95_ns": 714146,
+              "p99_ns": 1108233,
+              "retained_samples": 212102,
+              "total_ns": 42208927969
+            },
+            "hold_share_of_wall": 0.949,
+            "hold_total_ms_over_tensors": 42202.338,
+            "max_demand": 4,
+            "mean_demand": 3.491,
+            "tensor_rows": 434,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.714,
+                "bytes": 2492234848,
+                "decode_cpu_ms": 1266.859,
+                "elapsed_ms": 4429.688,
+                "element_bytes": 622329856,
+                "entries": 19040,
+                "hold_ms": 2172.182,
+                "index": 0,
+                "name": "model.embed_tokens.weight",
+                "wait_ms": 990.647
+              },
+              {
+                "backend_share_of_elapsed": 0.964,
+                "bytes": 180575200,
+                "decode_cpu_ms": 52.819,
+                "elapsed_ms": 1485.72,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 460.826,
+                "index": 112,
+                "name": "model.layers.17.mlp.up_proj.weight",
+                "wait_ms": 972.074
+              },
+              {
+                "backend_share_of_elapsed": 0.952,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.131,
+                "elapsed_ms": 1098.567,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 432.845,
+                "index": 231,
+                "name": "model.layers.7.mlp.up_proj.weight",
+                "wait_ms": 612.59
+              },
+              {
+                "backend_share_of_elapsed": 0.964,
+                "bytes": 180575200,
+                "decode_cpu_ms": 64.0,
+                "elapsed_ms": 1763.953,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 430.005,
+                "index": 52,
+                "name": "model.layers.12.mlp.up_proj.weight",
+                "wait_ms": 1269.949
+              },
+              {
+                "backend_share_of_elapsed": 0.945,
+                "bytes": 180575200,
+                "decode_cpu_ms": 66.993,
+                "elapsed_ms": 1228.961,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 429.652,
+                "index": 291,
+                "name": "model.layers.24.mlp.gate_proj.weight",
+                "wait_ms": 732.316
+              },
+              {
+                "backend_share_of_elapsed": 0.962,
+                "bytes": 180575200,
+                "decode_cpu_ms": 52.298,
+                "elapsed_ms": 1377.718,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 428.725,
+                "index": 160,
+                "name": "model.layers.20.mlp.up_proj.weight",
+                "wait_ms": 896.695
+              },
+              {
+                "backend_share_of_elapsed": 0.946,
+                "bytes": 180575200,
+                "decode_cpu_ms": 53.398,
+                "elapsed_ms": 986.599,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 427.384,
+                "index": 171,
+                "name": "model.layers.21.mlp.up_proj.weight",
+                "wait_ms": 505.817
+              },
+              {
+                "backend_share_of_elapsed": 0.953,
+                "bytes": 180575200,
+                "decode_cpu_ms": 63.902,
+                "elapsed_ms": 1357.42,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 426.895,
+                "index": 63,
+                "name": "model.layers.13.mlp.gate_proj.weight",
+                "wait_ms": 866.623
+              },
+              {
+                "backend_share_of_elapsed": 0.959,
+                "bytes": 180575200,
+                "decode_cpu_ms": 54.541,
+                "elapsed_ms": 1334.645,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 420.558,
+                "index": 206,
+                "name": "model.layers.5.mlp.gate_proj.weight",
+                "wait_ms": 859.546
+              },
+              {
+                "backend_share_of_elapsed": 0.954,
+                "bytes": 180575200,
+                "decode_cpu_ms": 54.089,
+                "elapsed_ms": 1186.723,
+                "element_bytes": 45088768,
+                "entries": 1424,
+                "hold_ms": 418.659,
+                "index": 302,
+                "name": "model.layers.25.mlp.down_proj.weight",
+                "wait_ms": 713.975
+              }
+            ],
+            "threads": [
+              {
+                "entries": 38,
+                "hold_ns": 6589752,
+                "thread": 0,
+                "wait_ns": 1171
+              },
+              {
+                "entries": 34664,
+                "hold_ns": 7115805622,
+                "thread": 19,
+                "wait_ns": 15341880502
+              },
+              {
+                "entries": 18432,
+                "hold_ns": 3893017640,
+                "thread": 20,
+                "wait_ns": 18120920474
+              },
+              {
+                "entries": 25216,
+                "hold_ns": 5897526324,
+                "thread": 21,
+                "wait_ns": 15836572766
+              },
+              {
+                "entries": 27720,
+                "hold_ns": 6514593186,
+                "thread": 22,
+                "wait_ns": 15173044557
+              },
+              {
+                "entries": 33248,
+                "hold_ns": 5420145397,
+                "thread": 23,
+                "wait_ns": 12558593848
+              },
+              {
+                "entries": 23792,
+                "hold_ns": 4535555628,
+                "thread": 24,
+                "wait_ns": 12817670505
+              },
+              {
+                "entries": 24040,
+                "hold_ns": 4420146343,
+                "thread": 25,
+                "wait_ns": 12538724435
+              },
+              {
+                "entries": 24952,
+                "hold_ns": 4405548077,
+                "thread": 26,
+                "wait_ns": 12717225036
+              }
+            ],
+            "wait": {
+              "count": 212102,
+              "max_ns": 59016130,
+              "mean_ns": 542685.2801670894,
+              "p50_ns": 30,
+              "p95_ns": 2639859,
+              "p99_ns": 9251841,
+              "retained_samples": 212102,
+              "total_ns": 115104633294
+            },
+            "wait_share_of_wall": 2.589
+          },
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 310.328,
+          "pipeline": {
+            "decode_sum_ms": 73750.455,
+            "decode_wall_ms": 19838.457,
+            "effective_threads": 4,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 20,
+            "oversized_tasks": 1,
+            "requested_threads": 8,
+            "tasks": 434,
+            "total_ms": 19872.071,
+            "transfer_ms": 17388.869,
+            "worker_utilisation": 0.928,
+            "write_ms": 2423.985
+          },
+          "sha256_match": true,
+          "sink": "counting",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 8,
+          "tile_threads": 1
+        }
+      },
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 622329856,
+      "lock_probe_enabled": true,
+      "logical_bytes": 6171877376,
+      "open_ms": 321.79,
+      "peak_rss_kib": 1584596,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          2207.675,
+          2944.595
+        ],
+        "max_ms": 2944.595,
+        "mean_ms": 2576.135,
+        "min_ms": 2207.675,
+        "p50_ms": 2944.595,
+        "p95_ms": 2944.595,
+        "p99_ms": 2944.595,
+        "samples": 2
+      },
+      "single_largest_tensor_lock": {
+        "elapsed_total_ms_over_tensors": 3636.015,
+        "hold": {
+          "count": 19074,
+          "max_ns": 2239599,
+          "mean_ns": 136326.96487365,
+          "p50_ns": 19677,
+          "p95_ns": 648002,
+          "p99_ns": 1088857,
+          "retained_samples": 19074,
+          "total_ns": 2600300528
+        },
+        "hold_share_of_wall": 0.505,
+        "hold_total_ms_over_tensors": 2587.867,
+        "max_demand": 1,
+        "mean_demand": 1.0,
+        "tensor_rows": 1,
+        "tensors": [
+          {
+            "backend_share_of_elapsed": 0.712,
+            "bytes": 2492234848,
+            "decode_cpu_ms": 1047.678,
+            "elapsed_ms": 3636.015,
+            "element_bytes": 622329856,
+            "entries": 19040,
+            "hold_ms": 2587.867,
+            "index": 0,
+            "name": "model.embed_tokens.weight",
+            "wait_ms": 0.47
+          }
+        ],
+        "threads": [
+          {
+            "entries": 19074,
+            "hold_ns": 2600300528,
+            "thread": 0,
+            "wait_ns": 471307
+          }
+        ],
+        "wait": {
+          "count": 19074,
+          "max_ns": 351,
+          "mean_ns": 24.7093949879417,
+          "p50_ns": 20,
+          "p95_ns": 30,
+          "p99_ns": 40,
+          "retained_samples": 19074,
+          "total_ns": 471307
+        },
+        "wait_share_of_wall": 0.0
+      },
+      "sink": "counting sink: decode + backend read, no output hash and no host writeback; exactness proven by one untimed SHA-256 pass per worker count",
+      "store": ".docker-cache/ckpt-probe"
+    },
+    "restore_qwen3b_sha256_probe1": {
+      "amdahl_cap_speedup": 9.917373104465035,
+      "checkpoint": "qwen3b",
+      "configurations": {
+        "threads_2_tiles_1": {
+          "amdahl_cap_speedup": 9.917373104465035,
+          "backend_bytes_read_last_rep": 6189430488,
+          "backend_requests_last_rep": 106047,
+          "decode_bytes_last_rep": 6171877376,
+          "largest_tensor_bytes": 622329856,
+          "latency": {
+            "all_ms": [
+              21004.309
+            ],
+            "max_ms": 21004.309,
+            "mean_ms": 21004.309,
+            "min_ms": 21004.309,
+            "p50_ms": 21004.309,
+            "p95_ms": 21004.309,
+            "p99_ms": 21004.309,
+            "samples": 1
+          },
+          "lock": {
+            "elapsed_total_ms_over_tensors": 39331.778,
+            "hold": {
+              "count": 106051,
+              "max_ns": 6018337,
+              "mean_ns": 177941.6907808507,
+              "p50_ns": 49693,
+              "p95_ns": 694289,
+              "p99_ns": 1235120,
+              "retained_samples": 106051,
+              "total_ns": 18870894249
+            },
+            "hold_share_of_wall": 0.898,
+            "hold_total_ms_over_tensors": 18870.62,
+            "max_demand": 2,
+            "mean_demand": 1.675,
+            "tensor_rows": 434,
+            "tensors": [
+              {
+                "backend_share_of_elapsed": 0.973,
+                "bytes": 90287600,
+                "decode_cpu_ms": 26.936,
+                "elapsed_ms": 982.149,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 658.534,
+                "index": 195,
+                "name": "model.layers.4.mlp.up_proj.weight",
+                "wait_ms": 296.679
+              },
+              {
+                "backend_share_of_elapsed": 0.979,
+                "bytes": 90287600,
+                "decode_cpu_ms": 25.643,
+                "elapsed_ms": 1209.041,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 398.493,
+                "index": 194,
+                "name": "model.layers.4.mlp.gate_proj.weight",
+                "wait_ms": 784.905
+              },
+              {
+                "backend_share_of_elapsed": 0.96,
+                "bytes": 90287600,
+                "decode_cpu_ms": 26.603,
+                "elapsed_ms": 657.171,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 386.812,
+                "index": 206,
+                "name": "model.layers.5.mlp.gate_proj.weight",
+                "wait_ms": 243.757
+              },
+              {
+                "backend_share_of_elapsed": 0.969,
+                "bytes": 90287600,
+                "decode_cpu_ms": 25.877,
+                "elapsed_ms": 822.065,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 311.057,
+                "index": 205,
+                "name": "model.layers.5.mlp.down_proj.weight",
+                "wait_ms": 485.13
+              },
+              {
+                "backend_share_of_elapsed": 0.96,
+                "bytes": 90287600,
+                "decode_cpu_ms": 26.195,
+                "elapsed_ms": 651.355,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 255.096,
+                "index": 63,
+                "name": "model.layers.13.mlp.gate_proj.weight",
+                "wait_ms": 370.064
+              },
+              {
+                "backend_share_of_elapsed": 0.924,
+                "bytes": 90287600,
+                "decode_cpu_ms": 27.98,
+                "elapsed_ms": 369.683,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 241.121,
+                "index": 375,
+                "name": "model.layers.31.mlp.gate_proj.weight",
+                "wait_ms": 100.581
+              },
+              {
+                "backend_share_of_elapsed": 0.933,
+                "bytes": 90287600,
+                "decode_cpu_ms": 27.476,
+                "elapsed_ms": 410.643,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 230.344,
+                "index": 62,
+                "name": "model.layers.13.mlp.down_proj.weight",
+                "wait_ms": 152.823
+              },
+              {
+                "backend_share_of_elapsed": 0.922,
+                "bytes": 90287600,
+                "decode_cpu_ms": 27.033,
+                "elapsed_ms": 344.415,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 229.13,
+                "index": 50,
+                "name": "model.layers.12.mlp.down_proj.weight",
+                "wait_ms": 88.252
+              },
+              {
+                "backend_share_of_elapsed": 0.915,
+                "bytes": 90287600,
+                "decode_cpu_ms": 28.404,
+                "elapsed_ms": 333.347,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 227.152,
+                "index": 340,
+                "name": "model.layers.28.mlp.up_proj.weight",
+                "wait_ms": 77.791
+              },
+              {
+                "backend_share_of_elapsed": 0.918,
+                "bytes": 90287600,
+                "decode_cpu_ms": 26.7,
+                "elapsed_ms": 325.164,
+                "element_bytes": 45088768,
+                "entries": 712,
+                "hold_ms": 222.433,
+                "index": 64,
+                "name": "model.layers.13.mlp.up_proj.weight",
+                "wait_ms": 76.031
+              }
+            ],
+            "threads": [
+              {
+                "entries": 19,
+                "hold_ns": 274313,
+                "thread": 0,
+                "wait_ns": 481
+              },
+              {
+                "entries": 62728,
+                "hold_ns": 11540626915,
+                "thread": 1,
+                "wait_ns": 5747100927
+              },
+              {
+                "entries": 43304,
+                "hold_ns": 7329993021,
+                "thread": 2,
+                "wait_ns": 10587767034
+              }
+            ],
+            "wait": {
+              "count": 106051,
+              "max_ns": 40438597,
+              "mean_ns": 154028.4244561579,
+              "p50_ns": 30,
+              "p95_ns": 686204,
+              "p99_ns": 2518421,
+              "retained_samples": 106051,
+              "total_ns": 16334868442
+            },
+            "wait_share_of_wall": 0.778
+          },
+          "logical_bytes": 6171877376,
+          "max_inflight_bytes": 268435456,
+          "mb_per_s_best": 293.839,
+          "pipeline": {
+            "decode_sum_ms": 39331.942,
+            "decode_wall_ms": 20954.219,
+            "effective_threads": 2,
+            "observed_max_inflight_bytes": 866665472,
+            "observed_max_inflight_tasks": 23,
+            "oversized_tasks": 1,
+            "requested_threads": 2,
+            "tasks": 434,
+            "total_ms": 20994.398,
+            "transfer_ms": 13668.511,
+            "worker_utilisation": 0.937,
+            "write_ms": 7265.587
+          },
+          "sha256_match": true,
+          "sink": "sha256",
+          "stats": {
+            "bytes_written": 6171927112,
+            "exact_source_file": true,
+            "file_sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+            "header_reproduced": true,
+            "manifest_root": "c65decedfd9d84b515c643ed283925a5b42e6514da8f8b9baedb918195cfc62e",
+            "shards_read": 3472,
+            "tasks": 434,
+            "units_touched": 3472
+          },
+          "tensors": 434,
+          "threads": 2,
+          "tile_threads": 1
+        }
+      },
+      "largest_tensor": "model.embed_tokens.weight",
+      "largest_tensor_bytes": 622329856,
+      "lock_probe_enabled": true,
+      "logical_bytes": 6171877376,
+      "open_ms": 278.564,
+      "peak_rss_kib": 1535920,
+      "phase": "restore",
+      "schema": "weft.family-lifecycle.restore.v1",
+      "single_largest_tensor": {
+        "all_ms": [
+          3148.743
+        ],
+        "max_ms": 3148.743,
+        "mean_ms": 3148.743,
+        "min_ms": 3148.743,
+        "p50_ms": 3148.743,
+        "p95_ms": 3148.743,
+        "p99_ms": 3148.743,
+        "samples": 1
+      },
+      "single_largest_tensor_lock": {
+        "elapsed_total_ms_over_tensors": 2386.621,
+        "hold": {
+          "count": 9537,
+          "max_ns": 1924950,
+          "mean_ns": 184053.47813777917,
+          "p50_ns": 84198,
+          "p95_ns": 705830,
+          "p99_ns": 1177753,
+          "retained_samples": 9537,
+          "total_ns": 1755318021
+        },
+        "hold_share_of_wall": 0.557,
+        "hold_total_ms_over_tensors": 1752.532,
+        "max_demand": 1,
+        "mean_demand": 1.0,
+        "tensor_rows": 1,
+        "tensors": [
+          {
+            "backend_share_of_elapsed": 0.734,
+            "bytes": 1246117424,
+            "decode_cpu_ms": 633.854,
+            "elapsed_ms": 2386.621,
+            "element_bytes": 622329856,
+            "entries": 9520,
+            "hold_ms": 1752.532,
+            "index": 0,
+            "name": "model.embed_tokens.weight",
+            "wait_ms": 0.236
+          }
+        ],
+        "threads": [
+          {
+            "entries": 9537,
+            "hold_ns": 1755318021,
+            "thread": 0,
+            "wait_ns": 236186
+          }
+        ],
+        "wait": {
+          "count": 9537,
+          "max_ns": 211,
+          "mean_ns": 24.765230156233617,
+          "p50_ns": 20,
+          "p95_ns": 30,
+          "p99_ns": 40,
+          "retained_samples": 9537,
+          "total_ns": 236186
+        },
+        "wait_share_of_wall": 0.0
+      },
+      "sink": "SHA-256 hashing sink: decode + backend read + hash, no host writeback",
+      "store": ".docker-cache/ckpt-probe"
+    }
+  },
+  "label": "qwen3b baseline at 525f884: per-configuration warm-up, counting sink plus sha256 exactness; store written by family_lifecycle checkpoint (fast raw, 8-way) in the same bench court",
+  "labels": [
+    "Single host, warm page cache, one run per configuration unless the inner receipt says otherwise; no fleet, media, power-loss, or cloud claim.",
+    "Phase totals are wall-clock sums across every thread and are not a partition of wall time; unmeasured time is the residual.",
+    "Restore throughput is measured with a SHA-256 hashing sink, so it is decode + backend read + hash, not host writeback."
+  ],
+  "peak_rss_kib": 3508,
+  "phase": "throughput",
+  "revisions": {
+    "weftcodec": "301ea653a6d25e9feafa2fb074bfc3545aaf2042",
+    "weftcodec_go": "6fd2097963299119bb1c21dd48f16d19004ff34d",
+    "weftfs": "525f884894e67078f0596cb0ce085d386fb1f5f4",
+    "weftfs_go": "afbd40303a62e2ab4e5107f52cb2f1874d63f4d3"
+  },
+  "schema": "weft.throughput-court.v1"
+}

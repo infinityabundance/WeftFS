@@ -1,0 +1,78 @@
+{
+ "schema": "weft.cephfs_court.v1",
+ "generated_utc": "20261114T020000Z",
+ "backend": {
+  "product": "CephFS (Ceph distributed file system)",
+  "version": "ceph version 19.2.0 (16063ff2022298c9300e49a547a16ffda59baf13) squid (stable)",
+  "image": "quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723",
+  "image_digest": "quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723",
+  "image_id": "sha256:637a5761b2549743c465dae594a6a48f86d96e969cb3a3d5193894c1dcb742d5",
+  "topology": "single-node: 1 mon, 1 mgr, 1 bluestore OSD (tmpfs), 1 MDS; cephfs_data + cephfs_metadata pools; 1 client",
+  "mount": "ceph-fuse in the client container (the court kernel has no ceph.ko; /dev/fuse is present)",
+  "mon": "v2:10.213.89.10:3300/0",
+  "osd_data": "/mnt/1tb_kingston/WeftFS/.docker-cache/cephfs-20261114T020000Z/osd (host bind mount on the court filesystem, not a tmpfs; the receipt's non-claims still apply)",
+  "pool_settings": {
+   "cephfs_data": "size 1, min_size 1",
+   "cephfs_metadata": "size 1, min_size 1",
+   "why": "one OSD: size 2 is permanently degraded and doubles the bytes the single OSD must hold",
+   "mds_session_timeout": 300,
+   "why_session_timeout": "a 4-CPU client running a 424 MB FUSE workload can pause between MDS messages; a blocklisted client wedges the mount"
+  },
+  "cluster_status_file": "bench/receipts/cephfs-20261114T020000Z.cluster.txt",
+  "fs_status_file": "bench/receipts/cephfs-20261114T020000Z.fs.txt",
+  "label": "SINGLE-NODE Ceph deployed in one OOM-protected container plus one client container on one host. Not multi-node, not a fleet, not clustered performance, not a cloud result. The OSD data directory is a tmpfs, so no media or power-loss claim."
+ },
+ "container": {
+  "server": {
+   "memory": "3g",
+   "memory_swap": "3g",
+   "pids": "1024",
+   "cpus": "4",
+   "cap_drop": "ALL",
+   "cap_add": [
+    "CHOWN",
+    "DAC_OVERRIDE",
+    "FOWNER",
+    "SETGID",
+    "SETUID"
+   ],
+   "why_capabilities": "Ceph daemons run as uid/gid 167 and write keyrings they own"
+  },
+  "client": {
+   "memory": "3g",
+   "memory_swap": "3g",
+   "pids": "1024",
+   "cpus": "4",
+   "cap_drop": "ALL",
+   "cap_add": [
+    "SYS_ADMIN"
+   ],
+   "device": "/dev/fuse",
+   "why_capabilities": "ceph-fuse mounts through /dev/fuse; SYS_ADMIN is the minimum mount capability"
+  },
+  "no_new_privileges": true
+ },
+ "arms": {
+  "contract": [
+   "A",
+   "N",
+   "B",
+   "C",
+   "D",
+   "E"
+  ],
+  "repetitions": 1,
+  "reduced": true,
+  "partial": true,
+  "augmentation_receipt": "bench/receipts/augmentation-cephfs-20261114T020000Z.json",
+  "raw_log": "bench/receipts/cephfs-20261114T020000Z.log",
+  "durability": "every arm fsyncs a file and the directory, or publishes through the store's LocalBackend on the same mount; CephFS fsync orders against MDS/OSD",
+  "weftfs_fuse_in_data_path": false
+ },
+ "non_claims": [
+  "single-node Ceph on one host, one client, one writer",
+  "no fleet, multi-node, clustered, cloud, media or power-loss claim",
+  "requests are client-visible I/O operations, not RADOS RPCs",
+  "the OSD data directory is a tmpfs"
+ ]
+}

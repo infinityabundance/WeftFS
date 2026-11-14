@@ -1,0 +1,7 @@
+CHECK rows_complete pass 9 reps x 8000 requests per arm
+CHECK sensitivity_control pass C-naive false acceptances 422
+GATE g1_zero_incorrect_acceptances holds
+GATE g2_p99_margin fails E 130.273 us M 34.444 us (declared E <= 0.90 x M; non-inferiority <= 1.10 x: false)
+GATE g3_retained_bytes holds E_max 991848 B M-LRU_max 1048576 B budget 1048576
+GATE g4_correctness_under_change holds
+DIRECTION retired

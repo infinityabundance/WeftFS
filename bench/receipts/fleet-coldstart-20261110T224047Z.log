@@ -1,0 +1,58 @@
+fleet_coldstart_court: stamp=20261110T224047Z N=100 memory=8g
+fleet_coldstart_court: verified SmolLM-135M-Instruct.safetensors sha256=c1464c9ebccc6fb497aa4ccc8d74d29b33f9a9eddc4638a4575719357f532f2d
+fleet_coldstart_court: MinIO minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e) sha256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c
++ exec docker run --rm --init --name weft-bench-court-2780780 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=118015f364d05cc51af5d978a28bf469913303ae -e WEFT_REPO_WEFTFS_GO=ad90835857e95479ac1305fcc16f90ac891a45ca -e WEFT_REPO_WEFTCODEC=4cd729f55b65a80370946499feaff70a5277ef04 -e WEFT_REPO_WEFTCODEC_GO=d989c038b995d468c641989589f9d5756939585b -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo build --release --features fuse --example fleet_coldstart --example scale_7b'
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 5 warnings (run `cargo fix --lib -p weftfs` to apply 4 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+fleet_coldstart_court: build exit=0
+=== phase build (memory=8g) ===
+fleet_coldstart_court: phase build exit=0
+    "ok": true,
+    "problems": []
+  },
+  "wall_ms": 36239.217
+}=== phase with (memory=8g) ===
+fleet_coldstart_court: phase with exit=137
+fleet_coldstart_inner: phase=with N=100 work=/work/.docker-cache/fleet-court-20261110T224047Z/with
+fleet_coldstart_inner: corpus sha256=c1464c9ebccc6fb497aa4ccc8d74d29b33f9a9eddc4638a4575719357f532f2d
+fleet_coldstart_inner: MinIO up pid=11
+fleet_coldstart_inner: server ready at 1794350490128710116
+fleet_coldstart_inner: go signal published
+=== phase without (memory=8g) ===

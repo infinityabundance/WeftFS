@@ -1,0 +1,19 @@
+run config=torchsave rep=1/2 steps=128 every=64
+  loop_wall=1379.6ms step_p50=10.32ms pause_p50=0.85ms completion_p50=4.3ms bytes=10050198 resumes=2/2
+run config=torchsave rep=2/2 steps=128 every=64
+  loop_wall=1366.4ms step_p50=10.23ms pause_p50=0.81ms completion_p50=4.0ms bytes=10050198 resumes=2/2
+run config=torchsave-durable rep=1/2 steps=128 every=64
+  loop_wall=1384.6ms step_p50=10.45ms pause_p50=0.78ms completion_p50=4.3ms bytes=10048474 resumes=2/2
+run config=torchsave-durable rep=2/2 steps=128 every=64
+  loop_wall=1386.0ms step_p50=10.45ms pause_p50=0.82ms completion_p50=4.7ms bytes=10048474 resumes=2/2
+Traceback (most recent call last):
+  File "/work/python/courts/training_goodput.py", line 2249, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/training_goodput.py", line 2245, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1777, in run
+    "label": CONFIG_LABEL[config],
+             ~~~~~~~~~~~~^^^^^^^^
+KeyError: 'torchsave-durable'

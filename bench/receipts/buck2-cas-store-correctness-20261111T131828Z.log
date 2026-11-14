@@ -1,0 +1,104 @@
+kind: buck2-cas-store
+timestamp_utc: 20261111T131828Z
+court: fuse
+revisions:
+  WeftFS: 40df0cdf8854e8a070710f89c520b2e24cbef38f
+  WeftCodec: 301ea653a6d25e9feafa2fb074bfc3545aaf2042
+  WeftCodec-Go: 6fd2097963299119bb1c21dd48f16d19004ff34d
+  WeftFS-Go: afbd40303a62e2ab4e5107f52cb2f1874d63f4d3
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.3-1-cachyos
+image: weft/fuse-court:1 sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e
+== build rust oracle ==
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1406:9
+     |
+1406 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1407:9
+     |
+1407 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1408:9
+     |
+1408 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+== build adapter ==
+== go vet + go test (cross-language included) ==
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.049s
+== adapter correctness demo ==
+buck2-cas store demo: 38/38 assertions pass; receipt /work/bench/receipts/buck2-cas-store-correctness-20261111T131828Z.json
+== mount by:action=<key> ==
+object.bin--bc560cec
+== CLI fetch from the same store ==
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261111T131828Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261111T131828Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261111T131828Z/cli-fetch.bin
+== CLI verify ==
+verify ok: key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50
+== unmount ==
+== merge mount evidence into the receipt ==
+mount merged: 41/41 assertions pass

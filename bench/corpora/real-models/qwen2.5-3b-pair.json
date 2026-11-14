@@ -1,0 +1,86 @@
+{
+  "schema": "weft.real-model.corpus.v1",
+  "label": "Real public checkpoint family for the large-model lifecycle court",
+  "note": "Qwen2.5-3B base and Qwen2.5-3B-Instruct are published as two shards each. Every shard was fetched by bench/scripts/real_model_fetch.py, which reads the LFS pointer from the Hugging Face tree API for the exact revision and verifies size and SHA-256 after download. The two shards of each checkpoint were then merged into one container by bench/scripts/safetensors_merge.py, which verifies every tensor byte-for-byte against its source shard and records a per-tensor sha256. No weights are committed; they live under .docker-cache/real-corpus.",
+  "budget": {
+    "work_volume": "/mnt/1tb_kingston",
+    "work_volume_total_bytes": 1426376364032,
+    "work_volume_available_bytes_at_ingest": 96749367296,
+    "work_volume_available_gib": 90.1,
+    "court_tmpfs": {
+      "/tmp": "1g",
+      "/mnt/weft-fuse": "512m",
+      "/mnt/weft-bench": "1g",
+      "usable_for_weights": false
+    },
+    "measured_store_ratio_vs_source": 0.646,
+    "conservative_store_ratio": 1.3,
+    "chosen_family": "Qwen2.5-3B base -> Qwen2.5-3B-Instruct",
+    "chosen_raw_bytes": 12343853824,
+    "chosen_total_projection_gib_at_0.646x": 41.91,
+    "chosen_total_projection_gib_at_1.3x": 49.43,
+    "chosen_margin_gib": [48.19, 40.67],
+    "rejected_family": "Mistral-7B-v0.3 -> Mistral-7B-Instruct-v0.3",
+    "rejected_raw_bytes": 28992161856,
+    "rejected_total_projection_gib_at_0.646x": 98.45,
+    "rejected_total_projection_gib_at_1.3x": 116.1,
+    "rejected_margin_gib": [-8.34, -26.0],
+    "rejected_reason": "At the measured 0.646x store ratio the projected total is already above the 90.1 GiB available, and projected ingest RSS is 41.0 GiB against 50 GiB host-available RAM with memory-swap=memory (no swap fallback). Both bounds fail a safety margin; the 3B pair is the largest candidate that fits."
+  },
+  "cases": [
+    {
+      "id": "qwen3b-base",
+      "repo": "Qwen/Qwen2.5-3B",
+      "revision": "main",
+      "role": "base of the independent fine-tune pair",
+      "dtype": "bf16",
+      "tensor_count": 434,
+      "tensor_data_bytes": 6171877376,
+      "merged": {
+        "path": ".docker-cache/real-corpus/Qwen2.5-3B.safetensors",
+        "size": 6171927112,
+        "sha256": "52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab",
+        "merge_manifest": "bench/corpora/real-models/qwen2.5-3b-merge.json"
+      },
+      "shards": [
+        {
+          "file": "model-00001-of-00002.safetensors",
+          "size": 3968658944,
+          "sha256": "f9558df91d3b89b4826e4db37439edb52f1d62a4fd602685013e7ca6b9f60f8f"
+        },
+        {
+          "file": "model-00002-of-00002.safetensors",
+          "size": 2203268048,
+          "sha256": "51410930d5cf19a998fdb17ef0c46e4d9ace72c97a975a3331395a8a500f5edb"
+        }
+      ]
+    },
+    {
+      "id": "qwen3b-instruct",
+      "repo": "Qwen/Qwen2.5-3B-Instruct",
+      "revision": "main",
+      "role": "independent instruction fine-tune of qwen3b-base",
+      "dtype": "bf16",
+      "tensor_count": 434,
+      "tensor_data_bytes": 6171877376,
+      "merged": {
+        "path": ".docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors",
+        "size": 6171927112,
+        "sha256": "54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2",
+        "merge_manifest": "bench/corpora/real-models/qwen2.5-3b-instruct-merge.json"
+      },
+      "shards": [
+        {
+          "file": "model-00001-of-00002.safetensors",
+          "size": 3968658944,
+          "sha256": "67347b23fb4165b652eb6611f5e1f2a06dfcddba8e909df1b2b0b1857bee06c2"
+        },
+        {
+          "file": "model-00002-of-00002.safetensors",
+          "size": 2203268048,
+          "sha256": "a40d941d0e7e0b966ad8b62bb6d6b7c88cce1299197b599d9d0a4ce59aabfc1d"
+        }
+      ]
+    }
+  ]
+}

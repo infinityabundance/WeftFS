@@ -54,6 +54,7 @@ pub(crate) mod index;
 pub(crate) mod index_chain;
 pub(crate) mod index_incremental;
 pub mod kv_capability;
+pub mod kv_index;
 pub mod kv_prefix;
 pub mod load_attestation;
 pub mod load_receipt;

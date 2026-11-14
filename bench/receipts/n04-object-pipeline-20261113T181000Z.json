@@ -1,0 +1,156 @@
+{
+ "schema": "weft.n04.object_pipeline.v1",
+ "generated_utc": "20261113T181000Z",
+ "result": "partial",
+ "partial": true,
+ "checks": {
+  "provider_abort_failed_closed": true,
+  "provider_abort_left_previous_head": true,
+  "provider_abort_retry_matches_reference": true,
+  "lost_ack_failed_closed": true,
+  "lost_ack_retry_matches_reference": true,
+  "stale_reader_stayed_pinned": true,
+  "fresh_reader_sees_the_commit": true
+ },
+ "environment": {
+  "court_image": "weft/bench-court:1",
+  "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+  "kernel": "7.3.3-1-cachyos",
+  "memory": "3g",
+  "memory_swap": "3g",
+  "pids": "1024",
+  "cpus": "4",
+  "cap_drop": "ALL",
+  "cap_add": [],
+  "revisions": {}
+ },
+ "backend": {
+  "product": "MinIO (S3-compatible object store)",
+  "release": "RELEASE.2025-04-22T22-12-26Z",
+  "binary_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c",
+  "version_line": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)",
+  "client_container_image": "debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc",
+  "data_directory": "tmpfs, 1 GiB",
+  "scope": "single-node loopback object store in one OOM-protected container; not a cloud, multi-node, fleet, media or power-loss claim"
+ },
+ "fixture": {
+  "path": ".docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+  "sha256_verified": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+  "subset": "the frozen augmentation subset: the 272 MB embedding + 100 name-sorted evenly spaced tensors = 101 tensors, 424,439,296 logical bytes"
+ },
+ "durability_contract": {
+  "native_arms": "a completed write is every object PUT acknowledged by the provider",
+  "weftfs_arms": "every blob PUT acknowledged by the provider, then one commit record accepted that names them; all-or-nothing for a reader",
+  "fsync_claimed": false,
+  "note": "the pipeline reports durability_model=provider-ack on S3 and issues no file barrier; the MinIO data directory is a tmpfs",
+  "visibility": "single-node read-after-write and list-after-write for published keys; conditional PUT (If-None-Match/If-Match) required and probed at open"
+ },
+ "arms": {
+  "contract": [
+   "A",
+   "N",
+   "B",
+   "C",
+   "D",
+   "E"
+  ],
+  "pipelined": [
+   "B-pipe4",
+   "C-pipe4",
+   "D-pipe4",
+   "E-pipe4"
+  ],
+  "requested": [
+   "A",
+   "N",
+   "B",
+   "C",
+   "D",
+   "E",
+   "B-pipe4",
+   "C-pipe4",
+   "D-pipe4",
+   "E-pipe4"
+  ],
+  "repetitions": 7,
+  "interleaving": "rotated by one position per repetition, as the augmentation contract requires",
+  "augmentation_receipt": "bench/receipts/augmentation-minio-20261113T181000Z.json"
+ },
+ "adverse": {
+  "put_target": 30,
+  "baseline_put_count": 43,
+  "proxy": "bench/scripts/s3_fault_proxy.py (byte-level forwarder, one fault per run)",
+  "scenarios": {
+   "abort": {
+    "failure_message": "Io: pipeline tensor `layer3.weight` (3): S3 PUT s3://weft-n04-20261113t181000z-reset-faulted/manifests/02/0222acf22570614ebaad064ba29a9ca16be37b6607bb1e52e58bc1e6bdf517da failed: http://127.0.0.1:10001/weft-n04-20261113t181000z-reset-faulted/manifests/02/0222acf22570614ebaad064ba29a9ca16be37b6607bb1e52e58bc1e6bdf517da: Network Error: Unexpected EOF",
+    "fault": "the provider aborted the write",
+    "generation_after_fault": 2,
+    "head_after_fault": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+    "logical_bytes": 2097152,
+    "no_partial_entry_visible": true,
+    "pre_fault_generation": 2,
+    "pre_fault_head": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+    "reference_generation": 3,
+    "reference_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+    "retry_generation": 3,
+    "retry_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+    "retry_matches_reference": true,
+    "retry_verify_ok": true,
+    "scenario": "abort",
+    "tensors": 8,
+    "verify_after_fault_ok": true
+   },
+   "lost-ack": {
+    "failure_message": "Io: pipeline tensor `layer4.weight` (4): S3 PUT s3://weft-n04-20261113t181000z-swallow-faulted/manifests/02/02bf9cd27b0228530b8d07989cfb42d21a86060bcce0e0a5659483ac4b1d8b34 failed: http://127.0.0.1:10001/weft-n04-20261113t181000z-swallow-faulted/manifests/02/02bf9cd27b0228530b8d07989cfb42d21a86060bcce0e0a5659483ac4b1d8b34: Network Error: Unexpected EOF",
+    "fault": "the provider aborted the write",
+    "generation_after_fault": 2,
+    "head_after_fault": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+    "logical_bytes": 2097152,
+    "no_partial_entry_visible": true,
+    "pre_fault_generation": 2,
+    "pre_fault_head": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+    "reference_generation": 3,
+    "reference_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+    "retry_generation": 3,
+    "retry_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+    "retry_matches_reference": true,
+    "retry_verify_ok": true,
+    "scenario": "lost-ack",
+    "tensors": 8,
+    "verify_after_fault_ok": true
+   },
+   "stale-reader": {
+    "fresh_reader_head_matches": true,
+    "fresh_reader_sees_new_entry": true,
+    "generation_before": 2,
+    "head_before": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+    "reader_saw_no_new_entry": true,
+    "reader_stayed_pinned": true,
+    "scenario": "stale-reader",
+    "written_generation": 3,
+    "written_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd"
+   },
+   "baseline": {
+    "generation": 3,
+    "head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+    "scenario": "baseline",
+    "tensors": 8,
+    "verify_ok": true
+   }
+  },
+  "s3_fencing_suite": "bench/receipts/n04-s3-fencing-20261113T181000Z.log",
+  "proxy_logs": [
+   "bench/receipts/n04-proxy-count-baseline-20261113T181000Z.jsonl",
+   "bench/receipts/n04-proxy-reset-abort-20261113T181000Z.jsonl",
+   "bench/receipts/n04-proxy-swallow-lost-ack-20261113T181000Z.jsonl",
+   "bench/receipts/n04-proxy-count-stale-reader-20261113T181000Z.jsonl"
+  ]
+ },
+ "losses_and_non_claims": [
+  "the provider-ack durability model is not a media or power-loss guarantee",
+  "one host, one loopback object-store process, one writer",
+  "the fault proxy is test infrastructure and cannot reproduce a real provider's partial-failure modes",
+  "no claim about AWS S3, GCS, Azure or any cloud service",
+  "pipelined rows are labelled ablations: the pipeline is a store API (Store::prepare_tensor_group_pipelined), not a shipped CLI verb"
+ ]
+}

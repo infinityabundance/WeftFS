@@ -1,0 +1,137 @@
+family_lifecycle: stamp=20261111T165528Z
+family_lifecycle: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+family_lifecycle: limits memory=3g cpus=4 pids=1024
+family_lifecycle: revisions weftfs=3ab54c75b7205e9897e185aa1fac670b6dff16ff weftfs-go=80ddb5b3cec406c7539bafcde5019fb6ced24e7b weftcodec=d9234e5322686afbbbe6fcca103da853928811aa weftcodec-go=fe05240558a94abe530e3020c25b64ab2ad23a32
+family_lifecycle: reps ingest=1 measure=1 topology=1 recovery=1 configs=default
+family_lifecycle: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+family_lifecycle: verified Qwen2.5-0.5B-Instruct.safetensors sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+family_lifecycle: verified pythia-70m-step0.safetensors sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+family_lifecycle: verified pythia-70m-step1.safetensors sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+== build ==
+   Compiling weftcodec v1.3.0 (/work/WeftCodec)
+   Compiling weftfs v1.3.0 (/work)
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1406:9
+     |
+1406 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1407:9
+     |
+1407 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1408:9
+     |
+1408 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 11 warnings (run `cargo fix --lib -p weftfs` to apply 10 suggestions)
+    Finished `release` profile [optimized] target(s) in 31.20s
+== baselines pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/baselines.json
+== checkpoint 8-way pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/checkpoint.json
+== cross-topology pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/topology.json
+== process-fault recovery pythia-consecutive (*.layers.0.*) ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/recovery.json
+== ingest pythia-consecutive/default pattern=whole lambda=0 backend=local ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/ingest.json
+== measure pythia-consecutive/default ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/measure.json
+== gc fixture pythia-consecutive/default (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/gc/gc-pinned.json
+== assemble pythia-consecutive/default ==
+
+== pythia-consecutive / default ==
+ingest median wall 90840.302 ms, peak RSS 680604 KiB
+  strategies base: {"zstd":76}
+  strategies next: {"sparse-delta":20,"zstd":50,"zstd-patch":6}
+  physical data-only 163909392, indexes 309701, total 164428847
+  full_family_threads_1: p50 1241.795 ms p99 1241.795 ms bytes 163977217 match true
+  full_family_threads_4: p50 900.033 ms p99 900.033 ms bytes 163977217 match true
+  region_100_rows_threads_1: p50 399.123 ms p99 399.123 ms bytes 59972402 match true
+  region_100_rows_threads_4: p50 392.174 ms p99 392.174 ms bytes 59972402 match true
+  region_1_row_threads_1: p50 391.02 ms p99 391.02 ms bytes 59972402 match true
+  region_1_row_threads_4: p50 392.069 ms p99 392.069 ms bytes 59972402 match true
+  single_tensor_threads_1: p50 398.125 ms p99 398.125 ms bytes 59972402 match true
+  single_tensor_threads_4: p50 391.55 ms p99 391.55 ms bytes 59972402 match true
+  subset100_threads_1: p50 1061.916 ms p99 1061.916 ms bytes 163977217 match true
+  subset100_threads_4: p50 854.103 ms p99 854.103 ms bytes 163977217 match true
+  topology sharded_8: p50 2925.899 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology sharded_4: p50 2911.709 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology row_major: p50 2865.149 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology blocked_largest_tensor: p50 1065.599 ms, bytes 71856081 (0.697x naive), roots_ok true
+  recovery after_objects: open p50 358.561 ms, usable p50 0.17 ms, old 1 new 0, verify_ok true
+  recovery after_commit_file: open p50 190.027 ms, usable p50 0.364 ms, old 1 new 0, verify_ok true
+  recovery after_superblock_write: open p50 2241.634 ms, usable p50 116.572 ms, old 0 new 1, verify_ok true
+  gc without_snapshot: deleted 141606821 bytes in false, retained blob bytes 141614783, verify_ok true, live-restore true
+  gc with_snapshot: deleted 0 bytes in true, retained blob bytes 141614783, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261111T165528Z/pythia-consecutive/default/family-lifecycle.json
+== merge ==
+receipt bench/receipts/family-lifecycle-20261111T165528Z.json
+family_lifecycle: receipt bench/receipts/family-lifecycle-20261111T165528Z.json
+family_lifecycle: log bench/receipts/family-lifecycle-20261111T165528Z.log

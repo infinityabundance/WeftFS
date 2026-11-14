@@ -1,0 +1,12 @@
+restore_scaling_3b: command scripts/docker-court.sh bench "bash (inline 3B restore-only baseline)"
+bash: line 1: git: command not found
+revision 
+corpus sha256:
+52da3d997beeb4739e5f4f315f0d36b5a9d6f7ad038935774cac670abd1917ab  .docker-cache/real-corpus/Qwen2.5-3B.safetensors
+== probe=0 counting ==
+.docker-cache/restore-3b-20261111T064500Z/restore-counting-probe0.json
+== probe=1 counting ==
+.docker-cache/restore-3b-20261111T064500Z/restore-counting-probe1.json
+== probe=1 sha256 exactness at 2 workers ==
+.docker-cache/restore-3b-20261111T064500Z/restore-sha256-probe1.json
+bench/receipts/restore-scaling-3b-baseline-20261111T064500Z.json

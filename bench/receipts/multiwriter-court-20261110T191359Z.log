@@ -1,0 +1,136 @@
+== multiwriter court ==
+kernel: Linux 25d7e24f6820 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+== build ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5695:8
+     |
+5695 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5702:8
+     |
+5702 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5719:7
+     |
+5719 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5721:4
+     |
+5721 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5754:4
+     |
+5754 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+rust example sha256=ce54f3859d3d699b9f198c260bcabca485222fdc826d7eb3cbee06eccb176970
+go example sha256=a95d1ca1d389c05b62097cc1840f20fdad680137cdd4b40f5e9a12e9fda4c774
+== parity ==
+parity: {"different": {}, "equal": true, "go": {"content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06", "head": "00634254ea98c25e423a1efa4134c843af614d34f0b9e3dc8bb04b649e51d3f8", "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1", "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "size": 11, "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"}, "rust": {"content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06", "head": "00634254ea98c25e423a1efa4134c843af614d34f0b9e3dc8bb04b649e51d3f8", "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1", "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "size": 11, "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"}}
+parity commit file: same; superblock: same
+cross read: {"go_reads_rust": {"content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "len": 11, "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "ok": true}, "ok": true, "rust_reads_go": {"content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5", "len": 11, "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708", "ok": true}}
+
+== mixed disjoint ==
+disjoint: {"attempts": 211, "committed": 160, "conflicts": 0, "errors": [], "expected": 160, "processes": 8, "retry_amplification": 1.31875}
+
+mixed verify: {"bad": [], "failed": 0, "verifiers": 16}
+
+mixed store generation: 161 (verify --full: true)
+== contention ==
+contended: {"committed": 1, "conflict_rate": 0.9875, "conflicts": 79, "errors": [], "operations": 80, "processes": 8}
+
+contended store generation: 2
+hot read: {"go": {"content_hash": "ee7ed87e90172e9fac54a168bed9528c1c1d6ba80fd1f612df0454c4e89ec4bd", "len": 4, "object_id": "050cd52ded99120927c30e335b90f297b0313f187de1b3dd6ba27c7b978422e2", "ok": true}, "ok": true, "rust": {"content_hash": "ee7ed87e90172e9fac54a168bed9528c1c1d6ba80fd1f612df0454c4e89ec4bd", "len": 4, "object_id": "050cd52ded99120927c30e335b90f297b0313f187de1b3dd6ba27c7b978422e2", "ok": true}}
+
+history: {"contended_generation": 2, "expected_contended_generation": 2, "expected_mixed_generation": 161, "mixed_generation": 161, "note": "finite history check, not a linearizability proof", "ok": true}
+
+{"receipt": "bench/receipts/multiwriter-court-20261110T191359Z.json", "result": "pass", "failures": 0}
+receipt: bench/receipts/multiwriter-court-20261110T191359Z.json
+761a49e8950bbe5e22d32b65cda1238ec19f5132a638ba234f8720dc191734f4  bench/receipts/multiwriter-court-20261110T191359Z.json
+16f1c5033a6cc1faeb20a4284e8d778969b559e16d719a9acca1ed28915f861e  bench/receipts/multiwriter-court-20261110T191359Z.log

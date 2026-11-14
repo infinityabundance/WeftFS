@@ -97,6 +97,14 @@ pub const KV_PAGE_DIR: &str = "pages";
 pub const MAX_KV_PREFIX_TOKENS: u64 = 1_048_576;
 /// Bound on the number of reasoning strings a lookup returns.
 const MAX_LOOKUP_REASONS: usize = 16;
+/// Canonical revocation record schema (T063).
+pub const KV_REVOCATION_SCHEMA: &str = "weft.kv.revocation.v1";
+/// Revocation record identity domain.
+pub const DOMAIN_KV_REVOCATION: &str = "weft/kv/revocation/v1";
+/// Revocation namespace directory.
+pub const KV_REVOCATION_DIR: &str = "revocations";
+/// Bound on the number of revocation records a read will materialise.
+pub const MAX_KV_REVOCATIONS: usize = 1_000_000;
 
 fn hex(hash: Hash32) -> String {
     hash.to_hex()
@@ -124,6 +132,15 @@ pub fn kv_token_chain_root(tokens: &[u64]) -> Hash32 {
         root = identity::h(DOMAIN_KV_TOKEN_CHAIN, &data);
     }
     root
+}
+
+/// Chain root after the first `len` tokens.
+///
+/// `len` must be `<= tokens.len()`. This is the frozen per-token chain, not a
+/// second construction: the value equals `kv_token_chain_root(&tokens[..len])`.
+pub fn kv_prefix_chain_root_at(tokens: &[u64], len: u64) -> Hash32 {
+    let len = (len as usize).min(tokens.len());
+    kv_token_chain_root(&tokens[..len])
 }
 
 /// Tokenizer identity domain for the CLI's declared identity strings.
@@ -573,6 +590,8 @@ pub struct KvPrefixWrite {
     pub prefix_id: Hash32,
     pub commit: Hash32,
     pub new_pages: u64,
+    /// `ObjectId` of the published record file (the index's reference).
+    pub record_object_id: Hash32,
 }
 
 /// Result of an authorized prefix get.
@@ -580,6 +599,88 @@ pub struct KvPrefixWrite {
 pub struct KvPrefixRead {
     pub record: KvPrefixRecord,
     pub pages: Vec<DecodedKvPage>,
+}
+
+/// A canonical `weft.kv.revocation.v1` record: one prefix, revoked.
+///
+/// Revocation is additive state: the prefix record itself is untouched (its
+/// content id is immutable) and the revocation names it. A revoked prefix is
+/// never returned by a lookup and never served by `kv get`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KvRevocation {
+    pub name: String,
+    pub prefix_id: Hash32,
+    pub revoked_at_ns: i64,
+    pub reason: String,
+}
+
+/// Outcome of [`Store::kv_prefix_revoke`].
+#[derive(Clone, Debug)]
+pub struct KvRevocationWrite {
+    pub revocation: KvRevocation,
+    pub revocation_id: Hash32,
+    pub commit: Hash32,
+    /// `false` when the prefix was already revoked (idempotent; no commit).
+    pub newly_revoked: bool,
+}
+
+impl KvRevocation {
+    fn to_value(&self) -> Value {
+        let mut map = BTreeMap::new();
+        map.insert(
+            "schema".to_owned(),
+            Value::Str(KV_REVOCATION_SCHEMA.to_owned()),
+        );
+        map.insert("name".to_owned(), Value::Str(self.name.clone()));
+        map.insert("prefix_id".to_owned(), Value::Str(hex(self.prefix_id)));
+        map.insert(
+            "revoked_at_ns".to_owned(),
+            Value::U64(self.revoked_at_ns as u64),
+        );
+        map.insert("reason".to_owned(), Value::Str(self.reason.clone()));
+        Value::Map(map)
+    }
+
+    /// Canonical WCB bytes.
+    pub fn canonical_bytes(&self) -> Result<Vec<u8>> {
+        wcb::encode(&self.to_value(), &Limits::default()).map_err(Error::from)
+    }
+
+    /// `H("weft/kv/revocation/v1", canonical bytes)`.
+    pub fn id(&self) -> Result<Hash32> {
+        Ok(identity::h(DOMAIN_KV_REVOCATION, &self.canonical_bytes()?))
+    }
+
+    /// Strict decode.
+    pub fn from_canonical_bytes(bytes: &[u8]) -> Result<Self> {
+        const KEYS: usize = 5;
+        let value = wcb::decode(bytes, &Limits::default()).map_err(Error::from)?;
+        let Value::Map(map) = value else {
+            return Err(Error::corrupt("kv revocation is not a map"));
+        };
+        if map.len() != KEYS {
+            return Err(Error::corrupt("kv revocation has an unknown key set"));
+        }
+        let text = |key: &str| -> Result<String> {
+            match map.get(key) {
+                Some(Value::Str(value)) => Ok(value.clone()),
+                _ => Err(Error::corrupt(format!("kv revocation `{key}` is not text"))),
+            }
+        };
+        if text("schema")? != KV_REVOCATION_SCHEMA {
+            return Err(Error::corrupt("unknown kv revocation schema"));
+        }
+        let revoked_at_ns = match map.get("revoked_at_ns") {
+            Some(Value::U64(value)) => *value as i64,
+            _ => return Err(Error::corrupt("kv revocation `revoked_at_ns` is not u64")),
+        };
+        Ok(KvRevocation {
+            name: text("name")?,
+            prefix_id: parse_hex(&text("prefix_id")?, "kv revocation prefix_id")?,
+            revoked_at_ns,
+            reason: text("reason")?,
+        })
+    }
 }
 
 /// KV logical GC report.
@@ -1010,9 +1111,20 @@ impl Store {
                 )));
             }
         }
+        // The object id the replaced record holds *now*: the index needs it to
+        // fold the exact previous entry out of its accumulator.
+        let existing_object = match &existing {
+            Some(_) => {
+                let kv = self.resolve_path(&format!("/{KV_DIR}"))?;
+                let prefix_dir = self.lookup(kv, KV_PREFIX_DIR.as_bytes())?;
+                Some(self.lookup(prefix_dir, name.as_bytes())?)
+            }
+            None => None,
+        };
 
         // Everything below is one commit: no partially visible prefix.
-        let ((record, prefix_id), commit) = self.group(|store| {
+        let previous_head = self.head();
+        let ((record, prefix_id, record_object_id), commit) = self.group(|store| {
             let root = store.resolve_path("/")?;
             let kv = ensure_dir(store, root, KV_DIR, uid, gid)?;
             let prefix_dir = ensure_dir(store, kv, KV_PREFIX_DIR, uid, gid)?;
@@ -1135,7 +1247,7 @@ impl Store {
                 data.extend_from_slice(prefix_id.as_bytes());
                 data
             });
-            store.create_file_seeded(
+            let record_object_id = store.create_file_seeded(
                 prefix_dir,
                 name.as_bytes(),
                 &bytes,
@@ -1145,13 +1257,26 @@ impl Store {
                 attrs,
                 record_seed.as_bytes(),
             )?;
-            Ok((record, prefix_id))
+            Ok((record, prefix_id, record_object_id))
         })?;
+        // After the commit: a one-generation delta segment. A failure here only
+        // leaves the index stale; it can never fail or alter the commit.
+        self.kv_index_note_put(
+            self.generation(),
+            previous_head,
+            existing
+                .as_ref()
+                .zip(existing_object)
+                .map(|(record, object)| (record, object)),
+            &record,
+            record_object_id,
+        );
         Ok(KvPrefixWrite {
             prefix_id,
             record,
             commit,
             new_pages: new_pages_per_layer * u64::from(spec.layer_count),
+            record_object_id,
         })
     }
 
@@ -1176,8 +1301,9 @@ impl Store {
         KvPrefixRecord::from_canonical_bytes(&bytes)
     }
 
-    /// Every live prefix record, sorted by name.
-    pub fn kv_prefix_list(&self) -> Result<Vec<(String, KvPrefixRecord)>> {
+    /// Every live prefix record with the `ObjectId` of its record file,
+    /// sorted by name. This is the oracle the KV index is built from.
+    pub fn kv_prefix_records_with_ids(&self) -> Result<Vec<(String, Hash32, KvPrefixRecord)>> {
         let kv = match self.resolve_path(&format!("/{KV_DIR}")) {
             Ok(kv) => kv,
             Err(err) if err.class() == Class::NotFound => return Ok(Vec::new()),
@@ -1197,6 +1323,49 @@ impl Store {
             }
             let bytes = self.read_object(target)?;
             match KvPrefixRecord::from_canonical_bytes(&bytes) {
+                Ok(record) => out.push((name, target, record)),
+                Err(_) => continue,
+            }
+        }
+        out.sort_by(|a, b| a.0.cmp(&b.0));
+        Ok(out)
+    }
+
+    /// Every live prefix record, sorted by name.
+    pub fn kv_prefix_list(&self) -> Result<Vec<(String, KvPrefixRecord)>> {
+        Ok(self
+            .kv_prefix_records_with_ids()?
+            .into_iter()
+            .map(|(name, _, record)| (name, record))
+            .collect())
+    }
+
+    /// Every revocation record, sorted by name.
+    pub fn kv_prefix_revocations(&self) -> Result<Vec<(String, KvRevocation)>> {
+        let kv = match self.resolve_path(&format!("/{KV_DIR}")) {
+            Ok(kv) => kv,
+            Err(err) if err.class() == Class::NotFound => return Ok(Vec::new()),
+            Err(err) => return Err(err),
+        };
+        let dir = match self.lookup(kv, KV_REVOCATION_DIR.as_bytes()) {
+            Ok(dir) => dir,
+            Err(err) if err.class() == Class::NotFound => return Ok(Vec::new()),
+            Err(err) => return Err(err),
+        };
+        let mut out = Vec::new();
+        for entry in self.list_dir(dir)? {
+            if out.len() >= MAX_KV_REVOCATIONS {
+                return Err(Error::limit_exceeded(format!(
+                    "kv revocation set exceeds {MAX_KV_REVOCATIONS} records"
+                )));
+            }
+            let name = String::from_utf8_lossy(&entry.name).into_owned();
+            let target = self.lookup(dir, &entry.name)?;
+            if self.object_meta(target)?.kind != ObjectKind::File {
+                continue;
+            }
+            let bytes = self.read_object(target)?;
+            match KvRevocation::from_canonical_bytes(&bytes) {
                 Ok(record) => out.push((name, record)),
                 Err(_) => continue,
             }
@@ -1205,9 +1374,108 @@ impl Store {
         Ok(out)
     }
 
+    /// The revocation for `name`, if any.
+    pub fn kv_prefix_revocation(&self, name: &str) -> Result<Option<KvRevocation>> {
+        Ok(self
+            .kv_prefix_revocations()?
+            .into_iter()
+            .find(|(revoked, _)| revoked == name)
+            .map(|(_, record)| record))
+    }
+
+    /// Revocation epoch: the number of revocation records.
+    ///
+    /// Revocations are append-only, so this is monotone and is a valid cache
+    /// epoch: a grant or index entry cached under epoch `n` is invalid as soon
+    /// as epoch `n+1` exists.
+    pub fn kv_revocation_epoch(&self) -> Result<u64> {
+        Ok(self.kv_prefix_revocations()?.len() as u64)
+    }
+
+    /// Revoke a prefix: it can never be returned by a lookup again.
+    ///
+    /// Idempotent: revoking an already-revoked prefix returns the stored record
+    /// and publishes nothing. The prefix record and its pages are untouched
+    /// (content ids are immutable), so a snapshot that predates the revocation
+    /// still reads it, exactly as a snapshot must.
+    pub fn kv_prefix_revoke(
+        &mut self,
+        name: &str,
+        reason: &str,
+        now_ns: i64,
+        uid: u64,
+        gid: u64,
+    ) -> Result<KvRevocationWrite> {
+        self.require_writable()?;
+        let record = self.kv_prefix(name)?;
+        if let Some(existing) = self.kv_prefix_revocation(name)? {
+            return Ok(KvRevocationWrite {
+                revocation_id: existing.id()?,
+                revocation: existing,
+                commit: self.head(),
+                newly_revoked: false,
+            });
+        }
+        let prefix_id = record.id()?;
+        let revocation = KvRevocation {
+            name: name.to_owned(),
+            prefix_id,
+            revoked_at_ns: now_ns,
+            reason: reason.to_owned(),
+        };
+        let bytes = revocation.canonical_bytes()?;
+        let revocation_id = revocation.id()?;
+        let record_object_id = {
+            let kv = self.resolve_path(&format!("/{KV_DIR}"))?;
+            let prefix_dir = self.lookup(kv, KV_PREFIX_DIR.as_bytes())?;
+            self.lookup(prefix_dir, name.as_bytes())?
+        };
+        let previous_head = self.head();
+        let ((), commit) = self.group(|store| {
+            let root = store.resolve_path("/")?;
+            let kv = ensure_dir(store, root, KV_DIR, uid, gid)?;
+            let dir = ensure_dir(store, kv, KV_REVOCATION_DIR, uid, gid)?;
+            if store.lookup(dir, name.as_bytes()).is_ok() {
+                store.unlink(dir, name.as_bytes())?;
+            }
+            let mut attrs = BTreeMap::new();
+            attrs.insert(
+                ATTR_KV_PREFIX.to_owned(),
+                Value::Str(prefix_id.to_hex()),
+            );
+            attrs.insert(
+                ATTR_KV_PREFIX_TENANT.to_owned(),
+                Value::Str(record.tenant.clone()),
+            );
+            attrs.insert(
+                ATTR_KV_PREFIX_MODEL.to_owned(),
+                Value::Str(record.model.clone()),
+            );
+            store.create_file(dir, name.as_bytes(), &bytes, 0o644, uid, gid, attrs)?;
+            Ok(())
+        })?;
+        self.kv_index_note_tombstone(self.generation(), previous_head, &record, record_object_id);
+        Ok(KvRevocationWrite {
+            revocation,
+            revocation_id,
+            commit,
+            newly_revoked: true,
+        })
+    }
+
     /// Exact compatibility lookup. Chooses the longest compatible prefix;
-    /// never a partial match.
+    /// never a partial match. Revoked prefixes are never returned.
+    ///
+    /// This is the **oracle**: it reads every prefix record. The indexed path is
+    /// [`Store::kv_prefix_lookup_indexed`](crate::store::Store::kv_prefix_lookup_indexed)
+    /// (in [`crate::kv_index`]), and this function is its differential
+    /// reference and its fallback.
     pub fn kv_prefix_lookup(&self, request: &KvPrefixRequest) -> Result<KvLookup> {
+        self.kv_prefix_lookup_scan(request)
+    }
+
+    /// The oracle scan (see [`Store::kv_prefix_lookup`]).
+    pub fn kv_prefix_lookup_scan(&self, request: &KvPrefixRequest) -> Result<KvLookup> {
         if request.tokens.is_empty() {
             return Err(Error::invalid_argument(
                 "kv lookup needs at least one token",
@@ -1219,10 +1487,14 @@ impl Store {
             )));
         }
         let prefixes = self.kv_prefix_list()?;
+        let revoked = kv_revocation_ids(self)?;
         let scanned = prefixes.len() as u64;
         let mut best: Option<KvPrefixRecord> = None;
         let mut reasons = Vec::new();
         for (_, record) in &prefixes {
+            if revoked.contains(&record.id()?) {
+                continue;
+            }
             match record.compatibility(request) {
                 Ok(()) => {
                     if best
@@ -1273,6 +1545,14 @@ impl Store {
             .map_err(|_| Error::new(Class::Unauthorized, KV_DENIED))?;
         if capability.check_valid_at(now_ns).is_err() {
             return Err(Error::new(Class::Unauthorized, KV_DENIED));
+        }
+        // A revoked prefix is indistinguishable from an absent one to this
+        // caller: the same class and the same text. Revocation must not become
+        // an existence oracle of its own.
+        if self.kv_prefix_revocation(name)?.is_some() {
+            return Err(Error::not_found(format!(
+                "kv prefix `{name}` does not exist"
+            )));
         }
         let record = match self.kv_prefix(name) {
             Ok(record) => record,
@@ -1332,7 +1612,11 @@ impl Store {
         }
         let kv = self.resolve_path(&format!("/{KV_DIR}"))?;
         let prefix_dir = self.lookup(kv, KV_PREFIX_DIR.as_bytes())?;
-        self.unlink(prefix_dir, name.as_bytes())
+        let object_id = self.lookup(prefix_dir, name.as_bytes())?;
+        let previous_head = self.head();
+        self.unlink(prefix_dir, name.as_bytes())?;
+        self.kv_index_note_tombstone(self.generation(), previous_head, &record, object_id);
+        Ok(())
     }
 
     /// Logical KV GC: keep every page named by a live prefix or pinned by an
@@ -1635,6 +1919,18 @@ pub fn reserved_prefix_attribute_names() -> [&'static str; 5] {
 
 /// The record object's full attribute map is private to the module; this is
 /// only used by verification tools that need the id.
+/// The set of revoked prefix content ids.
+///
+/// A lookup filters on this set; a revoked prefix is never returned, and the
+/// filter is applied identically by the oracle scan and the indexed path.
+pub fn kv_revocation_ids(store: &Store) -> Result<BTreeSet<Hash32>> {
+    Ok(store
+        .kv_prefix_revocations()?
+        .into_iter()
+        .map(|(_, revocation)| revocation.prefix_id)
+        .collect())
+}
+
 pub fn prefix_id_of(record: &ObjectRecord) -> Option<Hash32> {
     match record.attrs.get(ATTR_KV_PREFIX) {
         Some(Value::Str(text)) => Hash32::from_hex(text).ok(),

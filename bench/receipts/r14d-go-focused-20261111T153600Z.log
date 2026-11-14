@@ -1,0 +1,61 @@
++ exec docker run --rm --init --name weft-go-court-763801 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=e77f0e5986cc2d7678aba080b7f1dd746221f6cd -e WEFT_REPO_WEFTFS_GO=225eb0dc9012bd93b51cf5fe6523ebfe5eadc601 -e WEFT_REPO_WEFTCODEC=67cea30dd27cf6d51348622d88b8c1416c45920e -e WEFT_REPO_WEFTCODEC_GO=5e047c3c1872dab23cbc85d9d4be4106a6455fba -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftFS-Go && go test -count=1 -v -run '\''Azure|MW2'\'' ./store/'
+=== RUN   TestAzureStoreRoundTripOnDouble
+    azure_integration_test.go:93: Azure double counters (writer): requests=122 reads=15 range_reads=0 bytes_read=57239 writes=34 bytes_written=103226 conflicts=0 fences=8 heads=4
+--- PASS: TestAzureStoreRoundTripOnDouble (0.02s)
+=== RUN   TestAzureBlobPlaneCreateOnceRangesAndListing
+--- PASS: TestAzureBlobPlaneCreateOnceRangesAndListing (0.00s)
+=== RUN   TestAzureEndpointThatIgnoresIfNoneMatchIsRefused
+--- PASS: TestAzureEndpointThatIgnoresIfNoneMatchIsRefused (0.00s)
+=== RUN   TestAzureEndpointThatIgnoresIfMatchIsRefused
+--- PASS: TestAzureEndpointThatIgnoresIfMatchIsRefused (0.00s)
+=== RUN   TestAzureLiteralETagEndpointIsNegotiated
+--- PASS: TestAzureLiteralETagEndpointIsNegotiated (0.00s)
+=== RUN   TestAzureWrongKeyIsUnauthorized
+--- PASS: TestAzureWrongKeyIsUnauthorized (0.00s)
+=== RUN   TestAzureOptimisticTwoDisjointCommitters
+--- PASS: TestAzureOptimisticTwoDisjointCommitters (0.01s)
+=== RUN   TestAzureSingleWriterRefusesAnOptimisticStore
+--- PASS: TestAzureSingleWriterRefusesAnOptimisticStore (0.00s)
+=== RUN   TestAzureLiveStoreRoundTrip
+    azure_integration_test.go:536: WEFT_AZURE_TEST_ENDPOINT is not set; the Azure court is not running
+--- SKIP: TestAzureLiveStoreRoundTrip (0.00s)
+=== RUN   TestAzureLiveConditionalCreateAndCAS
+    azure_integration_test.go:620: WEFT_AZURE_TEST_ENDPOINT is not set; the Azure court is not running
+--- SKIP: TestAzureLiveConditionalCreateAndCAS (0.00s)
+=== RUN   TestAzureStringToSignIsExact
+--- PASS: TestAzureStringToSignIsExact (0.00s)
+=== RUN   TestAzureStringToSignOmitsEmptyContentLength
+--- PASS: TestAzureStringToSignOmitsEmptyContentLength (0.00s)
+=== RUN   TestAzureCanonicalQueryAndResource
+--- PASS: TestAzureCanonicalQueryAndResource (0.00s)
+=== RUN   TestAzurePathEncoding
+--- PASS: TestAzurePathEncoding (0.00s)
+=== RUN   TestAzureResolveRejectsAmbiguousCredentials
+--- PASS: TestAzureResolveRejectsAmbiguousCredentials (0.00s)
+=== RUN   TestAzureConfigValidation
+--- PASS: TestAzureConfigValidation (0.00s)
+=== RUN   TestAzureDevKeyDecodes
+--- PASS: TestAzureDevKeyDecodes (0.00s)
+=== RUN   TestAzureCrossLanguageHandoff
+    azure_handoff_test.go:91: WEFT_AZURE_TEST_ENDPOINT is not set; the Azure court is not running
+--- SKIP: TestAzureCrossLanguageHandoff (0.00s)
+=== RUN   TestMW2OptimisticPolicyAndSingleRefusal
+--- PASS: TestMW2OptimisticPolicyAndSingleRefusal (0.00s)
+=== RUN   TestMW2DisjointTransactionsBothCommit
+--- PASS: TestMW2DisjointTransactionsBothCommit (0.00s)
+=== RUN   TestMW2SameNameIsATypedConflict
+--- PASS: TestMW2SameNameIsATypedConflict (0.00s)
+=== RUN   TestMW2SameObjectUpdateIsRejected
+--- PASS: TestMW2SameObjectUpdateIsRejected (0.00s)
+=== RUN   TestMW2ReplayIsIdempotent
+--- PASS: TestMW2ReplayIsIdempotent (0.00s)
+=== RUN   TestMW2AmbiguousOutcomeResolvedByDigest
+--- PASS: TestMW2AmbiguousOutcomeResolvedByDigest (0.00s)
+=== RUN   TestMW2GCKeepsPreparedPins
+--- PASS: TestMW2GCKeepsPreparedPins (0.00s)
+=== RUN   TestMW2AuthRaceDeniesPublication
+--- PASS: TestMW2AuthRaceDeniesPublication (0.00s)
+=== RUN   TestMW2QuotaRaceAtLimitRejectsLoser
+--- PASS: TestMW2QuotaRaceAtLimitRejectsLoser (0.00s)
+PASS
+ok  	github.com/infinityabundance/WeftFS-Go/store	0.044s

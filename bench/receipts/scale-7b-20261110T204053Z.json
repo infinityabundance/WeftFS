@@ -1,0 +1,126 @@
+{
+  "corpus": {
+    "file": "Qwen2.5-7B-Instruct.safetensors",
+    "merge_tool": "bench/scripts/safetensors_merge.py (per-tensor sha256 verified against each shard)",
+    "repo": "Qwen/Qwen2.5-7B-Instruct",
+    "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+    "shards": 4,
+    "size_bytes": 15231272088
+  },
+  "court": {
+    "cap_drop": "ALL",
+    "cpus": 4,
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "no_new_privileges": true,
+    "nproc": 2048,
+    "pids": 1024,
+    "tmpfs": "1g",
+    "weftcodec_revision": "4cd729f55b65a80370946499feaff70a5277ef04",
+    "weftfs_revision": "118015f364d05cc51af5d978a28bf469913303ae"
+  },
+  "disk_headroom_bytes_after": 64473452544,
+  "generated_utc": "20261110T204053Z",
+  "label": "real public checkpoint, single host, warm page cache; not a fleet/media/cloud claim",
+  "log": "bench/receipts/scale-7b-20261110T204053Z.log",
+  "phases": {
+    "flat": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": 1,
+      "report": null
+    },
+    "ingest": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": 137,
+      "report": null
+    },
+    "packed": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": 1,
+      "report": null
+    },
+    "restore_1": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": 1,
+      "report": null
+    },
+    "restore_4": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": 1,
+      "report": null
+    },
+    "restore_8": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": 1,
+      "report": null
+    },
+    "verify_flat": {
+      "cgroup_memory_peak_bytes": 8065024,
+      "exit": 0,
+      "report": {
+        "generation": 1,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 9059,
+        "verify": {
+          "checked_chunks": 0,
+          "checked_manifests": 0,
+          "checked_objects": 0,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 1,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 0.094
+      }
+    },
+    "verify_ingest": {
+      "cgroup_memory_peak_bytes": 8626176,
+      "exit": 0,
+      "report": {
+        "generation": 2,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 10096,
+        "verify": {
+          "checked_chunks": 0,
+          "checked_manifests": 0,
+          "checked_objects": 0,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 0.224
+      }
+    },
+    "verify_packed": {
+      "cgroup_memory_peak_bytes": 8568832,
+      "exit": 0,
+      "report": {
+        "generation": 1,
+        "phase": "verify",
+        "status": "ok",
+        "store_bytes": 8898,
+        "verify": {
+          "checked_chunks": 0,
+          "checked_manifests": 0,
+          "checked_objects": 0,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 1,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 0.102
+      }
+    }
+  },
+  "schema": "weft-scale-7b-court-v1"
+}

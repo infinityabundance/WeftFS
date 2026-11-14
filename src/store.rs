@@ -999,6 +999,12 @@ pub struct Store {
     /// envelope. Both are pure functions of content-addressed inputs; no
     /// authorization decision is retained. See [`crate::kv_capability::KvReadCache`].
     kv_read_cache: Mutex<crate::kv_capability::KvReadCache>,
+    /// Derived, generation-coupled KV prefix index (subphase T063). Advisory:
+    /// every candidate is verified against its record before use, and a load
+    /// that fails any check is dropped (the caller rebuilds or scans).
+    kv_index_cache: Mutex<Option<std::sync::Arc<crate::kv_index::LoadedKvIndex>>>,
+    /// Counters and bounded notes for the KV prefix index (T063).
+    kv_index_stats: Mutex<crate::kv_index::KvIndexStats>,
     /// Opt-in instrumentation of the backend mutex (subphase R13). Off unless
     /// a court harness enables it; never consulted by a commit, receipt, or
     /// format decision.
@@ -1334,6 +1340,8 @@ impl Store {
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
             kv_read_cache: Mutex::new(crate::kv_capability::KvReadCache::default()),
+            kv_index_cache: Mutex::new(None),
+            kv_index_stats: Mutex::new(crate::kv_index::KvIndexStats::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
             read_pool,
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
@@ -1590,6 +1598,8 @@ impl Store {
             single_flight_test_dwell_nanos: AtomicU64::new(0),
             overlay_tables: Mutex::new(OverlayTableCache::default()),
             kv_read_cache: Mutex::new(crate::kv_capability::KvReadCache::default()),
+            kv_index_cache: Mutex::new(None),
+            kv_index_stats: Mutex::new(crate::kv_index::KvIndexStats::default()),
             lock_probe: crate::lock_probe::LockProbe::new(),
             read_pool,
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
@@ -2608,6 +2618,30 @@ impl Store {
     /// Capability evidence from the writable open, if any.
     /// The handle's KV fast-path decode cache (crate-internal; the caches hold
     /// decode results only and are fenced by the head generation).
+    /// Bounded KV prefix index cache and counters (T063).
+    pub(crate) fn kv_index_cache(
+        &self,
+    ) -> &Mutex<Option<std::sync::Arc<crate::kv_index::LoadedKvIndex>>> {
+        &self.kv_index_cache
+    }
+
+    /// KV prefix index counters.
+    pub(crate) fn kv_index_stats(&self) -> &Mutex<crate::kv_index::KvIndexStats> {
+        &self.kv_index_stats
+    }
+
+    /// Update the KV prefix index counters.
+    pub(crate) fn bump_kv_index(
+        &self,
+        update: impl FnOnce(&mut crate::kv_index::KvIndexStats),
+    ) {
+        let mut stats = self
+            .kv_index_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        update(&mut stats);
+    }
+
     pub(crate) fn kv_read_cache(&self) -> &Mutex<crate::kv_capability::KvReadCache> {
         &self.kv_read_cache
     }

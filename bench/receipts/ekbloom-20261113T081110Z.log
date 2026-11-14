@@ -1,0 +1,703 @@
+== ekbloom court ==
+phase: boundary
+stamp: 20261113T081110Z
+kernel: Linux 8565978d6dc6 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/rust-court:1 (sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb)
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+revisions: weftfs=d370f98d0ad647f8b8a63cc0aa8229dd9f8adbe6 weftfs_go=7f55d11a7a66a5c6e542e345d06539d801281a4c weftcodec=75f08634824d3f6fe1561a1c523e97f390e85391 weftcodec_go=9812d158bf41be85f73ca667f9e2439661d7db2e
+rustc: rustc 1.99.1 (58cf8f9c3 2026-10-13)
+cargo: cargo 1.99.1 (5f94df478 2026-08-27)
+ekbloom: version=0.7.3 lock_checksum=1c56ae95137ee95cdd8a3c26006aec3281752b23c150a5243152e2370e965da4
+== build (cargo build --release --locked) ==
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2249:9
+     |
+2249 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2354:13
+     |
+2354 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 14 warnings (run `cargo fix --lib -p weftfs` to apply 12 suggestions)
+   Compiling ekbloom-harness v0.1.0 (/work/bench/ekbloom-harness)
+    Finished `release` profile [optimized] target(s) in 1.76s
+harness sha256: ae37cb8038c4a55e6567e19f528279cdff369742480393ad7c56fbee7814c977
+== run ==
+corpus: arm=base file=.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors bytes=988097824 sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342 header_sha256=a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14 tensors=290
+corpus: arm=instruct file=.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe header_sha256=a1ad4b586dee7de313404262f716dee70a0a3c75cdcef6bd7860fd955b117e14 tensors=290
+boundary: arm=base objects=290 (every tensor, contract §3.1)
+  [1/290] model.embed_tokens.weight logical=272269312 body=210902688 exact=true verifier=true encode_ms=1052.955 decode_ms=1849.542 peak_kib=744080
+  [2/290] model.layers.0.input_layernorm.weight logical=1792 body=2088 exact=true verifier=true encode_ms=0.024 decode_ms=0.021 peak_kib=6364
+  [3/290] model.layers.0.mlp.down_proj.weight logical=8716288 body=6773664 exact=true verifier=true encode_ms=34.889 decode_ms=59.759 peak_kib=78624
+  [4/290] model.layers.0.mlp.gate_proj.weight logical=8716288 body=6794760 exact=true verifier=true encode_ms=33.366 decode_ms=58.525 peak_kib=90408
+  [5/290] model.layers.0.mlp.up_proj.weight logical=8716288 body=6764904 exact=true verifier=true encode_ms=33.259 decode_ms=59.478 peak_kib=88540
+  [6/290] model.layers.0.post_attention_layernorm.weight logical=1792 body=1704 exact=true verifier=true encode_ms=0.021 decode_ms=0.022 peak_kib=35576
+  [7/290] model.layers.0.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.004 peak_kib=35576
+  [8/290] model.layers.0.self_attn.k_proj.weight logical=229376 body=182520 exact=true verifier=true encode_ms=0.873 decode_ms=1.535 peak_kib=35576
+  [9/290] model.layers.0.self_attn.o_proj.weight logical=1605632 body=1255640 exact=true verifier=true encode_ms=5.891 decode_ms=10.596 peak_kib=35576
+  [10/290] model.layers.0.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=35576
+  [11/290] model.layers.0.self_attn.q_proj.weight logical=1605632 body=1269872 exact=true verifier=true encode_ms=5.958 decode_ms=10.892 peak_kib=35576
+  [12/290] model.layers.0.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=35576
+  [13/290] model.layers.0.self_attn.v_proj.weight logical=229376 body=179536 exact=true verifier=true encode_ms=0.845 decode_ms=1.495 peak_kib=35576
+  [14/290] model.layers.1.input_layernorm.weight logical=1792 body=1952 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=35576
+  [15/290] model.layers.1.mlp.down_proj.weight logical=8716288 body=6764576 exact=true verifier=true encode_ms=33.098 decode_ms=59.627 peak_kib=88364
+  [16/290] model.layers.1.mlp.gate_proj.weight logical=8716288 body=6792432 exact=true verifier=true encode_ms=32.760 decode_ms=59.287 peak_kib=88304
+  [17/290] model.layers.1.mlp.up_proj.weight logical=8716288 body=6756696 exact=true verifier=true encode_ms=33.419 decode_ms=59.588 peak_kib=88328
+  [18/290] model.layers.1.post_attention_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=35560
+  [19/290] model.layers.1.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=35560
+  [20/290] model.layers.1.self_attn.k_proj.weight logical=229376 body=180112 exact=true verifier=true encode_ms=0.867 decode_ms=1.501 peak_kib=35560
+  [21/290] model.layers.1.self_attn.o_proj.weight logical=1605632 body=1252488 exact=true verifier=true encode_ms=6.081 decode_ms=10.712 peak_kib=35560
+  [22/290] model.layers.1.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=35560
+  [23/290] model.layers.1.self_attn.q_proj.weight logical=1605632 body=1259760 exact=true verifier=true encode_ms=5.986 decode_ms=10.656 peak_kib=35560
+  [24/290] model.layers.1.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=35560
+  [25/290] model.layers.1.self_attn.v_proj.weight logical=229376 body=179352 exact=true verifier=true encode_ms=0.854 decode_ms=1.507 peak_kib=35560
+  [26/290] model.layers.10.input_layernorm.weight logical=1792 body=2064 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=35560
+  [27/290] model.layers.10.mlp.down_proj.weight logical=8716288 body=6808616 exact=true verifier=true encode_ms=33.598 decode_ms=59.237 peak_kib=90400
+  [28/290] model.layers.10.mlp.gate_proj.weight logical=8716288 body=6807960 exact=true verifier=true encode_ms=32.975 decode_ms=59.365 peak_kib=90400
+  [29/290] model.layers.10.mlp.up_proj.weight logical=8716288 body=6784688 exact=true verifier=true encode_ms=33.124 decode_ms=59.441 peak_kib=88300
+  [30/290] model.layers.10.post_attention_layernorm.weight logical=1792 body=2016 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=35616
+  [31/290] model.layers.10.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=35616
+  [32/290] model.layers.10.self_attn.k_proj.weight logical=229376 body=180528 exact=true verifier=true encode_ms=0.866 decode_ms=1.525 peak_kib=35616
+  [33/290] model.layers.10.self_attn.o_proj.weight logical=1605632 body=1264376 exact=true verifier=true encode_ms=6.076 decode_ms=10.726 peak_kib=35616
+  [34/290] model.layers.10.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.015 decode_ms=0.011 peak_kib=35616
+  [35/290] model.layers.10.self_attn.q_proj.weight logical=1605632 body=1258648 exact=true verifier=true encode_ms=6.057 decode_ms=10.788 peak_kib=35616
+  [36/290] model.layers.10.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=35616
+  [37/290] model.layers.10.self_attn.v_proj.weight logical=229376 body=180216 exact=true verifier=true encode_ms=0.871 decode_ms=1.535 peak_kib=35616
+  [38/290] model.layers.11.input_layernorm.weight logical=1792 body=2048 exact=true verifier=true encode_ms=0.016 decode_ms=0.018 peak_kib=35616
+  [39/290] model.layers.11.mlp.down_proj.weight logical=8716288 body=6807864 exact=true verifier=true encode_ms=33.078 decode_ms=58.910 peak_kib=90388
+  [40/290] model.layers.11.mlp.gate_proj.weight logical=8716288 body=6794072 exact=true verifier=true encode_ms=33.154 decode_ms=59.371 peak_kib=88388
+  [41/290] model.layers.11.mlp.up_proj.weight logical=8716288 body=6784400 exact=true verifier=true encode_ms=32.830 decode_ms=59.319 peak_kib=88360
+  [42/290] model.layers.11.post_attention_layernorm.weight logical=1792 body=2032 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=35616
+  [43/290] model.layers.11.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=35616
+  [44/290] model.layers.11.self_attn.k_proj.weight logical=229376 body=182560 exact=true verifier=true encode_ms=0.877 decode_ms=1.572 peak_kib=35616
+  [45/290] model.layers.11.self_attn.o_proj.weight logical=1605632 body=1261952 exact=true verifier=true encode_ms=6.078 decode_ms=10.719 peak_kib=35616
+  [46/290] model.layers.11.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.010 peak_kib=35616
+  [47/290] model.layers.11.self_attn.q_proj.weight logical=1605632 body=1274904 exact=true verifier=true encode_ms=6.189 decode_ms=10.691 peak_kib=35616
+  [48/290] model.layers.11.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=35616
+  [49/290] model.layers.11.self_attn.v_proj.weight logical=229376 body=180216 exact=true verifier=true encode_ms=0.904 decode_ms=1.545 peak_kib=35616
+  [50/290] model.layers.12.input_layernorm.weight logical=1792 body=2064 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=35616
+  [51/290] model.layers.12.mlp.down_proj.weight logical=8716288 body=6807304 exact=true verifier=true encode_ms=33.742 decode_ms=58.742 peak_kib=90476
+  [52/290] model.layers.12.mlp.gate_proj.weight logical=8716288 body=6797272 exact=true verifier=true encode_ms=32.756 decode_ms=59.131 peak_kib=88456
+  [53/290] model.layers.12.mlp.up_proj.weight logical=8716288 body=6786376 exact=true verifier=true encode_ms=32.999 decode_ms=59.377 peak_kib=88412
+  [54/290] model.layers.12.post_attention_layernorm.weight logical=1792 body=2024 exact=true verifier=true encode_ms=0.023 decode_ms=0.021 peak_kib=35620
+  [55/290] model.layers.12.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=35620
+  [56/290] model.layers.12.self_attn.k_proj.weight logical=229376 body=180456 exact=true verifier=true encode_ms=0.884 decode_ms=1.558 peak_kib=35620
+  [57/290] model.layers.12.self_attn.o_proj.weight logical=1605632 body=1261792 exact=true verifier=true encode_ms=6.038 decode_ms=10.741 peak_kib=35620
+  [58/290] model.layers.12.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=35620
+  [59/290] model.layers.12.self_attn.q_proj.weight logical=1605632 body=1259200 exact=true verifier=true encode_ms=6.052 decode_ms=10.644 peak_kib=35620
+  [60/290] model.layers.12.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=35620
+  [61/290] model.layers.12.self_attn.v_proj.weight logical=229376 body=179504 exact=true verifier=true encode_ms=0.874 decode_ms=1.684 peak_kib=35620
+  [62/290] model.layers.13.input_layernorm.weight logical=1792 body=2056 exact=true verifier=true encode_ms=0.017 decode_ms=0.019 peak_kib=35620
+  [63/290] model.layers.13.mlp.down_proj.weight logical=8716288 body=6807800 exact=true verifier=true encode_ms=33.844 decode_ms=59.250 peak_kib=90440
+  [64/290] model.layers.13.mlp.gate_proj.weight logical=8716288 body=6793176 exact=true verifier=true encode_ms=32.979 decode_ms=58.838 peak_kib=88448
+  [65/290] model.layers.13.mlp.up_proj.weight logical=8716288 body=6784728 exact=true verifier=true encode_ms=32.731 decode_ms=59.947 peak_kib=88380
+  [66/290] model.layers.13.post_attention_layernorm.weight logical=1792 body=1992 exact=true verifier=true encode_ms=0.023 decode_ms=0.021 peak_kib=35616
+  [67/290] model.layers.13.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.011 decode_ms=0.005 peak_kib=35616
+  [68/290] model.layers.13.self_attn.k_proj.weight logical=229376 body=181232 exact=true verifier=true encode_ms=0.868 decode_ms=1.530 peak_kib=35616
+  [69/290] model.layers.13.self_attn.o_proj.weight logical=1605632 body=1262192 exact=true verifier=true encode_ms=6.169 decode_ms=10.845 peak_kib=35616
+  [70/290] model.layers.13.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=35616
+  [71/290] model.layers.13.self_attn.q_proj.weight logical=1605632 body=1267840 exact=true verifier=true encode_ms=6.110 decode_ms=10.683 peak_kib=35616
+  [72/290] model.layers.13.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.006 peak_kib=35616
+  [73/290] model.layers.13.self_attn.v_proj.weight logical=229376 body=180376 exact=true verifier=true encode_ms=0.922 decode_ms=1.555 peak_kib=35616
+  [74/290] model.layers.14.input_layernorm.weight logical=1792 body=2040 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=35616
+  [75/290] model.layers.14.mlp.down_proj.weight logical=8716288 body=6809104 exact=true verifier=true encode_ms=32.989 decode_ms=59.494 peak_kib=90508
+  [76/290] model.layers.14.mlp.gate_proj.weight logical=8716288 body=6794968 exact=true verifier=true encode_ms=33.070 decode_ms=58.795 peak_kib=88496
+  [77/290] model.layers.14.mlp.up_proj.weight logical=8716288 body=6785440 exact=true verifier=true encode_ms=32.695 decode_ms=59.074 peak_kib=88464
+  [78/290] model.layers.14.post_attention_layernorm.weight logical=1792 body=1920 exact=true verifier=true encode_ms=0.023 decode_ms=0.021 peak_kib=35616
+  [79/290] model.layers.14.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.005 peak_kib=35616
+  [80/290] model.layers.14.self_attn.k_proj.weight logical=229376 body=180464 exact=true verifier=true encode_ms=0.871 decode_ms=1.532 peak_kib=35616
+  [81/290] model.layers.14.self_attn.o_proj.weight logical=1605632 body=1260944 exact=true verifier=true encode_ms=6.101 decode_ms=10.929 peak_kib=35616
+  [82/290] model.layers.14.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=35616
+  [83/290] model.layers.14.self_attn.q_proj.weight logical=1605632 body=1260632 exact=true verifier=true encode_ms=6.042 decode_ms=10.701 peak_kib=35616
+  [84/290] model.layers.14.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=35616
+  [85/290] model.layers.14.self_attn.v_proj.weight logical=229376 body=180800 exact=true verifier=true encode_ms=0.870 decode_ms=1.530 peak_kib=35616
+  [86/290] model.layers.15.input_layernorm.weight logical=1792 body=2032 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=35616
+  [87/290] model.layers.15.mlp.down_proj.weight logical=8716288 body=6820192 exact=true verifier=true encode_ms=33.656 decode_ms=59.416 peak_kib=88948
+  [88/290] model.layers.15.mlp.gate_proj.weight logical=8716288 body=6802848 exact=true verifier=true encode_ms=33.428 decode_ms=59.391 peak_kib=88948
+  [89/290] model.layers.15.mlp.up_proj.weight logical=8716288 body=6795744 exact=true verifier=true encode_ms=33.573 decode_ms=59.630 peak_kib=88996
+  [90/290] model.layers.15.post_attention_layernorm.weight logical=1792 body=1904 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=36096
+  [91/290] model.layers.15.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=36096
+  [92/290] model.layers.15.self_attn.k_proj.weight logical=229376 body=180736 exact=true verifier=true encode_ms=0.881 decode_ms=1.669 peak_kib=36096
+  [93/290] model.layers.15.self_attn.o_proj.weight logical=1605632 body=1262768 exact=true verifier=true encode_ms=6.114 decode_ms=10.751 peak_kib=36096
+  [94/290] model.layers.15.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=36096
+  [95/290] model.layers.15.self_attn.q_proj.weight logical=1605632 body=1260024 exact=true verifier=true encode_ms=6.141 decode_ms=10.822 peak_kib=36096
+  [96/290] model.layers.15.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=36096
+  [97/290] model.layers.15.self_attn.v_proj.weight logical=229376 body=179568 exact=true verifier=true encode_ms=0.874 decode_ms=1.538 peak_kib=36096
+  [98/290] model.layers.16.input_layernorm.weight logical=1792 body=1992 exact=true verifier=true encode_ms=0.014 decode_ms=0.019 peak_kib=36096
+  [99/290] model.layers.16.mlp.down_proj.weight logical=8716288 body=6787704 exact=true verifier=true encode_ms=33.342 decode_ms=59.331 peak_kib=88804
+  [100/290] model.layers.16.mlp.gate_proj.weight logical=8716288 body=6809712 exact=true verifier=true encode_ms=33.226 decode_ms=59.607 peak_kib=88832
+  [101/290] model.layers.16.mlp.up_proj.weight logical=8716288 body=6791768 exact=true verifier=true encode_ms=33.588 decode_ms=59.160 peak_kib=88896
+  [102/290] model.layers.16.post_attention_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=36088
+  [103/290] model.layers.16.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=36088
+  [104/290] model.layers.16.self_attn.k_proj.weight logical=229376 body=181584 exact=true verifier=true encode_ms=0.879 decode_ms=1.622 peak_kib=36088
+  [105/290] model.layers.16.self_attn.o_proj.weight logical=1605632 body=1258936 exact=true verifier=true encode_ms=6.113 decode_ms=10.734 peak_kib=36088
+  [106/290] model.layers.16.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=36088
+  [107/290] model.layers.16.self_attn.q_proj.weight logical=1605632 body=1278736 exact=true verifier=true encode_ms=6.112 decode_ms=10.824 peak_kib=36088
+  [108/290] model.layers.16.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=36088
+  [109/290] model.layers.16.self_attn.v_proj.weight logical=229376 body=182216 exact=true verifier=true encode_ms=0.872 decode_ms=1.520 peak_kib=36088
+  [110/290] model.layers.17.input_layernorm.weight logical=1792 body=1904 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=36088
+  [111/290] model.layers.17.mlp.down_proj.weight logical=8716288 body=6777968 exact=true verifier=true encode_ms=33.787 decode_ms=59.790 peak_kib=88896
+  [112/290] model.layers.17.mlp.gate_proj.weight logical=8716288 body=6798472 exact=true verifier=true encode_ms=33.499 decode_ms=58.736 peak_kib=88892
+  [113/290] model.layers.17.mlp.up_proj.weight logical=8716288 body=6776336 exact=true verifier=true encode_ms=32.887 decode_ms=60.236 peak_kib=88868
+  [114/290] model.layers.17.post_attention_layernorm.weight logical=1792 body=1920 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=36060
+  [115/290] model.layers.17.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=36060
+  [116/290] model.layers.17.self_attn.k_proj.weight logical=229376 body=180472 exact=true verifier=true encode_ms=0.885 decode_ms=1.854 peak_kib=36060
+  [117/290] model.layers.17.self_attn.o_proj.weight logical=1605632 body=1254040 exact=true verifier=true encode_ms=6.180 decode_ms=10.893 peak_kib=36060
+  [118/290] model.layers.17.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=36060
+  [119/290] model.layers.17.self_attn.q_proj.weight logical=1605632 body=1261288 exact=true verifier=true encode_ms=6.037 decode_ms=10.878 peak_kib=36060
+  [120/290] model.layers.17.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.004 peak_kib=36060
+  [121/290] model.layers.17.self_attn.v_proj.weight logical=229376 body=180048 exact=true verifier=true encode_ms=0.881 decode_ms=1.635 peak_kib=36060
+  [122/290] model.layers.18.input_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.016 decode_ms=0.021 peak_kib=36060
+  [123/290] model.layers.18.mlp.down_proj.weight logical=8716288 body=6785616 exact=true verifier=true encode_ms=33.585 decode_ms=58.985 peak_kib=88872
+  [124/290] model.layers.18.mlp.gate_proj.weight logical=8716288 body=6786392 exact=true verifier=true encode_ms=32.979 decode_ms=59.899 peak_kib=88808
+  [125/290] model.layers.18.mlp.up_proj.weight logical=8716288 body=6774504 exact=true verifier=true encode_ms=32.817 decode_ms=60.024 peak_kib=88792
+  [126/290] model.layers.18.post_attention_layernorm.weight logical=1792 body=1928 exact=true verifier=true encode_ms=0.023 decode_ms=0.020 peak_kib=36056
+  [127/290] model.layers.18.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.003 peak_kib=36056
+  [128/290] model.layers.18.self_attn.k_proj.weight logical=229376 body=180232 exact=true verifier=true encode_ms=0.887 decode_ms=1.577 peak_kib=36056
+  [129/290] model.layers.18.self_attn.o_proj.weight logical=1605632 body=1255360 exact=true verifier=true encode_ms=6.184 decode_ms=10.822 peak_kib=36056
+  [130/290] model.layers.18.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=36056
+  [131/290] model.layers.18.self_attn.q_proj.weight logical=1605632 body=1259104 exact=true verifier=true encode_ms=6.067 decode_ms=10.697 peak_kib=36056
+  [132/290] model.layers.18.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=36056
+  [133/290] model.layers.18.self_attn.v_proj.weight logical=229376 body=180648 exact=true verifier=true encode_ms=0.868 decode_ms=1.516 peak_kib=36056
+  [134/290] model.layers.19.input_layernorm.weight logical=1792 body=1880 exact=true verifier=true encode_ms=0.017 decode_ms=0.019 peak_kib=36056
+  [135/290] model.layers.19.mlp.down_proj.weight logical=8716288 body=6802296 exact=true verifier=true encode_ms=33.253 decode_ms=59.278 peak_kib=88768
+  [136/290] model.layers.19.mlp.gate_proj.weight logical=8716288 body=6799080 exact=true verifier=true encode_ms=32.625 decode_ms=61.565 peak_kib=88952
+  [137/290] model.layers.19.mlp.up_proj.weight logical=8716288 body=6787776 exact=true verifier=true encode_ms=33.278 decode_ms=59.722 peak_kib=88932
+  [138/290] model.layers.19.post_attention_layernorm.weight logical=1792 body=1920 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=36084
+  [139/290] model.layers.19.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=36084
+  [140/290] model.layers.19.self_attn.k_proj.weight logical=229376 body=179784 exact=true verifier=true encode_ms=0.909 decode_ms=1.554 peak_kib=36084
+  [141/290] model.layers.19.self_attn.o_proj.weight logical=1605632 body=1253864 exact=true verifier=true encode_ms=6.254 decode_ms=10.830 peak_kib=36084
+  [142/290] model.layers.19.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=36084
+  [143/290] model.layers.19.self_attn.q_proj.weight logical=1605632 body=1262016 exact=true verifier=true encode_ms=6.145 decode_ms=10.631 peak_kib=36084
+  [144/290] model.layers.19.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.011 decode_ms=0.004 peak_kib=36084
+  [145/290] model.layers.19.self_attn.v_proj.weight logical=229376 body=179952 exact=true verifier=true encode_ms=0.878 decode_ms=1.528 peak_kib=36084
+  [146/290] model.layers.2.input_layernorm.weight logical=1792 body=1896 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=36084
+  [147/290] model.layers.2.mlp.down_proj.weight logical=8716288 body=6771048 exact=true verifier=true encode_ms=33.242 decode_ms=59.559 peak_kib=88804
+  [148/290] model.layers.2.mlp.gate_proj.weight logical=8716288 body=6797120 exact=true verifier=true encode_ms=32.594 decode_ms=59.149 peak_kib=88944
+  [149/290] model.layers.2.mlp.up_proj.weight logical=8716288 body=6760944 exact=true verifier=true encode_ms=33.329 decode_ms=59.539 peak_kib=88944
+  [150/290] model.layers.2.post_attention_layernorm.weight logical=1792 body=1824 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=36028
+  [151/290] model.layers.2.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=36028
+  [152/290] model.layers.2.self_attn.k_proj.weight logical=229376 body=180312 exact=true verifier=true encode_ms=0.867 decode_ms=1.502 peak_kib=36028
+  [153/290] model.layers.2.self_attn.o_proj.weight logical=1605632 body=1253168 exact=true verifier=true encode_ms=6.053 decode_ms=10.518 peak_kib=36028
+  [154/290] model.layers.2.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=36028
+  [155/290] model.layers.2.self_attn.q_proj.weight logical=1605632 body=1264072 exact=true verifier=true encode_ms=5.984 decode_ms=10.590 peak_kib=36028
+  [156/290] model.layers.2.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=36028
+  [157/290] model.layers.2.self_attn.v_proj.weight logical=229376 body=179976 exact=true verifier=true encode_ms=0.856 decode_ms=1.515 peak_kib=36028
+  [158/290] model.layers.20.input_layernorm.weight logical=1792 body=1912 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=36028
+  [159/290] model.layers.20.mlp.down_proj.weight logical=8716288 body=6805176 exact=true verifier=true encode_ms=33.409 decode_ms=59.944 peak_kib=89008
+  [160/290] model.layers.20.mlp.gate_proj.weight logical=8716288 body=6796120 exact=true verifier=true encode_ms=33.001 decode_ms=59.916 peak_kib=89008
+  [161/290] model.layers.20.mlp.up_proj.weight logical=8716288 body=6791184 exact=true verifier=true encode_ms=33.005 decode_ms=59.736 peak_kib=88992
+  [162/290] model.layers.20.post_attention_layernorm.weight logical=1792 body=1888 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=36088
+  [163/290] model.layers.20.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=36088
+  [164/290] model.layers.20.self_attn.k_proj.weight logical=229376 body=181080 exact=true verifier=true encode_ms=0.966 decode_ms=1.566 peak_kib=36088
+  [165/290] model.layers.20.self_attn.o_proj.weight logical=1605632 body=1258336 exact=true verifier=true encode_ms=6.110 decode_ms=10.840 peak_kib=36088
+  [166/290] model.layers.20.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.018 decode_ms=0.010 peak_kib=36088
+  [167/290] model.layers.20.self_attn.q_proj.weight logical=1605632 body=1270128 exact=true verifier=true encode_ms=5.965 decode_ms=10.751 peak_kib=36088
+  [168/290] model.layers.20.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=36088
+  [169/290] model.layers.20.self_attn.v_proj.weight logical=229376 body=180984 exact=true verifier=true encode_ms=0.865 decode_ms=1.577 peak_kib=36088
+  [170/290] model.layers.21.input_layernorm.weight logical=1792 body=1904 exact=true verifier=true encode_ms=0.017 decode_ms=0.019 peak_kib=36088
+  [171/290] model.layers.21.mlp.down_proj.weight logical=8716288 body=6793640 exact=true verifier=true encode_ms=33.206 decode_ms=59.050 peak_kib=88920
+  [172/290] model.layers.21.mlp.gate_proj.weight logical=8716288 body=6782856 exact=true verifier=true encode_ms=32.836 decode_ms=59.184 peak_kib=88920
+  [173/290] model.layers.21.mlp.up_proj.weight logical=8716288 body=6784320 exact=true verifier=true encode_ms=32.720 decode_ms=58.846 peak_kib=88920
+  [174/290] model.layers.21.post_attention_layernorm.weight logical=1792 body=1840 exact=true verifier=true encode_ms=0.021 decode_ms=0.024 peak_kib=36076
+  [175/290] model.layers.21.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=36076
+  [176/290] model.layers.21.self_attn.k_proj.weight logical=229376 body=180960 exact=true verifier=true encode_ms=0.883 decode_ms=1.555 peak_kib=36076
+  [177/290] model.layers.21.self_attn.o_proj.weight logical=1605632 body=1258872 exact=true verifier=true encode_ms=6.003 decode_ms=10.683 peak_kib=36076
+  [178/290] model.layers.21.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.018 decode_ms=0.016 peak_kib=36076
+  [179/290] model.layers.21.self_attn.q_proj.weight logical=1605632 body=1275408 exact=true verifier=true encode_ms=6.133 decode_ms=10.669 peak_kib=36076
+  [180/290] model.layers.21.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=36076
+  [181/290] model.layers.21.self_attn.v_proj.weight logical=229376 body=181056 exact=true verifier=true encode_ms=0.866 decode_ms=1.518 peak_kib=36076
+  [182/290] model.layers.22.input_layernorm.weight logical=1792 body=1888 exact=true verifier=true encode_ms=0.017 decode_ms=0.019 peak_kib=36076
+  [183/290] model.layers.22.mlp.down_proj.weight logical=8716288 body=6781336 exact=true verifier=true encode_ms=33.396 decode_ms=59.334 peak_kib=88792
+  [184/290] model.layers.22.mlp.gate_proj.weight logical=8716288 body=6778696 exact=true verifier=true encode_ms=33.018 decode_ms=59.268 peak_kib=88884
+  [185/290] model.layers.22.mlp.up_proj.weight logical=8716288 body=6785432 exact=true verifier=true encode_ms=32.953 decode_ms=58.974 peak_kib=88976
+  [186/290] model.layers.22.post_attention_layernorm.weight logical=1792 body=1816 exact=true verifier=true encode_ms=0.024 decode_ms=0.021 peak_kib=36076
+  [187/290] model.layers.22.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.005 peak_kib=36076
+  [188/290] model.layers.22.self_attn.k_proj.weight logical=229376 body=180784 exact=true verifier=true encode_ms=0.877 decode_ms=1.542 peak_kib=36076
+  [189/290] model.layers.22.self_attn.o_proj.weight logical=1605632 body=1251760 exact=true verifier=true encode_ms=6.039 decode_ms=10.663 peak_kib=36076
+  [190/290] model.layers.22.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=36076
+  [191/290] model.layers.22.self_attn.q_proj.weight logical=1605632 body=1269984 exact=true verifier=true encode_ms=5.973 decode_ms=10.910 peak_kib=36076
+  [192/290] model.layers.22.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=36076
+  [193/290] model.layers.22.self_attn.v_proj.weight logical=229376 body=180856 exact=true verifier=true encode_ms=0.874 decode_ms=1.520 peak_kib=36076
+  [194/290] model.layers.23.input_layernorm.weight logical=1792 body=1896 exact=true verifier=true encode_ms=0.017 decode_ms=0.018 peak_kib=36076
+  [195/290] model.layers.23.mlp.down_proj.weight logical=8716288 body=6777568 exact=true verifier=true encode_ms=33.483 decode_ms=59.119 peak_kib=92372
+  [196/290] model.layers.23.mlp.gate_proj.weight logical=8716288 body=6784648 exact=true verifier=true encode_ms=33.065 decode_ms=58.790 peak_kib=90512
+  [197/290] model.layers.23.mlp.up_proj.weight logical=8716288 body=6782304 exact=true verifier=true encode_ms=33.337 decode_ms=58.775 peak_kib=90456
+  [198/290] model.layers.23.post_attention_layernorm.weight logical=1792 body=1720 exact=true verifier=true encode_ms=0.023 decode_ms=0.021 peak_kib=37648
+  [199/290] model.layers.23.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37648
+  [200/290] model.layers.23.self_attn.k_proj.weight logical=229376 body=181616 exact=true verifier=true encode_ms=0.872 decode_ms=1.545 peak_kib=37648
+  [201/290] model.layers.23.self_attn.o_proj.weight logical=1605632 body=1258360 exact=true verifier=true encode_ms=6.286 decode_ms=10.947 peak_kib=37648
+  [202/290] model.layers.23.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.018 decode_ms=0.011 peak_kib=37648
+  [203/290] model.layers.23.self_attn.q_proj.weight logical=1605632 body=1271016 exact=true verifier=true encode_ms=6.206 decode_ms=11.039 peak_kib=37648
+  [204/290] model.layers.23.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.004 peak_kib=37648
+  [205/290] model.layers.23.self_attn.v_proj.weight logical=229376 body=180344 exact=true verifier=true encode_ms=0.940 decode_ms=1.538 peak_kib=37648
+  [206/290] model.layers.3.input_layernorm.weight logical=1792 body=1936 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=37648
+  [207/290] model.layers.3.mlp.down_proj.weight logical=8716288 body=6776192 exact=true verifier=true encode_ms=33.954 decode_ms=59.930 peak_kib=90512
+  [208/290] model.layers.3.mlp.gate_proj.weight logical=8716288 body=6792752 exact=true verifier=true encode_ms=33.017 decode_ms=59.156 peak_kib=90536
+  [209/290] model.layers.3.mlp.up_proj.weight logical=8716288 body=6766032 exact=true verifier=true encode_ms=33.200 decode_ms=59.892 peak_kib=90536
+  [210/290] model.layers.3.post_attention_layernorm.weight logical=1792 body=1856 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37616
+  [211/290] model.layers.3.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.003 peak_kib=37616
+  [212/290] model.layers.3.self_attn.k_proj.weight logical=229376 body=181008 exact=true verifier=true encode_ms=0.877 decode_ms=1.608 peak_kib=37616
+  [213/290] model.layers.3.self_attn.o_proj.weight logical=1605632 body=1256664 exact=true verifier=true encode_ms=6.250 decode_ms=10.732 peak_kib=37616
+  [214/290] model.layers.3.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37616
+  [215/290] model.layers.3.self_attn.q_proj.weight logical=1605632 body=1271608 exact=true verifier=true encode_ms=6.080 decode_ms=10.801 peak_kib=37616
+  [216/290] model.layers.3.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=37616
+  [217/290] model.layers.3.self_attn.v_proj.weight logical=229376 body=179704 exact=true verifier=true encode_ms=0.885 decode_ms=1.608 peak_kib=37616
+  [218/290] model.layers.4.input_layernorm.weight logical=1792 body=1984 exact=true verifier=true encode_ms=0.017 decode_ms=0.021 peak_kib=37616
+  [219/290] model.layers.4.mlp.down_proj.weight logical=8716288 body=6783872 exact=true verifier=true encode_ms=33.894 decode_ms=58.752 peak_kib=90408
+  [220/290] model.layers.4.mlp.gate_proj.weight logical=8716288 body=6800344 exact=true verifier=true encode_ms=32.736 decode_ms=59.012 peak_kib=90440
+  [221/290] model.layers.4.mlp.up_proj.weight logical=8716288 body=6772520 exact=true verifier=true encode_ms=33.271 decode_ms=59.606 peak_kib=90504
+  [222/290] model.layers.4.post_attention_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.024 decode_ms=0.021 peak_kib=37628
+  [223/290] model.layers.4.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.005 peak_kib=37628
+  [224/290] model.layers.4.self_attn.k_proj.weight logical=229376 body=180472 exact=true verifier=true encode_ms=0.914 decode_ms=1.525 peak_kib=37628
+  [225/290] model.layers.4.self_attn.o_proj.weight logical=1605632 body=1257408 exact=true verifier=true encode_ms=6.311 decode_ms=10.706 peak_kib=37628
+  [226/290] model.layers.4.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=37628
+  [227/290] model.layers.4.self_attn.q_proj.weight logical=1605632 body=1259456 exact=true verifier=true encode_ms=6.124 decode_ms=10.609 peak_kib=37628
+  [228/290] model.layers.4.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.003 peak_kib=37628
+  [229/290] model.layers.4.self_attn.v_proj.weight logical=229376 body=179480 exact=true verifier=true encode_ms=0.887 decode_ms=1.540 peak_kib=37628
+  [230/290] model.layers.5.input_layernorm.weight logical=1792 body=1952 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37628
+  [231/290] model.layers.5.mlp.down_proj.weight logical=8716288 body=6783256 exact=true verifier=true encode_ms=33.307 decode_ms=59.356 peak_kib=90392
+  [232/290] model.layers.5.mlp.gate_proj.weight logical=8716288 body=6805136 exact=true verifier=true encode_ms=32.706 decode_ms=58.511 peak_kib=90248
+  [233/290] model.layers.5.mlp.up_proj.weight logical=8716288 body=6765288 exact=true verifier=true encode_ms=33.410 decode_ms=59.130 peak_kib=90304
+  [234/290] model.layers.5.post_attention_layernorm.weight logical=1792 body=1912 exact=true verifier=true encode_ms=0.024 decode_ms=0.021 peak_kib=37616
+  [235/290] model.layers.5.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37616
+  [236/290] model.layers.5.self_attn.k_proj.weight logical=229376 body=180576 exact=true verifier=true encode_ms=0.862 decode_ms=1.565 peak_kib=37616
+  [237/290] model.layers.5.self_attn.o_proj.weight logical=1605632 body=1256664 exact=true verifier=true encode_ms=6.073 decode_ms=10.658 peak_kib=37616
+  [238/290] model.layers.5.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37616
+  [239/290] model.layers.5.self_attn.q_proj.weight logical=1605632 body=1259400 exact=true verifier=true encode_ms=6.063 decode_ms=10.630 peak_kib=37616
+  [240/290] model.layers.5.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37616
+  [241/290] model.layers.5.self_attn.v_proj.weight logical=229376 body=179824 exact=true verifier=true encode_ms=0.879 decode_ms=1.557 peak_kib=37616
+  [242/290] model.layers.6.input_layernorm.weight logical=1792 body=1912 exact=true verifier=true encode_ms=0.018 decode_ms=0.019 peak_kib=37616
+  [243/290] model.layers.6.mlp.down_proj.weight logical=8716288 body=6786104 exact=true verifier=true encode_ms=33.312 decode_ms=59.489 peak_kib=90188
+  [244/290] model.layers.6.mlp.gate_proj.weight logical=8716288 body=6795456 exact=true verifier=true encode_ms=33.175 decode_ms=59.053 peak_kib=90292
+  [245/290] model.layers.6.mlp.up_proj.weight logical=8716288 body=6775040 exact=true verifier=true encode_ms=33.423 decode_ms=58.885 peak_kib=90256
+  [246/290] model.layers.6.post_attention_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37632
+  [247/290] model.layers.6.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37632
+  [248/290] model.layers.6.self_attn.k_proj.weight logical=229376 body=180632 exact=true verifier=true encode_ms=0.876 decode_ms=1.520 peak_kib=37632
+  [249/290] model.layers.6.self_attn.o_proj.weight logical=1605632 body=1257616 exact=true verifier=true encode_ms=6.100 decode_ms=10.634 peak_kib=37632
+  [250/290] model.layers.6.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.018 decode_ms=0.011 peak_kib=37632
+  [251/290] model.layers.6.self_attn.q_proj.weight logical=1605632 body=1262288 exact=true verifier=true encode_ms=6.104 decode_ms=10.599 peak_kib=37632
+  [252/290] model.layers.6.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37632
+  [253/290] model.layers.6.self_attn.v_proj.weight logical=229376 body=179296 exact=true verifier=true encode_ms=0.875 decode_ms=1.547 peak_kib=37632
+  [254/290] model.layers.7.input_layernorm.weight logical=1792 body=1856 exact=true verifier=true encode_ms=0.016 decode_ms=0.020 peak_kib=37632
+  [255/290] model.layers.7.mlp.down_proj.weight logical=8716288 body=6790576 exact=true verifier=true encode_ms=32.971 decode_ms=58.749 peak_kib=90060
+  [256/290] model.layers.7.mlp.gate_proj.weight logical=8716288 body=6791632 exact=true verifier=true encode_ms=32.979 decode_ms=59.600 peak_kib=90136
+  [257/290] model.layers.7.mlp.up_proj.weight logical=8716288 body=6777648 exact=true verifier=true encode_ms=33.132 decode_ms=59.766 peak_kib=90384
+  [258/290] model.layers.7.post_attention_layernorm.weight logical=1792 body=1880 exact=true verifier=true encode_ms=0.024 decode_ms=0.020 peak_kib=37640
+  [259/290] model.layers.7.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37640
+  [260/290] model.layers.7.self_attn.k_proj.weight logical=229376 body=180648 exact=true verifier=true encode_ms=0.895 decode_ms=1.512 peak_kib=37640
+  [261/290] model.layers.7.self_attn.o_proj.weight logical=1605632 body=1258280 exact=true verifier=true encode_ms=6.179 decode_ms=10.683 peak_kib=37640
+  [262/290] model.layers.7.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37640
+  [263/290] model.layers.7.self_attn.q_proj.weight logical=1605632 body=1260248 exact=true verifier=true encode_ms=6.332 decode_ms=10.668 peak_kib=37640
+  [264/290] model.layers.7.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.011 decode_ms=0.004 peak_kib=37640
+  [265/290] model.layers.7.self_attn.v_proj.weight logical=229376 body=179776 exact=true verifier=true encode_ms=0.888 decode_ms=1.643 peak_kib=37640
+  [266/290] model.layers.8.input_layernorm.weight logical=1792 body=1952 exact=true verifier=true encode_ms=0.016 decode_ms=0.018 peak_kib=37640
+  [267/290] model.layers.8.mlp.down_proj.weight logical=8716288 body=6806848 exact=true verifier=true encode_ms=33.680 decode_ms=59.324 peak_kib=92460
+  [268/290] model.layers.8.mlp.gate_proj.weight logical=8716288 body=6810856 exact=true verifier=true encode_ms=33.103 decode_ms=59.817 peak_kib=92404
+  [269/290] model.layers.8.mlp.up_proj.weight logical=8716288 body=6790224 exact=true verifier=true encode_ms=33.178 decode_ms=59.417 peak_kib=90416
+  [270/290] model.layers.8.post_attention_layernorm.weight logical=1792 body=1928 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=37664
+  [271/290] model.layers.8.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.005 peak_kib=37664
+  [272/290] model.layers.8.self_attn.k_proj.weight logical=229376 body=180560 exact=true verifier=true encode_ms=0.917 decode_ms=1.514 peak_kib=37664
+  [273/290] model.layers.8.self_attn.o_proj.weight logical=1605632 body=1260912 exact=true verifier=true encode_ms=6.272 decode_ms=10.645 peak_kib=37664
+  [274/290] model.layers.8.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=37664
+  [275/290] model.layers.8.self_attn.q_proj.weight logical=1605632 body=1260632 exact=true verifier=true encode_ms=6.198 decode_ms=10.599 peak_kib=37664
+  [276/290] model.layers.8.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=37664
+  [277/290] model.layers.8.self_attn.v_proj.weight logical=229376 body=179520 exact=true verifier=true encode_ms=0.881 decode_ms=1.557 peak_kib=37664
+  [278/290] model.layers.9.input_layernorm.weight logical=1792 body=2040 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37664
+  [279/290] model.layers.9.mlp.down_proj.weight logical=8716288 body=6803840 exact=true verifier=true encode_ms=33.572 decode_ms=59.273 peak_kib=90372
+  [280/290] model.layers.9.mlp.gate_proj.weight logical=8716288 body=6791104 exact=true verifier=true encode_ms=33.408 decode_ms=59.208 peak_kib=90276
+  [281/290] model.layers.9.mlp.up_proj.weight logical=8716288 body=6778136 exact=true verifier=true encode_ms=33.128 decode_ms=59.585 peak_kib=90352
+  [282/290] model.layers.9.post_attention_layernorm.weight logical=1792 body=2000 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37640
+  [283/290] model.layers.9.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37640
+  [284/290] model.layers.9.self_attn.k_proj.weight logical=229376 body=181416 exact=true verifier=true encode_ms=0.883 decode_ms=1.549 peak_kib=37640
+  [285/290] model.layers.9.self_attn.o_proj.weight logical=1605632 body=1261272 exact=true verifier=true encode_ms=6.300 decode_ms=10.712 peak_kib=37640
+  [286/290] model.layers.9.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37640
+  [287/290] model.layers.9.self_attn.q_proj.weight logical=1605632 body=1271488 exact=true verifier=true encode_ms=6.129 decode_ms=10.949 peak_kib=37640
+  [288/290] model.layers.9.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37640
+  [289/290] model.layers.9.self_attn.v_proj.weight logical=229376 body=180672 exact=true verifier=true encode_ms=0.886 decode_ms=1.544 peak_kib=37640
+  [290/290] model.norm.weight logical=1792 body=1744 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37640
+boundary: arm=instruct objects=290 (every tensor, contract §3.1)
+  [1/290] model.embed_tokens.weight logical=272269312 body=211069808 exact=true verifier=true encode_ms=1048.536 decode_ms=1849.589 peak_kib=775616
+  [2/290] model.layers.0.input_layernorm.weight logical=1792 body=2088 exact=true verifier=true encode_ms=0.023 decode_ms=0.065 peak_kib=37640
+  [3/290] model.layers.0.mlp.down_proj.weight logical=8716288 body=6779552 exact=true verifier=true encode_ms=32.903 decode_ms=58.873 peak_kib=90412
+  [4/290] model.layers.0.mlp.gate_proj.weight logical=8716288 body=6800896 exact=true verifier=true encode_ms=32.513 decode_ms=59.954 peak_kib=90444
+  [5/290] model.layers.0.mlp.up_proj.weight logical=8716288 body=6769680 exact=true verifier=true encode_ms=33.209 decode_ms=60.411 peak_kib=90420
+  [6/290] model.layers.0.post_attention_layernorm.weight logical=1792 body=1712 exact=true verifier=true encode_ms=0.022 decode_ms=0.023 peak_kib=37624
+  [7/290] model.layers.0.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37624
+  [8/290] model.layers.0.self_attn.k_proj.weight logical=229376 body=182736 exact=true verifier=true encode_ms=0.867 decode_ms=1.555 peak_kib=37624
+  [9/290] model.layers.0.self_attn.o_proj.weight logical=1605632 body=1258616 exact=true verifier=true encode_ms=5.867 decode_ms=10.689 peak_kib=37624
+  [10/290] model.layers.0.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37624
+  [11/290] model.layers.0.self_attn.q_proj.weight logical=1605632 body=1270784 exact=true verifier=true encode_ms=6.147 decode_ms=10.875 peak_kib=37624
+  [12/290] model.layers.0.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37624
+  [13/290] model.layers.0.self_attn.v_proj.weight logical=229376 body=179712 exact=true verifier=true encode_ms=0.941 decode_ms=1.575 peak_kib=37624
+  [14/290] model.layers.1.input_layernorm.weight logical=1792 body=1960 exact=true verifier=true encode_ms=0.015 decode_ms=0.020 peak_kib=37624
+  [15/290] model.layers.1.mlp.down_proj.weight logical=8716288 body=6770464 exact=true verifier=true encode_ms=32.936 decode_ms=59.253 peak_kib=90360
+  [16/290] model.layers.1.mlp.gate_proj.weight logical=8716288 body=6798248 exact=true verifier=true encode_ms=33.021 decode_ms=59.115 peak_kib=90468
+  [17/290] model.layers.1.mlp.up_proj.weight logical=8716288 body=6761552 exact=true verifier=true encode_ms=33.105 decode_ms=59.281 peak_kib=90424
+  [18/290] model.layers.1.post_attention_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.022 decode_ms=0.022 peak_kib=37608
+  [19/290] model.layers.1.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37608
+  [20/290] model.layers.1.self_attn.k_proj.weight logical=229376 body=180384 exact=true verifier=true encode_ms=0.861 decode_ms=1.486 peak_kib=37608
+  [21/290] model.layers.1.self_attn.o_proj.weight logical=1605632 body=1254032 exact=true verifier=true encode_ms=6.034 decode_ms=10.544 peak_kib=37608
+  [22/290] model.layers.1.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.010 peak_kib=37608
+  [23/290] model.layers.1.self_attn.q_proj.weight logical=1605632 body=1260904 exact=true verifier=true encode_ms=6.021 decode_ms=10.480 peak_kib=37608
+  [24/290] model.layers.1.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37608
+  [25/290] model.layers.1.self_attn.v_proj.weight logical=229376 body=179656 exact=true verifier=true encode_ms=0.868 decode_ms=1.508 peak_kib=37608
+  [26/290] model.layers.10.input_layernorm.weight logical=1792 body=2072 exact=true verifier=true encode_ms=0.016 decode_ms=0.020 peak_kib=37608
+  [27/290] model.layers.10.mlp.down_proj.weight logical=8716288 body=6814664 exact=true verifier=true encode_ms=32.999 decode_ms=59.096 peak_kib=92396
+  [28/290] model.layers.10.mlp.gate_proj.weight logical=8716288 body=6813488 exact=true verifier=true encode_ms=32.889 decode_ms=59.753 peak_kib=92464
+  [29/290] model.layers.10.mlp.up_proj.weight logical=8716288 body=6789104 exact=true verifier=true encode_ms=33.202 decode_ms=59.620 peak_kib=90416
+  [30/290] model.layers.10.post_attention_layernorm.weight logical=1792 body=2024 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37660
+  [31/290] model.layers.10.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37660
+  [32/290] model.layers.10.self_attn.k_proj.weight logical=229376 body=180736 exact=true verifier=true encode_ms=0.884 decode_ms=1.551 peak_kib=37660
+  [33/290] model.layers.10.self_attn.o_proj.weight logical=1605632 body=1265544 exact=true verifier=true encode_ms=6.168 decode_ms=10.749 peak_kib=37660
+  [34/290] model.layers.10.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=37660
+  [35/290] model.layers.10.self_attn.q_proj.weight logical=1605632 body=1259704 exact=true verifier=true encode_ms=5.998 decode_ms=10.733 peak_kib=37660
+  [36/290] model.layers.10.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.004 peak_kib=37660
+  [37/290] model.layers.10.self_attn.v_proj.weight logical=229376 body=180360 exact=true verifier=true encode_ms=0.969 decode_ms=1.565 peak_kib=37660
+  [38/290] model.layers.11.input_layernorm.weight logical=1792 body=2048 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37660
+  [39/290] model.layers.11.mlp.down_proj.weight logical=8716288 body=6813184 exact=true verifier=true encode_ms=33.521 decode_ms=59.488 peak_kib=92460
+  [40/290] model.layers.11.mlp.gate_proj.weight logical=8716288 body=6798992 exact=true verifier=true encode_ms=33.047 decode_ms=59.478 peak_kib=90416
+  [41/290] model.layers.11.mlp.up_proj.weight logical=8716288 body=6789144 exact=true verifier=true encode_ms=33.232 decode_ms=59.622 peak_kib=90420
+  [42/290] model.layers.11.post_attention_layernorm.weight logical=1792 body=2032 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=37660
+  [43/290] model.layers.11.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37660
+  [44/290] model.layers.11.self_attn.k_proj.weight logical=229376 body=182688 exact=true verifier=true encode_ms=0.888 decode_ms=1.561 peak_kib=37660
+  [45/290] model.layers.11.self_attn.o_proj.weight logical=1605632 body=1263016 exact=true verifier=true encode_ms=6.026 decode_ms=11.125 peak_kib=37660
+  [46/290] model.layers.11.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=37660
+  [47/290] model.layers.11.self_attn.q_proj.weight logical=1605632 body=1275592 exact=true verifier=true encode_ms=6.121 decode_ms=11.033 peak_kib=37660
+  [48/290] model.layers.11.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37660
+  [49/290] model.layers.11.self_attn.v_proj.weight logical=229376 body=180320 exact=true verifier=true encode_ms=0.878 decode_ms=1.549 peak_kib=37660
+  [50/290] model.layers.12.input_layernorm.weight logical=1792 body=2064 exact=true verifier=true encode_ms=0.018 decode_ms=0.020 peak_kib=37660
+  [51/290] model.layers.12.mlp.down_proj.weight logical=8716288 body=6812656 exact=true verifier=true encode_ms=33.357 decode_ms=59.237 peak_kib=92616
+  [52/290] model.layers.12.mlp.gate_proj.weight logical=8716288 body=6802504 exact=true verifier=true encode_ms=32.781 decode_ms=59.814 peak_kib=90596
+  [53/290] model.layers.12.mlp.up_proj.weight logical=8716288 body=6791000 exact=true verifier=true encode_ms=33.027 decode_ms=59.874 peak_kib=90528
+  [54/290] model.layers.12.post_attention_layernorm.weight logical=1792 body=2024 exact=true verifier=true encode_ms=0.021 decode_ms=0.021 peak_kib=37664
+  [55/290] model.layers.12.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37664
+  [56/290] model.layers.12.self_attn.k_proj.weight logical=229376 body=180704 exact=true verifier=true encode_ms=0.868 decode_ms=1.526 peak_kib=37664
+  [57/290] model.layers.12.self_attn.o_proj.weight logical=1605632 body=1262736 exact=true verifier=true encode_ms=6.001 decode_ms=10.674 peak_kib=37664
+  [58/290] model.layers.12.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=37664
+  [59/290] model.layers.12.self_attn.q_proj.weight logical=1605632 body=1259936 exact=true verifier=true encode_ms=6.043 decode_ms=10.743 peak_kib=37664
+  [60/290] model.layers.12.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37664
+  [61/290] model.layers.12.self_attn.v_proj.weight logical=229376 body=179656 exact=true verifier=true encode_ms=0.877 decode_ms=1.542 peak_kib=37664
+  [62/290] model.layers.13.input_layernorm.weight logical=1792 body=2056 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37664
+  [63/290] model.layers.13.mlp.down_proj.weight logical=8716288 body=6813128 exact=true verifier=true encode_ms=33.133 decode_ms=58.604 peak_kib=92672
+  [64/290] model.layers.13.mlp.gate_proj.weight logical=8716288 body=6799272 exact=true verifier=true encode_ms=32.691 decode_ms=59.387 peak_kib=90628
+  [65/290] model.layers.13.mlp.up_proj.weight logical=8716288 body=6790200 exact=true verifier=true encode_ms=33.187 decode_ms=59.737 peak_kib=90604
+  [66/290] model.layers.13.post_attention_layernorm.weight logical=1792 body=2000 exact=true verifier=true encode_ms=0.111 decode_ms=0.021 peak_kib=37664
+  [67/290] model.layers.13.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.004 peak_kib=37664
+  [68/290] model.layers.13.self_attn.k_proj.weight logical=229376 body=181480 exact=true verifier=true encode_ms=0.896 decode_ms=1.544 peak_kib=37664
+  [69/290] model.layers.13.self_attn.o_proj.weight logical=1605632 body=1263136 exact=true verifier=true encode_ms=6.159 decode_ms=10.601 peak_kib=37664
+  [70/290] model.layers.13.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37664
+  [71/290] model.layers.13.self_attn.q_proj.weight logical=1605632 body=1269016 exact=true verifier=true encode_ms=5.987 decode_ms=10.628 peak_kib=37664
+  [72/290] model.layers.13.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.010 decode_ms=0.004 peak_kib=37664
+  [73/290] model.layers.13.self_attn.v_proj.weight logical=229376 body=180392 exact=true verifier=true encode_ms=0.892 decode_ms=1.535 peak_kib=37664
+  [74/290] model.layers.14.input_layernorm.weight logical=1792 body=2032 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37664
+  [75/290] model.layers.14.mlp.down_proj.weight logical=8716288 body=6814464 exact=true verifier=true encode_ms=33.041 decode_ms=59.234 peak_kib=92648
+  [76/290] model.layers.14.mlp.gate_proj.weight logical=8716288 body=6800816 exact=true verifier=true encode_ms=33.114 decode_ms=59.525 peak_kib=90632
+  [77/290] model.layers.14.mlp.up_proj.weight logical=8716288 body=6790720 exact=true verifier=true encode_ms=33.255 decode_ms=59.261 peak_kib=90604
+  [78/290] model.layers.14.post_attention_layernorm.weight logical=1792 body=1928 exact=true verifier=true encode_ms=0.021 decode_ms=0.019 peak_kib=37664
+  [79/290] model.layers.14.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37664
+  [80/290] model.layers.14.self_attn.k_proj.weight logical=229376 body=180640 exact=true verifier=true encode_ms=0.885 decode_ms=1.535 peak_kib=37664
+  [81/290] model.layers.14.self_attn.o_proj.weight logical=1605632 body=1262120 exact=true verifier=true encode_ms=6.150 decode_ms=10.750 peak_kib=37664
+  [82/290] model.layers.14.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37664
+  [83/290] model.layers.14.self_attn.q_proj.weight logical=1605632 body=1261632 exact=true verifier=true encode_ms=6.227 decode_ms=10.695 peak_kib=37664
+  [84/290] model.layers.14.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37664
+  [85/290] model.layers.14.self_attn.v_proj.weight logical=229376 body=180848 exact=true verifier=true encode_ms=0.878 decode_ms=1.528 peak_kib=37664
+  [86/290] model.layers.15.input_layernorm.weight logical=1792 body=2040 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37664
+  [87/290] model.layers.15.mlp.down_proj.weight logical=8716288 body=6825744 exact=true verifier=true encode_ms=33.505 decode_ms=58.608 peak_kib=92668
+  [88/290] model.layers.15.mlp.gate_proj.weight logical=8716288 body=6808960 exact=true verifier=true encode_ms=32.717 decode_ms=58.989 peak_kib=92668
+  [89/290] model.layers.15.mlp.up_proj.weight logical=8716288 body=6800880 exact=true verifier=true encode_ms=33.052 decode_ms=58.875 peak_kib=90600
+  [90/290] model.layers.15.post_attention_layernorm.weight logical=1792 body=1904 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=37684
+  [91/290] model.layers.15.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37684
+  [92/290] model.layers.15.self_attn.k_proj.weight logical=229376 body=180912 exact=true verifier=true encode_ms=0.883 decode_ms=1.529 peak_kib=37684
+  [93/290] model.layers.15.self_attn.o_proj.weight logical=1605632 body=1263688 exact=true verifier=true encode_ms=5.980 decode_ms=10.877 peak_kib=37684
+  [94/290] model.layers.15.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.019 decode_ms=0.011 peak_kib=37684
+  [95/290] model.layers.15.self_attn.q_proj.weight logical=1605632 body=1261120 exact=true verifier=true encode_ms=6.019 decode_ms=10.827 peak_kib=37684
+  [96/290] model.layers.15.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=37684
+  [97/290] model.layers.15.self_attn.v_proj.weight logical=229376 body=179784 exact=true verifier=true encode_ms=0.919 decode_ms=1.632 peak_kib=37684
+  [98/290] model.layers.16.input_layernorm.weight logical=1792 body=1992 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37684
+  [99/290] model.layers.16.mlp.down_proj.weight logical=8716288 body=6793288 exact=true verifier=true encode_ms=33.703 decode_ms=58.714 peak_kib=90680
+  [100/290] model.layers.16.mlp.gate_proj.weight logical=8716288 body=6815744 exact=true verifier=true encode_ms=32.593 decode_ms=59.265 peak_kib=92772
+  [101/290] model.layers.16.mlp.up_proj.weight logical=8716288 body=6796848 exact=true verifier=true encode_ms=33.169 decode_ms=59.506 peak_kib=90728
+  [102/290] model.layers.16.post_attention_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=37676
+  [103/290] model.layers.16.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37676
+  [104/290] model.layers.16.self_attn.k_proj.weight logical=229376 body=181864 exact=true verifier=true encode_ms=0.883 decode_ms=1.573 peak_kib=37676
+  [105/290] model.layers.16.self_attn.o_proj.weight logical=1605632 body=1260064 exact=true verifier=true encode_ms=6.094 decode_ms=10.821 peak_kib=37676
+  [106/290] model.layers.16.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37676
+  [107/290] model.layers.16.self_attn.q_proj.weight logical=1605632 body=1278976 exact=true verifier=true encode_ms=6.198 decode_ms=10.763 peak_kib=37676
+  [108/290] model.layers.16.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.005 peak_kib=37676
+  [109/290] model.layers.16.self_attn.v_proj.weight logical=229376 body=182400 exact=true verifier=true encode_ms=0.902 decode_ms=1.546 peak_kib=37676
+  [110/290] model.layers.17.input_layernorm.weight logical=1792 body=1904 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=37676
+  [111/290] model.layers.17.mlp.down_proj.weight logical=8716288 body=6783616 exact=true verifier=true encode_ms=33.117 decode_ms=59.703 peak_kib=90692
+  [112/290] model.layers.17.mlp.gate_proj.weight logical=8716288 body=6804224 exact=true verifier=true encode_ms=32.783 decode_ms=58.783 peak_kib=90692
+  [113/290] model.layers.17.mlp.up_proj.weight logical=8716288 body=6780968 exact=true verifier=true encode_ms=32.797 decode_ms=60.140 peak_kib=90636
+  [114/290] model.layers.17.post_attention_layernorm.weight logical=1792 body=1928 exact=true verifier=true encode_ms=0.022 decode_ms=0.031 peak_kib=37644
+  [115/290] model.layers.17.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.005 peak_kib=37644
+  [116/290] model.layers.17.self_attn.k_proj.weight logical=229376 body=180480 exact=true verifier=true encode_ms=1.029 decode_ms=1.550 peak_kib=37644
+  [117/290] model.layers.17.self_attn.o_proj.weight logical=1605632 body=1255224 exact=true verifier=true encode_ms=6.086 decode_ms=10.684 peak_kib=37644
+  [118/290] model.layers.17.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.010 peak_kib=37644
+  [119/290] model.layers.17.self_attn.q_proj.weight logical=1605632 body=1262032 exact=true verifier=true encode_ms=5.968 decode_ms=10.747 peak_kib=37644
+  [120/290] model.layers.17.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37644
+  [121/290] model.layers.17.self_attn.v_proj.weight logical=229376 body=180144 exact=true verifier=true encode_ms=0.882 decode_ms=1.544 peak_kib=37644
+  [122/290] model.layers.18.input_layernorm.weight logical=1792 body=1864 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37644
+  [123/290] model.layers.18.mlp.down_proj.weight logical=8716288 body=6790520 exact=true verifier=true encode_ms=33.370 decode_ms=59.837 peak_kib=90656
+  [124/290] model.layers.18.mlp.gate_proj.weight logical=8716288 body=6791672 exact=true verifier=true encode_ms=33.189 decode_ms=59.538 peak_kib=90628
+  [125/290] model.layers.18.mlp.up_proj.weight logical=8716288 body=6779368 exact=true verifier=true encode_ms=33.498 decode_ms=59.594 peak_kib=90688
+  [126/290] model.layers.18.post_attention_layernorm.weight logical=1792 body=1936 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=37640
+  [127/290] model.layers.18.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37640
+  [128/290] model.layers.18.self_attn.k_proj.weight logical=229376 body=180352 exact=true verifier=true encode_ms=0.872 decode_ms=1.536 peak_kib=37640
+  [129/290] model.layers.18.self_attn.o_proj.weight logical=1605632 body=1256600 exact=true verifier=true encode_ms=6.230 decode_ms=10.631 peak_kib=37640
+  [130/290] model.layers.18.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37640
+  [131/290] model.layers.18.self_attn.q_proj.weight logical=1605632 body=1259944 exact=true verifier=true encode_ms=6.043 decode_ms=11.007 peak_kib=37640
+  [132/290] model.layers.18.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.006 peak_kib=37640
+  [133/290] model.layers.18.self_attn.v_proj.weight logical=229376 body=180832 exact=true verifier=true encode_ms=0.892 decode_ms=1.536 peak_kib=37640
+  [134/290] model.layers.19.input_layernorm.weight logical=1792 body=1888 exact=true verifier=true encode_ms=0.025 decode_ms=0.020 peak_kib=37640
+  [135/290] model.layers.19.mlp.down_proj.weight logical=8716288 body=6807328 exact=true verifier=true encode_ms=32.996 decode_ms=59.769 peak_kib=92764
+  [136/290] model.layers.19.mlp.gate_proj.weight logical=8716288 body=6804600 exact=true verifier=true encode_ms=33.051 decode_ms=59.306 peak_kib=90656
+  [137/290] model.layers.19.mlp.up_proj.weight logical=8716288 body=6792120 exact=true verifier=true encode_ms=33.343 decode_ms=59.332 peak_kib=90688
+  [138/290] model.layers.19.post_attention_layernorm.weight logical=1792 body=1920 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=37668
+  [139/290] model.layers.19.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37668
+  [140/290] model.layers.19.self_attn.k_proj.weight logical=229376 body=180000 exact=true verifier=true encode_ms=0.892 decode_ms=1.532 peak_kib=37668
+  [141/290] model.layers.19.self_attn.o_proj.weight logical=1605632 body=1255160 exact=true verifier=true encode_ms=6.008 decode_ms=10.626 peak_kib=37668
+  [142/290] model.layers.19.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37668
+  [143/290] model.layers.19.self_attn.q_proj.weight logical=1605632 body=1262928 exact=true verifier=true encode_ms=6.085 decode_ms=10.644 peak_kib=37668
+  [144/290] model.layers.19.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37668
+  [145/290] model.layers.19.self_attn.v_proj.weight logical=229376 body=180040 exact=true verifier=true encode_ms=0.871 decode_ms=1.547 peak_kib=37668
+  [146/290] model.layers.2.input_layernorm.weight logical=1792 body=1896 exact=true verifier=true encode_ms=0.016 decode_ms=0.019 peak_kib=37668
+  [147/290] model.layers.2.mlp.down_proj.weight logical=8716288 body=6776432 exact=true verifier=true encode_ms=33.275 decode_ms=59.037 peak_kib=90616
+  [148/290] model.layers.2.mlp.gate_proj.weight logical=8716288 body=6803448 exact=true verifier=true encode_ms=32.548 decode_ms=59.146 peak_kib=90584
+  [149/290] model.layers.2.mlp.up_proj.weight logical=8716288 body=6766168 exact=true verifier=true encode_ms=33.062 decode_ms=59.518 peak_kib=90620
+  [150/290] model.layers.2.post_attention_layernorm.weight logical=1792 body=1816 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=37616
+  [151/290] model.layers.2.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37616
+  [152/290] model.layers.2.self_attn.k_proj.weight logical=229376 body=180544 exact=true verifier=true encode_ms=0.861 decode_ms=1.483 peak_kib=37616
+  [153/290] model.layers.2.self_attn.o_proj.weight logical=1605632 body=1254712 exact=true verifier=true encode_ms=6.106 decode_ms=10.780 peak_kib=37616
+  [154/290] model.layers.2.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37616
+  [155/290] model.layers.2.self_attn.q_proj.weight logical=1605632 body=1265128 exact=true verifier=true encode_ms=6.154 decode_ms=10.773 peak_kib=37616
+  [156/290] model.layers.2.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37616
+  [157/290] model.layers.2.self_attn.v_proj.weight logical=229376 body=180280 exact=true verifier=true encode_ms=0.856 decode_ms=1.492 peak_kib=37616
+  [158/290] model.layers.20.input_layernorm.weight logical=1792 body=1912 exact=true verifier=true encode_ms=0.017 decode_ms=0.021 peak_kib=37616
+  [159/290] model.layers.20.mlp.down_proj.weight logical=8716288 body=6810464 exact=true verifier=true encode_ms=33.197 decode_ms=59.064 peak_kib=92620
+  [160/290] model.layers.20.mlp.gate_proj.weight logical=8716288 body=6802328 exact=true verifier=true encode_ms=32.823 decode_ms=58.962 peak_kib=90576
+  [161/290] model.layers.20.mlp.up_proj.weight logical=8716288 body=6795936 exact=true verifier=true encode_ms=32.601 decode_ms=59.805 peak_kib=90616
+  [162/290] model.layers.20.post_attention_layernorm.weight logical=1792 body=1896 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37676
+  [163/290] model.layers.20.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37676
+  [164/290] model.layers.20.self_attn.k_proj.weight logical=229376 body=181128 exact=true verifier=true encode_ms=0.885 decode_ms=1.530 peak_kib=37676
+  [165/290] model.layers.20.self_attn.o_proj.weight logical=1605632 body=1259456 exact=true verifier=true encode_ms=6.101 decode_ms=10.690 peak_kib=37676
+  [166/290] model.layers.20.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37676
+  [167/290] model.layers.20.self_attn.q_proj.weight logical=1605632 body=1270680 exact=true verifier=true encode_ms=6.078 decode_ms=10.665 peak_kib=37676
+  [168/290] model.layers.20.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37676
+  [169/290] model.layers.20.self_attn.v_proj.weight logical=229376 body=181176 exact=true verifier=true encode_ms=0.880 decode_ms=1.525 peak_kib=37676
+  [170/290] model.layers.21.input_layernorm.weight logical=1792 body=1904 exact=true verifier=true encode_ms=0.015 decode_ms=0.018 peak_kib=37676
+  [171/290] model.layers.21.mlp.down_proj.weight logical=8716288 body=6798496 exact=true verifier=true encode_ms=33.786 decode_ms=59.609 peak_kib=90608
+  [172/290] model.layers.21.mlp.gate_proj.weight logical=8716288 body=6788280 exact=true verifier=true encode_ms=33.037 decode_ms=59.634 peak_kib=90608
+  [173/290] model.layers.21.mlp.up_proj.weight logical=8716288 body=6789376 exact=true verifier=true encode_ms=33.192 decode_ms=58.612 peak_kib=90560
+  [174/290] model.layers.21.post_attention_layernorm.weight logical=1792 body=1840 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=37660
+  [175/290] model.layers.21.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37660
+  [176/290] model.layers.21.self_attn.k_proj.weight logical=229376 body=181072 exact=true verifier=true encode_ms=0.880 decode_ms=1.544 peak_kib=37660
+  [177/290] model.layers.21.self_attn.o_proj.weight logical=1605632 body=1260160 exact=true verifier=true encode_ms=6.065 decode_ms=10.617 peak_kib=37660
+  [178/290] model.layers.21.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.015 decode_ms=0.011 peak_kib=37660
+  [179/290] model.layers.21.self_attn.q_proj.weight logical=1605632 body=1276008 exact=true verifier=true encode_ms=6.039 decode_ms=10.624 peak_kib=37660
+  [180/290] model.layers.21.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37660
+  [181/290] model.layers.21.self_attn.v_proj.weight logical=229376 body=181184 exact=true verifier=true encode_ms=0.867 decode_ms=1.512 peak_kib=37660
+  [182/290] model.layers.22.input_layernorm.weight logical=1792 body=1888 exact=true verifier=true encode_ms=0.016 decode_ms=0.020 peak_kib=37660
+  [183/290] model.layers.22.mlp.down_proj.weight logical=8716288 body=6786560 exact=true verifier=true encode_ms=32.767 decode_ms=58.993 peak_kib=90536
+  [184/290] model.layers.22.mlp.gate_proj.weight logical=8716288 body=6783784 exact=true verifier=true encode_ms=32.858 decode_ms=58.782 peak_kib=90536
+  [185/290] model.layers.22.mlp.up_proj.weight logical=8716288 body=6790184 exact=true verifier=true encode_ms=33.285 decode_ms=59.341 peak_kib=90520
+  [186/290] model.layers.22.post_attention_layernorm.weight logical=1792 body=1816 exact=true verifier=true encode_ms=0.021 decode_ms=0.022 peak_kib=37664
+  [187/290] model.layers.22.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.005 peak_kib=37664
+  [188/290] model.layers.22.self_attn.k_proj.weight logical=229376 body=180872 exact=true verifier=true encode_ms=0.891 decode_ms=1.575 peak_kib=37664
+  [189/290] model.layers.22.self_attn.o_proj.weight logical=1605632 body=1252712 exact=true verifier=true encode_ms=6.197 decode_ms=10.875 peak_kib=37664
+  [190/290] model.layers.22.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.011 peak_kib=37664
+  [191/290] model.layers.22.self_attn.q_proj.weight logical=1605632 body=1270128 exact=true verifier=true encode_ms=6.165 decode_ms=10.840 peak_kib=37664
+  [192/290] model.layers.22.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.003 peak_kib=37664
+  [193/290] model.layers.22.self_attn.v_proj.weight logical=229376 body=181024 exact=true verifier=true encode_ms=0.875 decode_ms=1.546 peak_kib=37664
+  [194/290] model.layers.23.input_layernorm.weight logical=1792 body=1896 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37664
+  [195/290] model.layers.23.mlp.down_proj.weight logical=8716288 body=6783760 exact=true verifier=true encode_ms=33.651 decode_ms=59.274 peak_kib=90520
+  [196/290] model.layers.23.mlp.gate_proj.weight logical=8716288 body=6790792 exact=true verifier=true encode_ms=33.140 decode_ms=59.758 peak_kib=90528
+  [197/290] model.layers.23.mlp.up_proj.weight logical=8716288 body=6788328 exact=true verifier=true encode_ms=33.275 decode_ms=58.917 peak_kib=90560
+  [198/290] model.layers.23.post_attention_layernorm.weight logical=1792 body=1728 exact=true verifier=true encode_ms=0.022 decode_ms=0.021 peak_kib=37668
+  [199/290] model.layers.23.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37668
+  [200/290] model.layers.23.self_attn.k_proj.weight logical=229376 body=181576 exact=true verifier=true encode_ms=0.885 decode_ms=1.545 peak_kib=37668
+  [201/290] model.layers.23.self_attn.o_proj.weight logical=1605632 body=1259304 exact=true verifier=true encode_ms=6.046 decode_ms=10.939 peak_kib=37668
+  [202/290] model.layers.23.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37668
+  [203/290] model.layers.23.self_attn.q_proj.weight logical=1605632 body=1271376 exact=true verifier=true encode_ms=5.966 decode_ms=10.743 peak_kib=37668
+  [204/290] model.layers.23.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37668
+  [205/290] model.layers.23.self_attn.v_proj.weight logical=229376 body=180568 exact=true verifier=true encode_ms=0.945 decode_ms=1.549 peak_kib=37668
+  [206/290] model.layers.3.input_layernorm.weight logical=1792 body=1936 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37668
+  [207/290] model.layers.3.mlp.down_proj.weight logical=8716288 body=6781888 exact=true verifier=true encode_ms=33.708 decode_ms=59.564 peak_kib=90564
+  [208/290] model.layers.3.mlp.gate_proj.weight logical=8716288 body=6799160 exact=true verifier=true encode_ms=33.475 decode_ms=59.565 peak_kib=90588
+  [209/290] model.layers.3.mlp.up_proj.weight logical=8716288 body=6771024 exact=true verifier=true encode_ms=33.261 decode_ms=59.405 peak_kib=90588
+  [210/290] model.layers.3.post_attention_layernorm.weight logical=1792 body=1848 exact=true verifier=true encode_ms=0.021 decode_ms=0.021 peak_kib=37636
+  [211/290] model.layers.3.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37636
+  [212/290] model.layers.3.self_attn.k_proj.weight logical=229376 body=181144 exact=true verifier=true encode_ms=0.916 decode_ms=1.590 peak_kib=37636
+  [213/290] model.layers.3.self_attn.o_proj.weight logical=1605632 body=1257824 exact=true verifier=true encode_ms=6.021 decode_ms=10.600 peak_kib=37636
+  [214/290] model.layers.3.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37636
+  [215/290] model.layers.3.self_attn.q_proj.weight logical=1605632 body=1272280 exact=true verifier=true encode_ms=6.034 decode_ms=10.621 peak_kib=37636
+  [216/290] model.layers.3.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37636
+  [217/290] model.layers.3.self_attn.v_proj.weight logical=229376 body=179960 exact=true verifier=true encode_ms=0.880 decode_ms=1.538 peak_kib=37636
+  [218/290] model.layers.4.input_layernorm.weight logical=1792 body=1976 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37636
+  [219/290] model.layers.4.mlp.down_proj.weight logical=8716288 body=6789344 exact=true verifier=true encode_ms=33.270 decode_ms=59.940 peak_kib=90568
+  [220/290] model.layers.4.mlp.gate_proj.weight logical=8716288 body=6806144 exact=true verifier=true encode_ms=32.977 decode_ms=59.379 peak_kib=92644
+  [221/290] model.layers.4.mlp.up_proj.weight logical=8716288 body=6777376 exact=true verifier=true encode_ms=33.055 decode_ms=59.016 peak_kib=90600
+  [222/290] model.layers.4.post_attention_layernorm.weight logical=1792 body=1856 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=37648
+  [223/290] model.layers.4.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37648
+  [224/290] model.layers.4.self_attn.k_proj.weight logical=229376 body=180680 exact=true verifier=true encode_ms=0.876 decode_ms=1.517 peak_kib=37648
+  [225/290] model.layers.4.self_attn.o_proj.weight logical=1605632 body=1258688 exact=true verifier=true encode_ms=6.094 decode_ms=10.624 peak_kib=37648
+  [226/290] model.layers.4.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37648
+  [227/290] model.layers.4.self_attn.q_proj.weight logical=1605632 body=1260592 exact=true verifier=true encode_ms=6.078 decode_ms=10.579 peak_kib=37648
+  [228/290] model.layers.4.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.006 peak_kib=37648
+  [229/290] model.layers.4.self_attn.v_proj.weight logical=229376 body=179672 exact=true verifier=true encode_ms=1.001 decode_ms=1.536 peak_kib=37648
+  [230/290] model.layers.5.input_layernorm.weight logical=1792 body=1952 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37648
+  [231/290] model.layers.5.mlp.down_proj.weight logical=8716288 body=6789232 exact=true verifier=true encode_ms=33.518 decode_ms=59.283 peak_kib=90588
+  [232/290] model.layers.5.mlp.gate_proj.weight logical=8716288 body=6812088 exact=true verifier=true encode_ms=33.223 decode_ms=58.784 peak_kib=92676
+  [233/290] model.layers.5.mlp.up_proj.weight logical=8716288 body=6771128 exact=true verifier=true encode_ms=32.811 decode_ms=58.550 peak_kib=90644
+  [234/290] model.layers.5.post_attention_layernorm.weight logical=1792 body=1912 exact=true verifier=true encode_ms=0.020 decode_ms=0.020 peak_kib=37636
+  [235/290] model.layers.5.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37636
+  [236/290] model.layers.5.self_attn.k_proj.weight logical=229376 body=180728 exact=true verifier=true encode_ms=0.871 decode_ms=1.525 peak_kib=37636
+  [237/290] model.layers.5.self_attn.o_proj.weight logical=1605632 body=1257696 exact=true verifier=true encode_ms=6.067 decode_ms=10.637 peak_kib=37636
+  [238/290] model.layers.5.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.015 decode_ms=0.011 peak_kib=37636
+  [239/290] model.layers.5.self_attn.q_proj.weight logical=1605632 body=1260264 exact=true verifier=true encode_ms=5.991 decode_ms=11.261 peak_kib=37636
+  [240/290] model.layers.5.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37636
+  [241/290] model.layers.5.self_attn.v_proj.weight logical=229376 body=180000 exact=true verifier=true encode_ms=0.873 decode_ms=1.565 peak_kib=37636
+  [242/290] model.layers.6.input_layernorm.weight logical=1792 body=1912 exact=true verifier=true encode_ms=0.017 decode_ms=0.018 peak_kib=37636
+  [243/290] model.layers.6.mlp.down_proj.weight logical=8716288 body=6792352 exact=true verifier=true encode_ms=32.664 decode_ms=58.698 peak_kib=90604
+  [244/290] model.layers.6.mlp.gate_proj.weight logical=8716288 body=6801224 exact=true verifier=true encode_ms=32.766 decode_ms=58.908 peak_kib=92632
+  [245/290] model.layers.6.mlp.up_proj.weight logical=8716288 body=6780032 exact=true verifier=true encode_ms=33.085 decode_ms=59.544 peak_kib=90528
+  [246/290] model.layers.6.post_attention_layernorm.weight logical=1792 body=1856 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37652
+  [247/290] model.layers.6.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37652
+  [248/290] model.layers.6.self_attn.k_proj.weight logical=229376 body=180832 exact=true verifier=true encode_ms=0.876 decode_ms=1.525 peak_kib=37652
+  [249/290] model.layers.6.self_attn.o_proj.weight logical=1605632 body=1258680 exact=true verifier=true encode_ms=6.070 decode_ms=10.748 peak_kib=37652
+  [250/290] model.layers.6.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.017 decode_ms=0.011 peak_kib=37652
+  [251/290] model.layers.6.self_attn.q_proj.weight logical=1605632 body=1263376 exact=true verifier=true encode_ms=5.981 decode_ms=10.742 peak_kib=37652
+  [252/290] model.layers.6.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37652
+  [253/290] model.layers.6.self_attn.v_proj.weight logical=229376 body=179432 exact=true verifier=true encode_ms=0.871 decode_ms=1.522 peak_kib=37652
+  [254/290] model.layers.7.input_layernorm.weight logical=1792 body=1856 exact=true verifier=true encode_ms=0.018 decode_ms=0.018 peak_kib=37652
+  [255/290] model.layers.7.mlp.down_proj.weight logical=8716288 body=6796624 exact=true verifier=true encode_ms=33.133 decode_ms=58.768 peak_kib=90544
+  [256/290] model.layers.7.mlp.gate_proj.weight logical=8716288 body=6798176 exact=true verifier=true encode_ms=32.828 decode_ms=58.588 peak_kib=90616
+  [257/290] model.layers.7.mlp.up_proj.weight logical=8716288 body=6782896 exact=true verifier=true encode_ms=32.760 decode_ms=58.797 peak_kib=90672
+  [258/290] model.layers.7.post_attention_layernorm.weight logical=1792 body=1888 exact=true verifier=true encode_ms=0.022 decode_ms=0.020 peak_kib=37660
+  [259/290] model.layers.7.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.004 peak_kib=37660
+  [260/290] model.layers.7.self_attn.k_proj.weight logical=229376 body=180888 exact=true verifier=true encode_ms=0.875 decode_ms=1.517 peak_kib=37660
+  [261/290] model.layers.7.self_attn.o_proj.weight logical=1605632 body=1259416 exact=true verifier=true encode_ms=6.074 decode_ms=10.644 peak_kib=37660
+  [262/290] model.layers.7.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.015 decode_ms=0.010 peak_kib=37660
+  [263/290] model.layers.7.self_attn.q_proj.weight logical=1605632 body=1261152 exact=true verifier=true encode_ms=6.057 decode_ms=10.594 peak_kib=37660
+  [264/290] model.layers.7.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=37660
+  [265/290] model.layers.7.self_attn.v_proj.weight logical=229376 body=179912 exact=true verifier=true encode_ms=0.889 decode_ms=1.541 peak_kib=37660
+  [266/290] model.layers.8.input_layernorm.weight logical=1792 body=1952 exact=true verifier=true encode_ms=0.016 decode_ms=0.018 peak_kib=37660
+  [267/290] model.layers.8.mlp.down_proj.weight logical=8716288 body=6812472 exact=true verifier=true encode_ms=33.213 decode_ms=59.084 peak_kib=92744
+  [268/290] model.layers.8.mlp.gate_proj.weight logical=8716288 body=6816672 exact=true verifier=true encode_ms=32.553 decode_ms=58.739 peak_kib=92752
+  [269/290] model.layers.8.mlp.up_proj.weight logical=8716288 body=6795576 exact=true verifier=true encode_ms=32.862 decode_ms=58.860 peak_kib=90708
+  [270/290] model.layers.8.post_attention_layernorm.weight logical=1792 body=1928 exact=true verifier=true encode_ms=0.021 decode_ms=0.020 peak_kib=37684
+  [271/290] model.layers.8.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.008 decode_ms=0.004 peak_kib=37684
+  [272/290] model.layers.8.self_attn.k_proj.weight logical=229376 body=180784 exact=true verifier=true encode_ms=0.864 decode_ms=1.512 peak_kib=37684
+  [273/290] model.layers.8.self_attn.o_proj.weight logical=1605632 body=1262368 exact=true verifier=true encode_ms=6.008 decode_ms=10.521 peak_kib=37684
+  [274/290] model.layers.8.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37684
+  [275/290] model.layers.8.self_attn.q_proj.weight logical=1605632 body=1261720 exact=true verifier=true encode_ms=6.039 decode_ms=10.609 peak_kib=37684
+  [276/290] model.layers.8.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=37684
+  [277/290] model.layers.8.self_attn.v_proj.weight logical=229376 body=179760 exact=true verifier=true encode_ms=0.876 decode_ms=1.524 peak_kib=37684
+  [278/290] model.layers.9.input_layernorm.weight logical=1792 body=2040 exact=true verifier=true encode_ms=0.015 decode_ms=0.019 peak_kib=37684
+  [279/290] model.layers.9.mlp.down_proj.weight logical=8716288 body=6808264 exact=true verifier=true encode_ms=32.798 decode_ms=59.019 peak_kib=92736
+  [280/290] model.layers.9.mlp.gate_proj.weight logical=8716288 body=6796960 exact=true verifier=true encode_ms=32.890 decode_ms=58.710 peak_kib=90692
+  [281/290] model.layers.9.mlp.up_proj.weight logical=8716288 body=6782432 exact=true verifier=true encode_ms=32.642 decode_ms=58.772 peak_kib=90672
+  [282/290] model.layers.9.post_attention_layernorm.weight logical=1792 body=2000 exact=true verifier=true encode_ms=0.021 decode_ms=0.022 peak_kib=37660
+  [283/290] model.layers.9.self_attn.k_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.009 decode_ms=0.004 peak_kib=37660
+  [284/290] model.layers.9.self_attn.k_proj.weight logical=229376 body=181552 exact=true verifier=true encode_ms=0.881 decode_ms=1.540 peak_kib=37660
+  [285/290] model.layers.9.self_attn.o_proj.weight logical=1605632 body=1261840 exact=true verifier=true encode_ms=6.068 decode_ms=10.563 peak_kib=37660
+  [286/290] model.layers.9.self_attn.q_proj.bias logical=1792 body=2088 exact=true verifier=true encode_ms=0.016 decode_ms=0.010 peak_kib=37660
+  [287/290] model.layers.9.self_attn.q_proj.weight logical=1605632 body=1272640 exact=true verifier=true encode_ms=6.082 decode_ms=10.620 peak_kib=37660
+  [288/290] model.layers.9.self_attn.v_proj.bias logical=256 body=552 exact=true verifier=true encode_ms=0.007 decode_ms=0.003 peak_kib=37660
+  [289/290] model.layers.9.self_attn.v_proj.weight logical=229376 body=180784 exact=true verifier=true encode_ms=0.885 decode_ms=1.535 peak_kib=37660
+  [290/290] model.norm.weight logical=1792 body=1736 exact=true verifier=true encode_ms=0.016 decode_ms=0.018 peak_kib=37660
+receipt: bench/receipts/ekbloom-20261113T081110Z.json
+verdict: pass
+ekbloom_court: receipt=bench/receipts/ekbloom-20261113T081110Z.json
+ekbloom_court: log=bench/receipts/ekbloom-20261113T081110Z.log

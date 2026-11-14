@@ -1,0 +1,67 @@
+{
+  "checks": {
+    "failed": 0,
+    "ok": true,
+    "passed": 4,
+    "rows": [
+      {
+        "check": "rust.packed_races_suite",
+        "detail": "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s",
+        "ok": true
+      },
+      {
+        "check": "go.rust_writer_races_go_reader",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "go.go_writer_races_rust_reader",
+        "detail": "",
+        "ok": true
+      },
+      {
+        "check": "go.vet_and_gofmt",
+        "detail": "",
+        "ok": true
+      }
+    ],
+    "total": 4
+  },
+  "command": "scripts/resource_courts.sh",
+  "environment": {
+    "cost_reps": 2,
+    "cost_sizes": "1,10",
+    "court": "scripts/docker-court.sh (rust | bench | fuse)",
+    "docker_server": "29.9.3",
+    "generated_utc": "20261113T125442Z",
+    "host_kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "no_new_privileges": true,
+      "pids": 1024,
+      "tmpfs": "1g"
+    },
+    "reduced": true,
+    "resource_reps": 2,
+    "revisions": {
+      "WeftFS": "5b49da3fe44d20ec83ea244213c1bda91576ccc2",
+      "WeftFS-Go": "44d20e7bd948067dede66dfded82aa9a0bead60e"
+    }
+  },
+  "gate": "X08",
+  "invariant": "a reader may see the state as of the last commit it opened or a newer committed state; never a catalog entry without its pack, a pack without durable bytes, a reclaimed blob still referenced by a live root, or member bytes that fail their digest",
+  "result": "pass",
+  "scenarios": [
+    "racing seal/catalog/commit with readers and same-handle read-back",
+    "aborted group publishes nothing",
+    "process crash mid-seal leaves old or new whole state",
+    "GC concurrent with readers and a writer keeps every live root",
+    "cancelled reader releases reservations and leaves the plane intact",
+    "Rust writer races Go reader (cross-language)",
+    "Go writer races Rust reader (cross-language)"
+  ],
+  "schema": "weft.packed_races.receipt.v1",
+  "stamp": "20261113T125442Z"
+}

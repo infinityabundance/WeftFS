@@ -1,0 +1,225 @@
+{
+  "schema": "weft.training-resume.v1",
+  "stamp": "20261114T114807Z",
+  "generated_at": "2026-11-14T11:48:41Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cpu_only": true,
+    "single_host": true,
+    "gloo": false,
+    "note": "CPU only, single process per phase; no GPU or multi-host claim"
+  },
+  "revision": {
+    "weftfs": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+    "weftcodec": "34f76203229ed22bfad7495963d84977c6627d27"
+  },
+  "state_components": [
+    "model parameters",
+    "AdamW exp_avg/exp_avg_sq/step",
+    "CosineAnnealingLR state",
+    "GradScaler state (enabled=False on CPU)",
+    "python random state",
+    "torch RNG state",
+    "numpy data bit-generator state + permutation + cursor",
+    "optimizer step counter"
+  ],
+  "args": {
+    "arm": "weft",
+    "steps": 48,
+    "resume_steps": 16,
+    "checkpoint_every": 8,
+    "reps": 2,
+    "kill_reps": 2,
+    "scenarios": [
+      "step",
+      "complete",
+      "inflight"
+    ]
+  },
+  "control": [
+    {
+      "arm": "weft",
+      "rep": 0,
+      "mode": "control",
+      "returncode": 0,
+      "steps": 48,
+      "wall_ms": 4929.63,
+      "checkpoints": 6,
+      "checkpoint_write_ms": [
+        627.173,
+        487.131,
+        439.24,
+        435.43,
+        441.644,
+        450.441
+      ],
+      "checkpoint_bytes": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "arm": "weft",
+      "rep": 1,
+      "mode": "control",
+      "returncode": 0,
+      "steps": 48,
+      "wall_ms": 4887.786,
+      "checkpoints": 6,
+      "checkpoint_write_ms": [
+        623.382,
+        487.588,
+        441.856,
+        433.93,
+        440.757,
+        440.303
+      ],
+      "checkpoint_bytes": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "kills": [
+    {
+      "arm": "weft",
+      "scenario": "step",
+      "rep": 0,
+      "kill_step": 16,
+      "kill_phase": 16,
+      "first_returncode": -9,
+      "resume_returncode": 0,
+      "visible_checkpoints_before_kill": [
+        "tip-step-000008"
+      ],
+      "resumed_checkpoint": "tip-step-000008",
+      "resumed_step": 8,
+      "steps_lost": 8,
+      "kill_to_first_step_ms": 1436.53,
+      "steps_after_resume": 16,
+      "resume_wall_ms": 2815.007,
+      "resume_recovered": true,
+      "partial_checkpoint_visible": false,
+      "compared_steps": 24,
+      "loss_bits_equal": 8,
+      "param_sha_equal": 24,
+      "exact": false
+    },
+    {
+      "arm": "weft",
+      "scenario": "step",
+      "rep": 1,
+      "kill_step": 16,
+      "kill_phase": 16,
+      "first_returncode": -9,
+      "resume_returncode": 0,
+      "visible_checkpoints_before_kill": [
+        "tip-step-000008"
+      ],
+      "resumed_checkpoint": "tip-step-000008",
+      "resumed_step": 8,
+      "steps_lost": 8,
+      "kill_to_first_step_ms": 1402.884,
+      "steps_after_resume": 16,
+      "resume_wall_ms": 2774.357,
+      "resume_recovered": true,
+      "partial_checkpoint_visible": false,
+      "compared_steps": 24,
+      "loss_bits_equal": 8,
+      "param_sha_equal": 24,
+      "exact": false
+    },
+    {
+      "arm": "weft",
+      "scenario": "complete",
+      "rep": 0,
+      "kill_step": 16,
+      "kill_phase": 16,
+      "first_returncode": -9,
+      "resume_returncode": 0,
+      "visible_checkpoints_before_kill": [
+        "tip-step-000008",
+        "tip-step-000016"
+      ],
+      "resumed_checkpoint": "tip-step-000016",
+      "resumed_step": 16,
+      "steps_lost": 0,
+      "kill_to_first_step_ms": 1400.328,
+      "steps_after_resume": 16,
+      "resume_wall_ms": 2665.36,
+      "resume_recovered": true,
+      "partial_checkpoint_visible": false,
+      "compared_steps": 16,
+      "loss_bits_equal": 0,
+      "param_sha_equal": 16,
+      "exact": false
+    },
+    {
+      "arm": "weft",
+      "scenario": "complete",
+      "rep": 1,
+      "kill_step": 16,
+      "kill_phase": 16,
+      "first_returncode": -9,
+      "resume_returncode": 0,
+      "visible_checkpoints_before_kill": [
+        "tip-step-000008",
+        "tip-step-000016"
+      ],
+      "resumed_checkpoint": "tip-step-000016",
+      "resumed_step": 16,
+      "steps_lost": 0,
+      "kill_to_first_step_ms": 1398.429,
+      "steps_after_resume": 16,
+      "resume_wall_ms": 2658.473,
+      "resume_recovered": true,
+      "partial_checkpoint_visible": false,
+      "compared_steps": 16,
+      "loss_bits_equal": 0,
+      "param_sha_equal": 16,
+      "exact": false
+    },
+    {
+      "arm": "weft",
+      "scenario": "inflight",
+      "rep": 0,
+      "error": "the child produced no kill record",
+      "returncode": -9
+    },
+    {
+      "arm": "weft",
+      "scenario": "inflight",
+      "rep": 1,
+      "error": "the child produced no kill record",
+      "returncode": -9
+    }
+  ],
+  "retained_bytes_control_dirs": 59612908,
+  "checks": {
+    "control_completed": true,
+    "kill_observed": false,
+    "resume_recovered": false,
+    "no_partial_checkpoint": true,
+    "exact_loss_bits": false,
+    "exact_param_hashes": true
+  },
+  "losses": [
+    "The RNG draws enter the reported loss only; the backward pass is the plain cross entropy, so the parameter hashes do not prove RNG restore. The loss bits do, and both are reported.",
+    "GradScaler is disabled because this court has no GPU/fp16 autocast; its state is uniformly empty and that is not a scaler-correctness claim.",
+    "A SIGKILL is a process fault, not a power loss; host caches are not dropped.",
+    "Checkpoint byte counts are reported per file; the store tree is the retained-bytes figure for the WeftFS arm."
+  ],
+  "result": "fail"
+}

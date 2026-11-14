@@ -1,0 +1,70 @@
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+Traceback (most recent call last):
+  File "/work/python/courts/async_save_overlap.py", line 453, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/work/python/courts/async_save_overlap.py", line 448, in main
+    return run(args)
+           ^^^^^^^^^
+  File "/work/python/courts/async_save_overlap.py", line 363, in run
+    unsynchronized = probe_unsynchronized(args.cli, work)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/async_save_overlap.py", line 125, in probe_unsynchronized
+    handle.result(timeout=120)
+  File "/work/python/weftcodec/dcp.py", line 3749, in result
+    metadata = self._future.result(timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/dcp.py", line 3844, in _run
+    return dcp.save(
+           ^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py", line 90, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py", line 488, in inner_func
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/state_dict_saver.py", line 196, in save
+    return _save_state_dict(
+           ^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/state_dict_saver.py", line 513, in _save_state_dict
+    metadata = distW.all_reduce("write", write_data, finish_checkpoint)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py", line 264, in all_reduce
+    raise final_result
+torch.distributed.checkpoint.api.CheckpointException: CheckpointException ranks:dict_keys([0])
+Traceback (most recent call last): (RANK 0)
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py", line 242, in all_reduce
+    local_data = map_fun()
+                 ^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/logger.py", line 90, in wrapper
+    result = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/state_dict_saver.py", line 502, in write_data
+    all_writes.wait()
+  File "/usr/local/lib/python3.12/site-packages/torch/futures/__init__.py", line 80, in wait
+    return super().wait()
+           ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/futures/__init__.py", line 279, in raise_error
+    raise fut_result
+  File "/work/python/weftcodec/dcp.py", line 1934, in write_data
+    results = self._execute(plan, planner)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/dcp.py", line 2253, in _execute
+    write_report = service.write_checkpoint(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/service.py", line 951, in write_checkpoint
+    response = self._call(opcode, bytes(body), fd=fd)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/service.py", line 660, in _call
+    raise ServiceError(class_name, message, request_id=request_id)
+weftcodec.service.ServiceError: Busy: store is locked by another writer: Resource temporarily unavailable (os error 11)
+

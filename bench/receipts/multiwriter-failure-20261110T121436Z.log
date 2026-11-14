@@ -1,0 +1,129 @@
+== multiwriter failure court ==
+kernel: Linux b826893d53a9 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5695:8
+     |
+5695 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5702:8
+     |
+5702 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5719:7
+     |
+5719 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5721:4
+     |
+5721 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5754:4
+     |
+5754 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+== process faults ==
+rust mw2_prepared: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_before_head: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_after_head: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_after_ack: exit=134 initial=committed final=committed name_present=true verify=true generation=2
+go mw2_prepared: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_before_head: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_after_head: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_after_ack: exit=137 initial=committed final=committed name_present=true verify=true generation=2
+== idempotent replay ==
+replay: {"first": {"aborted": 0, "attempts": 1, "backend_reads": 17, "backend_writes": 11, "bytes_read": 27990, "bytes_written": 6070, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11672, "writer": "w"}, "generation_first": 2, "generation_second": 2, "ok": true, "second": {"aborted": 0, "attempts": 0, "backend_reads": 21, "backend_writes": 3, "bytes_read": 12959, "bytes_written": 218, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11168, "writer": "w"}}
+
+== delayed writer ==
+delayed: {"delayed": {"aborted": 0, "attempts": 0, "backend_reads": 15, "backend_writes": 7, "bytes_read": 20493, "bytes_written": 686, "committed": 0, "conflicts": 1, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 400, "errors": [], "logical_bytes": 0, "ok": true, "peak_rss_kib": 11492, "writer": "a"}, "ok": true, "winner": {"aborted": 0, "attempts": 1, "backend_reads": 19, "backend_writes": 10, "bytes_read": 28176, "bytes_written": 5977, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11760, "writer": "b"}}
+
+{"receipt": "bench/receipts/multiwriter-failure-20261110T121436Z.json", "result": "pass", "failures": 0}
+receipt: bench/receipts/multiwriter-failure-20261110T121436Z.json
+22299259fcbe228080d20086fb6a9a28cdbd59d9f37a7ce61c7d098b58902748  bench/receipts/multiwriter-failure-20261110T121436Z.json
+711b73a1d4fc88bc583933f5f50078c93ad36eb44e1f047084861bd901f8b6c1  bench/receipts/multiwriter-failure-20261110T121436Z.log

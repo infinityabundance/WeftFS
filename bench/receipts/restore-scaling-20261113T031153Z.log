@@ -1,0 +1,125 @@
+restore_scaling_court: stamp=20261113T031153Z
+restore_scaling_court: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+restore_scaling_court: limits memory=3g cpus=4 pids=1024
+restore_scaling_court: revisions weftfs=e67e63186456d8d0915204baa19d65013a6bb281 weftcodec=5104fa081e4e5a5f68e39fb88a42d5fe3b3f9d59
+restore_scaling_court: families=qwen0.5b threads=1 4 tiles=1 reps=1 shards=8 minio=0 second=0 readers=0
+== build ==
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2249:9
+     |
+2249 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2333:13
+     |
+2333 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 14 warnings (run `cargo fix --lib -p weftfs` to apply 12 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.03s
+restore_scaling_court: verified Qwen2.5-0.5B sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+restore_scaling_court: verified Qwen2.5-0.5B-Instruct sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+== checkpoint qwen0.5b (fast raw, 8-way) ==
+/work/.docker-cache/restore-scaling-20261113T031153Z/qwen0.5b/checkpoint.json
+== restore qwen0.5b threads=1,4 probe=0 sink=counting ==
+/work/.docker-cache/restore-scaling-20261113T031153Z/qwen0.5b/restore-counting-probe0.json
+== restore qwen0.5b threads=1,4 probe=1 sink=counting ==
+/work/.docker-cache/restore-scaling-20261113T031153Z/qwen0.5b/restore-counting-probe1.json
+== restore qwen0.5b threads=1,4 probe=1 sink=counting-filehash ==
+/work/.docker-cache/restore-scaling-20261113T031153Z/qwen0.5b/restore-counting-filehash-probe1.json
+== restore qwen0.5b threads=1,4 probe=1 sink=sha256 ==
+/work/.docker-cache/restore-scaling-20261113T031153Z/qwen0.5b/restore-sha256-probe1.json
+== restore qwen0.5b threads=1,4 shard-threads=4 (store only) ==
+/work/.docker-cache/restore-scaling-20261113T031153Z/qwen0.5b/restore-counting-shard4-probe1.json
+== assemble ==
+bench/receipts/restore-scaling-20261113T031153Z.json
+restore_scaling_court: receipt bench/receipts/restore-scaling-20261113T031153Z.json
+restore_scaling_court: log bench/receipts/restore-scaling-20261113T031153Z.log

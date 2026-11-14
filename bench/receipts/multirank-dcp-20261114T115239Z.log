@@ -1,0 +1,58 @@
+multirank court: clean 4-rank publish
+/usr/local/bin/python3.12: can't open file '/work/python3': [Errno 2] No such file or directory
+/usr/local/bin/python3.12: can't open file '/work/python3': [Errno 2] No such file or directory
+/usr/local/bin/python3.12: can't open file '/work/python3': [Errno 2] No such file or directory
+/usr/local/bin/python3.12: can't open file '/work/python3': [Errno 2] No such file or directory
+E1114 11:52:40.449000 15 site-packages/torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 2) local_rank: 0 (pid: 17) of binary: /usr/local/bin/python3.12
+Traceback (most recent call last):
+  File "/usr/local/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 384, in wrapper
+    result = f(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1138, in main
+    run(args)
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/run.py", line 1129, in run
+    elastic_launch(
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 197, in __call__
+    return launch_agent(
+           ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/torch/distributed/launcher/api.py", line 386, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+python3 FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2026-11-14_11:52:40
+  host      : a37e2dd09c3e
+  rank      : 1 (local_rank: 1)
+  exitcode  : 2 (pid: 18) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2026-11-14_11:52:40
+  host      : a37e2dd09c3e
+  rank      : 2 (local_rank: 2)
+  exitcode  : 2 (pid: 19) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2026-11-14_11:52:40
+  host      : a37e2dd09c3e
+  rank      : 3 (local_rank: 3)
+  exitcode  : 2 (pid: 20) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-11-14_11:52:40
+  host      : a37e2dd09c3e
+  rank      : 0 (local_rank: 0)
+  exitcode  : 2 (pid: 17) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

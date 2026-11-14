@@ -1,0 +1,129 @@
+augmentation: backend=local configs=A,B,C,D,E,N subset(max_others=8, include_embedding=true) passes=2 label=qwen2.5-3b-instruct-9-tensors
+augmentation: work=/work/.docker-cache/augmentation-local-20261113T104000Z
+augmentation: fixture /work/.docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors bytes=6171927112 sha256=54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2 (parse 4517.0 ms)
+augmentation: subset 9 tensors, 626540544 logical bytes, digest 6607f7786d3df0555aed17804d5482ae98e01c5f2a271c6bcfce1df5bf439f4e
+augmentation: configs=["A", "C", "N"] reps=7 interleaved with a one-position rotation per repetition
+augmentation: === rep 1/7 order=["A", "C", "N"] ===
+augmentation: rep 1 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 1 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+augmentation: rep 1 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: === rep 2/7 order=["C", "N", "A"] ===
+augmentation: rep 2 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 2 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 2 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: === rep 3/7 order=["N", "A", "C"] ===
+augmentation: rep 3 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 3 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 3 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: === rep 4/7 order=["A", "C", "N"] ===
+augmentation: rep 4 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 4 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 4 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: === rep 5/7 order=["C", "N", "A"] ===
+augmentation: rep 5 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 5 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 5 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: === rep 6/7 order=["N", "A", "C"] ===
+augmentation: rep 6 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 6 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 6 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: === rep 7/7 order=["A", "C", "N"] ===
+augmentation: rep 7 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 7 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 7 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: result=pass receipt=bench/receipts/augmentation-local-20261113T104000Z.json

@@ -1,0 +1,297 @@
+== multiwriter failure court ==
+kernel: Linux de66780774d6 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2249:9
+     |
+2249 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2333:13
+     |
+2333 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: unused import: `HeadExpectation`
+  --> examples/mw2_writer.rs:23:36
+   |
+23 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, StorageBackend};
+   |                                    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `StorageBackend`
+  --> examples/mw2_writer.rs:23:72
+   |
+23 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, StorageBackend};
+   |                                                                        ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> examples/mw2_writer.rs:120:9
+    |
+120 |     let mut plane = backend_kind(args, &backend(args))
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `open_store` is never used
+  --> examples/mw2_writer.rs:93:4
+   |
+93 | fn open_store(
+   |    ^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `sha256_hex` is never used
+   --> examples/mw2_writer.rs:110:4
+    |
+110 | fn sha256_hex(bytes: &[u8]) -> String {
+    |    ^^^^^^^^^^
+
+warning: function `read_superblock` is never used
+   --> examples/mw2_writer.rs:119:4
+    |
+119 | fn read_superblock(args: &[String], path: &str) -> Option<(u64, Hash32, Vec<u8>)> {
+    |    ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:42:23
+   |
+42 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2249:9
+     |
+2249 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1474:9
+     |
+1474 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1475:9
+     |
+1475 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1476:9
+     |
+1476 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2333:13
+     |
+2333 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5804:8
+     |
+5804 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5811:8
+     |
+5811 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5828:7
+     |
+5828 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5830:4
+     |
+5830 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5863:4
+     |
+5863 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+== process faults ==
+rust mw2_prepared: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_before_head: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_after_head: exit=134 initial=unknown final=committed name_present=true verify=true generation=2
+rust mw2_after_ack: exit=134 initial=committed final=committed name_present=true verify=true generation=2
+go mw2_prepared: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_before_head: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_after_head: exit=137 initial=unknown final=committed name_present=true verify=true generation=2
+go mw2_after_ack: exit=137 initial=committed final=committed name_present=true verify=true generation=2
+== idempotent replay ==
+replay: {"first": {"aborted": 0, "attempts": 1, "backend_reads": 17, "backend_writes": 11, "bytes_read": 27990, "bytes_written": 6070, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11608, "writer": "w"}, "generation_first": 2, "generation_second": 2, "ok": true, "second": {"aborted": 0, "attempts": 0, "backend_reads": 21, "backend_writes": 3, "bytes_read": 12959, "bytes_written": 218, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11620, "writer": "w"}}
+
+== delayed writer ==
+delayed: {"delayed": {"aborted": 0, "attempts": 0, "backend_reads": 15, "backend_writes": 7, "bytes_read": 20493, "bytes_written": 686, "committed": 0, "conflicts": 1, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 400, "errors": [], "logical_bytes": 0, "ok": true, "peak_rss_kib": 11428, "writer": "a"}, "ok": true, "winner": {"aborted": 0, "attempts": 1, "backend_reads": 19, "backend_writes": 10, "bytes_read": 28176, "bytes_written": 5977, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "elapsed_ms": 0, "errors": [], "logical_bytes": 3, "ok": true, "peak_rss_kib": 11688, "writer": "b"}}
+
+{"receipt": "bench/receipts/multiwriter-failure-20261112T232916Z.json", "result": "pass", "failures": 0}
+receipt: bench/receipts/multiwriter-failure-20261112T232916Z.json
+064ba3b40b9f88e2b1fed2032a4ff5a936d42ff9737c7d83dbf2f31fdfb30655  bench/receipts/multiwriter-failure-20261112T232916Z.json
+9c02510e9a1da20437c3e18e6e46804337d20d7651db05b4d622cc63f605b70d  bench/receipts/multiwriter-failure-20261112T232916Z.log

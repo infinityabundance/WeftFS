@@ -1,0 +1,86 @@
+family_lifecycle: stamp=20261109T170248Z
+family_lifecycle: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+family_lifecycle: limits memory=3g cpus=4 pids=1024
+family_lifecycle: revisions weftfs=a3256aff61d7f45341ffb2c0575643e476010f50 weftfs-go=1b2e1cc63ffc4a89ae7f059d27dfe592b93d5081 weftcodec=2dc0768bc328026c3d1e87ccee700f624fee8c36 weftcodec-go=087a3b0e1d087ce0e8d155a4a570f99e58c3f160
+family_lifecycle: reps ingest=1 measure=1 topology=1 recovery=1 configs=default
+family_lifecycle: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+family_lifecycle: verified Qwen2.5-0.5B-Instruct.safetensors sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+family_lifecycle: verified pythia-70m-step0.safetensors sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+family_lifecycle: verified pythia-70m-step1.safetensors sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+== build ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1336:9
+     |
+1336 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1337:9
+     |
+1337 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1338:9
+     |
+1338 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: `weftfs` (lib) generated 4 warnings (run `cargo fix --lib -p weftfs` to apply 4 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+== baselines pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/baselines.json
+== checkpoint 8-way pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/checkpoint.json
+== cross-topology pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/topology.json
+== process-fault recovery pythia-consecutive (*.layers.0.*) ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/recovery.json
+== ingest pythia-consecutive/default pattern=whole lambda=0 backend=local ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/ingest.json
+== measure pythia-consecutive/default ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/measure.json
+== gc fixture pythia-consecutive/default (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/gc/gc-pinned.json
+== assemble pythia-consecutive/default ==
+
+== pythia-consecutive / default ==
+ingest median wall 59199.593 ms, peak RSS 679556 KiB
+  strategies base: {"zstd":76}
+  strategies next: {"sparse-delta":20,"zstd":50,"zstd-patch":6}
+  physical data-only 163909392, indexes 4921629, total 169019675
+  full_family_threads_1: p50 1230.093 ms p99 1230.093 ms bytes 163977217 match true
+  full_family_threads_4: p50 899.107 ms p99 899.107 ms bytes 163977217 match true
+  region_100_rows_threads_1: p50 389.271 ms p99 389.271 ms bytes 59972402 match true
+  region_100_rows_threads_4: p50 392.189 ms p99 392.189 ms bytes 59972402 match true
+  region_1_row_threads_1: p50 395.078 ms p99 395.078 ms bytes 59972402 match true
+  region_1_row_threads_4: p50 386.994 ms p99 386.994 ms bytes 59972402 match true
+  single_tensor_threads_1: p50 386.044 ms p99 386.044 ms bytes 59972402 match true
+  single_tensor_threads_4: p50 386.326 ms p99 386.326 ms bytes 59972402 match true
+  subset100_threads_1: p50 1042.354 ms p99 1042.354 ms bytes 163977217 match true
+  subset100_threads_4: p50 796.98 ms p99 796.98 ms bytes 163977217 match true
+  topology sharded_8: p50 2888.889 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology sharded_4: p50 2879.706 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology row_major: p50 2891.113 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology blocked_largest_tensor: p50 1156.833 ms, bytes 71856081 (0.697x naive), roots_ok true
+  recovery after_objects: open p50 9.123 ms, usable p50 0.144 ms, old 1 new 0, verify_ok true
+  recovery after_commit_file: open p50 8.754 ms, usable p50 0.418 ms, old 1 new 0, verify_ok true
+  recovery after_superblock_write: open p50 9.396 ms, usable p50 111.429 ms, old 0 new 1, verify_ok true
+  gc without_snapshot: deleted 141606821 bytes in false, retained blob bytes 141614783, verify_ok true, live-restore true
+  gc with_snapshot: deleted 0 bytes in true, retained blob bytes 141614783, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261109T170248Z/pythia-consecutive/default/family-lifecycle.json
+== merge ==
+receipt bench/receipts/family-lifecycle-20261109T170248Z.json
+family_lifecycle: receipt bench/receipts/family-lifecycle-20261109T170248Z.json
+family_lifecycle: log bench/receipts/family-lifecycle-20261109T170248Z.log

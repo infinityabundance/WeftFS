@@ -1,0 +1,150 @@
+cephfs_court: starting single-node Ceph (mon+mgr+osd+mds) from quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723
+cephfs_court: ceph version 19.2.0 (16063ff2022298c9300e49a547a16ffda59baf13) squid (stable); mon=v2:10.213.89.10:3300/0
+cephfs_court: building the harness in the rust court
++ exec docker run --rm --init --name weft-rust-court-2581647 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=6a584fd7a3f71ca6dc71fc1765b5ecbb191349af -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo build --release --example augmentation_bench'
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1515:9
+     |
+1515 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1516:9
+     |
+1516 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1517:9
+     |
+1517 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2390:13
+     |
+2390 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 15 warnings (run `cargo fix --lib -p weftfs` to apply 13 suggestions)
+warning: variable does not need to be mutable
+    --> examples/augmentation_bench.rs:1752:9
+     |
+1752 |     let mut kind = backend_kind_publication(args, publication)?;
+     |         ----^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `backend_kind` is never used
+   --> examples/augmentation_bench.rs:634:4
+    |
+634 | fn backend_kind(args: &Args) -> Result<BackendKind, String> {
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `config_dir` is never used
+    --> examples/augmentation_bench.rs:2982:4
+     |
+2982 | fn config_dir(args: &Args, config: &str) -> PathBuf {
+     |    ^^^^^^^^^^
+
+warning: function `remove_config_dir` is never used
+    --> examples/augmentation_bench.rs:2986:4
+     |
+2986 | fn remove_config_dir(args: &Args, config: &str) -> Result<(), String> {
+     |    ^^^^^^^^^^^^^^^^^
+
+warning: `weftfs` (example "augmentation_bench") generated 4 warnings (run `cargo fix --example "augmentation_bench" -p weftfs` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 0.15s
+cephfs_court: mounting CephFS in the client container and running the court
+2026-11-14T02:09:31.121+0000 7f1fd3749440 -1 init, newargv = 0x5567d8ee9430 newargc=15
+ceph-fuse[17]: starting ceph client
+ceph-fuse[17]: starting fuse
+cephfs_court: court receipt bench/receipts/cephfs-20261114T060000Z.json
+cephfs_court: receipt bench/receipts/augmentation-cephfs-20261114T060000Z.json
+cephfs_court: court receipt bench/receipts/cephfs-20261114T060000Z.json
+cephfs_court: log bench/receipts/cephfs-20261114T060000Z.log

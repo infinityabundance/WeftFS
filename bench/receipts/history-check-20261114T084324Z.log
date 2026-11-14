@@ -1,0 +1,189 @@
+== T026 independent history checker court ==
+kernel: Linux d97fe193b64a 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1654:9
+     |
+1654 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1655:9
+     |
+1655 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1656:9
+     |
+1656 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1730:9
+     |
+1730 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3070:13
+     |
+3070 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1722:8
+     |
+1222 | impl Store {
+     | ---------- method in this implementation
+...
+1722 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused import: `HeadExpectation`
+  --> examples/mw2_writer.rs:37:36
+   |
+37 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, KeyKind, StorageBackend};
+   |                                    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `StorageBackend`
+  --> examples/mw2_writer.rs:37:81
+   |
+37 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, KeyKind, StorageBackend};
+   |                                                                                 ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> examples/mw2_writer.rs:142:9
+    |
+142 |     let mut plane = backend_kind(args, &backend(args))
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `open_store` is never used
+   --> examples/mw2_writer.rs:115:4
+    |
+115 | fn open_store(
+    |    ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+4b6e190050a3203924742d345b23e222a7faacf7fb19902c39542a7c8124b596  .docker-cache/target-rust/debug/examples/mw2_writer
+5386b15a7f3b658d023d4bab5e3b8ceddb5e94324c5d3d4584ec02d90e2244e0  verifier/history_check.py
+== H1 MW2 disjoint ==
+mw2_disjoint: true {"checked": ["generation_unique", "per_key_register_linearizability", "per_domain_multi_key_atomicity", "conflict_justification", "handle_monotonicity"], "committed": 20, "domains": 1, "history": "/tmp/weft-history.mF3IoJ/h1/history.jsonl", "keys": 60, "multi_key_generations": 1, "not_checked": ["global serializability across MW3 domains", "cross-domain snapshot isolation", "a single global linear
+== H2 MW2 conflict ==
+mw2_conflict: true {"checked": ["generation_unique", "per_key_register_linearizability", "per_domain_multi_key_atomicity", "conflict_justification", "handle_monotonicity"], "committed": 1, "domains": 1, "history": "/tmp/weft-history.mF3IoJ/h2/history.jsonl", "keys": 3, "multi_key_generations": 1, "not_checked": ["global serializability across MW3 domains", "cross-domain snapshot isolation", "a single global lineariz
+== H3 MW2 process faults ==
+mw2_faults: true {"checked": ["generation_unique", "per_key_register_linearizability", "per_domain_multi_key_atomicity", "conflict_justification", "handle_monotonicity"], "committed": 2, "domains": 1, "history": "/tmp/weft-history.mF3IoJ/h3/history.jsonl", "keys": 3, "multi_key_generations": 0, "not_checked": ["global serializability across MW3 domains", "cross-domain snapshot isolation", "a single global lineariz
+== H4 MW3 domains ==
+mw3_domains: true {"checked": ["generation_unique", "per_key_register_linearizability", "per_domain_multi_key_atomicity", "conflict_justification", "handle_monotonicity"], "committed": 12, "domains": 2, "history": "/tmp/weft-history.mF3IoJ/h4/history.jsonl", "keys": 36, "multi_key_generations": 2, "not_checked": ["global serializability across MW3 domains", "cross-domain snapshot isolation", "a single global linear
+== violation detection ==
+violation duplicate_generation: rejected=true kinds=generation_conflict expected=generation_conflict
+violation partial_transaction: rejected=true kinds=stale_read expected=stale_read
+violation phantom_value: rejected=true kinds=phantom_value expected=phantom_value
+violation read_before_any_write: rejected=true kinds=read_before_any_write expected=read_before_any_write
+violation stale_read: rejected=true kinds=stale_read expected=stale_read
+violation unexplained_conflict: rejected=true kinds=unexplained_conflict expected=unexplained_conflict
+== false-positive control ==
+valid cross_domain_allowed: accepted=true
+valid mw2_ok: accepted=true
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "<stdin>", line 2, in <listcomp>
+  File "/usr/lib/python3.11/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/json/decoder.py", line 353, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Unterminated string starting at: line 1 column 28 (char 27)

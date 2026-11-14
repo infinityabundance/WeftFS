@@ -1,0 +1,26 @@
+write_policy: stamp=20261109T110556Z
+write_policy: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+write_policy: limits memory=3g cpus=4 pids=1024
+write_policy: revisions weftfs=38fedb3a75492d320d1b64339f70e3a5d6932e2a weftcodec=d95fa78c805eef43b32c3da5025981eab7325513
+write_policy: configs=planned fast-zstd1 models=base instruct
+88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342  /work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors
+fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe  /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors
+write_policy: building release harness
+write_policy: base-planned save
+write_policy: base-planned restore (full / single / 1-row)
+write_policy: base-fast-zstd1 save
+write_policy: base-fast-zstd1 restore (full / single / 1-row)
+write_policy: base-fast-zstd1 transcode
+write_policy: instruct-planned save
+write_policy: instruct-planned restore (full / single / 1-row)
+write_policy: instruct-fast-zstd1 save
+write_policy: instruct-fast-zstd1 restore (full / single / 1-row)
+write_policy: instruct-fast-zstd1 transcode
+write_policy: crash proxy (fast-raw save)
+bench/scripts/write_policy_court.sh: line 122:   116 Aborted                 (core dumped) "$bin" transcode --store "$crash_store" --root /checkpoints/model "$@" > "$work/phases/crash-$label-transcode.json" 2> "$work/phases/crash-$label-transcode.err"
+write_policy: crash after-publish exit=134
+bench/scripts/write_policy_court.sh: line 122:   119 Aborted                 (core dumped) "$bin" transcode --store "$crash_store" --root /checkpoints/model "$@" > "$work/phases/crash-$label-transcode.json" 2> "$work/phases/crash-$label-transcode.err"
+write_policy: crash before-publish exit=134
+assembled bench/receipts/write-policy-20261109T110556Z.json
+write_policy: receipt=bench/receipts/write-policy-20261109T110556Z.json
+2.2M	/work/.docker-cache/write-policy-20261109T110556Z

@@ -1,0 +1,19 @@
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to load in a single process.
+  return func(*args, **kwargs)
+Traceback (most recent call last):
+  File "/work/python/courts/dcp_orbax_baselines.py", line 436, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/work/python/courts/dcp_orbax_baselines.py", line 429, in main
+    return run(args)
+           ^^^^^^^^^
+  File "/work/python/courts/dcp_orbax_baselines.py", line 296, in run
+    cells.append(orbax_arm(state, work, args.reps))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/dcp_orbax_baselines.py", line 218, in orbax_arm
+    checkpointer.save(directory, args=ocp.args.StandardSave(tree))
+  File "/work/.docker-cache/py-baselines/orbax/checkpoint/_src/checkpointers/checkpointer.py", line 301, in save
+    raise ValueError(f'Destination {directory} already exists.')
+ValueError: Destination /work/.docker-cache/baselines-20261114T115746Z/orbax-ocdbt/ckpt-000 already exists.

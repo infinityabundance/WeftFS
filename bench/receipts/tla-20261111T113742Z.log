@@ -1,0 +1,502 @@
+== TLA court ==
+kernel: Linux e7156c463146 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 x86_64 x86_64 GNU/Linux
+image: weft/tla-court:1 (sha256:de042d3c478deec6579b3182ff8dc49e450e4119b20245938c8f8d6c3d6f7916)
+limits: memory=3g swap=3g cpus=4 pids=1024
+java: Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+tla2tools: v1.7.4 sha256=936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+== TLC WeftCommit ==
+== TLC WeftCommitBuggy ==
+== TLC WeftMultiWriter ==
+== TLC WeftMultiWriterBuggy ==
+== TLC WeftMultiWriterGcBuggy ==
+===== WeftCommit (corrected) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 82 and seed -2307260381074619231 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 55] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.DyUs8g/WeftCommit.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftCommit
+Starting... (2026-11-11 11:37:42)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-11 11:37:42.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 7.7E-16
+615 states generated, 591 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 68.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-11 11:37:42)
+
+===== WeftCommitBuggy (deliberately flawed) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 0 and seed -5774333844380135176 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 89] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.DyUs8g/WeftCommitBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftCommitBuggy
+Starting... (2026-11-11 11:37:42)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-11 11:37:42.
+Error: Invariant NoPartial is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 2: <Start line 83, col 3 to line 92, col 29 of module WeftCommitBuggy>
+/\ phase = "objects"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 3: <SyncObjects line 95, col 3 to line 101, col 29 of module WeftCommitBuggy>
+/\ phase = "objectsSynced"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 4: <WriteCommit line 104, col 3 to line 108, col 43 of module WeftCommitBuggy>
+/\ phase = "commitWritten"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 1
+/\ commit = <<"none", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = FALSE
+/\ returned = {}
+/\ recovered = 0
+
+State 5: <CrashCommitWrite line 113, col 3 to line 120, col 73 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 3
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 6: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 2
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 7: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 1
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 0
+
+State 8: <RecoverStep line 199, col 3 to line 213, col 59 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 1
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = FALSE
+/\ applied = {}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 0
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 1
+
+State 9: <ReplayStep line 216, col 3 to line 225, col 76 of module WeftCommitBuggy>
+/\ phase = "idle"
+/\ recoveredAgain = 0
+/\ applyGen = 2
+/\ slot = (0 :> 0 @@ 1 :> 0)
+/\ recoveryDone = TRUE
+/\ applied = {<<1, 1>>}
+/\ pending = 0
+/\ commit = <<"torn", "none", "none">>
+/\ againDone = FALSE
+/\ durableObj = {1, 4}
+/\ scan = 0
+/\ appliedAgain = {}
+/\ crashed = TRUE
+/\ returned = {}
+/\ recovered = 1
+
+32 states generated, 29 distinct states found, 5 states left on queue.
+The depth of the complete state graph search is 9.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-11 11:37:42)
+
+===== WeftMultiWriter (corrected) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 17 and seed -907235663891727603 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 123] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.DyUs8g/WeftMultiWriter.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriter
+Starting... (2026-11-11 11:37:43)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-11 11:37:43.
+Progress(13) at 2026-11-11 11:37:46: 767,589 states generated (767,589 s/min), 120,483 distinct states found (120,483 ds/min), 40,428 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.5E-8
+  based on the actual fingerprints:  val = 3.8E-9
+2690909 states generated, 268641 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 20.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 5).
+Finished in 08s at (2026-11-11 11:37:52)
+
+===== WeftMultiWriterBuggy (deliberately flawed: no conflict validation) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 39 and seed -802734874582110973 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 158] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.DyUs8g/WeftMultiWriterBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterBuggy
+Starting... (2026-11-11 11:37:52)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-11 11:37:52.
+Error: Invariant NoBlindOverwrite is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = [c1 |-> "idle", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 2: <Start line 96, col 3 to line 108, col 65 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 3: <Start line 96, col 3 to line 108, col 65 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "prepared"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 4: <Publish line 147, col 3 to line 160, col 37 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "prepared"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 1, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 1
+
+State 5: <Revalidate line 116, col 3 to line 123, col 53 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "prepared"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 1, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 1]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 1
+
+State 6: <Publish line 147, col 3 to line 160, col 37 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "publishing"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 1, c2 |-> 2]
+/\ observedHead = [c1 |-> 0, c2 |-> 1]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [ kind |-> "txn",
+     owner |-> "c2",
+     writes |-> {"k1"},
+     observed |-> [k1 |-> 0] ] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 2
+
+578 states generated, 227 distinct states found, 146 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 3 (minimum is 0, the maximum 9 and the 95th percentile is 8).
+Finished in 00s at (2026-11-11 11:37:52)
+
+===== WeftMultiWriterGcBuggy (deliberately flawed: GC ignores prepared txns) =====
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 52 and seed 7065132183584522190 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 192] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-tla.DyUs8g/WeftMultiWriterGcBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterGcBuggy
+Starting... (2026-11-11 11:37:53)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-11 11:37:53.
+Error: Invariant GcNeverReclaimsReachable is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = [c1 |-> "idle", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 2: <Start line 95, col 3 to line 107, col 65 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 3: <GcReclaim line 245, col 3 to line 251, col 46 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {"k1"}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+14 states generated, 9 distinct states found, 6 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-11 11:37:53)

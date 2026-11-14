@@ -1,0 +1,79 @@
+object_pipeline_court: phase 1 (augmentation court, configs=A,N,B,C,D,E,B-pipe4,C-pipe4,D-pipe4,E-pipe4 reps=1)
+augmentation_court: device control -> bench/receipts/augmentation-minio-20261113T182000Z.device.json
++ exec docker run --rm --init --name weft-bench-court-2161428 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=37a03c0dbb62213547e380e8d7ceb4eb7870e654 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_AUGMENTATION_STAMP=20261113T182000Z --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && python3 bench/scripts/augmentation_device_control.py bench/receipts/augmentation-minio-20261113T182000Z.device.json 20261113T182000Z'
+augmentation_court: device 2600 MB/s (clean)
+augmentation_court: MinIO RELEASE.2025-04-22T22-12-26Z sha256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c bucket_prefix=weft-augmentation-20261113t182000z label=full reps=1 configs=A,N,B,C,D,E,B-pipe4,C-pipe4,D-pipe4,E-pipe4
+augmentation_court: the MinIO container is restarted between cells; its tmpfs does not release deleted-but-open bytes until the process restarts, so one container cannot hold several clean configurations. Write and restore for one cell both happen before its restart.
+augmentation_court: prepare
+augmentation_court: r1-A-write
+augmentation_court: r1-A-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-N-write
+augmentation_court: r1-N-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-B-write
+augmentation_court: r1-B-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-C-write
+augmentation_court: r1-C-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-D-write
+augmentation_court: r1-D-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-E-write
+augmentation_court: r1-E-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-B-pipe4-write
+augmentation_court: r1-B-pipe4-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-C-pipe4-write
+augmentation_court: r1-C-pipe4-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-D-pipe4-write
+augmentation_court: r1-D-pipe4-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: r1-E-pipe4-write
+augmentation_court: r1-E-pipe4-restore
+augmentation_court: restarting MinIO to reclaim the tmpfs before the next cell
+augmentation_court: assemble
+augmentation_court: assemble failed; tail of /mnt/1tb_kingston/WeftFS/.docker-cache/augmentation-minio-20261113T182000Z/phases/assemble.log follows
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: variable does not need to be mutable
+    --> examples/augmentation_bench.rs:1752:9
+     |
+1752 |     let mut kind = backend_kind_publication(args, publication)?;
+     |         ----^^^^
+     |         |
+     |         help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `backend_kind` is never used
+   --> examples/augmentation_bench.rs:634:4
+    |
+634 | fn backend_kind(args: &Args) -> Result<BackendKind, String> {
+    |    ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `config_dir` is never used
+    --> examples/augmentation_bench.rs:2982:4
+     |
+2982 | fn config_dir(args: &Args, config: &str) -> PathBuf {
+     |    ^^^^^^^^^^
+
+warning: function `remove_config_dir` is never used
+    --> examples/augmentation_bench.rs:2986:4
+     |
+2986 | fn remove_config_dir(args: &Args, config: &str) -> Result<(), String> {
+     |    ^^^^^^^^^^^^^^^^^
+
+augmentation_bench: /work/.docker-cache/augmentation-minio-20261113T182000Z/phases/A-write.json: No such file or directory (os error 2)

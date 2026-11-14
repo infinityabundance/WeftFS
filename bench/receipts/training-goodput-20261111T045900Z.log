@@ -1,0 +1,22 @@
+run config=torchsave rep=1/1 steps=64 every=4
+  loop_wall=973.1ms step_p50=11.96ms pause_p50=0.77ms completion_p50=3.8ms bytes=80401584 resumes=16/16
+run config=torchsave-durable rep=1/1 steps=64 every=4
+  loop_wall=980.5ms step_p50=12.21ms pause_p50=0.79ms completion_p50=4.5ms bytes=80387792 resumes=16/16
+run config=dcp rep=1/1 steps=64 every=4
+  loop_wall=1153.7ms step_p50=11.62ms pause_p50=0.79ms completion_p50=20.1ms bytes=84433152 resumes=16/16
+run config=weft rep=1/1 steps=64 every=4
+  loop_wall=2523.4ms step_p50=12.04ms pause_p50=3.68ms completion_p50=130.8ms bytes=78856377 resumes=16/16
+run config=weft-fast rep=1/1 steps=64 every=4
+  loop_wall=2662.1ms step_p50=12.66ms pause_p50=3.91ms completion_p50=140.3ms bytes=85600148 resumes=16/16
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+Traceback (most recent call last):
+  File "/work/python/courts/training_goodput.py", line 2273, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/training_goodput.py", line 2269, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 2080, in run
+    min(
+TypeError: '<' not supported between instances of 'NoneType' and 'NoneType'

@@ -1,0 +1,5061 @@
++ exec docker run --rm --init --name weft-bench-court-3758972 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:76:13
+   |
+76 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:316:13
+    |
+316 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:239:5
+    |
+228 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+239 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:591:12
+    |
+310 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+591 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+648 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:685:12
+    |
+662 | impl Cache {
+    | ---------- methods in this implementation
+...
+685 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+699 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+. 1/3
+caches::tests::lru_evicts_the_least_recently_used --- FAILED
+caches::tests::tinylfu_keeps_a_hot_entry_against_a_cold_admission --- FAILED
+
+failures:
+
+---- caches::tests::lru_evicts_the_least_recently_used stdout ----
+
+thread 'caches::tests::lru_evicts_the_least_recently_used' (54) panicked at src/caches.rs:756:9:
+assertion failed: c.get(&[1u8; 32]).is_some()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::panic
+   3: ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used
+   4: <ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+---- caches::tests::tinylfu_keeps_a_hot_entry_against_a_cold_admission stdout ----
+
+thread 'caches::tests::tinylfu_keeps_a_hot_entry_against_a_cold_admission' (56) panicked at src/caches.rs:777:9:
+assertion failed: c.get(&[7u8; 32]).is_some()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::panic
+   3: ekbloom_context_harness::caches::tests::tinylfu_keeps_a_hot_entry_against_a_cold_admission
+   4: <ekbloom_context_harness::caches::tests::tinylfu_keeps_a_hot_entry_against_a_cold_admission::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    caches::tests::lru_evicts_the_least_recently_used
+    caches::tests::tinylfu_keeps_a_hot_entry_against_a_cold_admission
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--bin ekbloom-context-harness`
++ exec docker run --rm --init --name weft-bench-court-3759299 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:76:13
+   |
+76 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:316:13
+    |
+316 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:239:5
+    |
+228 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+239 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:591:12
+    |
+310 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+591 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+648 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:685:12
+    |
+662 | impl Cache {
+    | ---------- methods in this implementation
+...
+685 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+699 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+.. 2/3
+caches::tests::lru_evicts_the_least_recently_used --- FAILED
+
+failures:
+
+---- caches::tests::lru_evicts_the_least_recently_used stdout ----
+
+thread 'caches::tests::lru_evicts_the_least_recently_used' (55) panicked at src/caches.rs:756:9:
+assertion failed: c.get(&[1u8; 32]).is_some()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::panic
+   3: ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used
+   4: <ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    caches::tests::lru_evicts_the_least_recently_used
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--bin ekbloom-context-harness`
++ exec docker run --rm --init --name weft-bench-court-3759632 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:76:13
+   |
+76 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:316:13
+    |
+316 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:239:5
+    |
+228 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+239 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:591:12
+    |
+310 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+591 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+648 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:685:12
+    |
+662 | impl Cache {
+    | ---------- methods in this implementation
+...
+685 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+699 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+.. 2/3
+caches::tests::lru_evicts_the_least_recently_used --- FAILED
+
+failures:
+
+---- caches::tests::lru_evicts_the_least_recently_used stdout ----
+
+thread 'caches::tests::lru_evicts_the_least_recently_used' (55) panicked at src/caches.rs:757:9:
+assertion failed: c.get(&[1u8; 32]).is_some()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::panic
+   3: ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used
+   4: <ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    caches::tests::lru_evicts_the_least_recently_used
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--bin ekbloom-context-harness`
++ exec docker run --rm --init --name weft-bench-court-3759961 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:76:13
+   |
+76 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:320:13
+    |
+320 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:243:5
+    |
+232 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+243 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:595:12
+    |
+314 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+595 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+652 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+656 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:693:12
+    |
+670 | impl Cache {
+    | ---------- methods in this implementation
+...
+693 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+707 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+.. 2/3
+caches::tests::lru_evicts_the_least_recently_used --- FAILED
+
+failures:
+
+---- caches::tests::lru_evicts_the_least_recently_used stdout ----
+
+thread 'caches::tests::lru_evicts_the_least_recently_used' (55) panicked at src/caches.rs:770:9:
+assertion failed: c.get(&[2u8; 32]).is_none()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::panicking::panic
+   3: ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used
+   4: <ekbloom_context_harness::caches::tests::lru_evicts_the_least_recently_used::{closure#0} as core::ops::function::FnOnce<()>>::call_once
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    caches::tests::lru_evicts_the_least_recently_used
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--bin ekbloom-context-harness`
++ exec docker run --rm --init --name weft-bench-court-3760295 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+error[E0425]: cannot find value `budget` in this scope
+  --> src/caches.rs:91:13
+   |
+69 |     budget: u64,
+   |     ------ a field by that name exists in `Self`
+...
+91 |             budget,
+   |             ^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `ekbloom-context-harness` (bin "ekbloom-context-harness" test) due to 1 previous error; 7 warnings emitted
++ exec docker run --rm --init --name weft-bench-court-3760603 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: method `capacity` is never used
+   --> src/caches.rs:221:12
+    |
+ 73 | impl LruCache {
+    | ------------- method in this implementation
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+  --> src/caches.rs:69:5
+   |
+63 | pub struct LruCache {
+   |            -------- field in this struct
+...
+69 |     budget: u64,
+   |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:186:12
+    |
+ 73 | impl LruCache {
+    | ------------- methods in this implementation
+...
+186 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+217 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+ekbloom_context_court: shipped graph ekbloom mentions=0
+prepared base=/work/.docker-cache/ekbloom-context-20261114T090000Z/base subjects=6552 branches=3 contracts=51 head=af02f445a9f70274725c8f0bf86b14506787f40943e6980f921ab49487bcf898
+.docker-cache/ekbloom-context-20261114T090000Z/decisions.sh: line 43: 0xEKB10C0DE5EED0001: value too great for base (error token is "0xEKB10C0DE5EED0001")
+ekbloom-context-harness: /work/.docker-cache/ekbloom-context-20261114T090000Z/rep-01/W.tsv: No such file or directory (os error 2)
++ exec docker run --rm --init --name weft-bench-court-3761092 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: method `capacity` is never used
+   --> src/caches.rs:221:12
+    |
+ 73 | impl LruCache {
+    | ------------- method in this implementation
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+  --> src/caches.rs:69:5
+   |
+63 | pub struct LruCache {
+   |            -------- field in this struct
+...
+69 |     budget: u64,
+   |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:186:12
+    |
+ 73 | impl LruCache {
+    | ------------- methods in this implementation
+...
+186 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+217 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+ekbloom_context_court: shipped graph ekbloom mentions=0
+prepared base=/work/.docker-cache/ekbloom-context-20261114T090000Z/base subjects=6552 branches=3 contracts=51 head=d193bf9965a8a90ab6f120862916dca645154a1d3a0e2d8b769474f96fe0d365
+ekbloom_context_court: rep 1/2 arm W order=W,M-lru,M-tinylfu,E slot=1
+ekbloom-context-harness: --seed must be an integer
++ exec docker run --rm --init --name weft-bench-court-3761452 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: method `capacity` is never used
+   --> src/caches.rs:221:12
+    |
+ 73 | impl LruCache {
+    | ------------- method in this implementation
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+  --> src/caches.rs:69:5
+   |
+63 | pub struct LruCache {
+   |            -------- field in this struct
+...
+69 |     budget: u64,
+   |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:186:12
+    |
+ 73 | impl LruCache {
+    | ------------- methods in this implementation
+...
+186 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+217 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+ekbloom_context_court: shipped graph ekbloom mentions=0
+prepared base=/work/.docker-cache/ekbloom-context-20261114T090000Z/base subjects=6552 branches=3 contracts=51 head=278e29abed50a15042cfd86a649ad1084abec3cf6ec7db2b2b8071318213a673
+ekbloom_context_court: rep 1/2 arm W order=W,M-lru,M-tinylfu,E slot=1
+ekbloom_context_court: rep 1/2 arm M-lru order=W,M-lru,M-tinylfu,E slot=2
+ekbloom_context_court: rep 1/2 arm M-tinylfu order=W,M-lru,M-tinylfu,E slot=3
+ekbloom_context_court: rep 1/2 arm E order=W,M-lru,M-tinylfu,E slot=4
+ekbloom_context_court: rep 1/2 arm C-naive order=W,M-lru,M-tinylfu,E slot=5
+ekbloom_context_court: rep 2/2 arm M-lru order=M-lru,M-tinylfu,E,W slot=1
+ekbloom_context_court: rep 2/2 arm M-tinylfu order=M-lru,M-tinylfu,E,W slot=2
+ekbloom_context_court: rep 2/2 arm E order=M-lru,M-tinylfu,E,W slot=3
+ekbloom_context_court: rep 2/2 arm W order=M-lru,M-tinylfu,E,W slot=4
+ekbloom_context_court: rep 2/2 arm C-naive order=M-lru,M-tinylfu,E,W slot=5
+ekbloom-context-harness: No such file or directory (os error 2)
++ exec docker run --rm --init --name weft-bench-court-3762203 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=105b0da39f6cf7ea96a189bb7c9538fb6ffcf2c9 -e WEFT_REPO_WEFTFS_GO=eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1 -e WEFT_REPO_WEFTCODEC=d808f254ca9ead037bacd3fb937e2b5d3d3f5abb -e WEFT_REPO_WEFTCODEC_GO=f7b9de1bf1685d10fe186499d71d4b1b692baa1e -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && WEFT_EKBLOOM_CONTEXT_STAMP=20261114T090000Z REPS=2 LABEL=reduced RECEIPT=bench/receipts/ekbloom-context-20261114T090000Z.json LOG=bench/receipts/ekbloom-context-20261114T090000Z.log ROWS=bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst LIFECYCLE=bench/receipts/ekbloom-context-lifecycle-20261114T090000Z.json bash .docker-cache/ekbloom-context-20261114T090000Z/decisions.sh'
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: method `capacity` is never used
+   --> src/caches.rs:221:12
+    |
+ 73 | impl LruCache {
+    | ------------- method in this implementation
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+
+running 3 tests
+...
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+warning: unused import: `self`
+  --> /work/src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> /work/src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> /work/src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> /work/src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> /work/src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1595:9
+     |
+1595 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> /work/src/backend.rs:1596:9
+     |
+1596 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> /work/src/backend.rs:1597:9
+     |
+1597 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> /work/src/backend.rs:1671:9
+     |
+1671 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> /work/src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> /work/src/store.rs:2958:13
+     |
+2958 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> /work/src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> /work/src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> /work/src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> /work/src/store.rs:1640:8
+     |
+1152 | impl Store {
+     | ---------- method in this implementation
+...
+1640 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused imports: `CONTRACT_SCHEMA` and `SUBJECT_SCHEMA`
+  --> src/fixture.rs:25:66
+   |
+25 |     Attention, Dimensions, Geometry, SubjectKind, SubjectRecord, CONTRACT_SCHEMA, SUBJECT_SCHEMA,
+   |                                                                  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Request`
+  --> src/main.rs:31:24
+   |
+31 | use fixture::{Fixture, Request};
+   |                        ^^^^^^^
+
+warning: unused import: `SubjectKind`
+  --> src/main.rs:32:56
+   |
+32 | use rule::{contract_root, AuthorityRecord, Dimensions, SubjectKind};
+   |                                                        ^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> src/caches.rs:80:13
+   |
+80 |         let mut slots = vec![Slot::default(); capacity];
+   |             ----^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src/caches.rs:324:13
+    |
+324 |         let mut slots = vec![Slot::default(); capacity];
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: unused variable: `index`
+   --> src/fixture.rs:546:17
+    |
+546 |             let index = first + KV_PER_BRANCH + TENSOR_PER_BRANCH + i;
+    |                 ^^^^^ help: if this is intentional, prefix it with an underscore: `_index`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `out`
+   --> src/scale.rs:195:12
+    |
+195 | pub fn run(out: &Path, work: &Path, sizes: &[usize]) -> Result<Json, String> {
+    |            ^^^ help: if this is intentional, prefix it with an underscore: `_out`
+
+warning: variable does not need to be mutable
+    --> src/main.rs:1199:9
+     |
+1199 |     let mut store = weftfs::store::Store::open_with_options(
+     |         ----^^^^^
+     |         |
+     |         help: remove this `mut`
+
+warning: field `index` is never read
+   --> src/main.rs:543:5
+    |
+542 | struct Row {
+    |        --- field in this struct
+543 |     index: u64,
+    |     ^^^^^
+    |
+    = note: `Row` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `false_accepts`, `semantic_mismatches`, `event_re_evaluations`, and `event_stale_accepts` are never read
+  --> src/arm.rs:68:9
+   |
+52 | pub struct ArmStats {
+   |            -------- fields in this struct
+...
+68 |     pub false_accepts: u64,
+   |         ^^^^^^^^^^^^^
+69 |     pub semantic_mismatches: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+...
+75 |     pub event_re_evaluations: u64,
+   |         ^^^^^^^^^^^^^^^^^^^^
+76 |     pub event_stale_accepts: u64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `ArmStats` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `variant` is never read
+  --> src/arm.rs:94:9
+   |
+92 | pub struct Arm {
+   |            --- field in this struct
+93 |     pub kind: ArmKind,
+94 |     pub variant: Option<String>,
+   |         ^^^^^^^
+
+warning: function `manifest_entry_bytes` is never used
+   --> src/arm.rs:742:8
+    |
+742 | pub fn manifest_entry_bytes() -> u64 {
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `key_core_len` is never used
+   --> src/arm.rs:748:8
+    |
+748 | pub fn key_core_len() -> usize {
+    |        ^^^^^^^^^^^^
+
+warning: function `dims_root` is never used
+   --> src/arm.rs:753:8
+    |
+753 | pub fn dims_root(dims: &Dimensions) -> Result<Hash32, String> {
+    |        ^^^^^^^^^
+
+warning: function `sample_attention` is never used
+   --> src/arm.rs:759:8
+    |
+759 | pub fn sample_attention() -> Attention {
+    |        ^^^^^^^^^^^^^^^^
+
+warning: field `budget` is never read
+  --> src/caches.rs:69:5
+   |
+63 | pub struct LruCache {
+   |            -------- field in this struct
+...
+69 |     budget: u64,
+   |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:186:12
+    |
+ 73 | impl LruCache {
+    | ------------- methods in this implementation
+...
+186 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+217 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+221 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: field `budget` is never read
+   --> src/caches.rs:247:5
+    |
+236 | pub struct TinyLfu {
+    |            ------- field in this struct
+...
+247 |     budget: u64,
+    |     ^^^^^^
+
+warning: methods `set_budget`, `len`, and `capacity` are never used
+   --> src/caches.rs:599:12
+    |
+318 | impl TinyLfu {
+    | ------------ methods in this implementation
+...
+599 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+656 |     pub fn len(&self) -> usize {
+    |            ^^^
+...
+660 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+
+warning: methods `set_budget` and `len` are never used
+   --> src/caches.rs:697:12
+    |
+674 | impl Cache {
+    | ---------- methods in this implementation
+...
+697 |     pub fn set_budget(&mut self, budget: u64) {
+    |            ^^^^^^^^^^
+...
+711 |     pub fn len(&self) -> usize {
+    |            ^^^
+
+warning: constant `KV_HEAD_COUNT` is never used
+  --> src/fixture.rs:43:11
+   |
+43 | pub const KV_HEAD_COUNT: u32 = 8;
+   |           ^^^^^^^^^^^^^
+
+warning: constant `KV_HEAD_DIM` is never used
+  --> src/fixture.rs:44:11
+   |
+44 | pub const KV_HEAD_DIM: u32 = 8;
+   |           ^^^^^^^^^^^
+
+warning: function `bucket_name` is never used
+    --> src/fixture.rs:1060:8
+     |
+1060 | pub fn bucket_name(bucket: u8) -> &'static str {
+     |        ^^^^^^^^^^^
+
+warning: multiple fields are never read
+  --> src/manifest.rs:53:9
+   |
+52 | pub struct BuildReport {
+   |            ----------- fields in this struct
+53 |     pub entries: u64,
+   |         ^^^^^^^
+54 |     pub slot_count: u64,
+   |         ^^^^^^^^^^
+55 |     pub source_bytes: u64,
+   |         ^^^^^^^^^^^^
+56 |     pub file_bytes: u64,
+   |         ^^^^^^^^^^
+57 |     pub resident_bytes: u64,
+   |         ^^^^^^^^^^^^^^
+58 |     pub retained_bytes: u64,
+59 |     pub resident_surface: bool,
+   |         ^^^^^^^^^^^^^^^^
+60 |     pub build_ms: f64,
+   |         ^^^^^^^^
+61 |     pub profile: String,
+   |         ^^^^^^^
+   |
+   = note: `BuildReport` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `path` is never read
+  --> src/manifest.rs:66:5
+   |
+64 | pub struct ManifestTable {
+   |            ------------- field in this struct
+65 |     ready: ReadyObject,
+66 |     path: PathBuf,
+   |     ^^^^
+
+warning: associated items `open_existing`, `path`, and `logical_len` are never used
+   --> src/manifest.rs:203:12
+    |
+ 88 | impl ManifestTable {
+    | ------------------ associated items in this implementation
+...
+203 |     pub fn open_existing(path: &Path) -> Result<ManifestTable, String> {
+    |            ^^^^^^^^^^^^^
+...
+251 |     pub fn path(&self) -> &Path {
+    |            ^^^^
+...
+259 |     pub fn logical_len(&self) -> u64 {
+    |            ^^^^^^^^^^^
+
+warning: constant `SUBJECT_DOMAIN` is never used
+  --> src/rule.rs:23:11
+   |
+23 | pub const SUBJECT_DOMAIN: &str = "weft/kv/exact-prefix/subject/v1";
+   |           ^^^^^^^^^^^^^^
+
+warning: associated function `from_u8` is never used
+  --> src/rule.rs:51:12
+   |
+42 | impl Verdict {
+   | ------------ associated function in this implementation
+...
+51 |     pub fn from_u8(value: u8) -> Option<Verdict> {
+   |            ^^^^^^^
+
+warning: method `root` is never used
+   --> src/rule.rs:460:12
+    |
+440 | impl SubjectRecord {
+    | ------------------ method in this implementation
+...
+460 |     pub fn root(&self) -> Result<Hash32, String> {
+    |            ^^^^
+
+warning: function `request_key` is never used
+   --> src/rule.rs:590:8
+    |
+590 | pub fn request_key(
+    |        ^^^^^^^^^^^
+
+warning: function `source_len` is never used
+  --> src/scale.rs:70:4
+   |
+70 | fn source_len(n: usize) -> usize {
+   |    ^^^^^^^^^^
+
+ekbloom_context_court: shipped graph ekbloom mentions=0
+prepared base=/work/.docker-cache/ekbloom-context-20261114T090000Z/base subjects=6552 branches=3 contracts=51 head=99192c2c6b4e78c34aa696037163483bbec6cc99e8eca3d7f28b0f7b43688862
+ekbloom_context_court: rep 1/2 arm W order=W,M-lru,M-tinylfu,E slot=1
+ekbloom_context_court: rep 1/2 arm M-lru order=W,M-lru,M-tinylfu,E slot=2
+ekbloom_context_court: rep 1/2 arm M-tinylfu order=W,M-lru,M-tinylfu,E slot=3
+ekbloom_context_court: rep 1/2 arm E order=W,M-lru,M-tinylfu,E slot=4
+ekbloom_context_court: rep 1/2 arm C-naive order=W,M-lru,M-tinylfu,E slot=5
+ekbloom_context_court: rep 2/2 arm M-lru order=M-lru,M-tinylfu,E,W slot=1
+ekbloom_context_court: rep 2/2 arm M-tinylfu order=M-lru,M-tinylfu,E,W slot=2
+ekbloom_context_court: rep 2/2 arm E order=M-lru,M-tinylfu,E,W slot=3
+ekbloom_context_court: rep 2/2 arm W order=M-lru,M-tinylfu,E,W slot=4
+ekbloom_context_court: rep 2/2 arm C-naive order=M-lru,M-tinylfu,E,W slot=5
+ekbloom_context_court: receipt /work/bench/receipts/ekbloom-context-20261114T090000Z.json
+ekbloom_context_court: log /work/bench/receipts/ekbloom-context-20261114T090000Z.log
+ekbloom_context_court: rows /work/bench/receipts/ekbloom-context-20261114T090000Z.rows.jsonl.zst

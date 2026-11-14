@@ -1,0 +1,160 @@
+kind: buck2-cas-store
+timestamp_utc: 20261114T103633Z
+court: fuse
+revisions:
+  WeftFS: 5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37
+  WeftCodec: 34f76203229ed22bfad7495963d84977c6627d27
+  WeftCodec-Go: ad53f3c3975e6dc8799d2b67524a30e688d961fd
+  WeftFS-Go: 76648a414908caad0c4f0d972e2c8433e5a73826
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.3-1-cachyos
+image: weft/fuse-court:1 sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e
+== build rust oracle ==
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1654:9
+     |
+1654 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1655:9
+     |
+1655 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1656:9
+     |
+1656 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1730:9
+     |
+1730 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: value assigned to `next` is never read
+    --> src/fuse.rs:2841:28
+     |
+2841 |             let mut next = Vec::new();
+     |                            ^^^^^^^^^^ this value is reassigned later and never used
+...
+2850 |                 next = match store.read_object(id) {
+     |                 ---- `next` is overwritten here before the previous value is read
+     |
+     = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3247:13
+     |
+3247 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1737:8
+     |
+1222 | impl Store {
+     | ---------- method in this implementation
+...
+1737 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+== build adapter ==
+== go vet + go test (cross-language included) ==
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.053s
+== adapter correctness demo ==
+buck2-cas store demo: 38/38 assertions pass; receipt /work/bench/receipts/buck2-cas-store-correctness-20261114T103633Z.json
+== mount by:action=<key> ==
+object.bin--bc560cec
+== CLI fetch from the same store ==
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261114T103633Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261114T103633Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261114T103633Z/cli-fetch.bin
+== CLI verify ==
+verify ok: key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50
+== unmount ==
+== merge mount evidence into the receipt ==
+mount merged: 41/41 assertions pass

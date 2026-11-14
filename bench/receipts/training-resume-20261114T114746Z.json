@@ -1,0 +1,127 @@
+{
+  "schema": "weft.training-resume.v1",
+  "stamp": "20261114T114746Z",
+  "generated_at": "2026-11-14T11:47:59Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cpu_only": true,
+    "single_host": true,
+    "gloo": false,
+    "note": "CPU only, single process per phase; no GPU or multi-host claim"
+  },
+  "revision": {
+    "weftfs": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+    "weftcodec": "34f76203229ed22bfad7495963d84977c6627d27"
+  },
+  "state_components": [
+    "model parameters",
+    "AdamW exp_avg/exp_avg_sq/step",
+    "CosineAnnealingLR state",
+    "GradScaler state (enabled=False on CPU)",
+    "python random state",
+    "torch RNG state",
+    "numpy data bit-generator state + permutation + cursor",
+    "optimizer step counter"
+  ],
+  "args": {
+    "arm": "weft",
+    "steps": 48,
+    "resume_steps": 16,
+    "checkpoint_every": 8,
+    "reps": 2,
+    "kill_reps": 2,
+    "scenarios": [
+      "step",
+      "complete",
+      "inflight"
+    ]
+  },
+  "control": [
+    {
+      "arm": "weft",
+      "rep": 0,
+      "mode": "control",
+      "returncode": 1,
+      "steps": 8,
+      "wall_ms": 1562.755,
+      "checkpoints": 0,
+      "checkpoint_write_ms": [],
+      "checkpoint_bytes": []
+    },
+    {
+      "arm": "weft",
+      "rep": 1,
+      "mode": "control",
+      "returncode": 1,
+      "steps": 8,
+      "wall_ms": 1535.89,
+      "checkpoints": 0,
+      "checkpoint_write_ms": [],
+      "checkpoint_bytes": []
+    }
+  ],
+  "kills": [
+    {
+      "arm": "weft",
+      "scenario": "step",
+      "rep": 0,
+      "error": "the child produced no kill record",
+      "returncode": 1
+    },
+    {
+      "arm": "weft",
+      "scenario": "step",
+      "rep": 1,
+      "error": "the child produced no kill record",
+      "returncode": 1
+    },
+    {
+      "arm": "weft",
+      "scenario": "complete",
+      "rep": 0,
+      "error": "the child produced no kill record",
+      "returncode": 1
+    },
+    {
+      "arm": "weft",
+      "scenario": "complete",
+      "rep": 1,
+      "error": "the child produced no kill record",
+      "returncode": 1
+    },
+    {
+      "arm": "weft",
+      "scenario": "inflight",
+      "rep": 0,
+      "error": "the child produced no kill record",
+      "returncode": 1
+    },
+    {
+      "arm": "weft",
+      "scenario": "inflight",
+      "rep": 1,
+      "error": "the child produced no kill record",
+      "returncode": 1
+    }
+  ],
+  "retained_bytes_control_dirs": 2861,
+  "checks": {
+    "control_completed": false,
+    "kill_observed": false,
+    "resume_recovered": false,
+    "no_partial_checkpoint": true,
+    "exact_loss_bits": true,
+    "exact_param_hashes": true
+  },
+  "losses": [
+    "The RNG draws enter the reported loss only; the backward pass is the plain cross entropy, so the parameter hashes do not prove RNG restore. The loss bits do, and both are reported.",
+    "GradScaler is disabled because this court has no GPU/fp16 autocast; its state is uniformly empty and that is not a scaler-correctness claim.",
+    "A SIGKILL is a process fault, not a power loss; host caches are not dropped.",
+    "Checkpoint byte counts are reported per file; the store tree is the retained-bytes figure for the WeftFS arm."
+  ],
+  "result": "fail"
+}

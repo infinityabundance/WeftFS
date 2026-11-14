@@ -1,0 +1,97 @@
+family_lifecycle: stamp=20261110T181858Z
+family_lifecycle: court=Linux 7.3.3-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559
+family_lifecycle: limits memory=3g cpus=4 pids=1024
+family_lifecycle: revisions weftfs=9fdafd3c44aabc18c3848e2f551e8745b498763b weftfs-go=ad90835857e95479ac1305fcc16f90ac891a45ca weftcodec=4cd729f55b65a80370946499feaff70a5277ef04 weftcodec-go=d989c038b995d468c641989589f9d5756939585b
+family_lifecycle: reps ingest=1 measure=1 topology=1 recovery=1 configs=default
+family_lifecycle: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+family_lifecycle: verified Qwen2.5-0.5B-Instruct.safetensors sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+family_lifecycle: verified pythia-70m-step0.safetensors sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+family_lifecycle: verified pythia-70m-step1.safetensors sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+== build ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `weftfs` (lib) generated 5 warnings (run `cargo fix --lib -p weftfs` to apply 4 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+== baselines pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/baselines.json
+== checkpoint 8-way pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/checkpoint.json
+== cross-topology pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/topology.json
+== process-fault recovery pythia-consecutive (*.layers.0.*) ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/recovery.json
+== ingest pythia-consecutive/default pattern=whole lambda=0 backend=local ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/ingest.json
+== measure pythia-consecutive/default ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/measure.json
+== gc fixture pythia-consecutive/default (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/gc/gc-pinned.json
+== assemble pythia-consecutive/default ==
+
+== pythia-consecutive / default ==
+ingest median wall 63795.63 ms, peak RSS 681260 KiB
+  strategies base: {"zstd":76}
+  strategies next: {"sparse-delta":20,"zstd":50,"zstd-patch":6}
+  physical data-only 163909392, indexes 309701, total 164428847
+  full_family_threads_1: p50 1241.861 ms p99 1241.861 ms bytes 163977217 match true
+  full_family_threads_4: p50 898.219 ms p99 898.219 ms bytes 163977217 match true
+  region_100_rows_threads_1: p50 442.691 ms p99 442.691 ms bytes 59972402 match true
+  region_100_rows_threads_4: p50 393.067 ms p99 393.067 ms bytes 59972402 match true
+  region_1_row_threads_1: p50 397.433 ms p99 397.433 ms bytes 59972402 match true
+  region_1_row_threads_4: p50 393.769 ms p99 393.769 ms bytes 59972402 match true
+  single_tensor_threads_1: p50 383.187 ms p99 383.187 ms bytes 59972402 match true
+  single_tensor_threads_4: p50 415.109 ms p99 415.109 ms bytes 59972402 match true
+  subset100_threads_1: p50 1037.521 ms p99 1037.521 ms bytes 163977217 match true
+  subset100_threads_4: p50 781.418 ms p99 781.418 ms bytes 163977217 match true
+  topology sharded_8: p50 2951.551 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology sharded_4: p50 2885.824 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology row_major: p50 2856.287 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology blocked_largest_tensor: p50 1060.751 ms, bytes 71856081 (0.697x naive), roots_ok true
+  recovery after_objects: open p50 270.662 ms, usable p50 0.167 ms, old 1 new 0, verify_ok true
+  recovery after_commit_file: open p50 263.38 ms, usable p50 0.32 ms, old 1 new 0, verify_ok true
+  recovery after_superblock_write: open p50 201.783 ms, usable p50 112.722 ms, old 0 new 1, verify_ok true
+  gc without_snapshot: deleted 141606821 bytes in false, retained blob bytes 141614783, verify_ok true, live-restore true
+  gc with_snapshot: deleted 0 bytes in true, retained blob bytes 141614783, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261110T181858Z/pythia-consecutive/default/family-lifecycle.json
+== merge ==
+receipt bench/receipts/family-lifecycle-20261110T181858Z.json
+family_lifecycle: receipt bench/receipts/family-lifecycle-20261110T181858Z.json
+family_lifecycle: log bench/receipts/family-lifecycle-20261110T181858Z.log

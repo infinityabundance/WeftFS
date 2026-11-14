@@ -1,0 +1,430 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["A", "C", "C-pipe4", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3"] reps=7 backend=local
+ablate: === rep 1/7 order=["A", "C", "C-pipe4", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3"] ===
+ablate: rep 1 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 1 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_objects: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_commit_file: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_superblock_write: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar2 after_objects: exit -1
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar2 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar2 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3 after_objects: exit -1
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar4 after_objects: exit -1
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar4 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar4 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar8 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar8 after_objects: exit -1
+--- crash-check C-pipe4-zpar8 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar8 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar8 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar8 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+--- crash-check C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3-tokens3 after_objects: exit -1
+--- crash-check C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3-tokens3 after_commit_file: exit -1
+--- crash-check C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+crash-write C-pipe4-zpar3-tokens3 after_superblock_write: exit -1
+--- crash-check C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: === rep 2/7 order=["C", "C-pipe4", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3", "A"] ===
+ablate: rep 2 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 2 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 2 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 2 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: === rep 3/7 order=["C-pipe4", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3", "A", "C"] ===
+ablate: rep 3 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 3 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 3 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 3 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 3 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: === rep 4/7 order=["C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3", "A", "C", "C-pipe4"] ===
+ablate: rep 4 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 4 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 4 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 4 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 4 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: === rep 5/7 order=["C-pipe4-zpar3", "C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3", "A", "C", "C-pipe4", "C-pipe4-zpar2"] ===
+ablate: rep 5 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 5 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 5 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 5 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 5 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: === rep 6/7 order=["C-pipe4-zpar4", "C-pipe4-zpar8", "C-pipe4-zpar3-tokens3", "A", "C", "C-pipe4", "C-pipe4-zpar2", "C-pipe4-zpar3"] ===
+ablate: rep 6 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 6 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 6 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 6 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 6 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: === rep 7/7 order=["C-pipe4-zpar8", "C-pipe4-zpar3-tokens3", "A", "C", "C-pipe4", "C-pipe4-zpar2", "C-pipe4-zpar3", "C-pipe4-zpar4"] ===
+ablate: rep 7 config C-pipe4-zpar8 write
+--- write C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar8 restore
+--- restore C-pipe4-zpar8 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar3-tokens3 write
+--- write C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar3-tokens3 restore
+--- restore C-pipe4-zpar3-tokens3 (exit Some(0)) ---
+
+ablate: rep 7 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 7 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 7 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 7 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar2 write
+--- write C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar2 restore
+--- restore C-pipe4-zpar2 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar3 write
+--- write C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar3 restore
+--- restore C-pipe4-zpar3 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar4 write
+--- write C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-zpar4 restore
+--- restore C-pipe4-zpar4 (exit Some(0)) ---
+
+ablate: result=fail receipt=/work/bench/receipts/r21-pipeline-20261112T210000Z.json

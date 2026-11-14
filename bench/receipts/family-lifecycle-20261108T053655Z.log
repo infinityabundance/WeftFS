@@ -1,0 +1,285 @@
+family_lifecycle: stamp=20261108T053655Z
+family_lifecycle: court=Linux 7.3.1-1-cachyos x86_64 image=weft/bench-court:1 id=sha256:4041d66ed25626e875de58f79e6527997c85ca81541566cbabe09451b40f2041
+family_lifecycle: limits memory=20g cpus=8 pids=1024
+family_lifecycle: revisions weftfs=5a92225850edb7e12921dad00a6c6ac8910463ab weftfs-go=b475d2db062375d795705b22cc41fc5c30609fc9 weftcodec=6dd7e13d16de33ed765c462ec14a13f0a6c8c844 weftcodec-go=70e47011901db343fc3b7622a565c309b58f093d
+family_lifecycle: reps ingest=3 measure=3 topology=3 recovery=3 configs=default region1 region100
+family_lifecycle: verified Qwen2.5-0.5B.safetensors sha256=88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342
+family_lifecycle: verified Qwen2.5-0.5B-Instruct.safetensors sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+family_lifecycle: verified pythia-70m-step0.safetensors sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e
+family_lifecycle: verified pythia-70m-step1.safetensors sha256=652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109
+== build ==
+   Compiling weftfs v1.1.0 (/work)
+    Finished `release` profile [optimized] target(s) in 3.28s
+== baselines pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/baselines.json
+== checkpoint 8-way pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/checkpoint.json
+== cross-topology pythia-consecutive ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/topology.json
+== process-fault recovery pythia-consecutive (*.layers.0.*) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/recovery.json
+== ingest pythia-consecutive/default pattern=whole lambda=0 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/ingest.json
+== measure pythia-consecutive/default ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/measure.json
+== gc fixture pythia-consecutive/default (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/gc/gc-pinned.json
+== assemble pythia-consecutive/default ==
+
+== pythia-consecutive / default ==
+ingest median wall 11291.5 ms, peak RSS 889772 KiB
+  strategies base: {"zstd":76}
+  strategies next: {"sparse-delta":26,"zstd":50}
+  physical data-only 173233994, indexes 4917263, total 178339923
+  full_family_threads_1: p50 1004.967 ms p99 1095.542 ms bytes 173305059 match true
+  full_family_threads_4: p50 780.824 ms p99 782.111 ms bytes 173305059 match true
+  region_100_rows_threads_1: p50 345.995 ms p99 346.474 ms bytes 63391536 match true
+  region_100_rows_threads_4: p50 341.088 ms p99 341.777 ms bytes 63391536 match true
+  region_1_row_threads_1: p50 336.938 ms p99 342.081 ms bytes 63391536 match true
+  region_1_row_threads_4: p50 337.789 ms p99 340.313 ms bytes 63391536 match true
+  single_tensor_threads_1: p50 342.344 ms p99 344.355 ms bytes 63391536 match true
+  single_tensor_threads_4: p50 339.044 ms p99 341.39 ms bytes 63391536 match true
+  subset100_threads_1: p50 922.027 ms p99 927.373 ms bytes 173305059 match true
+  subset100_threads_4: p50 744.941 ms p99 750.749 ms bytes 173305059 match true
+  topology sharded_8: p50 2989.696 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology sharded_4: p50 2959.842 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology row_major: p50 2912.969 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology blocked_largest_tensor: p50 1079.457 ms, bytes 71856081 (0.697x naive), roots_ok true
+  recovery after_objects: open p50 9.237 ms, usable p50 0.143 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 9.02 ms, usable p50 0.313 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 9.74 ms, usable p50 113.764 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 141682009 bytes in false, retained blob bytes 141614783, verify_ok true, live-restore true
+  gc with_snapshot: deleted 75188 bytes in true, retained blob bytes 141614783, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/default/family-lifecycle.json
+== ingest pythia-consecutive/region1 pattern=rows:1 lambda=1 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/ingest.json
+== measure pythia-consecutive/region1 ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/measure.json
+== gc fixture pythia-consecutive/region1 (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/gc/gc-pinned.json
+== assemble pythia-consecutive/region1 ==
+
+== pythia-consecutive / region1 ==
+ingest median wall 19398.309 ms, peak RSS 1098568 KiB
+  strategies base: {"float-tiled-streams":24,"raw":50,"tensor-tiled":2}
+  strategies next: {"float-tiled-streams":24,"raw":50,"tensor-tiled":2}
+  physical data-only 263896551, indexes 5071210, total 269158535
+  full_family_threads_1: p50 740.906 ms p99 744.27 ms bytes 151780521 match true
+  full_family_threads_4: p50 545.02 ms p99 574.598 ms bytes 151780521 match true
+  region_100_rows_threads_1: p50 1.493 ms p99 1.811 ms bytes 362852 match true
+  region_100_rows_threads_4: p50 1.525 ms p99 1.808 ms bytes 362852 match true
+  region_1_row_threads_1: p50 1.475 ms p99 1.497 ms bytes 362852 match true
+  region_1_row_threads_4: p50 1.46 ms p99 1.469 ms bytes 362852 match true
+  single_tensor_threads_1: p50 221.001 ms p99 221.274 ms bytes 44377591 match true
+  single_tensor_threads_4: p50 80.737 ms p99 81.775 ms bytes 44377591 match true
+  subset100_threads_1: p50 612.388 ms p99 615.264 ms bytes 151780521 match true
+  subset100_threads_4: p50 471.448 ms p99 471.76 ms bytes 151780521 match true
+  topology sharded_8: p50 2989.696 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology sharded_4: p50 2959.842 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology row_major: p50 2912.969 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology blocked_largest_tensor: p50 1079.457 ms, bytes 71856081 (0.697x naive), roots_ok true
+  recovery after_objects: open p50 9.237 ms, usable p50 0.143 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 9.02 ms, usable p50 0.313 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 9.74 ms, usable p50 113.764 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 141682009 bytes in false, retained blob bytes 141614783, verify_ok true, live-restore true
+  gc with_snapshot: deleted 75188 bytes in true, retained blob bytes 141614783, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region1/family-lifecycle.json
+== ingest pythia-consecutive/region100 pattern=rows:100 lambda=1 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/ingest.json
+== measure pythia-consecutive/region100 ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/measure.json
+== gc fixture pythia-consecutive/region100 (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/gc/gc-pinned.json
+== assemble pythia-consecutive/region100 ==
+
+== pythia-consecutive / region100 ==
+ingest median wall 52870.454 ms, peak RSS 1098240 KiB
+  strategies base: {"raw":56,"tensor-tiled":20}
+  strategies next: {"raw":56,"tensor-tiled":20}
+  physical data-only 225738590, indexes 5029522, total 230958058
+  full_family_threads_1: p50 716.426 ms p99 718.737 ms bytes 125028337 match true
+  full_family_threads_4: p50 561.838 ms p99 573.917 ms bytes 125028337 match true
+  region_100_rows_threads_1: p50 1.515 ms p99 1.856 ms bytes 362852 match true
+  region_100_rows_threads_4: p50 1.539 ms p99 1.838 ms bytes 362852 match true
+  region_1_row_threads_1: p50 1.464 ms p99 1.542 ms bytes 362852 match true
+  region_1_row_threads_4: p50 1.496 ms p99 1.508 ms bytes 362852 match true
+  single_tensor_threads_1: p50 225.329 ms p99 226.689 ms bytes 44377591 match true
+  single_tensor_threads_4: p50 81.902 ms p99 82.098 ms bytes 44377591 match true
+  subset100_threads_1: p50 605.172 ms p99 608.523 ms bytes 125028337 match true
+  subset100_threads_4: p50 481.054 ms p99 481.223 ms bytes 125028337 match true
+  topology sharded_8: p50 2989.696 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology sharded_4: p50 2959.842 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology row_major: p50 2912.969 ms, bytes 197146951 (0.700x naive), roots_ok true
+  topology blocked_largest_tensor: p50 1079.457 ms, bytes 71856081 (0.697x naive), roots_ok true
+  recovery after_objects: open p50 9.237 ms, usable p50 0.143 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 9.02 ms, usable p50 0.313 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 9.74 ms, usable p50 113.764 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 141682009 bytes in false, retained blob bytes 141614783, verify_ok true, live-restore true
+  gc with_snapshot: deleted 75188 bytes in true, retained blob bytes 141614783, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/pythia-consecutive/region100/family-lifecycle.json
+== baselines qwen-finetune ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/baselines.json
+== checkpoint 8-way qwen-finetune ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/checkpoint.json
+== cross-topology qwen-finetune ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/topology.json
+== process-fault recovery qwen-finetune (*.layers.0.*) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/recovery.json
+== ingest qwen-finetune/default pattern=whole lambda=0 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/ingest.json
+== measure qwen-finetune/default ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/measure.json
+== gc fixture qwen-finetune/default (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/gc/gc-pinned.json
+== assemble qwen-finetune/default ==
+
+== qwen-finetune / default ==
+ingest median wall 130932.577 ms, peak RSS 2999708 KiB
+  strategies base: {"float-tensor":169,"raw":48,"zstd":73}
+  strategies next: {"raw":48,"weight-delta":241,"zstd":1}
+  physical data-only 1199958249, indexes 76367980, total 1277011741
+  full_family_threads_1: p50 9276.795 ms p99 9553.234 ms bytes 1199642104 match true
+  full_family_threads_4: p50 4287.478 ms p99 4310.606 ms bytes 1199642104 match true
+  region_100_rows_threads_1: p50 2575.078 ms p99 2581.265 ms bytes 333871119 match true
+  region_100_rows_threads_4: p50 2546.712 ms p99 2637.998 ms bytes 333871119 match true
+  region_1_row_threads_1: p50 2523.839 ms p99 2543.63 ms bytes 333871119 match true
+  region_1_row_threads_4: p50 2528.152 ms p99 2570.338 ms bytes 333871119 match true
+  single_tensor_threads_1: p50 2569.861 ms p99 2575.557 ms bytes 333871119 match true
+  single_tensor_threads_4: p50 2555.08 ms p99 2566.911 ms bytes 333871119 match true
+  subset100_threads_1: p50 4891.066 ms p99 4901.204 ms bytes 644377858 match true
+  subset100_threads_4: p50 3141.763 ms p99 3206.151 ms bytes 644377858 match true
+  topology sharded_8: p50 10041.572 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology sharded_4: p50 10109.376 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology row_major: p50 10504.86 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology blocked_largest_tensor: p50 2897.962 ms, bytes 225254705 (0.827x naive), roots_ok true
+  recovery after_objects: open p50 8.9 ms, usable p50 0.145 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 8.213 ms, usable p50 0.299 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 8.792 ms, usable p50 262.013 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 231628264 bytes in false, retained blob bytes 231471817, verify_ok true, live-restore true
+  gc with_snapshot: deleted 78278 bytes in true, retained blob bytes 231471817, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/default/family-lifecycle.json
+== ingest qwen-finetune/region1 pattern=rows:1 lambda=1 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/ingest.json
+== measure qwen-finetune/region1 ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/measure.json
+== gc fixture qwen-finetune/region1 (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/gc/gc-pinned.json
+== assemble qwen-finetune/region1 ==
+
+== qwen-finetune / region1 ==
+ingest median wall 122867.885 ms, peak RSS 3510976 KiB
+  strategies base: {"float-tiled-streams":169,"raw":121}
+  strategies next: {"float-tiled-streams":169,"raw":121}
+  physical data-only 1320298344, indexes 79524068, total 1400520384
+  full_family_threads_1: p50 2349.14 ms p99 2358.639 ms bytes 659948548 match true
+  full_family_threads_4: p50 1006.94 ms p99 1012.7 ms bytes 659948548 match true
+  region_100_rows_threads_1: p50 7.277 ms p99 8.223 ms bytes 2923647 match true
+  region_100_rows_threads_4: p50 2.756 ms p99 3.127 ms bytes 2923647 match true
+  region_1_row_threads_1: p50 7.258 ms p99 7.302 ms bytes 2923647 match true
+  region_1_row_threads_4: p50 2.599 ms p99 2.626 ms bytes 2923647 match true
+  single_tensor_threads_1: p50 561.932 ms p99 562.415 ms bytes 181005475 match true
+  single_tensor_threads_4: p50 220.317 ms p99 221.264 ms bytes 181005475 match true
+  subset100_threads_1: p50 1063.534 ms p99 1070.365 ms bytes 352504974 match true
+  subset100_threads_4: p50 669.718 ms p99 673.678 ms bytes 352504974 match true
+  topology sharded_8: p50 10041.572 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology sharded_4: p50 10109.376 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology row_major: p50 10504.86 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology blocked_largest_tensor: p50 2897.962 ms, bytes 225254705 (0.827x naive), roots_ok true
+  recovery after_objects: open p50 8.9 ms, usable p50 0.145 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 8.213 ms, usable p50 0.299 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 8.792 ms, usable p50 262.013 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 231628264 bytes in false, retained blob bytes 231471817, verify_ok true, live-restore true
+  gc with_snapshot: deleted 78278 bytes in true, retained blob bytes 231471817, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region1/family-lifecycle.json
+== ingest qwen-finetune/region100 pattern=rows:100 lambda=1 backend=local ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/ingest.json
+== measure qwen-finetune/region100 ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/measure.json
+== gc fixture qwen-finetune/region100 (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/gc/gc-pinned.json
+== assemble qwen-finetune/region100 ==
+
+== qwen-finetune / region100 ==
+ingest median wall 117637.108 ms, peak RSS 3510540 KiB
+  strategies base: {"float-tiled":73,"raw":217}
+  strategies next: {"float-tiled":73,"raw":217}
+  physical data-only 1375240590, indexes 77733036, total 1453661214
+  full_family_threads_1: p50 1821.414 ms p99 1835.354 ms bytes 687660370 match true
+  full_family_threads_4: p50 836.092 ms p99 838.516 ms bytes 687660370 match true
+  region_100_rows_threads_1: p50 5.413 ms p99 6.028 ms bytes 2896846 match true
+  region_100_rows_threads_4: p50 2.11 ms p99 2.497 ms bytes 2896846 match true
+  region_1_row_threads_1: p50 5.181 ms p99 5.222 ms bytes 2896846 match true
+  region_1_row_threads_4: p50 1.886 ms p99 1.893 ms bytes 2896846 match true
+  single_tensor_threads_1: p50 447.881 ms p99 448.176 ms bytes 180687450 match true
+  single_tensor_threads_4: p50 190.44 ms p99 192.352 ms bytes 180687450 match true
+  subset100_threads_1: p50 804.034 ms p99 809.739 ms bytes 361489864 match true
+  subset100_threads_4: p50 535.126 ms p99 540.734 ms bytes 361489864 match true
+  topology sharded_8: p50 10041.572 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology sharded_4: p50 10109.376 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology row_major: p50 10504.86 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology blocked_largest_tensor: p50 2897.962 ms, bytes 225254705 (0.827x naive), roots_ok true
+  recovery after_objects: open p50 8.9 ms, usable p50 0.145 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 8.213 ms, usable p50 0.299 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 8.792 ms, usable p50 262.013 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 231628264 bytes in false, retained blob bytes 231471817, verify_ok true, live-restore true
+  gc with_snapshot: deleted 78278 bytes in true, retained blob bytes 231471817, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/region100/family-lifecycle.json
+== starting MinIO on 127.0.0.1:9311 ==
+family_lifecycle: MinIO ready (pid 4272)
+== ingest qwen-finetune/s3-reduced pattern=whole lambda=0 backend=s3 ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/ingest.json
+== measure qwen-finetune/s3-reduced ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/measure.json
+== gc fixture qwen-finetune/s3-reduced (limit=8) ==
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/gc/ingest-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/gc/gc-plain.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/gc/ingest-pinned.json
+/work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/gc/gc-pinned.json
+== assemble qwen-finetune/s3-reduced ==
+
+== qwen-finetune / s3-reduced ==
+ingest median wall 159131.173 ms, peak RSS 3000112 KiB
+  strategies base: {"float-tensor":169,"raw":48,"zstd":73}
+  strategies next: {"raw":48,"weight-delta":241,"zstd":1}
+  full_family_threads_1: p50 9737.482 ms p99 9742.74 ms bytes 1199642104 match true
+  full_family_threads_4: p50 4346.81 ms p99 4362.087 ms bytes 1199642104 match true
+  region_100_rows_threads_1: p50 2539.452 ms p99 2547.236 ms bytes 333871119 match true
+  region_100_rows_threads_4: p50 2521.403 ms p99 2554.113 ms bytes 333871119 match true
+  region_1_row_threads_1: p50 2538.986 ms p99 2566.244 ms bytes 333871119 match true
+  region_1_row_threads_4: p50 2526.519 ms p99 2552.715 ms bytes 333871119 match true
+  single_tensor_threads_1: p50 2547.828 ms p99 2548.178 ms bytes 333871119 match true
+  single_tensor_threads_4: p50 2543.88 ms p99 2550.231 ms bytes 333871119 match true
+  subset100_threads_1: p50 4965.086 ms p99 4978.413 ms bytes 644377858 match true
+  subset100_threads_4: p50 3193.004 ms p99 3200.61 ms bytes 644377858 match true
+  topology sharded_8: p50 10041.572 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology sharded_4: p50 10109.376 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology row_major: p50 10504.86 ms, bytes 823438236 (0.833x naive), roots_ok true
+  topology blocked_largest_tensor: p50 2897.962 ms, bytes 225254705 (0.827x naive), roots_ok true
+  recovery after_objects: open p50 8.9 ms, usable p50 0.145 ms, old 3 new 0, verify_ok true
+  recovery after_commit_file: open p50 8.213 ms, usable p50 0.299 ms, old 3 new 0, verify_ok true
+  recovery after_superblock_write: open p50 8.792 ms, usable p50 262.013 ms, old 0 new 3, verify_ok true
+  gc without_snapshot: deleted 231628264 bytes in false, retained blob bytes 231471817, verify_ok true, live-restore true
+  gc with_snapshot: deleted 78278 bytes in true, retained blob bytes 231471817, verify_ok true, live-restore true
+receipt /work/.docker-cache/family-lifecycle-20261108T053655Z/qwen-finetune/s3-reduced/family-lifecycle.json
+== merge ==
+receipt bench/receipts/family-lifecycle-20261108T053655Z.json
+family_lifecycle: receipt bench/receipts/family-lifecycle-20261108T053655Z.json
+family_lifecycle: log bench/receipts/family-lifecycle-20261108T053655Z.log

@@ -1,0 +1,4417 @@
+{
+  "checks": {
+    "all_requested_configurations_present": true,
+    "all_restored_tensors_exact": true,
+    "at_least_seven_reps": true,
+    "base_configuration_present": true,
+    "crash_proxy_old_or_new": true,
+    "identical_logical_bytes": true,
+    "mandatory_metrics_present": true,
+    "not_measured_declared": true,
+    "repetitions_match_declared": true,
+    "strategies_stable_across_reps": true,
+    "supplementary_native_app_exact": true
+  },
+  "configs_requested": [
+    "A",
+    "C",
+    "N"
+  ],
+  "configuration": {
+    "backend": "local",
+    "chunk_size": 1048576,
+    "configs": [
+      "A",
+      "C",
+      "N"
+    ],
+    "fixed_timestamp_ns": 1700000000000000000,
+    "include_embedding": true,
+    "interleaving": "configuration order rotated by one position per repetition; every repetition runs every arm",
+    "label": "qwen2.5-3b-instruct-9-tensors",
+    "max_others": 8,
+    "minio_restart_between_configurations": false,
+    "quiesce_between_cells": true,
+    "reduced": false,
+    "reps": 7,
+    "restore_passes": 2,
+    "seed": "weft-augmentation-r3",
+    "subset_rule": "embedding + evenly spaced N name-sorted non-embedding tensors",
+    "supplementary_native_app": true
+  },
+  "configurations": {
+    "A": {
+      "all_restores_exact": true,
+      "crash": null,
+      "least_contended_rep": 1,
+      "representative_rep": 2,
+      "reps": 7,
+      "restore": {
+        "backend": "local",
+        "cold": {
+          "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+          "bytes_read": 626540544,
+          "cpu_user_sys_ms": 300.0,
+          "mismatches": 0,
+          "peak_rss_kib": 611044,
+          "per_tensor": {
+            "mean_us": 55870.333333333336,
+            "p50_us": 1008.0,
+            "p95_us": 498273.0,
+            "p99_us": 498273.0,
+            "samples": 9
+          },
+          "requests": 9,
+          "restored_bytes": 626540544,
+          "wall_ms": 503.661971
+        },
+        "config": "A",
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "open_ms": 0.0,
+        "phase": "restore",
+        "protocol": null,
+        "protocol_ms": 0.0,
+        "read_ms": 503.661971,
+        "schema": "weft.augmentation.phase.v1",
+        "tensor_count": 9,
+        "warm": {
+          "basis": "warm (same process, OS page cache warm)",
+          "bytes_read": 626540544,
+          "cpu_user_sys_ms": 290.0,
+          "mismatches": 0,
+          "peak_rss_kib": 612092,
+          "per_tensor": {
+            "mean_us": 31978.11111111111,
+            "p50_us": 461.0,
+            "p95_us": 285904.0,
+            "p99_us": 285904.0,
+            "samples": 9
+          },
+          "requests": 9,
+          "restored_bytes": 626540544,
+          "wall_ms": 288.519558
+        }
+      },
+      "samples": [
+        {
+          "crash": null,
+          "rep": 1,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611328,
+              "per_tensor": {
+                "mean_us": 60255.333333333336,
+                "p50_us": 1022.0,
+                "p95_us": 537682.0,
+                "p99_us": 537682.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 543.043033
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 543.043033,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612268,
+              "per_tensor": {
+                "mean_us": 32340.666666666668,
+                "p50_us": 464.0,
+                "p95_us": 289132.0,
+                "p99_us": 289132.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 291.758936
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 200.0,
+            "fixture_verify_ms": 3113.435076,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613548,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 74.366195,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 376.129784,
+            "write_ms": 294.76040400000005
+          }
+        },
+        {
+          "crash": null,
+          "rep": 2,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611044,
+              "per_tensor": {
+                "mean_us": 55870.333333333336,
+                "p50_us": 1008.0,
+                "p95_us": 498273.0,
+                "p99_us": 498273.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 503.661971
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 503.661971,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612092,
+              "per_tensor": {
+                "mean_us": 31978.11111111111,
+                "p50_us": 461.0,
+                "p95_us": 285904.0,
+                "p99_us": 285904.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 288.519558
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 6189.153786000001,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613152,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 144.87874000000002,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 456.971531,
+            "write_ms": 293.650694
+          }
+        },
+        {
+          "crash": null,
+          "rep": 3,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611208,
+              "per_tensor": {
+                "mean_us": 55389.22222222222,
+                "p50_us": 1011.0,
+                "p95_us": 493974.0,
+                "p99_us": 493974.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 499.205818
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 499.205818,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 280.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612368,
+              "per_tensor": {
+                "mean_us": 32029.444444444445,
+                "p50_us": 460.0,
+                "p95_us": 286372.0,
+                "p99_us": 286372.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 288.948996
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 250.0,
+            "fixture_verify_ms": 6205.922051,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613504,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 144.06210500000003,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 455.853032,
+            "write_ms": 293.73430399999995
+          }
+        },
+        {
+          "crash": null,
+          "rep": 4,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611276,
+              "per_tensor": {
+                "mean_us": 54982.88888888889,
+                "p50_us": 1026.0,
+                "p95_us": 490255.0,
+                "p99_us": 490255.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 495.482559
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 495.482559,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612176,
+              "per_tensor": {
+                "mean_us": 31949.555555555555,
+                "p50_us": 459.0,
+                "p95_us": 285655.0,
+                "p99_us": 285655.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 288.313739
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 250.0,
+            "fixture_verify_ms": 6197.332007,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612636,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 142.760047,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 442.437079,
+            "write_ms": 283.70097100000004
+          }
+        },
+        {
+          "crash": null,
+          "rep": 5,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611236,
+              "per_tensor": {
+                "mean_us": 187743.66666666663,
+                "p50_us": 1041.0,
+                "p95_us": 1683714.0,
+                "p99_us": 1683714.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 1690.587308
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 1690.587308,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612284,
+              "per_tensor": {
+                "mean_us": 31864.444444444445,
+                "p50_us": 461.0,
+                "p95_us": 284879.0,
+                "p99_us": 284879.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 287.47192
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 7468.219657,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613200,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 159.672978,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 6937.742945,
+            "write_ms": 6757.6080569999995
+          }
+        },
+        {
+          "crash": null,
+          "rep": 6,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611032,
+              "per_tensor": {
+                "mean_us": 89260.55555555556,
+                "p50_us": 1027.0,
+                "p95_us": 798582.0,
+                "p99_us": 798582.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 804.260134
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 804.260134,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612084,
+              "per_tensor": {
+                "mean_us": 32228.444444444445,
+                "p50_us": 460.0,
+                "p95_us": 288156.0,
+                "p99_us": 288156.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 290.707277
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 8390.696111000001,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612516,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 153.60340299999996,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 3504.310448,
+            "write_ms": 3331.7277360000003
+          }
+        },
+        {
+          "crash": null,
+          "rep": 7,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611092,
+              "per_tensor": {
+                "mean_us": 78272.55555555556,
+                "p50_us": 1022.0,
+                "p95_us": 691946.0,
+                "p99_us": 691946.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 706.5637879999999
+            },
+            "config": "A",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 706.5637879999999,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626540544,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612240,
+              "per_tensor": {
+                "mean_us": 32076.555555555555,
+                "p50_us": 458.0,
+                "p95_us": 286796.0,
+                "p99_us": 286796.0,
+                "samples": 9
+              },
+              "requests": 9,
+              "restored_bytes": 626540544,
+              "wall_ms": 289.370458
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "A",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 9579.756164,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "native_bytes_written": 626540544,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612348,
+            "phase": "write",
+            "physical_bytes_written": 626540544,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626540544,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 181.690371,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 8167.528055,
+            "write_ms": 7966.093973
+          }
+        }
+      ],
+      "stats": {
+        "cold_physical_bytes_read": {
+          "max": 626540544.0,
+          "median": 626540544.0,
+          "min": 626540544.0,
+          "p50": 626540544.0,
+          "p95": 626540544.0,
+          "samples": [
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0
+          ]
+        },
+        "cold_read_requests": {
+          "max": 9.0,
+          "median": 9.0,
+          "min": 9.0,
+          "p50": 9.0,
+          "p95": 9.0,
+          "samples": [
+            9.0,
+            9.0,
+            9.0,
+            9.0,
+            9.0,
+            9.0,
+            9.0
+          ]
+        },
+        "cold_restore_cpu_ms": {
+          "max": 300.0,
+          "median": 300.0,
+          "min": 290.0,
+          "p50": 300.0,
+          "p95": 300.0,
+          "samples": [
+            300.0,
+            300.0,
+            300.0,
+            290.0,
+            300.0,
+            290.0,
+            300.0
+          ]
+        },
+        "cold_restore_peak_rss_kib": {
+          "max": 611328.0,
+          "median": 611208.0,
+          "min": 611032.0,
+          "p50": 611208.0,
+          "p95": 611328.0,
+          "samples": [
+            611328.0,
+            611044.0,
+            611208.0,
+            611276.0,
+            611236.0,
+            611032.0,
+            611092.0
+          ]
+        },
+        "cold_restore_wall_ms": {
+          "max": 1690.587308,
+          "median": 543.043033,
+          "min": 495.482559,
+          "p50": 543.043033,
+          "p95": 1690.587308,
+          "samples": [
+            543.043033,
+            503.661971,
+            499.205818,
+            495.482559,
+            1690.587308,
+            804.260134,
+            706.5637879999999
+          ]
+        },
+        "physical_bytes_written": {
+          "max": 626540544.0,
+          "median": 626540544.0,
+          "min": 626540544.0,
+          "p50": 626540544.0,
+          "p95": 626540544.0,
+          "samples": [
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0
+          ]
+        },
+        "physical_footprint_bytes": {
+          "max": 626540544.0,
+          "median": 626540544.0,
+          "min": 626540544.0,
+          "p50": 626540544.0,
+          "p95": 626540544.0,
+          "samples": [
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0,
+            626540544.0
+          ]
+        },
+        "reps": 7,
+        "write_cpu_ms": {
+          "max": 260.0,
+          "median": 260.0,
+          "min": 200.0,
+          "p50": 260.0,
+          "p95": 260.0,
+          "samples": [
+            200.0,
+            260.0,
+            250.0,
+            250.0,
+            260.0,
+            260.0,
+            260.0
+          ]
+        },
+        "write_peak_rss_kib": {
+          "max": 613548.0,
+          "median": 613152.0,
+          "min": 612348.0,
+          "p50": 613152.0,
+          "p95": 613548.0,
+          "samples": [
+            613548.0,
+            613152.0,
+            613504.0,
+            612636.0,
+            613200.0,
+            612516.0,
+            612348.0
+          ]
+        },
+        "write_requests": {
+          "max": 9.0,
+          "median": 9.0,
+          "min": 9.0,
+          "p50": 9.0,
+          "p95": 9.0,
+          "samples": [
+            9.0,
+            9.0,
+            9.0,
+            9.0,
+            9.0,
+            9.0,
+            9.0
+          ]
+        },
+        "write_wall_ms": {
+          "max": 8167.528055,
+          "median": 456.971531,
+          "min": 376.129784,
+          "p50": 456.971531,
+          "p95": 8167.528055,
+          "samples": [
+            376.129784,
+            456.971531,
+            455.853032,
+            442.437079,
+            6937.742945,
+            3504.310448,
+            8167.528055
+          ]
+        }
+      },
+      "strategies_stable_across_reps": true,
+      "summary": {
+        "chosen_representations": null,
+        "cold_physical_bytes_read": 626540544,
+        "cold_read_requests": 9,
+        "cold_restore_wall_ms": 503.661971,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 1243970321.515499,
+        "physical_bytes_written": 626540544,
+        "physical_footprint_bytes": 626540544,
+        "physical_restore_bytes_per_s": 1243970321.515499,
+        "protocol": null,
+        "read_amplification": 1.0,
+        "restore_cpu_ms": 300.0,
+        "restore_peak_rss_kib": 611044,
+        "restore_per_tensor": {
+          "mean_us": 55870.333333333336,
+          "p50_us": 1008.0,
+          "p95_us": 498273.0,
+          "p99_us": 498273.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 626540544,
+        "warm_restore_wall_ms": 288.519558,
+        "write_amplification": 1.0,
+        "write_cpu_ms": 260.0,
+        "write_peak_rss_kib": 613152,
+        "write_requests": 9,
+        "write_wall_ms": 456.971531
+      },
+      "summary_least_contended": {
+        "chosen_representations": null,
+        "cold_physical_bytes_read": 626540544,
+        "cold_read_requests": 9,
+        "cold_restore_wall_ms": 543.043033,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 1153758553.0537503,
+        "physical_bytes_written": 626540544,
+        "physical_footprint_bytes": 626540544,
+        "physical_restore_bytes_per_s": 1153758553.0537503,
+        "protocol": null,
+        "read_amplification": 1.0,
+        "restore_cpu_ms": 300.0,
+        "restore_peak_rss_kib": 611328,
+        "restore_per_tensor": {
+          "mean_us": 60255.333333333336,
+          "p50_us": 1022.0,
+          "p95_us": 537682.0,
+          "p99_us": 537682.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 626540544,
+        "warm_restore_wall_ms": 291.758936,
+        "write_amplification": 1.0,
+        "write_cpu_ms": 200.0,
+        "write_peak_rss_kib": 613548,
+        "write_requests": 9,
+        "write_wall_ms": 376.129784
+      },
+      "write": {
+        "backend": "local",
+        "config": "A",
+        "cpu_user_sys_ms": 260.0,
+        "fixture_verify_ms": 6189.153786000001,
+        "footprint_source": "recursive file walk (du source)",
+        "logical_bytes": 626540544,
+        "native_bytes_written": 626540544,
+        "native_sync_calls": 10,
+        "native_writes": 9,
+        "peak_rss_kib": 613152,
+        "phase": "write",
+        "physical_bytes_written": 626540544,
+        "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+        "physical_footprint_bytes": 626540544,
+        "schema": "weft.augmentation.phase.v1",
+        "source_read_ms": 144.87874000000002,
+        "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+        "subset_tensor_count": 9,
+        "tensor_count": 9,
+        "wall_ms": 456.971531,
+        "write_ms": 293.650694
+      }
+    },
+    "C": {
+      "all_restores_exact": true,
+      "crash": {
+        "baseline_generation": 3,
+        "new": 1,
+        "ok": true,
+        "old": 2,
+        "partial": 0,
+        "phases": [
+          {
+            "exact": true,
+            "exit_code": -1,
+            "expected": "old",
+            "expected_ok": true,
+            "generation_after": 3,
+            "generation_before": 3,
+            "phase": "after_objects",
+            "problems": [],
+            "state": "old",
+            "tensor_mismatches": 0,
+            "tensor_missing": 0,
+            "verify_consistent": true,
+            "verify_ok": true,
+            "verify_problems": 0
+          },
+          {
+            "exact": true,
+            "exit_code": -1,
+            "expected": "old",
+            "expected_ok": true,
+            "generation_after": 3,
+            "generation_before": 3,
+            "phase": "after_commit_file",
+            "problems": [
+              "commit file for generation 4 exists above the highest published superblock generation 3"
+            ],
+            "state": "old",
+            "tensor_mismatches": 0,
+            "tensor_missing": 0,
+            "verify_consistent": true,
+            "verify_ok": false,
+            "verify_problems": 1
+          },
+          {
+            "exact": true,
+            "exit_code": -1,
+            "expected": "new",
+            "expected_ok": true,
+            "generation_after": 5,
+            "generation_before": 3,
+            "phase": "after_superblock_write",
+            "problems": [],
+            "state": "new",
+            "tensor_mismatches": 0,
+            "tensor_missing": 0,
+            "verify_consistent": true,
+            "verify_ok": true,
+            "verify_problems": 0
+          }
+        ],
+        "status": "measured"
+      },
+      "least_contended_rep": 4,
+      "representative_rep": 1,
+      "reps": 7,
+      "restore": {
+        "backend": "local",
+        "backend_stats_total": {
+          "bytes_read": 831770905,
+          "bytes_written": 0,
+          "fsyncs": 0,
+          "link_publications": 0,
+          "range_reads": 0,
+          "reads": 97,
+          "rename_fallbacks": 0,
+          "rename_publications": 0,
+          "writes": 0
+        },
+        "cold": {
+          "backend_bytes_read": 415904039,
+          "backend_bytes_read_at_open": 37173,
+          "backend_read_requests": 61,
+          "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+          "cpu_user_sys_ms": 2000.0,
+          "includes_open": true,
+          "mismatches": 0,
+          "peak_rss_kib": 1625376,
+          "per_tensor": {
+            "mean_us": 239181.22222222225,
+            "p50_us": 3767.0,
+            "p95_us": 2136298.0,
+            "p99_us": 2136298.0,
+            "samples": 9
+          },
+          "read_wall_ms": 2165.836151,
+          "restored_bytes": 626540544,
+          "wall_ms": 2167.309115
+        },
+        "config": "C",
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "open_ms": 1.472964,
+        "phase": "restore",
+        "protocol": null,
+        "protocol_ms": 0.0,
+        "read_ms": 2165.836151,
+        "schema": "weft.augmentation.phase.v1",
+        "tensor_count": 9,
+        "warm": {
+          "backend_bytes_read": 415866866,
+          "backend_read_requests": 36,
+          "basis": "warm (same process, store already open, OS/backend cache warm)",
+          "cpu_user_sys_ms": 1990.0,
+          "mismatches": 0,
+          "peak_rss_kib": 1626592,
+          "per_tensor": {
+            "mean_us": 236162.44444444444,
+            "p50_us": 3695.0,
+            "p95_us": 2109661.0,
+            "p99_us": 2109661.0,
+            "samples": 9
+          },
+          "wall_ms": 2135.865582
+        }
+      },
+      "samples": [
+        {
+          "crash": {
+            "baseline_generation": 3,
+            "new": 1,
+            "ok": true,
+            "old": 2,
+            "partial": 0,
+            "phases": [
+              {
+                "exact": true,
+                "exit_code": -1,
+                "expected": "old",
+                "expected_ok": true,
+                "generation_after": 3,
+                "generation_before": 3,
+                "phase": "after_objects",
+                "problems": [],
+                "state": "old",
+                "tensor_mismatches": 0,
+                "tensor_missing": 0,
+                "verify_consistent": true,
+                "verify_ok": true,
+                "verify_problems": 0
+              },
+              {
+                "exact": true,
+                "exit_code": -1,
+                "expected": "old",
+                "expected_ok": true,
+                "generation_after": 3,
+                "generation_before": 3,
+                "phase": "after_commit_file",
+                "problems": [
+                  "commit file for generation 4 exists above the highest published superblock generation 3"
+                ],
+                "state": "old",
+                "tensor_mismatches": 0,
+                "tensor_missing": 0,
+                "verify_consistent": true,
+                "verify_ok": false,
+                "verify_problems": 1
+              },
+              {
+                "exact": true,
+                "exit_code": -1,
+                "expected": "new",
+                "expected_ok": true,
+                "generation_after": 5,
+                "generation_before": 3,
+                "phase": "after_superblock_write",
+                "problems": [],
+                "state": "new",
+                "tensor_mismatches": 0,
+                "tensor_missing": 0,
+                "verify_consistent": true,
+                "verify_ok": true,
+                "verify_problems": 0
+              }
+            ],
+            "status": "measured"
+          },
+          "rep": 1,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 2000.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625376,
+              "per_tensor": {
+                "mean_us": 239181.22222222225,
+                "p50_us": 3767.0,
+                "p95_us": 2136298.0,
+                "p99_us": 2136298.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2165.836151,
+              "restored_bytes": 626540544,
+              "wall_ms": 2167.309115
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 1.472964,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2165.836151,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 1990.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626592,
+              "per_tensor": {
+                "mean_us": 236162.44444444444,
+                "p50_us": 3695.0,
+                "p95_us": 2109661.0,
+                "p99_us": 2109661.0,
+                "samples": 9
+              },
+              "wall_ms": 2135.865582
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 154.552146,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1990.0,
+            "fixture_verify_ms": 4003.273259,
+            "footprint_ms": 0.126847,
+            "generation": 3,
+            "init_ms": 19.447829,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564492,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 112935.44444444444,
+              "p50_us": 10580.0,
+              "p95_us": 962848.0,
+              "p99_us": 962848.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 1016.380234,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 145.67386599999998,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "8e42bd5bbfc3ed3692239f53c6e880869a32b057dfb9af1817e80769d8a060ee",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 1370.19861,
+            "write_ms": 1170.9323800000002
+          }
+        },
+        {
+          "crash": null,
+          "rep": 2,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 2000.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625284,
+              "per_tensor": {
+                "mean_us": 237438.33333333337,
+                "p50_us": 3718.0,
+                "p95_us": 2120919.0,
+                "p99_us": 2120919.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2147.036662,
+              "restored_bytes": 626540544,
+              "wall_ms": 2148.569488
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 1.532826,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2147.036662,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 1990.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626336,
+              "per_tensor": {
+                "mean_us": 236370.55555555556,
+                "p50_us": 3768.0,
+                "p95_us": 2111497.0,
+                "p99_us": 2111497.0,
+                "samples": 9
+              },
+              "wall_ms": 2137.803652
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 152.026249,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1950.0,
+            "fixture_verify_ms": 6183.414035,
+            "footprint_ms": 0.11788,
+            "generation": 3,
+            "init_ms": 19.850664,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564736,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 109945.88888888888,
+              "p50_us": 10342.0,
+              "p95_us": 936816.0,
+              "p99_us": 936816.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 989.473335,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 146.408853,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "d2f6ba96c587fa9a2243770813ef311835e7e1d29627350e9a5cac63af5145c0",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 1338.7483470000002,
+            "write_ms": 1141.499584
+          }
+        },
+        {
+          "crash": null,
+          "rep": 3,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 1990.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625392,
+              "per_tensor": {
+                "mean_us": 235666.0,
+                "p50_us": 3764.0,
+                "p95_us": 2104880.0,
+                "p99_us": 2104880.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2130.078151,
+              "restored_bytes": 626540544,
+              "wall_ms": 2131.496614
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 1.418463,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2130.078151,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 1980.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626568,
+              "per_tensor": {
+                "mean_us": 233763.77777777775,
+                "p50_us": 3716.0,
+                "p95_us": 2088448.0,
+                "p99_us": 2088448.0,
+                "samples": 9
+              },
+              "wall_ms": 2116.100783
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 157.36630300000002,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1950.0,
+            "fixture_verify_ms": 6189.771419000001,
+            "footprint_ms": 0.16034900000000002,
+            "generation": 3,
+            "init_ms": 20.772087000000003,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564668,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 111158.33333333331,
+              "p50_us": 11530.0,
+              "p95_us": 940593.0,
+              "p99_us": 940593.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 1000.384308,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 145.515491,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "5bacb799988f95454fb39f8f377ddd512fe899cf194142b2ad02dcf0f2167f93",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 1349.11067,
+            "write_ms": 1157.750611
+          }
+        },
+        {
+          "crash": null,
+          "rep": 4,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 1990.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625540,
+              "per_tensor": {
+                "mean_us": 234974.0,
+                "p50_us": 3685.0,
+                "p95_us": 2098685.0,
+                "p99_us": 2098685.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2126.674025,
+              "restored_bytes": 626540544,
+              "wall_ms": 2128.071369
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 1.397344,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2126.674025,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 1990.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626696,
+              "per_tensor": {
+                "mean_us": 234239.11111111112,
+                "p50_us": 3684.0,
+                "p95_us": 2092750.0,
+                "p99_us": 2092750.0,
+                "samples": 9
+              },
+              "wall_ms": 2118.2310580000003
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 154.258511,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1940.0,
+            "fixture_verify_ms": 6177.283827,
+            "footprint_ms": 0.130393,
+            "generation": 3,
+            "init_ms": 19.578696,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564560,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 110057.11111111112,
+              "p50_us": 10305.0,
+              "p95_us": 938227.0,
+              "p99_us": 938227.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 990.477487,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 140.68346200000005,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "c2283e86a1cc62b08782010e3f849d539835c34d94a3fc2248f5b6c70b68bb8c",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 1332.270681,
+            "write_ms": 1144.735998
+          }
+        },
+        {
+          "crash": null,
+          "rep": 5,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 1990.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625336,
+              "per_tensor": {
+                "mean_us": 240628.77777777775,
+                "p50_us": 3715.0,
+                "p95_us": 2147780.0,
+                "p99_us": 2147780.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2178.62579,
+              "restored_bytes": 626540544,
+              "wall_ms": 2180.051286
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 1.425496,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2178.62579,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 1990.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626588,
+              "per_tensor": {
+                "mean_us": 240703.11111111112,
+                "p50_us": 3697.0,
+                "p95_us": 2146569.0,
+                "p99_us": 2146569.0,
+                "samples": 9
+              },
+              "wall_ms": 2177.143325
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 4991.864824,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1970.0,
+            "fixture_verify_ms": 7543.11761,
+            "footprint_ms": 0.179144,
+            "generation": 3,
+            "init_ms": 393.866636,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564784,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 158628.55555555556,
+              "p50_us": 57699.0,
+              "p95_us": 969434.0,
+              "p99_us": 969434.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 1427.6169180000004,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 170.870756,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "5a35a9e5c91a65d88dcf87652faa06d0a5fda74d57aa7cfa44d6e9ecc248e96f",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 7301.905181,
+            "write_ms": 6419.481742000001
+          }
+        },
+        {
+          "crash": null,
+          "rep": 6,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 2000.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625124,
+              "per_tensor": {
+                "mean_us": 275896.3333333333,
+                "p50_us": 3759.0,
+                "p95_us": 2463380.0,
+                "p99_us": 2463380.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2493.3087029999997,
+              "restored_bytes": 626540544,
+              "wall_ms": 2503.1421339999997
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 9.833431,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2493.3087029999997,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 2000.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626340,
+              "per_tensor": {
+                "mean_us": 240434.22222222225,
+                "p50_us": 3759.0,
+                "p95_us": 2145465.0,
+                "p99_us": 2145465.0,
+                "samples": 9
+              },
+              "wall_ms": 2174.179795
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 4999.114517999999,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1990.0,
+            "fixture_verify_ms": 6376.736927,
+            "footprint_ms": 0.19326,
+            "generation": 3,
+            "init_ms": 238.535419,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564572,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 166049.66666666666,
+              "p50_us": 56280.0,
+              "p95_us": 1027447.0,
+              "p99_us": 1027447.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 1494.3848309999998,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 175.868628,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "c5b3f0446697245b5b5e04670bac0097d6bb8225a466f2754e04fdb5cb15a3fb",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 7025.658069,
+            "write_ms": 6493.499349
+          }
+        },
+        {
+          "crash": null,
+          "rep": 7,
+          "restore": {
+            "backend": "local",
+            "backend_stats_total": {
+              "bytes_read": 831770905,
+              "bytes_written": 0,
+              "fsyncs": 0,
+              "link_publications": 0,
+              "range_reads": 0,
+              "reads": 97,
+              "rename_fallbacks": 0,
+              "rename_publications": 0,
+              "writes": 0
+            },
+            "cold": {
+              "backend_bytes_read": 415904039,
+              "backend_bytes_read_at_open": 37173,
+              "backend_read_requests": 61,
+              "basis": "cold (fresh process; local store files fadvise(DONTNEED) before open)",
+              "cpu_user_sys_ms": 2000.0,
+              "includes_open": true,
+              "mismatches": 0,
+              "peak_rss_kib": 1625044,
+              "per_tensor": {
+                "mean_us": 240623.44444444444,
+                "p50_us": 3704.0,
+                "p95_us": 2146241.0,
+                "p99_us": 2146241.0,
+                "samples": 9
+              },
+              "read_wall_ms": 2178.8820140000003,
+              "restored_bytes": 626540544,
+              "wall_ms": 2182.571322
+            },
+            "config": "C",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 3.689308,
+            "phase": "restore",
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "read_ms": 2178.8820140000003,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "backend_bytes_read": 415866866,
+              "backend_read_requests": 36,
+              "basis": "warm (same process, store already open, OS/backend cache warm)",
+              "cpu_user_sys_ms": 1990.0,
+              "mismatches": 0,
+              "peak_rss_kib": 1626180,
+              "per_tensor": {
+                "mean_us": 238307.33333333337,
+                "p50_us": 3852.0,
+                "p95_us": 2127769.0,
+                "p99_us": 2127769.0,
+                "samples": 9
+              },
+              "wall_ms": 2155.457603
+            }
+          },
+          "write": {
+            "ablation": {
+              "deferred_blob_sync": true,
+              "float_tensor_disabled": false,
+              "group_commit": true,
+              "pack_member_threshold_bytes": null,
+              "publication": "one-atomic-publication",
+              "zstd19_disabled": false
+            },
+            "backend": "local",
+            "backend_stats": {
+              "bytes_read": 1830,
+              "bytes_written": 415894726,
+              "fsyncs": 58,
+              "link_publications": 0,
+              "range_reads": 1,
+              "reads": 8,
+              "rename_fallbacks": 0,
+              "rename_publications": 29,
+              "writes": 32
+            },
+            "commit_ms": 4828.164384,
+            "commit_phases": {},
+            "config": "C",
+            "cpu_user_sys_ms": 1980.0,
+            "fixture_verify_ms": 9099.590655,
+            "footprint_ms": 0.174595,
+            "generation": 3,
+            "init_ms": 349.542734,
+            "logical_bytes": 626540544,
+            "object_ids": {
+              "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+              "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+              "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+              "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+              "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+              "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+              "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+              "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+              "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+            },
+            "output_contents": {
+              "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+              "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+              "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+              "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+              "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+              "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+              "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+              "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+              "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+            },
+            "peak_rss_kib": 1564296,
+            "per_tensor": null,
+            "per_tensor_write": {
+              "mean_us": 152317.55555555556,
+              "p50_us": 49624.0,
+              "p95_us": 994446.0,
+              "p99_us": 994446.0,
+              "samples": 9
+            },
+            "phase": "write",
+            "phases": null,
+            "physical_bytes_written": 415894726,
+            "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+            "pipeline": null,
+            "planner": {
+              "encoded_zstd19": 0,
+              "exhaustive_fallback_tensors": 0,
+              "mode": "two-stage",
+              "mode9_gate_fail": 4,
+              "mode9_gate_pass": 4,
+              "mode9_gate_unresolved": 1,
+              "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+              "prediction_violation_tensors": 0,
+              "skipped_zstd19": 9,
+              "skipped_zstd3": 4,
+              "tensors_with_trace": 9
+            },
+            "prepare_ms": 1370.8120199999998,
+            "prepare_phases": {},
+            "protocol": null,
+            "protocol_ms": 0.0,
+            "publication_ledger": {
+              "accounted_blob_and_control_bytes": 415874013,
+              "backend_bytes_written": 415894726,
+              "backend_writes": 32,
+              "categories": {
+                "commit_records": {
+                  "bytes": 8672,
+                  "count": 3
+                },
+                "index_segments": {
+                  "bytes": 4563,
+                  "count": 3
+                },
+                "manifest_blobs": {
+                  "bytes": 415860778,
+                  "count": 18
+                },
+                "object_blobs": {
+                  "bytes": 0,
+                  "count": 0
+                },
+                "superblock": {
+                  "count": 3
+                }
+              },
+              "duplicate_blobs": 0,
+              "fsyncs": {
+                "dir": 29,
+                "file": 29,
+                "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+                "total": 58
+              },
+              "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+              "pack": null,
+              "unaccounted_bytes": 20713
+            },
+            "representations": {
+              "float-tensor": 5,
+              "zstd": 4
+            },
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 184.858583,
+            "storage": {
+              "footprint_source": "recursive file walk of the store directory (du source)",
+              "physical_footprint_bytes": 415882220,
+              "physical_footprint_objects": 27
+            },
+            "store_head": "dec55b9ba60a7508c797c441d46cdb06f5e47a3a134f015fa6a97fce6962f71b",
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 6866.916775,
+            "write_ms": 6198.976403999999
+          }
+        }
+      ],
+      "stats": {
+        "cold_physical_bytes_read": {
+          "max": 415904039.0,
+          "median": 415904039.0,
+          "min": 415904039.0,
+          "p50": 415904039.0,
+          "p95": 415904039.0,
+          "samples": [
+            415904039.0,
+            415904039.0,
+            415904039.0,
+            415904039.0,
+            415904039.0,
+            415904039.0,
+            415904039.0
+          ]
+        },
+        "cold_read_requests": {
+          "max": 61.0,
+          "median": 61.0,
+          "min": 61.0,
+          "p50": 61.0,
+          "p95": 61.0,
+          "samples": [
+            61.0,
+            61.0,
+            61.0,
+            61.0,
+            61.0,
+            61.0,
+            61.0
+          ]
+        },
+        "cold_restore_cpu_ms": {
+          "max": 2000.0,
+          "median": 2000.0,
+          "min": 1990.0,
+          "p50": 2000.0,
+          "p95": 2000.0,
+          "samples": [
+            2000.0,
+            2000.0,
+            1990.0,
+            1990.0,
+            1990.0,
+            2000.0,
+            2000.0
+          ]
+        },
+        "cold_restore_peak_rss_kib": {
+          "max": 1625540.0,
+          "median": 1625336.0,
+          "min": 1625044.0,
+          "p50": 1625336.0,
+          "p95": 1625540.0,
+          "samples": [
+            1625376.0,
+            1625284.0,
+            1625392.0,
+            1625540.0,
+            1625336.0,
+            1625124.0,
+            1625044.0
+          ]
+        },
+        "cold_restore_wall_ms": {
+          "max": 2503.1421339999997,
+          "median": 2167.309115,
+          "min": 2128.071369,
+          "p50": 2167.309115,
+          "p95": 2503.1421339999997,
+          "samples": [
+            2167.309115,
+            2148.569488,
+            2131.496614,
+            2128.071369,
+            2180.051286,
+            2503.1421339999997,
+            2182.571322
+          ]
+        },
+        "physical_bytes_written": {
+          "max": 415894726.0,
+          "median": 415894726.0,
+          "min": 415894726.0,
+          "p50": 415894726.0,
+          "p95": 415894726.0,
+          "samples": [
+            415894726.0,
+            415894726.0,
+            415894726.0,
+            415894726.0,
+            415894726.0,
+            415894726.0,
+            415894726.0
+          ]
+        },
+        "physical_footprint_bytes": {
+          "max": 415882220.0,
+          "median": 415882220.0,
+          "min": 415882220.0,
+          "p50": 415882220.0,
+          "p95": 415882220.0,
+          "samples": [
+            415882220.0,
+            415882220.0,
+            415882220.0,
+            415882220.0,
+            415882220.0,
+            415882220.0,
+            415882220.0
+          ]
+        },
+        "reps": 7,
+        "write_cpu_ms": {
+          "max": 1990.0,
+          "median": 1970.0,
+          "min": 1940.0,
+          "p50": 1970.0,
+          "p95": 1990.0,
+          "samples": [
+            1990.0,
+            1950.0,
+            1950.0,
+            1940.0,
+            1970.0,
+            1990.0,
+            1980.0
+          ]
+        },
+        "write_peak_rss_kib": {
+          "max": 1564784.0,
+          "median": 1564572.0,
+          "min": 1564296.0,
+          "p50": 1564572.0,
+          "p95": 1564784.0,
+          "samples": [
+            1564492.0,
+            1564736.0,
+            1564668.0,
+            1564560.0,
+            1564784.0,
+            1564572.0,
+            1564296.0
+          ]
+        },
+        "write_requests": {
+          "max": 32.0,
+          "median": 32.0,
+          "min": 32.0,
+          "p50": 32.0,
+          "p95": 32.0,
+          "samples": [
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0,
+            32.0
+          ]
+        },
+        "write_wall_ms": {
+          "max": 7301.905181,
+          "median": 1370.19861,
+          "min": 1332.270681,
+          "p50": 1370.19861,
+          "p95": 7301.905181,
+          "samples": [
+            1370.19861,
+            1338.7483470000002,
+            1349.11067,
+            1332.270681,
+            7301.905181,
+            7025.658069,
+            6866.916775
+          ]
+        }
+      },
+      "strategies_stable_across_reps": true,
+      "summary": {
+        "chosen_representations": {
+          "float-tensor": 5,
+          "zstd": 4
+        },
+        "cold_physical_bytes_read": 415904039,
+        "cold_read_requests": 61,
+        "cold_restore_wall_ms": 2167.309115,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 289086840.29596764,
+        "physical_bytes_written": 415894726,
+        "physical_footprint_bytes": 415882220,
+        "physical_restore_bytes_per_s": 191898809.50599885,
+        "protocol": null,
+        "read_amplification": 0.6638102561484034,
+        "restore_cpu_ms": 2000.0,
+        "restore_peak_rss_kib": 1625376,
+        "restore_per_tensor": {
+          "mean_us": 239181.22222222225,
+          "p50_us": 3767.0,
+          "p95_us": 2136298.0,
+          "p99_us": 2136298.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 415866866,
+        "warm_restore_wall_ms": 2135.865582,
+        "write_amplification": 0.6637953919866357,
+        "write_cpu_ms": 1990.0,
+        "write_peak_rss_kib": 1564492,
+        "write_requests": 32,
+        "write_wall_ms": 1370.19861
+      },
+      "summary_least_contended": {
+        "chosen_representations": {
+          "float-tensor": 5,
+          "zstd": 4
+        },
+        "cold_physical_bytes_read": 415904039,
+        "cold_read_requests": 61,
+        "cold_restore_wall_ms": 2128.071369,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 294417073.1898043,
+        "physical_bytes_written": 415894726,
+        "physical_footprint_bytes": 415882220,
+        "physical_restore_bytes_per_s": 195437072.76858723,
+        "protocol": null,
+        "read_amplification": 0.6638102561484034,
+        "restore_cpu_ms": 1990.0,
+        "restore_peak_rss_kib": 1625540,
+        "restore_per_tensor": {
+          "mean_us": 234974.0,
+          "p50_us": 3685.0,
+          "p95_us": 2098685.0,
+          "p99_us": 2098685.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 415866866,
+        "warm_restore_wall_ms": 2118.2310580000003,
+        "write_amplification": 0.6637953919866357,
+        "write_cpu_ms": 1940.0,
+        "write_peak_rss_kib": 1564560,
+        "write_requests": 32,
+        "write_wall_ms": 1332.270681
+      },
+      "write": {
+        "ablation": {
+          "deferred_blob_sync": true,
+          "float_tensor_disabled": false,
+          "group_commit": true,
+          "pack_member_threshold_bytes": null,
+          "publication": "one-atomic-publication",
+          "zstd19_disabled": false
+        },
+        "backend": "local",
+        "backend_stats": {
+          "bytes_read": 1830,
+          "bytes_written": 415894726,
+          "fsyncs": 58,
+          "link_publications": 0,
+          "range_reads": 1,
+          "reads": 8,
+          "rename_fallbacks": 0,
+          "rename_publications": 29,
+          "writes": 32
+        },
+        "commit_ms": 154.552146,
+        "commit_phases": {},
+        "config": "C",
+        "cpu_user_sys_ms": 1990.0,
+        "fixture_verify_ms": 4003.273259,
+        "footprint_ms": 0.126847,
+        "generation": 3,
+        "init_ms": 19.447829,
+        "logical_bytes": 626540544,
+        "object_ids": {
+          "model.embed_tokens.weight": "69b91bfd2bf6ac646457e8b945bd60ef27d249cb3c597873905ee8c6a3e898a9",
+          "model.layers.0.input_layernorm.weight": "54e395087fc48bba7c1b5fb2cbbed74eff5294f05f6ff115cef0f6eb8b838ea2",
+          "model.layers.12.self_attn.k_proj.weight": "5b57e089ff35e2cc1c41977be37f8c6f07e93f37421b33edfbf580ca0a4f7b77",
+          "model.layers.17.input_layernorm.weight": "05ea3073202bc2325b2adeba304ba202fe68cdce7c258843b2fff7fbddef936a",
+          "model.layers.20.self_attn.k_proj.weight": "5f99376fed21d0f3ee78a2eadb5414e4797a6f395334fc8ba3efc4c8381937fe",
+          "model.layers.25.input_layernorm.weight": "4d2e4d82e64b55c2fa7a8f0c8cb293c241021357e38a60627bce525202bb3d78",
+          "model.layers.29.self_attn.k_proj.weight": "99fdddba833bfc8d6cf50defbb105064de366e0c233d94191346a9b05e9c5607",
+          "model.layers.33.input_layernorm.weight": "bd3246050411c9415c837c8be7122656d84789ade9e9b373a9b813a202c3f2dc",
+          "model.layers.5.self_attn.k_proj.weight": "a887f43d60a8b03b481b88fba5ff351f0b1b446328d6bf8cbb69d48b6bd32230"
+        },
+        "output_contents": {
+          "model.embed_tokens.weight": "0c9177667c75d314ddb19cb2c41a7d9fa5f16d9fd40c89a14534667cc3e1353e",
+          "model.layers.0.input_layernorm.weight": "1bab079c2d41556ccdf31abc62dabdf4cb3b63ba43fb6b07257c4729d43ec468",
+          "model.layers.12.self_attn.k_proj.weight": "e1f0d2e83a2092eca86def940d9499d7d516e1fce9cff0b86b3e6243288d3874",
+          "model.layers.17.input_layernorm.weight": "d1355af0702b3e0cd8a5f903de3a29bda967ea9a1843e5007822d43e04e9e173",
+          "model.layers.20.self_attn.k_proj.weight": "39077bc0ca98675863396321ccd92e1d78ba0c85ce23681529e775a4fea9a579",
+          "model.layers.25.input_layernorm.weight": "a49480e7f6df404687c12869983b92c5f9a79d08dffb434c1c11d38ccc4dcf99",
+          "model.layers.29.self_attn.k_proj.weight": "f663f62d317ac23dab88213d2678d64dce1d65ada22ff4a42f2991d6f5df07d7",
+          "model.layers.33.input_layernorm.weight": "a2e448279d661d19d57818b37c45c39a1d1fcb10da79a818a6f0ddda475f29d9",
+          "model.layers.5.self_attn.k_proj.weight": "8c97efd0ec5f47046c93c31b6a5ad6d5a9ffe6276147f145c52ccdbe4f69efcf"
+        },
+        "peak_rss_kib": 1564492,
+        "per_tensor": null,
+        "per_tensor_write": {
+          "mean_us": 112935.44444444444,
+          "p50_us": 10580.0,
+          "p95_us": 962848.0,
+          "p99_us": 962848.0,
+          "samples": 9
+        },
+        "phase": "write",
+        "phases": null,
+        "physical_bytes_written": 415894726,
+        "physical_bytes_written_source": "Store::backend_stats().bytes_written (probe, LOCK, FORMAT, superblock, commits, manifests, chunk/frame blobs, index segments)",
+        "pipeline": null,
+        "planner": {
+          "encoded_zstd19": 0,
+          "exhaustive_fallback_tensors": 0,
+          "mode": "two-stage",
+          "mode9_gate_fail": 4,
+          "mode9_gate_pass": 4,
+          "mode9_gate_unresolved": 1,
+          "note": "the trace is per tensor in `per_tensor[].plan.planner`; a skipped candidate carries the bound that made the skip safe",
+          "prediction_violation_tensors": 0,
+          "skipped_zstd19": 9,
+          "skipped_zstd3": 4,
+          "tensors_with_trace": 9
+        },
+        "prepare_ms": 1016.380234,
+        "prepare_phases": {},
+        "protocol": null,
+        "protocol_ms": 0.0,
+        "publication_ledger": {
+          "accounted_blob_and_control_bytes": 415874013,
+          "backend_bytes_written": 415894726,
+          "backend_writes": 32,
+          "categories": {
+            "commit_records": {
+              "bytes": 8672,
+              "count": 3
+            },
+            "index_segments": {
+              "bytes": 4563,
+              "count": 3
+            },
+            "manifest_blobs": {
+              "bytes": 415860778,
+              "count": 18
+            },
+            "object_blobs": {
+              "bytes": 0,
+              "count": 0
+            },
+            "superblock": {
+              "count": 3
+            }
+          },
+          "duplicate_blobs": 0,
+          "fsyncs": {
+            "dir": 29,
+            "file": 29,
+            "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+            "total": 58
+          },
+          "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+          "pack": null,
+          "unaccounted_bytes": 20713
+        },
+        "representations": {
+          "float-tensor": 5,
+          "zstd": 4
+        },
+        "schema": "weft.augmentation.phase.v1",
+        "source_read_ms": 145.67386599999998,
+        "storage": {
+          "footprint_source": "recursive file walk of the store directory (du source)",
+          "physical_footprint_bytes": 415882220,
+          "physical_footprint_objects": 27
+        },
+        "store_head": "8e42bd5bbfc3ed3692239f53c6e880869a32b057dfb9af1817e80769d8a060ee",
+        "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+        "subset_tensor_count": 9,
+        "tensor_count": 9,
+        "wall_ms": 1370.19861,
+        "write_ms": 1170.9323800000002
+      }
+    },
+    "N": {
+      "all_restores_exact": true,
+      "crash": null,
+      "least_contended_rep": 3,
+      "representative_rep": 4,
+      "reps": 7,
+      "restore": {
+        "backend": "local",
+        "cold": {
+          "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+          "bytes_read": 626544527,
+          "cpu_user_sys_ms": 300.0,
+          "mismatches": 0,
+          "peak_rss_kib": 610996,
+          "per_tensor": {
+            "mean_us": 64402.666666666664,
+            "p50_us": 1026.0,
+            "p95_us": 570243.0,
+            "p99_us": 570243.0,
+            "samples": 9
+          },
+          "requests": 12,
+          "restored_bytes": 626540544,
+          "wall_ms": 580.394592
+        },
+        "config": "N",
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "open_ms": 0.0,
+        "phase": "restore",
+        "protocol": {
+          "context_key_set_verified": true,
+          "manifest_verified": true,
+          "metadata_reads": 3,
+          "provenance_verified": true
+        },
+        "protocol_ms": 0.0,
+        "read_ms": 580.394592,
+        "schema": "weft.augmentation.phase.v1",
+        "tensor_count": 9,
+        "warm": {
+          "basis": "warm (same process, OS page cache warm)",
+          "bytes_read": 626544527,
+          "cpu_user_sys_ms": 290.0,
+          "mismatches": 0,
+          "peak_rss_kib": 612016,
+          "per_tensor": {
+            "mean_us": 32033.777777777777,
+            "p50_us": 459.0,
+            "p95_us": 286402.0,
+            "p99_us": 286402.0,
+            "samples": 9
+          },
+          "requests": 12,
+          "restored_bytes": 626540544,
+          "wall_ms": 289.00183400000003
+        }
+      },
+      "samples": [
+        {
+          "crash": null,
+          "rep": 1,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 610992,
+              "per_tensor": {
+                "mean_us": 55092.22222222222,
+                "p50_us": 1016.0,
+                "p95_us": 491241.0,
+                "p99_us": 491241.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 496.466679
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 496.466679,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612052,
+              "per_tensor": {
+                "mean_us": 32338.0,
+                "p50_us": 463.0,
+                "p95_us": 289122.0,
+                "p99_us": 289122.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 293.291174
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 6197.7116829999995,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612856,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 145.744166,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 489.769991,
+            "write_ms": 318.093843
+          }
+        },
+        {
+          "crash": null,
+          "rep": 2,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611608,
+              "per_tensor": {
+                "mean_us": 57050.0,
+                "p50_us": 1006.0,
+                "p95_us": 508939.0,
+                "p99_us": 508939.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 514.1841000000001
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 514.1841000000001,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612628,
+              "per_tensor": {
+                "mean_us": 31848.444444444445,
+                "p50_us": 458.0,
+                "p95_us": 284756.0,
+                "p99_us": 284756.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 287.263002
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 240.0,
+            "fixture_verify_ms": 6211.803792,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613328,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 145.05060400000002,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 1157.026615,
+            "write_ms": 983.3820649999998
+          }
+        },
+        {
+          "crash": null,
+          "rep": 3,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611060,
+              "per_tensor": {
+                "mean_us": 54924.88888888889,
+                "p50_us": 1015.0,
+                "p95_us": 489779.0,
+                "p99_us": 489779.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 495.277823
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 495.277823,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612052,
+              "per_tensor": {
+                "mean_us": 32024.777777777777,
+                "p50_us": 460.0,
+                "p95_us": 286329.0,
+                "p99_us": 286329.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 288.90456
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 6203.873125,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613012,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 146.78567199999998,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 484.000137,
+            "write_ms": 308.91275100000007
+          }
+        },
+        {
+          "crash": null,
+          "rep": 4,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 610996,
+              "per_tensor": {
+                "mean_us": 64402.666666666664,
+                "p50_us": 1026.0,
+                "p95_us": 570243.0,
+                "p99_us": 570243.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 580.394592
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 580.394592,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612016,
+              "per_tensor": {
+                "mean_us": 32033.777777777777,
+                "p50_us": 459.0,
+                "p95_us": 286402.0,
+                "p99_us": 286402.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 289.00183400000003
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 240.0,
+            "fixture_verify_ms": 6214.152546,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612992,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 159.58693300000002,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 5359.041879,
+            "write_ms": 5027.291831999999
+          }
+        },
+        {
+          "crash": null,
+          "rep": 5,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611428,
+              "per_tensor": {
+                "mean_us": 67869.66666666667,
+                "p50_us": 1033.0,
+                "p95_us": 604546.0,
+                "p99_us": 604546.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 611.600408
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 611.600408,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612448,
+              "per_tensor": {
+                "mean_us": 32392.0,
+                "p50_us": 460.0,
+                "p95_us": 289601.0,
+                "p99_us": 289601.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 292.211828
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 7780.322415,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612720,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 174.56259600000004,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 7450.487176,
+            "write_ms": 7123.862643
+          }
+        },
+        {
+          "crash": null,
+          "rep": 6,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 300.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611132,
+              "per_tensor": {
+                "mean_us": 67735.33333333333,
+                "p50_us": 1040.0,
+                "p95_us": 599791.0,
+                "p99_us": 599791.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 610.599324
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 610.599324,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 612148,
+              "per_tensor": {
+                "mean_us": 32127.0,
+                "p50_us": 465.0,
+                "p95_us": 287219.0,
+                "p99_us": 287219.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 289.87774
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 8013.769509999999,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 613416,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 163.46437200000005,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 7545.125641,
+            "write_ms": 7201.470242
+          }
+        },
+        {
+          "crash": null,
+          "rep": 7,
+          "restore": {
+            "backend": "local",
+            "cold": {
+              "basis": "cold (fresh process; local files fadvise(DONTNEED) before read)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 610988,
+              "per_tensor": {
+                "mean_us": 62089.444444444445,
+                "p50_us": 1032.0,
+                "p95_us": 553301.0,
+                "p99_us": 553301.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 559.576436
+            },
+            "config": "N",
+            "exactness": {
+              "expected_logical_bytes": 626540544,
+              "match": true,
+              "mismatches": 0,
+              "restored_logical_bytes": 626540544,
+              "tensors_verified": 9
+            },
+            "logical_bytes": 626540544,
+            "open_ms": 0.0,
+            "phase": "restore",
+            "protocol": {
+              "context_key_set_verified": true,
+              "manifest_verified": true,
+              "metadata_reads": 3,
+              "provenance_verified": true
+            },
+            "protocol_ms": 0.0,
+            "read_ms": 559.576436,
+            "schema": "weft.augmentation.phase.v1",
+            "tensor_count": 9,
+            "warm": {
+              "basis": "warm (same process, OS page cache warm)",
+              "bytes_read": 626544527,
+              "cpu_user_sys_ms": 290.0,
+              "mismatches": 0,
+              "peak_rss_kib": 611912,
+              "per_tensor": {
+                "mean_us": 32630.0,
+                "p50_us": 459.0,
+                "p95_us": 291696.0,
+                "p99_us": 291696.0,
+                "samples": 9
+              },
+              "requests": 12,
+              "restored_bytes": 626540544,
+              "wall_ms": 294.337921
+            }
+          },
+          "write": {
+            "backend": "local",
+            "config": "N",
+            "cpu_user_sys_ms": 260.0,
+            "fixture_verify_ms": 9533.611278,
+            "footprint_source": "recursive file walk (du source)",
+            "logical_bytes": 626540544,
+            "metadata_bytes_written": 3983,
+            "metadata_objects": 3,
+            "native_bytes_written": 626544527,
+            "native_sync_calls": 10,
+            "native_writes": 9,
+            "peak_rss_kib": 612308,
+            "phase": "write",
+            "physical_bytes_written": 626544527,
+            "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+            "physical_footprint_bytes": 626544527,
+            "schema": "weft.augmentation.phase.v1",
+            "source_read_ms": 361.300555,
+            "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+            "subset_tensor_count": 9,
+            "tensor_count": 9,
+            "wall_ms": 7558.682857,
+            "write_ms": 7048.525056
+          }
+        }
+      ],
+      "stats": {
+        "cold_physical_bytes_read": {
+          "max": 626544527.0,
+          "median": 626544527.0,
+          "min": 626544527.0,
+          "p50": 626544527.0,
+          "p95": 626544527.0,
+          "samples": [
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0
+          ]
+        },
+        "cold_read_requests": {
+          "max": 12.0,
+          "median": 12.0,
+          "min": 12.0,
+          "p50": 12.0,
+          "p95": 12.0,
+          "samples": [
+            12.0,
+            12.0,
+            12.0,
+            12.0,
+            12.0,
+            12.0,
+            12.0
+          ]
+        },
+        "cold_restore_cpu_ms": {
+          "max": 300.0,
+          "median": 290.0,
+          "min": 290.0,
+          "p50": 290.0,
+          "p95": 300.0,
+          "samples": [
+            290.0,
+            300.0,
+            290.0,
+            300.0,
+            290.0,
+            300.0,
+            290.0
+          ]
+        },
+        "cold_restore_peak_rss_kib": {
+          "max": 611608.0,
+          "median": 611060.0,
+          "min": 610988.0,
+          "p50": 611060.0,
+          "p95": 611608.0,
+          "samples": [
+            610992.0,
+            611608.0,
+            611060.0,
+            610996.0,
+            611428.0,
+            611132.0,
+            610988.0
+          ]
+        },
+        "cold_restore_wall_ms": {
+          "max": 611.600408,
+          "median": 559.576436,
+          "min": 495.277823,
+          "p50": 559.576436,
+          "p95": 611.600408,
+          "samples": [
+            496.466679,
+            514.1841000000001,
+            495.277823,
+            580.394592,
+            611.600408,
+            610.599324,
+            559.576436
+          ]
+        },
+        "physical_bytes_written": {
+          "max": 626544527.0,
+          "median": 626544527.0,
+          "min": 626544527.0,
+          "p50": 626544527.0,
+          "p95": 626544527.0,
+          "samples": [
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0
+          ]
+        },
+        "physical_footprint_bytes": {
+          "max": 626544527.0,
+          "median": 626544527.0,
+          "min": 626544527.0,
+          "p50": 626544527.0,
+          "p95": 626544527.0,
+          "samples": [
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0,
+            626544527.0
+          ]
+        },
+        "reps": 7,
+        "write_cpu_ms": {
+          "max": 260.0,
+          "median": 260.0,
+          "min": 240.0,
+          "p50": 260.0,
+          "p95": 260.0,
+          "samples": [
+            260.0,
+            240.0,
+            260.0,
+            240.0,
+            260.0,
+            260.0,
+            260.0
+          ]
+        },
+        "write_peak_rss_kib": {
+          "max": 613416.0,
+          "median": 612992.0,
+          "min": 612308.0,
+          "p50": 612992.0,
+          "p95": 613416.0,
+          "samples": [
+            612856.0,
+            613328.0,
+            613012.0,
+            612992.0,
+            612720.0,
+            613416.0,
+            612308.0
+          ]
+        },
+        "write_requests": {
+          "max": 12.0,
+          "median": 12.0,
+          "min": 12.0,
+          "p50": 12.0,
+          "p95": 12.0,
+          "samples": [
+            12.0,
+            12.0,
+            12.0,
+            12.0,
+            12.0,
+            12.0,
+            12.0
+          ]
+        },
+        "write_wall_ms": {
+          "max": 7558.682857,
+          "median": 5359.041879,
+          "min": 484.000137,
+          "p50": 5359.041879,
+          "p95": 7558.682857,
+          "samples": [
+            489.769991,
+            1157.026615,
+            484.000137,
+            5359.041879,
+            7450.487176,
+            7545.125641,
+            7558.682857
+          ]
+        }
+      },
+      "strategies_stable_across_reps": true,
+      "summary": {
+        "chosen_representations": null,
+        "cold_physical_bytes_read": 626544527,
+        "cold_read_requests": 12,
+        "cold_restore_wall_ms": 580.394592,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 1079507894.518769,
+        "physical_bytes_written": 626544527,
+        "physical_footprint_bytes": 626544527,
+        "physical_restore_bytes_per_s": 1079514757.0913272,
+        "protocol": {
+          "context_key_set_verified": true,
+          "manifest_verified": true,
+          "metadata_reads": 3,
+          "provenance_verified": true
+        },
+        "read_amplification": 1.0000063571304971,
+        "restore_cpu_ms": 300.0,
+        "restore_peak_rss_kib": 610996,
+        "restore_per_tensor": {
+          "mean_us": 64402.666666666664,
+          "p50_us": 1026.0,
+          "p95_us": 570243.0,
+          "p99_us": 570243.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 626544527,
+        "warm_restore_wall_ms": 289.00183400000003,
+        "write_amplification": 1.0000063571304971,
+        "write_cpu_ms": 240.0,
+        "write_peak_rss_kib": 612992,
+        "write_requests": 12,
+        "write_wall_ms": 5359.041879
+      },
+      "summary_least_contended": {
+        "chosen_representations": null,
+        "cold_physical_bytes_read": 626544527,
+        "cold_read_requests": 12,
+        "cold_restore_wall_ms": 495.277823,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 1265028464.640138,
+        "physical_bytes_written": 626544527,
+        "physical_footprint_bytes": 626544527,
+        "physical_restore_bytes_per_s": 1265036506.5911703,
+        "protocol": {
+          "context_key_set_verified": true,
+          "manifest_verified": true,
+          "metadata_reads": 3,
+          "provenance_verified": true
+        },
+        "read_amplification": 1.0000063571304971,
+        "restore_cpu_ms": 290.0,
+        "restore_peak_rss_kib": 611060,
+        "restore_per_tensor": {
+          "mean_us": 54924.88888888889,
+          "p50_us": 1015.0,
+          "p95_us": 489779.0,
+          "p99_us": 489779.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 626544527,
+        "warm_restore_wall_ms": 288.90456,
+        "write_amplification": 1.0000063571304971,
+        "write_cpu_ms": 260.0,
+        "write_peak_rss_kib": 613012,
+        "write_requests": 12,
+        "write_wall_ms": 484.000137
+      },
+      "write": {
+        "backend": "local",
+        "config": "N",
+        "cpu_user_sys_ms": 240.0,
+        "fixture_verify_ms": 6214.152546,
+        "footprint_source": "recursive file walk (du source)",
+        "logical_bytes": 626540544,
+        "metadata_bytes_written": 3983,
+        "metadata_objects": 3,
+        "native_bytes_written": 626544527,
+        "native_sync_calls": 10,
+        "native_writes": 9,
+        "peak_rss_kib": 612992,
+        "phase": "write",
+        "physical_bytes_written": 626544527,
+        "physical_bytes_written_source": "harness-counted file bytes (local) or PUT body bytes (S3), plus metadata objects for N",
+        "physical_footprint_bytes": 626544527,
+        "schema": "weft.augmentation.phase.v1",
+        "source_read_ms": 159.58693300000002,
+        "subset_selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+        "subset_tensor_count": 9,
+        "tensor_count": 9,
+        "wall_ms": 5359.041879,
+        "write_ms": 5027.291831999999
+      }
+    }
+  },
+  "contract": "bench/CONTRACTS-augmentation.md",
+  "deltas_vs_A": {
+    "C": {
+      "augmentation_overhead_pct": 268.24738234040893,
+      "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
+      "latency_reduction_pct": -330.3102556456461,
+      "logical_throughput_improvement_pct": -76.76095359383011,
+      "physical_throughput_improvement_pct": -84.57368265247574,
+      "storage_reduction_pct": 33.62245684135646
+    },
+    "N": {
+      "augmentation_overhead_pct": 518.283295204085,
+      "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
+      "latency_reduction_pct": -15.234944351198594,
+      "logical_throughput_improvement_pct": -13.220767742784206,
+      "physical_throughput_improvement_pct": -13.220216075880305,
+      "storage_reduction_pct": -0.0006357130497208494
+    }
+  },
+  "deltas_vs_A_least_contended": {
+    "C": {
+      "augmentation_overhead_pct": 276.462617910512,
+      "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
+      "latency_reduction_pct": -291.8789561194867,
+      "logical_throughput_improvement_pct": -74.48191630644507,
+      "physical_throughput_improvement_pct": -83.06083432696491,
+      "storage_reduction_pct": 33.62245684135646
+    },
+    "N": {
+      "augmentation_overhead_pct": 6.539047052780718,
+      "formula_note": "positive reduction/improvement = X better; positive overhead = X costs more end-to-end than A",
+      "latency_reduction_pct": 8.795842520274084,
+      "logical_throughput_improvement_pct": 9.644124526044045,
+      "physical_throughput_improvement_pct": 9.64482154805191,
+      "storage_reduction_pct": -0.0006357130497208494
+    }
+  },
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "mode9_encode_threads": 4,
+    "nproc": "2048",
+    "pids": "1024",
+    "revisions": {
+      "WeftCodec": "58db5aa440847d67182f6c46e503a1232d277183",
+      "WeftCodec-Go": "9812d158bf41be85f73ca667f9e2439661d7db2e",
+      "WeftFS": "cfd60e223faed65578f74e36f8053143d39fa108",
+      "WeftFS-Go": "1fa3d32fc473acad811bfdae32fdc0f60ce4f78a"
+    },
+    "s3_server": {
+      "binary_sha256": null,
+      "container_image": null,
+      "label": null,
+      "release": null
+    },
+    "uname": "Linux 7.3.3-1-cachyos x86_64"
+  },
+  "formulas": {
+    "augmentation_overhead_pct": "100*((X.write_wall_ms + X.cold_restore_wall_ms) - (A.write_wall_ms + A.cold_restore_wall_ms))/(A.write_wall_ms + A.cold_restore_wall_ms)",
+    "latency_reduction_pct": "100*(A.cold_restore_wall_ms - X.cold_restore_wall_ms)/A.cold_restore_wall_ms",
+    "storage_reduction_pct": "100*(A.physical_footprint_bytes - X.physical_footprint_bytes)/A.physical_footprint_bytes",
+    "throughput_improvement_pct": "100*(X.logical_restore_bytes_per_s - A.logical_restore_bytes_per_s)/A.logical_restore_bytes_per_s; physical-byte throughput is reported separately",
+    "write_multiplier": "X.write_wall_ms / A.write_wall_ms"
+  },
+  "generated_utc": "20261113T003607Z",
+  "least_contended": {
+    "A": {
+      "rep": 1,
+      "summary": {
+        "chosen_representations": null,
+        "cold_physical_bytes_read": 626540544,
+        "cold_read_requests": 9,
+        "cold_restore_wall_ms": 543.043033,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 1153758553.0537503,
+        "physical_bytes_written": 626540544,
+        "physical_footprint_bytes": 626540544,
+        "physical_restore_bytes_per_s": 1153758553.0537503,
+        "protocol": null,
+        "read_amplification": 1.0,
+        "restore_cpu_ms": 300.0,
+        "restore_peak_rss_kib": 611328,
+        "restore_per_tensor": {
+          "mean_us": 60255.333333333336,
+          "p50_us": 1022.0,
+          "p95_us": 537682.0,
+          "p99_us": 537682.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 626540544,
+        "warm_restore_wall_ms": 291.758936,
+        "write_amplification": 1.0,
+        "write_cpu_ms": 200.0,
+        "write_peak_rss_kib": 613548,
+        "write_requests": 9,
+        "write_wall_ms": 376.129784
+      },
+      "write_wall_ms": 376.129784
+    },
+    "C": {
+      "rep": 4,
+      "summary": {
+        "chosen_representations": {
+          "float-tensor": 5,
+          "zstd": 4
+        },
+        "cold_physical_bytes_read": 415904039,
+        "cold_read_requests": 61,
+        "cold_restore_wall_ms": 2128.071369,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 294417073.1898043,
+        "physical_bytes_written": 415894726,
+        "physical_footprint_bytes": 415882220,
+        "physical_restore_bytes_per_s": 195437072.76858723,
+        "protocol": null,
+        "read_amplification": 0.6638102561484034,
+        "restore_cpu_ms": 1990.0,
+        "restore_peak_rss_kib": 1625540,
+        "restore_per_tensor": {
+          "mean_us": 234974.0,
+          "p50_us": 3685.0,
+          "p95_us": 2098685.0,
+          "p99_us": 2098685.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 415866866,
+        "warm_restore_wall_ms": 2118.2310580000003,
+        "write_amplification": 0.6637953919866357,
+        "write_cpu_ms": 1940.0,
+        "write_peak_rss_kib": 1564560,
+        "write_requests": 32,
+        "write_wall_ms": 1332.270681
+      },
+      "write_wall_ms": 1332.270681
+    },
+    "N": {
+      "rep": 3,
+      "summary": {
+        "chosen_representations": null,
+        "cold_physical_bytes_read": 626544527,
+        "cold_read_requests": 12,
+        "cold_restore_wall_ms": 495.277823,
+        "exactness": {
+          "expected_logical_bytes": 626540544,
+          "match": true,
+          "mismatches": 0,
+          "restored_logical_bytes": 626540544,
+          "tensors_verified": 9
+        },
+        "logical_bytes": 626540544,
+        "logical_restore_bytes_per_s": 1265028464.640138,
+        "physical_bytes_written": 626544527,
+        "physical_footprint_bytes": 626544527,
+        "physical_restore_bytes_per_s": 1265036506.5911703,
+        "protocol": {
+          "context_key_set_verified": true,
+          "manifest_verified": true,
+          "metadata_reads": 3,
+          "provenance_verified": true
+        },
+        "read_amplification": 1.0000063571304971,
+        "restore_cpu_ms": 290.0,
+        "restore_peak_rss_kib": 611060,
+        "restore_per_tensor": {
+          "mean_us": 54924.88888888889,
+          "p50_us": 1015.0,
+          "p95_us": 489779.0,
+          "p99_us": 489779.0,
+          "samples": 9
+        },
+        "warm_physical_bytes_read": 626544527,
+        "warm_restore_wall_ms": 288.90456,
+        "write_amplification": 1.0000063571304971,
+        "write_cpu_ms": 260.0,
+        "write_peak_rss_kib": 613012,
+        "write_requests": 12,
+        "write_wall_ms": 484.000137
+      },
+      "write_wall_ms": 484.000137
+    }
+  },
+  "mandatory_metrics": [
+    "durable_write_wall_ms",
+    "logical_bytes",
+    "physical_bytes_written",
+    "physical_bytes_written_source",
+    "physical_footprint_bytes",
+    "footprint_source",
+    "cold_restore_wall_ms",
+    "cold_physical_bytes_read",
+    "cold_read_requests",
+    "warm_restore_wall_ms",
+    "warm_physical_bytes_read",
+    "p50_us",
+    "p95_us",
+    "p99_us",
+    "peak_rss_kib",
+    "cpu_user_sys_ms",
+    "write_requests",
+    "write_amplification",
+    "read_amplification",
+    "logical_restore_bytes_per_s",
+    "physical_restore_bytes_per_s",
+    "exactness"
+  ],
+  "methodology": {
+    "cold_restore": "fresh process; local store files fadvise(DONTNEED) before open; includes open, protocol verification, every tensor read and SHA-256 check",
+    "default_note": "A/B/C/D/E/N in this receipt are the shipped defaults of their rows unless the key carries a `-suffix`; no row here requires a non-default flag to reproduce",
+    "logical_bytes": "exact source tensor payload bytes in the subset",
+    "physical_bytes_written": "backend counters for WeftFS (probe, LOCK, FORMAT, superblock, commits, manifests, chunks/frames, index segments) or harness PUT/file counters for A/N",
+    "physical_footprint": "recursive file walk for local, object listing for S3",
+    "representative_rep": "`configurations.X.write`/`.restore`/`.summary` are the median-wall repetition; `summary_least_contended` and `deltas_vs_A_least_contended` use the minimum-wall repetition",
+    "reps": "every arm runs once per repetition and the arms are interleaved with a one-position rotation; the receipt publishes every repetition's raw phase JSON and the min/p50/p95/max of every mandatory metric",
+    "warm_restore": "second pass in the same process; OS/backend cache warm; no store cache is enabled",
+    "write_wall": "source read + store init + encode + index build + every commit + protocol + final durability barrier"
+  },
+  "not_measured": [
+    {
+      "backend": "3FS",
+      "reason": "No deployed 3FS cluster. The only executed 3FS evidence is an ABI-compatible dlopen shim (docs/THREEFS.md); no cluster, client, or RDMA transport was available in this court."
+    },
+    {
+      "backend": "CephFS",
+      "reason": "No CephFS mount or MDS was available. The Ceph evidence in this repository is Ceph RGW, an object-store S3 server, not a POSIX filesystem."
+    },
+    {
+      "backend": "Lustre",
+      "reason": "No Lustre server, client, or mount exists in the court."
+    },
+    {
+      "backend": "BeeGFS",
+      "reason": "No BeeGFS server, client, or mount exists in the court."
+    },
+    {
+      "backend": "DAOS",
+      "reason": "No DAOS server, client library, or pool exists in the court."
+    },
+    {
+      "backend": "JuiceFS",
+      "reason": "No JuiceFS binary, metadata engine, or object store was configured."
+    },
+    {
+      "backend": "IBM Storage Scale",
+      "reason": "Not installed and no licensed client or cluster is available."
+    },
+    {
+      "backend": "WEKA",
+      "reason": "Not installed and no licensed client or cluster is available."
+    },
+    {
+      "backend": "VAST",
+      "reason": "Not installed and no appliance or client is available."
+    },
+    {
+      "backend": "AIStore",
+      "reason": "Not installed and no cluster is available."
+    },
+    {
+      "backend": "live AWS S3",
+      "reason": "No credentials or bucket. This receipt is MinIO on loopback, not AWS."
+    },
+    {
+      "backend": "live Google Cloud Storage",
+      "reason": "No credentials or bucket. The GCS evidence in this repository is fake-gcs-server and a service-account unit court."
+    },
+    {
+      "backend": "live Azure Blob",
+      "reason": "No credentials or account. The Azure evidence in this repository is Azurite."
+    },
+    {
+      "backend": "physical power loss / host cache loss",
+      "reason": "The court is a process-level measurement; crash and power-loss courts are separate and no media claim is made here."
+    },
+    {
+      "backend": "multi-node / fleet",
+      "reason": "One host, one server process, one writer. No distributed publication claim."
+    }
+  ],
+  "orders": [
+    {
+      "order": [
+        "A",
+        "C",
+        "N"
+      ],
+      "rep": 1
+    },
+    {
+      "order": [
+        "C",
+        "N",
+        "A"
+      ],
+      "rep": 2
+    },
+    {
+      "order": [
+        "N",
+        "A",
+        "C"
+      ],
+      "rep": 3
+    },
+    {
+      "order": [
+        "A",
+        "C",
+        "N"
+      ],
+      "rep": 4
+    },
+    {
+      "order": [
+        "C",
+        "N",
+        "A"
+      ],
+      "rep": 5
+    },
+    {
+      "order": [
+        "N",
+        "A",
+        "C"
+      ],
+      "rep": 6
+    },
+    {
+      "order": [
+        "A",
+        "C",
+        "N"
+      ],
+      "rep": 7
+    }
+  ],
+  "raw_log": "bench/receipts/augmentation-local-20261113T104000Z.log",
+  "result": "pass",
+  "schema": "weft.augmentation.v1",
+  "scope": "single host, one backend, OOM-protected Docker court. Not a cloud, fleet, media, or power-loss claim.",
+  "subset": {
+    "include_embedding": true,
+    "logical_bytes": 626540544,
+    "other_tensors": 8,
+    "schema": "weft.augmentation.subset.v1",
+    "selection": "embedding + evenly spaced 8 of 433 name-sorted non-embedding tensors",
+    "source": "/work/.docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors",
+    "source_bytes": 6171927112,
+    "source_sha256": "54917aba5570e50db3f135b6e268a2b67bf951d06610713e5b6e69b8b20d91d2",
+    "subset_digest": "6607f7786d3df0555aed17804d5482ae98e01c5f2a271c6bcfce1df5bf439f4e",
+    "tensor_count": 9,
+    "tensors": [
+      {
+        "bytes": 622329856,
+        "dtype": "bf16",
+        "file": "0000-model.embed_tokens.weight.bin",
+        "key": "30c994ae4c61fcf35a8a60fb772fd8f2270a0676c8fb923bb4f95cb6dd702338",
+        "name": "model.embed_tokens.weight",
+        "sha256": "03bd8df1218b5bcb8439e6a0d10d49e2cbc55e002f6552401e3e0cc71291fe87",
+        "shape": [
+          151936,
+          2048
+        ]
+      },
+      {
+        "bytes": 4096,
+        "dtype": "bf16",
+        "file": "0001-model.layers.0.input_layernorm.weight.bin",
+        "key": "e4306c121b5ccc541d9ee82923dd579e29270ec4fdb497409bcf19be9bd0e98f",
+        "name": "model.layers.0.input_layernorm.weight",
+        "sha256": "bb76647ca031467a438bc23eb4e868619ee61a4780b31644658f91db9f09bb29",
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes": 1048576,
+        "dtype": "bf16",
+        "file": "0002-model.layers.12.self_attn.k_proj.weight.bin",
+        "key": "118c79293abf7ed9915142d6b42af5bace5e535456e84392e451fc336b490c69",
+        "name": "model.layers.12.self_attn.k_proj.weight",
+        "sha256": "af0fe225efbeed6adb7c760301fd52a48b334736bd451e0986a133ab377de44d",
+        "shape": [
+          256,
+          2048
+        ]
+      },
+      {
+        "bytes": 4096,
+        "dtype": "bf16",
+        "file": "0003-model.layers.17.input_layernorm.weight.bin",
+        "key": "36c6898e19b5f0ddbe7d285d002e67074b56e5661d27b21f5eb957657e937b5d",
+        "name": "model.layers.17.input_layernorm.weight",
+        "sha256": "5ad1c0b0c1948965cfc06bcb01003a78ebd994f6936745e0013d3c76d57bcac8",
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes": 1048576,
+        "dtype": "bf16",
+        "file": "0004-model.layers.20.self_attn.k_proj.weight.bin",
+        "key": "52a5982d00f7a43516e9a68ae1deb3812dc2a927458434e07b8b3831ce676774",
+        "name": "model.layers.20.self_attn.k_proj.weight",
+        "sha256": "ffa9a5a91bd6ba30dc60b24e176407f93770c506c16697f4daa7bd4123f72731",
+        "shape": [
+          256,
+          2048
+        ]
+      },
+      {
+        "bytes": 4096,
+        "dtype": "bf16",
+        "file": "0005-model.layers.25.input_layernorm.weight.bin",
+        "key": "60bbf45dafe063a4501a77805ce66b412660ac5b0398ceadc8e94f09f6cb4caa",
+        "name": "model.layers.25.input_layernorm.weight",
+        "sha256": "c998165fe9d46da3aaaf9490c6be5ed7b2a999cf14c4624ee3349f94298bd31b",
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes": 1048576,
+        "dtype": "bf16",
+        "file": "0006-model.layers.29.self_attn.k_proj.weight.bin",
+        "key": "abed013dc03e2176ced850aad166192f4f7a02040879ef47322c5e7c66e33195",
+        "name": "model.layers.29.self_attn.k_proj.weight",
+        "sha256": "0a7c2943f7097dbf0b55ccbf079a43f9b8ee8f393574f01189866d34f96c3194",
+        "shape": [
+          256,
+          2048
+        ]
+      },
+      {
+        "bytes": 4096,
+        "dtype": "bf16",
+        "file": "0007-model.layers.33.input_layernorm.weight.bin",
+        "key": "69428217886638db1a1cc1952c78da68d39cdfe13e5aa79684739b93aa0dc01a",
+        "name": "model.layers.33.input_layernorm.weight",
+        "sha256": "c572d72794c42d4ade07959f02eac61d2c0894b84b78f21b0cbfea52d7e63932",
+        "shape": [
+          2048
+        ]
+      },
+      {
+        "bytes": 1048576,
+        "dtype": "bf16",
+        "file": "0008-model.layers.5.self_attn.k_proj.weight.bin",
+        "key": "f9f70eabb937cb946f471116267c7d63854a8589fa84a4075f84f85a8d3da5aa",
+        "name": "model.layers.5.self_attn.k_proj.weight",
+        "sha256": "4b824eee9da82bdb4cf5fa4608c8b2cf7165edcaeae494d10ad662a50c5ce2c5",
+        "shape": [
+          256,
+          2048
+        ]
+      }
+    ],
+    "total_source_tensors": 434
+  }
+}

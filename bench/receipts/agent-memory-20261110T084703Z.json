@@ -1,0 +1,632 @@
+{
+  "schema": "weftfs.agent-memory.receipt/1",
+  "generated_at": "2026-11-10T08:47:03Z",
+  "run": {
+    "started_at": "2026-11-10T08:47:03Z",
+    "finished_at": "2026-11-10T08:47:15Z",
+    "duration_ms": 12000
+  },
+  "environment": {
+    "arch": "x86_64",
+    "cap_add": "SYS_ADMIN",
+    "cap_drop": "ALL",
+    "court": "fuse",
+    "device": "/dev/fuse",
+    "fixed_timestamps": "1767225600000000000,1767225660000000000,1767225720000000000",
+    "fusermount3": "fusermount3 version: 3.14.0",
+    "go": "go version go1.23.12 linux/amd64",
+    "host_nproc": "16",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "Linux 7.3.3-1-cachyos x86_64",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_memory_swap": "3g",
+    "limit_nproc": "2048",
+    "limit_pids": "1024",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "scratch": ".docker-cache/f3-demos",
+    "skip_build": "0",
+    "tar": "tar (GNU tar) 1.34",
+    "tmpfs_fuse": "512m",
+    "tmpfs_tmp": "1g",
+    "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "1d27ccb28e2d3117511ddee3eb0efe38fa11dff7"
+    },
+    {
+      "name": "WeftFS-Go",
+      "revision": "ad90835857e95479ac1305fcc16f90ac891a45ca"
+    },
+    {
+      "name": "WeftCodec",
+      "revision": "4cd729f55b65a80370946499feaff70a5277ef04"
+    },
+    {
+      "name": "WeftCodec-Go",
+      "revision": "d989c038b995d468c641989589f9d5756939585b"
+    }
+  ],
+  "fixtures": null,
+  "steps": [
+    {
+      "id": "january-store",
+      "title": "Create prompt/model/tool/dataset/output and typed lineage edges",
+      "status": "pass",
+      "notes": "output=f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 model=71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9 prompt=5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726 tool=075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a dataset=dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 init",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 mkdir /prompts --seed dir-prompts",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 mkdir /models --seed dir-models",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 mkdir /tools --seed dir-tools",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 mkdir /datasets --seed dir-datasets",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 mkdir /outputs --seed dir-outputs",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 create /prompts/task.txt --text Summarize the retained experiment log. Task: summarize.\n --seed prompt-jan --attr task=summarize --attr model=llama-4 --attr sha256=0a42efa0daa7deb1a0ab53fdd67697ff21d88dbb88cdb4ee5e7085a5a1da03ea",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 create /models/llama-4.bin --text llama-4 ver_19 weights marker\n --seed model-jan --attr task=summarize --attr model=llama-4",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 create /tools/retriever.bin --text retriever v3 tool marker\n --seed tool-jan --attr task=summarize",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 create /datasets/eval-v1.bin --text eval-v1 dataset marker\n --seed dataset-jan --attr task=summarize",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 create /outputs/run-001.bin --text agent output run-001: exact retained bytes\n --seed output-jan --attr task=summarize --attr model=llama-4 --attr sha256=2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 stat /prompts/task.txt",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 stat /models/llama-4.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 stat /tools/retriever.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 stat /datasets/eval-v1.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 stat /outputs/run-001.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate generated_by --object 71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate prompted_by --object 5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate grounded_in --object dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate used_tool --object 075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 relation add --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0 --predicate derived_from --object 5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 relation list",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1767225600000000000 snapshot create jan-2026"
+      ],
+      "assertions": [
+        {
+          "name": "init exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-prompts exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-models exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-tools exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-datasets exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "mkdir-outputs exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-prompt exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-tool exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-dataset exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "create-output exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-prompt exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-tool exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-dataset exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-output exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-generated exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-prompted exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-grounded exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-tool exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-derived exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "rel-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "five typed lineage edges",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        },
+        {
+          "name": "snapshot-jan exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "relations-jan",
+          "content": "{\n  \"relations\": [\n    {\n      \"attrs\": {},\n      \"kind\": \"object\",\n      \"predicate\": \"grounded_in\",\n      \"provenance\": null,\n      \"relation_id\": \"0b42f259ebc2b95080bd4659cf04c7a27b5960d779cdb8f73b09833a7e19b999\",\n      \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\",\n      \"target\": {\n        \"kind\": \"object\",\n        \"object_id\": \"dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e\"\n      }\n    },\n    {\n      \"attrs\": {},\n      \"kind\": \"object\",\n      \"predicate\": \"used_tool\",\n      \"provenance\": null,\n      \"relation_id\": \"4050c19e2a1f3cb8932c821dc8a2164f6df02d0a1d7b423730972ce4ad9d2b79\",\n      \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\",\n      \"target\": {\n        \"kind\": \"object\",\n        \"object_id\": \"075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a\"\n      }\n    },\n    {\n      \"attrs\": {},\n      \"kind\": \"object\",\n      \"predicate\": \"prompted_by\",\n      \"provenance\": null,\n      \"relation_id\": \"5c71a8f4f174295520c75f429864198a495a163f01a9dfb872f7e3ea6ae68b37\",\n      \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\",\n      \"target\": {\n        \"kind\": \"object\",\n        \"object_id\": \"5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726\"\n      }\n    },\n    {\n      \"attrs\": {},\n      \"kind\": \"object\",\n      \"predicate\": \"derived_from\",\n      \"provenance\": null,\n      \"relation_id\": \"b60f83ea9c83782448a0332bb2def09ab1277d6ee060a3f3d0ce4e6e5c6ca04e\",\n      \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\",\n      \"target\": {\n        \"kind\": \"object\",\n        \"object_id\": \"5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726\"\n      }\n    },\n    {\n      \"attrs\": {},\n      \"kind\": \"object\",\n      \"predicate\": \"generated_by\",\n      \"provenance\": null,\n      \"relation_id\": \"cfd37f52b8d3f972b9b3b267a160470168d1b60e99927e9ac9e99226a0411e6c\",\n      \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\",\n      \"target\": {\n        \"kind\": \"object\",\n        \"object_id\": \"71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9\"\n      }\n    }\n  ]\n}\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "contexts",
+      "title": "Context Roots by task, model, time",
+      "status": "pass",
+      "notes": "task=153cae3a446262f5f830705ab77a0b95037d1beb03a986222de871dd3eb97c3f model=9489c647df27b92dff142ff1f11e56d4d606f97dd5ef26ec4e5db08c9374fa58 time=e78d12780073091d96f08cee62da27a98b84a454dc51cb28f5731fc40d3e8992",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 context create --name by:task=summarize --selector select attrs.task == \"summarize\" --snapshot jan-2026",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 context create --name by:model=llama-4 --selector select attrs.model == \"llama-4\" --snapshot jan-2026",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 context create --name at:2026-01 --selector select true --snapshot jan-2026",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 context list"
+      ],
+      "assertions": [
+        {
+          "name": "ctx-task exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-time exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-list exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "three Context Roots stored",
+          "expected": "3",
+          "actual": "3",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "export",
+      "title": "Export the January point-in-time replay bundle",
+      "status": "pass",
+      "notes": "bundle=96a26a293be0d84984c286b5b5a1545033091f537b3ab0085ff6c98822f3b2f3",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1767225600000000000 export-bundle --out /work/bench/bundles/agent-memory-7-20261110T084703Z.tar.zst --source-revision WeftFS=1d27ccb28e2d3117511ddee3eb0efe38fa11dff7"
+      ],
+      "assertions": [
+        {
+          "name": "export exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "bundle exists",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "bundle sha256 matches file",
+          "expected": "96a26a293be0d84984c286b5b5a1545033091f537b3ab0085ff6c98822f3b2f3",
+          "actual": "96a26a293be0d84984c286b5b5a1545033091f537b3ab0085ff6c98822f3b2f3",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": [
+        {
+          "kind": "agent-memory-bundle",
+          "path": "bench/bundles/agent-memory-7-20261110T084703Z.tar.zst",
+          "sha256": "96a26a293be0d84984c286b5b5a1545033091f537b3ab0085ff6c98822f3b2f3"
+        }
+      ]
+    },
+    {
+      "id": "september-store",
+      "title": "Write a later run; old snapshot and Context Roots stay pinned",
+      "status": "pass",
+      "notes": "sep-output=0b9645a9589b369407c76a6d34c11f10c182cd026ed26c32d15225ad4643faaf sep-context=596acd79e42bc21d96c548020ce5fcf90dea8f2edc6fb6bc963baa548cfbd3a1",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1788220800000000000 create /outputs/run-002.bin --text agent output run-002: later bytes\n --seed output-sep --attr task=summarize --attr model=llama-4 --attr sha256=55fab56a56b47b6454a8d28fa713e1b978d5374b2c6329b9fbe121df314f2e10",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1788220800000000000 stat /outputs/run-002.bin",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --fixed-timestamp-ns 1788220800000000000 snapshot create sep-2026",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1788220800000000000 context create --name by:task=summarize@sep --selector select attrs.task == \"summarize\" --snapshot sep-2026",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1788220800000000000 context show by:task=summarize",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1788220800000000000 verify --full"
+      ],
+      "assertions": [
+        {
+          "name": "create-output-2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "stat-output-2 exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "snapshot-sep exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-task-sep exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "ctx-jan-show exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "January Context Root identity did not change",
+          "expected": "153cae3a446262f5f830705ab77a0b95037d1beb03a986222de871dd3eb97c3f",
+          "actual": "153cae3a446262f5f830705ab77a0b95037d1beb03a986222de871dd3eb97c3f",
+          "pass": true
+        },
+        {
+          "name": "verify-sep exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "store verifies after the later writes",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "months-later-mounts",
+      "title": "After simulated months, old mounts and old time root are exact",
+      "status": "pass",
+      "notes": "run-001 exact in task/model/time mounts; run-002 absent from January",
+      "commands": [
+        "rust mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z -> /mnt/weft-fuse/agent-7-20261110T084703Z-task --context by:task=summarize",
+        "go mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z -> /mnt/weft-fuse/agent-7-20261110T084703Z-model --context by:model=llama-4",
+        "rust mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z -> /mnt/weft-fuse/agent-7-20261110T084703Z-time --at 1767225600000000000",
+        "go mount /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z -> /mnt/weft-fuse/agent-7-20261110T084703Z-sep --at 1788220800000000000",
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1788220800000000000 stat /outputs/run-001.bin"
+      ],
+      "assertions": [
+        {
+          "name": "stat-mount-old exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "task mount retains run-001 sha256",
+          "expected": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "actual": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "pass": true
+        },
+        {
+          "name": "model mount retains run-001 sha256",
+          "expected": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "actual": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "pass": true
+        },
+        {
+          "name": "time mount retains run-001 sha256",
+          "expected": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "actual": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "pass": true
+        },
+        {
+          "name": "January time root does not expose later run",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "task context does not expose later run",
+          "expected": "absent",
+          "actual": "absent",
+          "pass": true
+        },
+        {
+          "name": "September time root exposes later run sha256",
+          "expected": "55fab56a56b47b6454a8d28fa713e1b978d5374b2c6329b9fbe121df314f2e10",
+          "actual": "55fab56a56b47b6454a8d28fa713e1b978d5374b2c6329b9fbe121df314f2e10",
+          "pass": true
+        },
+        {
+          "name": "September time root keeps old run exact sha256",
+          "expected": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "actual": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "pass": true
+        },
+        {
+          "name": "task context lists all five retained objects",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    },
+    {
+      "id": "replay-after-months",
+      "title": "Replay the January bundle later and verify exact bytes + lineage",
+      "status": "pass",
+      "notes": "exact run-001 sha; 3 Context Roots; 5 lineage edges",
+      "commands": [
+        "bash /work/scripts/replay-bundle.sh --bundle /work/bench/bundles/agent-memory-7-20261110T084703Z.tar.zst --out /work/.docker-cache/f3-demos/agent-memory-replay-7-20261110T084703Z",
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261110T084703Z/store --json relation list --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0",
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261110T084703Z/store --json context show by:task=summarize",
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261110T084703Z/store --json context show by:model=llama-4",
+        "/work/.docker-cache/f3-demos/bin/go-weftfs --store /work/.docker-cache/f3-demos/agent-memory-replay-7-20261110T084703Z/store --json context show at:2026-01"
+      ],
+      "assertions": [
+        {
+          "name": "replay exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replay reports ok",
+          "expected": "contains <replay: ok>",
+          "actual": "<match>",
+          "pass": true
+        },
+        {
+          "name": "Go verify --full OK",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "Go manifest verification ok",
+          "expected": "true",
+          "actual": "true",
+          "pass": true
+        },
+        {
+          "name": "replay checked three contexts",
+          "expected": "3",
+          "actual": "3",
+          "pass": true
+        },
+        {
+          "name": "replayed output bytes are exact sha256",
+          "expected": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "actual": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "pass": true
+        },
+        {
+          "name": "replay-rel exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replayed store retains five lineage edges",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        },
+        {
+          "name": "replay-ctx-task exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replayed task Context Root identity is exact",
+          "expected": "153cae3a446262f5f830705ab77a0b95037d1beb03a986222de871dd3eb97c3f",
+          "actual": "153cae3a446262f5f830705ab77a0b95037d1beb03a986222de871dd3eb97c3f",
+          "pass": true
+        },
+        {
+          "name": "replay-ctx-model exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replayed model Context Root identity is exact",
+          "expected": "9489c647df27b92dff142ff1f11e56d4d606f97dd5ef26ec4e5db08c9374fa58",
+          "actual": "9489c647df27b92dff142ff1f11e56d4d606f97dd5ef26ec4e5db08c9374fa58",
+          "pass": true
+        },
+        {
+          "name": "replay-ctx-time exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "replayed time Context Root identity is exact",
+          "expected": "e78d12780073091d96f08cee62da27a98b84a454dc51cb28f5731fc40d3e8992",
+          "actual": "e78d12780073091d96f08cee62da27a98b84a454dc51cb28f5731fc40d3e8992",
+          "pass": true
+        }
+      ],
+      "outputs": [
+        {
+          "label": "relations-replay",
+          "content": "[\n  {\n    \"id\": \"0b42f259ebc2b95080bd4659cf04c7a27b5960d779cdb8f73b09833a7e19b999\",\n    \"kind\": \"object\",\n    \"object\": \"dde215f83faa0a6c0473264f72ed5e365e83ad940539ec4c1b5403b6b7ce6f0e\",\n    \"predicate\": \"grounded_in\",\n    \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\"\n  },\n  {\n    \"id\": \"4050c19e2a1f3cb8932c821dc8a2164f6df02d0a1d7b423730972ce4ad9d2b79\",\n    \"kind\": \"object\",\n    \"object\": \"075f81f30b988f5c08317b0f26fdae0f2cd91eebfad5f5e6dc6de064cf22397a\",\n    \"predicate\": \"used_tool\",\n    \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\"\n  },\n  {\n    \"id\": \"5c71a8f4f174295520c75f429864198a495a163f01a9dfb872f7e3ea6ae68b37\",\n    \"kind\": \"object\",\n    \"object\": \"5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726\",\n    \"predicate\": \"prompted_by\",\n    \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\"\n  },\n  {\n    \"id\": \"b60f83ea9c83782448a0332bb2def09ab1277d6ee060a3f3d0ce4e6e5c6ca04e\",\n    \"kind\": \"object\",\n    \"object\": \"5e4a68cdfa9f6088482efb485fcabcf10b858f03742d51c730221b82a475d726\",\n    \"predicate\": \"derived_from\",\n    \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\"\n  },\n  {\n    \"id\": \"cfd37f52b8d3f972b9b3b267a160470168d1b60e99927e9ac9e99226a0411e6c\",\n    \"kind\": \"object\",\n    \"object\": \"71f0abe305b26a2775f50a53b1bd78c1db9f5df588f853bc1e39f85c77137bd9\",\n    \"predicate\": \"generated_by\",\n    \"subject\": \"f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0\"\n  }\n]\n"
+        }
+      ],
+      "artifacts": []
+    },
+    {
+      "id": "lineage-check",
+      "title": "Every typed edge survives with the same subject and object",
+      "status": "pass",
+      "notes": "all five predicates present after the later writes",
+      "commands": [
+        "/work/.docker-cache/f3-demos/bin/weftfs --store /work/.docker-cache/f3-demos/stores/agent-memory-7-20261110T084703Z --json --fixed-timestamp-ns 1788220800000000000 relation list --subject f3cc29caa5e13ed923c2ce858185fdbf967d842f343525b3da64a6516bde78c0"
+      ],
+      "assertions": [
+        {
+          "name": "lineage exit",
+          "expected": "0",
+          "actual": "0",
+          "pass": true
+        },
+        {
+          "name": "five edges still name run-001",
+          "expected": "5",
+          "actual": "5",
+          "pass": true
+        },
+        {
+          "name": "lineage predicate generated_by present",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "lineage predicate prompted_by present",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "lineage predicate grounded_in present",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "lineage predicate used_tool present",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        },
+        {
+          "name": "lineage predicate derived_from present",
+          "expected": "1",
+          "actual": "1",
+          "pass": true
+        }
+      ],
+      "outputs": [],
+      "artifacts": []
+    }
+  ],
+  "notes": [
+    "Timestamps are simulated fixture nanoseconds; no real-time aging or retention claim is made",
+    "The bundle is a point-in-time export of the January store; replay runs after the September writes"
+  ],
+  "summary": {
+    "total": 7,
+    "pass": 7,
+    "fail": 0,
+    "blocked": 0,
+    "all_pass": true
+  }
+}

@@ -1,0 +1,52 @@
+run config=torchsave rep=1/2 steps=128 every=64
+  loop_wall=1383.8ms step_p50=10.50ms pause_p50=0.82ms completion_p50=4.3ms bytes=10050198 resumes=2/2
+run config=torchsave rep=2/2 steps=128 every=64
+  loop_wall=1412.5ms step_p50=10.71ms pause_p50=0.78ms completion_p50=4.2ms bytes=10050198 resumes=2/2
+run config=torchsave-durable rep=1/2 steps=128 every=64
+  loop_wall=1393.3ms step_p50=10.51ms pause_p50=0.86ms completion_p50=4.3ms bytes=10048474 resumes=2/2
+run config=torchsave-durable rep=2/2 steps=128 every=64
+  loop_wall=1386.0ms step_p50=10.39ms pause_p50=0.86ms completion_p50=4.8ms bytes=10048474 resumes=2/2
+run config=dcp rep=1/2 steps=128 every=64
+  loop_wall=1439.2ms step_p50=10.21ms pause_p50=0.86ms completion_p50=49.1ms bytes=10554144 resumes=2/2
+run config=dcp rep=2/2 steps=128 every=64
+  loop_wall=1460.2ms step_p50=10.25ms pause_p50=0.82ms completion_p50=52.3ms bytes=10554144 resumes=2/2
+run config=weft rep=1/2 steps=128 every=64
+  loop_wall=1500.6ms step_p50=10.24ms pause_p50=2.27ms completion_p50=89.6ms bytes=9857530 resumes=2/2
+run config=weft rep=2/2 steps=128 every=64
+  loop_wall=1530.5ms step_p50=10.45ms pause_p50=2.36ms completion_p50=93.0ms bytes=9857530 resumes=2/2
+run config=weft-fast rep=1/2 steps=128 every=64
+Traceback (most recent call last):
+  File "/work/python/courts/training_goodput.py", line 2251, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/training_goodput.py", line 2247, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1752, in run
+    result = run_one_loop(args, config, rep, run_dir)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1069, in run_one_loop
+    raise RuntimeError(
+RuntimeError: loop child weft-fast rep 0 failed (rc=1)
+Traceback (most recent call last):
+  File "/work/python/courts/training_goodput.py", line 2251, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/training_goodput.py", line 2247, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 708, in child_loop
+    handle = submit(step, snapshot)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 550, in submit
+    async_handle = save_checkpoint_async(
+                   ^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/dcp.py", line 2448, in save_checkpoint_async
+    writer = WeftStorageWriter(
+             ^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/dcp.py", line 1086, in __init__
+    self._store.requires_store()
+  File "/work/python/weftcodec/dcp.py", line 505, in requires_store
+    raise StoreUnavailable(
+weftcodec.dcp.StoreUnavailable: no WeftFS store at /tmp/weft-training-goodput/weft-fast-run-0/store (missing FORMAT); call init_store() first
+

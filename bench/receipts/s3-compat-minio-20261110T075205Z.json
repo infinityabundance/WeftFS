@@ -1,0 +1,216 @@
+{
+  "bucket": "weft-s3-court-20261110t075205z",
+  "checks": [
+    {
+      "detail": {
+        "first": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"8b04d5e3775d298e78455efc5ca404d5\"",
+          "status": 200
+        },
+        "first_writer_bytes_readable": true,
+        "second": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "At least one of the pre-conditions you specified did not hold",
+          "etag": "\"8b04d5e3775d298e78455efc5ca404d5\"",
+          "status": 412
+        }
+      },
+      "name": "if-none-match-create-once",
+      "summary": "create=200 repeat=412 bytes_kept=true",
+      "supported": true
+    },
+    {
+      "detail": {
+        "etag_as_returned": "\"9abcde3c584628a02620bf796dee1204\"",
+        "matching_accepted": true,
+        "matching_if_match_as_returned": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"6654c734ccab8f440ff0825eb443dc7f\"",
+          "status": 200
+        },
+        "read_after_stale": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"6654c734ccab8f440ff0825eb443dc7f\"",
+          "status": 200
+        },
+        "stale_if_match": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "At least one of the pre-conditions you specified did not hold",
+          "etag": "\"6654c734ccab8f440ff0825eb443dc7f\"",
+          "status": 412
+        },
+        "winner_bytes_kept": true
+      },
+      "name": "if-match-conditional-overwrite",
+      "summary": "matching accepted; stale=412 PreconditionFailed",
+      "supported": true
+    },
+    {
+      "detail": {
+        "body_matches": true,
+        "content_range_ok": true,
+        "response": {
+          "content_range": "bytes 4-15/16",
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"4032af8d61035123906e58e067140cc5\"",
+          "status": 206
+        }
+      },
+      "name": "range-open-ended",
+      "summary": "status=206 bytes=12 content-range=bytes 4-15/16",
+      "supported": true
+    },
+    {
+      "detail": {
+        "at_eof": {
+          "content_range": null,
+          "error_code": "InvalidRange",
+          "error_message": "The requested range &#39;bytes=16--1&#39; is not satisfiable",
+          "etag": null,
+          "status": 416
+        },
+        "past_end": {
+          "content_range": null,
+          "error_code": "InvalidRange",
+          "error_message": "The requested range &#39;bytes=999--1&#39; is not satisfiable",
+          "etag": null,
+          "status": 416
+        }
+      },
+      "name": "range-out-of-range",
+      "summary": "past_end=416/InvalidRange at_eof=416/InvalidRange",
+      "supported": true
+    },
+    {
+      "detail": {
+        "response": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": null,
+          "status": 404
+        }
+      },
+      "name": "head-missing-key",
+      "summary": "status=404",
+      "supported": true
+    },
+    {
+      "detail": {
+        "create": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"321c3cf486ed509164edec1e1981fec8\"",
+          "status": 200
+        },
+        "first_delete": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": null,
+          "status": 204
+        },
+        "second_delete": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": null,
+          "status": 204
+        }
+      },
+      "name": "delete-idempotent",
+      "summary": "delete=204 delete_again=204",
+      "supported": true
+    },
+    {
+      "detail": {
+        "complete": true,
+        "duplicates": 0,
+        "expected_keys": [
+          "weft-s3-test-20261110t075205z/run-41-1605230100/list/00",
+          "weft-s3-test-20261110t075205z/run-41-1605230100/list/01",
+          "weft-s3-test-20261110t075205z/run-41-1605230100/list/02",
+          "weft-s3-test-20261110t075205z/run-41-1605230100/list/03",
+          "weft-s3-test-20261110t075205z/run-41-1605230100/list/04"
+        ],
+        "pages": [
+          {
+            "is_truncated": true,
+            "keys": [
+              "weft-s3-test-20261110t075205z/run-41-1605230100/list/00",
+              "weft-s3-test-20261110t075205z/run-41-1605230100/list/01"
+            ],
+            "next_token_present": true,
+            "status": 200
+          },
+          {
+            "is_truncated": true,
+            "keys": [
+              "weft-s3-test-20261110t075205z/run-41-1605230100/list/02",
+              "weft-s3-test-20261110t075205z/run-41-1605230100/list/03"
+            ],
+            "next_token_present": true,
+            "status": 200
+          },
+          {
+            "is_truncated": false,
+            "keys": [
+              "weft-s3-test-20261110t075205z/run-41-1605230100/list/04"
+            ],
+            "next_token_present": false,
+            "status": 200
+          }
+        ]
+      },
+      "name": "list-pagination",
+      "summary": "pages=3 keys=5 duplicates=0 complete=true",
+      "supported": true
+    },
+    {
+      "detail": {
+        "head_etag": "\"e1740315d3459ff864d6e5e7841cb2b5\"",
+        "if_match_form": "as-returned",
+        "loser": {
+          "content_range": null,
+          "error_code": "PreconditionFailed",
+          "error_message": "At least one of the pre-conditions you specified did not hold",
+          "etag": "\"6f423b2de0c5fd2cd3fccd5c0b921834\"",
+          "status": 412
+        },
+        "winner": {
+          "content_range": null,
+          "error_code": null,
+          "error_message": null,
+          "etag": "\"6f423b2de0c5fd2cd3fccd5c0b921834\"",
+          "status": 200
+        },
+        "winner_bytes_kept": true
+      },
+      "name": "stale-cas-probe",
+      "summary": "winner=200 (form=as-returned) loser=412 winner_bytes_kept=true",
+      "supported": true
+    }
+  ],
+  "endpoint": "http://weft-s3-minio-1897705:9000",
+  "generated_utc": "20261110T075205Z",
+  "implementation": "MinIO RELEASE.2025-04-22T22-12-26Z",
+  "label": "Single-host S3-compatible endpoint on localhost, synthetic objects. Protocol behaviour only; not a durability, media, power-loss, cloud, fleet, or production claim.",
+  "run_prefix": "weft-s3-test-20261110t075205z/run-41-1605230100",
+  "schema": "weft-s3-compat-matrix-v1",
+  "summary": {
+    "supported": 8,
+    "total": 8,
+    "unsupported": 0
+  }
+}

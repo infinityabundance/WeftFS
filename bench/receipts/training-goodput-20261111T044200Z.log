@@ -1,0 +1,34 @@
+run config=torchsave rep=1/2 steps=128 every=64
+  loop_wall=1395.7ms step_p50=10.49ms pause_p50=0.85ms completion_p50=4.2ms bytes=10050198 resumes=2/2
+run config=torchsave rep=2/2 steps=128 every=64
+  loop_wall=1391.3ms step_p50=10.45ms pause_p50=0.89ms completion_p50=4.7ms bytes=10050198 resumes=2/2
+run config=torchsave-durable rep=1/2 steps=128 every=64
+  loop_wall=1391.8ms step_p50=10.49ms pause_p50=0.74ms completion_p50=4.3ms bytes=10048474 resumes=2/2
+run config=torchsave-durable rep=2/2 steps=128 every=64
+  loop_wall=1421.8ms step_p50=10.69ms pause_p50=0.78ms completion_p50=4.6ms bytes=10048474 resumes=2/2
+run config=dcp rep=1/2 steps=128 every=64
+  loop_wall=1499.1ms step_p50=10.46ms pause_p50=0.98ms completion_p50=60.7ms bytes=10554144 resumes=2/2
+run config=dcp rep=2/2 steps=128 every=64
+  loop_wall=1500.2ms step_p50=10.51ms pause_p50=1.00ms completion_p50=59.5ms bytes=10554144 resumes=2/2
+run config=weft rep=1/2 steps=128 every=64
+  loop_wall=1542.5ms step_p50=10.65ms pause_p50=2.54ms completion_p50=83.2ms bytes=9857530 resumes=2/2
+run config=weft rep=2/2 steps=128 every=64
+  loop_wall=1538.3ms step_p50=10.50ms pause_p50=2.27ms completion_p50=85.8ms bytes=9857530 resumes=2/2
+run config=weft-fast rep=1/2 steps=128 every=64
+  loop_wall=1562.9ms step_p50=10.70ms pause_p50=2.24ms completion_p50=86.9ms bytes=10708268 resumes=2/2
+run config=weft-fast rep=2/2 steps=128 every=64
+  loop_wall=1615.3ms step_p50=10.57ms pause_p50=2.44ms completion_p50=108.9ms bytes=10708268 resumes=2/2
+kill scenario=after_ack rep=1/1 delay_ms=0.0
+Traceback (most recent call last):
+  File "/work/python/courts/training_goodput.py", line 2255, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/work/python/courts/training_goodput.py", line 2251, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1849, in run
+    row = run_kill_scenario(args, scenario, rep, delay)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/training_goodput.py", line 1379, in run_kill_scenario
+    raise RuntimeError(
+RuntimeError: kill scenario after_ack rep 0 exposed no resumable checkpoint

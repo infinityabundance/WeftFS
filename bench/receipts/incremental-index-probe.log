@@ -1,0 +1,657 @@
+command: unknown
+mode: delta live: 512 checkpoints: [100, 1000, 5000]
+mode=delta generation=100 commit_p50=0.891 ms p95=1.101 ms p99=1.552 ms bytes_per_commit_p50=1131 index_bytes=485762 data_bytes=84882 depth=1
+mode=delta generation=1000 commit_p50=1.120 ms p95=1.214 ms p99=1.525 ms bytes_per_commit_p50=1092 index_bytes=4310411 data_bytes=876405 depth=10
+mode=delta generation=5000 commit_p50=1.153 ms p95=1.304 ms p99=1.454 ms bytes_per_commit_p50=1092 index_bytes=21889848 data_bytes=5097861 depth=17
+
+{
+  "control_variables": {
+    "WEFT_INDEX_GC": "unknown",
+    "WEFT_INDEX_LIVE": "512",
+    "WEFT_INDEX_MAINTENANCE": "unknown",
+    "WEFT_INDEX_MODE": "delta",
+    "WEFT_INDEX_SIZES": "100,1000,5000",
+    "WEFT_INDEX_WINDOW": "200"
+  },
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory_limit": "3g",
+    "pids": "1024"
+  },
+  "generated_unix_secs": 1794433295,
+  "generated_utc": "probe",
+  "label": "synthetic fixture, tmpfs, single host, one process, warm page cache; history grows while the live working set is constant",
+  "method": {
+    "bytes_written_per_commit": "index segment file + commit file, read from fs metadata",
+    "cold_query": "one fresh read-only handle per sample; the first indexed resolve per handle",
+    "phase_totals": "cumulative phase-profile totals since the first measured commit",
+    "seed": "live working set created in group commits; one small `set_xattr` commit per measured step",
+    "window": "statistics are the last WEFT_INDEX_WINDOW commits ending at the checkpoint"
+  },
+  "package_version": "1.3.0",
+  "peak_rss_kib": 15852,
+  "profile": "release",
+  "revision": "b69fa0ef6a410d41560a93d0a7571ce74b73da6d",
+  "run": {
+    "checkpoints": [
+      100,
+      1000,
+      5000
+    ],
+    "final": {
+      "data_bytes": 5097861,
+      "generation": 5002,
+      "head_chain_depth": 17,
+      "head_segment": "delta",
+      "index_bytes": 21889848,
+      "index_stats": {
+        "builds": 0,
+        "loads": 0,
+        "rejects": 0,
+        "write_errors": 0,
+        "writes": 5002
+      },
+      "phase_totals": {
+        "index_attest": {
+          "count": 5000,
+          "max_ms": 0.389467,
+          "total_ms": 882.954041
+        },
+        "index_build": {
+          "count": 5000,
+          "max_ms": 0.841212,
+          "total_ms": 2248.38801
+        },
+        "index_load": {
+          "count": 5000,
+          "max_ms": 5.831513,
+          "total_ms": 493.390387
+        },
+        "index_segment": {
+          "count": 10000,
+          "max_ms": 6.389947,
+          "total_ms": 4355.126366
+        },
+        "manifest_commit": {
+          "count": 5000,
+          "max_ms": 0.118802,
+          "total_ms": 114.444607
+        }
+      }
+    },
+    "live_objects": 512,
+    "mode": "delta",
+    "samples": [
+      {
+        "bytes_written_per_commit": {
+          "mean": 4548.53,
+          "p50": 1131.0,
+          "p95": 1132.0
+        },
+        "cold_query": {
+          "all_true": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 0.39924600000000005,
+            "p95_ms": 0.418181,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              0.418181,
+              0.39924600000000005,
+              0.403553,
+              0.39637,
+              0.39585
+            ]
+          },
+          "attr_eq": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 0.35204799999999997,
+            "p95_ms": 0.365142,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              0.36149499999999996,
+              0.35204799999999997,
+              0.365142,
+              0.33680899999999997,
+              0.350104
+            ]
+          },
+          "has_attr": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 0.490977,
+            "p95_ms": 0.638612,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              0.480347,
+              0.490977,
+              0.474487,
+              0.508069,
+              0.638612
+            ]
+          },
+          "tag": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 0.33791099999999996,
+            "p95_ms": 0.345124,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              0.338252,
+              0.334885,
+              0.32851400000000003,
+              0.33791099999999996,
+              0.345124
+            ]
+          }
+        },
+        "commit_ms": {
+          "mean": 0.9741760300000002,
+          "p50": 0.8912945000000001,
+          "p95": 1.100656,
+          "p99": 1.552259,
+          "window": 100
+        },
+        "data_bytes": 84882,
+        "gc": null,
+        "generation": 100,
+        "generations_since_previous_checkpoint": 100,
+        "head_chain_depth": 1,
+        "head_segment": "delta",
+        "index_bytes": 485762,
+        "index_ppm_of_data": 5722792,
+        "index_stats": {
+          "builds": 0,
+          "loads": 0,
+          "notes": [],
+          "rejects": 0,
+          "write_errors": 0,
+          "writes": 102
+        },
+        "live_objects": 512,
+        "phase_totals": {
+          "index_attest": {
+            "count": 100,
+            "max_ms": 0.151834,
+            "total_ms": 6.561516
+          },
+          "index_build": {
+            "count": 100,
+            "max_ms": 0.841212,
+            "total_ms": 45.2622
+          },
+          "index_load": {
+            "count": 100,
+            "max_ms": 5.831513,
+            "total_ms": 11.729348
+          },
+          "index_segment": {
+            "count": 200,
+            "max_ms": 6.389947,
+            "total_ms": 71.050424
+          },
+          "manifest_commit": {
+            "count": 100,
+            "max_ms": 0.042289,
+            "total_ms": 2.16781
+          }
+        }
+      },
+      {
+        "bytes_written_per_commit": {
+          "mean": 5164.89,
+          "p50": 1092.0,
+          "p95": 1093.0
+        },
+        "cold_query": {
+          "all_true": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.152834,
+            "p95_ms": 1.175826,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.175826,
+              1.163443,
+              1.1509999999999998,
+              1.127446,
+              1.152834
+            ]
+          },
+          "attr_eq": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.189192,
+            "p95_ms": 1.312542,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.20425,
+              1.164104,
+              1.189192,
+              1.158023,
+              1.312542
+            ]
+          },
+          "has_attr": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.2540120000000001,
+            "p95_ms": 1.2736500000000002,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.2736500000000002,
+              1.2503760000000002,
+              1.2540120000000001,
+              1.221652,
+              1.2594830000000001
+            ]
+          },
+          "tag": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.121154,
+            "p95_ms": 1.144678,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.144678,
+              1.134469,
+              1.121154,
+              1.079266,
+              1.05473
+            ]
+          }
+        },
+        "commit_ms": {
+          "mean": 1.139904515,
+          "p50": 1.1204079999999998,
+          "p95": 1.213787,
+          "p99": 1.525099,
+          "window": 200
+        },
+        "data_bytes": 876405,
+        "gc": null,
+        "generation": 1000,
+        "generations_since_previous_checkpoint": 900,
+        "head_chain_depth": 10,
+        "head_segment": "delta",
+        "index_bytes": 4310411,
+        "index_ppm_of_data": 4918287,
+        "index_stats": {
+          "builds": 0,
+          "loads": 0,
+          "notes": [],
+          "rejects": 0,
+          "write_errors": 0,
+          "writes": 1002
+        },
+        "live_objects": 512,
+        "phase_totals": {
+          "index_attest": {
+            "count": 1000,
+            "max_ms": 0.290162,
+            "total_ms": 148.970791
+          },
+          "index_build": {
+            "count": 1000,
+            "max_ms": 0.841212,
+            "total_ms": 452.530227
+          },
+          "index_load": {
+            "count": 1000,
+            "max_ms": 5.831513,
+            "total_ms": 92.968974
+          },
+          "index_segment": {
+            "count": 2000,
+            "max_ms": 6.389947,
+            "total_ms": 819.819595
+          },
+          "manifest_commit": {
+            "count": 1000,
+            "max_ms": 0.078848,
+            "total_ms": 22.721334
+          }
+        }
+      },
+      {
+        "bytes_written_per_commit": {
+          "mean": 5165.055,
+          "p50": 1092.0,
+          "p95": 1093.0
+        },
+        "cold_query": {
+          "all_true": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.612822,
+            "p95_ms": 1.773142,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.773142,
+              1.689526,
+              1.528495,
+              1.612822,
+              1.569352
+            ]
+          },
+          "attr_eq": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.51488,
+            "p95_ms": 1.608695,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.582136,
+              1.4907650000000001,
+              1.51488,
+              1.503939,
+              1.608695
+            ]
+          },
+          "has_attr": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.7335580000000002,
+            "p95_ms": 1.771729,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.771729,
+              1.76112,
+              1.6817309999999999,
+              1.6285530000000001,
+              1.7335580000000002
+            ]
+          },
+          "tag": {
+            "builds": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "disk_loads": [
+              1,
+              1,
+              1,
+              1,
+              1
+            ],
+            "p50_ms": 1.496636,
+            "p95_ms": 1.581404,
+            "rejects": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "samples_ms": [
+              1.451982,
+              1.581404,
+              1.505342,
+              1.494361,
+              1.496636
+            ]
+          }
+        },
+        "commit_ms": {
+          "mean": 1.181597395,
+          "p50": 1.1525979999999998,
+          "p95": 1.304257,
+          "p99": 1.4544670000000002,
+          "window": 200
+        },
+        "data_bytes": 5097861,
+        "gc": null,
+        "generation": 5000,
+        "generations_since_previous_checkpoint": 4000,
+        "head_chain_depth": 17,
+        "head_segment": "delta",
+        "index_bytes": 21889848,
+        "index_ppm_of_data": 4293928,
+        "index_stats": {
+          "builds": 0,
+          "loads": 0,
+          "notes": [],
+          "rejects": 0,
+          "write_errors": 0,
+          "writes": 5002
+        },
+        "live_objects": 512,
+        "phase_totals": {
+          "index_attest": {
+            "count": 5000,
+            "max_ms": 0.389467,
+            "total_ms": 882.954041
+          },
+          "index_build": {
+            "count": 5000,
+            "max_ms": 0.841212,
+            "total_ms": 2248.38801
+          },
+          "index_load": {
+            "count": 5000,
+            "max_ms": 5.831513,
+            "total_ms": 493.390387
+          },
+          "index_segment": {
+            "count": 10000,
+            "max_ms": 6.389947,
+            "total_ms": 4355.126366
+          },
+          "manifest_commit": {
+            "count": 5000,
+            "max_ms": 0.118802,
+            "total_ms": 114.444607
+          }
+        }
+      }
+    ],
+    "seed_ms": 20.639323,
+    "window": 200
+  },
+  "schema": "weftfs.incremental-index-bench.v1"
+}

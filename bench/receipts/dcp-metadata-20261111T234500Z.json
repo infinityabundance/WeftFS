@@ -1,0 +1,1832 @@
+{
+  "config": {
+    "fast_codec": "raw",
+    "iterations": 30,
+    "note": "the save that produces the metadata is untimed; only the serialisation of the resulting object is measured",
+    "profile_calls": 8,
+    "write_policy": "fast"
+  },
+  "environment": {
+    "court_cpus": "4",
+    "court_image": "weft/python-court:1",
+    "court_image_id": "sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152",
+    "court_memory": "3g",
+    "court_pids": "1024",
+    "cpu_count": 16,
+    "kernel": "7.3.3-1-cachyos",
+    "platform": "Linux-7.3.3-1-cachyos-x86_64-with-glibc2.36",
+    "python": "3.12.16",
+    "repo_weftcodec": "d9234e5322686afbbbe6fcca103da853928811aa",
+    "repo_weftfs": "11230b33fe37817aab2d6c32f728e75dce085181",
+    "torch": "2.15.0+cpu",
+    "weftfs_cli": "/work/.docker-cache/target-rust/release/weftfs"
+  },
+  "fixture": {
+    "base_entries": 169,
+    "note": "169 is the exact R11/R12b fixture; 1/16/64 take its first N entries; 1024 repeats the fixture with suffixed names and 4x4 float32 tensors",
+    "sizes": [
+      1,
+      16,
+      64,
+      169,
+      1024
+    ],
+    "source": "python/courts/training_goodput.py build_model/capture_state"
+  },
+  "measured_at": "2026-11-11T23:15:25Z",
+  "peak_rss_kib": 354880,
+  "schema": "weft.dcp-metadata-cost.v1",
+  "sizes": [
+    {
+      "alternatives": {
+        "fast_generic": {
+          "iterations": 30,
+          "max_ms": 0.068287,
+          "mean_ms": 0.016611366666666665,
+          "min_ms": 0.013775,
+          "p50_ms": 0.014277,
+          "p95_ms": 0.025518
+        },
+        "native_floor": {
+          "client_marshal": {
+            "bytes": 207,
+            "iterations": 30,
+            "max_ms": 0.033022,
+            "mean_ms": 0.004910833333333334,
+            "min_ms": 0.003116,
+            "p50_ms": 0.003221,
+            "p95_ms": 0.014236
+          },
+          "client_memfd_write": {
+            "iterations": 20,
+            "max_ms": 0.00544,
+            "mean_ms": 0.0020018,
+            "min_ms": 0.001543,
+            "p50_ms": 0.001803,
+            "p95_ms": 0.002275
+          },
+          "floor_note": "stat_file is the cheapest request/response the service offers; the marshalling and memfd write are the client work a native encoder cannot avoid. Rust encoding, the reply copy and the plan-less store lookup are excluded, so this is a strict lower bound.",
+          "floor_without_rust_encode_ms": 0.012318,
+          "read_round_trip": {
+            "bytes": 486,
+            "iterations": 20,
+            "max_ms": 0.054222,
+            "mean_ms": 0.02944755,
+            "min_ms": 0.026189,
+            "p50_ms": 0.027171,
+            "p95_ms": 0.033954
+          },
+          "stat_round_trip": {
+            "iterations": 20,
+            "max_ms": 0.031178,
+            "mean_ms": 0.010787149999999999,
+            "min_ms": 0.008556,
+            "p50_ms": 0.009097000000000001,
+            "p95_ms": 0.015649
+          }
+        },
+        "plan_assemble": {
+          "iterations": 30,
+          "max_ms": 0.044743,
+          "mean_ms": 0.008369,
+          "min_ms": 0.006021,
+          "p50_ms": 0.0063514999999999995,
+          "p95_ms": 0.013365
+        },
+        "plan_build": {
+          "iterations": 7,
+          "max_ms": 0.073878,
+          "mean_ms": 0.039787,
+          "min_ms": 0.031759,
+          "p50_ms": 0.032901,
+          "p95_ms": 0.073878
+        },
+        "plan_cache_stats": {
+          "fallbacks": 1,
+          "last_mode": "plan",
+          "oracle_checks": 1,
+          "oracle_mismatches": 0,
+          "plan_builds": 1,
+          "plan_evictions": 0,
+          "plan_hits": 30
+        },
+        "plan_cached_total": {
+          "iterations": 30,
+          "max_ms": 0.078667,
+          "mean_ms": 0.013702899999999999,
+          "min_ms": 0.009648,
+          "p50_ms": 0.0109055,
+          "p95_ms": 0.016902
+        },
+        "plan_matches": {
+          "iterations": 30,
+          "max_ms": 0.003606,
+          "mean_ms": 0.0015225333333333333,
+          "min_ms": 0.001282,
+          "p50_ms": 0.0013425,
+          "p95_ms": 0.002304
+        },
+        "reference": {
+          "iterations": 30,
+          "max_ms": 0.032941,
+          "mean_ms": 0.0286255,
+          "min_ms": 0.028113,
+          "p50_ms": 0.028323,
+          "p95_ms": 0.030617
+        },
+        "tree_only": {
+          "iterations": 30,
+          "max_ms": 0.007173,
+          "mean_ms": 0.004368166666666667,
+          "min_ms": 0.004058,
+          "p50_ms": 0.0041329999999999995,
+          "p95_ms": 0.006943
+        }
+      },
+      "content_root": "8a687c7de312ebd78fd9dd999ade360d6e572d1c1bba2c827df1168f012057a5",
+      "cprofile": [
+        {
+          "calls_per_encode": 41.0,
+          "cumtime_ms_per_encode": 0.177924625,
+          "file": "wcb.py",
+          "function": "value",
+          "line": 122,
+          "tottime_ms_per_encode": 0.0955075
+        },
+        {
+          "calls_per_encode": 214.0,
+          "cumtime_ms_per_encode": 0.016502125,
+          "file": "~",
+          "function": "<built-in method builtins.isinstance>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.016502125
+        },
+        {
+          "calls_per_encode": 138.0,
+          "cumtime_ms_per_encode": 0.01307375,
+          "file": "~",
+          "function": "<method 'append' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.01307375
+        },
+        {
+          "calls_per_encode": 69.0,
+          "cumtime_ms_per_encode": 0.018828125,
+          "file": "varint.py",
+          "function": "encode",
+          "line": 29,
+          "tottime_ms_per_encode": 0.012550125
+        },
+        {
+          "calls_per_encode": 122.0,
+          "cumtime_ms_per_encode": 0.008958124999999999,
+          "file": "~",
+          "function": "<built-in method builtins.len>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.008958124999999999
+        },
+        {
+          "calls_per_encode": 70.0,
+          "cumtime_ms_per_encode": 0.008535125000000001,
+          "file": "~",
+          "function": "<method 'extend' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.008535125000000001
+        },
+        {
+          "calls_per_encode": 41.0,
+          "cumtime_ms_per_encode": 0.0050776250000000005,
+          "file": "~",
+          "function": "<method 'encode' of 'str' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.0050776250000000005
+        },
+        {
+          "calls_per_encode": 7.0,
+          "cumtime_ms_per_encode": 0.0063100000000000005,
+          "file": "~",
+          "function": "<method 'sort' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.004882
+        },
+        {
+          "calls_per_encode": 41.0,
+          "cumtime_ms_per_encode": 0.0037250000000000004,
+          "file": "wcb.py",
+          "function": "_bump_item",
+          "line": 98,
+          "tottime_ms_per_encode": 0.0037250000000000004
+        },
+        {
+          "calls_per_encode": 42.0,
+          "cumtime_ms_per_encode": 0.003220375,
+          "file": "wcb.py",
+          "function": "_check_text",
+          "line": 106,
+          "tottime_ms_per_encode": 0.003220375
+        },
+        {
+          "calls_per_encode": 28.0,
+          "cumtime_ms_per_encode": 0.002846625,
+          "file": "~",
+          "function": "<method 'append' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.002846625
+        },
+        {
+          "calls_per_encode": 1.0,
+          "cumtime_ms_per_encode": 0.001845875,
+          "file": "<string>",
+          "function": "__init__",
+          "line": 2,
+          "tottime_ms_per_encode": 0.001845875
+        },
+        {
+          "calls_per_encode": 1.0,
+          "cumtime_ms_per_encode": 0.18149862500000002,
+          "file": "wcb.py",
+          "function": "encode",
+          "line": 69,
+          "tottime_ms_per_encode": 0.00162925
+        },
+        {
+          "calls_per_encode": 19.0,
+          "cumtime_ms_per_encode": 0.0016182500000000001,
+          "file": "wcb.py",
+          "function": "_enter",
+          "line": 113,
+          "tottime_ms_per_encode": 0.0016182500000000001
+        }
+      ],
+      "entries": 1,
+      "hash": {
+        "blake3": {
+          "iterations": 20,
+          "max_ms": 0.007705,
+          "mean_ms": 0.0011867499999999999,
+          "min_ms": 0.000771,
+          "p50_ms": 0.000812,
+          "p95_ms": 0.001282
+        },
+        "domain_blake3": {
+          "iterations": 20,
+          "max_ms": 0.003647,
+          "mean_ms": 0.0011958,
+          "min_ms": 0.000982,
+          "p50_ms": 0.0010170000000000001,
+          "p95_ms": 0.001723
+        },
+        "sha256": {
+          "iterations": 20,
+          "max_ms": 0.032541,
+          "mean_ms": 0.0021055,
+          "min_ms": 0.000451,
+          "p50_ms": 0.000461,
+          "p95_ms": 0.001122
+        }
+      },
+      "memfd_copy": {
+        "iterations": 20,
+        "max_ms": 0.011872,
+        "mean_ms": 0.00259885,
+        "min_ms": 0.001543,
+        "p50_ms": 0.001828,
+        "p95_ms": 0.00506
+      },
+      "metadata_bytes": 486,
+      "metadata_sha256": "a9c7d6f22a4f80c3e2e51fc1fabe524b9aa13c1cbd6bcd48bb7d11d8e9826dcc",
+      "replay": {
+        "items": {
+          "ints": 8,
+          "maps": 7,
+          "payloads": 14
+        },
+        "keys_encode_and_sort": {
+          "iterations": 30,
+          "max_ms": 0.014066,
+          "mean_ms": 0.010353699999999999,
+          "min_ms": 0.009949,
+          "p50_ms": 0.010119,
+          "p95_ms": 0.011541
+        },
+        "payload_extends": {
+          "iterations": 30,
+          "max_ms": 0.001122,
+          "mean_ms": 0.0005380333333333333,
+          "min_ms": 0.000481,
+          "p50_ms": 0.000511,
+          "p95_ms": 0.000811
+        },
+        "varints": {
+          "iterations": 30,
+          "max_ms": 0.001884,
+          "mean_ms": 0.0007452666666666666,
+          "min_ms": 0.000652,
+          "p50_ms": 0.000691,
+          "p95_ms": 0.001012
+        },
+        "walk": {
+          "iterations": 30,
+          "max_ms": 0.015258,
+          "mean_ms": 0.008100233333333333,
+          "min_ms": 0.007624,
+          "p50_ms": 0.0077800000000000005,
+          "p95_ms": 0.009147
+        }
+      },
+      "save_ms": 3.4676400246098638,
+      "save_stats": {
+        "container_bytes": 78,
+        "entries": 1,
+        "tensor_bytes": 8
+      },
+      "sections": {
+        "encode": {
+          "iterations": 30,
+          "max_ms": 0.048941,
+          "mean_ms": 0.0293481,
+          "min_ms": 0.028012,
+          "p50_ms": 0.028333,
+          "p95_ms": 0.03233
+        },
+        "planner_tree": {
+          "iterations": 30,
+          "max_ms": 0.001322,
+          "mean_ms": 0.0008189666666666667,
+          "min_ms": 0.000721,
+          "p50_ms": 0.0007615,
+          "p95_ms": 0.001132
+        },
+        "state_dict_tree": {
+          "iterations": 30,
+          "max_ms": 0.002174,
+          "mean_ms": 0.0013776333333333332,
+          "min_ms": 0.001252,
+          "p50_ms": 0.001308,
+          "p95_ms": 0.001993
+        },
+        "storage_rows_tree": {
+          "iterations": 30,
+          "max_ms": 0.004748,
+          "mean_ms": 0.0030515,
+          "min_ms": 0.002675,
+          "p50_ms": 0.0028190000000000003,
+          "p95_ms": 0.00458
+        },
+        "total": {
+          "iterations": 30,
+          "max_ms": 0.055013,
+          "mean_ms": 0.0345962,
+          "min_ms": 0.032751,
+          "p50_ms": 0.033227,
+          "p95_ms": 0.040014
+        }
+      },
+      "shipped": {
+        "service_calls_during_serialize": 0,
+        "total": {
+          "iterations": 30,
+          "max_ms": 0.084587,
+          "mean_ms": 0.046266466666666665,
+          "min_ms": 0.032761,
+          "p50_ms": 0.039954,
+          "p95_ms": 0.059631
+        }
+      },
+      "size": 1
+    },
+    {
+      "alternatives": {
+        "fast_generic": {
+          "iterations": 30,
+          "max_ms": 0.425644,
+          "mean_ms": 0.17609519999999998,
+          "min_ms": 0.154188,
+          "p50_ms": 0.158306,
+          "p95_ms": 0.266196
+        },
+        "native_floor": {
+          "client_marshal": {
+            "bytes": 4210,
+            "iterations": 30,
+            "max_ms": 0.075872,
+            "mean_ms": 0.04709383333333333,
+            "min_ms": 0.041247,
+            "p50_ms": 0.043235499999999996,
+            "p95_ms": 0.06423
+          },
+          "client_memfd_write": {
+            "iterations": 20,
+            "max_ms": 0.015499,
+            "mean_ms": 0.0038005499999999998,
+            "min_ms": 0.002424,
+            "p50_ms": 0.0028799999999999997,
+            "p95_ms": 0.007183
+          },
+          "floor_note": "stat_file is the cheapest request/response the service offers; the marshalling and memfd write are the client work a native encoder cannot avoid. Rust encoding, the reply copy and the plan-less store lookup are excluded, so this is a strict lower bound.",
+          "floor_without_rust_encode_ms": 0.0543305,
+          "read_round_trip": {
+            "bytes": 6484,
+            "iterations": 20,
+            "max_ms": 0.133189,
+            "mean_ms": 0.054290950000000004,
+            "min_ms": 0.039974,
+            "p50_ms": 0.0445435,
+            "p95_ms": 0.078446
+          },
+          "stat_round_trip": {
+            "iterations": 20,
+            "max_ms": 0.066785,
+            "mean_ms": 0.0150951,
+            "min_ms": 0.010781,
+            "p50_ms": 0.011095,
+            "p95_ms": 0.026309
+          }
+        },
+        "plan_assemble": {
+          "iterations": 30,
+          "max_ms": 0.072164,
+          "mean_ms": 0.04263653333333333,
+          "min_ms": 0.040185,
+          "p50_ms": 0.041222,
+          "p95_ms": 0.045465
+        },
+        "plan_build": {
+          "iterations": 7,
+          "max_ms": 0.654681,
+          "mean_ms": 0.6122964285714286,
+          "min_ms": 0.579762,
+          "p50_ms": 0.596533,
+          "p95_ms": 0.654681
+        },
+        "plan_cache_stats": {
+          "fallbacks": 1,
+          "last_mode": "plan",
+          "oracle_checks": 1,
+          "oracle_mismatches": 0,
+          "plan_builds": 1,
+          "plan_evictions": 0,
+          "plan_hits": 30
+        },
+        "plan_cached_total": {
+          "iterations": 30,
+          "max_ms": 0.102561,
+          "mean_ms": 0.0635462,
+          "min_ms": 0.057226,
+          "p50_ms": 0.0591155,
+          "p95_ms": 0.101008
+        },
+        "plan_matches": {
+          "iterations": 30,
+          "max_ms": 0.014837,
+          "mean_ms": 0.012379333333333332,
+          "min_ms": 0.012022,
+          "p50_ms": 0.0121725,
+          "p95_ms": 0.014287
+        },
+        "reference": {
+          "iterations": 30,
+          "max_ms": 0.529679,
+          "mean_ms": 0.33056626666666666,
+          "min_ms": 0.309888,
+          "p50_ms": 0.32009750000000003,
+          "p95_ms": 0.360834
+        },
+        "tree_only": {
+          "iterations": 30,
+          "max_ms": 0.105417,
+          "mean_ms": 0.058163566666666666,
+          "min_ms": 0.053931,
+          "p50_ms": 0.054532,
+          "p95_ms": 0.082805
+        }
+      },
+      "content_root": "b1f61c22b5c69755c7e4f10d2a48ebe50c88c7dbe1569ef1ff39e3730d027641",
+      "cprofile": [
+        {
+          "calls_per_encode": 541.0,
+          "cumtime_ms_per_encode": 2.101534875,
+          "file": "wcb.py",
+          "function": "value",
+          "line": 122,
+          "tottime_ms_per_encode": 1.1404193750000002
+        },
+        {
+          "calls_per_encode": 2544.0,
+          "cumtime_ms_per_encode": 0.193516125,
+          "file": "~",
+          "function": "<built-in method builtins.isinstance>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.193516125
+        },
+        {
+          "calls_per_encode": 1736.0,
+          "cumtime_ms_per_encode": 0.16196925,
+          "file": "~",
+          "function": "<method 'append' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.16196925
+        },
+        {
+          "calls_per_encode": 854.0,
+          "cumtime_ms_per_encode": 0.2343385,
+          "file": "varint.py",
+          "function": "encode",
+          "line": 29,
+          "tottime_ms_per_encode": 0.157254125
+        },
+        {
+          "calls_per_encode": 1382.0,
+          "cumtime_ms_per_encode": 0.10305212500000001,
+          "file": "~",
+          "function": "<built-in method builtins.len>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.10305212500000001
+        },
+        {
+          "calls_per_encode": 775.0,
+          "cumtime_ms_per_encode": 0.094523,
+          "file": "~",
+          "function": "<method 'extend' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.094523
+        },
+        {
+          "calls_per_encode": 446.0,
+          "cumtime_ms_per_encode": 0.058191875000000004,
+          "file": "~",
+          "function": "<method 'encode' of 'str' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.058191875000000004
+        },
+        {
+          "calls_per_encode": 541.0,
+          "cumtime_ms_per_encode": 0.0511765,
+          "file": "wcb.py",
+          "function": "_bump_item",
+          "line": 98,
+          "tottime_ms_per_encode": 0.0511765
+        },
+        {
+          "calls_per_encode": 82.0,
+          "cumtime_ms_per_encode": 0.056453875,
+          "file": "~",
+          "function": "<method 'sort' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.040656875
+        },
+        {
+          "calls_per_encode": 462.0,
+          "cumtime_ms_per_encode": 0.03586575,
+          "file": "wcb.py",
+          "function": "_check_text",
+          "line": 106,
+          "tottime_ms_per_encode": 0.03586575
+        },
+        {
+          "calls_per_encode": 313.0,
+          "cumtime_ms_per_encode": 0.030237125,
+          "file": "~",
+          "function": "<method 'append' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.030237125
+        },
+        {
+          "calls_per_encode": 229.0,
+          "cumtime_ms_per_encode": 0.01887575,
+          "file": "wcb.py",
+          "function": "_enter",
+          "line": 113,
+          "tottime_ms_per_encode": 0.01887575
+        },
+        {
+          "calls_per_encode": 313.0,
+          "cumtime_ms_per_encode": 0.015797000000000002,
+          "file": "wcb.py",
+          "function": "<lambda>",
+          "line": 180,
+          "tottime_ms_per_encode": 0.015797000000000002
+        },
+        {
+          "calls_per_encode": 1.0,
+          "cumtime_ms_per_encode": 0.002448375,
+          "file": "<string>",
+          "function": "__init__",
+          "line": 2,
+          "tottime_ms_per_encode": 0.002448375
+        }
+      ],
+      "entries": 16,
+      "hash": {
+        "blake3": {
+          "iterations": 20,
+          "max_ms": 0.012633,
+          "mean_ms": 0.00359075,
+          "min_ms": 0.003066,
+          "p50_ms": 0.003096,
+          "p95_ms": 0.003326
+        },
+        "domain_blake3": {
+          "iterations": 20,
+          "max_ms": 0.008315,
+          "mean_ms": 0.005627399999999999,
+          "min_ms": 0.00542,
+          "p50_ms": 0.005464999999999999,
+          "p95_ms": 0.005831
+        },
+        "sha256": {
+          "iterations": 20,
+          "max_ms": 0.015879,
+          "mean_ms": 0.003492,
+          "min_ms": 0.002815,
+          "p50_ms": 0.002825,
+          "p95_ms": 0.003056
+        }
+      },
+      "memfd_copy": {
+        "iterations": 20,
+        "max_ms": 0.017473,
+        "mean_ms": 0.0046592000000000005,
+        "min_ms": 0.003006,
+        "p50_ms": 0.004092,
+        "p95_ms": 0.005701
+      },
+      "metadata_bytes": 6484,
+      "metadata_sha256": "d4a8a2ad5ad250b6774c153e52def136d8bd726ba4f38f9a74d2cd39efb2c0cb",
+      "replay": {
+        "items": {
+          "ints": 163,
+          "maps": 82,
+          "payloads": 149
+        },
+        "keys_encode_and_sort": {
+          "iterations": 30,
+          "max_ms": 0.189493,
+          "mean_ms": 0.11651116666666667,
+          "min_ms": 0.105116,
+          "p50_ms": 0.107611,
+          "p95_ms": 0.182931
+        },
+        "payload_extends": {
+          "iterations": 30,
+          "max_ms": 0.007063,
+          "mean_ms": 0.003940333333333333,
+          "min_ms": 0.003417,
+          "p50_ms": 0.003476,
+          "p95_ms": 0.006442
+        },
+        "varints": {
+          "iterations": 30,
+          "max_ms": 0.020759,
+          "mean_ms": 0.0129014,
+          "min_ms": 0.011762,
+          "p50_ms": 0.011872,
+          "p95_ms": 0.020648
+        },
+        "walk": {
+          "iterations": 30,
+          "max_ms": 0.152284,
+          "mean_ms": 0.09754693333333334,
+          "min_ms": 0.091591,
+          "p50_ms": 0.09252250000000001,
+          "p95_ms": 0.151984
+        }
+      },
+      "save_ms": 8.438494987785816,
+      "save_stats": {
+        "container_bytes": 598133,
+        "entries": 16,
+        "tensor_bytes": 596744
+      },
+      "sections": {
+        "encode": {
+          "iterations": 30,
+          "max_ms": 0.350264,
+          "mean_ms": 0.32047366666666666,
+          "min_ms": 0.312713,
+          "p50_ms": 0.31667100000000004,
+          "p95_ms": 0.338842
+        },
+        "planner_tree": {
+          "iterations": 30,
+          "max_ms": 0.009868,
+          "mean_ms": 0.0049172,
+          "min_ms": 0.004428,
+          "p50_ms": 0.0045835,
+          "p95_ms": 0.007775
+        },
+        "state_dict_tree": {
+          "iterations": 30,
+          "max_ms": 0.030497,
+          "mean_ms": 0.0195829,
+          "min_ms": 0.018605,
+          "p50_ms": 0.0188555,
+          "p95_ms": 0.026529
+        },
+        "storage_rows_tree": {
+          "iterations": 30,
+          "max_ms": 0.047549,
+          "mean_ms": 0.03393316666666667,
+          "min_ms": 0.03239,
+          "p50_ms": 0.03294,
+          "p95_ms": 0.038561
+        },
+        "total": {
+          "iterations": 30,
+          "max_ms": 0.409995,
+          "mean_ms": 0.3789069333333333,
+          "min_ms": 0.368277,
+          "p50_ms": 0.373888,
+          "p95_ms": 0.408512
+        }
+      },
+      "shipped": {
+        "service_calls_during_serialize": 0,
+        "total": {
+          "iterations": 30,
+          "max_ms": 0.592506,
+          "mean_ms": 0.4038154,
+          "min_ms": 0.365341,
+          "p50_ms": 0.3787065,
+          "p95_ms": 0.523386
+        }
+      },
+      "size": 16
+    },
+    {
+      "alternatives": {
+        "fast_generic": {
+          "iterations": 30,
+          "max_ms": 0.917512,
+          "mean_ms": 0.6477643666666667,
+          "min_ms": 0.606011,
+          "p50_ms": 0.6245555,
+          "p95_ms": 0.782209
+        },
+        "native_floor": {
+          "client_marshal": {
+            "bytes": 17264,
+            "iterations": 30,
+            "max_ms": 0.209131,
+            "mean_ms": 0.16629396666666668,
+            "min_ms": 0.158245,
+            "p50_ms": 0.16006900000000002,
+            "p95_ms": 0.205253
+          },
+          "client_memfd_write": {
+            "iterations": 20,
+            "max_ms": 0.014798,
+            "mean_ms": 0.0042951000000000005,
+            "min_ms": 0.003476,
+            "p50_ms": 0.003652,
+            "p95_ms": 0.004899
+          },
+          "floor_note": "stat_file is the cheapest request/response the service offers; the marshalling and memfd write are the client work a native encoder cannot avoid. Rust encoding, the reply copy and the plan-less store lookup are excluded, so this is a strict lower bound.",
+          "floor_without_rust_encode_ms": 0.169557,
+          "read_round_trip": {
+            "bytes": 26222,
+            "iterations": 20,
+            "max_ms": 0.149779,
+            "mean_ms": 0.06330575000000001,
+            "min_ms": 0.045816,
+            "p50_ms": 0.053645,
+            "p95_ms": 0.095498
+          },
+          "stat_round_trip": {
+            "iterations": 20,
+            "max_ms": 0.08572,
+            "mean_ms": 0.014694450000000001,
+            "min_ms": 0.008686,
+            "p50_ms": 0.009488,
+            "p95_ms": 0.023233
+          }
+        },
+        "plan_assemble": {
+          "iterations": 30,
+          "max_ms": 0.200224,
+          "mean_ms": 0.15486823333333335,
+          "min_ms": 0.149338,
+          "p50_ms": 0.150671,
+          "p95_ms": 0.185947
+        },
+        "plan_build": {
+          "iterations": 7,
+          "max_ms": 2.458597,
+          "mean_ms": 2.388289285714286,
+          "min_ms": 2.329317,
+          "p50_ms": 2.389489,
+          "p95_ms": 2.458597
+        },
+        "plan_cache_stats": {
+          "fallbacks": 1,
+          "last_mode": "plan",
+          "oracle_checks": 1,
+          "oracle_mismatches": 0,
+          "plan_builds": 1,
+          "plan_evictions": 0,
+          "plan_hits": 30
+        },
+        "plan_cached_total": {
+          "iterations": 30,
+          "max_ms": 0.296263,
+          "mean_ms": 0.20790066666666668,
+          "min_ms": 0.200464,
+          "p50_ms": 0.2029335,
+          "p95_ms": 0.228697
+        },
+        "plan_matches": {
+          "iterations": 30,
+          "max_ms": 0.047689,
+          "mean_ms": 0.0451038,
+          "min_ms": 0.044463,
+          "p50_ms": 0.0449185,
+          "p95_ms": 0.046848
+        },
+        "reference": {
+          "iterations": 30,
+          "max_ms": 2.064082,
+          "mean_ms": 1.3084976,
+          "min_ms": 1.219325,
+          "p50_ms": 1.2413715,
+          "p95_ms": 1.867424
+        },
+        "tree_only": {
+          "iterations": 30,
+          "max_ms": 0.405406,
+          "mean_ms": 0.25212239999999997,
+          "min_ms": 0.239106,
+          "p50_ms": 0.24374,
+          "p95_ms": 0.276516
+        }
+      },
+      "content_root": "b8c62a7ca6b7f645ac88d2ce9869747a89e6145c29c30d11ba94997b1d7d34b4",
+      "cprofile": [
+        {
+          "calls_per_encode": 2127.0,
+          "cumtime_ms_per_encode": 8.0164855,
+          "file": "wcb.py",
+          "function": "value",
+          "line": 122,
+          "tottime_ms_per_encode": 4.364464625
+        },
+        {
+          "calls_per_encode": 9986.0,
+          "cumtime_ms_per_encode": 0.7401155,
+          "file": "~",
+          "function": "<built-in method builtins.isinstance>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.7401155
+        },
+        {
+          "calls_per_encode": 6800.0,
+          "cumtime_ms_per_encode": 0.6117518750000001,
+          "file": "~",
+          "function": "<method 'append' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.6117518750000001
+        },
+        {
+          "calls_per_encode": 3352.0,
+          "cumtime_ms_per_encode": 0.90243075,
+          "file": "varint.py",
+          "function": "encode",
+          "line": 29,
+          "tottime_ms_per_encode": 0.611452125
+        },
+        {
+          "calls_per_encode": 5414.0,
+          "cumtime_ms_per_encode": 0.379302375,
+          "file": "~",
+          "function": "<built-in method builtins.len>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.379302375
+        },
+        {
+          "calls_per_encode": 3031.0,
+          "cumtime_ms_per_encode": 0.3575815,
+          "file": "~",
+          "function": "<method 'extend' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.3575815
+        },
+        {
+          "calls_per_encode": 1742.0,
+          "cumtime_ms_per_encode": 0.22224137500000002,
+          "file": "~",
+          "function": "<method 'encode' of 'str' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.22224137500000002
+        },
+        {
+          "calls_per_encode": 2127.0,
+          "cumtime_ms_per_encode": 0.1979335,
+          "file": "wcb.py",
+          "function": "_bump_item",
+          "line": 98,
+          "tottime_ms_per_encode": 0.1979335
+        },
+        {
+          "calls_per_encode": 322.0,
+          "cumtime_ms_per_encode": 0.210021,
+          "file": "~",
+          "function": "<method 'sort' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.150325375
+        },
+        {
+          "calls_per_encode": 1806.0,
+          "cumtime_ms_per_encode": 0.13544975,
+          "file": "wcb.py",
+          "function": "_check_text",
+          "line": 106,
+          "tottime_ms_per_encode": 0.13544975
+        },
+        {
+          "calls_per_encode": 1225.0,
+          "cumtime_ms_per_encode": 0.112741875,
+          "file": "~",
+          "function": "<method 'append' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.112741875
+        },
+        {
+          "calls_per_encode": 901.0,
+          "cumtime_ms_per_encode": 0.07343000000000001,
+          "file": "wcb.py",
+          "function": "_enter",
+          "line": 113,
+          "tottime_ms_per_encode": 0.07343000000000001
+        },
+        {
+          "calls_per_encode": 1225.0,
+          "cumtime_ms_per_encode": 0.05969562500000001,
+          "file": "wcb.py",
+          "function": "<lambda>",
+          "line": 180,
+          "tottime_ms_per_encode": 0.05969562500000001
+        },
+        {
+          "calls_per_encode": 1.0,
+          "cumtime_ms_per_encode": 0.0032235000000000002,
+          "file": "<string>",
+          "function": "__init__",
+          "line": 2,
+          "tottime_ms_per_encode": 0.0032235000000000002
+        }
+      ],
+      "entries": 64,
+      "hash": {
+        "blake3": {
+          "iterations": 20,
+          "max_ms": 0.020579,
+          "mean_ms": 0.00589655,
+          "min_ms": 0.00501,
+          "p50_ms": 0.005079500000000001,
+          "p95_ms": 0.005891
+        },
+        "domain_blake3": {
+          "iterations": 20,
+          "max_ms": 0.013475,
+          "mean_ms": 0.00994245,
+          "min_ms": 0.009688,
+          "p50_ms": 0.009728500000000001,
+          "p95_ms": 0.010219
+        },
+        "sha256": {
+          "iterations": 20,
+          "max_ms": 0.030637,
+          "mean_ms": 0.01154165,
+          "min_ms": 0.010469,
+          "p50_ms": 0.0105,
+          "p95_ms": 0.010951
+        }
+      },
+      "memfd_copy": {
+        "iterations": 20,
+        "max_ms": 0.028904,
+        "mean_ms": 0.00582095,
+        "min_ms": 0.003998,
+        "p50_ms": 0.0043230000000000005,
+        "p95_ms": 0.008055
+      },
+      "metadata_bytes": 26222,
+      "metadata_sha256": "8f30328b1169965e42bbbb258f775d7f018875d7c929c6fcd99b3cc2479c0c9d",
+      "replay": {
+        "items": {
+          "ints": 645,
+          "maps": 322,
+          "payloads": 581
+        },
+        "keys_encode_and_sort": {
+          "iterations": 30,
+          "max_ms": 0.739701,
+          "mean_ms": 0.48382003333333334,
+          "min_ms": 0.411848,
+          "p50_ms": 0.42028350000000003,
+          "p95_ms": 0.735693
+        },
+        "payload_extends": {
+          "iterations": 30,
+          "max_ms": 0.023814,
+          "mean_ms": 0.014347833333333334,
+          "min_ms": 0.011992,
+          "p50_ms": 0.012333,
+          "p95_ms": 0.020378
+        },
+        "varints": {
+          "iterations": 30,
+          "max_ms": 0.071473,
+          "mean_ms": 0.0501705,
+          "min_ms": 0.044764,
+          "p50_ms": 0.045199500000000004,
+          "p95_ms": 0.071073
+        },
+        "walk": {
+          "iterations": 30,
+          "max_ms": 0.602424,
+          "mean_ms": 0.41007913333333335,
+          "min_ms": 0.356516,
+          "p50_ms": 0.3643645,
+          "p95_ms": 0.586925
+        }
+      },
+      "save_ms": 24.358080001547933,
+      "save_stats": {
+        "container_bytes": 2259546,
+        "entries": 64,
+        "tensor_bytes": 2253732
+      },
+      "sections": {
+        "encode": {
+          "iterations": 30,
+          "max_ms": 2.122921,
+          "mean_ms": 1.3615688666666665,
+          "min_ms": 1.221048,
+          "p50_ms": 1.2432050000000001,
+          "p95_ms": 2.121348
+        },
+        "planner_tree": {
+          "iterations": 30,
+          "max_ms": 0.031108,
+          "mean_ms": 0.019350233333333335,
+          "min_ms": 0.016691,
+          "p50_ms": 0.017217,
+          "p95_ms": 0.030026
+        },
+        "state_dict_tree": {
+          "iterations": 30,
+          "max_ms": 0.158987,
+          "mean_ms": 0.103328,
+          "min_ms": 0.090499,
+          "p50_ms": 0.093109,
+          "p95_ms": 0.158767
+        },
+        "storage_rows_tree": {
+          "iterations": 30,
+          "max_ms": 0.239487,
+          "mean_ms": 0.15274403333333333,
+          "min_ms": 0.131114,
+          "p50_ms": 0.1376615,
+          "p95_ms": 0.239277
+        },
+        "total": {
+          "iterations": 30,
+          "max_ms": 2.549407,
+          "mean_ms": 1.6369911333333333,
+          "min_ms": 1.462869,
+          "p50_ms": 1.4948345,
+          "p95_ms": 2.542484
+        }
+      },
+      "shipped": {
+        "service_calls_during_serialize": 0,
+        "total": {
+          "iterations": 30,
+          "max_ms": 61.931278,
+          "mean_ms": 3.6837506,
+          "min_ms": 1.451658,
+          "p50_ms": 1.491508,
+          "p95_ms": 2.708945
+        }
+      },
+      "size": 64
+    },
+    {
+      "alternatives": {
+        "fast_generic": {
+          "iterations": 30,
+          "max_ms": 1.738043,
+          "mean_ms": 1.6323,
+          "min_ms": 1.580429,
+          "p50_ms": 1.6149835000000001,
+          "p95_ms": 1.731851
+        },
+        "native_floor": {
+          "client_marshal": {
+            "bytes": 46911,
+            "iterations": 30,
+            "max_ms": 0.554585,
+            "mean_ms": 0.4619947,
+            "min_ms": 0.428279,
+            "p50_ms": 0.442596,
+            "p95_ms": 0.543524
+          },
+          "client_memfd_write": {
+            "iterations": 20,
+            "max_ms": 0.019056,
+            "mean_ms": 0.0061697,
+            "min_ms": 0.004819,
+            "p50_ms": 0.00553,
+            "p95_ms": 0.006232
+          },
+          "floor_note": "stat_file is the cheapest request/response the service offers; the marshalling and memfd write are the client work a native encoder cannot avoid. Rust encoding, the reply copy and the plan-less store lookup are excluded, so this is a strict lower bound.",
+          "floor_without_rust_encode_ms": 0.452685,
+          "read_round_trip": {
+            "bytes": 71559,
+            "iterations": 20,
+            "max_ms": 0.179084,
+            "mean_ms": 0.08631554999999999,
+            "min_ms": 0.06436,
+            "p50_ms": 0.0718645,
+            "p95_ms": 0.142656
+          },
+          "stat_round_trip": {
+            "iterations": 20,
+            "max_ms": 0.114474,
+            "mean_ms": 0.01603995,
+            "min_ms": 0.009438,
+            "p50_ms": 0.010089,
+            "p95_ms": 0.018635
+          }
+        },
+        "plan_assemble": {
+          "iterations": 30,
+          "max_ms": 0.485907,
+          "mean_ms": 0.4075838,
+          "min_ms": 0.390588,
+          "p50_ms": 0.3996905,
+          "p95_ms": 0.473504
+        },
+        "plan_build": {
+          "iterations": 7,
+          "max_ms": 6.357543,
+          "mean_ms": 6.2070547142857135,
+          "min_ms": 6.102717,
+          "p50_ms": 6.205068,
+          "p95_ms": 6.357543
+        },
+        "plan_cache_stats": {
+          "fallbacks": 1,
+          "last_mode": "plan",
+          "oracle_checks": 1,
+          "oracle_mismatches": 0,
+          "plan_builds": 1,
+          "plan_evictions": 0,
+          "plan_hits": 30
+        },
+        "plan_cached_total": {
+          "iterations": 30,
+          "max_ms": 0.707601,
+          "mean_ms": 0.5605001000000001,
+          "min_ms": 0.539106,
+          "p50_ms": 0.5490745,
+          "p95_ms": 0.623073
+        },
+        "plan_matches": {
+          "iterations": 30,
+          "max_ms": 0.231142,
+          "mean_ms": 0.12705503333333332,
+          "min_ms": 0.118531,
+          "p50_ms": 0.1205195,
+          "p95_ms": 0.170639
+        },
+        "reference": {
+          "iterations": 30,
+          "max_ms": 3.510481,
+          "mean_ms": 3.3011150000000002,
+          "min_ms": 3.161179,
+          "p50_ms": 3.278738,
+          "p95_ms": 3.433828
+        },
+        "tree_only": {
+          "iterations": 30,
+          "max_ms": 58.647051,
+          "mean_ms": 2.6495806666666666,
+          "min_ms": 0.645375,
+          "p50_ms": 0.729812,
+          "p95_ms": 0.821162
+        }
+      },
+      "content_root": "d513aaf2095e097ef3d6cbaaaa2621064f41d009df540f37ae0a48a51a5be666",
+      "cprofile": [
+        {
+          "calls_per_encode": 5564.0,
+          "cumtime_ms_per_encode": 21.338790375,
+          "file": "wcb.py",
+          "function": "value",
+          "line": 122,
+          "tottime_ms_per_encode": 11.59302675
+        },
+        {
+          "calls_per_encode": 26233.0,
+          "cumtime_ms_per_encode": 2.01067075,
+          "file": "~",
+          "function": "<built-in method builtins.isinstance>",
+          "line": 0,
+          "tottime_ms_per_encode": 2.01067075
+        },
+        {
+          "calls_per_encode": 17787.0,
+          "cumtime_ms_per_encode": 1.64146925,
+          "file": "~",
+          "function": "<method 'append' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 1.64146925
+        },
+        {
+          "calls_per_encode": 8784.0,
+          "cumtime_ms_per_encode": 2.3731853750000003,
+          "file": "varint.py",
+          "function": "encode",
+          "line": 29,
+          "tottime_ms_per_encode": 1.5972083750000001
+        },
+        {
+          "calls_per_encode": 14234.0,
+          "cumtime_ms_per_encode": 1.044008875,
+          "file": "~",
+          "function": "<built-in method builtins.len>",
+          "line": 0,
+          "tottime_ms_per_encode": 1.044008875
+        },
+        {
+          "calls_per_encode": 7966.0,
+          "cumtime_ms_per_encode": 0.9342281250000001,
+          "file": "~",
+          "function": "<method 'extend' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.9342281250000001
+        },
+        {
+          "calls_per_encode": 4577.0,
+          "cumtime_ms_per_encode": 0.57221325,
+          "file": "~",
+          "function": "<method 'encode' of 'str' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.57221325
+        },
+        {
+          "calls_per_encode": 5564.0,
+          "cumtime_ms_per_encode": 0.5451475,
+          "file": "wcb.py",
+          "function": "_bump_item",
+          "line": 98,
+          "tottime_ms_per_encode": 0.5451475
+        },
+        {
+          "calls_per_encode": 847.0,
+          "cumtime_ms_per_encode": 0.5465198750000001,
+          "file": "~",
+          "function": "<method 'sort' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.391653375
+        },
+        {
+          "calls_per_encode": 4746.0,
+          "cumtime_ms_per_encode": 0.350261875,
+          "file": "wcb.py",
+          "function": "_check_text",
+          "line": 106,
+          "tottime_ms_per_encode": 0.350261875
+        },
+        {
+          "calls_per_encode": 3220.0,
+          "cumtime_ms_per_encode": 0.30484925,
+          "file": "~",
+          "function": "<method 'append' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 0.30484925
+        },
+        {
+          "calls_per_encode": 2371.0,
+          "cumtime_ms_per_encode": 0.19918650000000002,
+          "file": "wcb.py",
+          "function": "_enter",
+          "line": 113,
+          "tottime_ms_per_encode": 0.19918650000000002
+        },
+        {
+          "calls_per_encode": 3220.0,
+          "cumtime_ms_per_encode": 0.15486650000000002,
+          "file": "wcb.py",
+          "function": "<lambda>",
+          "line": 180,
+          "tottime_ms_per_encode": 0.15486650000000002
+        },
+        {
+          "calls_per_encode": 1.0,
+          "cumtime_ms_per_encode": 21.346411875,
+          "file": "wcb.py",
+          "function": "encode",
+          "line": 69,
+          "tottime_ms_per_encode": 0.004387875
+        }
+      ],
+      "entries": 169,
+      "hash": {
+        "blake3": {
+          "iterations": 20,
+          "max_ms": 0.024406,
+          "mean_ms": 0.0098955,
+          "min_ms": 0.008966,
+          "p50_ms": 0.009052000000000001,
+          "p95_ms": 0.009648
+        },
+        "domain_blake3": {
+          "iterations": 20,
+          "max_ms": 0.018725,
+          "mean_ms": 0.014609800000000001,
+          "min_ms": 0.014156,
+          "p50_ms": 0.014277,
+          "p95_ms": 0.015149
+        },
+        "sha256": {
+          "iterations": 20,
+          "max_ms": 0.055684,
+          "mean_ms": 0.0309267,
+          "min_ms": 0.028082,
+          "p50_ms": 0.0281525,
+          "p95_ms": 0.04839
+        }
+      },
+      "memfd_copy": {
+        "iterations": 20,
+        "max_ms": 0.034715,
+        "mean_ms": 0.0090976,
+        "min_ms": 0.007044,
+        "p50_ms": 0.007494000000000001,
+        "p95_ms": 0.011191
+      },
+      "metadata_bytes": 71559,
+      "metadata_sha256": "facb1b236087a473cf394cfe80cc191f64b81d66476b17c9d80248d0a5c6cf0c",
+      "replay": {
+        "items": {
+          "ints": 1667,
+          "maps": 847,
+          "payloads": 1526
+        },
+        "keys_encode_and_sort": {
+          "iterations": 30,
+          "max_ms": 1.546937,
+          "mean_ms": 1.1312408,
+          "min_ms": 1.074895,
+          "p50_ms": 1.107817,
+          "p95_ms": 1.188187
+        },
+        "payload_extends": {
+          "iterations": 30,
+          "max_ms": 0.073046,
+          "mean_ms": 0.03505943333333333,
+          "min_ms": 0.031199,
+          "p50_ms": 0.032375,
+          "p95_ms": 0.061155
+        },
+        "varints": {
+          "iterations": 30,
+          "max_ms": 0.161131,
+          "mean_ms": 0.12006243333333333,
+          "min_ms": 0.114072,
+          "p50_ms": 0.11496500000000001,
+          "p95_ms": 0.158266
+        },
+        "walk": {
+          "iterations": 30,
+          "max_ms": 1.541225,
+          "mean_ms": 0.9686427666666667,
+          "min_ms": 0.925126,
+          "p50_ms": 0.9421725000000001,
+          "p95_ms": 1.056081
+        }
+      },
+      "save_ms": 47.184051014482975,
+      "save_stats": {
+        "container_bytes": 4989309,
+        "entries": 169,
+        "tensor_bytes": 4973360
+      },
+      "sections": {
+        "encode": {
+          "iterations": 30,
+          "max_ms": 5.478001,
+          "mean_ms": 3.4924996,
+          "min_ms": 3.188309,
+          "p50_ms": 3.3213925,
+          "p95_ms": 4.551933
+        },
+        "planner_tree": {
+          "iterations": 30,
+          "max_ms": 0.082614,
+          "mean_ms": 0.05113433333333333,
+          "min_ms": 0.044493,
+          "p50_ms": 0.0456055,
+          "p95_ms": 0.077244
+        },
+        "state_dict_tree": {
+          "iterations": 30,
+          "max_ms": 66.858943,
+          "mean_ms": 2.4893959999999997,
+          "min_ms": 0.233045,
+          "p50_ms": 0.2434595,
+          "p95_ms": 0.42863
+        },
+        "storage_rows_tree": {
+          "iterations": 30,
+          "max_ms": 0.722378,
+          "mean_ms": 0.4400053666666667,
+          "min_ms": 0.390038,
+          "p50_ms": 0.4095795,
+          "p95_ms": 0.667447
+        },
+        "total": {
+          "iterations": 30,
+          "max_ms": 71.012113,
+          "mean_ms": 6.4730353,
+          "min_ms": 3.884308,
+          "p50_ms": 4.0351695,
+          "p95_ms": 6.593423
+        }
+      },
+      "shipped": {
+        "service_calls_during_serialize": 0,
+        "total": {
+          "iterations": 30,
+          "max_ms": 7.066966,
+          "mean_ms": 4.138014466666666,
+          "min_ms": 3.885259,
+          "p50_ms": 3.9966619999999997,
+          "p95_ms": 4.537647
+        }
+      },
+      "size": 169
+    },
+    {
+      "alternatives": {
+        "fast_generic": {
+          "iterations": 30,
+          "max_ms": 11.391345,
+          "mean_ms": 10.632065899999999,
+          "min_ms": 10.473002,
+          "p50_ms": 10.570915,
+          "p95_ms": 11.322166
+        },
+        "native_floor": {
+          "client_marshal": {
+            "bytes": 302088,
+            "iterations": 30,
+            "max_ms": 3.23164,
+            "mean_ms": 3.0194971666666666,
+            "min_ms": 2.999287,
+            "p50_ms": 3.00913,
+            "p95_ms": 3.06542
+          },
+          "client_memfd_write": {
+            "iterations": 20,
+            "max_ms": 0.065231,
+            "mean_ms": 0.02567945,
+            "min_ms": 0.022482,
+            "p50_ms": 0.023459,
+            "p95_ms": 0.02665
+          },
+          "floor_note": "stat_file is the cheapest request/response the service offers; the marshalling and memfd write are the client work a native encoder cannot avoid. Rust encoding, the reply copy and the plan-less store lookup are excluded, so this is a strict lower bound.",
+          "floor_without_rust_encode_ms": 3.019354,
+          "read_round_trip": {
+            "bytes": 401583,
+            "iterations": 20,
+            "max_ms": 0.322993,
+            "mean_ms": 0.2126693,
+            "min_ms": 0.200635,
+            "p50_ms": 0.2057235,
+            "p95_ms": 0.231732
+          },
+          "stat_round_trip": {
+            "iterations": 20,
+            "max_ms": 0.106499,
+            "mean_ms": 0.015707199999999998,
+            "min_ms": 0.009929,
+            "p50_ms": 0.010224,
+            "p95_ms": 0.017733
+          }
+        },
+        "plan_assemble": {
+          "iterations": 30,
+          "max_ms": 2.843716,
+          "mean_ms": 2.4771891666666668,
+          "min_ms": 2.414445,
+          "p50_ms": 2.4499265,
+          "p95_ms": 2.74922
+        },
+        "plan_build": {
+          "iterations": 7,
+          "max_ms": 104.512712,
+          "mean_ms": 50.351631857142856,
+          "min_ms": 40.660489,
+          "p50_ms": 41.121389,
+          "p95_ms": 104.512712
+        },
+        "plan_cache_stats": {
+          "fallbacks": 1,
+          "last_mode": "plan",
+          "oracle_checks": 1,
+          "oracle_mismatches": 0,
+          "plan_builds": 1,
+          "plan_evictions": 0,
+          "plan_hits": 30
+        },
+        "plan_cached_total": {
+          "iterations": 30,
+          "max_ms": 3.383824,
+          "mean_ms": 3.289949233333333,
+          "min_ms": 3.242531,
+          "p50_ms": 3.282756,
+          "p95_ms": 3.353898
+        },
+        "plan_matches": {
+          "iterations": 30,
+          "max_ms": 0.821052,
+          "mean_ms": 0.7928815,
+          "min_ms": 0.783372,
+          "p50_ms": 0.789378,
+          "p95_ms": 0.815131
+        },
+        "reference": {
+          "iterations": 30,
+          "max_ms": 22.344342,
+          "mean_ms": 20.417135299999998,
+          "min_ms": 19.857533,
+          "p50_ms": 20.1817125,
+          "p95_ms": 21.419557
+        },
+        "tree_only": {
+          "iterations": 30,
+          "max_ms": 82.335691,
+          "mean_ms": 20.556255633333333,
+          "min_ms": 5.251329,
+          "p50_ms": 5.6407004999999995,
+          "p95_ms": 73.776571
+        }
+      },
+      "content_root": "687a675650e5f34f7b37b8ed86a4447df6c3cf23581dfe4599e08d871c24c7f1",
+      "cprofile": [
+        {
+          "calls_per_encode": 38922.0,
+          "cumtime_ms_per_encode": 130.210298,
+          "file": "wcb.py",
+          "function": "value",
+          "line": 122,
+          "tottime_ms_per_encode": 72.01795075
+        },
+        {
+          "calls_per_encode": 163901.0,
+          "cumtime_ms_per_encode": 11.882687625,
+          "file": "~",
+          "function": "<built-in method builtins.isinstance>",
+          "line": 0,
+          "tottime_ms_per_encode": 11.882687625
+        },
+        {
+          "calls_per_encode": 116777.0,
+          "cumtime_ms_per_encode": 10.164244875000001,
+          "file": "~",
+          "function": "<method 'append' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 10.164244875000001
+        },
+        {
+          "calls_per_encode": 58387.0,
+          "cumtime_ms_per_encode": 14.4722405,
+          "file": "varint.py",
+          "function": "encode",
+          "line": 29,
+          "tottime_ms_per_encode": 9.721459375
+        },
+        {
+          "calls_per_encode": 86054.0,
+          "cumtime_ms_per_encode": 6.0115365,
+          "file": "~",
+          "function": "<built-in method builtins.len>",
+          "line": 0,
+          "tottime_ms_per_encode": 6.0115365
+        },
+        {
+          "calls_per_encode": 48151.0,
+          "cumtime_ms_per_encode": 5.350331875,
+          "file": "~",
+          "function": "<method 'extend' of 'bytearray' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 5.350331875
+        },
+        {
+          "calls_per_encode": 38922.0,
+          "cumtime_ms_per_encode": 3.515280875,
+          "file": "wcb.py",
+          "function": "_bump_item",
+          "line": 98,
+          "tottime_ms_per_encode": 3.515280875
+        },
+        {
+          "calls_per_encode": 27662.0,
+          "cumtime_ms_per_encode": 3.348593375,
+          "file": "~",
+          "function": "<method 'encode' of 'str' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 3.348593375
+        },
+        {
+          "calls_per_encode": 5122.0,
+          "cumtime_ms_per_encode": 3.222333625,
+          "file": "~",
+          "function": "<method 'sort' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 2.3057833750000003
+        },
+        {
+          "calls_per_encode": 28686.0,
+          "cumtime_ms_per_encode": 2.050795625,
+          "file": "wcb.py",
+          "function": "_check_text",
+          "line": 106,
+          "tottime_ms_per_encode": 2.050795625
+        },
+        {
+          "calls_per_encode": 19465.0,
+          "cumtime_ms_per_encode": 1.7800617500000002,
+          "file": "~",
+          "function": "<method 'append' of 'list' objects>",
+          "line": 0,
+          "tottime_ms_per_encode": 1.7800617500000002
+        },
+        {
+          "calls_per_encode": 14341.0,
+          "cumtime_ms_per_encode": 1.14502175,
+          "file": "wcb.py",
+          "function": "_enter",
+          "line": 113,
+          "tottime_ms_per_encode": 1.14502175
+        },
+        {
+          "calls_per_encode": 19465.0,
+          "cumtime_ms_per_encode": 0.9165502500000001,
+          "file": "wcb.py",
+          "function": "<lambda>",
+          "line": 180,
+          "tottime_ms_per_encode": 0.9165502500000001
+        },
+        {
+          "calls_per_encode": 1.0,
+          "cumtime_ms_per_encode": 130.236831125,
+          "file": "wcb.py",
+          "function": "encode",
+          "line": 69,
+          "tottime_ms_per_encode": 0.019503625000000004
+        }
+      ],
+      "entries": 1024,
+      "hash": {
+        "blake3": {
+          "iterations": 20,
+          "max_ms": 0.049292,
+          "mean_ms": 0.03374695,
+          "min_ms": 0.032821,
+          "p50_ms": 0.0328715,
+          "p95_ms": 0.033643
+        },
+        "domain_blake3": {
+          "iterations": 20,
+          "max_ms": 0.043331,
+          "mean_ms": 0.0389532,
+          "min_ms": 0.038552,
+          "p50_ms": 0.038611999999999994,
+          "p95_ms": 0.040376
+        },
+        "sha256": {
+          "iterations": 20,
+          "max_ms": 0.177021,
+          "mean_ms": 0.15737859999999998,
+          "min_ms": 0.155951,
+          "p50_ms": 0.15608650000000002,
+          "p95_ms": 0.157935
+        }
+      },
+      "memfd_copy": {
+        "iterations": 20,
+        "max_ms": 0.091651,
+        "mean_ms": 0.0358753,
+        "min_ms": 0.030877,
+        "p50_ms": 0.032616,
+        "p95_ms": 0.041157
+      },
+      "metadata_bytes": 401583,
+      "metadata_sha256": "3804cd93738acabd1a2b7d628358f9457ebf46cb43b29fb461571044ff825267",
+      "replay": {
+        "items": {
+          "ints": 15360,
+          "maps": 5122,
+          "payloads": 9221
+        },
+        "keys_encode_and_sort": {
+          "iterations": 30,
+          "max_ms": 8.184832,
+          "mean_ms": 6.6485992000000005,
+          "min_ms": 6.536427,
+          "p50_ms": 6.596894000000001,
+          "p95_ms": 6.64572
+        },
+        "payload_extends": {
+          "iterations": 30,
+          "max_ms": 0.231001,
+          "mean_ms": 0.18339060000000001,
+          "min_ms": 0.179856,
+          "p50_ms": 0.18138300000000002,
+          "p95_ms": 0.192178
+        },
+        "varints": {
+          "iterations": 30,
+          "max_ms": 0.96495,
+          "mean_ms": 0.9572808666666667,
+          "min_ms": 0.953559,
+          "p50_ms": 0.9563900000000001,
+          "p95_ms": 0.964921
+        },
+        "walk": {
+          "iterations": 30,
+          "max_ms": 6.814816,
+          "mean_ms": 6.2336808,
+          "min_ms": 6.098549,
+          "p50_ms": 6.2095565,
+          "p95_ms": 6.331034
+        }
+      },
+      "save_ms": 186.34066602680832,
+      "save_stats": {
+        "container_bytes": 150189,
+        "entries": 1024,
+        "tensor_bytes": 65536
+      },
+      "sections": {
+        "encode": {
+          "iterations": 30,
+          "max_ms": 25.118849,
+          "mean_ms": 20.680196566666666,
+          "min_ms": 20.109994,
+          "p50_ms": 20.3530575,
+          "p95_ms": 22.199012
+        },
+        "planner_tree": {
+          "iterations": 30,
+          "max_ms": 52.358537,
+          "mean_ms": 2.057369066666667,
+          "min_ms": 0.280424,
+          "p50_ms": 0.299013,
+          "p95_ms": 0.483392
+        },
+        "state_dict_tree": {
+          "iterations": 30,
+          "max_ms": 61.668869,
+          "mean_ms": 9.3352681,
+          "min_ms": 1.861463,
+          "p50_ms": 2.0327725,
+          "p95_ms": 61.171861
+        },
+        "storage_rows_tree": {
+          "iterations": 30,
+          "max_ms": 61.45006,
+          "mean_ms": 10.4614169,
+          "min_ms": 3.114592,
+          "p50_ms": 3.2273825,
+          "p95_ms": 61.426747
+        },
+        "total": {
+          "iterations": 30,
+          "max_ms": 89.065979,
+          "mean_ms": 42.534250633333336,
+          "min_ms": 25.566845,
+          "p50_ms": 25.9329535,
+          "p95_ms": 85.875547
+        }
+      },
+      "shipped": {
+        "service_calls_during_serialize": 0,
+        "total": {
+          "iterations": 30,
+          "max_ms": 103.765999,
+          "mean_ms": 44.40010336666667,
+          "min_ms": 25.694894,
+          "p50_ms": 27.39141,
+          "p95_ms": 101.109822
+        }
+      },
+      "size": 1024
+    }
+  ],
+  "stamp": "20261111T234500Z"
+}

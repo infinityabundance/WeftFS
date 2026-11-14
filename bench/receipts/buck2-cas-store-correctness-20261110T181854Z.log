@@ -1,0 +1,66 @@
+kind: buck2-cas-store
+timestamp_utc: 20261110T181854Z
+court: fuse
+revisions:
+  WeftFS: 9fdafd3c44aabc18c3848e2f551e8745b498763b
+  WeftCodec: 4cd729f55b65a80370946499feaff70a5277ef04
+  WeftCodec-Go: d989c038b995d468c641989589f9d5756939585b
+  WeftFS-Go: ad90835857e95479ac1305fcc16f90ac891a45ca
+limits: memory=3g cpus=4 pids=1024 nproc=2048
+kernel: 7.3.3-1-cachyos
+image: weft/fuse-court:1 sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e
+== build rust oracle ==
+warning: unused variable: `commit`
+    --> src/backend.rs:1370:9
+     |
+1370 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1371:9
+     |
+1371 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1372:9
+     |
+1372 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1801:13
+     |
+1801 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:242:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+242 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+== build adapter ==
+== go vet + go test (cross-language included) ==
+?   	github.com/infinityabundance/WeftFS/adapters/buck2/cmd/buck2cas	[no test files]
+ok  	github.com/infinityabundance/WeftFS/adapters/buck2/cas	0.049s
+== adapter correctness demo ==
+buck2-cas store demo: 38/38 assertions pass; receipt /work/bench/receipts/buck2-cas-store-correctness-20261110T181854Z.json
+== mount by:action=<key> ==
+object.bin--bc560cec
+== CLI fetch from the same store ==
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261110T181854Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261110T181854Z/cli-fetch.bin
+hit key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50 out=/work/.docker-cache/buck2/20261110T181854Z/cli-fetch.bin
+== CLI verify ==
+verify ok: key=e1a6f42d1f17fd62b4d23611814336bfeda262ba1f4525437f76b09a5ed2d0d5 content_id=b0e18453590e0b34be3d914505cdaf71043d448b1d29be763ac39ec910ab9709 bytes=50
+== unmount ==
+== merge mount evidence into the receipt ==
+mount merged: 41/41 assertions pass

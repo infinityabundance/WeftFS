@@ -1,0 +1,505 @@
+object_pipeline_court: phase 2 (adverse court against a second MinIO)
+object_pipeline_court: adverse baseline (proxy mode=count target_put=0)
++ exec docker run --rm --init --name weft-bench-court-2159118 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=0163bfa837d5d104291ab68ca95490ddecd05f10 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_BUCKET=weft-n04-20261113t181000z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_TEST_PREFIX=weft-n04-test-20261113t181000z -e 'WEFT_S3_SERVER_LABEL=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)' -e WEFT_S3_SERVER_RELEASE=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc --network weft-n04-net-2158751 --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work &&       python3 bench/scripts/s3_fault_proxy.py --listen 10001 --upstream 10.213.88.10:9000         --mode count --target-put 0 --log /work/.docker-cache/n04-20261113T181000Z/op/proxy-count-baseline.jsonl &       PROXY=$!;       READY=0; for i in $(seq 1 100); do         if (exec 3<>/dev/tcp/127.0.0.1/10001) 2>/dev/null; then READY=1; break; fi;         sleep 0.1;       done;       if [ "$READY" != 1 ]; then echo '\''proxy did not listen'\'' >&2; kill $PROXY 2>/dev/null || true; exit 1; fi;       cargo run --release --quiet --example object_pipeline_adverse --         --scenario baseline --endpoint http://127.0.0.1:10001         --reference-endpoint http://10.213.88.10:9000         --bucket weft-n04-20261113t181000z-count --out /work/.docker-cache/n04-20261113T181000Z/op/baseline.json;       RC=$?; kill $PROXY 2>/dev/null || true; wait $PROXY 2>/dev/null || true; exit $RC'
+s3_fault_proxy: mode=count target_put=0 upstream=10.213.88.10:9000 listen=10001
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1515:9
+     |
+1515 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1516:9
+     |
+1516 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1517:9
+     |
+1517 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2390:13
+     |
+2390 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+{
+  "generation": 3,
+  "head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+  "scenario": "baseline",
+  "tensors": 8,
+  "verify_ok": true
+}
+object_pipeline_court: the baseline write issued 43 PUTs; fault target is PUT 30
+object_pipeline_court: adverse abort (proxy mode=reset target_put=30)
++ exec docker run --rm --init --name weft-bench-court-2159655 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=0163bfa837d5d104291ab68ca95490ddecd05f10 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_BUCKET=weft-n04-20261113t181000z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_TEST_PREFIX=weft-n04-test-20261113t181000z -e 'WEFT_S3_SERVER_LABEL=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)' -e WEFT_S3_SERVER_RELEASE=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc --network weft-n04-net-2158751 --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work &&       python3 bench/scripts/s3_fault_proxy.py --listen 10001 --upstream 10.213.88.10:9000         --mode reset --target-put 30 --log /work/.docker-cache/n04-20261113T181000Z/op/proxy-reset-abort.jsonl &       PROXY=$!;       READY=0; for i in $(seq 1 100); do         if (exec 3<>/dev/tcp/127.0.0.1/10001) 2>/dev/null; then READY=1; break; fi;         sleep 0.1;       done;       if [ "$READY" != 1 ]; then echo '\''proxy did not listen'\'' >&2; kill $PROXY 2>/dev/null || true; exit 1; fi;       cargo run --release --quiet --example object_pipeline_adverse --         --scenario abort --endpoint http://127.0.0.1:10001         --reference-endpoint http://10.213.88.10:9000         --bucket weft-n04-20261113t181000z-reset --out /work/.docker-cache/n04-20261113T181000Z/op/abort.json;       RC=$?; kill $PROXY 2>/dev/null || true; wait $PROXY 2>/dev/null || true; exit $RC'
+s3_fault_proxy: mode=reset target_put=30 upstream=10.213.88.10:9000 listen=10001
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1515:9
+     |
+1515 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1516:9
+     |
+1516 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1517:9
+     |
+1517 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2390:13
+     |
+2390 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+{
+  "failure_message": "Io: pipeline tensor `layer3.weight` (3): S3 PUT s3://weft-n04-20261113t181000z-reset-faulted/manifests/02/0222acf22570614ebaad064ba29a9ca16be37b6607bb1e52e58bc1e6bdf517da failed: http://127.0.0.1:10001/weft-n04-20261113t181000z-reset-faulted/manifests/02/0222acf22570614ebaad064ba29a9ca16be37b6607bb1e52e58bc1e6bdf517da: Network Error: Unexpected EOF",
+  "fault": "the provider aborted the write",
+  "generation_after_fault": 2,
+  "head_after_fault": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+  "logical_bytes": 2097152,
+  "no_partial_entry_visible": true,
+  "pre_fault_generation": 2,
+  "pre_fault_head": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+  "reference_generation": 3,
+  "reference_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+  "retry_generation": 3,
+  "retry_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+  "retry_matches_reference": true,
+  "retry_verify_ok": true,
+  "scenario": "abort",
+  "tensors": 8,
+  "verify_after_fault_ok": true
+}
+object_pipeline_court: adverse lost-ack (proxy mode=swallow target_put=30)
++ exec docker run --rm --init --name weft-bench-court-2159999 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=0163bfa837d5d104291ab68ca95490ddecd05f10 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_BUCKET=weft-n04-20261113t181000z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_TEST_PREFIX=weft-n04-test-20261113t181000z -e 'WEFT_S3_SERVER_LABEL=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)' -e WEFT_S3_SERVER_RELEASE=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc --network weft-n04-net-2158751 --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work &&       python3 bench/scripts/s3_fault_proxy.py --listen 10001 --upstream 10.213.88.10:9000         --mode swallow --target-put 30 --log /work/.docker-cache/n04-20261113T181000Z/op/proxy-swallow-lost-ack.jsonl &       PROXY=$!;       READY=0; for i in $(seq 1 100); do         if (exec 3<>/dev/tcp/127.0.0.1/10001) 2>/dev/null; then READY=1; break; fi;         sleep 0.1;       done;       if [ "$READY" != 1 ]; then echo '\''proxy did not listen'\'' >&2; kill $PROXY 2>/dev/null || true; exit 1; fi;       cargo run --release --quiet --example object_pipeline_adverse --         --scenario lost-ack --endpoint http://127.0.0.1:10001         --reference-endpoint http://10.213.88.10:9000         --bucket weft-n04-20261113t181000z-swallow --out /work/.docker-cache/n04-20261113T181000Z/op/lost-ack.json;       RC=$?; kill $PROXY 2>/dev/null || true; wait $PROXY 2>/dev/null || true; exit $RC'
+s3_fault_proxy: mode=swallow target_put=30 upstream=10.213.88.10:9000 listen=10001
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1515:9
+     |
+1515 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1516:9
+     |
+1516 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1517:9
+     |
+1517 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2390:13
+     |
+2390 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+{
+  "failure_message": "Io: pipeline tensor `layer4.weight` (4): S3 PUT s3://weft-n04-20261113t181000z-swallow-faulted/manifests/02/02bf9cd27b0228530b8d07989cfb42d21a86060bcce0e0a5659483ac4b1d8b34 failed: http://127.0.0.1:10001/weft-n04-20261113t181000z-swallow-faulted/manifests/02/02bf9cd27b0228530b8d07989cfb42d21a86060bcce0e0a5659483ac4b1d8b34: Network Error: Unexpected EOF",
+  "fault": "the provider aborted the write",
+  "generation_after_fault": 2,
+  "head_after_fault": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+  "logical_bytes": 2097152,
+  "no_partial_entry_visible": true,
+  "pre_fault_generation": 2,
+  "pre_fault_head": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+  "reference_generation": 3,
+  "reference_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+  "retry_generation": 3,
+  "retry_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd",
+  "retry_matches_reference": true,
+  "retry_verify_ok": true,
+  "scenario": "lost-ack",
+  "tensors": 8,
+  "verify_after_fault_ok": true
+}
+object_pipeline_court: adverse stale-reader (proxy mode=count target_put=0)
++ exec docker run --rm --init --name weft-bench-court-2160317 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=0163bfa837d5d104291ab68ca95490ddecd05f10 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_BUCKET=weft-n04-20261113t181000z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_TEST_PREFIX=weft-n04-test-20261113t181000z -e 'WEFT_S3_SERVER_LABEL=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)' -e WEFT_S3_SERVER_RELEASE=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc --network weft-n04-net-2158751 --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work &&       python3 bench/scripts/s3_fault_proxy.py --listen 10001 --upstream 10.213.88.10:9000         --mode count --target-put 0 --log /work/.docker-cache/n04-20261113T181000Z/op/proxy-count-stale-reader.jsonl &       PROXY=$!;       READY=0; for i in $(seq 1 100); do         if (exec 3<>/dev/tcp/127.0.0.1/10001) 2>/dev/null; then READY=1; break; fi;         sleep 0.1;       done;       if [ "$READY" != 1 ]; then echo '\''proxy did not listen'\'' >&2; kill $PROXY 2>/dev/null || true; exit 1; fi;       cargo run --release --quiet --example object_pipeline_adverse --         --scenario stale-reader --endpoint http://127.0.0.1:10001         --reference-endpoint http://10.213.88.10:9000         --bucket weft-n04-20261113t181000z-count --out /work/.docker-cache/n04-20261113T181000Z/op/stale-reader.json;       RC=$?; kill $PROXY 2>/dev/null || true; wait $PROXY 2>/dev/null || true; exit $RC'
+s3_fault_proxy: mode=count target_put=0 upstream=10.213.88.10:9000 listen=10001
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1515:9
+     |
+1515 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1516:9
+     |
+1516 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1517:9
+     |
+1517 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2390:13
+     |
+2390 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+{
+  "fresh_reader_head_matches": true,
+  "fresh_reader_sees_new_entry": true,
+  "generation_before": 2,
+  "head_before": "ce50d9cb1e067781fdc988287376a4b9f67dce8470922b30392f9a286d0dc348",
+  "reader_saw_no_new_entry": true,
+  "reader_stayed_pinned": true,
+  "scenario": "stale-reader",
+  "written_generation": 3,
+  "written_head": "b3abae1b6298e15596e2756ed874b0e82113536cbcd8dc04cb63b78f0537e9fd"
+}
+object_pipeline_court: S3 fencing suite (stale conditional write refused)
+{
+ "result": "partial",
+ "checks": {
+  "provider_abort_failed_closed": true,
+  "provider_abort_left_previous_head": true,
+  "provider_abort_retry_matches_reference": true,
+  "lost_ack_failed_closed": true,
+  "lost_ack_retry_matches_reference": true,
+  "stale_reader_stayed_pinned": true,
+  "fresh_reader_sees_the_commit": true
+ }
+}
+object_pipeline_court: receipt bench/receipts/n04-object-pipeline-20261113T181000Z.json
+object_pipeline_court: log bench/receipts/n04-object-pipeline-20261113T181000Z.log
