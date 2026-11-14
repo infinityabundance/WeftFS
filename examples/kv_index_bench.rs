@@ -29,7 +29,7 @@ use std::time::Instant;
 use serde_json::{json, Value as Json};
 use weftfs::identity::Hash32;
 use weftfs::kv_index::{
-    entries_accumulator, KvIndexEntry, KvIndexEntryKind, KvIndexSegmentRef, SegmentKind,
+    entries_accumulator, KvIndexEntry, KvIndexEntryKind, KvIndexSegment, SegmentKind,
 };
 use weftfs::kv_prefix::{
     kv_page_bytes, kv_token_ids, KvLookup, KvPrefixBatchItem, KvPrefixRequest, KvPrefixSpec,
