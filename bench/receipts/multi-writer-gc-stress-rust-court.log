@@ -1,0 +1,71 @@
+# Supplementary repetition arm in the RUST court (the image the CI job compiles
+# in), at revision 5b026b2664ae027b789ce071330ffd1745567558
+# on 2026-11-14T22:09:02Z.
+#
+# The binary is built by this invocation (`cargo test --test multi_writer_gc
+# --no-run`) and its sha256 is printed below; each of the 50 runs executes that
+# binary once with --test-threads=8 (8 tests in the suite) under `timeout 180`.
+#
+# Court limits: defaults, unchanged - memory 3g, memory-swap 3g, pids 1024,
+# cpus 4, /tmp tmpfs 1g, WEFT_NPROC 2048, cap-drop=ALL. No override.
+# Image: weft/rust-court:1 (rust:1-slim-bookworm + build-essential + libfuse3-dev).
+# The store lives on the bind-mounted project filesystem
+# (TMPDIR=.docker-cache/mwgc-stress-tmp), not the court tmpfs, so every run pays
+# real fsync latency like the CI runner did.
+# This log is supplementary evidence; the receipt is
+# bench/receipts/multi-writer-gc-stress-20261114T214326Z.json.
++ exec docker run --rm --init --name weft-rust-court-3614069 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=5b026b2664ae027b789ce071330ffd1745567558 -e WEFT_REPO_WEFTFS_GO=a8e8e7afa85446f9a441c275b7c7bbaedb3bb847 -e WEFT_REPO_WEFTCODEC=34f76203229ed22bfad7495963d84977c6627d27 -e WEFT_REPO_WEFTCODEC_GO=ad53f3c3975e6dc8799d2b67524a30e688d961fd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; set -e; export TMPDIR=/work/.docker-cache/mwgc-stress-tmp; mkdir -p $TMPDIR; cargo test --test multi_writer_gc --no-run 2>&1 | tee /work/.docker-cache/build.txt | tail -2; bin=$(grep -o '\''Executable tests/multi_writer_gc.rs ([^)]*)'\'' /work/.docker-cache/build.txt | sed -E '\''s/.*\((.*)\)/\1/'\''); echo "binary=$bin sha256=$(sha256sum "$bin" | cut -d'\'' '\'' -f1)"; fails=0; for i in $(seq 1 50); do if timeout 180 "$bin" --test-threads=8 > /work/.docker-cache/rc-run.out 2>&1; then echo "RESULT run=$i status=pass"; else echo "RESULT run=$i status=fail"; fails=$((fails+1)); cat /work/.docker-cache/rc-run.out; fi; done; echo "rust_court_arm runs=50 failures=$fails"'
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.14s
+  Executable tests/multi_writer_gc.rs (.docker-cache/target-rust/debug/deps/multi_writer_gc-7377255b7a5aa42b)
+binary=.docker-cache/target-rust/debug/deps/multi_writer_gc-7377255b7a5aa42b sha256=7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125
+RESULT run=1 status=pass
+RESULT run=2 status=pass
+RESULT run=3 status=pass
+RESULT run=4 status=pass
+RESULT run=5 status=pass
+RESULT run=6 status=pass
+RESULT run=7 status=pass
+RESULT run=8 status=pass
+RESULT run=9 status=pass
+RESULT run=10 status=pass
+RESULT run=11 status=pass
+RESULT run=12 status=pass
+RESULT run=13 status=pass
+RESULT run=14 status=pass
+RESULT run=15 status=pass
+RESULT run=16 status=pass
+RESULT run=17 status=pass
+RESULT run=18 status=pass
+RESULT run=19 status=pass
+RESULT run=20 status=pass
+RESULT run=21 status=pass
+RESULT run=22 status=pass
+RESULT run=23 status=pass
+RESULT run=24 status=pass
+RESULT run=25 status=pass
+RESULT run=26 status=pass
+RESULT run=27 status=pass
+RESULT run=28 status=pass
+RESULT run=29 status=pass
+RESULT run=30 status=pass
+RESULT run=31 status=pass
+RESULT run=32 status=pass
+RESULT run=33 status=pass
+RESULT run=34 status=pass
+RESULT run=35 status=pass
+RESULT run=36 status=pass
+RESULT run=37 status=pass
+RESULT run=38 status=pass
+RESULT run=39 status=pass
+RESULT run=40 status=pass
+RESULT run=41 status=pass
+RESULT run=42 status=pass
+RESULT run=43 status=pass
+RESULT run=44 status=pass
+RESULT run=45 status=pass
+RESULT run=46 status=pass
+RESULT run=47 status=pass
+RESULT run=48 status=pass
+RESULT run=49 status=pass
+RESULT run=50 status=pass
+rust_court_arm runs=50 failures=0
