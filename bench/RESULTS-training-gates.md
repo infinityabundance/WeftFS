@@ -163,6 +163,7 @@ Save p50: WeftFS session **30.429 ms**, WeftFS fast **30.167 ms**, OCDBT **29.79
 A second independent run of the same court:
 
 <!-- BEGIN GENERATED:tg-baselines-repeat (scripts/perf_numbers.py) -->
+Repeat run: WeftFS fast **30.033 ms**, OCDBT **30.079 ms**, native DCP **9.939 ms**.
 <!-- END GENERATED:tg-baselines-repeat -->
 
 Attacks applied: one persistent service per session, the reusable DCP
