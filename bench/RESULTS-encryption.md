@@ -6,16 +6,13 @@ the registered court and the docs follow it, and this is the receipt the
 registered court produces at the closing revision).
 **Court:** `weft/bench-court:1` (`sha256:4c6c41fb…`), kernel `7.3.3-1-cachyos`,
 3 GiB / 4 vCPU / 1024 pids, unchanged hard limits, `tmpfs` fixture.
-**Receipt:** `bench/receipts/encryption-20261114T234223Z.json` (every check
-passes), raw log `bench/receipts/encryption-20261114T234223Z.log`.
-**Superseded, retained, not cited:** `encryption-20261115T001500Z.json` (same
-checks, but its stamp was supplied by a shell override that was ahead of the
-host clock — the run is real, the stamp is not evidence), and
-`encryption-20261114T235500Z.json`, `encryption-20261114T233000Z.json`,
-`encryption-20261114T231500Z.json` (same measurements at earlier harness
-revisions; the last also lacks the `environment.revisions` field the numbers
-generator needs), and `encryption-20261114T230000Z.json` (first run: the
-plane-throughput column was mis-scaled by 1024).
+**Receipt:** `bench/receipts/encryption-20261114T234710Z.json` (every check
+passes), raw log `bench/receipts/encryption-20261114T234710Z.log`.
+**Superseded, retained, not cited:** `encryption-20261114T234223Z.json` (same
+bench, before the court gained its CLI smoke), `encryption-20261115T001500Z.json`
+(same checks, but its stamp was supplied by a shell override that was ahead of
+the host clock — the run is real, the stamp is not evidence), and the four
+earlier runs listed below with the defect each one carried.
 
 ## What was measured
 
@@ -125,6 +122,11 @@ and still leaks equality through the name.
   file: revocation is a retention decision, not a rotation.
 
 ## Reproduction
+
+The court first runs the store suite, then a CLI smoke in the rust court (init
+with an inline key, create, cat, `verify --full`, `info`, a wrong key refused, a
+keyless read refused, and the first object on disk carrying `WEFTE1`), then the
+bench.
 
 ```bash
 bash scripts/encryption_court.sh      # the registered court: Docker preflight, then the bench court
