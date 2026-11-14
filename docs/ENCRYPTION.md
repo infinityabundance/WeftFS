@@ -207,9 +207,24 @@ logical-byte total). Wall and CPU are medians; CPU is `getrusage` user+sys for
 the phase. Reading is warm page cache, so the read row isolates CPU, not media.
 
 <!-- BEGIN GENERATED:encryption-table (scripts/perf_numbers.py) -->
+| row | write median ms | read median ms | write CPU ms | read CPU ms | footprint B | objects |
+|---|---:|---:|---:|---:|---:|---:|
+| `plain` | 52.7 | 39.7 | 51.7 | 39.6 | 72,574,425 | 1,216 |
+| `convergent` | 95.3 | 78.9 | 94.4 | 78.2 | 72,739,961 | 1,216 |
+| `random` | 94.0 | 65.4 | 92.2 | 65.0 | 72,739,961 | 1,216 |
 <!-- END GENERATED:encryption-table -->
 
 <!-- BEGIN GENERATED:encryption-headline (scripts/perf_numbers.py) -->
+On this fixture the convergent envelope costs **1.81x** the plain
+write wall and **1.99x** the plain read wall; the random envelope
+costs **1.78x** and **1.65x**. Physical footprint
+rises by **0.228 %** in both modes and the object count is the
+same in all three arms (**1,216**), which is the leak: the blob name
+is the plaintext hash whichever mode is chosen. The plane itself seals at
+**1,568 MiB/s** and opens at **2,127 MiB/s**
+(convergent) on one core of the bench court; seven interleaved repetitions,
+medians, warm page cache. Source: `bench/receipts/encryption-20261114T235500Z.json`
+(stamp 20261114T235500Z, revision 7f85d5cfb5ca).
 <!-- END GENERATED:encryption-headline -->
 
 Interpretation:

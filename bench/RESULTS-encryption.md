@@ -38,6 +38,12 @@ written), so it measures decode + envelope CPU, not media.
 ## Result
 
 <!-- BEGIN GENERATED:encryption-verdict (scripts/perf_numbers.py) -->
+All **14** checks pass with **0** failures on a
+**76,546,048 B** logical fixture: every raw row restored every
+object byte-exactly, and every arm's physical footprint was identical across its
+7 repetitions. The four dedup facts (convergent equality, random
+inequality, convergent idempotent republish, random conflicting republish) are
+checks in the same receipt.
 <!-- END GENERATED:encryption-verdict -->
 
 <!-- BEGIN GENERATED:encryption-table (scripts/perf_numbers.py) -->
@@ -55,6 +61,10 @@ each arm.
 64 independent one-MiB objects sealed and opened with the same key set:
 
 <!-- BEGIN GENERATED:encryption-plane (scripts/perf_numbers.py) -->
+| mode | seal MiB/s | open MiB/s |
+|---|---:|---:|
+| `convergent` | 1,568 | 2,127 |
+| `random` | 1,618 | 2,655 |
 <!-- END GENERATED:encryption-plane -->
 
 `random` opens faster than `convergent` because the convergent header carries a
@@ -87,8 +97,17 @@ and still leaks equality through the name.
 
 ## Losses
 
-* Write wall and write CPU roughly double (see ratio rows): the envelope is
-  extra CPU on the critical path and there is no hardware offload.
+<!-- BEGIN GENERATED:encryption-losses (scripts/perf_numbers.py) -->
+* **Wall:** write median plain 52.7 ms, convergent 95.3 ms
+  (1.81x), random 94.0 ms (1.78x); read
+  median plain 39.7 ms, convergent 78.9 ms
+  (1.99x), random 65.4 ms (1.65x).
+* **Bytes:** footprint plain 72,574,425 B, both envelope modes
+  72,739,961 B (+0.228 %).
+* **CPU:** the write phase's CPU delta is published in the table above; the envelope
+  is extra CPU on the critical path with no hardware offload.
+<!-- END GENERATED:encryption-losses -->
+
 * Read wall and read CPU rise by more than the write ratio for `convergent`,
   because the plaintext hash is recomputed on every open.
 * Footprint grows by the fixed header plus one tag per block, and that applies
