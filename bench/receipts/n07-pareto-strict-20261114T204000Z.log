@@ -1,0 +1,29 @@
+n07: self-test ok (4 cases)
+n07: check ok; strict=['A', 'C-pipe4-pack1m', 'C-pipe4-t19off'] eligible=['A', 'C-pipe4-sync16']
+| config | min ms | median ms | footprint B | eligible | reason |
+|---|---:|---:|---:|---|---|
+| `A` strict eligible | 332.0 | 339.7 | 424439296 | yes | native anchor: the same backend without the augmentation (the comparator) |
+| `C-pipe4-t19off` strict | 575.9 | 593.7 | 282106049 | no | encode-worker count 4; removes the level-19 candidate that pythia-70m needs (measured win there) |
+| `C-pipe4-sync16` eligible | 582.0 | 617.1 | 282106049 | yes | encode-worker count 4; early-barrier granularity 16 MiB |
+| `C-pipe4-zpar4` | 584.8 | 618.5 | 282106049 | yes | encode-worker count 4; chunk-parallel ZSTD threads 4 |
+| `C-pipe4-gate4` | 586.3 | 594.9 | 282106049 | no | encode-worker count 4; non-default level-19 gate margin |
+| `C-pipe4-an1` | 586.6 | 614.7 | 282106049 | yes | encode-worker count 4; analyse histogram threads 1 |
+| `C-pipe4-zpar1` | 592.2 | 611.8 | 282106049 | yes | encode-worker count 4; chunk-parallel ZSTD threads 1 |
+| `C-pipe4` | 592.6 | 600.9 | 282106049 | yes | encode-worker count 4 |
+| `C-pipe4-zpar3` | 593.1 | 608.4 | 282106049 | yes | encode-worker count 4; chunk-parallel ZSTD threads 3 |
+| `C-pipe4-tm9off` | 593.6 | 649.2 | 330355860 | no | encode-worker count 4; removes the mode-9 candidate from the representation portfolio |
+| `C-pipe4-zpar2` | 598.0 | 620.1 | 282106049 | yes | encode-worker count 4; chunk-parallel ZSTD threads 2 |
+| `E-pipe4` | 603.4 | 621.8 | 282157248 | yes | encode-worker count 4 |
+| `C-pipe4-tokens4` | 612.1 | 644.0 | 282106049 | yes | encode-worker count 4; CPU-token budget 4 |
+| `C-pipe4-sync32` | 627.9 | 665.6 | 282106049 | yes | encode-worker count 4; early-barrier granularity 32 MiB |
+| `C-pipe8` | 648.7 | 686.3 | 282106049 | yes | encode-worker count 8 |
+| `C-pipe4-zchunk16384` | 671.7 | 703.2 | 282106049 | no | encode-worker count 4; changes the codec chunk size from the frozen 64 KiB |
+| `C-pipe4-tokens1` | 912.8 | 924.6 | 282106049 | yes | encode-worker count 4; CPU-token budget 1 |
+| `C-pipe2` | 926.5 | 954.3 | 282106049 | yes | encode-worker count 2 |
+| `C-pipe4-tokens2` | 959.8 | 982.3 | 282106049 | yes | encode-worker count 4; CPU-token budget 2 |
+| `C-pipe4-pack1m` strict | 962.7 | 1010.0 | 282102521 | no | encode-worker count 4; changes the physical blob plane and therefore the footprint |
+| `C-pipe4-pack8m` | 964.4 | 978.7 | 282115133 | no | encode-worker count 4; changes the physical blob plane and therefore the footprint |
+| `C` | 1004.4 | 1179.4 | 282106049 | yes | shipped two-stage planner and default publication |
+| `C-pipe4-leeway4` | 2552.1 | 2617.6 | 282106049 | no | encode-worker count 4; non-default level-19 gate margin |
+| `C-pipe4-znochunk` | 3518.1 | 3587.0 | 282103649 | no | encode-worker count 4; unchunks the ZSTD frame, breaking the two-stage predictor |
+| `C-legacy` | 6583.8 | 6670.3 | 282106049 | no | exhaustive control planner, not the shipped two-stage policy |
