@@ -286,7 +286,10 @@ What the table says:
   while the restore and footprint ratios are stable. That is the same signature
   as §6: durable per-object publication on a contended host.
 - The Pareto is descriptive: it was added to the contract after these two
-  families were measured, and the contract says so.
+  families were measured, and the contract says so. The three measurement
+  receipts record the contract digest as it stood when they ran
+  (`5c789d14…`); appending this section changed the file's digest, which is
+  why the section itself carries its own date and disclosure.
 
 ### 8.1 Revision disclosure
 
