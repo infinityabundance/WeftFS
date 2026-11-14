@@ -67,6 +67,16 @@ pub enum Class {
     DependencyMismatch,
     /// The caller cancelled a read while it was waiting for shared work.
     Cancelled,
+    /// A pinned commit snapshot named by a Context Root or an artifact request
+    /// does not exist in this store. Distinct from `NotFound`, which means an
+    /// authorized absence inside a snapshot that *does* exist: a missing
+    /// snapshot is never silently substituted by the head.
+    SnapshotMissing,
+    /// A capability (or its revocation id) is revoked at the observed
+    /// revocation epoch. The externally visible message is fixed and
+    /// non-disclosing; the class is stable evidence that revocation, not
+    /// absence, refused the operation.
+    CapabilityRevoked,
     /// Transport/read/write failure.
     Io,
 }
@@ -101,6 +111,8 @@ impl Class {
             Class::CrossDomain => "CrossDomain",
             Class::DependencyMismatch => "DependencyMismatch",
             Class::Cancelled => "Cancelled",
+            Class::SnapshotMissing => "SnapshotMissing",
+            Class::CapabilityRevoked => "CapabilityRevoked",
             Class::Io => "Io",
         }
     }
@@ -217,6 +229,12 @@ impl Error {
     }
     pub fn cancelled(message: impl Into<String>) -> Self {
         Self::new(Class::Cancelled, message)
+    }
+    pub fn snapshot_missing(message: impl Into<String>) -> Self {
+        Self::new(Class::SnapshotMissing, message)
+    }
+    pub fn capability_revoked(message: impl Into<String>) -> Self {
+        Self::new(Class::CapabilityRevoked, message)
     }
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(Class::Io, message)

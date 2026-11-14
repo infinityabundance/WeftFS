@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
 use std::sync::Arc;
 
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use serde_json::json;
 use weftcodec::capability::{
     public_key_for_seed, sign_envelope, verify_envelope, CapabilityEnvelope,
@@ -21,6 +21,10 @@ use weftcodec::selector;
 use weftcodec::wcb::Value;
 use weftcodec::{Region, SemanticPolicy};
 
+use weftfs::artifact_api::{
+    ArtifactPlan, ArtifactRef, ArtifactResolution, ArtifactVerification, ContextPlane,
+    Materialized, PinnedView, SnapshotRef,
+};
 use weftfs::auth::Principal;
 use weftfs::azure::AzureConfig;
 use weftfs::backend::BackendKind;
@@ -854,6 +858,13 @@ enum Command {
         #[command(subcommand)]
         command: ContextCommand,
     },
+    /// One explicit artifact API used by DCP, Orbax and agent consumers:
+    /// resolve, plan, materialize, verify, pin, release, and one-commit
+    /// transactions. Snapshot-scoped; never widens a pinned snapshot.
+    Artifact {
+        #[command(subcommand)]
+        command: ArtifactCommand,
+    },
     /// Materialize a Context Root as a training-ready, fully verified set.
     Materialize {
         /// Context Root name or `weft://` URI.
@@ -1511,6 +1522,89 @@ enum ContextCommand {
     Uri { target: String },
     /// Delete a stored Context Root by name.
     Delete { name: String },
+}
+
+/// The explicit artifact API verbs. Every verb is snapshot-scoped: `--snapshot`
+/// names a snapshot (hex or name) and an omitted snapshot means the head, whose
+/// result is reported as `provisional`. `pin`/`release` require a snapshot.
+#[derive(Subcommand)]
+enum ArtifactCommand {
+    /// Resolve an artifact to its ordered entries.
+    Resolve {
+        #[command(flatten)]
+        artifact: ArtifactSelectorArgs,
+        #[arg(long = "max-results")]
+        max_results: Option<usize>,
+    },
+    /// Produce the ordered plan, including missing declared dependencies.
+    Plan {
+        #[command(flatten)]
+        artifact: ArtifactSelectorArgs,
+    },
+    /// Materialize exact bytes into an output directory (or stdout for one
+    /// checkpoint tensor with `--out -`).
+    Materialize {
+        #[command(flatten)]
+        artifact: ArtifactSelectorArgs,
+        /// Output directory, or `-` for one checkpoint tensor's raw bytes.
+        #[arg(long)]
+        out: String,
+    },
+    /// Verify the artifact and, with `--out`, the produced files.
+    Verify {
+        #[command(flatten)]
+        artifact: ArtifactSelectorArgs,
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Pin an artifact (durable GC root, and a durable retention binding when
+    /// the artifact carries a KV provenance descriptor root).
+    Pin {
+        #[command(flatten)]
+        artifact: ArtifactSelectorArgs,
+        /// Pin snapshot; required (a provisional head pin would move).
+        #[arg(long)]
+        snapshot: String,
+        #[arg(long = "policy-epoch", default_value_t = 0u64)]
+        policy_epoch: u64,
+        #[arg(long = "declared-lifetime-ms", default_value_t = 31_536_000_000u64)]
+        declared_lifetime_ms: u64,
+    },
+    /// Release a pin and rebind a durable retention binding to `ephemeral`.
+    Release {
+        #[command(flatten)]
+        artifact: ArtifactSelectorArgs,
+        #[arg(long)]
+        snapshot: String,
+    },
+    /// Execute a JSON ops file as one group commit (transaction semantics).
+    Txn {
+        /// `{"ops":[{"op":"pin"|"release", "artifact":{...}, ...}]}`.
+        #[arg(long)]
+        ops: PathBuf,
+        #[arg(long)]
+        snapshot: Option<String>,
+    },
+}
+
+/// One artifact selector, shared by every verb.
+#[derive(Args)]
+struct ArtifactSelectorArgs {
+    /// Stored Context Root name or `weft://` URI.
+    #[arg(long)]
+    root: Option<String>,
+    /// `weft.checkpoint.v1` checkpoint name.
+    #[arg(long)]
+    checkpoint: Option<String>,
+    /// One tensor inside `--checkpoint`.
+    #[arg(long)]
+    tensor: Option<String>,
+    /// Exact store object id (64 hex digits).
+    #[arg(long = "object-id")]
+    object_id: Option<String>,
+    /// Snapshot name or commit hex. Omitted means the head (provisional).
+    #[arg(long)]
+    snapshot: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -3556,6 +3650,7 @@ fn run(cli: Cli) -> Result<()> {
             weftfs::checkpoint_service::serve(&store, policy.options(), policy.kind()?, config)
         }
         Command::Context { command } => run_context(&store, json, policy, command),
+        Command::Artifact { command } => run_artifact(&store, json, policy, command),
         Command::Materialize {
             root,
             training_ready,
@@ -6992,6 +7087,435 @@ fn run_context(
             )
         }
     }
+}
+
+/// `weftfs artifact ...`: the one explicit artifact API (T072).
+fn run_artifact(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: ArtifactCommand,
+) -> Result<()> {
+    let mut plane_for = |mode: OpenMode| -> Result<ContextPlane> {
+        let store = open_store(store_path, mode, policy.clone())?;
+        Ok(ContextPlane::from_store(store, Principal::root()))
+    };
+
+    match command {
+        ArtifactCommand::Resolve {
+            artifact,
+            max_results,
+        } => {
+            let view = resolve_view(&plane_for(OpenMode::ReadOnly)?, &artifact)?;
+            let plane = plane_for(OpenMode::ReadOnly)?;
+            let reference = artifact_ref(&artifact)?;
+            let mut resolution = plane.resolve(view, &reference)?;
+            if let Some(max) = max_results {
+                if resolution.entries.len() > max {
+                    resolution.entries.truncate(max);
+                }
+            }
+            emit_resolution(json, &resolution)
+        }
+        ArtifactCommand::Plan { artifact } => {
+            let plane = plane_for(OpenMode::ReadOnly)?;
+            let view = resolve_view(&plane, &artifact)?;
+            let reference = artifact_ref(&artifact)?;
+            let plan = plane.plan(view, &reference)?;
+            emit_plan(json, &plan)
+        }
+        ArtifactCommand::Materialize { artifact, out } => {
+            let plane = plane_for(OpenMode::ReadOnly)?;
+            let view = resolve_view(&plane, &artifact)?;
+            let reference = artifact_ref(&artifact)?;
+            if out == "-" {
+                let (name, tensor) = match &reference {
+                    ArtifactRef::Checkpoint {
+                        name,
+                        tensor: Some(tensor),
+                    } => (name.clone(), tensor.clone()),
+                    _ => return Err(Error::invalid_argument(
+                        "`--out -` streams one checkpoint tensor; pass --checkpoint and --tensor",
+                    )),
+                };
+                let materialized = plane.materialize_tensor(view, &name, &tensor)?;
+                let mut stdout = std::io::stdout().lock();
+                stdout
+                    .write_all(&materialized.bytes)
+                    .map_err(|err| Error::io(format!("cannot write tensor bytes: {err}")))?;
+                stdout
+                    .flush()
+                    .map_err(|err| Error::io(format!("cannot flush tensor bytes: {err}")))?;
+                return Ok(());
+            }
+            let out_path = PathBuf::from(&out);
+            match plane.materialize(view, &reference, &out_path)? {
+                Materialized::Directory(outcome) => {
+                    if json {
+                        print_json(&json!({
+                            "ok": true,
+                            "out": outcome.out.display().to_string(),
+                            "manifest": outcome.manifest_path.display().to_string(),
+                            "files": outcome.files,
+                            "bytes": outcome.bytes,
+                            "snapshot": outcome.snapshot.to_hex(),
+                            "provisional": outcome.provisional,
+                            "plan_root": outcome.plan_root.to_hex(),
+                            "file_digests": outcome.file_digests.iter().map(|(name, sha)| json!({"name": name, "sha256": sha})).collect::<Vec<_>>(),
+                        }))
+                    } else {
+                        println!("out={}", outcome.out.display());
+                        println!("manifest={}", outcome.manifest_path.display());
+                        println!("files={}", outcome.files);
+                        println!("bytes={}", outcome.bytes);
+                        Ok(())
+                    }
+                }
+                Materialized::Tensor(tensor) => {
+                    if json {
+                        print_json(&json!({
+                            "ok": true,
+                            "checkpoint": tensor.checkpoint,
+                            "tensor": tensor.tensor,
+                            "bytes": tensor.bytes.len(),
+                            "sha256": hex::encode(tensor.report.sha256),
+                            "content_root": tensor.report.restored_content_root.to_hex(),
+                            "logical_root": tensor.report.full_logical_root.to_hex(),
+                            "snapshot": tensor.snapshot.to_hex(),
+                            "provisional": tensor.provisional,
+                            "plan_root": tensor.plan_root.to_hex(),
+                        }))
+                    } else {
+                        println!("tensor={}", tensor.tensor);
+                        println!("bytes={}", tensor.bytes.len());
+                        Ok(())
+                    }
+                }
+            }
+        }
+        ArtifactCommand::Verify { artifact, out } => {
+            let plane = plane_for(OpenMode::ReadOnly)?;
+            let view = resolve_view(&plane, &artifact)?;
+            let reference = artifact_ref(&artifact)?;
+            let verification = plane.verify(view, &reference, out.as_deref())?;
+            emit_verification(json, &verification)
+        }
+        ArtifactCommand::Pin {
+            artifact,
+            snapshot,
+            policy_epoch,
+            declared_lifetime_ms,
+        } => {
+            let mut plane = plane_for(OpenMode::ReadWrite)?;
+            let view = plane.observe_snapshot(&parse_snapshot_ref(&snapshot)?)?;
+            let reference = artifact_ref(&artifact)?;
+            let outcome = plane.pin(view, &reference, policy_epoch, declared_lifetime_ms)?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "root": outcome.root.to_hex(),
+                    "marker_created": outcome.marker_created,
+                    "retention_binding": outcome.retention_binding.map(|id| id.to_hex()),
+                    "commit": outcome.commit.to_hex(),
+                    "snapshot": outcome.snapshot.to_hex(),
+                }))
+            } else {
+                println!("root={}", outcome.root);
+                println!("commit={}", outcome.commit);
+                Ok(())
+            }
+        }
+        ArtifactCommand::Release { artifact, snapshot } => {
+            let mut plane = plane_for(OpenMode::ReadWrite)?;
+            let view = plane.observe_snapshot(&parse_snapshot_ref(&snapshot)?)?;
+            let reference = artifact_ref(&artifact)?;
+            let outcome = plane.release(view, &reference)?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "root": outcome.root.to_hex(),
+                    "marker_removed": outcome.marker_removed,
+                    "retention_binding": outcome.retention_binding.map(|id| id.to_hex()),
+                    "reclaimable_after_gc": outcome.reclaimable_after_gc,
+                    "commit": outcome.commit.to_hex(),
+                    "snapshot": outcome.snapshot.to_hex(),
+                }))
+            } else {
+                println!("root={}", outcome.root);
+                println!("marker_removed={}", outcome.marker_removed);
+                Ok(())
+            }
+        }
+        ArtifactCommand::Txn { ops, snapshot } => {
+            let mut plane = plane_for(OpenMode::ReadWrite)?;
+            let parsed: serde_json::Value = serde_json::from_slice(
+                &fs::read(&ops)
+                    .map_err(|err| Error::io(format!("cannot read {}: {err}", ops.display())))?,
+            )
+            .map_err(|err| Error::malformed(format!("ops file is not JSON: {err}")))?;
+            let rows = parsed
+                .get("ops")
+                .and_then(|value| value.as_array())
+                .ok_or_else(|| Error::malformed("ops file needs an `ops` array"))?;
+            let default_snapshot = match snapshot.as_deref() {
+                Some(text) => parse_snapshot_ref(text)?,
+                None => SnapshotRef::Head,
+            };
+            // Resolve every op's snapshot and artifact before the transaction
+            // opens. Snapshot replay is read-only and snapshots are immutable,
+            // so a plan computed here cannot disagree with the group commit.
+            let mut planned = Vec::with_capacity(rows.len());
+            for row in rows {
+                let op = row
+                    .get("op")
+                    .and_then(|value| value.as_str())
+                    .ok_or_else(|| Error::malformed("each op needs an `op` string"))?
+                    .to_owned();
+                let reference = json_artifact_ref(
+                    row.get("artifact")
+                        .ok_or_else(|| Error::malformed("each op needs an `artifact` object"))?,
+                )?;
+                let snapshot_ref = match row.get("snapshot").and_then(|v| v.as_str()) {
+                    Some(text) => parse_snapshot_ref(text)?,
+                    None => default_snapshot.clone(),
+                };
+                let view = plane.observe_snapshot(&snapshot_ref)?;
+                let epoch = row
+                    .get("policy_epoch")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let lifetime = row
+                    .get("declared_lifetime_ms")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(31_536_000_000);
+                planned.push((op, reference, view, epoch, lifetime));
+            }
+            let mut outcomes = Vec::new();
+            let ((), commit) = plane.transaction(|txn| {
+                for (op, reference, view, epoch, lifetime) in &planned {
+                    match op.as_str() {
+                        "pin" => {
+                            let outcome = txn.pin(*view, reference, *epoch, *lifetime)?;
+                            outcomes.push(json!({
+                                "op": "pin",
+                                "root": outcome.root.to_hex(),
+                                "marker_created": outcome.marker_created,
+                                "retention_binding": outcome.retention_binding.map(|id| id.to_hex()),
+                            }));
+                        }
+                        "release" => {
+                            let outcome = txn.release(*view, reference)?;
+                            outcomes.push(json!({
+                                "op": "release",
+                                "root": outcome.root.to_hex(),
+                                "marker_removed": outcome.marker_removed,
+                                "reclaimable_after_gc": outcome.reclaimable_after_gc,
+                            }));
+                        }
+                        other => {
+                            return Err(Error::invalid_argument(format!(
+                                "unknown artifact op `{other}` (pin|release)"
+                            )))
+                        }
+                    }
+                }
+                Ok(())
+            })?;
+            if json {
+                print_json(&json!({"ok": true, "commit": commit.to_hex(), "ops": outcomes}))
+            } else {
+                println!("commit={}", commit);
+                Ok(())
+            }
+        }
+    }
+}
+
+fn parse_snapshot_ref(text: &str) -> Result<SnapshotRef> {
+    if text.len() == 64 && text.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Ok(SnapshotRef::Id(Hash32::from_hex(text).map_err(|_| {
+            Error::invalid_argument("snapshot hex is not a 32-byte hash")
+        })?));
+    }
+    Ok(SnapshotRef::Name(text.to_owned()))
+}
+
+fn artifact_ref(args: &ArtifactSelectorArgs) -> Result<weftfs::artifact_api::ArtifactRef> {
+    let chosen = [
+        args.root.is_some(),
+        args.checkpoint.is_some(),
+        args.object_id.is_some(),
+    ]
+    .into_iter()
+    .filter(|chosen| *chosen)
+    .count();
+    if chosen != 1 {
+        return Err(Error::invalid_argument(
+            "exactly one of --root, --checkpoint or --object-id is required",
+        ));
+    }
+    if args.tensor.is_some() && args.checkpoint.is_none() {
+        return Err(Error::invalid_argument("--tensor needs --checkpoint"));
+    }
+    if let Some(root) = &args.root {
+        return Ok(weftfs::artifact_api::ArtifactRef::ContextRoot {
+            name_or_uri: root.clone(),
+        });
+    }
+    if let Some(name) = &args.checkpoint {
+        return Ok(weftfs::artifact_api::ArtifactRef::Checkpoint {
+            name: name.clone(),
+            tensor: args.tensor.clone(),
+        });
+    }
+    let id = args
+        .object_id
+        .as_deref()
+        .ok_or_else(|| Error::invalid_argument("missing object id"))?;
+    Ok(weftfs::artifact_api::ArtifactRef::Object {
+        id: Hash32::from_hex(id)
+            .map_err(|_| Error::invalid_argument("object id is not a 32-byte hash"))?,
+    })
+}
+
+fn json_artifact_ref(value: &serde_json::Value) -> Result<weftfs::artifact_api::ArtifactRef> {
+    if let Some(root) = value.get("root").and_then(|v| v.as_str()) {
+        return Ok(weftfs::artifact_api::ArtifactRef::ContextRoot {
+            name_or_uri: root.to_owned(),
+        });
+    }
+    if let Some(name) = value.get("checkpoint").and_then(|v| v.as_str()) {
+        return Ok(weftfs::artifact_api::ArtifactRef::Checkpoint {
+            name: name.to_owned(),
+            tensor: value
+                .get("tensor")
+                .and_then(|v| v.as_str())
+                .map(str::to_owned),
+        });
+    }
+    if let Some(id) = value.get("object_id").and_then(|v| v.as_str()) {
+        return Ok(weftfs::artifact_api::ArtifactRef::Object {
+            id: Hash32::from_hex(id)
+                .map_err(|_| Error::invalid_argument("object id is not a 32-byte hash"))?,
+        });
+    }
+    Err(Error::invalid_argument(
+        "artifact needs one of `root`, `checkpoint` or `object_id`",
+    ))
+}
+
+fn resolve_view(
+    plane: &weftfs::artifact_api::ContextPlane,
+    args: &ArtifactSelectorArgs,
+) -> Result<weftfs::artifact_api::PinnedView> {
+    match args.snapshot.as_deref() {
+        Some(text) => plane.observe_snapshot(&parse_snapshot_ref(text)?),
+        None => plane.observe_snapshot(&SnapshotRef::Head),
+    }
+}
+
+fn emit_resolution(json: bool, resolution: &ArtifactResolution) -> Result<()> {
+    if json {
+        print_json(&json!({
+            "ok": true,
+            "artifact_kind": resolution.kind,
+            "snapshot": resolution.snapshot.to_hex(),
+            "provisional": resolution.provisional,
+            "context_root_id": resolution.context_root_id.map(|id| id.to_hex()),
+            "selector_id": resolution.selector_id.map(|id| id.to_hex()),
+            "manifest_root": resolution.manifest_root.map(|id| id.to_hex()),
+            "matched_count": resolution.matched_count,
+            "complete": resolution.complete,
+            "tensor_count": resolution.tensor_count,
+            "entries": resolution.entries.iter().map(entry_json).collect::<Vec<_>>(),
+            "evidence_objects": resolution.evidence.len(),
+        }))
+    } else {
+        println!("artifact_kind={}", resolution.kind);
+        println!("snapshot={}", resolution.snapshot);
+        println!("provisional={}", resolution.provisional);
+        println!("matched_count={}", resolution.matched_count);
+        println!("complete={}", resolution.complete);
+        for entry in &resolution.entries {
+            println!(
+                "entry={} kind={} bytes={} content_root={}",
+                entry.name, entry.kind, entry.bytes, entry.content_root
+            );
+        }
+        Ok(())
+    }
+}
+
+fn emit_plan(json: bool, plan: &ArtifactPlan) -> Result<()> {
+    if json {
+        print_json(&json!({
+            "ok": true,
+            "artifact_kind": plan.kind,
+            "snapshot": plan.snapshot.to_hex(),
+            "provisional": plan.provisional,
+            "plan_root": plan.plan_root.to_hex(),
+            "complete": plan.complete,
+            "tensor_count": plan.tensor_count,
+            "entries": plan.entries.iter().map(entry_json).collect::<Vec<_>>(),
+            "dependencies": plan.dependencies.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+            "missing": plan.missing.iter().map(|missing| json!({
+                "root": missing.root.to_hex(),
+                "reason": missing.reason,
+            })).collect::<Vec<_>>(),
+        }))
+    } else {
+        println!("plan_root={}", plan.plan_root);
+        println!("complete={}", plan.complete);
+        println!("entries={}", plan.entries.len());
+        println!("missing={}", plan.missing.len());
+        Ok(())
+    }
+}
+
+fn emit_verification(json: bool, verification: &ArtifactVerification) -> Result<()> {
+    if json {
+        print_json(&json!({
+            "ok": verification.ok,
+            "store_checked": verification.store_checked,
+            "output_checked": verification.output_checked,
+            "snapshot": verification.snapshot.to_hex(),
+            "provisional": verification.provisional,
+            "plan_root": verification.plan_root.to_hex(),
+            "problems": verification.problems.iter().map(|problem| json!({
+                "class": problem.class,
+                "entry": problem.entry,
+                "detail": problem.detail,
+            })).collect::<Vec<_>>(),
+        }))
+    } else {
+        println!("ok={}", verification.ok);
+        println!("store_checked={}", verification.store_checked);
+        println!("output_checked={}", verification.output_checked);
+        for problem in &verification.problems {
+            println!(
+                "problem={} entry={} {}",
+                problem.class, problem.entry, problem.detail
+            );
+        }
+        Ok(())
+    }
+}
+
+fn entry_json(entry: &weftfs::artifact_api::ArtifactEntry) -> serde_json::Value {
+    json!({
+        "name": entry.name,
+        "kind": entry.kind,
+        "object_id": entry.object_id.map(|id| id.to_hex()),
+        "version_id": entry.version_id.map(|id| id.to_hex()),
+        "content_id": entry.content_id.map(|id| id.to_hex()),
+        "content_root": entry.content_root.to_hex(),
+        "logical_root": entry.logical_root.map(|id| id.to_hex()),
+        "bytes": entry.bytes,
+        "dtype": entry.dtype,
+        "shape": entry.shape,
+        "shards": entry.shards,
+        "dependencies": entry.dependencies.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+    })
 }
 
 #[allow(clippy::too_many_arguments)]

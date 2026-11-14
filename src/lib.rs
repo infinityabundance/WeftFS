@@ -30,6 +30,7 @@
 #![deny(unsafe_code)]
 
 pub mod access;
+pub mod artifact_api;
 pub mod auth;
 pub mod azure;
 pub mod b64;
@@ -96,6 +97,11 @@ pub mod wcb_util;
 pub mod writer_fence;
 pub mod writer_lock;
 
+pub use artifact_api::{
+    ArtifactEntry, ArtifactPlan, ArtifactProblem, ArtifactRef, ArtifactResolution,
+    ArtifactTransaction, ArtifactVerification, ContextPlane, MaterializeOutcome, Materialized,
+    MaterializedTensor, MissingDependency, PinOutcome, PinnedView, ReleaseOutcome, SnapshotRef,
+};
 pub use auth::Principal;
 pub use backend::{
     BackendKind, BackendStats, Capabilities, CompositeBackend, HeadExpectation, Key, KeyKind,
