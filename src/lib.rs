@@ -69,6 +69,7 @@ pub mod parallel;
 pub mod phase_profile;
 pub mod plan_graph;
 pub mod planes;
+pub mod producer_auth;
 pub mod provenance;
 pub mod quota;
 pub mod read_pool;
@@ -145,6 +146,12 @@ pub use plan_graph::{
 pub use planes::{
     BlobCapabilities, BlobPlane, BlobProbe, CommitCapabilities, CommitHead, CommitPlane,
     CommitProbe, ControlRecord, PlaneCapabilities, PlaneProbes, PlaneStats,
+};
+pub use producer_auth::{
+    rotate_key_set, validate_rotation_chain, verify_attestation, verify_attestation_against_store,
+    AttestationError, Determinism as ProducerDeterminism, KeyStatus, ProducerAttestation,
+    ProducerInput, ProducerKey, ProducerKeySet, Rejection as ProducerRejection,
+    StoreCheckedAttestation, VerifiedAttestation, VerifyMode as ProducerVerifyMode,
 };
 pub use provenance::{
     choose_recovery, Determinism, NoEligibleStrategy, ProvenanceClosure, ProvenanceEnvironment,
