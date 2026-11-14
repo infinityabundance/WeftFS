@@ -1,0 +1,458 @@
+== build ==
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1688:9
+     |
+1688 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1689:9
+     |
+1689 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1690:9
+     |
+1690 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1764:9
+     |
+1764 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3294:13
+     |
+3294 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1760:8
+     |
+1241 | impl Store {
+     | ---------- method in this implementation
+...
+1760 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: `weftfs` (lib) generated 19 warnings (run `cargo fix --lib -p weftfs` to apply 16 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+== court ==
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024"
+  },
+  "crash": [
+    {
+      "child_aborted": true,
+      "child_exit_success": false,
+      "child_ms": 597.306,
+      "entries_after_crash": 0,
+      "fault_point": "after-base-segment",
+      "index_present_after_crash": false,
+      "index_valid_after_crash": false,
+      "mismatches": 0,
+      "probes": 3,
+      "rebuild_bytes": 304064,
+      "rebuild_entries": 2000,
+      "rebuild_valid": true
+    },
+    {
+      "child_aborted": true,
+      "child_exit_success": false,
+      "child_ms": 586.951,
+      "entries_after_crash": 2000,
+      "fault_point": "after-root",
+      "index_present_after_crash": true,
+      "index_valid_after_crash": true,
+      "mismatches": 0,
+      "probes": 3,
+      "rebuild_bytes": 304064,
+      "rebuild_entries": 2000,
+      "rebuild_valid": true
+    }
+  ],
+  "end_to_end_ceiling": null,
+  "entry_bytes": 152,
+  "fixture": {
+    "bytes_per_page_all_layers": 16,
+    "dtype": "bf16",
+    "head_dim": 1,
+    "kv_heads": 1,
+    "layers": 1,
+    "model": "synthetic-tiny",
+    "page_rows": 8,
+    "population": "batch of 256 prefixes per commit",
+    "tokens_per_prefix": "32..=96 (4..=12 page-aligned pages)"
+  },
+  "index_only": [
+    {
+      "accumulator": "30aaff8cd9b7c005ab723d20717e1f4a7daa54e47633c6616fcf4d42e4025678",
+      "build_ms": 0.018,
+      "bytes_per_entry": 152.064,
+      "class": "index-only",
+      "decode_ms": 0.048,
+      "encode_ms": 0.07,
+      "n": 1000,
+      "note": "synthetic entries; no store, no records, no page objects",
+      "peak_rss_kib": 198608,
+      "probe": {
+        "max_us": 0.601,
+        "mean_us": 0.127,
+        "min_us": 0.1,
+        "p50_ns": 120,
+        "p50_us": 0.12,
+        "p95_ns": 160,
+        "p95_us": 0.16,
+        "p99_ns": 330,
+        "p99_us": 0.33,
+        "samples": 200
+      },
+      "segment_bytes": 152064
+    },
+    {
+      "accumulator": "2f1815b6e0c26d2831d3a4638c63226b802a8c0942b6302b28456570f9b93663",
+      "build_ms": 0.049,
+      "bytes_per_entry": 152.006,
+      "class": "index-only",
+      "decode_ms": 0.403,
+      "encode_ms": 0.855,
+      "n": 10000,
+      "note": "synthetic entries; no store, no records, no page objects",
+      "peak_rss_kib": 198608,
+      "probe": {
+        "max_us": 0.541,
+        "mean_us": 0.21,
+        "min_us": 0.17,
+        "p50_ns": 191,
+        "p50_us": 0.191,
+        "p95_ns": 281,
+        "p95_us": 0.281,
+        "p99_ns": 501,
+        "p99_us": 0.501,
+        "samples": 200
+      },
+      "segment_bytes": 1520064
+    },
+    {
+      "accumulator": "074c53674c5fc27599887cca0b43edcddeef3ea0461cf87be65c5dcf28c4ec6b",
+      "build_ms": 0.45,
+      "bytes_per_entry": 152.001,
+      "class": "index-only",
+      "decode_ms": 4.849,
+      "encode_ms": 20.064,
+      "n": 100000,
+      "note": "synthetic entries; no store, no records, no page objects",
+      "peak_rss_kib": 228296,
+      "probe": {
+        "max_us": 1.313,
+        "mean_us": 0.314,
+        "min_us": 0.19,
+        "p50_ns": 260,
+        "p50_us": 0.26,
+        "p95_ns": 872,
+        "p95_us": 0.872,
+        "p99_ns": 1172,
+        "p99_us": 1.172,
+        "samples": 200
+      },
+      "segment_bytes": 15200064
+    }
+  ],
+  "index_only_ceiling": null,
+  "label": "KV prefix index court: end-to-end store rows and index-only scaling rows; no inference engine",
+  "ladder": [
+    {
+      "class": "end-to-end",
+      "commits": 5,
+      "first_indexed_lookup_ms": 0.393,
+      "index_build_ms": 27.456,
+      "index_build_reported_ms": 27.331,
+      "index_bytes": 152064,
+      "index_bytes_per_prefix": 152.064,
+      "index_segments": 1,
+      "lookup_indexed": {
+        "max_us": 364.821,
+        "mean_us": 83.237,
+        "min_us": 42.118,
+        "p50_ns": 76122,
+        "p50_us": 76.122,
+        "p95_ns": 122880,
+        "p95_us": 122.88,
+        "p99_ns": 137016,
+        "p99_us": 137.016,
+        "samples": 200
+      },
+      "lookup_indexed_warm": {
+        "max_us": 144.5,
+        "mean_us": 83.579,
+        "min_us": 38.151,
+        "p50_ns": 78546,
+        "p50_us": 78.546,
+        "p95_ns": 123210,
+        "p95_us": 123.21,
+        "p99_ns": 144500,
+        "p99_us": 144.5,
+        "samples": 50
+      },
+      "lookup_scan": {
+        "max_us": 37886.466,
+        "mean_us": 30307.96,
+        "min_us": 25220.131,
+        "p50_ns": 30126426,
+        "p50_us": 30126.426,
+        "p95_ns": 35934444,
+        "p95_us": 35934.444,
+        "p99_ns": 36995254,
+        "p99_us": 36995.254,
+        "samples": 200
+      },
+      "mismatches": 0,
+      "n": 1000,
+      "peak_rss_kib": 61208,
+      "populate_ms": 622.332,
+      "prefixes": 1000,
+      "reopen_ms": 168.064,
+      "stats": {
+        "deltas_appended": 0,
+        "fallbacks": 0,
+        "loads": 1,
+        "lookups": 51,
+        "notes": [],
+        "probes": 404,
+        "rebuilds": 0,
+        "rejected_candidates": 0,
+        "rejects": 0
+      },
+      "store_bytes": 23824421,
+      "store_files": 18008
+    },
+    {
+      "class": "end-to-end",
+      "commits": 21,
+      "first_indexed_lookup_ms": 1.626,
+      "index_build_ms": 139.738,
+      "index_build_reported_ms": 138.418,
+      "index_bytes": 760064,
+      "index_bytes_per_prefix": 152.013,
+      "index_segments": 1,
+      "lookup_indexed": {
+        "max_us": 1665.568,
+        "mean_us": 154.212,
+        "min_us": 56.295,
+        "p50_ns": 109885,
+        "p50_us": 109.885,
+        "p95_ns": 292055,
+        "p95_us": 292.055,
+        "p99_ns": 1665568,
+        "p99_us": 1665.568,
+        "samples": 40
+      },
+      "lookup_indexed_warm": {
+        "max_us": 176.57,
+        "mean_us": 107.783,
+        "min_us": 38.222,
+        "p50_ns": 104676,
+        "p50_us": 104.676,
+        "p95_ns": 157705,
+        "p95_us": 157.705,
+        "p99_ns": 176570,
+        "p99_us": 176.57,
+        "samples": 50
+      },
+      "lookup_scan": {
+        "max_us": 187670.717,
+        "mean_us": 157332.19,
+        "min_us": 133140.453,
+        "p50_ns": 157463009,
+        "p50_us": 157463.009,
+        "p95_ns": 187000175,
+        "p95_us": 187000.175,
+        "p99_ns": 187670717,
+        "p99_us": 187670.717,
+        "samples": 40
+      },
+      "mismatches": 0,
+      "n": 5000,
+      "peak_rss_kib": 198608,
+      "populate_ms": 3341.594,
+      "prefixes": 5000,
+      "reopen_ms": 726.481,
+      "stats": {
+        "deltas_appended": 0,
+        "fallbacks": 0,
+        "loads": 1,
+        "lookups": 51,
+        "notes": [],
+        "probes": 400,
+        "rebuilds": 0,
+        "rejected_candidates": 0,
+        "rejects": 0
+      },
+      "store_bytes": 118980291,
+      "store_files": 90029
+    }
+  ],
+  "non_claims": [
+    "no inference engine ran; this is a storage index court",
+    "index-only rows are synthetic and are not end-to-end store results",
+    "one host, one court, warm page cache; no fleet claim",
+    "scan timings are the oracle on the same fixture, not a baseline product"
+  ],
+  "peak_rss_kib": 228296,
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "d6899a3ce68b6175a57cc838a635345ef0c8c375",
+    "WeftFS-Go": "6ca4c42e19ee480b15359d152aef60513683a7a5"
+  },
+  "revocation": {
+    "entries_after": 1968,
+    "entries_before": 2000,
+    "entry_delta": 32,
+    "index_bytes_after": 310976,
+    "index_bytes_before": 304064,
+    "index_valid_after": false,
+    "prefixes": 2000,
+    "rebuild_entries": 1800,
+    "rebuild_ms": 58.998,
+    "rebuild_valid": true,
+    "revocation_epoch": 200,
+    "revoke_all_ms": 580.998,
+    "revoke_ms_each": 2.905,
+    "revoked": 200,
+    "revoked_returns_across_both_paths": 0,
+    "revoked_still_absent_after_rebuild": true,
+    "unrevoked_neighbour_reusable": true,
+    "unrevoked_still_reusable_after_rebuild": true
+  },
+  "schema": "weft.kv.index.bench.v1",
+  "stamp": "20261114T133614Z",
+  "wall_ms": 34192.74
+}
+kv_index_court: receipt bench/receipts/kv-prefix-index-20261114T133614Z.json
+kv_index_court: log bench/receipts/kv-prefix-index-20261114T133614Z.log

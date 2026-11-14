@@ -1,0 +1,550 @@
+== build ==
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1688:9
+     |
+1688 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1689:9
+     |
+1689 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1690:9
+     |
+1690 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1764:9
+     |
+1764 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3294:13
+     |
+3294 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1760:8
+     |
+1241 | impl Store {
+     | ---------- method in this implementation
+...
+1760 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: `weftfs` (lib) generated 19 warnings (run `cargo fix --lib -p weftfs` to apply 16 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+== court ==
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g"
+  },
+  "default": {
+    "denial_equalise": false,
+    "grant_cache": {
+      "hits": 6997,
+      "invalidations": 0,
+      "misses": 5
+    },
+    "outcomes": [
+      {
+        "arm": "hit_control_a",
+        "first_failure_text": null,
+        "non_denied_calls": 1000
+      },
+      {
+        "arm": "hit_control_b",
+        "first_failure_text": null,
+        "non_denied_calls": 1000
+      },
+      {
+        "arm": "hit_small",
+        "first_failure_text": null,
+        "non_denied_calls": 1000
+      },
+      {
+        "arm": "foreign_tenant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_big",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "absent_object",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "expired_grant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "no_envelope",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_small",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      }
+    ],
+    "timing": {
+      "arms": [
+        {
+          "arm": "hit_control_a",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 73.276,
+            "p50_us": 34.244,
+            "p95_us": 43.852,
+            "p99_us": 47.749,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.132
+        },
+        {
+          "arm": "hit_control_b",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 58.319,
+            "p50_us": 34.194,
+            "p95_us": 43.842,
+            "p99_us": 46.727,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.132
+        },
+        {
+          "arm": "hit_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 37.129,
+            "p50_us": 15.279,
+            "p95_us": 20.578,
+            "p99_us": 21.76,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.133
+        },
+        {
+          "arm": "foreign_tenant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.942,
+            "p50_us": 0.411,
+            "p95_us": 0.611,
+            "p99_us": 0.711,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.145
+        },
+        {
+          "arm": "wrong_root_big",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.591,
+            "p50_us": 0.42,
+            "p95_us": 0.661,
+            "p99_us": 0.751,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.143
+        },
+        {
+          "arm": "absent_object",
+          "distinguishable_from_absent_at_4_sigma": false,
+          "distribution": {
+            "max_us": 0.2,
+            "p50_us": 0.06,
+            "p95_us": 0.09,
+            "p99_us": 0.11,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": 0.0
+        },
+        {
+          "arm": "expired_grant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.55,
+            "p50_us": 0.371,
+            "p95_us": 0.581,
+            "p99_us": 0.642,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.165
+        },
+        {
+          "arm": "no_envelope",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 2.114,
+            "p50_us": 0.321,
+            "p95_us": 0.511,
+            "p99_us": 0.581,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.171
+        },
+        {
+          "arm": "wrong_root_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 1.693,
+            "p50_us": 0.41,
+            "p95_us": 0.641,
+            "p99_us": 0.722,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -39.164
+        }
+      ],
+      "control_z": 3.842,
+      "residual_channels": [
+        "foreign_tenant is separable from an absent object (z=-39.1)",
+        "wrong_root_big is separable from an absent object (z=-39.1)",
+        "expired_grant is separable from an absent object (z=-39.2)",
+        "no_envelope is separable from an absent object (z=-39.2)",
+        "wrong_root_small is separable from an absent object (z=-39.2)"
+      ],
+      "size_inference_distinguishable_at_4_sigma": true,
+      "size_inference_z_big_vs_small": 4.463
+    }
+  },
+  "denial_equalised": {
+    "denial_equalise": true,
+    "grant_cache": {
+      "hits": 7997,
+      "invalidations": 0,
+      "misses": 5
+    },
+    "outcomes": [
+      {
+        "arm": "hit_control_a",
+        "first_failure_text": null,
+        "non_denied_calls": 1000
+      },
+      {
+        "arm": "hit_control_b",
+        "first_failure_text": null,
+        "non_denied_calls": 1000
+      },
+      {
+        "arm": "hit_small",
+        "first_failure_text": null,
+        "non_denied_calls": 1000
+      },
+      {
+        "arm": "foreign_tenant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_big",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "absent_object",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "expired_grant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "no_envelope",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_small",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      }
+    ],
+    "timing": {
+      "arms": [
+        {
+          "arm": "hit_control_a",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 54.962,
+            "p50_us": 34.204,
+            "p95_us": 43.781,
+            "p99_us": 46.206,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.917
+        },
+        {
+          "arm": "hit_control_b",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 64.14,
+            "p50_us": 34.194,
+            "p95_us": 43.792,
+            "p99_us": 45.805,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.917
+        },
+        {
+          "arm": "hit_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 37.239,
+            "p50_us": 15.299,
+            "p95_us": 20.779,
+            "p99_us": 22.322,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.917
+        },
+        {
+          "arm": "foreign_tenant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.57,
+            "p50_us": 0.421,
+            "p95_us": 0.551,
+            "p99_us": 0.731,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.932
+        },
+        {
+          "arm": "wrong_root_big",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.48,
+            "p50_us": 0.411,
+            "p95_us": 0.541,
+            "p99_us": 0.752,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.929
+        },
+        {
+          "arm": "absent_object",
+          "distinguishable_from_absent_at_4_sigma": false,
+          "distribution": {
+            "max_us": 0.311,
+            "p50_us": 0.111,
+            "p95_us": 0.141,
+            "p99_us": 0.17,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": 0.0
+        },
+        {
+          "arm": "expired_grant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.34,
+            "p50_us": 0.37,
+            "p95_us": 0.491,
+            "p99_us": 0.642,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.958
+        },
+        {
+          "arm": "no_envelope",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 0.641,
+            "p50_us": 0.32,
+            "p95_us": 0.431,
+            "p99_us": 0.571,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.957
+        },
+        {
+          "arm": "wrong_root_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 2.995,
+            "p50_us": 0.401,
+            "p95_us": 0.541,
+            "p99_us": 0.722,
+            "samples": 1000
+          },
+          "mann_whitney_z_vs_absent": -38.956
+        }
+      ],
+      "control_z": 0.368,
+      "residual_channels": [
+        "foreign_tenant is separable from an absent object (z=-38.9)",
+        "wrong_root_big is separable from an absent object (z=-38.9)",
+        "expired_grant is separable from an absent object (z=-39.0)",
+        "no_envelope is separable from an absent object (z=-39.0)",
+        "wrong_root_small is separable from an absent object (z=-39.0)"
+      ],
+      "size_inference_distinguishable_at_4_sigma": true,
+      "size_inference_z_big_vs_small": 4.81
+    }
+  },
+  "hard_failures": [],
+  "label": "KV side-channel and tenant-security court; in-process, one host, synthetic pages",
+  "non_claims": [
+    "not constant-time; the court reports separations, it does not prove them unexploitable",
+    "in-process measurements; a remote attacker also sees network noise and is not modelled",
+    "one host, synthetic pages, warm page cache; no fleet or production claim",
+    "kv_denial_equalise is off by default; enabling it is measured here, not recommended for all deployments"
+  ],
+  "result": "pass",
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "d6899a3ce68b6175a57cc838a635345ef0c8c375",
+    "WeftFS-Go": "6ca4c42e19ee480b15359d152aef60513683a7a5"
+  },
+  "revocation": {
+    "get_after": "Unauthorized: kv page is not available to this principal",
+    "reusable_after_indexed": false,
+    "reusable_after_scan": false,
+    "reusable_before": true,
+    "stale_reads_after_revocation": 0
+  },
+  "samples_per_arm": 1000,
+  "schema": "weft.kv.sidechannel.v1",
+  "stamp": "20261114T133602Z",
+  "wall_ms": 184.334
+}
+kv_sidechannel_court: receipt bench/receipts/kv-sidechannel-20261114T133602Z.json
+kv_sidechannel_court: log bench/receipts/kv-sidechannel-20261114T133602Z.log

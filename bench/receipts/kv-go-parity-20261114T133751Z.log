@@ -1,0 +1,311 @@
+== rust oracle (no fuse) ==
++ exec docker run --rm --init --name weft-rust-court-967335 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=d6899a3ce68b6175a57cc838a635345ef0c8c375 -e WEFT_REPO_WEFTFS_GO=2272a316813ec276c6e80f5eb3e48ea8d2e2cfd8 -e WEFT_REPO_WEFTCODEC=34f76203229ed22bfad7495963d84977c6627d27 -e WEFT_REPO_WEFTCODEC_GO=ad53f3c3975e6dc8799d2b67524a30e688d961fd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo build --release --bin weftfs --quiet'
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1688:9
+     |
+1688 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1689:9
+     |
+1689 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1690:9
+     |
+1690 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1764:9
+     |
+1764 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3294:13
+     |
+3294 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1760:8
+     |
+1241 | impl Store {
+     | ---------- method in this implementation
+...
+1760 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:6534:8
+     |
+6534 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:6541:8
+     |
+6541 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:6558:7
+     |
+6558 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:6560:4
+     |
+6560 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:6593:4
+     |
+6593 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: unused `Result` that must be used
+    --> src/main.rs:4854:25
+     |
+4854 | /                         print_json(&json!({
+4855 | |                             "checkpoint": plan.checkpoint,
+4856 | |                             "manifest_root": plan.manifest_root.to_hex(),
+4857 | |                             "axis": plan.axis,
+...    |
+4873 | |                             "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+4874 | |                         }));
+     | |___________________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+     = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+     |
+4854 |                         let _ = print_json(&json!({
+     |                         +++++++
+
+warning: unused `Result` that must be used
+    --> src/main.rs:4913:21
+     |
+4913 | /                     print_json(&json!({
+4914 | |                         "checkpoint": report.checkpoint,
+4915 | |                         "manifest_root": report.manifest_root.to_hex(),
+4916 | |                         "axis": report.axis,
+...    |
+4946 | |                         "peak_rss_kib": peak_rss_kib(),
+4947 | |                     }));
+     | |_______________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+     |
+4913 |                     let _ = print_json(&json!({
+     |                     +++++++
+
+== go tests ==
++ exec docker run --rm --init --name weft-go-court-967567 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=d6899a3ce68b6175a57cc838a635345ef0c8c375 -e WEFT_REPO_WEFTFS_GO=2272a316813ec276c6e80f5eb3e48ea8d2e2cfd8 -e WEFT_REPO_WEFTCODEC=34f76203229ed22bfad7495963d84977c6627d27 -e WEFT_REPO_WEFTCODEC_GO=ad53f3c3975e6dc8799d2b67524a30e688d961fd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftFS-Go && WEFTFS_RUST_BIN=/work/.docker-cache/target-rust/release/weftfs WEFT_KV_GO_RECEIPT=/work/.docker-cache/kv-go-parity-20261114T133751Z/cost.json timeout 900 go test -json -count=1 -run '\''TestKv'\'' ./store/ | tee /work/.docker-cache/kv-go-parity-20261114T133751Z/go-test.json'
+{"Time":"2026-11-14T13:37:56.280403949Z","Action":"start","Package":"github.com/infinityabundance/WeftFS-Go/store"}
+{"Time":"2026-11-14T13:37:56.281597036Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixTierRoundTripsAndRevokes"}
+{"Time":"2026-11-14T13:37:56.281627803Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixTierRoundTripsAndRevokes","Output":"=== RUN   TestKvPrefixTierRoundTripsAndRevokes\n"}
+{"Time":"2026-11-14T13:37:56.282579198Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixTierRoundTripsAndRevokes","Output":"--- PASS: TestKvPrefixTierRoundTripsAndRevokes (0.00s)\n"}
+{"Time":"2026-11-14T13:37:56.282583166Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixTierRoundTripsAndRevokes","Elapsed":0}
+{"Time":"2026-11-14T13:37:56.282587815Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvBatchIsOneCommitAndAllOrNothing"}
+{"Time":"2026-11-14T13:37:56.282589688Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvBatchIsOneCommitAndAllOrNothing","Output":"=== RUN   TestKvBatchIsOneCommitAndAllOrNothing\n"}
+{"Time":"2026-11-14T13:37:56.285304113Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvBatchIsOneCommitAndAllOrNothing","Output":"--- PASS: TestKvBatchIsOneCommitAndAllOrNothing (0.00s)\n"}
+{"Time":"2026-11-14T13:37:56.285309423Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvBatchIsOneCommitAndAllOrNothing","Elapsed":0}
+{"Time":"2026-11-14T13:37:56.285311026Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixGetVerifiesEd25519InGo"}
+{"Time":"2026-11-14T13:37:56.285312279Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixGetVerifiesEd25519InGo","Output":"=== RUN   TestKvPrefixGetVerifiesEd25519InGo\n"}
+{"Time":"2026-11-14T13:37:56.287325275Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixGetVerifiesEd25519InGo","Output":"--- PASS: TestKvPrefixGetVerifiesEd25519InGo (0.00s)\n"}
+{"Time":"2026-11-14T13:37:56.28732787Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixGetVerifiesEd25519InGo","Elapsed":0}
+{"Time":"2026-11-14T13:37:56.287331446Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixCrossLanguageReadsBothWays"}
+{"Time":"2026-11-14T13:37:56.287333611Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixCrossLanguageReadsBothWays","Output":"=== RUN   TestKvPrefixCrossLanguageReadsBothWays\n"}
+{"Time":"2026-11-14T13:37:56.300163282Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixCrossLanguageReadsBothWays","Output":"--- PASS: TestKvPrefixCrossLanguageReadsBothWays (0.01s)\n"}
+{"Time":"2026-11-14T13:37:56.300175785Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPrefixCrossLanguageReadsBothWays","Elapsed":0.01}
+{"Time":"2026-11-14T13:37:56.300180624Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost"}
+{"Time":"2026-11-14T13:37:56.300182287Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"=== RUN   TestKvGoCost\n"}
+{"Time":"2026-11-14T13:37:59.386182646Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"    kv_prefix_test.go:570: kv go cost: {\n"}
+{"Time":"2026-11-14T13:37:59.386206541Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"alloc_bytes_per_read_prefix\": 208664,\n"}
+{"Time":"2026-11-14T13:37:59.386208615Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"alloc_bytes_per_write_prefix\": 439616,\n"}
+{"Time":"2026-11-14T13:37:59.386210037Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"generation\": 6,\n"}
+{"Time":"2026-11-14T13:37:59.386211209Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"label\": \"Go per-page cost: batched publication and scoped reads; one host\",\n"}
+{"Time":"2026-11-14T13:37:59.386212552Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"one_batch_write_ms\": 0.257,\n"}
+{"Time":"2026-11-14T13:37:59.386213644Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"read_p50_ms\": 0.119,\n"}
+{"Time":"2026-11-14T13:37:59.386214455Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"read_p99_ms\": 0.221,\n"}
+{"Time":"2026-11-14T13:37:59.386216309Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"read_page_bytes\": 512,\n"}
+{"Time":"2026-11-14T13:37:59.386217191Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"read_per_prefix_ms\": 0.131,\n"}
+{"Time":"2026-11-14T13:37:59.386218222Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"read_reps\": 200,\n"}
+{"Time":"2026-11-14T13:37:59.386219104Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"schema\": \"weft.kv.go.cost.v1\",\n"}
+{"Time":"2026-11-14T13:37:59.386220497Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"single_write_p50_us\": 350.264,\n"}
+{"Time":"2026-11-14T13:37:59.386221499Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"single_write_p99_us\": 841.49,\n"}
+{"Time":"2026-11-14T13:37:59.386222751Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"single_write_per_prefix_us\": 387.908,\n"}
+{"Time":"2026-11-14T13:37:59.386223633Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"single_write_wall_ms\": 99.305,\n"}
+{"Time":"2026-11-14T13:37:59.386224474Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"write_bytes\": 4194304,\n"}
+{"Time":"2026-11-14T13:37:59.386225236Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"write_commits\": 1,\n"}
+{"Time":"2026-11-14T13:37:59.386226037Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"write_pages\": 8192,\n"}
+{"Time":"2026-11-14T13:37:59.386226829Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"write_per_page_us\": 353.955,\n"}
+{"Time":"2026-11-14T13:37:59.3862277Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"          \"write_wall_ms\": 2899.6\n"}
+{"Time":"2026-11-14T13:37:59.386229413Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"        }\n"}
+{"Time":"2026-11-14T13:37:59.462756619Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Output":"--- PASS: TestKvGoCost (3.16s)\n"}
+{"Time":"2026-11-14T13:37:59.462776436Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvGoCost","Elapsed":3.16}
+{"Time":"2026-11-14T13:37:59.462786225Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID"}
+{"Time":"2026-11-14T13:37:59.462787998Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID","Output":"=== RUN   TestKvStoreScopeIsTheProvenanceDescriptorID\n"}
+{"Time":"2026-11-14T13:37:59.464078997Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID","Output":"    kv_test.go:205: COURT written object=1a03e30e8ee73029ad347f8871522e7b57f7de95d04f041b2f522bc192f00689 descriptor_id=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a provenance_root=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f mode=19\n"}
+{"Time":"2026-11-14T13:37:59.464264122Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID","Output":"    kv_test.go:222: COURT authorized_read bytes=4096 exact=true\n"}
+{"Time":"2026-11-14T13:37:59.467905337Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID","Output":"    kv_test.go:408: COURT denials all class=Unauthorized text=\"kv page is not available to this principal\" plain_attrs=6 prov_attrs=8\n"}
+{"Time":"2026-11-14T13:37:59.468021835Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID","Output":"--- PASS: TestKvStoreScopeIsTheProvenanceDescriptorID (0.01s)\n"}
+{"Time":"2026-11-14T13:37:59.468026012Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvStoreScopeIsTheProvenanceDescriptorID","Elapsed":0.01}
+{"Time":"2026-11-14T13:37:59.468030681Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvForgeryIsRejected"}
+{"Time":"2026-11-14T13:37:59.468032545Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvForgeryIsRejected","Output":"=== RUN   TestKvProvForgeryIsRejected\n"}
+{"Time":"2026-11-14T13:37:59.471257723Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvForgeryIsRejected","Output":"--- PASS: TestKvProvForgeryIsRejected (0.00s)\n"}
+{"Time":"2026-11-14T13:37:59.471261059Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvForgeryIsRejected","Elapsed":0}
+{"Time":"2026-11-14T13:37:59.471263043Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvDescriptorCanonicalForms"}
+{"Time":"2026-11-14T13:37:59.471263895Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvDescriptorCanonicalForms","Output":"=== RUN   TestKvDescriptorCanonicalForms\n"}
+{"Time":"2026-11-14T13:37:59.471378058Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvDescriptorCanonicalForms","Output":"--- PASS: TestKvDescriptorCanonicalForms (0.00s)\n"}
+{"Time":"2026-11-14T13:37:59.471379621Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvDescriptorCanonicalForms","Elapsed":0}
+{"Time":"2026-11-14T13:37:59.471381073Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust"}
+{"Time":"2026-11-14T13:37:59.471381935Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust","Output":"=== RUN   TestKvProvHandoffGoThenRust\n"}
+{"Time":"2026-11-14T13:37:59.477469044Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust","Output":"    kv_test.go:779: COURT rust_cat bytes=5509 equals_go_stored=true\n"}
+{"Time":"2026-11-14T13:37:59.480982099Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust","Output":"    kv_test.go:798: COURT rust_descriptor_roots a=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f b=ef7309eabf7fdf2a25b0f9d37f0f6b87d301c3a8d22fd756332827cc2b24618e distinct=true\n"}
+{"Time":"2026-11-14T13:37:59.481585425Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust","Output":"    kv_test.go:820: COURT rust_codec_decoded bytes=4096 exact=true\n"}
+{"Time":"2026-11-14T13:37:59.483421752Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust","Output":"--- PASS: TestKvProvHandoffGoThenRust (0.01s)\n"}
+{"Time":"2026-11-14T13:37:59.483428625Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffGoThenRust","Elapsed":0.01}
+{"Time":"2026-11-14T13:37:59.483432963Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPageHandoffRustThenGo"}
+{"Time":"2026-11-14T13:37:59.483433975Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPageHandoffRustThenGo","Output":"=== RUN   TestKvPageHandoffRustThenGo\n"}
+{"Time":"2026-11-14T13:37:59.48996373Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPageHandoffRustThenGo","Output":"    kv_test.go:865: COURT rust_written_pages=2\n"}
+{"Time":"2026-11-14T13:37:59.491491461Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPageHandoffRustThenGo","Output":"    kv_test.go:961: COURT rust_written_page_bytes=65536 descriptor_and_frame_match=true\n"}
+{"Time":"2026-11-14T13:37:59.491578894Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPageHandoffRustThenGo","Output":"--- PASS: TestKvPageHandoffRustThenGo (0.01s)\n"}
+{"Time":"2026-11-14T13:37:59.491580938Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvPageHandoffRustThenGo","Elapsed":0.01}
+{"Time":"2026-11-14T13:37:59.491586648Z","Action":"run","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffRustThenGo"}
+{"Time":"2026-11-14T13:37:59.491588211Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffRustThenGo","Output":"=== RUN   TestKvProvHandoffRustThenGo\n"}
+{"Time":"2026-11-14T13:37:59.498230607Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffRustThenGo","Output":"    kv_test.go:1089: COURT rust_verb_written descriptor_id=9c8344b07bcf0560af65d704201ae14c288edf3863393c43242d03d366ea3b1a root=ba5ec110c7cb4cd79c330dc3103fd6e7fc4d2b9eaae3d0a949b826c90d5d7f5f frame_bytes=5509 exact=true\n"}
+{"Time":"2026-11-14T13:37:59.498920264Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffRustThenGo","Output":"--- PASS: TestKvProvHandoffRustThenGo (0.01s)\n"}
+{"Time":"2026-11-14T13:37:59.498923099Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Test":"TestKvProvHandoffRustThenGo","Elapsed":0.01}
+{"Time":"2026-11-14T13:37:59.498951011Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Output":"PASS\n"}
+{"Time":"2026-11-14T13:37:59.500169334Z","Action":"output","Package":"github.com/infinityabundance/WeftFS-Go/store","Output":"ok  \tgithub.com/infinityabundance/WeftFS-Go/store\t3.220s\n"}
+{"Time":"2026-11-14T13:37:59.500175225Z","Action":"pass","Package":"github.com/infinityabundance/WeftFS-Go/store","Elapsed":3.22}
+== assemble ==
+assemble_kv_go_parity: 11 passed / 0 failed / 0 skipped -> bench/receipts/kv-go-parity-20261114T133751Z.json
+kv_go_parity_court: receipt bench/receipts/kv-go-parity-20261114T133751Z.json
+kv_go_parity_court: log bench/receipts/kv-go-parity-20261114T133751Z.log
