@@ -477,7 +477,7 @@ seven interleaved repetitions. Source:
 | `verify.revision` | 517703200d4837d63233e3ef02c4102f454f9c05 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261114T162327Z.json` | 20261114T162327Z | 517703200d48 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,280 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,282 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 933 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261114T162327Z.tests.json` | 4535601d84f280033d4c053a1f1bd161857277ee356432354702382deb34f501 | bench/receip |
@@ -1077,6 +1077,23 @@ time. They are not current claims.
 | `paired.survive` | 4 | count | Ordering claims that survive a paired bootstrap CI | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
 | `paired.distinguishable` | 4 | count | Ordering pairs distinguishable from zero | `bench/receipts/paired-stats-20261114T185845Z.json` | 20261114T185845Z | 523c51d20c4e |
 <!-- END GENERATED:perf-catalog-paired -->
+
+<!-- BEGIN GENERATED:perf-catalog-pareto (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `pareto.qwen.reps` | 10 | reps | Qwen family repetitions | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.qwen.write_ratio` | 24.65 | ratio | Qwen write ratio (C/A), p50 | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.qwen.write_min_ratio` | 3.07 | ratio | Qwen write ratio (C/A), least-contended | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.qwen.footprint_ratio` | 0.6647 | ratio | Qwen footprint ratio (C/A) | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.qwen.storage_pct` | 33.53 | % | Qwen storage reduction | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.qwen.restore_ratio` | 4.17 | ratio | Qwen cold-restore ratio (C/A) | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.pythia.reps` | 7 | reps | pythia family repetitions | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.pythia.write_ratio` | 50.01 | ratio | pythia write ratio (C/A), p50 | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.pythia.write_min_ratio` | 50.92 | ratio | pythia write ratio (C/A), least-contended | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.pythia.footprint_ratio` | 0.5820 | ratio | pythia footprint ratio (C/A) | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.pythia.storage_pct` | 41.80 | % | pythia storage reduction | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.pythia.restore_ratio` | 2.42 | ratio | pythia cold-restore ratio (C/A) | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+<!-- END GENERATED:perf-catalog-pareto -->
 
 ## Reproduce
 

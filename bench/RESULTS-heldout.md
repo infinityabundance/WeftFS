@@ -260,7 +260,35 @@ from this workspace. No cross-host claim is made.
     validation family. The declared functional form has no intercept, and it was
     not changed after the held-out pass.
 
-## 8. What is not claimed
+## 8. N03 — the per-family Pareto, wins and losses in one table
+
+Durable write wall against physical footprint against cold restore, p50 over
+the interleaved repetitions, with the least-contended write repetition shown
+because p50 and minimum diverge on a shared host. The pythia row is the worst
+write cell in the programme and sits in the same table as the Qwen row.
+
+<!-- BEGIN GENERATED:heldout-pareto (scripts/perf_numbers.py) -->
+Qwen2.5-0.5B-Instruct (**10** repetitions): write **24.65x** native at p50 and **3.07x** least-contended; footprint **0.6647** of native (**33.53 %** smaller); cold restore **4.17x**.
+pythia-70m step 0 (**7** repetitions): write **50.01x** native at p50 and **50.92x** least-contended; footprint **0.5820** of native (**41.80 %** smaller); cold restore **2.42x**.
+<!-- END GENERATED:heldout-pareto -->
+
+What the table says:
+
+- **Every family wins on footprint and loses on write and restore.** There is
+  no family in which the augmentation is free.
+- **The F32 family is the write-cost catastrophe.** pythia's planned write is
+  about fifty times its native write at both statistics, so this is not host
+  noise: it is the mode-9/ZSTD candidate set on an F32 container whose values are
+  fp16-precision, where mode 9 spends a 32-bit layout to represent 16-bit
+  information.
+- **The Qwen family's p50 is host noise; its minimum is not.** The p50 and
+  least-contended write ratios differ by a factor of eight on the same arm,
+  while the restore and footprint ratios are stable. That is the same signature
+  as §6: durable per-object publication on a contended host.
+- The Pareto is descriptive: it was added to the contract after these two
+  families were measured, and the contract says so.
+
+## 9. What is not claimed
 
 One host, one container shape (`3g / 4 cpus / 1024 pids`), warm host page cache
 except where `fadvise` is used and labelled. No fleet, cloud, GPU, media or
@@ -269,7 +297,7 @@ The synthetic strata bound a sampler failure mode; they do not estimate its
 frequency in real training. The quoted WeftFS comparator figures come from
 other courts and are labelled as such.
 
-## 9. Reproduce
+## 10. Reproduce
 
 ```
 bash scripts/heldout_planner_court.sh
@@ -302,3 +330,5 @@ Each line is the machine-checkable anchor for one entry in `docs/claims.json`.
 - `claim:t083_n10_randomised_interleaving` — Every local arm ran ten paired repetitions in a seeded shuffled order with raw values retained.
 - `claim:t083_bootstrap_ci` — Paired differences carry a seeded percentile bootstrap 95 % confidence interval.
 - `claim:t083_write_ordering_not_survived` — Most claimed write-wall orderings do not survive the paired bootstrap on this host.
+- `claim:n03_per_family_pareto` — every family in the Pareto wins on footprint and loses on write and restore; the worst cell is not separated.
+- `claim:n03_pythia_write_loss` — the pythia F32 write ratio is published in the same table as the Qwen row.

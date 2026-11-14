@@ -1,0 +1,129 @@
+augmentation: backend=local configs=A,B,C,D,E,N subset(max_others=76, include_embedding=false) passes=2 label=heldout-pareto-pythia
+augmentation: work=/work/.docker-cache/pareto-20261114T191458Z
+augmentation: fixture /work/.docker-cache/real-corpus/pythia-70m-step0.safetensors bytes=281715176 sha256=17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e (parse 119.9 ms)
+augmentation: subset 76 tensors, 281706496 logical bytes, digest 9ca413e677ca8463589d8bd90280b287dd87c12b4c52798f4a2c004c421d2948
+augmentation: configs=["A", "N", "C"] reps=7 interleaved with a one-position rotation per repetition
+augmentation: === rep 1/7 order=["N", "C", "A"] ===
+augmentation: rep 1 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 1 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+augmentation: rep 1 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: === rep 2/7 order=["A", "C", "N"] ===
+augmentation: rep 2 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 2 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 2 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: === rep 3/7 order=["C", "N", "A"] ===
+augmentation: rep 3 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 3 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 3 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: === rep 4/7 order=["N", "C", "A"] ===
+augmentation: rep 4 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 4 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 4 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: === rep 5/7 order=["A", "N", "C"] ===
+augmentation: rep 5 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 5 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 5 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: === rep 6/7 order=["A", "N", "C"] ===
+augmentation: rep 6 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 6 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 6 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: === rep 7/7 order=["N", "A", "C"] ===
+augmentation: rep 7 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 7 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 7 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: result=pass receipt=bench/receipts/heldout-pareto-pythia-20261114T191458Z.json

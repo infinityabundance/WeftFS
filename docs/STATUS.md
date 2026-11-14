@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,280** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,282** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with

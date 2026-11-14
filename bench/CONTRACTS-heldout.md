@@ -292,3 +292,22 @@ physically meaningful gate is the honest outcome and the paper says so.
   bound a failure mode; they do not estimate its frequency in real training.
 - A comparator that could not be installed is `NOT MEASURED`; its absence is
   never evidence for WeftFS.
+
+## 10. N03 per-family Pareto (amendment, disclosed)
+
+**Added after the first family measurements.** N03 asks for a predeclared
+per-family Pareto of durable write wall against physical footprint against cold
+restore wall. The axes are fixed here as: write = the harness `write.wall_ms`
+(the same accessor for every family), p50 over the interleaved repetitions, with
+the least-contended repetition published alongside because the two diverge on a
+shared host; footprint = physical bytes retained after the write; restore = the
+cold restore wall, p50. Every family row is required to be byte-exact.
+
+Two families are published: Qwen2.5-0.5B-Instruct (the R3 contract subset) and
+pythia-70m step 0 (the whole container, F32 containers). A family that loses on
+an axis is published in the same table as one that wins; the pythia write cost
+is the worst cell in the programme and is not separated from the Qwen row.
+
+This section was written after those two measurements existed, so it is a
+**descriptive** table, not a pre-registered hypothesis test. The axes were fixed
+by N03 before the runs; the family set was not. No number in it is a gate.

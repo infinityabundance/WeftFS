@@ -1,0 +1,61 @@
+{
+ "schema": "weft.heldout-pareto.v1",
+ "stamp": "20261114T191458Z",
+ "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940",
+ "derived": true,
+ "axes": {
+  "write": "durable write wall from the harness `write.wall_ms` (the same accessor for both families), p50 over the interleaved repetitions; `write_min_ratio` is the least-contended repetition and is published because the p50 and the minimum diverge on a shared host",
+  "footprint": "physical bytes retained after write",
+  "restore": "cold restore wall, p50 over the repetitions"
+ },
+ "families": {
+  "qwen_0_5b_instruct": {
+   "family": "qwen_0_5b_instruct",
+   "fixture": "Qwen2.5-0.5B-Instruct.safetensors (101-tensor subset)",
+   "source_receipt": "bench/receipts/paired-stats-raw-20261114T185845Z.json",
+   "source_stamp": "20261114T190712Z",
+   "source_revision": "523c51d20c4eebfd8508eae0cd105952c0df6940",
+   "reps": 10,
+   "a_write_p50_ms": 341.225627,
+   "c_write_p50_ms": 8410.126425999999,
+   "c_write_min_ms": 999.254004,
+   "write_ratio": 24.646819466464045,
+   "write_min_ratio": 3.069901124265023,
+   "a_footprint_bytes": 424439296.0,
+   "c_footprint_bytes": 282106049.0,
+   "footprint_ratio": 0.6646558215948035,
+   "storage_reduction_pct": 33.53441784051965,
+   "a_restore_p50_ms": 361.70481,
+   "c_restore_p50_ms": 1507.2243529999998,
+   "restore_ratio": 4.16700113277454,
+   "all_exact": true,
+   "verdict": "loses on write and restore, wins on footprint"
+  },
+  "pythia_70m_step0": {
+   "family": "pythia_70m_step0",
+   "fixture": "pythia-70m step 0 (whole container, F32 containers)",
+   "source_receipt": "bench/receipts/heldout-pareto-pythia-20261114T191458Z.json",
+   "source_stamp": "20261114T191703Z",
+   "source_revision": "6e3d52957c413deb769630019282100e8093dfba",
+   "reps": 7,
+   "a_write_p50_ms": 240.308136,
+   "c_write_p50_ms": 12018.992515,
+   "c_write_min_ms": 11950.332053,
+   "write_ratio": 50.01492132168176,
+   "write_min_ratio": 50.92331049609185,
+   "a_footprint_bytes": 281706496.0,
+   "c_footprint_bytes": 163964176.0,
+   "footprint_ratio": 0.5820390311482203,
+   "storage_reduction_pct": 41.79609688517797,
+   "a_restore_p50_ms": 299.051252,
+   "c_restore_p50_ms": 724.3126769999999,
+   "restore_ratio": 2.4220352603639994,
+   "all_exact": true,
+   "verdict": "loses on write and restore, wins on footprint"
+  }
+ },
+ "note": "A is the native per-tensor baseline on the same backend; C is the shipped planned WeftFS write. Every row is exact.",
+ "losses": [
+  "pythia-70m (F32) is the worst cell for write cost; it is published in the same table as the Qwen row"
+ ]
+}
