@@ -1,0 +1,362 @@
+{
+ "critical_path_account": {
+  "accounted": 555.073,
+  "closure_rule": "init + reader + encode_wall + (pipeline_wall - reader - encode_wall) + commit + footprint; the residual is the harness loop and is never called zero",
+  "commit": 9.957,
+  "encode_wall": 391.801,
+  "footprint": 0.7,
+  "init": 20.051,
+  "measured_wall": 565.197,
+  "publisher_finish_tail": 86.474,
+  "reader": 46.09,
+  "residual": 10.124,
+  "residual_pct": 1.791
+ },
+ "durability_statements": {
+  "fewer_larger_16": "each of the 16 group files is individually durable; the index is a 17th file and is not atomic with the groups, so a crash can leave a durable group file with no durable index. Reconstructing a member additionally needs the index.",
+  "one_contiguous_pack": "the pack file is individually durable after one fdatasync, but its in-file index and members share one barrier; a torn append is visible to a reader unless an external commit record names a verified length. This is what the store's pack plane adds a catalog and commit ordering for.",
+  "per_object": "each published file is individually durable after its own fdatasync; its directory entry is durable after the directory fsync. A crash between files leaves a prefix of durable files and no torn file."
+ },
+ "host_spread": {
+  "per_object_min_to_median_pct": 1.3390661277985059,
+  "per_object_min_to_p95_pct": 2.5442256428171612
+ },
+ "io_cross_check": {
+  "backend_bytes_written": 282118555,
+  "backend_writes": 216,
+  "blob_payload_bytes": 281981457,
+  "fsync_dir": 161,
+  "fsync_file": 213,
+  "manifest_blobs": {
+   "bytes": 281977361,
+   "count": 186
+  },
+  "object_blobs": {
+   "bytes": 4096,
+   "count": 16
+  },
+  "payload_minus_backend": 137098
+ },
+ "limits": [
+  "one host, one container shape, warm page cache except the probe's own os.sync()",
+  "/proc/diskstats is host-wide and is reported as an upper bound",
+  "the probe copies the store's published bytes; it is a device and acknowledgement comparison, not a new store format",
+  "the store-level pack plane is slower; no product default changes on this evidence",
+  "no media, power-loss, fleet or cloud claim"
+ ],
+ "method": {
+  "acknowledgement": "every output byte written, one fdatasync per file, one directory fsync; no pre-acknowledgement transcode",
+  "blob_count": 202,
+  "diskstats": "/proc/diskstats is host-wide and is reported as an upper bound, not as the court's own write",
+  "order": "seeded Fisher-Yates per repetition; every variant runs once per repetition",
+  "payload_bytes": 281981457,
+  "quiesce": "os.sync() before and after every cell",
+  "reps": 2,
+  "seed": 20261114,
+  "store": "/work/.docker-cache/n02-durability-20261114T205500Z/C-pipe4/store"
+ },
+ "paired_savings": {
+  "fewer_larger_16": {
+   "bootstrap_95_high_pct": 59.503,
+   "bootstrap_95_low_pct": 57.554,
+   "median_saving_pct": 58.528,
+   "per_rep_saving_pct": [
+    57.554,
+    59.503
+   ],
+   "reps": 2
+  },
+  "one_contiguous_pack": {
+   "bootstrap_95_high_pct": 62.529,
+   "bootstrap_95_low_pct": 56.87,
+   "median_saving_pct": 59.7,
+   "per_rep_saving_pct": [
+    56.87,
+    62.529
+   ],
+   "reps": 2
+  }
+ },
+ "schema": "weft.n02.durability-tail-court.v1",
+ "stamp": "20261114T205500Z",
+ "store_write": {
+  "commit_ms": 9.957,
+  "commit_phases": {
+   "backend_sync": 1.294,
+   "index_attest": 0.141,
+   "index_segment": 4.349,
+   "manifest_commit": 5.144
+  },
+  "config": "C-pipe4",
+  "early_barrier": {
+   "applicable": true,
+   "busy_ms": 272.744702,
+   "files": 202,
+   "lanes": 4,
+   "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+   "passes": 9,
+   "publish_sync_kicks": 9
+  },
+  "logical_bytes": 424439296,
+  "physical_bytes_written": 282118555,
+  "physical_footprint_bytes": null,
+  "prepare_ms": 524.365,
+  "prepare_phases": {
+   "analyze": 151.142,
+   "analyze_mode9": 21.693,
+   "blob_publish": 311.199,
+   "digest": 71.786,
+   "encode": 564.134,
+   "encode_float_tensor": 182.963,
+   "encode_zstd": 304.194,
+   "source_read": 45.586
+  },
+  "publication_ledger": {
+   "accounted_blob_and_control_bytes": 282097842,
+   "backend_bytes_written": 282118555,
+   "backend_writes": 216,
+   "categories": {
+    "commit_records": {
+     "bytes": 76920,
+     "count": 3
+    },
+    "index_segments": {
+     "bytes": 39465,
+     "count": 3
+    },
+    "manifest_blobs": {
+     "bytes": 281977361,
+     "count": 186
+    },
+    "object_blobs": {
+     "bytes": 4096,
+     "count": 16
+    },
+    "superblock": {
+     "count": 3
+    }
+   },
+   "duplicate_blobs": 0,
+   "fsyncs": {
+    "dir": 161,
+    "file": 213,
+    "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+    "total": 374
+   },
+   "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+   "pack": null,
+   "unaccounted_bytes": 20713
+  },
+  "stages_ms": {
+   "encode_busy": 633.602931,
+   "encode_wall": 391.80128,
+   "pipeline_wall": 524.364849,
+   "publish_busy": 344.378735,
+   "publish_wall": 429.985496,
+   "reader": 46.089658
+  },
+  "tensors": 101,
+  "wall_ms": 565.197
+ },
+ "variants": {
+  "fewer_larger_16": {
+   "disk_bytes_written": {
+    "median": 566026240.0,
+    "min": 565321728,
+    "p95": 566660300.8,
+    "p99": 566716661.76
+   },
+   "files": {
+    "median": 17.0,
+    "min": 17,
+    "p95": 17.0,
+    "p99": 17.0
+   },
+   "fsyncs": {
+    "median": 17.0,
+    "min": 17,
+    "p95": 17.0,
+    "p99": 17.0
+   },
+   "proc_write_bytes": {
+    "median": 282038272.0,
+    "min": 282038272,
+    "p95": 282038272.0,
+    "p99": 282038272.0
+   },
+   "samples": [
+    {
+     "disk_bytes_written": 566730752,
+     "disk_sectors_written": 1106896,
+     "disk_write_calls": 4386,
+     "files": 17,
+     "fsyncs": 17,
+     "payload_bytes": 281981457,
+     "proc_write_bytes": 282038272,
+     "proc_write_chars": 282004365,
+     "rep": 1,
+     "variant": "fewer_larger_16",
+     "wall_ms": 153.3707450143993
+    },
+    {
+     "disk_bytes_written": 565321728,
+     "disk_sectors_written": 1104144,
+     "disk_write_calls": 4386,
+     "files": 17,
+     "fsyncs": 17,
+     "payload_bytes": 281981457,
+     "proc_write_bytes": 282038272,
+     "proc_write_chars": 282004365,
+     "rep": 2,
+     "variant": "fewer_larger_16",
+     "wall_ms": 150.2490839920938
+    }
+   ],
+   "saving_vs_per_object_min_pct": 58.418005951380024,
+   "wall_ms": {
+    "median": 151.80991450324655,
+    "min": 150.2490839920938,
+    "p95": 153.21466196328402,
+    "p99": 153.33952840417624
+   }
+  },
+  "one_contiguous_pack": {
+   "disk_bytes_written": {
+    "median": 564789248.0,
+    "min": 564248576,
+    "p95": 565275852.8,
+    "p99": 565319106.56
+   },
+   "files": {
+    "median": 2.0,
+    "min": 2,
+    "p95": 2.0,
+    "p99": 2.0
+   },
+   "fsyncs": {
+    "median": 2.0,
+    "min": 2,
+    "p95": 2.0,
+    "p99": 2.0
+   },
+   "proc_write_bytes": {
+    "median": 282009600.0,
+    "min": 282009600,
+    "p95": 282009600.0,
+    "p99": 282009600.0
+   },
+   "samples": [
+    {
+     "disk_bytes_written": 564248576,
+     "disk_sectors_written": 1102048,
+     "disk_write_calls": 4314,
+     "files": 2,
+     "fsyncs": 2,
+     "payload_bytes": 281981457,
+     "proc_write_bytes": 282009600,
+     "proc_write_chars": 282004947,
+     "rep": 1,
+     "variant": "one_contiguous_pack",
+     "wall_ms": 155.84173891693354
+    },
+    {
+     "disk_bytes_written": 565329920,
+     "disk_sectors_written": 1104160,
+     "disk_write_calls": 4380,
+     "files": 2,
+     "fsyncs": 2,
+     "payload_bytes": 281981457,
+     "proc_write_bytes": 282009600,
+     "proc_write_chars": 282004947,
+     "rep": 2,
+     "variant": "one_contiguous_pack",
+     "wall_ms": 139.02107696048915
+    }
+   ],
+   "saving_vs_per_object_min_pct": 61.52539874979878,
+   "wall_ms": {
+    "median": 147.43140793871135,
+    "min": 139.02107696048915,
+    "p95": 155.00070581911132,
+    "p99": 155.6735322973691
+   }
+  },
+  "per_object": {
+   "disk_bytes_written": {
+    "median": 583507968.0,
+    "min": 583467008,
+    "p95": 583544832.0,
+    "p99": 583548108.8
+   },
+   "files": {
+    "median": 202.0,
+    "min": 202,
+    "p95": 202.0,
+    "p99": 202.0
+   },
+   "fsyncs": {
+    "median": 202.0,
+    "min": 202,
+    "p95": 202.0,
+    "p99": 202.0
+   },
+   "proc_write_bytes": {
+    "median": 282607616.0,
+    "min": 282607616,
+    "p95": 282607616.0,
+    "p99": 282607616.0
+   },
+   "samples": [
+    {
+     "disk_bytes_written": 583467008,
+     "disk_sectors_written": 1139584,
+     "disk_write_calls": 5496,
+     "files": 202,
+     "fsyncs": 202,
+     "payload_bytes": 281981457,
+     "proc_write_bytes": 282607616,
+     "proc_write_chars": 281981457,
+     "rep": 1,
+     "variant": "per_object",
+     "wall_ms": 361.3320799777284
+    },
+    {
+     "disk_bytes_written": 583548928,
+     "disk_sectors_written": 1139744,
+     "disk_write_calls": 5498,
+     "files": 202,
+     "fsyncs": 202,
+     "payload_bytes": 281981457,
+     "proc_write_bytes": 282607616,
+     "proc_write_chars": 281981457,
+     "rep": 2,
+     "variant": "per_object",
+     "wall_ms": 371.00903096143156
+    }
+   ],
+   "saving_vs_per_object_min_pct": 0.0,
+   "wall_ms": {
+    "median": 366.17055546958,
+    "min": 361.3320799777284,
+    "p95": 370.5251834122464,
+    "p99": 370.91226145159453
+   }
+  }
+ },
+ "verdict": {
+  "clears": true,
+  "gate": "whole-wall saving > 10 % beyond the measured host spread for the winning variant",
+  "product_note": "the winning variant is a device/acknowledgement layout, not a store format. The store-level pack plane measured separately (R22 narrowed matrix) is slower because sealing and catalog publication are charged to the publisher, so no product default changes on this evidence.",
+  "statistic": "paired per-repetition saving against per_object (seeded Fisher-Yates order), median and seeded percentile bootstrap 95 % interval",
+  "threshold_pct": 10.0,
+  "unpaired_spread_pct": {
+   "per_object_min_to_median_pct": 1.3390661277985059,
+   "per_object_min_to_p95_pct": 2.5442256428171612
+  },
+  "why_paired": "the host stalled for 1-9 s in individual cells; a paired difference within one repetition cancels that state, while the unpaired min/median/p95 are still published unchanged",
+  "winning_ci_high_pct": 59.503,
+  "winning_ci_low_pct": 57.554,
+  "winning_median_saving_pct": 58.528,
+  "winning_variant": "fewer_larger_16"
+ }
+}
