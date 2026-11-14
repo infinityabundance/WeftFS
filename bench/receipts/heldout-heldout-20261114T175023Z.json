@@ -1,0 +1,5206 @@
+{
+  "checks": {
+    "all_arms_exact": true,
+    "bytes_prediction_end_to_end_median_abs_rel_le_0.10": true,
+    "bytes_prediction_median_abs_rel_le_0.10": true,
+    "model_schema": "weft.heldout.model.v1",
+    "model_sha256": "c289c24717cdafd25d368a11bb872d816a42dacccf7ad1e9f635c01da41f0d93",
+    "restore_prediction_median_abs_rel_le_0.20": true,
+    "sla_misses_reported": true,
+    "strategy_agreement_ge_0.90": false
+  },
+  "container": {
+    "file_bytes": 15231272088,
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+    "sha256": "22599fe41374d0b748ba26a4d4e4f96644650e468bac0e2dbdd657219283af23",
+    "tensors_in_container": 339
+  },
+  "court": {
+    "host": "Linux 7.3.3-1-cachyos x86_64",
+    "kernel": "7.3.3-1-cachyos",
+    "lambda_ns": 0,
+    "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+    "peak_rss_kib": 419084,
+    "prediction_objective": "bytes-only (the shipped default); latency lambda is a secondary row in RESULTS"
+  },
+  "elapsed_ms": 47480,
+  "exactness": {
+    "exact": 38,
+    "mismatches": 0,
+    "tensors": 38
+  },
+  "family": "qwen2.5-7b-instruct",
+  "family_summary": {
+    "errors": {
+      "bytes_conditional": {
+        "abs": {
+          "max": 945712.0,
+          "median": 15981.5,
+          "p90": 884523.4,
+          "p95": 927854.05
+        },
+        "abs_rel": {
+          "max": 0.5912193143340858,
+          "median": 0.009475270959156672,
+          "p90": 0.08441978454546317,
+          "p95": 0.25916353281369847
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.0018421032052072768,
+          "p10": -0.04034419453525589,
+          "p90": 0.0452388680714445
+        },
+        "small_n": false
+      },
+      "bytes_end_to_end": {
+        "abs": {
+          "max": 945712.0,
+          "median": 15981.5,
+          "p90": 884523.4,
+          "p95": 927854.05
+        },
+        "abs_rel": {
+          "max": 0.35471042607223474,
+          "median": 0.009475270959156672,
+          "p90": 0.061267416807829475,
+          "p95": 0.07445664414886749
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.001469024790147895,
+          "p10": -0.042495950660131274,
+          "p90": 0.010407250238897485
+        },
+        "small_n": false
+      },
+      "decode_cpu_conditional": {
+        "abs": {
+          "max": 47006150.033937216,
+          "median": 5092921.276974929,
+          "p90": 45533593.63393722,
+          "p95": 46082488.98393721
+        },
+        "abs_rel": {
+          "max": 0.4204821701566681,
+          "median": 0.14174934696181163,
+          "p90": 0.3428215653044377,
+          "p95": 0.36282463496839934
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.12544266918992164,
+          "p10": -0.34282156530443764,
+          "p90": 0.15325469438269473
+        },
+        "small_n": false
+      },
+      "restore_wall_conditional": {
+        "abs": {
+          "max": 17366433.033937216,
+          "median": 1881093.614269304,
+          "p90": 13350534.933937218,
+          "p95": 14968046.483937213
+        },
+        "abs_rel": {
+          "max": 0.6592976617266343,
+          "median": 0.04782672384975846,
+          "p90": 0.627215100082864,
+          "p95": 0.6428644859093811
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.03155277184173225,
+          "p10": -0.6272151000828639,
+          "p90": 0.05271261978608664
+        },
+        "small_n": false
+      },
+      "restore_wall_end_to_end": {
+        "abs": {
+          "max": 17366433.033937216,
+          "median": 1881093.614269304,
+          "p90": 13350534.933937218,
+          "p95": 14968046.483937213
+        },
+        "abs_rel": {
+          "max": 0.6592976617266343,
+          "median": 0.04782672384975846,
+          "p90": 0.6080276725346496,
+          "p95": 0.6357651852869766
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.03155277184173225,
+          "p10": -0.6080276725346495,
+          "p90": 0.05271261978608664
+        },
+        "small_n": false
+      },
+      "write_wall_conditional": {
+        "abs": {
+          "max": 365816895.9454273,
+          "median": 31648484.343419433,
+          "p90": 362114801.2454273,
+          "p95": 363022414.6454273
+        },
+        "abs_rel": {
+          "max": 2.3421322195719587,
+          "median": 0.7664593903658915,
+          "p90": 2.2647725879084613,
+          "p95": 2.2833879324551325
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.5544933289252207,
+          "p10": -0.29322936409319267,
+          "p90": 2.2647725879084613
+        },
+        "small_n": false
+      },
+      "write_wall_end_to_end": {
+        "abs": {
+          "max": 365816895.94542736,
+          "median": 31730776.71899984,
+          "p90": 362114801.24542737,
+          "p95": 363022414.64542735
+        },
+        "abs_rel": {
+          "max": 2.342132219571959,
+          "median": 0.7718261539897936,
+          "p90": 2.2647725879084617,
+          "p95": 2.2833879324551325
+        },
+        "n": 38,
+        "signed_rel": {
+          "median": 0.5544933289252207,
+          "p10": -0.2979730716379557,
+          "p90": 2.2647725879084617
+        },
+        "small_n": false
+      }
+    },
+    "exact_restores": 38,
+    "fadvised_files": 159,
+    "measured_family_restore_ms": 4362.123335,
+    "measured_restore_sum_ms": 4362.123335,
+    "measured_write_ms": 2299.860737,
+    "predicted_restore_ms": 4525.714825925875,
+    "predicted_rows": 38,
+    "predicted_strategy_not_applicable": 4,
+    "predicted_write_ms": 6079.049280152324,
+    "store_open_ms": 6.334726,
+    "strategy_agreement": 0.8947368421052632,
+    "strategy_missing_from_model": 0,
+    "tensors": 38
+  },
+  "mode": "predict",
+  "model_sha256": "c289c24717cdafd25d368a11bb872d816a42dacccf7ad1e9f635c01da41f0d93",
+  "schema": "weft.heldout.planner.v1",
+  "sla": {
+    "accepted": 3,
+    "miss_rate": 0.0,
+    "missed": 0,
+    "rows": [
+      {
+        "accepted": false,
+        "measured_ms": 4362.123335,
+        "miss": false,
+        "multiplier_of_prediction": 0.75,
+        "sla_ms": 3394.286119444406
+      },
+      {
+        "accepted": false,
+        "measured_ms": 4362.123335,
+        "miss": false,
+        "multiplier_of_prediction": 1.0,
+        "sla_ms": 4525.714825925875
+      },
+      {
+        "accepted": true,
+        "measured_ms": 4362.123335,
+        "miss": false,
+        "multiplier_of_prediction": 1.25,
+        "sla_ms": 5657.143532407344
+      },
+      {
+        "accepted": true,
+        "measured_ms": 4362.123335,
+        "miss": false,
+        "multiplier_of_prediction": 1.5,
+        "sla_ms": 6788.572238888812
+      },
+      {
+        "accepted": true,
+        "measured_ms": 4362.123335,
+        "miss": false,
+        "multiplier_of_prediction": 2.0,
+        "sla_ms": 9051.42965185175
+      }
+    ],
+    "rule": "accept iff predicted <= 0.90 * threshold"
+  },
+  "stamp": "20261114T175252543Z",
+  "subset": {
+    "logical_bytes": 1512118272,
+    "max_tensor_bytes": 167772160,
+    "max_tensors": 40,
+    "max_total_bytes": 1610612736,
+    "names": [
+      "model.layers.0.input_layernorm.weight",
+      "model.layers.0.self_attn.q_proj.weight",
+      "model.layers.1.self_attn.k_proj.weight",
+      "model.layers.10.mlp.up_proj.weight",
+      "model.layers.11.input_layernorm.weight",
+      "model.layers.11.self_attn.q_proj.weight",
+      "model.layers.12.self_attn.k_proj.weight",
+      "model.layers.13.mlp.up_proj.weight",
+      "model.layers.14.input_layernorm.weight",
+      "model.layers.14.self_attn.q_proj.weight",
+      "model.layers.15.self_attn.k_proj.weight",
+      "model.layers.16.mlp.up_proj.weight",
+      "model.layers.17.input_layernorm.weight",
+      "model.layers.17.self_attn.q_proj.weight",
+      "model.layers.18.self_attn.k_proj.weight",
+      "model.layers.19.mlp.up_proj.weight",
+      "model.layers.2.input_layernorm.weight",
+      "model.layers.2.self_attn.q_proj.weight",
+      "model.layers.20.self_attn.k_proj.weight",
+      "model.layers.21.mlp.up_proj.weight",
+      "model.layers.22.input_layernorm.weight",
+      "model.layers.22.self_attn.q_proj.weight",
+      "model.layers.23.self_attn.k_proj.weight",
+      "model.layers.24.mlp.up_proj.weight",
+      "model.layers.25.input_layernorm.weight",
+      "model.layers.25.self_attn.q_proj.weight",
+      "model.layers.26.self_attn.k_proj.weight",
+      "model.layers.27.mlp.up_proj.weight",
+      "model.layers.3.input_layernorm.weight",
+      "model.layers.3.self_attn.q_proj.weight",
+      "model.layers.4.self_attn.k_proj.weight",
+      "model.layers.5.mlp.up_proj.weight",
+      "model.layers.6.input_layernorm.weight",
+      "model.layers.6.self_attn.q_proj.weight",
+      "model.layers.7.self_attn.k_proj.weight",
+      "model.layers.8.mlp.up_proj.weight",
+      "model.layers.9.input_layernorm.weight",
+      "model.layers.9.self_attn.q_proj.weight"
+    ],
+    "rule": "every tensor with byte_len <= the declared bound, strided by the smallest k that keeps the subset within the declared tensor and byte bounds",
+    "selected": 38
+  },
+  "tensors": [
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 3544,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 9 saves less than 1/64 of the zstd frame                                      (4660 vs 3544 bytes); not worth the decode cost",
+          "physical_bytes": null,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3544,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 90089,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.0.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 3544,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 6739082,
+      "restore_cpu_ns": 117331,
+      "restore_ns": 180407,
+      "restored_sha256": "a4d57debc4b3d47a50b1f0ddc44960b2b20f160a7d47d1d1fcff211e6efb5eaa",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "a4d57debc4b3d47a50b1f0ddc44960b2b20f160a7d47d1d1fcff211e6efb5eaa",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14128887,
+      "written_bytes": 3544,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20078917,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20125206,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17149537,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20078917,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20125206,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17149537,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 18280357,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.0.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17149537,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 14872165,
+      "restore_cpu_ns": 66496746,
+      "restore_ns": 71713950,
+      "restored_sha256": "d2bbccdb5f2f2ff17e2e5d4798e20e549e7cc7f4035323e414069da50f850fa9",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "d2bbccdb5f2f2ff17e2e5d4798e20e549e7cc7f4035323e414069da50f850fa9",
+      "two_stage_analysis": null,
+      "write_wall_ns": 45515182,
+      "written_bytes": 17149537,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2952574,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2960748,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2546334,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2952574,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2960748,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2546334,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10959841,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.1.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2546334,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 8148261,
+      "restore_cpu_ns": 9986062,
+      "restore_ns": 11002200,
+      "restored_sha256": "d455c4da829c8649c54fb95f8f2502ace0de055844904daa210ea4d73a657480",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "d455c4da829c8649c54fb95f8f2502ace0de055844904daa210ea4d73a657480",
+      "two_stage_analysis": null,
+      "write_wall_ns": 26644793,
+      "written_bytes": 2546334,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105869806,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106174953,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90024973,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105869806,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106174953,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90024973,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 77896044,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.10.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90024973,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 46382370,
+      "restore_cpu_ns": 365599198,
+      "restore_ns": 393598253,
+      "restored_sha256": "65e584302d2423f885f997346076d843b3d133c52c180cbb6950c425a89b3100",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "65e584302d2423f885f997346076d843b3d133c52c180cbb6950c425a89b3100",
+      "two_stage_analysis": null,
+      "write_wall_ns": 161464055,
+      "written_bytes": 90024973,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5116,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 5031,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5116,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5031,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 61284,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.11.input_layernorm.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5031,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 7207756,
+      "restore_cpu_ns": 220136,
+      "restore_ns": 384588,
+      "restored_sha256": "10658fc8105f760df4e948d2e9f3222ee81ac3ee91b57b36f7fe0d7834b17656",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "10658fc8105f760df4e948d2e9f3222ee81ac3ee91b57b36f7fe0d7834b17656",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14195842,
+      "written_bytes": 5031,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20100378,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20152726,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17160895,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20100378,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20152726,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17160895,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 18927014,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.11.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17160895,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 13897585,
+      "restore_cpu_ns": 67397274,
+      "restore_ns": 73449009,
+      "restored_sha256": "8f7dc6f67ae00b98516bd6665fe7aa25d3027e18bac278bfd56d14f11082c467",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "8f7dc6f67ae00b98516bd6665fe7aa25d3027e18bac278bfd56d14f11082c467",
+      "two_stage_analysis": null,
+      "write_wall_ns": 44506689,
+      "written_bytes": 17160895,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2879338,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2886251,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2464806,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2879338,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2886251,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2464806,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 12069963,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.12.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2464806,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 8071829,
+      "restore_cpu_ns": 10754764,
+      "restore_ns": 11745587,
+      "restored_sha256": "b54a4748e7d30f929c1dfcc20d56c799ceb2528bc66ecb461782512c3c5d138b",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "b54a4748e7d30f929c1dfcc20d56c799ceb2528bc66ecb461782512c3c5d138b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27627808,
+      "written_bytes": 2464806,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105929993,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106246219,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90071329,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105929993,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106246219,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90071329,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 76671988,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.13.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90071329,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 44541364,
+      "restore_cpu_ns": 362764780,
+      "restore_ns": 393623149,
+      "restored_sha256": "c4b48ec8813c8f3d3c23a2a3ebfcf93736257371136669377dded7f7bf765e73",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "c4b48ec8813c8f3d3c23a2a3ebfcf93736257371136669377dded7f7bf765e73",
+      "two_stage_analysis": null,
+      "write_wall_ns": 160170910,
+      "written_bytes": 90071329,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5210,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 5109,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5210,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5109,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 66283,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.14.input_layernorm.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5109,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 7009166,
+      "restore_cpu_ns": 196337,
+      "restore_ns": 332039,
+      "restored_sha256": "f59e4b1af29d63d7a40f12f54ef1580ec075188ae01f1a0afa943edece7dfccf",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "f59e4b1af29d63d7a40f12f54ef1580ec075188ae01f1a0afa943edece7dfccf",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14132283,
+      "written_bytes": 5109,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20108173,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20162266,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17216327,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20108173,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20162266,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17216327,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 19921130,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.14.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17216327,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 13354241,
+      "restore_cpu_ns": 67340051,
+      "restore_ns": 72864899,
+      "restored_sha256": "8ac3095abf65487f53357d763d2d9b1c9520ec9d6f3555b4838594ac4f23051d",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "8ac3095abf65487f53357d763d2d9b1c9520ec9d6f3555b4838594ac4f23051d",
+      "two_stage_analysis": null,
+      "write_wall_ns": 48229549,
+      "written_bytes": 17216327,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2880762,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2888436,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2467616,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2880762,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2888436,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2467616,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10921879,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.15.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2467616,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 8352363,
+      "restore_cpu_ns": 9629069,
+      "restore_ns": 10655703,
+      "restored_sha256": "ec8e7d5754fa7b8146948292855d5bd212f78431f83624c361d6d1377c7f5015",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "ec8e7d5754fa7b8146948292855d5bd212f78431f83624c361d6d1377c7f5015",
+      "two_stage_analysis": null,
+      "write_wall_ns": 26838775,
+      "written_bytes": 2467616,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105956669,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106258922,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90079124,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105956669,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106258922,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90079124,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 77614477,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.16.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90079124,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 47869436,
+      "restore_cpu_ns": 360579040,
+      "restore_ns": 392977845,
+      "restored_sha256": "088939089dc7422b44d5018ac3b66023354da3ecadce18eb55665330374948c0",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "088939089dc7422b44d5018ac3b66023354da3ecadce18eb55665330374948c0",
+      "two_stage_analysis": null,
+      "write_wall_ns": 161838483,
+      "written_bytes": 90079124,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5248,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 5143,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5248,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5143,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 69069,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.17.input_layernorm.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5143,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 6832705,
+      "restore_cpu_ns": 202388,
+      "restore_ns": 362787,
+      "restored_sha256": "67ab4bb9767fe380e9330f3da21b45ca23cc10dc75e1d7cf0f41f29f1ea7c0f8",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "67ab4bb9767fe380e9330f3da21b45ca23cc10dc75e1d7cf0f41f29f1ea7c0f8",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13986030,
+      "written_bytes": 5143,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20094001,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20145879,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17198089,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20094001,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20145879,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17198089,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 19104787,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.17.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17198089,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 14145809,
+      "restore_cpu_ns": 67566312,
+      "restore_ns": 73092574,
+      "restored_sha256": "68f17a044eb26ccbad94931196adc4250fce2de7dd619cba38fdf291a2f7135d",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "68f17a044eb26ccbad94931196adc4250fce2de7dd619cba38fdf291a2f7135d",
+      "two_stage_analysis": null,
+      "write_wall_ns": 44884804,
+      "written_bytes": 17198089,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2874514,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2881535,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2455414,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2874514,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2881535,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2455414,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 12079140,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.18.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2455414,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 8312307,
+      "restore_cpu_ns": 9947547,
+      "restore_ns": 10911189,
+      "restored_sha256": "e44fbf0903d562b060d59247232b23fe3d85d750ccf0b13338dad773317d4d6a",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "e44fbf0903d562b060d59247232b23fe3d85d750ccf0b13338dad773317d4d6a",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27948767,
+      "written_bytes": 2455414,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 106002944,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106304365,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90102448,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 106002944,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106304365,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90102448,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 78444036,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.19.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90102448,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 42088164,
+      "restore_cpu_ns": 359736696,
+      "restore_ns": 388780047,
+      "restored_sha256": "e701306f0d61ea964c629fbb86a10a1cce0dcf744fb88f6a06c846b1215a8b83",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "e701306f0d61ea964c629fbb86a10a1cce0dcf744fb88f6a06c846b1215a8b83",
+      "two_stage_analysis": null,
+      "write_wall_ns": 158807063,
+      "written_bytes": 90102448,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5322,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 5096,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5322,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5096,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 69740,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.2.input_layernorm.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5096,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 6796629,
+      "restore_cpu_ns": 229972,
+      "restore_ns": 391171,
+      "restored_sha256": "7fac3a240398d4a9ac6855eb993923cbc0fe22f5d8cbf28aeec958b184fe6144",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "7fac3a240398d4a9ac6855eb993923cbc0fe22f5d8cbf28aeec958b184fe6144",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13892706,
+      "written_bytes": 5096,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20335447,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20406243,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17420707,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20335447,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20406243,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17420707,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 19225342,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.2.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17420707,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 12986303,
+      "restore_cpu_ns": 68281871,
+      "restore_ns": 73826855,
+      "restored_sha256": "f0554da795ea4f57e60e7726c4dbeed96afc2ad2294df4c0c40cc6a6f5464883",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "f0554da795ea4f57e60e7726c4dbeed96afc2ad2294df4c0c40cc6a6f5464883",
+      "two_stage_analysis": null,
+      "write_wall_ns": 44212259,
+      "written_bytes": 17420707,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2871748,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2880329,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2453695,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2871748,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2880329,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2453695,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 11142242,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.20.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2453695,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 8154113,
+      "restore_cpu_ns": 9895258,
+      "restore_ns": 10863230,
+      "restored_sha256": "a84e39def7fbae555ac67fa55c0580563f6dd1413e2879cad176d964de402423",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "a84e39def7fbae555ac67fa55c0580563f6dd1413e2879cad176d964de402423",
+      "two_stage_analysis": null,
+      "write_wall_ns": 26502186,
+      "written_bytes": 2453695,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 106009294,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106307639,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90098289,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 106009294,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106307639,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90098289,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 76642282,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.21.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90098289,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 70318665,
+      "restore_cpu_ns": 360627392,
+      "restore_ns": 391533838,
+      "restored_sha256": "0bd387e21aec5de40e0371c13be5651c3fc4582b860fb7afc31648c4930cc8f2",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "0bd387e21aec5de40e0371c13be5651c3fc4582b860fb7afc31648c4930cc8f2",
+      "two_stage_analysis": null,
+      "write_wall_ns": 184276761,
+      "written_bytes": 90098289,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 4514,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 9 saves less than 1/64 of the zstd frame                                      (4836 vs 4514 bytes); not worth the decode cost",
+          "physical_bytes": null,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 4514,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 75692,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.22.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 4514,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 7259653,
+      "restore_cpu_ns": 180759,
+      "restore_ns": 347458,
+      "restored_sha256": "e4dcd08db03ec97840956f59ca6e0b62bc48ec34341a7c088d50e615a9a930eb",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "e4dcd08db03ec97840956f59ca6e0b62bc48ec34341a7c088d50e615a9a930eb",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14292201,
+      "written_bytes": 4514,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20134101,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20189624,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17252259,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20134101,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20189624,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17252259,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 18672990,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.22.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17252259,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 13811133,
+      "restore_cpu_ns": 67359466,
+      "restore_ns": 73041078,
+      "restored_sha256": "c95b90d8dda36a03270cc32f8c288a94788971b8ff92ac83bc4acda1c26a5afd",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "c95b90d8dda36a03270cc32f8c288a94788971b8ff92ac83bc4acda1c26a5afd",
+      "two_stage_analysis": null,
+      "write_wall_ns": 42928612,
+      "written_bytes": 17252259,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2876988,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2886256,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2460343,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2876988,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2886256,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2460343,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10927430,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.23.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2460343,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 8771595,
+      "restore_cpu_ns": 9646260,
+      "restore_ns": 10681400,
+      "restored_sha256": "6f4b991a0642bc34d50fb6a54368289c64105b26a7838e3ed2bf134893a44c58",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "6f4b991a0642bc34d50fb6a54368289c64105b26a7838e3ed2bf134893a44c58",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27796041,
+      "written_bytes": 2460343,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105928446,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106231533,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90006208,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105928446,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106231533,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90006208,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 76303338,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.24.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90006208,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 43485672,
+      "restore_cpu_ns": 359140330,
+      "restore_ns": 389164475,
+      "restored_sha256": "fc7a8ca1a3b484d7317765c9efe58216942ce138c39d076462e8232da55e1550",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "fc7a8ca1a3b484d7317765c9efe58216942ce138c39d076462e8232da55e1550",
+      "two_stage_analysis": null,
+      "write_wall_ns": 156189686,
+      "written_bytes": 90006208,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 4288,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 9 saves less than 1/64 of the zstd frame                                      (4741 vs 4288 bytes); not worth the decode cost",
+          "physical_bytes": null,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 4288,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 110386,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.25.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 4288,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 7927008,
+      "restore_cpu_ns": 190707,
+      "restore_ns": 302334,
+      "restored_sha256": "cff642f53edeba8ce733ba1849f6299b956bdce06e56b30917011ef7f51b4fdf",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "cff642f53edeba8ce733ba1849f6299b956bdce06e56b30917011ef7f51b4fdf",
+      "two_stage_analysis": null,
+      "write_wall_ns": 15333706,
+      "written_bytes": 4288,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20104792,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20160045,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17175097,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20104792,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20160045,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17175097,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 22511847,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.25.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17175097,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 13672736,
+      "restore_cpu_ns": 66746483,
+      "restore_ns": 73097022,
+      "restored_sha256": "91412e047d8479b91117851d08bd0f8a8c8c784bb50b8fc2764278f25cc6e7d2",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "91412e047d8479b91117851d08bd0f8a8c8c784bb50b8fc2764278f25cc6e7d2",
+      "two_stage_analysis": null,
+      "write_wall_ns": 48728720,
+      "written_bytes": 17175097,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2881209,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2888603,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2474359,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2881209,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2888603,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2474359,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10809290,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.26.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2474359,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 6513069,
+      "restore_cpu_ns": 9562115,
+      "restore_ns": 10903605,
+      "restored_sha256": "3b15d52a927164011d0316a55fb52ae0f8d8af700c41693a9a11261ed9473ea2",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "3b15d52a927164011d0316a55fb52ae0f8d8af700c41693a9a11261ed9473ea2",
+      "two_stage_analysis": null,
+      "write_wall_ns": 25885084,
+      "written_bytes": 2474359,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105975183,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106275280,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90058221,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105975183,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106275280,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90058221,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 78191092,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.27.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90058221,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 41964442,
+      "restore_cpu_ns": 360121749,
+      "restore_ns": 392371512,
+      "restored_sha256": "e47f1cb022d1028015456ec98b19504fbac1085c353a2ccc1462aee1f78fa64e",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "e47f1cb022d1028015456ec98b19504fbac1085c353a2ccc1462aee1f78fa64e",
+      "two_stage_analysis": null,
+      "write_wall_ns": 159015421,
+      "written_bytes": 90058221,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5107,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 4991,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5107,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 4991,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 90319,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.3.input_layernorm.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 4991,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 5765684,
+      "restore_cpu_ns": 197039,
+      "restore_ns": 318204,
+      "restored_sha256": "d8457071638295712e783a0cd16056cf684781d61f09e0f64ee03e488168594b",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "d8457071638295712e783a0cd16056cf684781d61f09e0f64ee03e488168594b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12931291,
+      "written_bytes": 4991,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20195882,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20260101,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17234248,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20195882,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20260101,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17234248,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 19446073,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.3.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17234248,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 14024171,
+      "restore_cpu_ns": 66612296,
+      "restore_ns": 72916965,
+      "restored_sha256": "70415249718c8d4a508e955f4fa459ff976eb596961caccabb429df5ffd0690e",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "70415249718c8d4a508e955f4fa459ff976eb596961caccabb429df5ffd0690e",
+      "two_stage_analysis": null,
+      "write_wall_ns": 44378308,
+      "written_bytes": 17234248,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2890941,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2898265,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2473924,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2890941,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2898265,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2473924,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 11485832,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.4.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2473924,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 9243647,
+      "restore_cpu_ns": 9547239,
+      "restore_ns": 10925035,
+      "restored_sha256": "fdf7cba5d6cc348b46143291f4018943bf2d92c86aec3673dc1afdf1d3c9000f",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "fdf7cba5d6cc348b46143291f4018943bf2d92c86aec3673dc1afdf1d3c9000f",
+      "two_stage_analysis": null,
+      "write_wall_ns": 28448439,
+      "written_bytes": 2473924,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105926316,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106221384,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90098141,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105926316,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106221384,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90098141,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 81909765,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.5.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90098141,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 42558922,
+      "restore_cpu_ns": 363911912,
+      "restore_ns": 393864708,
+      "restored_sha256": "6ec6556a59f2ebdf95b31af99b437db81e8430352e350759974e4860902b5bf3",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "6ec6556a59f2ebdf95b31af99b437db81e8430352e350759974e4860902b5bf3",
+      "two_stage_analysis": null,
+      "write_wall_ns": 162124164,
+      "written_bytes": 90098141,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5075,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 4879,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5075,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 4879,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 73377,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.6.input_layernorm.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 4879,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 5730418,
+      "restore_cpu_ns": 207338,
+      "restore_ns": 336909,
+      "restored_sha256": "13e4525aa6271ce4d21fe69baf86be7667e3be9378ca4b859e8f6bae7061bc24",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "13e4525aa6271ce4d21fe69baf86be7667e3be9378ca4b859e8f6bae7061bc24",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12765802,
+      "written_bytes": 4879,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20094952,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20147996,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17134763,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20094952,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20147996,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17134763,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 19410436,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.6.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17134763,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 14512142,
+      "restore_cpu_ns": 67492891,
+      "restore_ns": 73386753,
+      "restored_sha256": "504d6af510017a139ee22863fbb1efdda25445362ebe703863d9b69a866f89a6",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "504d6af510017a139ee22863fbb1efdda25445362ebe703863d9b69a866f89a6",
+      "two_stage_analysis": null,
+      "write_wall_ns": 45933471,
+      "written_bytes": 17134763,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 2874716,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 2882450,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 2453503,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 3670016,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2874716,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2882450,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 2453503,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10881614,
+      "exact": true,
+      "logical_bytes": 3670016,
+      "name": "model.layers.7.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 2453503,
+      "prediction": {
+        "bytes": 2458160.0,
+        "candidates": {
+          "float-tensor": 2458160.0,
+          "raw": 3670016.0,
+          "zstd": 2887312.0
+        },
+        "restore_ns": 11085748.662705624,
+        "strategy": "float-tensor",
+        "write_ns": 23748069.241768308
+      },
+      "publish_ns": 7937178,
+      "restore_cpu_ns": 9856948,
+      "restore_ns": 10904217,
+      "restored_sha256": "b651ee206259676ae70dca2bd96c1c8ddd98a174acaad85fdc243f03f8497e54",
+      "shape": [
+        512,
+        3584
+      ],
+      "source_sha256": "b651ee206259676ae70dca2bd96c1c8ddd98a174acaad85fdc243f03f8497e54",
+      "two_stage_analysis": null,
+      "write_wall_ns": 26426325,
+      "written_bytes": 2453503,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 105889201,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 106194673,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 90018926,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 135790592,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 105889201,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 106194673,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 90018926,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 77793079,
+      "exact": true,
+      "logical_bytes": 135790592,
+      "name": "model.layers.8.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 90018926,
+      "prediction": {
+        "bytes": 90951920.0,
+        "candidates": {
+          "float-tensor": 90951920.0,
+          "raw": 135790592.0,
+          "zstd": 106830544.0
+        },
+        "restore_ns": 406146480.0339372,
+        "strategy": "float-tensor",
+        "write_ns": 522006581.94542736
+      },
+      "publish_ns": 45040374,
+      "restore_cpu_ns": 362396643,
+      "restore_ns": 393823732,
+      "restored_sha256": "72e57fd08c4ae84bb9c716fd55667f054338ec7677bcd76bee7036965f723130",
+      "shape": [
+        18944,
+        3584
+      ],
+      "source_sha256": "72e57fd08c4ae84bb9c716fd55667f054338ec7677bcd76bee7036965f723130",
+      "two_stage_analysis": null,
+      "write_wall_ns": 159240479,
+      "written_bytes": 90018926,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 5007,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd-19 skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 9 saves less than 1/64 of the zstd frame                                      (4944 vs 5007 bytes); not worth the decode cost",
+          "physical_bytes": null,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "zstd patch skipped: 7168 bytes is below the 1048576 byte threshold",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 7168,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 5007,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 78968,
+      "exact": true,
+      "logical_bytes": 7168,
+      "name": "model.layers.9.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 5007,
+      "prediction": {
+        "bytes": 4801.09375,
+        "candidates": {
+          "float-tensor": 4801.09375,
+          "raw": 7168.0,
+          "zstd": 5639.28125
+        },
+        "restore_ns": 133272.87436473073,
+        "strategy": "float-tensor",
+        "write_ns": 9934587.254378453
+      },
+      "publish_ns": 7191655,
+      "restore_cpu_ns": 174146,
+      "restore_ns": 332541,
+      "restored_sha256": "f2ec32d5d0f349d02cd3f47f6eb1dc1c464be8426ae77ac9448aefd45193fb09",
+      "shape": [
+        3584
+      ],
+      "source_sha256": "f2ec32d5d0f349d02cd3f47f6eb1dc1c464be8426ae77ac9448aefd45193fb09",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14287884,
+      "written_bytes": 5007,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidate_detail": [
+        {
+          "applicable": true,
+          "detail": "canonical row-major chunks",
+          "physical_bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD frame",
+          "physical_bytes": 20081466,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one ZSTD level-19 frame",
+          "physical_bytes": 20132546,
+          "strategy": "zstd"
+        },
+        {
+          "applicable": true,
+          "detail": "one mode-9 FLOAT_TENSOR frame (bf16)",
+          "physical_bytes": 17147594,
+          "strategy": "float-tensor"
+        },
+        {
+          "applicable": false,
+          "detail": "mode 10 carries quantized tensors; bf16 is not q8_0",
+          "physical_bytes": null,
+          "strategy": "tensor-sharded"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "tensor-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "no engram metadata supplied",
+          "physical_bytes": null,
+          "strategy": "engram-shard"
+        },
+        {
+          "applicable": false,
+          "detail": "no tile shape supplied",
+          "physical_bytes": null,
+          "strategy": "float-tiled"
+        },
+        {
+          "applicable": false,
+          "detail": "experimental: mode 18 is not auto-selected; pass --allow-experimental-modes or name the strategy",
+          "physical_bytes": null,
+          "strategy": "float-tiled-streams"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "weight-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal base with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "zstd-patch"
+        },
+        {
+          "applicable": false,
+          "detail": "no usable causal parent with the same dtype/shape",
+          "physical_bytes": null,
+          "strategy": "sparse-delta"
+        },
+        {
+          "applicable": false,
+          "detail": "semantic search disabled by the write policy",
+          "physical_bytes": null,
+          "strategy": "semantic-delta"
+        }
+      ],
+      "candidates": [
+        {
+          "bytes": 25690112,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 20081466,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 20132546,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 17147594,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 19195316,
+      "exact": true,
+      "logical_bytes": 25690112,
+      "name": "model.layers.9.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 17147594,
+      "prediction": {
+        "bytes": 17207120.0,
+        "candidates": {
+          "float-tensor": 17207120.0,
+          "raw": 25690112.0,
+          "zstd": 20211184.0
+        },
+        "restore_ns": 76929203.89124423,
+        "strategy": "float-tensor",
+        "write_ns": 106791154.69237813
+      },
+      "publish_ns": 12870508,
+      "restore_cpu_ns": 67094576,
+      "restore_ns": 73116067,
+      "restored_sha256": "14cf4f263d6659e3f8755b2b137c3064190134187574f76a2013afcbd9083ed5",
+      "shape": [
+        3584,
+        3584
+      ],
+      "source_sha256": "14cf4f263d6659e3f8755b2b137c3064190134187574f76a2013afcbd9083ed5",
+      "two_stage_analysis": null,
+      "write_wall_ns": 43351271,
+      "written_bytes": 17147594,
+      "written_strategy": "float-tensor"
+    }
+  ]
+}

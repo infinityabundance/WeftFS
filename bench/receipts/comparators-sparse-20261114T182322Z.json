@@ -1,0 +1,90 @@
+{
+ "schema": "weft.comparators.v1",
+ "stamp": "20261114T182322Z",
+ "pair": {
+  "base": {
+   "path": "/work/.docker-cache/real-corpus/pythia-70m-step0.safetensors",
+   "bytes": 281715176,
+   "sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e"
+  },
+  "newer": {
+   "path": "/work/.docker-cache/real-corpus/pythia-70m-step1.safetensors",
+   "bytes": 281715176,
+   "sha256": "652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109"
+  },
+  "tensors": 76,
+  "shapes_match": true
+ },
+ "court": {
+  "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+  "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***",
+  "accounting": "base bytes + stored form of the newer container + every index/manifest byte the arm needs"
+ },
+ "arms": [
+  {
+   "arm": "N",
+   "kind": "native separate containers",
+   "stored_bytes": 563430352,
+   "delta_bytes": 281715176,
+   "exact": true,
+   "index_bytes": 0,
+   "compress_ms": null,
+   "decompress_ms": null
+  },
+  {
+   "arm": "Z19",
+   "kind": "independent zstd -19 of the newer container",
+   "stored_bytes": 423955208,
+   "delta_bytes": 142240032,
+   "exact": true,
+   "index_bytes": 0,
+   "compress_ms": 123237.4231669819,
+   "decompress_ms": 267.8301769774407,
+   "detail": null
+  },
+  {
+   "arm": "PF12",
+   "kind": "zstd --patch-from -12 on the newer container",
+   "stored_bytes": 281745441,
+   "delta_bytes": 30265,
+   "exact": true,
+   "index_bytes": 0,
+   "compress_ms": 1392.6169580081478,
+   "decompress_ms": 122.3561210790649,
+   "detail": null
+  },
+  {
+   "arm": "PF19",
+   "kind": "zstd --patch-from -19 on the newer container",
+   "stored_bytes": 281990836,
+   "delta_bytes": 275660,
+   "exact": true,
+   "index_bytes": 0,
+   "compress_ms": 107518.75133393332,
+   "decompress_ms": 129.81093500275165,
+   "detail": null
+  },
+  {
+   "arm": "XNOR",
+   "kind": "our implementation of a ZipLLM/BitX-style XOR delta: per tensor, XOR(newer, base) then zstd -19, with an index",
+   "stored_bytes": 281738582,
+   "delta_bytes": 23406,
+   "exact": true,
+   "index_bytes": 12869,
+   "compress_ms": 207.53631077241153,
+   "decompress_ms": 77.09069282282144,
+   "frames": 76
+  }
+ ],
+ "not_measured": [
+  {
+   "arm": "ZIPNN",
+   "blocker": "`import zipnn` failed in the bench court: ModuleNotFoundError: No module named 'zipnn'"
+  },
+  {
+   "arm": "BCP",
+   "blocker": "`import bytecheckpoint` failed in the bench court: ModuleNotFoundError: No module named 'bytecheckpoint'"
+  }
+ ],
+ "loss_notes": []
+}

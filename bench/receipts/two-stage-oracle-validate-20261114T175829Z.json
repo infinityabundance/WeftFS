@@ -1,0 +1,5045 @@
+{
+  "chunk_bytes": 65536,
+  "chunks_per_synthetic": 32,
+  "court": {
+    "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+    "objective": "bytes-only (lambda 0): the shipped default"
+  },
+  "elapsed_ms": 24103,
+  "family": "qwen2.5-3b-base",
+  "overall_aggregate": {
+    "disagreements": 8,
+    "fallback_tensors": 19,
+    "mode9_exact_checked": 60,
+    "mode9_exact_violations": 0,
+    "skip_regret_bytes_max": 1046452.0,
+    "skip_regret_bytes_median": 1046411.0,
+    "skip_regret_bytes_p90": 1046446.3999999999,
+    "skip_regret_bytes_total": 8371341.0,
+    "skip_regret_tensors": 8,
+    "tensors": 151,
+    "undetected_regret_tensors": 8,
+    "violating_tensors": 19,
+    "violation_rate": 0.12582781456953643,
+    "zstd19_interval_checked": 56,
+    "zstd19_interval_violations": 18,
+    "zstd3_interval_checked": 75,
+    "zstd3_interval_violations": 17
+  },
+  "real": [
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2805,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2805
+        },
+        "chosen": "zstd",
+        "wall_ns": 44073
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.0.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 69008,
+      "two_stage": {
+        "bytes": 2805,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2805
+        },
+        "chosen": "zstd",
+        "wall_ns": 113081
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 641
+        },
+        "chosen": "raw",
+        "wall_ns": 16792
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.0.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 7553,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 24345
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 624
+        },
+        "chosen": "raw",
+        "wall_ns": 14457
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.0.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 441,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 14898
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 31906123,
+        "candidates": {
+          "float-tensor": 31906123,
+          "raw": 45088768,
+          "zstd": 36432955
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 625417770
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.1.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -588106465,
+      "two_stage": {
+        "bytes": 31906123,
+        "candidates": {
+          "float-tensor": 31906123,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 37311305
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3419,
+        "candidates": {
+          "float-tensor": 3419,
+          "raw": 4096,
+          "zstd": 3479
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 43291
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.1.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": 56555,
+      "two_stage": {
+        "bytes": 3419,
+        "candidates": {
+          "float-tensor": 3419,
+          "raw": 4096
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 99846
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29955622,
+        "candidates": {
+          "float-tensor": 29955622,
+          "raw": 45088768,
+          "zstd": 35374544
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 635065579
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.10.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -599276436,
+      "two_stage": {
+        "bytes": 29955622,
+        "candidates": {
+          "float-tensor": 29955622,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35789143
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 703261,
+        "candidates": {
+          "float-tensor": 703261,
+          "raw": 1048576,
+          "zstd": 823237
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 53329554
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.10.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -44977214,
+      "two_stage": {
+        "bytes": 703261,
+        "candidates": {
+          "float-tensor": 703261,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8352340
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 700550,
+        "candidates": {
+          "float-tensor": 700550,
+          "raw": 1048576,
+          "zstd": 825664
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 50943692
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.10.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -42553902,
+      "two_stage": {
+        "bytes": 700550,
+        "candidates": {
+          "float-tensor": 700550,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8389790
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2678,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2678
+        },
+        "chosen": "zstd",
+        "wall_ns": 40616
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.11.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 39183,
+      "two_stage": {
+        "bytes": 2678,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2678
+        },
+        "chosen": "zstd",
+        "wall_ns": 79799
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5597301,
+        "candidates": {
+          "float-tensor": 5597301,
+          "raw": 8388608,
+          "zstd": 6579443
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 116617517
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.11.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -104692588,
+      "two_stage": {
+        "bytes": 5597301,
+        "candidates": {
+          "float-tensor": 5597301,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11924929
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29950067,
+        "candidates": {
+          "float-tensor": 29950067,
+          "raw": 45088768,
+          "zstd": 35399365
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 626860583
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.12.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -591673082,
+      "two_stage": {
+        "bytes": 29950067,
+        "candidates": {
+          "float-tensor": 29950067,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35187501
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5587644,
+        "candidates": {
+          "float-tensor": 5587644,
+          "raw": 8388608,
+          "zstd": 6594474
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 120031550
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.12.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -107429638,
+      "two_stage": {
+        "bytes": 5587644,
+        "candidates": {
+          "float-tensor": 5587644,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 12601912
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2826,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2826
+        },
+        "chosen": "zstd",
+        "wall_ns": 40776
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.13.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 47700,
+      "two_stage": {
+        "bytes": 2826,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2826
+        },
+        "chosen": "zstd",
+        "wall_ns": 88476
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 629
+        },
+        "chosen": "raw",
+        "wall_ns": 14537
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.13.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 3657,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 18194
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 615
+        },
+        "chosen": "raw",
+        "wall_ns": 13245
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.13.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 390,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 13635
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29871677,
+        "candidates": {
+          "float-tensor": 29871677,
+          "raw": 45088768,
+          "zstd": 35375959
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 635289856
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.14.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -600064815,
+      "two_stage": {
+        "bytes": 29871677,
+        "candidates": {
+          "float-tensor": 29871677,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35225041
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3506,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3506
+        },
+        "chosen": "zstd",
+        "wall_ns": 39834
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.14.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 44584,
+      "two_stage": {
+        "bytes": 3506,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3506
+        },
+        "chosen": "zstd",
+        "wall_ns": 84418
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29912435,
+        "candidates": {
+          "float-tensor": 29912435,
+          "raw": 45088768,
+          "zstd": 35378995
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 628568891
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.15.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -592563914,
+      "two_stage": {
+        "bytes": 29912435,
+        "candidates": {
+          "float-tensor": 29912435,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36004977
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 702512,
+        "candidates": {
+          "float-tensor": 702512,
+          "raw": 1048576,
+          "zstd": 822758
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 56322210
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.15.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -48268948,
+      "two_stage": {
+        "bytes": 702512,
+        "candidates": {
+          "float-tensor": 702512,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8053262
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 697758,
+        "candidates": {
+          "float-tensor": 697758,
+          "raw": 1048576,
+          "zstd": 823026
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 57647184
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.15.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -49536665,
+      "two_stage": {
+        "bytes": 697758,
+        "candidates": {
+          "float-tensor": 697758,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8110519
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2895,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2895
+        },
+        "chosen": "zstd",
+        "wall_ns": 37319
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.16.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 32772,
+      "two_stage": {
+        "bytes": 2895,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2895
+        },
+        "chosen": "zstd",
+        "wall_ns": 70091
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5574940,
+        "candidates": {
+          "float-tensor": 5574940,
+          "raw": 8388608,
+          "zstd": 6580369
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 117237635
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.16.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -105035017,
+      "two_stage": {
+        "bytes": 5574940,
+        "candidates": {
+          "float-tensor": 5574940,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 12202618
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29907816,
+        "candidates": {
+          "float-tensor": 29907816,
+          "raw": 45088768,
+          "zstd": 35370550
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 634757963
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.17.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -598962016,
+      "two_stage": {
+        "bytes": 29907816,
+        "candidates": {
+          "float-tensor": 29907816,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35795947
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5605709,
+        "candidates": {
+          "float-tensor": 5605709,
+          "raw": 8388608,
+          "zstd": 6597140
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 116526737
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.17.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -104926625,
+      "two_stage": {
+        "bytes": 5605709,
+        "candidates": {
+          "float-tensor": 5605709,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11600112
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2971,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2971
+        },
+        "chosen": "zstd",
+        "wall_ns": 34805
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.18.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 32110,
+      "two_stage": {
+        "bytes": 2971,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2971
+        },
+        "chosen": "zstd",
+        "wall_ns": 66915
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 629
+        },
+        "chosen": "raw",
+        "wall_ns": 14858
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.18.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 2204,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 17062
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 617
+        },
+        "chosen": "raw",
+        "wall_ns": 13174
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.18.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 582,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 13756
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29927146,
+        "candidates": {
+          "float-tensor": 29927146,
+          "raw": 45088768,
+          "zstd": 35383131
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 623728366
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.19.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -588096516,
+      "two_stage": {
+        "bytes": 29927146,
+        "candidates": {
+          "float-tensor": 29927146,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35631850
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3533,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3533
+        },
+        "chosen": "zstd",
+        "wall_ns": 40054
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.19.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 48220,
+      "two_stage": {
+        "bytes": 3533,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3533
+        },
+        "chosen": "zstd",
+        "wall_ns": 88274
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 31199184,
+        "candidates": {
+          "float-tensor": 31199184,
+          "raw": 45088768,
+          "zstd": 36134630
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 617555553
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.2.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -581112598,
+      "two_stage": {
+        "bytes": 31199184,
+        "candidates": {
+          "float-tensor": 31199184,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36442955
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 707511,
+        "candidates": {
+          "float-tensor": 707511,
+          "raw": 1048576,
+          "zstd": 826513
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 53497057
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.2.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -45809647,
+      "two_stage": {
+        "bytes": 707511,
+        "candidates": {
+          "float-tensor": 707511,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 7687410
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 699472,
+        "candidates": {
+          "float-tensor": 699472,
+          "raw": 1048576,
+          "zstd": 822614
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 50938601
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.2.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -42417556,
+      "two_stage": {
+        "bytes": 699472,
+        "candidates": {
+          "float-tensor": 699472,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8521045
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2963,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2963
+        },
+        "chosen": "zstd",
+        "wall_ns": 40145
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.20.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 39895,
+      "two_stage": {
+        "bytes": 2963,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2963
+        },
+        "chosen": "zstd",
+        "wall_ns": 80040
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5645498,
+        "candidates": {
+          "float-tensor": 5645498,
+          "raw": 8388608,
+          "zstd": 6584015
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 118219888
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.20.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -106688624,
+      "two_stage": {
+        "bytes": 5645498,
+        "candidates": {
+          "float-tensor": 5645498,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11531264
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29969373,
+        "candidates": {
+          "float-tensor": 29969373,
+          "raw": 45088768,
+          "zstd": 35395011
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 640350461
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.21.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -604431625,
+      "two_stage": {
+        "bytes": 29969373,
+        "candidates": {
+          "float-tensor": 29969373,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35918836
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5611994,
+        "candidates": {
+          "float-tensor": 5611994,
+          "raw": 8388608,
+          "zstd": 6602943
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 118959920
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.21.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -105613448,
+      "two_stage": {
+        "bytes": 5611994,
+        "candidates": {
+          "float-tensor": 5611994,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 13346472
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2875,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2875
+        },
+        "chosen": "zstd",
+        "wall_ns": 37741
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.22.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 33782,
+      "two_stage": {
+        "bytes": 2875,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2875
+        },
+        "chosen": "zstd",
+        "wall_ns": 71523
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 623
+        },
+        "chosen": "raw",
+        "wall_ns": 14447
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.22.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 2545,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 16992
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 619
+        },
+        "chosen": "raw",
+        "wall_ns": 13305
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.22.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 481,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 13786
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29922603,
+        "candidates": {
+          "float-tensor": 29922603,
+          "raw": 45088768,
+          "zstd": 35387937
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 636155030
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.23.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -599597602,
+      "two_stage": {
+        "bytes": 29922603,
+        "candidates": {
+          "float-tensor": 29922603,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36557428
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3547,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3547
+        },
+        "chosen": "zstd",
+        "wall_ns": 38712
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.23.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 42659,
+      "two_stage": {
+        "bytes": 3547,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3547
+        },
+        "chosen": "zstd",
+        "wall_ns": 81371
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29926505,
+        "candidates": {
+          "float-tensor": 29926505,
+          "raw": 45088768,
+          "zstd": 35375280
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 628115613
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.24.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -592021700,
+      "two_stage": {
+        "bytes": 29926505,
+        "candidates": {
+          "float-tensor": 29926505,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36093913
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 701700,
+        "candidates": {
+          "float-tensor": 701700,
+          "raw": 1048576,
+          "zstd": 822708
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 54394953
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.24.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -45383883,
+      "two_stage": {
+        "bytes": 701700,
+        "candidates": {
+          "float-tensor": 701700,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 9011070
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 698624,
+        "candidates": {
+          "float-tensor": 698624,
+          "raw": 1048576,
+          "zstd": 824790
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 52071777
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.24.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -43972138,
+      "two_stage": {
+        "bytes": 698624,
+        "candidates": {
+          "float-tensor": 698624,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8099639
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2800,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2800
+        },
+        "chosen": "zstd",
+        "wall_ns": 40636
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.25.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 30627,
+      "two_stage": {
+        "bytes": 2800,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2800
+        },
+        "chosen": "zstd",
+        "wall_ns": 71263
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5647323,
+        "candidates": {
+          "float-tensor": 5647323,
+          "raw": 8388608,
+          "zstd": 6571175
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 118972763
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.25.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -106905759,
+      "two_stage": {
+        "bytes": 5647323,
+        "candidates": {
+          "float-tensor": 5647323,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 12067004
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29993141,
+        "candidates": {
+          "float-tensor": 29993141,
+          "raw": 45088768,
+          "zstd": 35397304
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 639686852
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.26.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -603069813,
+      "two_stage": {
+        "bytes": 29993141,
+        "candidates": {
+          "float-tensor": 29993141,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36617039
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5591438,
+        "candidates": {
+          "float-tensor": 5591438,
+          "raw": 8388608,
+          "zstd": 6592436
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 115878538
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.26.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -104392859,
+      "two_stage": {
+        "bytes": 5591438,
+        "candidates": {
+          "float-tensor": 5591438,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11485679
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2568,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2568
+        },
+        "chosen": "zstd",
+        "wall_ns": 44744
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.27.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 42379,
+      "two_stage": {
+        "bytes": 2568,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2568
+        },
+        "chosen": "zstd",
+        "wall_ns": 87123
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 628
+        },
+        "chosen": "raw",
+        "wall_ns": 15469
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.27.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 5790,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 21259
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 619
+        },
+        "chosen": "raw",
+        "wall_ns": 13836
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.27.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 440,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 14276
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29875358,
+        "candidates": {
+          "float-tensor": 29875358,
+          "raw": 45088768,
+          "zstd": 35374216
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 627932410
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.28.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -591665735,
+      "two_stage": {
+        "bytes": 29875358,
+        "candidates": {
+          "float-tensor": 29875358,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36266675
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3426,
+        "candidates": {
+          "float-tensor": 3426,
+          "raw": 4096,
+          "zstd": 3489
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 44583
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.28.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": 55865,
+      "two_stage": {
+        "bytes": 3426,
+        "candidates": {
+          "float-tensor": 3426,
+          "raw": 4096
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 100448
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29922736,
+        "candidates": {
+          "float-tensor": 29922736,
+          "raw": 45088768,
+          "zstd": 35386827
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 630356335
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.29.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -594513581,
+      "two_stage": {
+        "bytes": 29922736,
+        "candidates": {
+          "float-tensor": 29922736,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35842754
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 702744,
+        "candidates": {
+          "float-tensor": 702744,
+          "raw": 1048576,
+          "zstd": 821719
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 51151218
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.29.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -43309131,
+      "two_stage": {
+        "bytes": 702744,
+        "candidates": {
+          "float-tensor": 702744,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 7842087
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 696622,
+        "candidates": {
+          "float-tensor": 696622,
+          "raw": 1048576,
+          "zstd": 823830
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 51307861
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.29.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -43403757,
+      "two_stage": {
+        "bytes": 696622,
+        "candidates": {
+          "float-tensor": 696622,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 7904104
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2687,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2687
+        },
+        "chosen": "zstd",
+        "wall_ns": 39985
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.3.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 32150,
+      "two_stage": {
+        "bytes": 2687,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2687
+        },
+        "chosen": "zstd",
+        "wall_ns": 72135
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5604481,
+        "candidates": {
+          "float-tensor": 5604481,
+          "raw": 8388608,
+          "zstd": 6589270
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 113892060
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.3.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -102500407,
+      "two_stage": {
+        "bytes": 5604481,
+        "candidates": {
+          "float-tensor": 5604481,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11391653
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29968890,
+        "candidates": {
+          "float-tensor": 29968890,
+          "raw": 45088768,
+          "zstd": 35394388
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 633935646
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.30.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -597370233,
+      "two_stage": {
+        "bytes": 29968890,
+        "candidates": {
+          "float-tensor": 29968890,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 36565413
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5588926,
+        "candidates": {
+          "float-tensor": 5588926,
+          "raw": 8388608,
+          "zstd": 6588668
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 117811565
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.30.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -104676107,
+      "two_stage": {
+        "bytes": 5588926,
+        "candidates": {
+          "float-tensor": 5588926,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 13135458
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2673,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2673
+        },
+        "chosen": "zstd",
+        "wall_ns": 41287
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.31.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 41408,
+      "two_stage": {
+        "bytes": 2673,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2673
+        },
+        "chosen": "zstd",
+        "wall_ns": 82695
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 622
+        },
+        "chosen": "raw",
+        "wall_ns": 15018
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.31.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 3116,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 18134
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 618
+        },
+        "chosen": "raw",
+        "wall_ns": 13946
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.31.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 631,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 14577
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29867134,
+        "candidates": {
+          "float-tensor": 29867134,
+          "raw": 45088768,
+          "zstd": 35374625
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 629953974
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.32.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -592922622,
+      "two_stage": {
+        "bytes": 29867134,
+        "candidates": {
+          "float-tensor": 29867134,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 37031352
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3447,
+        "candidates": {
+          "float-tensor": 3447,
+          "raw": 4096,
+          "zstd": 3503
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 41948
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.32.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": 50335,
+      "two_stage": {
+        "bytes": 3447,
+        "candidates": {
+          "float-tensor": 3447,
+          "raw": 4096
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 92283
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29885698,
+        "candidates": {
+          "float-tensor": 29885698,
+          "raw": 45088768,
+          "zstd": 35386374
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 620299101
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.33.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -583207707,
+      "two_stage": {
+        "bytes": 29885698,
+        "candidates": {
+          "float-tensor": 29885698,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 37091394
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 713111,
+        "candidates": {
+          "float-tensor": 713111,
+          "raw": 1048576,
+          "zstd": 824984
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 54650581
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.33.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -46303841,
+      "two_stage": {
+        "bytes": 713111,
+        "candidates": {
+          "float-tensor": 713111,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8346740
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 702961,
+        "candidates": {
+          "float-tensor": 702961,
+          "raw": 1048576,
+          "zstd": 826239
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 52497010
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.33.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -43626423,
+      "two_stage": {
+        "bytes": 702961,
+        "candidates": {
+          "float-tensor": 702961,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8870587
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 1910,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 1910
+        },
+        "chosen": "zstd",
+        "wall_ns": 43562
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.34.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 43771,
+      "two_stage": {
+        "bytes": 1910,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 1910
+        },
+        "chosen": "zstd",
+        "wall_ns": 87333
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5590931,
+        "candidates": {
+          "float-tensor": 5590931,
+          "raw": 8388608,
+          "zstd": 6565302
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 116976065
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.34.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -105027873,
+      "two_stage": {
+        "bytes": 5590931,
+        "candidates": {
+          "float-tensor": 5590931,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11948192
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29871668,
+        "candidates": {
+          "float-tensor": 29871668,
+          "raw": 45088768,
+          "zstd": 35365373
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 628813384
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.35.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -587458191,
+      "two_stage": {
+        "bytes": 29871668,
+        "candidates": {
+          "float-tensor": 29871668,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 41355193
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5568239,
+        "candidates": {
+          "float-tensor": 5568239,
+          "raw": 8388608,
+          "zstd": 6583927
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 115882174
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.35.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -104526127,
+      "two_stage": {
+        "bytes": 5568239,
+        "candidates": {
+          "float-tensor": 5568239,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 11356047
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2974,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2974
+        },
+        "chosen": "zstd",
+        "wall_ns": 41918
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.4.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 44534,
+      "two_stage": {
+        "bytes": 2974,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2974
+        },
+        "chosen": "zstd",
+        "wall_ns": 86452
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 632
+        },
+        "chosen": "raw",
+        "wall_ns": 15168
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.4.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 4469,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 19637
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 621
+        },
+        "chosen": "raw",
+        "wall_ns": 13325
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.4.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 170,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 13495
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 31061529,
+        "candidates": {
+          "float-tensor": 31061529,
+          "raw": 45088768,
+          "zstd": 35993250
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 633794761
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.5.mlp.up_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -583112879,
+      "two_stage": {
+        "bytes": 31061529,
+        "candidates": {
+          "float-tensor": 31061529,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 50681882
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 3542,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3542
+        },
+        "chosen": "zstd",
+        "wall_ns": 39694
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.5.self_attn.q_proj.bias",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 51847,
+      "two_stage": {
+        "bytes": 3542,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 3542
+        },
+        "chosen": "zstd",
+        "wall_ns": 91541
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 30434247,
+        "candidates": {
+          "float-tensor": 30434247,
+          "raw": 45088768,
+          "zstd": 35704124
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 623328615
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.6.mlp.down_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -587562364,
+      "two_stage": {
+        "bytes": 30434247,
+        "candidates": {
+          "float-tensor": 30434247,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 35766251
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 702426,
+        "candidates": {
+          "float-tensor": 702426,
+          "raw": 1048576,
+          "zstd": 823662
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 51684935
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.6.self_attn.k_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -43923388,
+      "two_stage": {
+        "bytes": 702426,
+        "candidates": {
+          "float-tensor": 702426,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 7761547
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 701490,
+        "candidates": {
+          "float-tensor": 701490,
+          "raw": 1048576,
+          "zstd": 824095
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 53077834
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.6.self_attn.v_proj.weight",
+      "logical_bytes": 1048576,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -45074355,
+      "two_stage": {
+        "bytes": 701490,
+        "candidates": {
+          "float-tensor": 701490,
+          "raw": 1048576
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 8003479
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2381,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2381
+        },
+        "chosen": "zstd",
+        "wall_ns": 42129
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.7.post_attention_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 43351,
+      "two_stage": {
+        "bytes": 2381,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2381
+        },
+        "chosen": "zstd",
+        "wall_ns": 85480
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5607584,
+        "candidates": {
+          "float-tensor": 5607584,
+          "raw": 8388608,
+          "zstd": 6582826
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 117916551
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.7.self_attn.q_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -105304589,
+      "two_stage": {
+        "bytes": 5607584,
+        "candidates": {
+          "float-tensor": 5607584,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 12611962
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 29902742,
+        "candidates": {
+          "float-tensor": 29902742,
+          "raw": 45088768,
+          "zstd": 35404142
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 631461465
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.8.mlp.gate_proj.weight",
+      "logical_bytes": 45088768,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -594394016,
+      "two_stage": {
+        "bytes": 29902742,
+        "candidates": {
+          "float-tensor": 29902742,
+          "raw": 45088768
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 37067449
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 5563239,
+        "candidates": {
+          "float-tensor": 5563239,
+          "raw": 8388608,
+          "zstd": 6580872
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 116194567
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.8.self_attn.o_proj.weight",
+      "logical_bytes": 8388608,
+      "mode9_exact_prediction_holds": true,
+      "regret_bytes": 0,
+      "regret_ns": -103956543,
+      "two_stage": {
+        "bytes": 5563239,
+        "candidates": {
+          "float-tensor": 5563239,
+          "raw": 8388608
+        },
+        "chosen": "float-tensor",
+        "wall_ns": 12238024
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 2632,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2632
+        },
+        "chosen": "zstd",
+        "wall_ns": 41949
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.9.input_layernorm.weight",
+      "logical_bytes": 4096,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 44262,
+      "two_stage": {
+        "bytes": 2632,
+        "candidates": {
+          "raw": 4096,
+          "zstd": 2632
+        },
+        "chosen": "zstd",
+        "wall_ns": 86211
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": true
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 630
+        },
+        "chosen": "raw",
+        "wall_ns": 15038
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.9.self_attn.k_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 3596,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 18634
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    },
+    {
+      "dtype": "bf16",
+      "exhaustive": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512,
+          "zstd": 621
+        },
+        "chosen": "raw",
+        "wall_ns": 13585
+      },
+      "fallback_exhaustive": false,
+      "label": "model.layers.9.self_attn.v_proj.bias",
+      "logical_bytes": 512,
+      "mode9_exact_prediction_holds": null,
+      "regret_bytes": 0,
+      "regret_ns": 612,
+      "two_stage": {
+        "bytes": 512,
+        "candidates": {
+          "raw": 512
+        },
+        "chosen": "raw",
+        "wall_ns": 14197
+      },
+      "violation_details": [],
+      "violations": 0,
+      "zstd19_interval_contains_actual": null,
+      "zstd3_interval_contains_actual": null
+    }
+  ],
+  "real_aggregate": {
+    "disagreements": 0,
+    "fallback_tensors": 0,
+    "mode9_exact_checked": 52,
+    "mode9_exact_violations": 0,
+    "skip_regret_bytes_max": 0.0,
+    "skip_regret_bytes_median": 0.0,
+    "skip_regret_bytes_p90": 0.0,
+    "skip_regret_bytes_total": -0.0,
+    "skip_regret_tensors": 0,
+    "tensors": 87,
+    "undetected_regret_tensors": 0,
+    "violating_tensors": 0,
+    "violation_rate": 0.0,
+    "zstd19_interval_checked": 0,
+    "zstd19_interval_violations": 0,
+    "zstd3_interval_checked": 19,
+    "zstd3_interval_violations": 0
+  },
+  "schema": "weft.two-stage-oracle.v1",
+  "seed": 11400714819323198485,
+  "stamp": "20261114T175859368Z",
+  "synthetic": [
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 0,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 0,
+        "violation_rate": 0.0,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 0,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 0
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 66093069
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 5899782,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 71992851
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 67049945
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2625771,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 69675716
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 64938615
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 3285352,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 68223967
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 65078355
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1427845,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 66506200
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 68778872
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -1530477,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 67248395
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 64482924
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 7153152,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 71636076
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 63942394
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 5344907,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 69287301
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 64205015
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/uniform-random#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2947852,
+          "two_stage": {
+            "bytes": 2097152,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2099108
+            },
+            "chosen": "raw",
+            "wall_ns": 67152867
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "uniform-random"
+    },
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 0,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 0,
+        "violation_rate": 0.0,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 0,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 0
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3189524
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -385380,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2804144
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3220301
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -443238,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2777063
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3264994
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -326318,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2938676
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3164427
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -371844,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2792583
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3155099
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -366183,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2788916
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3148257
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -182441,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2965816
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3141564
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -367035,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2774529
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 3170268
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/all-zero#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -371955,
+          "two_stage": {
+            "bytes": 2244,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 2244
+            },
+            "chosen": "zstd",
+            "wall_ns": 2798313
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "all-zero"
+    },
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 0,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 0,
+        "violation_rate": 0.0,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 0,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 0
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 34694841
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2176734,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36871575
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35262291
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 3363658,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 38625949
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 34747158
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2001226,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36748384
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 34756677
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 3085950,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 37842627
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35231993
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1677302,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36909295
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35466873
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1367673,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36834546
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 34653203
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1913763,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36566966
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35120946
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/alternating#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2013058,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 37134004
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "alternating"
+    },
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 8,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 8,
+        "violation_rate": 1.0,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 8,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 8
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6298848
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 5858164,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 12157012
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6263311
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 4909374,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 11172685
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6546630
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 4540887,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 11087517
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6010549
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 5304031,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 11314580
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6182019
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 4715222,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 10897241
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6440251
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 4881392,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 11321643
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6617272
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 4340491,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 10957763
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 6423480
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/rare-heavy#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 4712547,
+          "two_stage": {
+            "bytes": 67771,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 67771
+            },
+            "chosen": "zstd",
+            "wall_ns": 11136027
+          },
+          "violation_details": [
+            "level-3 actual 67802 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 67771 B is outside the predicted interval 61190..67632 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "rare-heavy"
+    },
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 8,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 8,
+        "violation_rate": 1.0,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 8,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 8
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 59683826
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 59272517,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 118956343
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 58655747
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 58593510,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 117249257
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 60911096
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 54357123,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 115268219
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 58232367
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 55518219,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 113750586
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 59527874
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 58592309,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 118120183
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 60626546
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 55895403,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 116521949
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 59026458
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 56747315,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 115773773
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 58569185
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/sampled-lucky#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 54952644,
+          "two_stage": {
+            "bytes": 1837000,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1837000
+            },
+            "chosen": "zstd",
+            "wall_ns": 113521829
+          },
+          "violation_details": [
+            "level-3 actual 1837004 B is outside the predicted interval 2162..2390 B (method sampled-chunks)",
+            "level-19 actual 1837000 B is outside the predicted interval 1657895..1832411 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 2,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": false
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "sampled-lucky"
+    },
+    {
+      "aggregate": {
+        "disagreements": 8,
+        "fallback_tensors": 0,
+        "mode9_exact_checked": 8,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 1046452.0,
+        "skip_regret_bytes_median": 1046411.0,
+        "skip_regret_bytes_p90": 1046446.3999999999,
+        "skip_regret_bytes_total": 8371341.0,
+        "skip_regret_tensors": 8,
+        "tensors": 8,
+        "undetected_regret_tensors": 8,
+        "violating_tensors": 0,
+        "violation_rate": 0.0,
+        "zstd19_interval_checked": 0,
+        "zstd19_interval_violations": 0,
+        "zstd3_interval_checked": 0,
+        "zstd3_interval_violations": 0
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 13076739
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046412,
+          "regret_ns": -5671326,
+          "two_stage": {
+            "bytes": 1310764,
+            "candidates": {
+              "float-tensor": 1310764,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 7405413
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 11960034
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046452,
+          "regret_ns": -5039837,
+          "two_stage": {
+            "bytes": 1310804,
+            "candidates": {
+              "float-tensor": 1310804,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 6920197
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 12770257
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046410,
+          "regret_ns": -5711401,
+          "two_stage": {
+            "bytes": 1310762,
+            "candidates": {
+              "float-tensor": 1310762,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 7058856
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 12434380
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046444,
+          "regret_ns": -4939941,
+          "two_stage": {
+            "bytes": 1310796,
+            "candidates": {
+              "float-tensor": 1310796,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 7494439
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 12562939
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046398,
+          "regret_ns": -5715657,
+          "two_stage": {
+            "bytes": 1310750,
+            "candidates": {
+              "float-tensor": 1310750,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 6847282
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 12116286
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046399,
+          "regret_ns": -3303636,
+          "two_stage": {
+            "bytes": 1310751,
+            "candidates": {
+              "float-tensor": 1310751,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 8812650
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 11989008
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046396,
+          "regret_ns": -5046489,
+          "two_stage": {
+            "bytes": 1310748,
+            "candidates": {
+              "float-tensor": 1310748,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 6942519
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 264352,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 264352
+            },
+            "chosen": "zstd",
+            "wall_ns": 11987255
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/sampled-unlucky#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": true,
+          "regret_bytes": 1046430,
+          "regret_ns": -4829454,
+          "two_stage": {
+            "bytes": 1310782,
+            "candidates": {
+              "float-tensor": 1310782,
+              "raw": 2097152
+            },
+            "chosen": "float-tensor",
+            "wall_ns": 7157801
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": null,
+          "zstd3_interval_contains_actual": null
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "sampled-unlucky"
+    },
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 0,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 0,
+        "violation_rate": 0.0,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 0,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 0
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 34726340
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 3613094,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 38339434
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35760901
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2307007,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 38067908
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35637050
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 5221056,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 40858106
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35370362
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 3046357,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 38416719
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35593890
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 3385288,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 38979178
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36435972
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1004083,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 37440055
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 37543008
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 367406,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 37910414
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35472543
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/two-level#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1871784,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 37344327
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "two-level"
+    },
+    {
+      "aggregate": {
+        "disagreements": 0,
+        "fallback_tensors": 3,
+        "mode9_exact_checked": 0,
+        "mode9_exact_violations": 0,
+        "skip_regret_bytes_max": 0.0,
+        "skip_regret_bytes_median": 0.0,
+        "skip_regret_bytes_p90": 0.0,
+        "skip_regret_bytes_total": -0.0,
+        "skip_regret_tensors": 0,
+        "tensors": 8,
+        "undetected_regret_tensors": 0,
+        "violating_tensors": 3,
+        "violation_rate": 0.375,
+        "zstd19_interval_checked": 8,
+        "zstd19_interval_violations": 2,
+        "zstd3_interval_checked": 8,
+        "zstd3_interval_violations": 1
+      },
+      "observations": [
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 854095,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 854095
+            },
+            "chosen": "zstd",
+            "wall_ns": 30121064
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/per-chunk-random#0",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1942495,
+          "two_stage": {
+            "bytes": 854095,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 854095
+            },
+            "chosen": "zstd",
+            "wall_ns": 32063559
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 985149,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 985149
+            },
+            "chosen": "zstd",
+            "wall_ns": 32666916
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/per-chunk-random#1",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 32681412,
+          "two_stage": {
+            "bytes": 985149,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 985149
+            },
+            "chosen": "zstd",
+            "wall_ns": 65348328
+          },
+          "violation_details": [
+            "level-19 actual 985149 B is outside the predicted interval 889111..982703 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 1,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 723041,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 723041
+            },
+            "chosen": "zstd",
+            "wall_ns": 27035605
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/per-chunk-random#2",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 22681226,
+          "two_stage": {
+            "bytes": 723041,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 723041
+            },
+            "chosen": "zstd",
+            "wall_ns": 49716831
+          },
+          "violation_details": [
+            "level-19 actual 723041 B is outside the predicted interval 652562..721254 B (method sampled-ratio-on-measured-level3)"
+          ],
+          "violations": 1,
+          "zstd19_interval_contains_actual": false,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1247257,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1247257
+            },
+            "chosen": "zstd",
+            "wall_ns": 41050175
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/per-chunk-random#3",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 1185382,
+          "two_stage": {
+            "bytes": 1247257,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1247257
+            },
+            "chosen": "zstd",
+            "wall_ns": 42235557
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 985149,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 985149
+            },
+            "chosen": "zstd",
+            "wall_ns": 35210063
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/per-chunk-random#4",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 881265,
+          "two_stage": {
+            "bytes": 985149,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 985149
+            },
+            "chosen": "zstd",
+            "wall_ns": 36091328
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 985149,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 985149
+            },
+            "chosen": "zstd",
+            "wall_ns": 33087300
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/per-chunk-random#5",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 2023107,
+          "two_stage": {
+            "bytes": 985149,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 985149
+            },
+            "chosen": "zstd",
+            "wall_ns": 35110407
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1116203,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1116203
+            },
+            "chosen": "zstd",
+            "wall_ns": 39063235
+          },
+          "fallback_exhaustive": true,
+          "label": "synthetic/per-chunk-random#6",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": 34792104,
+          "two_stage": {
+            "bytes": 1116203,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1116203
+            },
+            "chosen": "zstd",
+            "wall_ns": 73855339
+          },
+          "violation_details": [
+            "level-3 actual 1116218 B is outside the predicted interval 0..1052968 B (method sampled-chunks)"
+          ],
+          "violations": 1,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": false
+        },
+        {
+          "dtype": "bf16",
+          "exhaustive": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 36909825
+          },
+          "fallback_exhaustive": false,
+          "label": "synthetic/per-chunk-random#7",
+          "logical_bytes": 2097152,
+          "mode9_exact_prediction_holds": null,
+          "regret_bytes": 0,
+          "regret_ns": -1185322,
+          "two_stage": {
+            "bytes": 1050676,
+            "candidates": {
+              "raw": 2097152,
+              "zstd": 1050676
+            },
+            "chosen": "zstd",
+            "wall_ns": 35724503
+          },
+          "violation_details": [],
+          "violations": 0,
+          "zstd19_interval_contains_actual": true,
+          "zstd3_interval_contains_actual": true
+        }
+      ],
+      "repetitions": 8,
+      "stratum": "per-chunk-random"
+    }
+  ],
+  "synthetic_aggregate": {
+    "disagreements": 8,
+    "fallback_tensors": 19,
+    "mode9_exact_checked": 8,
+    "mode9_exact_violations": 0,
+    "skip_regret_bytes_max": 1046452.0,
+    "skip_regret_bytes_median": 1046411.0,
+    "skip_regret_bytes_p90": 1046446.3999999999,
+    "skip_regret_bytes_total": 8371341.0,
+    "skip_regret_tensors": 8,
+    "tensors": 64,
+    "undetected_regret_tensors": 8,
+    "violating_tensors": 19,
+    "violation_rate": 0.296875,
+    "zstd19_interval_checked": 56,
+    "zstd19_interval_violations": 18,
+    "zstd3_interval_checked": 56,
+    "zstd3_interval_violations": 17
+  }
+}

@@ -1,0 +1,52 @@
+{
+ "schema": "weft.comparator-install-probe.v1",
+ "stamp": "20261114T185845Z",
+ "court": {
+  "python": "weft/python-court:1 sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152 (CPython 3.12.16, pip 25.0.1, torch 2.15.0+cpu)",
+  "bench": "weft/bench-court:1 sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 (CPython 3.11.2, gcc present, no pip)",
+  "limits": "3g memory / 3g swap / 1024 pids / 4 cpus, cap-drop=ALL, bounded /tmp"
+ },
+ "probes": {
+  "zipnn": {
+   "pinned": "0.5.4",
+   "python_court_binary_download": {
+    "command": "pip download --no-cache-dir --only-binary=:all: --no-deps -d /work/.docker-cache/piptmp 'zipnn==0.5.4'",
+    "output": "ERROR: Could not find a version that satisfies the requirement zipnn==0.5.4 (from versions: 0.1.0, 0.1.1)\nERROR: No matching distribution found for zipnn==0.5.4",
+    "conclusion": "no binary wheel for this interpreter/platform; only 0.1.0 and 0.1.1 publish one"
+   },
+   "python_court_source_build": {
+    "command": "pip install --no-cache-dir --quiet --target /work/.docker-cache/py-zipnn 'zipnn==0.5.4'",
+    "output": "building 'zipnn_core' extension ... error: [Errno 2] No such file or directory: 'gcc'\nERROR: Failed building wheel for zipnn",
+    "conclusion": "sdist build needs a compiler; the court with pip has none"
+   },
+   "bench_court_bootstrap": {
+    "command": "python3 -m venv /work/.docker-cache/venv-zipnn && /work/.docker-cache/venv-zipnn/bin/pip install 'zipnn==0.5.4'",
+    "output": "no venv binary produced; the bench court has gcc but no pip and no ensurepip",
+    "conclusion": "not installable in either court without changing the image"
+   },
+   "result": "not installed; no ZipNN number is claimed"
+  },
+  "bytecheckpoint": {
+   "pinned": "0.0.2",
+   "binary_download": {
+    "command": "pip download --no-cache-dir --only-binary=:all: --no-deps -d /work/.docker-cache/piptmp bytecheckpoint",
+    "output": "Saved ./.docker-cache/piptmp/bytecheckpoint-0.0.2-py3-none-any.whl\nSuccessfully downloaded bytecheckpoint",
+    "conclusion": "a pure-python wheel exists and downloads"
+   },
+   "install_with_dependencies": {
+    "command": "pip install --no-cache-dir --quiet 'bytecheckpoint==0.0.2'",
+    "output": "bash: line 1: 8 Killed  pip install --no-cache-dir --quiet 'bytecheckpoint==0.0.2'",
+    "conclusion": "the dependency set (torch and its CUDA packages) exceeds the 3 GiB court; the process was killed by the kernel OOM killer"
+   },
+   "install_without_dependencies": {
+    "command": "pip install --no-cache-dir --quiet --no-deps 'bytecheckpoint==0.0.2' && python3 -c 'import bytecheckpoint'",
+    "output": "File \".../bytecheckpoint/utilities/server/server_lib.py\", line 29, in <module>\n    import grpc\nModuleNotFoundError: No module named 'grpc'",
+    "conclusion": "installs, but importing requires grpc (and the full dependency set that could not be installed)"
+   },
+   "result": "downloaded but not runnable in this court; no ByteCheckpoint number is claimed"
+  }
+ },
+ "not_claimed": [
+  "these probes are installability evidence only; no compression, restore or write number was produced for either comparator"
+ ]
+}

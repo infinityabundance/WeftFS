@@ -1,0 +1,336 @@
+{
+ "schema": "weft.comparators.receipt.v1",
+ "stamp": "20261114T182322Z",
+ "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940",
+ "contract": {
+  "path": "bench/CONTRACTS-heldout.md",
+  "sha256": "5c789d14bab829aac03090ca12de6973d90f4d97eba93e89f2faa80d37b60967"
+ },
+ "pairs": [
+  {
+   "pair": "pythia-70m-step0.safetensors -> pythia-70m-step1.safetensors",
+   "stored_bytes": {
+    "N": {
+     "stored_bytes": 563430352,
+     "delta_bytes": 281715176,
+     "exact": true,
+     "compress_ms": null,
+     "decompress_ms": null,
+     "index_bytes": 0
+    },
+    "Z19": {
+     "stored_bytes": 423955208,
+     "delta_bytes": 142240032,
+     "exact": true,
+     "compress_ms": 123237.4231669819,
+     "decompress_ms": 267.8301769774407,
+     "index_bytes": 0
+    },
+    "PF12": {
+     "stored_bytes": 281745441,
+     "delta_bytes": 30265,
+     "exact": true,
+     "compress_ms": 1392.6169580081478,
+     "decompress_ms": 122.3561210790649,
+     "index_bytes": 0
+    },
+    "PF19": {
+     "stored_bytes": 281990836,
+     "delta_bytes": 275660,
+     "exact": true,
+     "compress_ms": 107518.75133393332,
+     "decompress_ms": 129.81093500275165,
+     "index_bytes": 0
+    },
+    "XNOR": {
+     "stored_bytes": 281738582,
+     "delta_bytes": 23406,
+     "exact": true,
+     "compress_ms": 207.53631077241153,
+     "decompress_ms": 77.09069282282144,
+     "index_bytes": 12869
+    }
+   },
+   "best_arm": "XNOR",
+   "best_stored_bytes": 281738582,
+   "worst_arm": "N",
+   "worst_stored_bytes": 563430352,
+   "spread_vs_native": {
+    "N": 1.0,
+    "Z19": 0.7524536200350102,
+    "PF12": 0.5000537156010367,
+    "PF19": 0.500489253017736,
+    "XNOR": 0.5000415419579668
+   },
+   "not_measured": [
+    {
+     "arm": "ZIPNN",
+     "blocker": "`import zipnn` failed in the bench court: ModuleNotFoundError: No module named 'zipnn'"
+    },
+    {
+     "arm": "BCP",
+     "blocker": "`import bytecheckpoint` failed in the bench court: ModuleNotFoundError: No module named 'bytecheckpoint'"
+    }
+   ]
+  },
+  {
+   "pair": "Qwen2.5-0.5B.safetensors -> Qwen2.5-0.5B-Instruct.safetensors",
+   "stored_bytes": {
+    "N": {
+     "stored_bytes": 1976195648,
+     "delta_bytes": 988097824,
+     "exact": true,
+     "compress_ms": null,
+     "decompress_ms": null,
+     "index_bytes": 0
+    },
+    "Z19": {
+     "stored_bytes": 1752190923,
+     "delta_bytes": 764093099,
+     "exact": true,
+     "compress_ms": 289150.62726207543,
+     "decompress_ms": 1101.4836030080914,
+     "index_bytes": 0
+    },
+    "XNOR": {
+     "stored_bytes": 1604800481,
+     "delta_bytes": 616702657,
+     "exact": true,
+     "compress_ms": 197041.99698450975,
+     "decompress_ms": 659.2158746207133,
+     "index_bytes": 50703
+    }
+   },
+   "best_arm": "XNOR",
+   "best_stored_bytes": 1604800481,
+   "worst_arm": "N",
+   "worst_stored_bytes": 1976195648,
+   "spread_vs_native": {
+    "N": 1.0,
+    "Z19": 0.8866485080934658,
+    "XNOR": 0.8120655880525449
+   },
+   "not_measured": [
+    {
+     "arm": "PF12",
+     "blocker": "zstd --patch-from -12 exited -9: long mode automatically triggered\n",
+     "returncode": -9
+    },
+    {
+     "arm": "PF19",
+     "blocker": "zstd --patch-from -19 exited -9: long mode automatically triggered\n[Optimal parser notes] Consider the following to improve patch size at the cost of speed:\n- Use --single-thread mode in the zstd cli\n- Set a larger targetLength (e.g. --zstd=targetLength=4096)\n- Set a larger chainLog (e.g. --zstd=chainLog=30)\nAlso consider playing around with searchLog and hashLog\n",
+     "returncode": -9
+    },
+    {
+     "arm": "ZIPNN",
+     "blocker": "`import zipnn` failed in the bench court: ModuleNotFoundError: No module named 'zipnn'"
+    },
+    {
+     "arm": "BCP",
+     "blocker": "`import bytecheckpoint` failed in the bench court: ModuleNotFoundError: No module named 'bytecheckpoint'"
+    }
+   ]
+  }
+ ],
+ "sparse": {
+  "schema": "weft.comparators.v1",
+  "stamp": "20261114T182322Z",
+  "pair": {
+   "base": {
+    "path": "/work/.docker-cache/real-corpus/pythia-70m-step0.safetensors",
+    "bytes": 281715176,
+    "sha256": "17a077abfddb6c589091e292adfcc2ee82d39bfd839f5dd80aaaea42861aaf8e"
+   },
+   "newer": {
+    "path": "/work/.docker-cache/real-corpus/pythia-70m-step1.safetensors",
+    "bytes": 281715176,
+    "sha256": "652e38fd15e118cc7c43d0aeb5e30675c7180cf1d8782cb401ba5d0f933fa109"
+   },
+   "tensors": 76,
+   "shapes_match": true
+  },
+  "court": {
+   "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+   "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***",
+   "accounting": "base bytes + stored form of the newer container + every index/manifest byte the arm needs"
+  },
+  "arms": [
+   {
+    "arm": "N",
+    "kind": "native separate containers",
+    "stored_bytes": 563430352,
+    "delta_bytes": 281715176,
+    "exact": true,
+    "index_bytes": 0,
+    "compress_ms": null,
+    "decompress_ms": null
+   },
+   {
+    "arm": "Z19",
+    "kind": "independent zstd -19 of the newer container",
+    "stored_bytes": 423955208,
+    "delta_bytes": 142240032,
+    "exact": true,
+    "index_bytes": 0,
+    "compress_ms": 123237.4231669819,
+    "decompress_ms": 267.8301769774407,
+    "detail": null
+   },
+   {
+    "arm": "PF12",
+    "kind": "zstd --patch-from -12 on the newer container",
+    "stored_bytes": 281745441,
+    "delta_bytes": 30265,
+    "exact": true,
+    "index_bytes": 0,
+    "compress_ms": 1392.6169580081478,
+    "decompress_ms": 122.3561210790649,
+    "detail": null
+   },
+   {
+    "arm": "PF19",
+    "kind": "zstd --patch-from -19 on the newer container",
+    "stored_bytes": 281990836,
+    "delta_bytes": 275660,
+    "exact": true,
+    "index_bytes": 0,
+    "compress_ms": 107518.75133393332,
+    "decompress_ms": 129.81093500275165,
+    "detail": null
+   },
+   {
+    "arm": "XNOR",
+    "kind": "our implementation of a ZipLLM/BitX-style XOR delta: per tensor, XOR(newer, base) then zstd -19, with an index",
+    "stored_bytes": 281738582,
+    "delta_bytes": 23406,
+    "exact": true,
+    "index_bytes": 12869,
+    "compress_ms": 207.53631077241153,
+    "decompress_ms": 77.09069282282144,
+    "frames": 76
+   }
+  ],
+  "not_measured": [
+   {
+    "arm": "ZIPNN",
+    "blocker": "`import zipnn` failed in the bench court: ModuleNotFoundError: No module named 'zipnn'"
+   },
+   {
+    "arm": "BCP",
+    "blocker": "`import bytecheckpoint` failed in the bench court: ModuleNotFoundError: No module named 'bytecheckpoint'"
+   }
+  ],
+  "loss_notes": []
+ },
+ "dense": {
+  "schema": "weft.comparators.v1",
+  "stamp": "20261114T182322Z",
+  "pair": {
+   "base": {
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+    "bytes": 988097824,
+    "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342"
+   },
+   "newer": {
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+    "bytes": 988097824,
+    "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe"
+   },
+   "tensors": 290,
+   "shapes_match": true
+  },
+  "court": {
+   "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+   "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***",
+   "accounting": "base bytes + stored form of the newer container + every index/manifest byte the arm needs"
+  },
+  "arms": [
+   {
+    "arm": "N",
+    "kind": "native separate containers",
+    "stored_bytes": 1976195648,
+    "delta_bytes": 988097824,
+    "exact": true,
+    "index_bytes": 0,
+    "compress_ms": null,
+    "decompress_ms": null
+   },
+   {
+    "arm": "Z19",
+    "kind": "independent zstd -19 of the newer container",
+    "stored_bytes": 1752190923,
+    "delta_bytes": 764093099,
+    "exact": true,
+    "index_bytes": 0,
+    "compress_ms": 289150.62726207543,
+    "decompress_ms": 1101.4836030080914,
+    "detail": null
+   },
+   {
+    "arm": "XNOR",
+    "kind": "our implementation of a ZipLLM/BitX-style XOR delta: per tensor, XOR(newer, base) then zstd -19, with an index",
+    "stored_bytes": 1604800481,
+    "delta_bytes": 616702657,
+    "exact": true,
+    "index_bytes": 50703,
+    "compress_ms": 197041.99698450975,
+    "decompress_ms": 659.2158746207133,
+    "frames": 290
+   }
+  ],
+  "not_measured": [
+   {
+    "arm": "PF12",
+    "blocker": "zstd --patch-from -12 exited -9: long mode automatically triggered\n",
+    "returncode": -9
+   },
+   {
+    "arm": "PF19",
+    "blocker": "zstd --patch-from -19 exited -9: long mode automatically triggered\n[Optimal parser notes] Consider the following to improve patch size at the cost of speed:\n- Use --single-thread mode in the zstd cli\n- Set a larger targetLength (e.g. --zstd=targetLength=4096)\n- Set a larger chainLog (e.g. --zstd=chainLog=30)\nAlso consider playing around with searchLog and hashLog\n",
+    "returncode": -9
+   },
+   {
+    "arm": "ZIPNN",
+    "blocker": "`import zipnn` failed in the bench court: ModuleNotFoundError: No module named 'zipnn'"
+   },
+   {
+    "arm": "BCP",
+    "blocker": "`import bytecheckpoint` failed in the bench court: ModuleNotFoundError: No module named 'bytecheckpoint'"
+   }
+  ],
+  "loss_notes": []
+ },
+ "weftfs_reference": {
+  "note": "quoted from named receipts, not re-measured in this court",
+  "sparse_pythia_step0_to_step1": {
+   "mode11_weight_delta_bytes": 7434959,
+   "mode16_sparse_delta_bytes": 29887,
+   "receipt": "bench/receipts/sparse-delta-20261106T052333Z.json",
+   "document": "bench/RESULTS-sparse-delta.md"
+  },
+  "dense_qwen05b_base_to_instruct": {
+   "weight_delta_bytes": 541188577,
+   "receipt": "bench/receipts/real-float-tensor-20261105T053958Z.json",
+   "document": "bench/RESULTS-float-tensor-real.md",
+   "note": "mode-11 marginal bytes for the instruct checkpoint against the base, per tensor, no manifests/index/commits; not comparable one-for-one with the arms above"
+  },
+  "family_totals": {
+   "receipt": "bench/receipts/planner-float-20261106T035316Z.json",
+   "document": "bench/RESULTS-planner-two-stage.md"
+  }
+ },
+ "checks": {
+  "all_arms_exact": true,
+  "every_arm_either_measured_or_blocked": true,
+  "losses_published": true
+ },
+ "checks_passed": 3,
+ "checks_total": 3,
+ "log": "bench/receipts/comparators-20261114T182322Z.log",
+ "log_sha256": "207c195c049107459143881a3cf47423e634897fcc93e5cf245b242cb99530dd",
+ "not_claimed": [
+  "the WeftFS column is quoted from other courts; this court drives external comparators only",
+  "no ZipNN or ByteCheckpoint arm ran unless a receipt row exists for it",
+  "one host, warm page cache, one zstd version, no GPU"
+ ]
+}

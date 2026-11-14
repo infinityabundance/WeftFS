@@ -1,0 +1,360 @@
+augmentation: backend=local configs=A,B,C,D,E,N subset(max_others=100, include_embedding=true) passes=2 label=paired-stats
+augmentation: work=/work/.docker-cache/paired-20261114T185845Z
+augmentation: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe (parse 417.2 ms)
+augmentation: subset 101 tensors, 424439296 logical bytes, digest af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+augmentation: configs=["A", "N", "B", "C", "D", "E"] reps=10 interleaved with a one-position rotation per repetition
+augmentation: === rep 1/10 order=["N", "D", "B", "A", "E", "C"] ===
+augmentation: rep 1 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 1 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+--- crash-check D (exit Some(0)) ---
+
+crash-write D after_objects: exit -1
+--- crash-check D (exit Some(0)) ---
+
+crash-write D after_commit_file: exit -1
+--- crash-check D (exit Some(0)) ---
+
+crash-write D after_superblock_write: exit -1
+--- crash-check D (exit Some(0)) ---
+
+augmentation: rep 1 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_objects: exit -1
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_commit_file: exit -1
+--- crash-check B (exit Some(0)) ---
+
+crash-write B after_superblock_write: exit -1
+--- crash-check B (exit Some(0)) ---
+
+augmentation: rep 1 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 1 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+--- crash-check E (exit Some(0)) ---
+
+crash-write E after_objects: exit -1
+--- crash-check E (exit Some(0)) ---
+
+crash-write E after_commit_file: exit -1
+--- crash-check E (exit Some(0)) ---
+
+crash-write E after_superblock_write: exit -1
+--- crash-check E (exit Some(0)) ---
+
+augmentation: rep 1 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+augmentation: === rep 2/10 order=["A", "E", "N", "C", "B", "D"] ===
+augmentation: rep 2 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 2 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 2 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 2 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 2 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: rep 2 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: === rep 3/10 order=["D", "B", "N", "E", "C", "A"] ===
+augmentation: rep 3 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 3 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: rep 3 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 3 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 3 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 3 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: === rep 4/10 order=["N", "D", "A", "E", "B", "C"] ===
+augmentation: rep 4 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 4 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 4 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 4 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 4 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: rep 4 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: === rep 5/10 order=["C", "D", "A", "N", "B", "E"] ===
+augmentation: rep 5 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 5 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 5 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 5 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 5 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: rep 5 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: === rep 6/10 order=["E", "N", "D", "C", "A", "B"] ===
+augmentation: rep 6 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 6 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 6 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 6 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 6 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 6 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: === rep 7/10 order=["A", "N", "D", "E", "C", "B"] ===
+augmentation: rep 7 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 7 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 7 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 7 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 7 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 7 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: === rep 8/10 order=["N", "C", "A", "D", "B", "E"] ===
+augmentation: rep 8 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 8 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 8 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 8 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 8 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: rep 8 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: === rep 9/10 order=["C", "A", "E", "N", "D", "B"] ===
+augmentation: rep 9 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 9 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: rep 9 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 9 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 9 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 9 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: === rep 10/10 order=["N", "E", "B", "C", "D", "A"] ===
+augmentation: rep 10 configuration N
+--- write N (exit Some(0)) ---
+
+--- restore N (exit Some(0)) ---
+
+augmentation: rep 10 configuration E
+--- write E (exit Some(0)) ---
+
+--- restore E (exit Some(0)) ---
+
+augmentation: rep 10 configuration B
+--- write B (exit Some(0)) ---
+
+--- restore B (exit Some(0)) ---
+
+augmentation: rep 10 configuration C
+--- write C (exit Some(0)) ---
+
+--- restore C (exit Some(0)) ---
+
+augmentation: rep 10 configuration D
+--- write D (exit Some(0)) ---
+
+--- restore D (exit Some(0)) ---
+
+augmentation: rep 10 configuration A
+--- write A (exit Some(0)) ---
+
+--- restore A (exit Some(0)) ---
+
+augmentation: result=pass receipt=bench/receipts/paired-stats-raw-20261114T185845Z.json

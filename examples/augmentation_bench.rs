@@ -409,6 +409,11 @@ struct Args {
     /// does not also flush the previous arm's dirty pages. On by default; the
     /// call is outside every measured phase and the receipt records the rule.
     quiesce: bool,
+    /// T083: when set, each repetition's configuration order is shuffled with
+    /// this seed (in addition to the rotation), so the interleaving is
+    /// randomised rather than a fixed rotation. `None` keeps the historical
+    /// rotation-only order.
+    order_seed: Option<u64>,
     /// R21: encode threads for the pipelined group writer. `None` runs the
     /// sequential writer (the exact pre-R21 path) unless the configuration key
     /// carries a `pipe<N>` suffix.
@@ -452,6 +457,7 @@ impl Default for Args {
             fixture_sha256: None,
             diff_only: false,
             quiesce: true,
+            order_seed: None,
             pipeline_workers: None,
             pipeline_staging_bytes: None,
             pipeline_encode_bytes: None,
@@ -519,6 +525,13 @@ fn parse_args() -> Result<Args, String> {
             "--fixture-sha256" => args.fixture_sha256 = Some(value("--fixture-sha256")?),
             "--diff-only" => args.diff_only = true,
             "--quiesce" => args.quiesce = parse_bool(&value("--quiesce")?)?,
+            "--order-seed" => {
+                args.order_seed = Some(
+                    value("--order-seed")?
+                        .parse()
+                        .map_err(|_| "--order-seed must be an integer".to_owned())?,
+                )
+            },
             "--pipeline-workers" => {
                 args.pipeline_workers = Some(
                     value("--pipeline-workers")?
@@ -3269,6 +3282,32 @@ fn assemble(
                 "summary": summarise(&median),
                 "summary_least_contended": summarise(&best),
                 "stats": arm_stats(samples),
+                // T083: the raw per-repetition values behind every statistic,
+                // so a paired bootstrap can be recomputed from the receipt
+                // without re-running the court.
+                "repetition_metrics": samples.iter().map(|sample| {
+                    let footprint = sample["write"]["storage"]["physical_footprint_bytes"]
+                        .as_u64()
+                        .or_else(|| sample["write"]["physical_footprint_bytes"].as_u64())
+                        .unwrap_or(0);
+                    let bytes_read = sample["restore"]["cold"]["backend_bytes_read"]
+                        .as_u64()
+                        .or_else(|| sample["restore"]["cold"]["bytes_read"].as_u64())
+                        .unwrap_or(0);
+                    json!({
+                        "rep": sample["rep"],
+                        "write_wall_ms": sample_write_wall(sample),
+                        "write_cpu_ms": sample["write"]["cpu_user_sys_ms"],
+                        "write_peak_rss_kib": sample["write"]["peak_rss_kib"],
+                        "physical_footprint_bytes": footprint,
+                        "physical_bytes_written": sample["write"]["physical_bytes_written"],
+                        "cold_restore_wall_ms": sample["restore"]["cold"]["wall_ms"],
+                        "cold_restore_cpu_ms": sample["restore"]["cold"]["cpu_user_sys_ms"],
+                        "cold_restore_peak_rss_kib": sample["restore"]["cold"]["peak_rss_kib"],
+                        "cold_bytes_read": bytes_read,
+                        "exact": sample["restore"]["exactness"]["match"],
+                    })
+                }).collect::<Vec<Json>>(),
                 "reps": samples.len(),
                 "representative_rep": median["rep"],
                 "least_contended_rep": best["rep"],
@@ -3486,6 +3525,7 @@ fn assemble(
             "include_embedding": args.include_embedding,
             "interleaving": "configuration order rotated by one position per repetition; every repetition runs every arm",
             "quiesce_between_cells": args.quiesce,
+            "order_seed": args.order_seed,
         },
         "environment": limit_label(),
         "subset": {
@@ -4762,6 +4802,19 @@ fn run(args: Args) -> Result<(), String> {
         let mut order = configs.clone();
         let rotation = (rep - 1) % order.len();
         order.rotate_left(rotation);
+        if let Some(seed) = args.order_seed {
+            // Seeded Fisher-Yates: the repetition's order is random but
+            // reproducible, and every arm still runs exactly once.
+            let mut state = seed.wrapping_add(rep as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+            for i in (1..order.len()).rev() {
+                state ^= state >> 12;
+                state ^= state << 25;
+                state ^= state >> 27;
+                let value = state.wrapping_mul(0x2545_f491_4f6c_dd1d);
+                let j = (value as usize) % (i + 1);
+                order.swap(i, j);
+            }
+        }
         orders.push(json!({ "rep": rep, "order": order }));
         append_log(
             &mut log,

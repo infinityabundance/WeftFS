@@ -1,0 +1,78 @@
+{
+ "schema": "weft.comparators.v1",
+ "stamp": "20261114T182322Z",
+ "pair": {
+  "base": {
+   "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+   "bytes": 988097824,
+   "sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342"
+  },
+  "newer": {
+   "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+   "bytes": 988097824,
+   "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe"
+  },
+  "tensors": 290,
+  "shapes_match": true
+ },
+ "court": {
+  "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+  "zstd": "*** Zstandard CLI (64-bit) v1.5.4, by Yann Collet ***",
+  "accounting": "base bytes + stored form of the newer container + every index/manifest byte the arm needs"
+ },
+ "arms": [
+  {
+   "arm": "N",
+   "kind": "native separate containers",
+   "stored_bytes": 1976195648,
+   "delta_bytes": 988097824,
+   "exact": true,
+   "index_bytes": 0,
+   "compress_ms": null,
+   "decompress_ms": null
+  },
+  {
+   "arm": "Z19",
+   "kind": "independent zstd -19 of the newer container",
+   "stored_bytes": 1752190923,
+   "delta_bytes": 764093099,
+   "exact": true,
+   "index_bytes": 0,
+   "compress_ms": 289150.62726207543,
+   "decompress_ms": 1101.4836030080914,
+   "detail": null
+  },
+  {
+   "arm": "XNOR",
+   "kind": "our implementation of a ZipLLM/BitX-style XOR delta: per tensor, XOR(newer, base) then zstd -19, with an index",
+   "stored_bytes": 1604800481,
+   "delta_bytes": 616702657,
+   "exact": true,
+   "index_bytes": 50703,
+   "compress_ms": 197041.99698450975,
+   "decompress_ms": 659.2158746207133,
+   "frames": 290
+  }
+ ],
+ "not_measured": [
+  {
+   "arm": "PF12",
+   "blocker": "zstd --patch-from -12 exited -9: long mode automatically triggered\n",
+   "returncode": -9
+  },
+  {
+   "arm": "PF19",
+   "blocker": "zstd --patch-from -19 exited -9: long mode automatically triggered\n[Optimal parser notes] Consider the following to improve patch size at the cost of speed:\n- Use --single-thread mode in the zstd cli\n- Set a larger targetLength (e.g. --zstd=targetLength=4096)\n- Set a larger chainLog (e.g. --zstd=chainLog=30)\nAlso consider playing around with searchLog and hashLog\n",
+   "returncode": -9
+  },
+  {
+   "arm": "ZIPNN",
+   "blocker": "`import zipnn` failed in the bench court: ModuleNotFoundError: No module named 'zipnn'"
+  },
+  {
+   "arm": "BCP",
+   "blocker": "`import bytecheckpoint` failed in the bench court: ModuleNotFoundError: No module named 'bytecheckpoint'"
+  }
+ ],
+ "loss_notes": []
+}

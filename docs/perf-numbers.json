@@ -105,6 +105,22 @@
   {
    "id": "kvplane",
    "title": "KV context plane (T063/T065/T067/T068/X17), receipts stamped 20261114T133053Z / T133751Z / T133924Z / T173411Z / T173416Z"
+  },
+  {
+   "id": "heldout",
+   "title": "Held-out predictive planner (T042 / N03)"
+  },
+  {
+   "id": "oracle",
+   "title": "Sampled-vs-exhaustive planner oracle (N11)"
+  },
+  {
+   "id": "comparators",
+   "title": "External comparator gap table (T041)"
+  },
+  {
+   "id": "paired",
+   "title": "Paired A-E statistics and host control (T083 / N10)"
   }
  ],
  "numbers": [
@@ -20609,6 +20625,851 @@
    "stamp": "20261114T133751Z",
    "revision_path": "revisions.WeftFS",
    "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "heldout.fit.tensors",
+   "label": "FIT tensors measured",
+   "unit": "tensors",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "fit.exactness.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.tensors",
+   "label": "Validation tensors",
+   "unit": "tensors",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.subset.selected",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.logical_b",
+   "label": "Validation logical bytes",
+   "unit": "bytes",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.subset.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.agreement",
+   "label": "Validation chosen-strategy agreement",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.strategy_agreement",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.bytes_med",
+   "label": "Validation conditional bytes relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.errors.bytes_conditional.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.bytes_p90",
+   "label": "Validation conditional bytes relative error, p90",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.errors.bytes_conditional.abs_rel.p90",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.bytes_e2e_med",
+   "label": "Validation end-to-end bytes relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.errors.bytes_end_to_end.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.restore_med",
+   "label": "Validation cold-restore relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.errors.restore_wall_end_to_end.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.write_med",
+   "label": "Validation write-wall relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.errors.write_wall_end_to_end.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.write_pred_ms",
+   "label": "Validation predicted write wall",
+   "unit": "ms",
+   "group": "heldout",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.predicted_write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.write_ms",
+   "label": "Validation measured write wall",
+   "unit": "ms",
+   "group": "heldout",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.measured_write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.restore_pred_ms",
+   "label": "Validation predicted restore wall",
+   "unit": "ms",
+   "group": "heldout",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.predicted_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.restore_ms",
+   "label": "Validation measured restore wall",
+   "unit": "ms",
+   "group": "heldout",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.family_summary.measured_family_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.sla_accepted",
+   "label": "Validation SLAs accepted",
+   "unit": "count",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.sla.accepted",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.val.sla_missed",
+   "label": "Validation SLAs missed",
+   "unit": "count",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "validate.sla.missed",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.tensors",
+   "label": "Held-out tensors",
+   "unit": "tensors",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.subset.selected",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.logical_b",
+   "label": "Held-out logical bytes",
+   "unit": "bytes",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.subset.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.agreement",
+   "label": "Held-out chosen-strategy agreement",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.strategy_agreement",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.bytes_med",
+   "label": "Held-out conditional bytes relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.errors.bytes_conditional.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.bytes_p95",
+   "label": "Held-out conditional bytes relative error, p95",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.errors.bytes_conditional.abs_rel.p95",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.bytes_max",
+   "label": "Held-out conditional bytes relative error, max",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.errors.bytes_conditional.abs_rel.max",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.bytes_e2e_med",
+   "label": "Held-out end-to-end bytes relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.errors.bytes_end_to_end.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.restore_med",
+   "label": "Held-out cold-restore relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.errors.restore_wall_end_to_end.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.write_med",
+   "label": "Held-out write-wall relative error, median",
+   "unit": "fraction",
+   "group": "heldout",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.errors.write_wall_end_to_end.abs_rel.median",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.restore_pred_ms",
+   "label": "Held-out predicted restore wall",
+   "unit": "ms",
+   "group": "heldout",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.predicted_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.restore_ms",
+   "label": "Held-out measured restore wall",
+   "unit": "ms",
+   "group": "heldout",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.family_summary.measured_family_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.sla_accepted",
+   "label": "Held-out SLAs accepted",
+   "unit": "count",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.sla.accepted",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.ho.sla_missed",
+   "label": "Held-out SLAs missed",
+   "unit": "count",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "held_out.sla.missed",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.tensors",
+   "label": "Synthetic tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "overall.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.violating",
+   "label": "Synthetic tensors with an interval violation",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "overall.violating_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.violation_rate",
+   "label": "Synthetic interval-violation rate",
+   "unit": "fraction",
+   "group": "oracle",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "overall.violation_rate",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.undetected",
+   "label": "Synthetic tensors with undetected skip-regret",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "overall.undetected_regret_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.regret_bytes",
+   "label": "Synthetic skip-regret bytes, total",
+   "unit": "bytes",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "overall.skip_regret_bytes_total",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.mode9_violations",
+   "label": "Mode-9 exact-prediction violations",
+   "unit": "count",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "overall.mode9_exact_violations",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.unlucky.tensors",
+   "label": "sampled-unlucky tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.sampled-unlucky.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.unlucky.violating",
+   "label": "sampled-unlucky violating tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.sampled-unlucky.violating_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.unlucky.undetected",
+   "label": "sampled-unlucky undetected skip-regret tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.sampled-unlucky.undetected_regret_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.unlucky.regret_bytes",
+   "label": "sampled-unlucky skip-regret bytes",
+   "unit": "bytes",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.sampled-unlucky.skip_regret_bytes_total",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.rare.tensors",
+   "label": "rare-heavy tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.rare-heavy.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.rare.violating",
+   "label": "rare-heavy violating tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.rare-heavy.violating_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.rare.fallbacks",
+   "label": "rare-heavy fallback tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "strata.rare-heavy.fallback_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.real_validate.tensors",
+   "label": "Real validation tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "validate.real_aggregate.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.real_validate.violating",
+   "label": "Real validation violating tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "validate.real_aggregate.violating_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.real_heldout.tensors",
+   "label": "Real held-out tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "held_out.real_aggregate.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "oracle.real_heldout.violating",
+   "label": "Real held-out violating tensors",
+   "unit": "tensors",
+   "group": "oracle",
+   "format": "int",
+   "receipt": "bench/receipts/two-stage-oracle-20261114T175829Z.json",
+   "path": "held_out.real_aggregate.violating_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175829Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.sparse.native",
+   "label": "Sparse pair: native both containers",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.0.stored_bytes.N.stored_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.sparse.z19",
+   "label": "Sparse pair: independent zstd -19 delta",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.0.stored_bytes.Z19.delta_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.sparse.pf12",
+   "label": "Sparse pair: patch-from -12 delta",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.0.stored_bytes.PF12.delta_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.sparse.pf19",
+   "label": "Sparse pair: patch-from -19 delta",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.0.stored_bytes.PF19.delta_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.sparse.xnor",
+   "label": "Sparse pair: XNOR delta",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.0.stored_bytes.XNOR.delta_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.sparse.xnor_ratio",
+   "label": "Sparse pair: XNOR complete bytes / native",
+   "unit": "ratio",
+   "group": "comparators",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.0.spread_vs_native.XNOR",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.dense.native",
+   "label": "Dense pair: native both containers",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.1.stored_bytes.N.stored_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.dense.z19",
+   "label": "Dense pair: independent zstd -19 delta",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.1.stored_bytes.Z19.delta_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.dense.xnor",
+   "label": "Dense pair: XNOR delta",
+   "unit": "bytes",
+   "group": "comparators",
+   "format": "int",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.1.stored_bytes.XNOR.delta_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "cmp.dense.xnor_ratio",
+   "label": "Dense pair: XNOR complete bytes / native",
+   "unit": "ratio",
+   "group": "comparators",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/comparators-20261114T182322Z.json",
+   "path": "pairs.1.spread_vs_native.XNOR",
+   "stamp_path": "stamp",
+   "stamp": "20261114T182322Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.reps",
+   "label": "Paired repetitions per arm",
+   "unit": "reps",
+   "group": "paired",
+   "format": "int",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "reps",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.a.min",
+   "label": "Native write wall, least-contended",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.A.write_wall_ms.min",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.a.p50",
+   "label": "Native write wall, p50",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.A.write_wall_ms.p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.a.p95",
+   "label": "Native write wall, p95",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.A.write_wall_ms.p95",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.c.write_p50",
+   "label": "Planned write wall, p50",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.C.write_wall_ms.p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.a.restore_p50",
+   "label": "Native cold restore, p50",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.A.cold_restore_wall_ms.p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.c.restore_p50",
+   "label": "Planned cold restore, p50",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.C.cold_restore_wall_ms.p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.e.restore_p50",
+   "label": "Combined cold restore, p50",
+   "unit": "ms",
+   "group": "paired",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "arms.E.cold_restore_wall_ms.p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.survive",
+   "label": "Ordering claims that survive a paired bootstrap CI",
+   "unit": "count",
+   "group": "paired",
+   "format": "int",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "ordering_survives",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "paired.distinguishable",
+   "label": "Ordering pairs distinguishable from zero",
+   "unit": "count",
+   "group": "paired",
+   "format": "int",
+   "receipt": "bench/receipts/paired-stats-20261114T185845Z.json",
+   "path": "ordering_distinguishable",
+   "stamp_path": "stamp",
+   "stamp": "20261114T185845Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
   }
  ],
  "blocks": [
@@ -25852,6 +26713,115 @@
      "template": "Measured break-even is **{{kv.eng.break_even}} \u00b5s/token**: reuse is cheaper than recompute whenever the per-token prefill cost exceeds it. Against the hypothetical grid, always-recompute regret is **{{kv.eng.regret10}} ms** at 10 \u00b5s/token, **{{kv.eng.regret50}} ms** at 50, **{{kv.eng.regret120}} ms** at 120 and **{{kv.eng.regret500}} ms** at 500; always-reuse and the declared model have zero regret in every cell because this fixture's prefixes are long."
     }
    ]
+  },
+  {
+   "id": "heldout-fit",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Fit: **{{heldout.fit.tensors}}** tensors measured across two whole families. Every coefficient below was fitted on those tensors only, before any validation or held-out measurement existed."
+    }
+   ]
+  },
+  {
+   "id": "heldout-validate",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{heldout.val.tensors}}** tensors, **{{heldout.val.logical_b}}** logical bytes. Chosen-strategy agreement with the exhaustive measurement: **{{heldout.val.agreement}}**. Conditional encoded-bytes relative error: median **{{heldout.val.bytes_med}}**, p90 **{{heldout.val.bytes_p90}}**; end-to-end **{{heldout.val.bytes_e2e_med}}** at the median."
+    },
+    {
+     "template": "Cold-restore relative error median **{{heldout.val.restore_med}}**. Write-wall relative error median **{{heldout.val.write_med}}** (predicted **{{heldout.val.write_pred_ms}}** ms against measured **{{heldout.val.write_ms}}** ms). Family restore predicted **{{heldout.val.restore_pred_ms}}** ms against measured **{{heldout.val.restore_ms}}** ms. SLAs accepted **{{heldout.val.sla_accepted}}**, missed **{{heldout.val.sla_missed}}**."
+    }
+   ]
+  },
+  {
+   "id": "heldout-heldout",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{heldout.ho.tensors}}** tensors, **{{heldout.ho.logical_b}}** logical bytes, measured once. Chosen-strategy agreement **{{heldout.ho.agreement}}**. Conditional encoded-bytes relative error: median **{{heldout.ho.bytes_med}}**, p95 **{{heldout.ho.bytes_p95}}**, max **{{heldout.ho.bytes_max}}**; end-to-end **{{heldout.ho.bytes_e2e_med}}** at the median."
+    },
+    {
+     "template": "Cold-restore relative error median **{{heldout.ho.restore_med}}**; write-wall relative error median **{{heldout.ho.write_med}}**. Family restore predicted **{{heldout.ho.restore_pred_ms}}** ms against measured **{{heldout.ho.restore_ms}}** ms. SLAs accepted **{{heldout.ho.sla_accepted}}**, missed **{{heldout.ho.sla_missed}}**."
+    }
+   ]
+  },
+  {
+   "id": "heldout-sla",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Validation: accepted **{{heldout.val.sla_accepted}}** of five thresholds, missed **{{heldout.val.sla_missed}}**. Held-out: accepted **{{heldout.ho.sla_accepted}}**, missed **{{heldout.ho.sla_missed}}**."
+    }
+   ]
+  },
+  {
+   "id": "oracle-summary",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Synthetic: **{{oracle.violating}}** of **{{oracle.tensors}}** tensors had an actual size outside a priced interval (rate **{{oracle.violation_rate}}**). **{{oracle.undetected}}** tensors record skip-regret with **{{oracle.regret_bytes}}** bytes of regret, and the mode-9 exact prediction was never violated (**{{oracle.mode9_violations}}**)."
+    },
+    {
+     "template": "`sampled-unlucky`: **{{oracle.unlucky.undetected}}** of **{{oracle.unlucky.tensors}}** undetected, **{{oracle.unlucky.regret_bytes}}** bytes, **{{oracle.unlucky.violating}}** violations. `rare-heavy`: **{{oracle.rare.violating}}** of **{{oracle.rare.tensors}}** detected, **{{oracle.rare.fallbacks}}** fallbacks, no regret. Real tensors: **{{oracle.real_validate.violating}}** of **{{oracle.real_validate.tensors}}** (validation) and **{{oracle.real_heldout.violating}}** of **{{oracle.real_heldout.tensors}}** (held-out) disagreed with the oracle."
+    }
+   ]
+  },
+  {
+   "id": "comparators",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Sparse pair, newer-container marginal bytes: XNOR **{{cmp.sparse.xnor}}**, patch-from -12 **{{cmp.sparse.pf12}}**, patch-from -19 **{{cmp.sparse.pf19}}**, independent zstd -19 **{{cmp.sparse.z19}}**. Native both containers **{{cmp.sparse.native}}**; XNOR's complete bytes are **{{cmp.sparse.xnor_ratio}}** of native."
+    },
+    {
+     "template": "Dense pair: XNOR **{{cmp.dense.xnor}}**, independent zstd -19 **{{cmp.dense.z19}}**, native **{{cmp.dense.native}}**; XNOR's complete bytes are **{{cmp.dense.xnor_ratio}}** of native. Both `--patch-from` levels were OOM-killed at the court limit and have no number."
+    }
+   ]
+  },
+  {
+   "id": "paired-stats",
+   "file": "bench/RESULTS-heldout.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{paired.reps}}** paired repetitions per arm. Native write wall min **{{paired.a.min}}** ms, p50 **{{paired.a.p50}}** ms, p95 **{{paired.a.p95}}** ms; planned write (C) p50 **{{paired.c.write_p50}}** ms. Cold restore p50: A **{{paired.a.restore_p50}}** ms, C **{{paired.c.restore_p50}}** ms, E **{{paired.e.restore_p50}}** ms."
+    },
+    {
+     "template": "Of the nine claimed orderings, **{{paired.survive}}** survive the paired bootstrap 95 % confidence interval and **{{paired.distinguishable}}** paired differences are distinguishable from zero in either direction."
+    }
+   ]
+  },
+  {
+   "id": "perf-catalog-heldout",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "heldout"
+  },
+  {
+   "id": "perf-catalog-oracle",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "oracle"
+  },
+  {
+   "id": "perf-catalog-comparators",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "comparators"
+  },
+  {
+   "id": "perf-catalog-paired",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "paired"
   }
  ]
 }

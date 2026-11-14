@@ -1,0 +1,4450 @@
+{
+  "checks": {
+    "all_arms_exact": true,
+    "bytes_prediction_end_to_end_median_abs_rel_le_0.10": true,
+    "bytes_prediction_median_abs_rel_le_0.10": true,
+    "model_schema": "weft.heldout.model.v1",
+    "model_sha256": "baad81e639e3839f8b4685b0e43bf3c3a6e5b63d29c99115d13e7a2d3b73d8a0",
+    "restore_prediction_median_abs_rel_le_0.20": true,
+    "sla_misses_reported": true,
+    "strategy_agreement_ge_0.90": false
+  },
+  "container": {
+    "file_bytes": 6171927112,
+    "path": "/work/.docker-cache/real-corpus/Qwen2.5-3B.safetensors",
+    "sha256": "25012463cfa58c3971057c8242d0363424cb9ee61caf783ce4e9c0546175f29c",
+    "tensors_in_container": 434
+  },
+  "court": {
+    "host": "Linux 7.3.3-1-cachyos x86_64",
+    "kernel": "7.3.3-1-cachyos",
+    "lambda_ns": 0,
+    "limits": "3g memory / 3g swap / 1024 pids / 4 cpus",
+    "peak_rss_kib": 187768,
+    "prediction_objective": "bytes-only (the shipped default); latency lambda is a secondary row in RESULTS"
+  },
+  "elapsed_ms": 31921,
+  "exactness": {
+    "exact": 87,
+    "mismatches": 0,
+    "tensors": 87
+  },
+  "family": "qwen2.5-3b-base",
+  "family_summary": {
+    "errors": {
+      "bytes_conditional": {
+        "abs": {
+          "max": 1705871.5714285746,
+          "median": 929.5714285714785,
+          "p90": 294465.0285714254,
+          "p95": 328580.72857142537
+        },
+        "abs_rel": {
+          "max": 0.6871447270007479,
+          "median": 0.00784069937459922,
+          "p90": 0.1982334159706258,
+          "p95": 0.20511666180363597
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": 0.003814414942385298,
+          "p10": -0.029444030312673106,
+          "p90": 0.14370011872728247
+        },
+        "small_n": false
+      },
+      "bytes_end_to_end": {
+        "abs": {
+          "max": 1705871.5714285746,
+          "median": 841.4285714285215,
+          "p90": 294465.0285714254,
+          "p95": 328580.72857142537
+        },
+        "abs_rel": {
+          "max": 0.43637808526551974,
+          "median": 0.010999835314567148,
+          "p90": 0.3302045549665179,
+          "p95": 0.3302045549665179
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": -0.0001346354328733254,
+          "p10": -0.3302045549665179,
+          "p90": 0.01099965255284571
+        },
+        "small_n": false
+      },
+      "decode_cpu_conditional": {
+        "abs": {
+          "max": 32923596.202298373,
+          "median": 680375.9438073696,
+          "p90": 30660357.602298375,
+          "p95": 31557678.702298373
+        },
+        "abs_rel": {
+          "max": 7.699072014836409,
+          "median": 0.30998738707070556,
+          "p90": 5.394821386449998,
+          "p95": 6.975591934968429
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": 0.26204517267305893,
+          "p10": -0.6783984907936078,
+          "p90": 5.394821386449998
+        },
+        "small_n": false
+      },
+      "restore_wall_conditional": {
+        "abs": {
+          "max": 13573082.797701627,
+          "median": 196217.94380736956,
+          "p90": 2949764.4404596747,
+          "p95": 4133613.602298375
+        },
+        "abs_rel": {
+          "max": 1.9418665919888198,
+          "median": 0.08017985102247514,
+          "p90": 1.6033635112966178,
+          "p95": 1.775839626603108
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": -0.0018661221405997194,
+          "p10": -0.7922289116990648,
+          "p90": 1.6033635112966178
+        },
+        "small_n": false
+      },
+      "restore_wall_end_to_end": {
+        "abs": {
+          "max": 13573082.797701627,
+          "median": 196217.94380736956,
+          "p90": 2949764.4404596747,
+          "p95": 4133613.602298375
+        },
+        "abs_rel": {
+          "max": 0.831833049740271,
+          "median": 0.08017985102247514,
+          "p90": 0.770579405236007,
+          "p95": 0.8123012649321719
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": -0.04042755121429077,
+          "p10": -0.770579405236007,
+          "p90": 0.034442986001360594
+        },
+        "small_n": false
+      },
+      "write_wall_conditional": {
+        "abs": {
+          "max": 17329189.6653499,
+          "median": 7457748.146363132,
+          "p90": 12831127.36896163,
+          "p95": 13742889.568961626
+        },
+        "abs_rel": {
+          "max": 0.6494240332909815,
+          "median": 0.422578233029059,
+          "p90": 0.5858946100828002,
+          "p95": 0.6080180992188611
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": -0.422578233029059,
+          "p10": -0.5858946100828002,
+          "p90": 0.12423872027731137
+        },
+        "small_n": false
+      },
+      "write_wall_end_to_end": {
+        "abs": {
+          "max": 17329189.6653499,
+          "median": 7457748.146363132,
+          "p90": 12831127.36896163,
+          "p95": 13742889.568961626
+        },
+        "abs_rel": {
+          "max": 0.6494240332909815,
+          "median": 0.4299063488740816,
+          "p90": 0.5868917200158943,
+          "p95": 0.6080180992188611
+        },
+        "n": 87,
+        "signed_rel": {
+          "median": -0.4299063488740816,
+          "p10": -0.5868917200158943,
+          "p90": 0.12423872027731137
+        },
+        "small_n": false
+      }
+    },
+    "exact_restores": 87,
+    "fadvised_files": 355,
+    "measured_family_restore_ms": 3579.590371,
+    "measured_restore_sum_ms": 3579.590371,
+    "measured_write_ms": 2631.523001,
+    "predicted_restore_ms": 3565.5635438089585,
+    "predicted_rows": 87,
+    "predicted_strategy_not_applicable": 35,
+    "predicted_write_ms": 2206.443190425773,
+    "store_open_ms": 13.858784,
+    "strategy_agreement": 0.5977011494252874,
+    "strategy_missing_from_model": 0,
+    "tensors": 87
+  },
+  "mode": "predict",
+  "model_sha256": "baad81e639e3839f8b4685b0e43bf3c3a6e5b63d29c99115d13e7a2d3b73d8a0",
+  "schema": "weft.heldout.planner.v1",
+  "sla": {
+    "accepted": 3,
+    "miss_rate": 0.0,
+    "missed": 0,
+    "rows": [
+      {
+        "accepted": false,
+        "measured_ms": 3579.590371,
+        "miss": false,
+        "multiplier_of_prediction": 0.75,
+        "sla_ms": 2674.1726578567186
+      },
+      {
+        "accepted": false,
+        "measured_ms": 3579.590371,
+        "miss": false,
+        "multiplier_of_prediction": 1.0,
+        "sla_ms": 3565.5635438089585
+      },
+      {
+        "accepted": true,
+        "measured_ms": 3579.590371,
+        "miss": false,
+        "multiplier_of_prediction": 1.25,
+        "sla_ms": 4456.954429761198
+      },
+      {
+        "accepted": true,
+        "measured_ms": 3579.590371,
+        "miss": false,
+        "multiplier_of_prediction": 1.5,
+        "sla_ms": 5348.345315713437
+      },
+      {
+        "accepted": true,
+        "measured_ms": 3579.590371,
+        "miss": false,
+        "multiplier_of_prediction": 2.0,
+        "sla_ms": 7131.127087617917
+      }
+    ],
+    "rule": "accept iff predicted <= 0.90 * threshold"
+  },
+  "stamp": "20261114T174642944Z",
+  "subset": {
+    "logical_bytes": 1079083008,
+    "max_tensor_bytes": 201326592,
+    "max_tensors": 96,
+    "max_total_bytes": 1610612736,
+    "names": [
+      "model.layers.0.input_layernorm.weight",
+      "model.layers.0.self_attn.k_proj.bias",
+      "model.layers.0.self_attn.v_proj.bias",
+      "model.layers.1.mlp.up_proj.weight",
+      "model.layers.1.self_attn.q_proj.bias",
+      "model.layers.10.mlp.down_proj.weight",
+      "model.layers.10.self_attn.k_proj.weight",
+      "model.layers.10.self_attn.v_proj.weight",
+      "model.layers.11.post_attention_layernorm.weight",
+      "model.layers.11.self_attn.q_proj.weight",
+      "model.layers.12.mlp.gate_proj.weight",
+      "model.layers.12.self_attn.o_proj.weight",
+      "model.layers.13.input_layernorm.weight",
+      "model.layers.13.self_attn.k_proj.bias",
+      "model.layers.13.self_attn.v_proj.bias",
+      "model.layers.14.mlp.up_proj.weight",
+      "model.layers.14.self_attn.q_proj.bias",
+      "model.layers.15.mlp.down_proj.weight",
+      "model.layers.15.self_attn.k_proj.weight",
+      "model.layers.15.self_attn.v_proj.weight",
+      "model.layers.16.post_attention_layernorm.weight",
+      "model.layers.16.self_attn.q_proj.weight",
+      "model.layers.17.mlp.gate_proj.weight",
+      "model.layers.17.self_attn.o_proj.weight",
+      "model.layers.18.input_layernorm.weight",
+      "model.layers.18.self_attn.k_proj.bias",
+      "model.layers.18.self_attn.v_proj.bias",
+      "model.layers.19.mlp.up_proj.weight",
+      "model.layers.19.self_attn.q_proj.bias",
+      "model.layers.2.mlp.down_proj.weight",
+      "model.layers.2.self_attn.k_proj.weight",
+      "model.layers.2.self_attn.v_proj.weight",
+      "model.layers.20.post_attention_layernorm.weight",
+      "model.layers.20.self_attn.q_proj.weight",
+      "model.layers.21.mlp.gate_proj.weight",
+      "model.layers.21.self_attn.o_proj.weight",
+      "model.layers.22.input_layernorm.weight",
+      "model.layers.22.self_attn.k_proj.bias",
+      "model.layers.22.self_attn.v_proj.bias",
+      "model.layers.23.mlp.up_proj.weight",
+      "model.layers.23.self_attn.q_proj.bias",
+      "model.layers.24.mlp.down_proj.weight",
+      "model.layers.24.self_attn.k_proj.weight",
+      "model.layers.24.self_attn.v_proj.weight",
+      "model.layers.25.post_attention_layernorm.weight",
+      "model.layers.25.self_attn.q_proj.weight",
+      "model.layers.26.mlp.gate_proj.weight",
+      "model.layers.26.self_attn.o_proj.weight",
+      "model.layers.27.input_layernorm.weight",
+      "model.layers.27.self_attn.k_proj.bias",
+      "model.layers.27.self_attn.v_proj.bias",
+      "model.layers.28.mlp.up_proj.weight",
+      "model.layers.28.self_attn.q_proj.bias",
+      "model.layers.29.mlp.down_proj.weight",
+      "model.layers.29.self_attn.k_proj.weight",
+      "model.layers.29.self_attn.v_proj.weight",
+      "model.layers.3.post_attention_layernorm.weight",
+      "model.layers.3.self_attn.q_proj.weight",
+      "model.layers.30.mlp.gate_proj.weight",
+      "model.layers.30.self_attn.o_proj.weight",
+      "model.layers.31.input_layernorm.weight",
+      "model.layers.31.self_attn.k_proj.bias",
+      "model.layers.31.self_attn.v_proj.bias",
+      "model.layers.32.mlp.up_proj.weight",
+      "model.layers.32.self_attn.q_proj.bias",
+      "model.layers.33.mlp.down_proj.weight",
+      "model.layers.33.self_attn.k_proj.weight",
+      "model.layers.33.self_attn.v_proj.weight",
+      "model.layers.34.post_attention_layernorm.weight",
+      "model.layers.34.self_attn.q_proj.weight",
+      "model.layers.35.mlp.gate_proj.weight",
+      "model.layers.35.self_attn.o_proj.weight",
+      "model.layers.4.input_layernorm.weight",
+      "model.layers.4.self_attn.k_proj.bias",
+      "model.layers.4.self_attn.v_proj.bias",
+      "model.layers.5.mlp.up_proj.weight",
+      "model.layers.5.self_attn.q_proj.bias",
+      "model.layers.6.mlp.down_proj.weight",
+      "model.layers.6.self_attn.k_proj.weight",
+      "model.layers.6.self_attn.v_proj.weight",
+      "model.layers.7.post_attention_layernorm.weight",
+      "model.layers.7.self_attn.q_proj.weight",
+      "model.layers.8.mlp.gate_proj.weight",
+      "model.layers.8.self_attn.o_proj.weight",
+      "model.layers.9.input_layernorm.weight",
+      "model.layers.9.self_attn.k_proj.bias",
+      "model.layers.9.self_attn.v_proj.bias"
+    ],
+    "rule": "every tensor with byte_len <= the declared bound, strided by the smallest k that keeps the subset within the declared tensor and byte bounds",
+    "selected": 87
+  },
+  "tensors": [
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2805,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 67796,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.0.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2805,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6753344,
+      "restore_cpu_ns": 101019,
+      "restore_ns": 163675,
+      "restored_sha256": "66c3603cf1087fb0ed59596bddfa375fdf8c29a412e7c2ff3d648ac4d424bddc",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "66c3603cf1087fb0ed59596bddfa375fdf8c29a412e7c2ff3d648ac4d424bddc",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14413700,
+      "written_bytes": 2805,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 641,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 18054,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.0.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 10197240,
+      "restore_cpu_ns": 32190,
+      "restore_ns": 96840,
+      "restored_sha256": "ff29a2cbf7a285535066400acaa40adef6681f809f1d0cfb3e7eaf55ab5e1b7c",
+      "shape": [
+        256
+      ],
+      "source_sha256": "ff29a2cbf7a285535066400acaa40adef6681f809f1d0cfb3e7eaf55ab5e1b7c",
+      "two_stage_analysis": null,
+      "write_wall_ns": 17670578,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 624,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 16120,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.0.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6944119,
+      "restore_cpu_ns": 30598,
+      "restore_ns": 91821,
+      "restored_sha256": "dc122cdc6bc9cb1bb4ebba66cdd2916a0d94b72159f9284dc6c484c3bde821f3",
+      "shape": [
+        256
+      ],
+      "source_sha256": "dc122cdc6bc9cb1bb4ebba66cdd2916a0d94b72159f9284dc6c484c3bde821f3",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13831524,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 36746953,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 36432955,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 31906123,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 31126640,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.1.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 31906123,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 24402581,
+      "restore_cpu_ns": 125597904,
+      "restore_ns": 162460091,
+      "restored_sha256": "1b5309f5ae6f765da23d7a69b514b6738b0b7be3463b46b8dd22e8ebd6b59461",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "1b5309f5ae6f765da23d7a69b514b6738b0b7be3463b46b8dd22e8ebd6b59461",
+      "two_stage_analysis": null,
+      "write_wall_ns": 71548748,
+      "written_bytes": 31906123,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3479,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 3419,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 51156,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.1.self_attn.q_proj.bias",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 3419,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6732785,
+      "restore_cpu_ns": 179306,
+      "restore_ns": 275685,
+      "restored_sha256": "abb3fb20c1b1af8d6c96d6bc1817a495c6019edb162a5255635b92f924ae666c",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "abb3fb20c1b1af8d6c96d6bc1817a495c6019edb162a5255635b92f924ae666c",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13629285,
+      "written_bytes": 3419,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35374544,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35462187,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29955622,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28432722,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.10.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29955622,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 20601728,
+      "restore_cpu_ns": 117994158,
+      "restore_ns": 148219153,
+      "restored_sha256": "3d4f12723e3d34e4f492800ac01a8a83a951a1215fe5d1a54a2f6b7c618fd9f7",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "3d4f12723e3d34e4f492800ac01a8a83a951a1215fe5d1a54a2f6b7c618fd9f7",
+      "two_stage_analysis": null,
+      "write_wall_ns": 64968908,
+      "written_bytes": 29955622,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 823237,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 825147,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 703261,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10758959,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.10.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 703261,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 7275709,
+      "restore_cpu_ns": 2840526,
+      "restore_ns": 3619596,
+      "restored_sha256": "59660fe71f8dc050792a267ee98f43f1ffb0e66cb30f0037bb265389fb802b3a",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "59660fe71f8dc050792a267ee98f43f1ffb0e66cb30f0037bb265389fb802b3a",
+      "two_stage_analysis": null,
+      "write_wall_ns": 25179721,
+      "written_bytes": 703261,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 825664,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 828001,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 700550,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 8067536,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.10.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 700550,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 7342633,
+      "restore_cpu_ns": 2674424,
+      "restore_ns": 3302483,
+      "restored_sha256": "d5cc260492b25cdb6cd29532f201a7f06e9ff0eab69086688dbb11db3c6c1190",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "d5cc260492b25cdb6cd29532f201a7f06e9ff0eab69086688dbb11db3c6c1190",
+      "two_stage_analysis": null,
+      "write_wall_ns": 22559922,
+      "written_bytes": 700550,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2678,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 50324,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.11.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2678,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 7199907,
+      "restore_cpu_ns": 80370,
+      "restore_ns": 148578,
+      "restored_sha256": "08e2b4bddebdaf99cc90e21b37cc18876eb4d777ed870f70344427ea7b61e4c3",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "08e2b4bddebdaf99cc90e21b37cc18876eb4d777ed870f70344427ea7b61e4c3",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14189562,
+      "written_bytes": 2678,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6579443,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6594546,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5597301,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10442057,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.11.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5597301,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 9520528,
+      "restore_cpu_ns": 21251739,
+      "restore_ns": 28052473,
+      "restored_sha256": "6899ad83be408695ea2cdaa8fc6182b8a1f187cceef7a0eb3658818fc9875ff4",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "6899ad83be408695ea2cdaa8fc6182b8a1f187cceef7a0eb3658818fc9875ff4",
+      "two_stage_analysis": null,
+      "write_wall_ns": 28300285,
+      "written_bytes": 5597301,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35399365,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35463886,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29950067,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28227119,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.12.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29950067,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 27063689,
+      "restore_cpu_ns": 116269504,
+      "restore_ns": 145938066,
+      "restored_sha256": "23e2228824a08d4a7d2c780c2db9c58ca8320ede2f7ed4393c5ec04e7f71be45",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "23e2228824a08d4a7d2c780c2db9c58ca8320ede2f7ed4393c5ec04e7f71be45",
+      "two_stage_analysis": null,
+      "write_wall_ns": 71929337,
+      "written_bytes": 29950067,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6594474,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6610511,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5587644,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10400259,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.12.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5587644,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 9432063,
+      "restore_cpu_ns": 21299928,
+      "restore_ns": 26360295,
+      "restored_sha256": "30f47b05a3428bd71aaba540cf905df4cfa0eeb292b26bd9ae3ca89009b5723b",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "30f47b05a3428bd71aaba540cf905df4cfa0eeb292b26bd9ae3ca89009b5723b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 28025251,
+      "written_bytes": 5587644,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2826,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 49583,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.13.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2826,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6688733,
+      "restore_cpu_ns": 129854,
+      "restore_ns": 201285,
+      "restored_sha256": "fb4be18f997c3647e2a1e551078997c07beca4d8ae0c0081d3be247659559e04",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "fb4be18f997c3647e2a1e551078997c07beca4d8ae0c0081d3be247659559e04",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13610721,
+      "written_bytes": 2826,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 629,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 15079,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.13.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6793519,
+      "restore_cpu_ns": 38914,
+      "restore_ns": 101429,
+      "restored_sha256": "d2c9d7688aec3e162a1391014c3d4f57df631b4caa826d764eb5b550d7bc0a7f",
+      "shape": [
+        256
+      ],
+      "source_sha256": "d2c9d7688aec3e162a1391014c3d4f57df631b4caa826d764eb5b550d7bc0a7f",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13777242,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 615,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 14637,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.13.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6859692,
+      "restore_cpu_ns": 32341,
+      "restore_ns": 93594,
+      "restored_sha256": "729846d817c6aac50955c2345c680d5282c364e257fbbc4e644d54344b2cdbc5",
+      "shape": [
+        256
+      ],
+      "source_sha256": "729846d817c6aac50955c2345c680d5282c364e257fbbc4e644d54344b2cdbc5",
+      "two_stage_analysis": null,
+      "write_wall_ns": 15083690,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35375959,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35463034,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29871677,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28786312,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.14.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29871677,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19406557,
+      "restore_cpu_ns": 115963412,
+      "restore_ns": 148735867,
+      "restored_sha256": "9319396ea5c4ee562e8b49dd72892ef6473e148f8946bfcc8b1cc2749bbbf0cd",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "9319396ea5c4ee562e8b49dd72892ef6473e148f8946bfcc8b1cc2749bbbf0cd",
+      "two_stage_analysis": null,
+      "write_wall_ns": 62841318,
+      "written_bytes": 29871677,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3506,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 38592,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.14.self_attn.q_proj.bias",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 3506,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5749139,
+      "restore_cpu_ns": 137648,
+      "restore_ns": 231502,
+      "restored_sha256": "f66f33ee729897096371bbc1c60c98f834773eda9bb9c764005009ad2ad553bd",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "f66f33ee729897096371bbc1c60c98f834773eda9bb9c764005009ad2ad553bd",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12751448,
+      "written_bytes": 3506,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35378995,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35458488,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29912435,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 27970360,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.15.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29912435,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 23031363,
+      "restore_cpu_ns": 118162474,
+      "restore_ns": 147138907,
+      "restored_sha256": "d0b0291c74b2e2c4cb43db7dd2108af8dcd4e1d92aa9ef169584741c1516a587",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "d0b0291c74b2e2c4cb43db7dd2108af8dcd4e1d92aa9ef169584741c1516a587",
+      "two_stage_analysis": null,
+      "write_wall_ns": 66671225,
+      "written_bytes": 29912435,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 822758,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 824403,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 702512,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7900184,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.15.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 702512,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 7526957,
+      "restore_cpu_ns": 2810498,
+      "restore_ns": 3467892,
+      "restored_sha256": "eedfcc564204ebb183018c84274db6643ecefd47225b0d5ee58b6968b18ebdcb",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "eedfcc564204ebb183018c84274db6643ecefd47225b0d5ee58b6968b18ebdcb",
+      "two_stage_analysis": null,
+      "write_wall_ns": 22574740,
+      "written_bytes": 702512,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 823026,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 824995,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 697758,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7750414,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.15.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 697758,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 7213151,
+      "restore_cpu_ns": 2647451,
+      "restore_ns": 3296543,
+      "restored_sha256": "5b3afe04c66be7179dcb40e8c6b46462c33c1d0add43eb0ab10fe4c14a19093b",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "5b3afe04c66be7179dcb40e8c6b46462c33c1d0add43eb0ab10fe4c14a19093b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 22084626,
+      "written_bytes": 697758,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2895,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 40045,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.16.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2895,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 8129441,
+      "restore_cpu_ns": 75681,
+      "restore_ns": 143669,
+      "restored_sha256": "9edfaf4969dc4ee4a8ba94c97b885d3ec9ef42b96258e3c8148f68228c893e27",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "9edfaf4969dc4ee4a8ba94c97b885d3ec9ef42b96258e3c8148f68228c893e27",
+      "two_stage_analysis": null,
+      "write_wall_ns": 15150735,
+      "written_bytes": 2895,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6580369,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6592361,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5574940,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10398035,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.16.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5574940,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 9267736,
+      "restore_cpu_ns": 21082734,
+      "restore_ns": 26154701,
+      "restored_sha256": "3c730728a33cf9c2d47f91377e7c73391ddfe4016b37473a6116eb108f017f07",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "3c730728a33cf9c2d47f91377e7c73391ddfe4016b37473a6116eb108f017f07",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27918233,
+      "written_bytes": 5574940,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35370550,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35456393,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29907816,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29393235,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.17.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29907816,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19558822,
+      "restore_cpu_ns": 116640332,
+      "restore_ns": 151520234,
+      "restored_sha256": "81cc2b5e4400811d40e99634a16632f3857d04f64f3c2fc34d3338c27c5f4098",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "81cc2b5e4400811d40e99634a16632f3857d04f64f3c2fc34d3338c27c5f4098",
+      "two_stage_analysis": null,
+      "write_wall_ns": 64979698,
+      "written_bytes": 29907816,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6597140,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6613771,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5605709,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10583902,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.17.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5605709,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 11593226,
+      "restore_cpu_ns": 21168208,
+      "restore_ns": 26912656,
+      "restored_sha256": "1b520be0f2023cd3acc518b41bb7df02b204afcc822210a15e564440292d6944",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "1b520be0f2023cd3acc518b41bb7df02b204afcc822210a15e564440292d6944",
+      "two_stage_analysis": null,
+      "write_wall_ns": 31346991,
+      "written_bytes": 5605709,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2971,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 36999,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.18.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2971,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 4553909,
+      "restore_cpu_ns": 150623,
+      "restore_ns": 220201,
+      "restored_sha256": "c358116cd64706e5f7af2afe7eb1ba8e3bd0499a502d0bb6b882500cadbd47c4",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "c358116cd64706e5f7af2afe7eb1ba8e3bd0499a502d0bb6b882500cadbd47c4",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12295296,
+      "written_bytes": 2971,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 629,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 16039,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.18.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6820759,
+      "restore_cpu_ns": 43040,
+      "restore_ns": 107751,
+      "restored_sha256": "130a9d59cc58afdadc637bfa07e1c32879bbdf11b16f5925af1d77006960b3bd",
+      "shape": [
+        256
+      ],
+      "source_sha256": "130a9d59cc58afdadc637bfa07e1c32879bbdf11b16f5925af1d77006960b3bd",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13802429,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 617,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 14317,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.18.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6723277,
+      "restore_cpu_ns": 34025,
+      "restore_ns": 95488,
+      "restored_sha256": "8f227b19d5d5c8814a7dca9f3e00214074298b862d362707d3b7c1ead3d7a362",
+      "shape": [
+        256
+      ],
+      "source_sha256": "8f227b19d5d5c8814a7dca9f3e00214074298b862d362707d3b7c1ead3d7a362",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13689347,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35383131,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35476662,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29927146,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28968142,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.19.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29927146,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19322851,
+      "restore_cpu_ns": 117214026,
+      "restore_ns": 149167553,
+      "restored_sha256": "096a2e3d5069c2d061bd59933eb75f743260dd0a4a7a7ca597a677d00f4afbb2",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "096a2e3d5069c2d061bd59933eb75f743260dd0a4a7a7ca597a677d00f4afbb2",
+      "two_stage_analysis": null,
+      "write_wall_ns": 63829391,
+      "written_bytes": 29927146,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3533,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 38041,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.19.self_attn.q_proj.bias",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 3533,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6739809,
+      "restore_cpu_ns": 156914,
+      "restore_ns": 295221,
+      "restored_sha256": "a276ead94f2f696b9aa90ce50c67c7c38e0de30a59b7ff8bac578315070fcadd",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "a276ead94f2f696b9aa90ce50c67c7c38e0de30a59b7ff8bac578315070fcadd",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13758727,
+      "written_bytes": 3533,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 36163113,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 36134630,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 31199184,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29521965,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.2.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 31199184,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19490585,
+      "restore_cpu_ns": 120866358,
+      "restore_ns": 154838176,
+      "restored_sha256": "1724516503931832b32ab2848a8a7bece2fe8a40d3ad3c16e10795186e50afcc",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "1724516503931832b32ab2848a8a7bece2fe8a40d3ad3c16e10795186e50afcc",
+      "two_stage_analysis": null,
+      "write_wall_ns": 64878750,
+      "written_bytes": 31199184,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 826513,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 828278,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 707511,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7594093,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.2.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 707511,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 6477218,
+      "restore_cpu_ns": 2876742,
+      "restore_ns": 3616799,
+      "restored_sha256": "6d8c610e8b0284af882e79d6fcf266cb8610c23c3cc91a95a1031a8281dba8b1",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "6d8c610e8b0284af882e79d6fcf266cb8610c23c3cc91a95a1031a8281dba8b1",
+      "two_stage_analysis": null,
+      "write_wall_ns": 24678586,
+      "written_bytes": 707511,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 822614,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 825789,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 699472,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7841614,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.2.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 699472,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 8036007,
+      "restore_cpu_ns": 2729668,
+      "restore_ns": 3592605,
+      "restored_sha256": "7ee0ea6a735bb66e931a90e381bd0efce511af53883f9deffe1f08f650ccb8c5",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "7ee0ea6a735bb66e931a90e381bd0efce511af53883f9deffe1f08f650ccb8c5",
+      "two_stage_analysis": null,
+      "write_wall_ns": 23625120,
+      "written_bytes": 699472,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2963,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 45715,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.20.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2963,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6744056,
+      "restore_cpu_ns": 90870,
+      "restore_ns": 158997,
+      "restored_sha256": "30790b5fc6f574b5dade9689f929666bc2c21535edb6dd8bda08d3156cd0aabe",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "30790b5fc6f574b5dade9689f929666bc2c21535edb6dd8bda08d3156cd0aabe",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14413780,
+      "written_bytes": 2963,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6584015,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6599486,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5645498,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10467925,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.20.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5645498,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 9588445,
+      "restore_cpu_ns": 20921683,
+      "restore_ns": 26987095,
+      "restored_sha256": "29e522349c3621d9ef45c1dab507ece58aa4c8c6abcd20610773ef5d187cb94b",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "29e522349c3621d9ef45c1dab507ece58aa4c8c6abcd20610773ef5d187cb94b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27182569,
+      "written_bytes": 5645498,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35395011,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35481119,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29969373,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28966739,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.21.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29969373,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 26168086,
+      "restore_cpu_ns": 117598371,
+      "restore_ns": 147168693,
+      "restored_sha256": "246c0ac40c399b71876a73a07444daba338f799cb9dc2f941e3f6db2c867b3de",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "246c0ac40c399b71876a73a07444daba338f799cb9dc2f941e3f6db2c867b3de",
+      "two_stage_analysis": null,
+      "write_wall_ns": 71571320,
+      "written_bytes": 29969373,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6602943,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6618271,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5611994,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 11058528,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.21.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5611994,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 8339554,
+      "restore_cpu_ns": 21344515,
+      "restore_ns": 28477957,
+      "restored_sha256": "aaf747ada494ae9a54af1d1ab27256f6a714451d5968dbe7964afdff5a900323",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "aaf747ada494ae9a54af1d1ab27256f6a714451d5968dbe7964afdff5a900323",
+      "two_stage_analysis": null,
+      "write_wall_ns": 31836284,
+      "written_bytes": 5611994,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2875,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 40345,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.22.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2875,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 7555360,
+      "restore_cpu_ns": 150401,
+      "restore_ns": 221052,
+      "restored_sha256": "46a094a9f2f6f3663f50c39afe7843e1b32d5c753f805c45694fde1b0e32843b",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "46a094a9f2f6f3663f50c39afe7843e1b32d5c753f805c45694fde1b0e32843b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13859535,
+      "written_bytes": 2875,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 623,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 15478,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.22.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6799950,
+      "restore_cpu_ns": 54160,
+      "restore_ns": 116949,
+      "restored_sha256": "b2f841b0232ea4dd3e26b845a030a9b96d462dcbeb6b2aa0efadd748641b5db9",
+      "shape": [
+        256
+      ],
+      "source_sha256": "b2f841b0232ea4dd3e26b845a030a9b96d462dcbeb6b2aa0efadd748641b5db9",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12615203,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 619,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 13886,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.22.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6740389,
+      "restore_cpu_ns": 41969,
+      "restore_ns": 102792,
+      "restored_sha256": "11a86ba44af7ad65180684a00a7fa235fed81c1ece1d4cde7864078abc942047",
+      "shape": [
+        256
+      ],
+      "source_sha256": "11a86ba44af7ad65180684a00a7fa235fed81c1ece1d4cde7864078abc942047",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13618285,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35387937,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35479057,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29922603,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29245950,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.23.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29922603,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 21530511,
+      "restore_cpu_ns": 117164828,
+      "restore_ns": 147450268,
+      "restored_sha256": "6f63f5eb8064a3e1a206224ddacfe8fd4bdca3c9f90f9a5221aac37847066cba",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "6f63f5eb8064a3e1a206224ddacfe8fd4bdca3c9f90f9a5221aac37847066cba",
+      "two_stage_analysis": null,
+      "write_wall_ns": 66426018,
+      "written_bytes": 29922603,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3547,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 39134,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.23.self_attn.q_proj.bias",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 3547,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6762751,
+      "restore_cpu_ns": 165399,
+      "restore_ns": 269001,
+      "restored_sha256": "3a1b8e6fddda324c36c6bdff7925465b1a97ddb21c4eac4adf7696314c329ce0",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "3a1b8e6fddda324c36c6bdff7925465b1a97ddb21c4eac4adf7696314c329ce0",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14022019,
+      "written_bytes": 3547,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35375280,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35455602,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29926505,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29193192,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.24.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29926505,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19859062,
+      "restore_cpu_ns": 119547940,
+      "restore_ns": 152099335,
+      "restored_sha256": "9a35954cf348590ca01ba7154b8b071fcb0ee07fe86d5968f82e68749c4ba048",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "9a35954cf348590ca01ba7154b8b071fcb0ee07fe86d5968f82e68749c4ba048",
+      "two_stage_analysis": null,
+      "write_wall_ns": 65372842,
+      "written_bytes": 29926505,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 822708,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 824198,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 701700,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 8521764,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.24.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 701700,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 4950228,
+      "restore_cpu_ns": 2841587,
+      "restore_ns": 3564072,
+      "restored_sha256": "fae340001047e4cac0feda9a775ac53f863190fed56a69d2b35851be4bdd339e",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "fae340001047e4cac0feda9a775ac53f863190fed56a69d2b35851be4bdd339e",
+      "two_stage_analysis": null,
+      "write_wall_ns": 20718285,
+      "written_bytes": 701700,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 824790,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 826774,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 698624,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7924259,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.24.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 698624,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 6160357,
+      "restore_cpu_ns": 2772247,
+      "restore_ns": 4876090,
+      "restored_sha256": "f31b93d6ec6603f2aa7c5a1c2a1d78657ec1a144b17522a19feb02477f0c1f39",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "f31b93d6ec6603f2aa7c5a1c2a1d78657ec1a144b17522a19feb02477f0c1f39",
+      "two_stage_analysis": null,
+      "write_wall_ns": 20333998,
+      "written_bytes": 698624,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2800,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 65673,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.25.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2800,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 7142180,
+      "restore_cpu_ns": 101199,
+      "restore_ns": 171851,
+      "restored_sha256": "8294933cf5820db86a9c662e71005b11f124e4ea9b4eae58e0fd76d2c595050c",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "8294933cf5820db86a9c662e71005b11f124e4ea9b4eae58e0fd76d2c595050c",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14247730,
+      "written_bytes": 2800,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6571175,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6588000,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5647323,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10262212,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.25.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5647323,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 10618877,
+      "restore_cpu_ns": 21222072,
+      "restore_ns": 27277096,
+      "restored_sha256": "8ccc1f67bb22de95a5e6fd8287b84feaa795402ed5da7a83c7dd92bfb59faca1",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "8ccc1f67bb22de95a5e6fd8287b84feaa795402ed5da7a83c7dd92bfb59faca1",
+      "two_stage_analysis": null,
+      "write_wall_ns": 30016358,
+      "written_bytes": 5647323,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35397304,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35486047,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29993141,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29441355,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.26.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29993141,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 21540029,
+      "restore_cpu_ns": 118508537,
+      "restore_ns": 152430172,
+      "restored_sha256": "476011ba8bf5183c2f4c6bf18e919f4211aec015636b2604ce33215ca703c2dd",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "476011ba8bf5183c2f4c6bf18e919f4211aec015636b2604ce33215ca703c2dd",
+      "two_stage_analysis": null,
+      "write_wall_ns": 65616897,
+      "written_bytes": 29993141,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6592436,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6609414,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5591438,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10531584,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.26.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5591438,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 8496616,
+      "restore_cpu_ns": 21349473,
+      "restore_ns": 26054374,
+      "restored_sha256": "9bca99c35779d6afb75cadf7204fd69c6a3f8e036f283d7c60074ae61c8e3435",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "9bca99c35779d6afb75cadf7204fd69c6a3f8e036f283d7c60074ae61c8e3435",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27381460,
+      "written_bytes": 5591438,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2568,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 50134,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.27.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2568,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5603498,
+      "restore_cpu_ns": 128952,
+      "restore_ns": 201787,
+      "restored_sha256": "2f91d03281f8bad8ce4c45ae0b44586e60e3f8477353e459e884df9a97016e32",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "2f91d03281f8bad8ce4c45ae0b44586e60e3f8477353e459e884df9a97016e32",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12544091,
+      "written_bytes": 2568,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 628,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 15058,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.27.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6692971,
+      "restore_cpu_ns": 76362,
+      "restore_ns": 145892,
+      "restored_sha256": "729c51b51f3068d859bc5b17d2928d6e1f0b8ebeea8e6952b8fa557b5605d040",
+      "shape": [
+        256
+      ],
+      "source_sha256": "729c51b51f3068d859bc5b17d2928d6e1f0b8ebeea8e6952b8fa557b5605d040",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14017570,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 619,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 15469,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.27.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 7578583,
+      "restore_cpu_ns": 69710,
+      "restore_ns": 138208,
+      "restored_sha256": "fb50b637576075fd8d2ffa7c7534ce7fc09128bc519449845872d66767815656",
+      "shape": [
+        256
+      ],
+      "source_sha256": "fb50b637576075fd8d2ffa7c7534ce7fc09128bc519449845872d66767815656",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14674386,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35374216,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35456131,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29875358,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28731280,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.28.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29875358,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19788771,
+      "restore_cpu_ns": 118911846,
+      "restore_ns": 150140779,
+      "restored_sha256": "ab47a91aa91525a56c4893cce942cd5766f416c3b531d918aad33591b820cef4",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "ab47a91aa91525a56c4893cce942cd5766f416c3b531d918aad33591b820cef4",
+      "two_stage_analysis": null,
+      "write_wall_ns": 64903856,
+      "written_bytes": 29875358,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3489,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 3426,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 57057,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.28.self_attn.q_proj.bias",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 3426,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6979535,
+      "restore_cpu_ns": 192832,
+      "restore_ns": 284742,
+      "restored_sha256": "87e4f4b08b04a2f6b9ae4b6d08e6fc995acb8cad1c69b861ddc2f600cec45b4e",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "87e4f4b08b04a2f6b9ae4b6d08e6fc995acb8cad1c69b861ddc2f600cec45b4e",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14764243,
+      "written_bytes": 3426,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35386827,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35455822,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29922736,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29712010,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.29.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29922736,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 22584888,
+      "restore_cpu_ns": 120146167,
+      "restore_ns": 151838006,
+      "restored_sha256": "7a7eea611efaa11e9d5508ed98ffca0411e4758c6b8812edcf80af5070c91eb8",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "7a7eea611efaa11e9d5508ed98ffca0411e4758c6b8812edcf80af5070c91eb8",
+      "two_stage_analysis": null,
+      "write_wall_ns": 69121157,
+      "written_bytes": 29922736,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 821719,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 824018,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 702744,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7966106,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.29.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 702744,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 4977799,
+      "restore_cpu_ns": 2849162,
+      "restore_ns": 4082048,
+      "restored_sha256": "13c585418a7a6534bd2bb616b701f9e4d346935c39e2ec6b9d0d0d2964c58a66",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "13c585418a7a6534bd2bb616b701f9e4d346935c39e2ec6b9d0d0d2964c58a66",
+      "two_stage_analysis": null,
+      "write_wall_ns": 19143136,
+      "written_bytes": 702744,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 823830,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 825482,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 696622,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 8805293,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.29.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 696622,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 6342406,
+      "restore_cpu_ns": 2738853,
+      "restore_ns": 3494521,
+      "restored_sha256": "fbd83396533821bfd9a9f7f8510c42874e1b7e3ebb82863346a75364c09be42a",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "fbd83396533821bfd9a9f7f8510c42874e1b7e3ebb82863346a75364c09be42a",
+      "two_stage_analysis": null,
+      "write_wall_ns": 22427165,
+      "written_bytes": 696622,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2687,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 48120,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.3.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2687,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5593008,
+      "restore_cpu_ns": 89729,
+      "restore_ns": 158335,
+      "restored_sha256": "6fcd04ecaa354b0ad1a23d80cae7f0635e3fa56b9468fd91299cbff335643140",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "6fcd04ecaa354b0ad1a23d80cae7f0635e3fa56b9468fd91299cbff335643140",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13488142,
+      "written_bytes": 2687,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6589270,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6602614,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5604481,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10247154,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.3.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5604481,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 8019456,
+      "restore_cpu_ns": 21164737,
+      "restore_ns": 25550213,
+      "restored_sha256": "fbac5254089a1022ab380f2f897111ecbd8e0d820f04cf5930809920b4a3a9ff",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "fbac5254089a1022ab380f2f897111ecbd8e0d820f04cf5930809920b4a3a9ff",
+      "two_stage_analysis": null,
+      "write_wall_ns": 26904581,
+      "written_bytes": 5604481,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35394388,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35483102,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29968890,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29417891,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.30.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29968890,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 44808374,
+      "restore_cpu_ns": 119075528,
+      "restore_ns": 148452539,
+      "restored_sha256": "d3a49f477d5fe7c46ee4c12e07eafea2d82f136148571a6c99d099fcd7b9a881",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "d3a49f477d5fe7c46ee4c12e07eafea2d82f136148571a6c99d099fcd7b9a881",
+      "two_stage_analysis": null,
+      "write_wall_ns": 90285325,
+      "written_bytes": 29968890,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6588668,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6605978,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5588926,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10757787,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.30.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5588926,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 9518524,
+      "restore_cpu_ns": 21189902,
+      "restore_ns": 25685215,
+      "restored_sha256": "39451057198a16c3b950def0a6da4b152228542821fa0c3f8a76e4ded0995ece",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "39451057198a16c3b950def0a6da4b152228542821fa0c3f8a76e4ded0995ece",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27588246,
+      "written_bytes": 5588926,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2673,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 49663,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.31.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2673,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5668449,
+      "restore_cpu_ns": 155451,
+      "restore_ns": 222986,
+      "restored_sha256": "2bc9151a6ea354dea9966919fbf3eed853c708c70985b9e14683276cb3a009f0",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "2bc9151a6ea354dea9966919fbf3eed853c708c70985b9e14683276cb3a009f0",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12818432,
+      "written_bytes": 2673,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 622,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 16360,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.31.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 6762711,
+      "restore_cpu_ns": 70492,
+      "restore_ns": 136314,
+      "restored_sha256": "821b7ae2ebd8bf784e821bc5715e7e4bf327654fde4a6386e48ee76446371052",
+      "shape": [
+        256
+      ],
+      "source_sha256": "821b7ae2ebd8bf784e821bc5715e7e4bf327654fde4a6386e48ee76446371052",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13719865,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 618,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 15238,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.31.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 5575625,
+      "restore_cpu_ns": 37440,
+      "restore_ns": 99416,
+      "restored_sha256": "6c1fa7503d2bcbf4b8d1924ac1cb118ccdb5ee3d660d196a01b837ef6e4192d5",
+      "shape": [
+        256
+      ],
+      "source_sha256": "6c1fa7503d2bcbf4b8d1924ac1cb118ccdb5ee3d660d196a01b837ef6e4192d5",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13698936,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35374625,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35448600,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29867134,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28523992,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.32.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29867134,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19148306,
+      "restore_cpu_ns": 117799022,
+      "restore_ns": 144542392,
+      "restored_sha256": "195775aedfd5a05fa35800ac7786b3f993096c448a5d30bd939f4b4dfca5e157",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "195775aedfd5a05fa35800ac7786b3f993096c448a5d30bd939f4b4dfca5e157",
+      "two_stage_analysis": null,
+      "write_wall_ns": 62825288,
+      "written_bytes": 29867134,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3503,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 3447,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 48530,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.32.self_attn.q_proj.bias",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 3447,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6908674,
+      "restore_cpu_ns": 208200,
+      "restore_ns": 300871,
+      "restored_sha256": "1a8a88fa26c700c71cce9c1d3a87483c2d9f4dba54effa9d4cdee136c3c878fa",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "1a8a88fa26c700c71cce9c1d3a87483c2d9f4dba54effa9d4cdee136c3c878fa",
+      "two_stage_analysis": null,
+      "write_wall_ns": 14196814,
+      "written_bytes": 3447,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35386374,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35461692,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29885698,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28478798,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.33.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29885698,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 17696937,
+      "restore_cpu_ns": 118498069,
+      "restore_ns": 155731062,
+      "restored_sha256": "f7c41794aa3925e3fd209019b280e56fb313b180cf431cd52e850048da7b6809",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "f7c41794aa3925e3fd209019b280e56fb313b180cf431cd52e850048da7b6809",
+      "two_stage_analysis": null,
+      "write_wall_ns": 63164290,
+      "written_bytes": 29885698,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 824984,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 827456,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 713111,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 8321961,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.33.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 713111,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 7674683,
+      "restore_cpu_ns": 2863387,
+      "restore_ns": 3646104,
+      "restored_sha256": "68248f41641892f058a54b248c2eb63d442dd108bc5836308094542f72c9a5a2",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "68248f41641892f058a54b248c2eb63d442dd108bc5836308094542f72c9a5a2",
+      "two_stage_analysis": null,
+      "write_wall_ns": 22114521,
+      "written_bytes": 713111,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 826239,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 828520,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 702961,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7629839,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.33.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 702961,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 5926290,
+      "restore_cpu_ns": 2723804,
+      "restore_ns": 3411527,
+      "restored_sha256": "9d35ba90c693c29113bd72d7e85f5d5b5aaa2aa2e9d4aff4fe5190dc911567d7",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "9d35ba90c693c29113bd72d7e85f5d5b5aaa2aa2e9d4aff4fe5190dc911567d7",
+      "two_stage_analysis": null,
+      "write_wall_ns": 20773629,
+      "written_bytes": 702961,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 1910,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 53169,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.34.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 1910,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 6741531,
+      "restore_cpu_ns": 115276,
+      "restore_ns": 185466,
+      "restored_sha256": "0a36755c21172dd30846f97207cc56a1885fd2ee879de0e4db4f3a05877c9c4d",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "0a36755c21172dd30846f97207cc56a1885fd2ee879de0e4db4f3a05877c9c4d",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13892858,
+      "written_bytes": 1910,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6565302,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6580068,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5590931,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10659523,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.34.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5590931,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 8270014,
+      "restore_cpu_ns": 20817710,
+      "restore_ns": 25671730,
+      "restored_sha256": "6a6f7d73fad0650c9961f10c185345227b13b663bb33bc05c07ea04369accf91",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "6a6f7d73fad0650c9961f10c185345227b13b663bb33bc05c07ea04369accf91",
+      "two_stage_analysis": null,
+      "write_wall_ns": 28088680,
+      "written_bytes": 5590931,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35365373,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35449565,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29871668,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 29227436,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.35.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29871668,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 19122518,
+      "restore_cpu_ns": 119742721,
+      "restore_ns": 143085282,
+      "restored_sha256": "0a20202fcb1675a1178adc496b7f2035c689499c4efcb5dfc9946fa8e1bcd650",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "0a20202fcb1675a1178adc496b7f2035c689499c4efcb5dfc9946fa8e1bcd650",
+      "two_stage_analysis": null,
+      "write_wall_ns": 64592776,
+      "written_bytes": 29871668,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6583927,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6600478,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5568239,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10564637,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.35.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5568239,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 9154775,
+      "restore_cpu_ns": 21769626,
+      "restore_ns": 27475055,
+      "restored_sha256": "355d3ce8d79a26257caf8cc64be946f14fe7eb61d576de578bdbb27bb578198e",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "355d3ce8d79a26257caf8cc64be946f14fe7eb61d576de578bdbb27bb578198e",
+      "two_stage_analysis": null,
+      "write_wall_ns": 26896024,
+      "written_bytes": 5568239,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2974,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 48361,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.4.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2974,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 4569839,
+      "restore_cpu_ns": 132958,
+      "restore_ns": 202518,
+      "restored_sha256": "9f31300549cd2e343e4bb9a8dc17e11568a9f0e5a6de75bfe31dfe23808fee15",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "9f31300549cd2e343e4bb9a8dc17e11568a9f0e5a6de75bfe31dfe23808fee15",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12164312,
+      "written_bytes": 2974,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 632,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 15399,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.4.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 8535489,
+      "restore_cpu_ns": 41627,
+      "restore_ns": 103182,
+      "restored_sha256": "2a1803ec5d84fe3997b7d49f182da60a7aae522a5b8aa854793eaab397fad88e",
+      "shape": [
+        256
+      ],
+      "source_sha256": "2a1803ec5d84fe3997b7d49f182da60a7aae522a5b8aa854793eaab397fad88e",
+      "two_stage_analysis": null,
+      "write_wall_ns": 16258903,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 621,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 14938,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.4.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 5747667,
+      "restore_cpu_ns": 33102,
+      "restore_ns": 95308,
+      "restored_sha256": "424ac31e6c3feb0c69ff47bec99e788e41c2bb9324bf82bd7715128a3e6805fe",
+      "shape": [
+        256
+      ],
+      "source_sha256": "424ac31e6c3feb0c69ff47bec99e788e41c2bb9324bf82bd7715128a3e6805fe",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12807152,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 36217746,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35993250,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 31061529,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 30010287,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.5.mlp.up_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 31061529,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 17726101,
+      "restore_cpu_ns": 119830368,
+      "restore_ns": 148072610,
+      "restored_sha256": "1decbdc78ea9e46bed07f9d5beda2b38eb8658beeebb705973d1875abd141765",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "1decbdc78ea9e46bed07f9d5beda2b38eb8658beeebb705973d1875abd141765",
+      "two_stage_analysis": null,
+      "write_wall_ns": 64437186,
+      "written_bytes": 31061529,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 3542,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 39513,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.5.self_attn.q_proj.bias",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 3542,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5626370,
+      "restore_cpu_ns": 173906,
+      "restore_ns": 269804,
+      "restored_sha256": "6b533e36973881e361940e7dc464adb432740d80bd292484b2c28d11aa89ef59",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "6b533e36973881e361940e7dc464adb432740d80bd292484b2c28d11aa89ef59",
+      "two_stage_analysis": null,
+      "write_wall_ns": 11559173,
+      "written_bytes": 3542,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35704124,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35785550,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 30434247,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28845423,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.6.mlp.down_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 30434247,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 18083359,
+      "restore_cpu_ns": 120249585,
+      "restore_ns": 145245734,
+      "restored_sha256": "ab24dd6c7e3c36ea4fec4bc0fc9d30c315fb3009d10eb3a9b8e4642eccb39c3d",
+      "shape": [
+        2048,
+        11008
+      ],
+      "source_sha256": "ab24dd6c7e3c36ea4fec4bc0fc9d30c315fb3009d10eb3a9b8e4642eccb39c3d",
+      "two_stage_analysis": null,
+      "write_wall_ns": 63333115,
+      "written_bytes": 30434247,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 823662,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 825737,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 702426,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7783586,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.6.self_attn.k_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 702426,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 6232843,
+      "restore_cpu_ns": 2818325,
+      "restore_ns": 3626998,
+      "restored_sha256": "dd60da51b93db8a0461df9836f7f12ac359b9412c9cc538a9f5e54f3364912c6",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "dd60da51b93db8a0461df9836f7f12ac359b9412c9cc538a9f5e54f3364912c6",
+      "two_stage_analysis": null,
+      "write_wall_ns": 21374470,
+      "written_bytes": 702426,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 1048576,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 824095,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 826515,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 701490,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 7609851,
+      "exact": true,
+      "logical_bytes": 1048576,
+      "name": "model.layers.6.self_attn.v_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 701490,
+      "prediction": {
+        "bytes": 702331.4285714285,
+        "candidates": {
+          "float-tensor": 702331.4285714285,
+          "raw": 1048576.0,
+          "zstd": 824946.2857142857
+        },
+        "restore_ns": 3498700.9438073696,
+        "strategy": "float-tensor",
+        "write_ns": 8827405.031038374
+      },
+      "publish_ns": 7295476,
+      "restore_cpu_ns": 2769214,
+      "restore_ns": 4948665,
+      "restored_sha256": "f9a22e9fa36569ac3926b19bfdca77a47944003672792caadb7072370218f1c4",
+      "shape": [
+        256,
+        2048
+      ],
+      "source_sha256": "f9a22e9fa36569ac3926b19bfdca77a47944003672792caadb7072370218f1c4",
+      "two_stage_analysis": null,
+      "write_wall_ns": 21010661,
+      "written_bytes": 701490,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2381,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 49282,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.7.post_attention_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2381,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5693515,
+      "restore_cpu_ns": 98724,
+      "restore_ns": 168645,
+      "restored_sha256": "07410470eb28c80a7e1a88573c2da783539f9cb58e9e806d05afc68112410af1",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "07410470eb28c80a7e1a88573c2da783539f9cb58e9e806d05afc68112410af1",
+      "two_stage_analysis": null,
+      "write_wall_ns": 13045746,
+      "written_bytes": 2381,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6582826,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6596172,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5607584,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10433251,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.7.self_attn.q_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5607584,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 8836330,
+      "restore_cpu_ns": 21616495,
+      "restore_ns": 28773398,
+      "restored_sha256": "59bc332287884970e80aae2f7410a7fd41ad37a9185aedd95596149b310f0e75",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "59bc332287884970e80aae2f7410a7fd41ad37a9185aedd95596149b310f0e75",
+      "two_stage_analysis": null,
+      "write_wall_ns": 27734920,
+      "written_bytes": 5607584,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 45088768,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 35404142,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 35459350,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 29902742,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 28842447,
+      "exact": true,
+      "logical_bytes": 45088768,
+      "name": "model.layers.8.mlp.gate_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 29902742,
+      "prediction": {
+        "bytes": 30200251.428571425,
+        "candidates": {
+          "float-tensor": 30200251.428571425,
+          "raw": 45088768.0,
+          "zstd": 35472690.28571428
+        },
+        "restore_ns": 148887008.20229837,
+        "strategy": "float-tensor",
+        "write_ns": 72956135.3346501
+      },
+      "publish_ns": 18524981,
+      "restore_cpu_ns": 118269435,
+      "restore_ns": 149165369,
+      "restored_sha256": "78b939a8ea258c2868e2ed6e24eadfb259e80c3fe443cbebadaf43e1f2b957e6",
+      "shape": [
+        11008,
+        2048
+      ],
+      "source_sha256": "78b939a8ea258c2868e2ed6e24eadfb259e80c3fe443cbebadaf43e1f2b957e6",
+      "two_stage_analysis": null,
+      "write_wall_ns": 62121935,
+      "written_bytes": 29902742,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 8388608,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 6580872,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 6596455,
+          "strategy": "zstd"
+        },
+        {
+          "bytes": 5563239,
+          "strategy": "float-tensor"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 10278021,
+      "exact": true,
+      "logical_bytes": 8388608,
+      "name": "model.layers.8.self_attn.o_proj.weight",
+      "planned_chosen": "float-tensor",
+      "planned_chosen_bytes": 5563239,
+      "prediction": {
+        "bytes": 5618651.428571428,
+        "candidates": {
+          "float-tensor": 5618651.428571428,
+          "raw": 8388608.0,
+          "zstd": 6599570.285714285
+        },
+        "restore_ns": 27730085.486889206,
+        "strategy": "float-tensor",
+        "write_ns": 19515526.748306997
+      },
+      "publish_ns": 8357036,
+      "restore_cpu_ns": 21488041,
+      "restore_ns": 27771018,
+      "restored_sha256": "feb17cce0edf0f6583b75a23ddfdcff18925d615dbe1e74b19228db669f1d9b4",
+      "shape": [
+        2048,
+        2048
+      ],
+      "source_sha256": "feb17cce0edf0f6583b75a23ddfdcff18925d615dbe1e74b19228db669f1d9b4",
+      "two_stage_analysis": null,
+      "write_wall_ns": 25942555,
+      "written_bytes": 5563239,
+      "written_strategy": "float-tensor"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 4096,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 2632,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 51797,
+      "exact": true,
+      "logical_bytes": 4096,
+      "name": "model.layers.9.input_layernorm.weight",
+      "planned_chosen": "zstd",
+      "planned_chosen_bytes": 2632,
+      "prediction": {
+        "bytes": 2743.4821428571427,
+        "candidates": {
+          "float-tensor": 2743.4821428571427,
+          "raw": 4096.0,
+          "zstd": 3222.4464285714284
+        },
+        "restore_ns": 50596.558491594944,
+        "strategy": "float-tensor",
+        "write_ns": 7306494.853636868
+      },
+      "publish_ns": 5680641,
+      "restore_cpu_ns": 124252,
+      "restore_ns": 188212,
+      "restored_sha256": "c67ee3fc38e57f18cb71d3d22575686b869edeb50b623b272fc458a92f6e79d2",
+      "shape": [
+        2048
+      ],
+      "source_sha256": "c67ee3fc38e57f18cb71d3d22575686b869edeb50b623b272fc458a92f6e79d2",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12727132,
+      "written_bytes": 2632,
+      "written_strategy": "zstd"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 630,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 14477,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.9.self_attn.k_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 5631780,
+      "restore_cpu_ns": 41618,
+      "restore_ns": 101319,
+      "restored_sha256": "0da741db2fcb420b3681510c59ac362e5ad5c244c61d0b5651a8d86811abd94b",
+      "shape": [
+        256
+      ],
+      "source_sha256": "0da741db2fcb420b3681510c59ac362e5ad5c244c61d0b5651a8d86811abd94b",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12595386,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    },
+    {
+      "candidates": [
+        {
+          "bytes": 512,
+          "strategy": "raw"
+        },
+        {
+          "bytes": 621,
+          "strategy": "zstd"
+        }
+      ],
+      "dtype": "bf16",
+      "encode_ns": 16741,
+      "exact": true,
+      "logical_bytes": 512,
+      "name": "model.layers.9.self_attn.v_proj.bias",
+      "planned_chosen": "raw",
+      "planned_chosen_bytes": 512,
+      "prediction": {
+        "bytes": 342.93526785714283,
+        "candidates": {
+          "float-tensor": 342.93526785714283,
+          "raw": 512.0,
+          "zstd": 402.80580357142856
+        },
+        "restore_ns": 38764.82775766827,
+        "strategy": "float-tensor",
+        "write_ns": 7301276.044204609
+      },
+      "publish_ns": 5907134,
+      "restore_cpu_ns": 32551,
+      "restore_ns": 90478,
+      "restored_sha256": "346b0d0331cb3c476bafc0a6b3abd5cd420fe41c1cc531e0f6313a8a4078d75c",
+      "shape": [
+        256
+      ],
+      "source_sha256": "346b0d0331cb3c476bafc0a6b3abd5cd420fe41c1cc531e0f6313a8a4078d75c",
+      "two_stage_analysis": null,
+      "write_wall_ns": 12938627,
+      "written_bytes": 512,
+      "written_strategy": "raw"
+    }
+  ]
+}
