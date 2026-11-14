@@ -564,6 +564,18 @@ seven interleaved repetitions. Source:
 | `stage_budget.suites.fuse_passed` | 905 | tests | Full FUSE passed tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
 | `stage_budget.suites.fuse_failed` | 0 | tests | Full FUSE failed tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
 | `stage_budget.suites.fuse_ignored` | 2 | tests | Full FUSE ignored tests | `bench/receipts/stage-budget-suites-20261113T224133Z.json` | 20261113T224133Z | a6ab12eb667b |
+| `conformance.rust_total` | 420 | count | Rust adapter vectors run | `bench/receipts/conformance-rust-20261114T062338Z.json` | — | — |
+| `conformance.rust_pass` | 288 | count | Rust adapter passes | `bench/receipts/conformance-rust-20261114T062338Z.json` | — | — |
+| `conformance.rust_fail` | 0 | count | Rust adapter failures | `bench/receipts/conformance-rust-20261114T062338Z.json` | — | — |
+| `conformance.rust_skip` | 132 | count | Rust adapter skips | `bench/receipts/conformance-rust-20261114T062338Z.json` | — | — |
+| `conformance.go_total` | 420 | count | Go adapter vectors run | `bench/receipts/conformance-go-20261114T062338Z.json` | — | — |
+| `conformance.go_pass` | 288 | count | Go adapter passes | `bench/receipts/conformance-go-20261114T062338Z.json` | — | — |
+| `conformance.go_fail` | 0 | count | Go adapter failures | `bench/receipts/conformance-go-20261114T062338Z.json` | — | — |
+| `conformance.go_skip` | 132 | count | Go adapter skips | `bench/receipts/conformance-go-20261114T062338Z.json` | — | — |
+| `conformance.python_total` | 420 | count | Python reader vectors run | `bench/receipts/conformance-python-20261114T062338Z.json` | — | — |
+| `conformance.python_pass` | 229 | count | Python reader passes | `bench/receipts/conformance-python-20261114T062338Z.json` | — | — |
+| `conformance.python_fail` | 0 | count | Python reader failures | `bench/receipts/conformance-python-20261114T062338Z.json` | — | — |
+| `conformance.python_skip` | 191 | count | Python reader skips | `bench/receipts/conformance-python-20261114T062338Z.json` | — | — |
 <!-- END GENERATED:perf-catalog-verification -->
 
 ## Context Advantage Court (R26)

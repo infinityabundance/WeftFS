@@ -14018,6 +14018,140 @@
    "stamp": "20261114T063213Z",
    "revision_path": "environment.revisions.WeftFS",
    "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "conformance.rust_total",
+   "label": "Rust adapter vectors run",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-rust-20261114T062338Z.json",
+   "path": "total"
+  },
+  {
+   "key": "conformance.rust_pass",
+   "label": "Rust adapter passes",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-rust-20261114T062338Z.json",
+   "path": "pass"
+  },
+  {
+   "key": "conformance.rust_fail",
+   "label": "Rust adapter failures",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-rust-20261114T062338Z.json",
+   "path": "fail"
+  },
+  {
+   "key": "conformance.rust_skip",
+   "label": "Rust adapter skips",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-rust-20261114T062338Z.json",
+   "path": "skip"
+  },
+  {
+   "key": "conformance.go_total",
+   "label": "Go adapter vectors run",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-go-20261114T062338Z.json",
+   "path": "total"
+  },
+  {
+   "key": "conformance.go_pass",
+   "label": "Go adapter passes",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-go-20261114T062338Z.json",
+   "path": "pass"
+  },
+  {
+   "key": "conformance.go_fail",
+   "label": "Go adapter failures",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-go-20261114T062338Z.json",
+   "path": "fail"
+  },
+  {
+   "key": "conformance.go_skip",
+   "label": "Go adapter skips",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-go-20261114T062338Z.json",
+   "path": "skip"
+  },
+  {
+   "key": "conformance.python_total",
+   "label": "Python reader vectors run",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-python-20261114T062338Z.json",
+   "path": "total"
+  },
+  {
+   "key": "conformance.python_pass",
+   "label": "Python reader passes",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-python-20261114T062338Z.json",
+   "path": "pass"
+  },
+  {
+   "key": "conformance.python_fail",
+   "label": "Python reader failures",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-python-20261114T062338Z.json",
+   "path": "fail"
+  },
+  {
+   "key": "conformance.python_skip",
+   "label": "Python reader skips",
+   "unit": "count",
+   "group": "verification",
+   "format": "int",
+   "receipt": "bench/receipts/conformance-python-20261114T062338Z.json",
+   "path": "skip"
+  },
+  {
+   "key": "verifier.provenance_self_test_cases",
+   "label": "Provenance self-test cases",
+   "path": "summary.provenance_self_test_cases",
+   "group": "verifier",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46",
+   "format": "int",
+   "unit": "count"
+  },
+  {
+   "key": "verifier.provenance_self_test_passed",
+   "label": "Provenance self-test cases passed",
+   "path": "summary.provenance_self_test_passed",
+   "group": "verifier",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46",
+   "format": "int",
+   "unit": "count"
   }
  ],
  "blocks": [
@@ -18632,6 +18766,50 @@
    "rows": [
     {
      "template": "At stamp {{verifier.cases|stamp}} (revision {{verifier.cases|revision}}), the clean-room verifier ran **{{verifier.cases}}** cases against the frozen corpus: **{{verifier.passed}}** passed, **{{verifier.failed}}** failed, **{{verifier.skipped}}** explicitly skipped. The negative suite passed **{{verifier.negative_passed}}/{{verifier.negative_cases}}**. The freeze matrix has **{{verifier.freeze_rows}}** identity rows; the verifier is **{{verifier.source_lines}}** lines of Python. Source: `{{verifier.cases|receipt}}`."
+    }
+   ]
+  },
+  {
+   "id": "freeze-conformance",
+   "file": "spec/CONTEXT-PLANE-FREEZE.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Adapter | Receipt | Total | Pass | Fail | Skip | Result |"
+    },
+    {
+     "template": "|---|---|---:|---:|---:|---:|---|"
+    },
+    {
+     "template": "| Rust `weftcodec` | `{{conformance.rust_total|receipt}}` | {{conformance.rust_total}} | {{conformance.rust_pass}} | {{conformance.rust_fail}} | {{conformance.rust_skip}} | pass |"
+    },
+    {
+     "template": "| Go `weftcodec` | `{{conformance.go_total|receipt}}` | {{conformance.go_total}} | {{conformance.go_pass}} | {{conformance.go_fail}} | {{conformance.go_skip}} | pass |"
+    },
+    {
+     "template": "| Python reader | `{{conformance.python_total|receipt}}` | {{conformance.python_total}} | {{conformance.python_pass}} | {{conformance.python_fail}} | {{conformance.python_skip}} | pass |"
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "All three receipts name the same manifest aggregate: `conformance/manifest.json` holds **{{conformance.vectors}}** vectors with aggregate `{{conformance.aggregate}}`."
+    }
+   ]
+  },
+  {
+   "id": "context-plane-status",
+   "file": "docs/STATUS.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Vector run (built in the rust/go courts, run by the host-only reference runner): Rust {{conformance.rust_total}} total, {{conformance.rust_pass}} pass, {{conformance.rust_fail}} fail, {{conformance.rust_skip}} skip (`{{conformance.rust_total|receipt}}`); Go {{conformance.go_total}}, {{conformance.go_pass}}, {{conformance.go_fail}}, {{conformance.go_skip}} (`{{conformance.go_total|receipt}}`); independent Python reader {{conformance.python_total}}, {{conformance.python_pass}}, {{conformance.python_fail}}, {{conformance.python_skip}} (`{{conformance.python_total|receipt}}`). All three name manifest aggregate `{{conformance.aggregate}}` over {{conformance.vectors}} vectors."
+    },
+    {
+     "template": "Independent verifier: {{verifier.cases}} cases, {{verifier.passed}} pass, {{verifier.failed}} fail, {{verifier.skipped}} skip; negative suite {{verifier.negative_passed}}/{{verifier.negative_cases}}; provenance self-test {{verifier.provenance_self_test_passed}}/{{verifier.provenance_self_test_cases}}. Receipt `{{verifier.cases|receipt}}`."
+    },
+    {
+     "template": "Freeze matrix: {{verifier.freeze_rows}} identity rows."
     }
    ]
   }

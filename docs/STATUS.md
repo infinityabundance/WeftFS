@@ -47,7 +47,7 @@ AI-mode rule range extended, §13 allocations completed, and
 number, hash domain or vector changed; the same reconciliation was exported
 byte-for-byte into all three submodule mirrors and committed there.
 
-`spec/CONTEXT-PLANE-FREEZE.md` publishes **24 identity rows** plus 15
+`spec/CONTEXT-PLANE-FREEZE.md` publishes a matrix of identity rows plus 15
 descriptor-only schemas, each with its identity, exact hash domain, version,
 normative document and Rust/Go/Python/verifier status. It records the
 divergences (checkpoint is Rust-only; Go provenance is write-only; KV prefix
@@ -63,20 +63,15 @@ The tokenizer identity gap is confirmed in both codec implementations:
 vocabulary contents, merges, normaliser, special tokens or chat-template
 semantics. Mode-19 bytes were not changed.
 
-Two-language vector run at this revision (built in the rust/go courts, run by
-the host-only reference runner): Rust **420 total, 288 pass, 0 fail, 132 skip**
-(`bench/receipts/conformance-rust-20261114T062338Z.json`); Go **420, 288, 0,
-132** (`conformance-go-20261114T062338Z.json`); independent Python reader
-**420, 229, 0, 191** (`conformance-python-20261114T062338Z.json`). All three
-name manifest aggregate
-`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8` over 420
-vectors. Skips are explicit and are never counted as passes.
+The two-language vector run at this revision (built in the rust/go courts, run
+by the host-only reference runner) and the independent verifier results are
+recorded in the generated block below. Skips are explicit and are never counted
+as passes.
 
 **Phase 1 verifier.** `verifier/` is a clean-room Python 3 stdlib-only
 implementation (own BLAKE3, WCB, Ed25519), with no import, FFI or subprocess
-call into WeftFS code. It ran **136 cases, 131 pass, 0 fail, 5 skip**, plus a
-**7/7** negative suite and a **7/7** `weft.provenance.v1` self-test (no frozen
-provenance corpus exists). Receipt
+call into WeftFS code. The provenance self-test is labelled separately because
+no frozen `weft.provenance.v1` corpus exists. Receipt
 `bench/receipts/context-plane-verifier-20261114T063213Z.json` (+ `.log`),
 analysis `bench/RESULTS-context-plane-verifier.md`. It is independent of the
 implementation code path but not yet an external third-party implementation;
@@ -85,6 +80,12 @@ spec text are listed in the verifier README and in the receipt's `unspecified`
 array; the largest are the non-self-contained KV provenance `page` map, the
 selector namespace grammar living in the Context Root document, and the
 provenance record's unstated unknown-key rule.
+
+<!-- BEGIN GENERATED:context-plane-status (scripts/perf_numbers.py) -->
+Vector run (built in the rust/go courts, run by the host-only reference runner): Rust 420 total, 288 pass, 0 fail, 132 skip (`bench/receipts/conformance-rust-20261114T062338Z.json`); Go 420, 288, 0, 132 (`bench/receipts/conformance-go-20261114T062338Z.json`); independent Python reader 420, 229, 0, 191 (`bench/receipts/conformance-python-20261114T062338Z.json`). All three name manifest aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8` over 420 vectors.
+Independent verifier: 136 cases, 131 pass, 0 fail, 5 skip; negative suite 7/7; provenance self-test 7/7. Receipt `bench/receipts/context-plane-verifier-20261114T063213Z.json`.
+Freeze matrix: 24 identity rows.
+<!-- END GENERATED:context-plane-status -->
 
 This subphase assigns no new wire value. It adds two courts to
 `scripts/verify-all.sh`: `context_plane_header` (compile-only) and
