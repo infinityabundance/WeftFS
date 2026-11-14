@@ -17,11 +17,30 @@ def load(path):
         return json.load(handle)
 
 
+def percentile(values, p):
+    ordered = sorted(values)
+    rank = (len(ordered) - 1) * p
+    lo = int(rank)
+    hi = min(lo + 1, len(ordered) - 1)
+    weight = rank - lo
+    return ordered[lo] * (1 - weight) + ordered[hi] * weight
+
+
 def stats(receipt, arm):
     entry = receipt["configurations"][arm]["stats"]
+    writes = [
+        row["write_wall_ms"]
+        for row in receipt["configurations"][arm]["repetition_metrics"]
+        if row.get("write_wall_ms") is not None
+    ]
     return {
-        "write_p50_ms": entry["write_wall_ms"]["p50"],
-        "write_min_ms": entry["write_wall_ms"]["min"],
+        # The same accessor the paired-statistics court publishes
+        # (`sample_write_wall`: init + source read + write + protocol). The
+        # harness's `stats.write_wall_ms` reads `write.wall_ms`, which differs
+        # for arm C; both are in the source receipts and only this one is used
+        # for the Pareto.
+        "write_p50_ms": percentile(writes, 0.50),
+        "write_min_ms": min(writes),
         "footprint_p50_bytes": entry["physical_footprint_bytes"]["p50"],
         "restore_p50_ms": entry["cold_restore_wall_ms"]["p50"],
         "reps": receipt["configurations"][arm]["reps"],

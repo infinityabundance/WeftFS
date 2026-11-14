@@ -268,7 +268,7 @@ because p50 and minimum diverge on a shared host. The pythia row is the worst
 write cell in the programme and sits in the same table as the Qwen row.
 
 <!-- BEGIN GENERATED:heldout-pareto (scripts/perf_numbers.py) -->
-Qwen2.5-0.5B-Instruct (**10** repetitions): write **24.65x** native at p50 and **3.07x** least-contended; footprint **0.6647** of native (**33.53 %** smaller); cold restore **4.17x**.
+Qwen2.5-0.5B-Instruct (**10** repetitions): write **14.11x** native at p50 and **3.07x** least-contended; footprint **0.6647** of native (**33.53 %** smaller); cold restore **4.17x**.
 pythia-70m step 0 (**7** repetitions): write **50.01x** native at p50 and **50.92x** least-contended; footprint **0.5820** of native (**41.80 %** smaller); cold restore **2.42x**.
 <!-- END GENERATED:heldout-pareto -->
 
@@ -285,6 +285,11 @@ What the table says:
   least-contended write ratios differ by a factor of eight on the same arm,
   while the restore and footprint ratios are stable. That is the same signature
   as §6: durable per-object publication on a contended host.
+- **Accessor.** The harness exposes two write-wall numbers: `write.wall_ms` and
+  the `init + source read + write + protocol` sum the paired court publishes.
+  They agree for arm A and diverge for arm C. This table uses the paired
+  court's accessor so the two sections are comparable; the difference is a
+  harness inconsistency that is recorded, not smoothed over.
 - The Pareto is descriptive: it was added to the contract after these two
   families were measured, and the contract says so. The three measurement
   receipts record the contract digest as it stood when they ran

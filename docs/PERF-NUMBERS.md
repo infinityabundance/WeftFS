@@ -1082,7 +1082,7 @@ time. They are not current claims.
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
 | `pareto.qwen.reps` | 10 | reps | Qwen family repetitions | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
-| `pareto.qwen.write_ratio` | 24.65 | ratio | Qwen write ratio (C/A), p50 | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
+| `pareto.qwen.write_ratio` | 14.11 | ratio | Qwen write ratio (C/A), p50 | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
 | `pareto.qwen.write_min_ratio` | 3.07 | ratio | Qwen write ratio (C/A), least-contended | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
 | `pareto.qwen.footprint_ratio` | 0.6647 | ratio | Qwen footprint ratio (C/A) | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
 | `pareto.qwen.storage_pct` | 33.53 | % | Qwen storage reduction | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
