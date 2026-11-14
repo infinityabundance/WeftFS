@@ -1,0 +1,15 @@
+cephfs_court: starting single-node Ceph (mon+mgr+osd+mds) from quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723
+cephfs_court: CephFS did not reach an active MDS within 240 s; logs follow
+Error response from daemon: container ccc3f1f74787cbbcb627d57e9786f4b26a0f4a00c658d0116cb17b79ba0faa1a is not running
+creating /etc/ceph/ceph.client.admin.keyring
+creating /etc/ceph/ceph.mon.keyring
+monmaptool: monmap file /etc/ceph/monmap-ceph
+setting min_mon_release = quincy
+monmaptool: set fsid to 3abd83f1-0cd7-44ee-8836-42e8499f5776
+monmaptool: writing epoch 0 to /etc/ceph/monmap-ceph (1 monitors)
+importing contents of /etc/ceph/ceph.client.admin.keyring into /etc/ceph/ceph.mon.keyring
+2026-11-14T01:23:13.037+0000 7f2a830edb00  0 set uid:gid to 167:167 (ceph:ceph)
+2026-11-14T01:23:13.038+0000 7f2a830edb00  0 ceph version 19.2.0 (16063ff2022298c9300e49a547a16ffda59baf13) squid (stable), process ceph-mon, pid 75
+2026-11-14T01:23:13.038+0000 7f2a830edb00 -1 error: monitor data filesystem reached concerning levels of available storage space (available: 2% 28 GiB)
+you may adjust 'mon data avail crit' to a lower value to make this go away (default: 5%)
+

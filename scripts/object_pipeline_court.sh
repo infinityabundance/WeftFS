@@ -46,13 +46,15 @@ cd "$repo_root"
 
 stamp="${WEFT_N04_STAMP:-$(date -u +%Y%m%dT%H%M%SZ)}"
 reps="${WEFT_N04_REPS:-7}"
-configs="${WEFT_N04_CONFIGS:-A,N,B,C,D,E,B-pipe4,C-pipe4,D-pipe4,E-pipe4}"
+configs="${WEFT_N04_CONFIGS:-}"
 augmentation_only=0
 adverse_only=0
+reduced=0
 for arg in "$@"; do
   case "$arg" in
     --augmentation-only) augmentation_only=1 ;;
     --adverse-only) adverse_only=1 ;;
+    --reduced) reduced=1 ;;
     --reps=*) reps="${arg#--reps=}" ;;
     --configs=*) configs="${arg#--configs=}" ;;
     -h|--help)
@@ -65,6 +67,20 @@ done
 
 command -v docker >/dev/null 2>&1 || skip "no docker CLI on PATH"
 docker info >/dev/null 2>&1 || skip "no reachable docker daemon"
+
+if [[ -z "$configs" ]]; then
+  if [[ "$reduced" == 1 ]]; then
+    # Aggregate-court configuration: the frozen reduced subset (16 evenly
+    # spaced non-embedding tensors), the six contract arms with the pipelined
+    # WeftFS rows. The full published run uses the 101-tensor subset.
+    configs="A,N,B-pipe4,C-pipe4,D-pipe4,E-pipe4"
+  else
+    configs="A,N,B,C,D,E,B-pipe4,C-pipe4,D-pipe4,E-pipe4"
+  fi
+fi
+if [[ "$reduced" == 1 ]]; then
+  export WEFT_AUGMENTATION_REDUCED=1
+fi
 [[ "$(uname -m)" == "x86_64" ]] || skip "only the verified linux-amd64 MinIO release is supported (host is $(uname -m))"
 command -v curl >/dev/null 2>&1 || skip "curl is required to fetch the pinned MinIO release"
 
@@ -427,6 +443,7 @@ receipt = {
         "pipelined": ["B-pipe4", "C-pipe4", "D-pipe4", "E-pipe4"],
         "requested": configs.split(","),
         "repetitions": int(reps),
+        "reduced": os.environ.get("WEFT_AUGMENTATION_REDUCED") == "1",
         "interleaving": "rotated by one position per repetition, as the augmentation contract requires",
         "augmentation_receipt": aug_receipt,
     },
