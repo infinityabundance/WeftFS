@@ -438,30 +438,30 @@ seven interleaved repetitions. Source:
 <!-- BEGIN GENERATED:perf-catalog-cephfs (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `cephfs.reps` | 7 | count | repetitions | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.tensors` | 101 | count | tensors restored by every arm | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.logical_b` | 424,439,296 | B | logical bytes in the subset | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.mismatches` | 0 | count | SHA-256 mismatches across every arm | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.a_write_p50` | 1,077.0 | ms | A durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.a_write_p95` | 19,319.9 | ms | A durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.b_write_p50` | 10,547.1 | ms | B durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.b_write_p95` | 29,536.8 | ms | B durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_write_p50` | 2,023.8 | ms | C durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_write_p95` | 17,306.1 | ms | C durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.d_write_p50` | 3,246.2 | ms | D durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.d_write_p95` | 22,829.0 | ms | D durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.e_write_p50` | 2,132.0 | ms | E durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.e_write_p95` | 16,109.0 | ms | E durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.n_write_p50` | 1,117.8 | ms | N durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.n_write_p95` | 18,338.0 | ms | N durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_write_min` | 1,864.1 | ms | C durable write wall, least-contended | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.a_cold_p50` | 981.3 | ms | A cold restore wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_cold_p50` | 1,783.1 | ms | C cold restore wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_storage_pct` | 33.5 | % | C physical-footprint reduction against A | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.e_storage_pct` | 33.5 | % | E physical-footprint reduction against A | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_latency_pct` | -131.3 | % | C cold-restore latency change against A | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_vs_a_write_ratio` | 1.88 | ratio | C write wall divided by A's | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
-| `cephfs.c_vs_a_cold_ratio` | 1.82 | ratio | C cold restore divided by A's | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.reps` | 7 | count | repetitions | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.tensors` | 101 | count | tensors restored by every arm | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.logical_b` | 424,439,296 | B | logical bytes in the subset | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.mismatches` | 0 | count | SHA-256 mismatches across every arm | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.a_write_p50` | 1,092.3 | ms | A durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.a_write_p95` | 9,349.9 | ms | A durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.b_write_p50` | 2,556.9 | ms | B durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.b_write_p95` | 21,257.5 | ms | B durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_write_p50` | 1,906.0 | ms | C durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_write_p95` | 20,622.6 | ms | C durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.d_write_p50` | 2,793.7 | ms | D durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.d_write_p95` | 33,543.0 | ms | D durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.e_write_p50` | 2,111.9 | ms | E durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.e_write_p95` | 17,555.8 | ms | E durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.n_write_p50` | 1,112.6 | ms | N durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.n_write_p95` | 15,206.2 | ms | N durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_write_min` | 1,848.5 | ms | C durable write wall, least-contended | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.a_cold_p50` | 867.4 | ms | A cold restore wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_cold_p50` | 1,800.8 | ms | C cold restore wall, p50 | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_storage_pct` | 33.5 | % | C physical-footprint reduction against A | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.e_storage_pct` | 33.5 | % | E physical-footprint reduction against A | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_latency_pct` | -98.4 | % | C cold-restore latency change against A | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_vs_a_write_ratio` | 1.74 | ratio | C write wall divided by A's | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
+| `cephfs.c_vs_a_cold_ratio` | 2.08 | ratio | C cold restore divided by A's | `bench/receipts/augmentation-cephfs-20261114T080000Z.json` | 20261114T023000Z | 6a584fd7a3f7 |
 <!-- END GENERATED:perf-catalog-cephfs -->
 
 ## Verification, conformance and claims counts
