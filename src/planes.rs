@@ -467,6 +467,126 @@ pub trait BlobPlane: Send {
     }
 }
 
+/// Forwarding implementation so a boxed plane is itself a plane.
+///
+/// Wrappers such as the encryption envelope and the pack plane are constructed
+/// from an already-boxed inner plane. Forwarding every method — including the
+/// ones with default bodies — matters: a default `flush` or
+/// `buffered_blob_kinds` would silently lose a packed plane's buffering
+/// semantics underneath a wrapper.
+impl BlobPlane for Box<dyn BlobPlane + Send> {
+    fn blob_label(&self) -> &'static str {
+        (**self).blob_label()
+    }
+
+    fn blob_capabilities(&self) -> BlobCapabilities {
+        (**self).blob_capabilities()
+    }
+
+    fn get(&self, key: &Key) -> Result<Vec<u8>> {
+        (**self).get(key)
+    }
+
+    fn get_range(&self, key: &Key, offset: u64, len: u64) -> Result<Vec<u8>> {
+        (**self).get_range(key, offset, len)
+    }
+
+    fn read_into(&self, key: &Key, offset: u64, buf: &mut [u8]) -> Result<usize> {
+        (**self).read_into(key, offset, buf)
+    }
+
+    fn read_ranges(&self, requests: &[crate::backend::RangeRead]) -> Result<Vec<Vec<u8>>> {
+        (**self).read_ranges(requests)
+    }
+
+    fn put_if_absent(&mut self, key: &Key, bytes: &[u8]) -> Result<()> {
+        (**self).put_if_absent(key, bytes)
+    }
+
+    fn delete(&mut self, key: &Key) -> Result<()> {
+        (**self).delete(key)
+    }
+
+    fn delete_many(&mut self, keys: &[Key]) -> Result<()> {
+        (**self).delete_many(keys)
+    }
+
+    fn flush(&mut self) -> Result<()> {
+        (**self).flush()
+    }
+
+    fn reclaim_unreferenced_packs(&mut self) -> Result<crate::packs::PackReclaim> {
+        (**self).reclaim_unreferenced_packs()
+    }
+
+    fn verify_packs(&self) -> Result<Vec<String>> {
+        (**self).verify_packs()
+    }
+
+    fn pack_counters(&self) -> Option<crate::packs::PackStats> {
+        (**self).pack_counters()
+    }
+
+    fn buffered_blob_kinds(&self) -> u8 {
+        (**self).buffered_blob_kinds()
+    }
+
+    fn refresh_metadata(&mut self) -> Result<()> {
+        (**self).refresh_metadata()
+    }
+
+    fn defer_pack_catalog(&mut self) -> Result<bool> {
+        (**self).defer_pack_catalog()
+    }
+
+    fn take_pending_pack_members(&mut self) -> Result<Option<crate::packs::DeferredPackEntries>> {
+        (**self).take_pending_pack_members()
+    }
+
+    fn adopt_pending_pack_members(
+        &mut self,
+        members: crate::packs::DeferredPackEntries,
+    ) -> Result<()> {
+        (**self).adopt_pending_pack_members(members)
+    }
+
+    fn len(&self, key: &Key) -> Result<u64> {
+        (**self).len(key)
+    }
+
+    fn exists(&self, key: &Key) -> Result<bool> {
+        (**self).exists(key)
+    }
+
+    fn list(&self, prefix: &Key) -> Result<Vec<Key>> {
+        (**self).list(prefix)
+    }
+
+    fn clean_stale(&mut self, grace_secs: u64) -> Result<()> {
+        (**self).clean_stale(grace_secs)
+    }
+
+    fn init_layout(&mut self) -> Result<()> {
+        (**self).init_layout()
+    }
+
+    fn ensure_layout(&mut self) -> Result<()> {
+        (**self).ensure_layout()
+    }
+
+    fn stats(&self) -> BackendStats {
+        (**self).stats()
+    }
+
+    fn diagnostics(&self) -> Vec<String> {
+        (**self).diagnostics()
+    }
+
+    fn root(&self) -> &Path {
+        (**self).root()
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Commit plane
 // ---------------------------------------------------------------------------

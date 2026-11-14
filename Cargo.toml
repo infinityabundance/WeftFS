@@ -57,6 +57,10 @@ ureq = { version = "2.12", default-features = false, features = ["tls"] }
 # the dependency graph through `weftcodec`'s capability envelopes, so no new
 # crate is fetched.
 ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+# Optional authenticated encryption at rest (subphase T079). `ring` is already in
+# the dependency graph through `ureq`'s rustls, so this adds no crate to
+# `Cargo.lock`; it supplies ChaCha20-Poly1305 and the system random source.
+ring = "0.17"
 
 [features]
 fuse = ["dep:fuser", "dep:ctrlc", "dep:log"]

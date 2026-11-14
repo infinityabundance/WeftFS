@@ -758,6 +758,13 @@ pub enum BackendKind {
         inner: Box<BackendKind>,
         options: crate::packs::PackOptions,
     },
+    /// Optional authenticated encryption at rest over the blob plane (T079).
+    /// Commit/control state stays on the inner commit plane and is not
+    /// encrypted; frozen codec frames are inside the envelope unchanged.
+    Encrypted {
+        inner: Box<BackendKind>,
+        config: crate::encryption::EncryptionConfig,
+    },
 }
 
 impl BackendKind {
@@ -826,6 +833,7 @@ impl BackendKind {
             BackendKind::ThreeFs { .. } => "3fs",
             BackendKind::Split { .. } => "split",
             BackendKind::Packed { .. } => "packed",
+            BackendKind::Encrypted { .. } => "encrypted",
         }
     }
 
@@ -837,6 +845,9 @@ impl BackendKind {
                 format!("{}-blobs/{}-commits", blobs.label(), commits.label())
             }
             BackendKind::Packed { inner, .. } => format!("packed-{}", inner.describe()),
+            BackendKind::Encrypted { inner, config } => {
+                format!("encrypted-{}-({})", config.mode.as_str(), inner.describe())
+            }
             BackendKind::ThreeFs { config } => format!("3fs:{}", config.mode.as_str()),
             other => other.label().to_owned(),
         }
@@ -855,6 +866,7 @@ impl BackendKind {
                 ..
             } => blobs.blob_root(root),
             BackendKind::Packed { inner, .. } => inner.blob_root(root),
+            BackendKind::Encrypted { inner, .. } => inner.blob_root(root),
             _ => root.to_path_buf(),
         }
     }
@@ -876,6 +888,7 @@ impl BackendKind {
                 self.describe(),
             ),
             BackendKind::Packed { inner, .. } => inner.capabilities(),
+            BackendKind::Encrypted { inner, .. } => inner.capabilities(),
         }
     }
 
@@ -886,6 +899,7 @@ impl BackendKind {
                 Some((blobs.capabilities(), commits.capabilities()))
             }
             BackendKind::Packed { inner, .. } => inner.split_planes(),
+            BackendKind::Encrypted { inner, .. } => inner.split_planes(),
             _ => None,
         }
     }
@@ -898,6 +912,11 @@ impl BackendKind {
     /// what makes a commit visible.
     pub fn require_plane_contract(&self) -> Result<()> {
         if let BackendKind::Packed { inner, .. } = self {
+            inner.require_plane_contract()?;
+        }
+        if let BackendKind::Encrypted { inner, .. } = self {
+            // The envelope preserves atomicity and durability of the inner
+            // plane but adds CPU work; it can never add a guarantee.
             inner.require_plane_contract()?;
         }
         let Some((blobs, commits)) = self.split_planes() else {
@@ -940,6 +959,7 @@ impl BackendKind {
             BackendKind::Azure { .. } => true,
             BackendKind::Split { commits, .. } => commits.is_remote(),
             BackendKind::Packed { inner, .. } => inner.is_remote(),
+            BackendKind::Encrypted { inner, .. } => inner.is_remote(),
             _ => false,
         }
     }
@@ -955,6 +975,7 @@ impl BackendKind {
             BackendKind::S3 { .. } | BackendKind::Gcs { .. } | BackendKind::Azure { .. } => true,
             BackendKind::Split { blobs, .. } => blobs.blobs_are_provider_acked(),
             BackendKind::Packed { inner, .. } => inner.blobs_are_provider_acked(),
+            BackendKind::Encrypted { inner, .. } => inner.blobs_are_provider_acked(),
             BackendKind::Local
             | BackendKind::Object
             | BackendKind::Posix { .. }
@@ -1009,6 +1030,14 @@ impl BackendKind {
                 )
                 .with_provider_ack(self.blobs_are_provider_acked()),
             ),
+            BackendKind::Encrypted { .. } => Box::new(
+                CompositeBackend::new(
+                    self.open_blob_plane(&root)?,
+                    self.open_commit_plane(&root)?,
+                    self.describe(),
+                )
+                .with_provider_ack(self.blobs_are_provider_acked()),
+            ),
         })
     }
 
@@ -1051,6 +1080,10 @@ impl BackendKind {
                     blobs, catalog, *options,
                 )?)
             }
+            BackendKind::Encrypted { inner, config } => {
+                let blobs = inner.open_blob_plane(&root)?;
+                crate::encryption::wrap(blobs, config.clone())?
+            }
         })
     }
 
@@ -1079,6 +1112,7 @@ impl BackendKind {
             }
             BackendKind::Split { commits, .. } => commits.open_commit_plane(&root)?,
             BackendKind::Packed { inner, .. } => inner.open_commit_plane(&root)?,
+            BackendKind::Encrypted { inner, .. } => inner.open_commit_plane(&root)?,
         })
     }
 }

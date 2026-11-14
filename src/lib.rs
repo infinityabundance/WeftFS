@@ -41,6 +41,7 @@ pub mod checkpoint_service;
 pub mod conformance;
 pub mod context;
 pub mod cost_model;
+pub mod encryption;
 pub mod error;
 pub mod evaluate;
 pub(crate) mod fence_pause;
@@ -121,6 +122,10 @@ pub use checkpoint::{
 };
 pub use context::{CapabilityContext, ContextResolution, MaterializationReport, StoredContextRoot};
 pub use cost_model::{CostClass, CostModelKind, CostTable};
+pub use encryption::{
+    EncryptedBlobPlane, EncryptionConfig, EncryptionKey, EncryptionMode, BLOCK_BYTES, HEADER_BYTES,
+    KEY_FILE_SCHEMA,
+};
 pub use error::{Class, Error, Result};
 pub use evaluate::{Evidence, EvidenceEntry, Resolution, ResolvedRef};
 pub use identity::Hash32;

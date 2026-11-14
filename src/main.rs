@@ -112,6 +112,23 @@ struct Cli {
         default_value = "local"
     )]
     backend: String,
+    /// Optional authenticated encryption at rest (T079): a
+    /// `weft.encryption.keyfile.v1` JSON file. Blob data is enveloped; commit
+    /// and control state is not.
+    #[arg(long = "encryption-key-file", global = true, value_name = "FILE")]
+    encryption_key_file: Option<PathBuf>,
+    /// Optional inline 32-byte hex key (alternative to the key file).
+    #[arg(long = "encryption-key-hex", global = true, value_name = "HEX64")]
+    encryption_key_hex: Option<String>,
+    /// Dedup policy for encryption: `convergent` (deterministic ciphertext,
+    /// physical dedup preserved, equality visible) or `random` (fresh nonce per
+    /// publication, ciphertext equality removed). Default `convergent`.
+    #[arg(
+        long = "encryption-mode",
+        global = true,
+        value_name = "convergent|random"
+    )]
+    encryption_mode: Option<String>,
     /// Writer mode: `single` (MW1 — many producers, one committer; the default)
     /// or `optimistic` (MW2 — independent committers publishing against one
     /// shared head with a conditional compare-and-swap). See
@@ -2061,16 +2078,27 @@ struct OpenPolicy {
     no_attest_indexes: bool,
     /// MW3: the conflict domain this handle is bound to, if any.
     domain: Option<weftfs::Hash32>,
+    /// Optional authenticated encryption over the blob plane (T079).
+    encryption: Option<weftfs::encryption::EncryptionConfig>,
 }
 
 impl OpenPolicy {
     /// The backend this policy selects. Packing wraps the selected backend.
     fn kind(&self) -> Result<BackendKind> {
         let kind = self.backend.kind();
-        match self.pack {
-            Some(options) => BackendKind::packed(kind, options),
-            None => Ok(kind),
-        }
+        let kind = match self.pack {
+            Some(options) => BackendKind::packed(kind, options)?,
+            None => kind,
+        };
+        // Encryption is the outermost blob-plane wrapper: packing, remote
+        // blobs and the local layout all carry ciphertext.
+        Ok(match &self.encryption {
+            Some(config) => BackendKind::Encrypted {
+                inner: Box::new(kind),
+                config: config.clone(),
+            },
+            None => kind,
+        })
     }
 
     fn options(&self) -> Options {
@@ -2251,6 +2279,9 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation,
         backend,
+        encryption_key_file,
+        encryption_key_hex,
+        encryption_mode,
         writer_mode,
         domain,
         blob_backend,
@@ -2333,8 +2364,42 @@ fn run(cli: Cli) -> Result<()> {
         })?;
         budgets.extend(parse_quota_file(&contents)?);
     }
+    let encryption = match (&encryption_key_file, &encryption_key_hex, &encryption_mode) {
+        (Some(path), None, mode) => {
+            let mut config = weftfs::encryption::load(path)?;
+            if let Some(mode) = mode {
+                config.mode = weftfs::encryption::EncryptionMode::parse(mode)?;
+            }
+            Some(config)
+        }
+        (None, Some(hex_key), mode) => {
+            let raw = hex::decode(hex_key.trim())
+                .map_err(|_| Error::invalid_argument("--encryption-key-hex is not hex"))?;
+            let secret: [u8; 32] = raw
+                .as_slice()
+                .try_into()
+                .map_err(|_| Error::invalid_argument("--encryption-key-hex must be 32 bytes"))?;
+            let mode =
+                weftfs::encryption::EncryptionMode::parse(mode.as_deref().unwrap_or("convergent"))?;
+            Some(weftfs::encryption::EncryptionConfig::from_secret(
+                mode, secret,
+            ))
+        }
+        (None, None, Some(_)) => {
+            return Err(Error::invalid_argument(
+                "--encryption-mode needs --encryption-key-file or --encryption-key-hex",
+            ))
+        }
+        (Some(_), Some(_), _) => {
+            return Err(Error::invalid_argument(
+                "pass exactly one of --encryption-key-file and --encryption-key-hex",
+            ))
+        }
+        (None, None, None) => None,
+    };
     let policy = OpenPolicy {
         fixed_timestamp_ns,
+        encryption,
         representation: parse_representation(&representation)?,
         writer_mode: weftfs::mw2::WriterMode::parse(&writer_mode)?,
         no_attest_indexes,

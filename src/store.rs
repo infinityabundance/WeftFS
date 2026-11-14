@@ -1569,6 +1569,20 @@ impl Store {
             }
         }
         let access = crate::access::AccessCounts::load(&*backend);
+        // An envelope refusal while replaying published state is a
+        // configuration error (wrong key set, or a revoked key), not an old
+        // head. Serving the newest generation whose manifests happen to
+        // decrypt would silently downgrade the store, so refuse the open.
+        if let Some(marker) = recovery
+            .notes
+            .iter()
+            .find(|note| crate::encryption::is_envelope_refusal(note))
+        {
+            return Err(Error::unauthorized(format!(
+                "the encryption key set cannot open this store's published state ({marker}); an \
+                 unopenable head is refused rather than replaced by an older generation"
+            )));
+        }
         let next_generation = recovery
             .generation
             .max(recovery.highest_file_generation)
