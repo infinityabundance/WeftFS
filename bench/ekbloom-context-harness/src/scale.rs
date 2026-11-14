@@ -67,6 +67,7 @@ fn percentile(values: &mut [u64], p: f64) -> f64 {
     values[idx.min(values.len() - 1)] as f64
 }
 
+#[allow(dead_code)]
 fn source_len(n: usize) -> usize {
     let slots = ((n * 2).max(8)).next_power_of_two();
     HEADER + slots * SLOT + n * KEY
@@ -84,8 +85,12 @@ fn build_source(n: usize, seed: u64) -> Vec<u8> {
     let mut state = seed | 1;
     for ordinal in 0..n {
         let key = xs(&mut state);
+        let mut key_bytes = [0u8; KEY];
+        for chunk in key_bytes.chunks_mut(8) {
+            chunk.copy_from_slice(&key.to_le_bytes());
+        }
         source[key_area + ordinal * KEY..key_area + (ordinal + 1) * KEY]
-            .copy_from_slice(&key.to_le_bytes());
+            .copy_from_slice(&key_bytes);
         let mut idx = (key % slots as u64) as usize;
         for _ in 0..64 {
             let base = HEADER + idx * SLOT;
