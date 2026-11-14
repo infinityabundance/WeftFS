@@ -471,3 +471,42 @@ fn a_coordinated_pass_marks_every_domain_head() {
     let err = bound.gc(true).unwrap_err();
     assert_eq!(err.class(), Class::UnsupportedVersion, "{err}");
 }
+
+#[test]
+fn a_released_or_expired_reservation_is_not_live() {
+    let (_dir, path) = new_store(0);
+    let mut store = Store::open_with_options(
+        &path,
+        OpenMode::ReadWrite,
+        Options {
+            fixed_timestamp_ns: Some(NOW),
+            writer_mode: WriterMode::Optimistic,
+            checkpoint_interval: 0,
+            gc_grace_secs: 0,
+            // One second, so the expiry arm is cheap to observe.
+            gc_reservation_secs: 1,
+            ..Options::default()
+        },
+    )
+    .unwrap();
+
+    let live = store.reserve_publication("tx-live").unwrap();
+    assert!(store.reservation_is_live(&live).unwrap());
+    store.release_reservation(&live).unwrap();
+    assert!(
+        !store.reservation_is_live(&live).unwrap(),
+        "a released reservation must not read as live"
+    );
+
+    let expiring = store.reserve_publication("tx-expire").unwrap();
+    assert!(store.reservation_is_live(&expiring).unwrap());
+    std::thread::sleep(std::time::Duration::from_millis(1200));
+    assert!(
+        !store.reservation_is_live(&expiring).unwrap(),
+        "an expired reservation must not read as live"
+    );
+    // A live reservation for the helper path still publishes normally.
+    let fresh = store.reserve_publication("tx-fresh").unwrap();
+    assert!(store.reservation_is_live(&fresh).unwrap());
+    store.release_reservation(&fresh).unwrap();
+}

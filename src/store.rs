@@ -8489,7 +8489,10 @@ impl Store {
             tx.put_entry_create(entry)?;
             tx.set_tip(state, object_id, version)?;
         }
-        let result = self.execute_transaction(&tx, &Self::fuse_tx_options());
+        let result = match self.require_live_reservation(&reservation) {
+            Ok(()) => self.execute_transaction(&tx, &Self::fuse_tx_options()),
+            Err(err) => Err(err),
+        };
         let released = self.release_reservation(&reservation);
         match (result, released) {
             (Ok(_), Ok(())) => Ok(object_id),
@@ -8537,7 +8540,10 @@ impl Store {
             tx.put_object(state, record)?;
             tx.set_tip(state, object_id, version)?;
         }
-        let result = self.execute_transaction(&tx, &Self::fuse_tx_options());
+        let result = match self.require_live_reservation(&reservation) {
+            Ok(()) => self.execute_transaction(&tx, &Self::fuse_tx_options()),
+            Err(err) => Err(err),
+        };
         let released = self.release_reservation(&reservation);
         match (result, released) {
             (Ok(_), Ok(())) => Ok(()),
@@ -10205,6 +10211,39 @@ impl Store {
     /// over-retained).
     pub fn release_reservation(&self, reservation: &PublicationReservation) -> Result<()> {
         self.release_publication_reservation(reservation.key_id())
+    }
+
+    /// Whether a publication reservation is still live (record present and its
+    /// deadline not passed).
+    ///
+    /// A publisher calls this immediately before its commit. If a GC pass
+    /// treated the reservation as abandoned because it expired, the publisher
+    /// must refuse rather than publish a commit whose blobs the pass may have
+    /// reclaimed. This closes the *bounded* prepare-to-publish window for the
+    /// transaction helpers; a caller that publishes without a reservation is
+    /// outside that protection (spec §11.5).
+    pub fn reservation_is_live(&self, reservation: &PublicationReservation) -> Result<bool> {
+        match self.with_backend(|backend| backend.read_all(&Key::reservation(reservation.key_id())))
+        {
+            Ok(bytes) => {
+                let record = crate::gc_epoch::decode_reservation(&bytes)?;
+                Ok(record.is_live(self.wall_ns()))
+            }
+            Err(err) if err.class() == Class::NotFound => Ok(false),
+            Err(err) => Err(err),
+        }
+    }
+
+    fn require_live_reservation(&self, reservation: &PublicationReservation) -> Result<()> {
+        if self.reservation_is_live(reservation)? {
+            return Ok(());
+        }
+        let _ = self.release_reservation(reservation);
+        Err(Error::busy(
+            "publication reservation expired or was reclaimed before the commit; the blobs it \
+             published may already be gone, so nothing is committed (retry with a fresh \
+             reservation)",
+        ))
     }
 
     fn release_publication_reservation(&self, key_id: &str) -> Result<()> {
