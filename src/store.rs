@@ -184,6 +184,17 @@ pub struct Options {
     pub single_flight_max_entries: usize,
     /// Maximum decoded bytes reserved by in-flight reconstructions.
     pub single_flight_max_bytes: u64,
+    /// Perform the capability half of the KV authorization preamble even when
+    /// the object is absent, so a denial costs roughly the same whether or not
+    /// an object exists (T067). Default **off**: the kernel cannot make an
+    /// absent lookup cost exactly what a present one costs, and the cost is paid
+    /// on every denial. The side-channel court measures both.
+    pub kv_denial_equalise: bool,
+    /// Cache verified KV grant decodes, keyed by envelope, generation and
+    /// revocation epoch (T065). Default **on**: a grant decode is repeated only
+    /// when the envelope, the head generation or the revocation epoch changes.
+    /// `false` restores the per-read decode (the control path).
+    pub kv_grant_cache: bool,
     /// Bound on the verified decoded-object cache. `0` (the default) disables
     /// the cache entirely; reads then behave exactly as they did before R8.
     pub cache_bytes: u64,
@@ -250,6 +261,8 @@ impl Default for Options {
             single_flight: false,
             single_flight_max_entries: crate::singleflight::DEFAULT_MAX_ENTRIES,
             single_flight_max_bytes: crate::singleflight::DEFAULT_MAX_BYTES,
+            kv_denial_equalise: false,
+            kv_grant_cache: true,
             cache_bytes: 0,
             cache_entries: MAX_CACHE_ENTRIES,
             attest_indexes: true,

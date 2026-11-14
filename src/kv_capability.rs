@@ -84,6 +84,10 @@ pub const MAX_KV_CAPABILITY_CACHE: usize = 1_024;
 struct CachedCapability {
     envelope: weftcodec::capability::CapabilityEnvelope,
     context: std::sync::Arc<CapabilityContext>,
+    /// Store generation the decode was produced under.
+    generation: u64,
+    /// Revocation epoch at that generation.
+    revocation_epoch: u64,
 }
 
 /// Bounded caches of derived decode results for the KV read fast path.
@@ -109,6 +113,14 @@ pub struct KvReadCache {
     generation: u64,
     descriptors: std::collections::HashMap<(Hash32, Hash32, Hash32), (StoredKvDescriptor, Hash32)>,
     capabilities: std::collections::HashMap<(Hash32, Hash32), CachedCapability>,
+    /// Memoised revocation epoch for one generation. A revocation is a commit,
+    /// so a generation change always re-derives it; the cache can never use an
+    /// epoch older than the state it is answering for.
+    revocation_epoch: Option<(u64, u64)>,
+    /// Grant-cache counters (T065).
+    grant_hits: u64,
+    grant_misses: u64,
+    grant_invalidations: u64,
 }
 
 impl KvReadCache {
@@ -128,6 +140,11 @@ impl KvReadCache {
     /// Number of retained capability decodes (diagnostics and tests).
     pub fn capability_entries(&self) -> usize {
         self.capabilities.len()
+    }
+
+    /// Grant-cache counters: `(hits, misses, invalidations)`.
+    pub fn grant_counters(&self) -> (u64, u64, u64) {
+        (self.grant_hits, self.grant_misses, self.grant_invalidations)
     }
 }
 
@@ -772,15 +789,35 @@ impl Store {
             return Ok(None);
         };
         let key = (verified.envelope_id, verified.blob_id);
+        if !self.options().kv_grant_cache {
+            // The control path: decode the grant on every read.
+            self.kv_read_cache()
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .grant_misses += 1;
+            return Ok(Some(std::sync::Arc::new(CapabilityContext::from_envelope(
+                &verified.envelope,
+            )?)));
+        }
+        let generation = self.generation();
+        let epoch = self.kv_revocation_epoch_cached()?;
         {
-            let cache = self
+            let mut cache = self
                 .kv_read_cache()
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
-            if let Some(hit) = cache.capabilities.get(&key) {
-                if hit.envelope == verified.envelope {
-                    return Ok(Some(std::sync::Arc::clone(&hit.context)));
-                }
+            // A hit must match the envelope, the generation and the revocation
+            // epoch. `generation` changes on every commit, so a grant cached
+            // before *any* state change is never reused.
+            let hit = cache.capabilities.get(&key).and_then(|cached| {
+                (cached.envelope == verified.envelope
+                    && cached.generation == generation
+                    && cached.revocation_epoch == epoch)
+                    .then(|| std::sync::Arc::clone(&cached.context))
+            });
+            if let Some(context) = hit {
+                cache.grant_hits += 1;
+                return Ok(Some(context));
             }
         }
         let context = std::sync::Arc::new(CapabilityContext::from_envelope(&verified.envelope)?);
@@ -788,17 +825,56 @@ impl Store {
             .kv_read_cache()
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(previous) = cache.capabilities.get(&key) {
+            if previous.generation != generation || previous.revocation_epoch != epoch {
+                cache.grant_invalidations += 1;
+            }
+        }
         if cache.capabilities.len() >= MAX_KV_CAPABILITY_CACHE {
             cache.capabilities.clear();
         }
+        cache.grant_misses += 1;
         cache.capabilities.insert(
             key,
             CachedCapability {
                 envelope: verified.envelope.clone(),
                 context: std::sync::Arc::clone(&context),
+                generation,
+                revocation_epoch: epoch,
             },
         );
         Ok(Some(context))
+    }
+
+    /// Revocation epoch memoised for one generation.
+    fn kv_revocation_epoch_cached(&self) -> Result<u64> {
+        let generation = self.generation();
+        {
+            let cache = self
+                .kv_read_cache()
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some((cached_generation, epoch)) = cache.revocation_epoch {
+                if cached_generation == generation {
+                    return Ok(epoch);
+                }
+            }
+        }
+        let epoch = self.kv_revocation_epoch()?;
+        let mut cache = self
+            .kv_read_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        cache.revocation_epoch = Some((generation, epoch));
+        Ok(epoch)
+    }
+
+    /// Grant-cache counters: `(hits, misses, invalidations)`.
+    pub fn kv_grant_cache_counters(&self) -> (u64, u64, u64) {
+        self.kv_read_cache()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .grant_counters()
     }
 
     /// Retained descriptor decodes in this handle's read cache.
@@ -847,17 +923,29 @@ impl Store {
         principal: &Principal,
         now_ns: i64,
     ) -> Result<(StoredKvDescriptor, Vec<u8>)> {
-        let Ok(record) = ({
+        let record = match ({
             let _state = phase_profile::scope(Phase::AuthState);
             self.object_meta(id)
-        }) else {
-            return Err(denied());
+        }) {
+            Ok(record) => record,
+            Err(_) => {
+                if self.options().kv_denial_equalise {
+                    self.kv_denial_preamble(principal, now_ns);
+                }
+                return Err(denied());
+            }
         };
-        let Ok((descriptor, descriptor_id)) = ({
+        let (descriptor, descriptor_id) = match ({
             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
             self.kv_descriptor_of(&record)
-        }) else {
-            return Err(denied());
+        }) {
+            Ok(value) => value,
+            Err(_) => {
+                if self.options().kv_denial_equalise {
+                    self.kv_denial_preamble(principal, now_ns);
+                }
+                return Err(denied());
+            }
         };
         let capability_phase = phase_profile::scope(Phase::AuthCapability);
         let Ok(Some(capability)) = self.kv_capability_of(principal) else {
@@ -883,6 +971,23 @@ impl Store {
             return Err(denied());
         };
         Ok((descriptor, bytes))
+    }
+
+    /// The capability half of the KV preamble, on fixed inputs.
+    ///
+    /// Runs only on a path that has already failed, and only when
+    /// `kv_denial_equalise` is set. It does the same grant decode and the same
+    /// three grant tests the present path does, on a fixed namespace and root,
+    /// so an absent object costs approximately what a present-but-unauthorized
+    /// object costs. It can never succeed.
+    fn kv_denial_preamble(&self, principal: &Principal, now_ns: i64) {
+        let Ok(Some(capability)) = self.kv_capability_of(principal) else {
+            return;
+        };
+        let _ = capability.check_valid_at(now_ns);
+        let _ = capability.scope.principal.is_empty();
+        let _ = capability.allows_namespace("kv.");
+        let _ = capability.allows_root(Hash32::ZERO);
     }
 
     /// Read one mode-12 KV page under an authenticated capability.
