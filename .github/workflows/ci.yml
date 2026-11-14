@@ -10,7 +10,7 @@
 #   model         bounded TLA+ check (workflow_dispatch only)
 #
 # WHAT DELIBERATELY DOES NOT RUN HERE — the Docker courts stay explicit:
-#   `scripts/verify-all.sh` (47 courts), the S3/MinIO, Ceph RGW, Azure/Azurite,
+#   `scripts/verify-all.sh` (49 courts), the S3/MinIO, Ceph RGW, Azure/Azurite,
 #   fake-GCS and 3FS courts, the 7B / context-advantage / augmentation / EKBLOOM
 #   benches, the 100,000-iteration crash torture, POSIX torture, the power-loss
 #   VM courts, and every FUSE suite. They need /dev/fuse, sidecar containers,
@@ -268,6 +268,8 @@ jobs:
     #   bash scripts/check_long_description_court.sh
     #   bash scripts/gen-conformance-manifest.sh --check
     #   bash scripts/check-conformance-coverage.sh
+    #   bash scripts/check-context-plane-header.sh
+    #   bash scripts/context-plane-verifier_court.sh
     #
     # There is no `scripts/check-commit-identity.sh` in this tree at 1bc5177,
     # so no such step is invoked. The identity rule is enforced by each
@@ -291,12 +293,16 @@ jobs:
         run: bash scripts/gen-conformance-manifest.sh --check
       - name: conformance coverage has no gaps
         run: bash scripts/check-conformance-coverage.sh
+      - name: candidate C ABI declaration compiles (C11 + C++17)
+        run: bash scripts/check-context-plane-header.sh
+      - name: independent context-plane verifier
+        run: bash scripts/context-plane-verifier_court.sh
       - name: Job summary
         if: always()
         run: |
           {
             echo '### guards'
-            echo 'Local reproduction: the six commands in this job, run on the host (no Docker).'
+            echo 'Local reproduction: the eight commands in this job, run on the host (no Docker).'
             echo 'Counts are generated from receipts into docs/PERF-NUMBERS.md; this summary does not restate them.'
           } >> "$GITHUB_STEP_SUMMARY"
 
