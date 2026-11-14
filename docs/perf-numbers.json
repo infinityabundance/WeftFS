@@ -125,6 +125,22 @@
   {
    "id": "pareto",
    "title": "N03 per-family Pareto (write wall / footprint / restore)"
+  },
+  {
+   "id": "n01",
+   "title": "N01 durable compressed-write rung (parallel early-barrier lanes)"
+  },
+  {
+   "id": "n02",
+   "title": "N02 durability tail: traced account and layout comparison"
+  },
+  {
+   "id": "n05",
+   "title": "N05 Rust/Go two-stage parity on the 101-tensor fixture"
+  },
+  {
+   "id": "n07",
+   "title": "N07 strict two-axis Pareto and eligible policy set"
   }
  ],
  "numbers": [
@@ -21643,6 +21659,1183 @@
    "stamp": "20261114T191458Z",
    "revision_path": "revision",
    "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "n01.pre.min_ms",
+   "label": "Pre-change durable write wall (one lane), least-contended",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4-wb1.wall_ms.min"
+  },
+  {
+   "key": "n01.pre.median_ms",
+   "label": "Pre-change durable write wall (one lane), median",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4-wb1.wall_ms.median"
+  },
+  {
+   "key": "n01.pre.p99_ms",
+   "label": "Pre-change durable write wall (one lane), p99",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4-wb1.wall_ms.p99"
+  },
+  {
+   "key": "n01.post.min_ms",
+   "label": "Shipped durable write wall (four lanes), least-contended",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4.wall_ms.min"
+  },
+  {
+   "key": "n01.post.median_ms",
+   "label": "Shipped durable write wall (four lanes), median",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4.wall_ms.median"
+  },
+  {
+   "key": "n01.post.p95_ms",
+   "label": "Shipped durable write wall (four lanes), p95",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4.wall_ms.p95"
+  },
+  {
+   "key": "n01.post.p99_ms",
+   "label": "Shipped durable write wall (four lanes), p99",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4.wall_ms.p99"
+  },
+  {
+   "key": "n01.best_lane.min_ms",
+   "label": "Eight-lane durable write wall, least-contended",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4-wb8.wall_ms.min"
+  },
+  {
+   "key": "n01.best_lane.median_ms",
+   "label": "Eight-lane durable write wall, median",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4-wb8.wall_ms.median"
+  },
+  {
+   "key": "n01.footprint_b",
+   "label": "Physical footprint, every lane count",
+   "unit": "B",
+   "group": "n01",
+   "format": "int",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.C-pipe4.footprint_bytes"
+  },
+  {
+   "key": "n01.delta_min_pct",
+   "label": "Change in least-contended wall vs one lane",
+   "unit": "%",
+   "group": "n01",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "post_change.delta_vs_pre_change_min_pct"
+  },
+  {
+   "key": "n01.delta_median_pct",
+   "label": "Change in median wall vs one lane",
+   "unit": "%",
+   "group": "n01",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "post_change.delta_vs_pre_change_median_pct"
+  },
+  {
+   "key": "n01.native_min_ms",
+   "label": "Native durable write wall (comparator), least-contended",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rows.A.wall_ms.min"
+  },
+  {
+   "key": "n01.ratio_native",
+   "label": "Shipped least-contended wall as a multiple of native",
+   "unit": "B",
+   "group": "n01",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "verdict.ratio_to_native"
+  },
+  {
+   "key": "n01.split.blob_publish_ms",
+   "label": "Blob publication phase, thread-additive",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.phases_ms.blob_publish"
+  },
+  {
+   "key": "n01.split.encode_cpu_ms",
+   "label": "Encode phase, thread-additive",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.phases_ms.encode"
+  },
+  {
+   "key": "n01.split.analyse_cpu_ms",
+   "label": "Analyse phase, thread-additive",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.phases_ms.analyze"
+  },
+  {
+   "key": "n01.split.digest_cpu_ms",
+   "label": "Digest phase, thread-additive",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.phases_ms.digest"
+  },
+  {
+   "key": "n01.split.index_segment_ms",
+   "label": "Advisory index segment publication",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.commit_phases_ms.index_segment"
+  },
+  {
+   "key": "n01.split.manifest_commit_ms",
+   "label": "Commit record publication",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.commit_phases_ms.manifest_commit"
+  },
+  {
+   "key": "n01.split.writeback_busy_ms",
+   "label": "Early-barrier busy time across lanes",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "stage_split.early_barrier.busy_ms"
+  },
+  {
+   "key": "n01.floor.reader_ms",
+   "label": "Reader time on the least-contended shipped repetition",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "floor.reader_ms"
+  },
+  {
+   "key": "n01.floor.encode_ms",
+   "label": "Encode wall on the least-contended shipped repetition",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "floor.encode_wall_ms"
+  },
+  {
+   "key": "n01.floor.tail_ms",
+   "label": "Publisher finish tail on the least-contended shipped repetition",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "floor.publisher_finish_tail_ms"
+  },
+  {
+   "key": "n01.floor.commit_ms",
+   "label": "Commit time on the least-contended shipped repetition",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "floor.commit_ms"
+  },
+  {
+   "key": "n01.floor.floor_ms",
+   "label": "Non-overlappable floor of the shipped row",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "floor.floor_ms"
+  },
+  {
+   "key": "n01.7b.planned_ms",
+   "label": "7B planned 8-way reduced cell, changed tree",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "seven_b_cells.planned"
+  },
+  {
+   "key": "n01.7b.flat_ms",
+   "label": "7B fast-raw 8-way reduced cell, changed tree",
+   "unit": "ms",
+   "group": "n01",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n01-write-rung-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "seven_b_cells.flat"
+  },
+  {
+   "key": "n01.identity.contents",
+   "label": "Content roots compared, wb1 vs wb8",
+   "unit": "count",
+   "group": "n01",
+   "format": "int",
+   "receipt": "bench/receipts/n01-identity-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "output_contents_count"
+  },
+  {
+   "key": "n02.per_object.min_ms",
+   "label": "Per-object layout, least-contended",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.per_object.wall_ms.min"
+  },
+  {
+   "key": "n02.per_object.median_ms",
+   "label": "Per-object layout, median",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.per_object.wall_ms.median"
+  },
+  {
+   "key": "n02.fewer.min_ms",
+   "label": "17 larger files, least-contended",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.fewer_larger_16.wall_ms.min"
+  },
+  {
+   "key": "n02.fewer.median_ms",
+   "label": "17 larger files, median",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.fewer_larger_16.wall_ms.median"
+  },
+  {
+   "key": "n02.fewer.files",
+   "label": "17 larger files, file count",
+   "unit": "files",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.fewer_larger_16.files.min"
+  },
+  {
+   "key": "n02.pack.min_ms",
+   "label": "One contiguous pack, least-contended",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.one_contiguous_pack.wall_ms.min"
+  },
+  {
+   "key": "n02.pack.median_ms",
+   "label": "One contiguous pack, median",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.one_contiguous_pack.wall_ms.median"
+  },
+  {
+   "key": "n02.pack.files",
+   "label": "One contiguous pack, file count",
+   "unit": "files",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "variants.one_contiguous_pack.files.min"
+  },
+  {
+   "key": "n02.fewer.saving_pct",
+   "label": "17 larger files, paired median saving",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "paired_savings.fewer_larger_16.median_saving_pct"
+  },
+  {
+   "key": "n02.fewer.ci_low_pct",
+   "label": "17 larger files, bootstrap 95% low",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "paired_savings.fewer_larger_16.bootstrap_95_low_pct"
+  },
+  {
+   "key": "n02.fewer.ci_high_pct",
+   "label": "17 larger files, bootstrap 95% high",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "paired_savings.fewer_larger_16.bootstrap_95_high_pct"
+  },
+  {
+   "key": "n02.pack.saving_pct",
+   "label": "One contiguous pack, paired median saving",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "paired_savings.one_contiguous_pack.median_saving_pct"
+  },
+  {
+   "key": "n02.pack.ci_low_pct",
+   "label": "One contiguous pack, bootstrap 95% low",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "paired_savings.one_contiguous_pack.bootstrap_95_low_pct"
+  },
+  {
+   "key": "n02.pack.ci_high_pct",
+   "label": "One contiguous pack, bootstrap 95% high",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "paired_savings.one_contiguous_pack.bootstrap_95_high_pct"
+  },
+  {
+   "key": "n02.account.wall_ms",
+   "label": "Store write wall used for the account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.measured_wall"
+  },
+  {
+   "key": "n02.account.accounted_ms",
+   "label": "Accounted critical-path terms",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.accounted"
+  },
+  {
+   "key": "n02.account.residual_ms",
+   "label": "Unattributed residual",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.residual"
+  },
+  {
+   "key": "n02.account.residual_pct",
+   "label": "Residual as a percentage of the wall",
+   "unit": "%",
+   "group": "n02",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.residual_pct"
+  },
+  {
+   "key": "n02.account.encode_ms",
+   "label": "Encode wall in the account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.encode_wall"
+  },
+  {
+   "key": "n02.account.tail_ms",
+   "label": "Publisher finish tail in the account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.publisher_finish_tail"
+  },
+  {
+   "key": "n02.account.reader_ms",
+   "label": "Reader time in the account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.reader"
+  },
+  {
+   "key": "n02.account.commit_ms",
+   "label": "Commit time in the account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "critical_path_account.commit"
+  },
+  {
+   "key": "n02.io.payload_b",
+   "label": "Published blob payload copied by the probe",
+   "unit": "B",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "io_cross_check.blob_payload_bytes"
+  },
+  {
+   "key": "n02.io.backend_b",
+   "label": "Backend bytes written by the store",
+   "unit": "B",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "io_cross_check.backend_bytes_written"
+  },
+  {
+   "key": "n02.io.fsync_file",
+   "label": "File barriers issued by the store",
+   "unit": "barriers",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "io_cross_check.fsync_file"
+  },
+  {
+   "key": "n02.io.fsync_dir",
+   "label": "Directory barriers issued by the store",
+   "unit": "barriers",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "io_cross_check.fsync_dir"
+  },
+  {
+   "key": "n02.store.pipe4_min_ms",
+   "label": "Store-level flat plane, least-contended",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261114T201500Z.json",
+   "path": "configs.C-pipe4.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T201829Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "581f364582811ba488323ed618c88cb8716c49ff"
+  },
+  {
+   "key": "n02.store.pack1m_min_ms",
+   "label": "Store-level 1 MiB pack plane, least-contended",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/r22-pareto-20261114T201500Z.json",
+   "path": "configs.C-pipe4-pack1m.wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T201829Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "581f364582811ba488323ed618c88cb8716c49ff"
+  },
+  {
+   "key": "n02.store.pack1m_footprint_b",
+   "label": "Store-level 1 MiB pack plane footprint",
+   "unit": "B",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/r22-pareto-20261114T201500Z.json",
+   "path": "configs.C-pipe4-pack1m.physical_footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T201829Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "581f364582811ba488323ed618c88cb8716c49ff"
+  },
+  {
+   "key": "n05.go.exhaustive_ms",
+   "label": "Go exhaustive planned write",
+   "unit": "ms",
+   "group": "n05",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "go_selector.wall_ms.exhaustive"
+  },
+  {
+   "key": "n05.go.twostage_ms",
+   "label": "Go two-stage planned write",
+   "unit": "ms",
+   "group": "n05",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "go_selector.wall_ms.two_stage"
+  },
+  {
+   "key": "n05.go.speedup",
+   "label": "Go two-stage speedup over Go exhaustive",
+   "unit": "x",
+   "group": "n05",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "go_selector.speedup"
+  },
+  {
+   "key": "n05.go.footprint_b",
+   "label": "Go physical footprint, both selectors",
+   "unit": "B",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "go_selector.footprint_bytes"
+  },
+  {
+   "key": "n05.go.peak_exhaustive_kib",
+   "label": "Go exhaustive peak RSS",
+   "unit": "KiB",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "go_selector.peak_rss_kib"
+  },
+  {
+   "key": "n05.rust.wall_ms",
+   "label": "Rust C-pipe4 write wall",
+   "unit": "ms",
+   "group": "n05",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rust.wall_ms"
+  },
+  {
+   "key": "n05.rust.footprint_b",
+   "label": "Rust physical footprint",
+   "unit": "B",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "rust.footprint_bytes"
+  },
+  {
+   "key": "n05.agree.same_bytes",
+   "label": "Tensors with the same strategy and physical bytes",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.same_strategy_and_bytes"
+  },
+  {
+   "key": "n05.agree.same_strategy",
+   "label": "Tensors with the same chosen strategy",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.same_strategy"
+  },
+  {
+   "key": "n05.agree.divergent",
+   "label": "Tensors whose choice or size differs",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.divergent_tensors"
+  },
+  {
+   "key": "n05.agree.mode9_tensors",
+   "label": "Tensors both chose as mode 9",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.mode9_both.tensors"
+  },
+  {
+   "key": "n05.agree.mode9_equal",
+   "label": "Mode-9 tensors with identical bytes",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.mode9_both.bytes_equal"
+  },
+  {
+   "key": "n05.agree.raw_tensors",
+   "label": "Tensors both chose as raw",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.raw_both.tensors"
+  },
+  {
+   "key": "n05.agree.raw_equal",
+   "label": "Raw tensors with identical bytes",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.raw_both.bytes_equal"
+  },
+  {
+   "key": "n05.agree.zstd_tensors",
+   "label": "Tensors both chose as zstd",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.zstd_both.tensors"
+  },
+  {
+   "key": "n05.agree.zstd_equal",
+   "label": "ZSTD tensors with identical bytes",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+   "path": "agreement.zstd_both.bytes_equal"
+  },
+  {
+   "key": "n05.diverge_count",
+   "label": "Divergent tensors listed in the receipt",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "count_path": "divergences",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.strict.count",
+   "label": "Strict two-axis frontier size",
+   "unit": "points",
+   "group": "n07",
+   "format": "int",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "count_path": "strict_frontier",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.eligible.count",
+   "label": "Eligible policy frontier size",
+   "unit": "points",
+   "group": "n07",
+   "format": "int",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "count_path": "eligible_frontier",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.points.count",
+   "label": "Rows classified",
+   "unit": "points",
+   "group": "n07",
+   "format": "int",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "count_path": "points",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.single_run.count",
+   "label": "Single-run rows",
+   "unit": "points",
+   "group": "n07",
+   "format": "int",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "count_path": "confidence.single_run_rows",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.A.min_ms",
+   "label": "Native anchor least-contended wall",
+   "unit": "ms",
+   "group": "n07",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "list": "points",
+   "where": {
+    "config": "A"
+   },
+   "select_path": "wall_min_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.t19off.min_ms",
+   "label": "Level-19-off row least-contended wall",
+   "unit": "ms",
+   "group": "n07",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "list": "points",
+   "where": {
+    "config": "C-pipe4-t19off"
+   },
+   "select_path": "wall_min_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.pack1m.footprint_b",
+   "label": "1 MiB pack row footprint",
+   "unit": "B",
+   "group": "n07",
+   "format": "int",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "list": "points",
+   "where": {
+    "config": "C-pipe4-pack1m"
+   },
+   "select_path": "footprint_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.sync16.min_ms",
+   "label": "Eligible frontier row least-contended wall",
+   "unit": "ms",
+   "group": "n07",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "list": "points",
+   "where": {
+    "config": "C-pipe4-sync16"
+   },
+   "select_path": "wall_min_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n07.default.min_ms",
+   "label": "Shipped default least-contended wall",
+   "unit": "ms",
+   "group": "n07",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
+   "list": "points",
+   "where": {
+    "config": "C-pipe4"
+   },
+   "select_path": "wall_min_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T204000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n02.per_object.files",
+   "label": "Per-object layout file count",
+   "unit": "files",
+   "group": "n02",
+   "format": "int",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "path": "variants.per_object.files.min",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n02.account.init_ms",
+   "label": "Init in the critical-path account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "path": "critical_path_account.init",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n02.account.footprint_ms",
+   "label": "Footprint walk in the account",
+   "unit": "ms",
+   "group": "n02",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/n02-durability-tail-20261114T195000Z.json",
+   "path": "critical_path_account.footprint",
+   "stamp_path": "stamp",
+   "stamp": "20261114T195000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n05.go.peak_twostage_kib",
+   "label": "Go two-stage peak RSS",
+   "unit": "KiB",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "path": "go_selector.peak_rss_kib",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
+  },
+  {
+   "key": "n05.points_total",
+   "label": "Tensors compared",
+   "unit": "tensors",
+   "group": "n05",
+   "format": "int",
+   "receipt": "bench/receipts/n05-go-parity-20261114T203000Z.json",
+   "path": "method.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T203000Z",
+   "revision_path": "revision.WeftFS",
+   "revision": "6d79c4c312b5b88196091ae0dab898c2692f7901"
   }
  ],
  "blocks": [
@@ -27014,6 +28207,422 @@
    "file": "docs/PERF-NUMBERS.md",
    "kind": "catalog",
    "group": "pareto"
+  },
+  {
+   "id": "n01-headline",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{n01.post.min_ms}} ms** least-contended / **{{n01.post.median_ms}} ms** median (p95 {{n01.post.p95_ms}} ms, p99 {{n01.post.p99_ms}} ms; native {{n01.native_min_ms}} ms), at {{n01.footprint_b}} B."
+    },
+    {
+     "template": "That is **{{n01.ratio_native}}\u00d7** the native wall and **{{n01.delta_min_pct}} %** better on the least-contended statistic than the one-lane row ({{n01.pre.min_ms}} ms / {{n01.pre.median_ms}} ms median)."
+    }
+   ]
+  },
+  {
+   "id": "n01-baseline",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| row | min ms | median ms | p99 ms | footprint B |"
+    },
+    {
+     "template": "|---|---:|---:|---:|---:|"
+    },
+    {
+     "template": "| pre-change, one lane (`C-pipe4-wb1`) | {{n01.pre.min_ms}} | {{n01.pre.median_ms}} | {{n01.pre.p99_ms}} | {{n01.footprint_b}} |"
+    },
+    {
+     "template": "| shipped, four lanes (`C-pipe4`) | {{n01.post.min_ms}} | {{n01.post.median_ms}} | {{n01.post.p99_ms}} | {{n01.footprint_b}} |"
+    },
+    {
+     "template": "| best lane count (`C-pipe4-wb8`) | {{n01.best_lane.min_ms}} | {{n01.best_lane.median_ms}} | \u2014 | {{n01.footprint_b}} |"
+    },
+    {
+     "template": "| native anchor (`A`) | {{n01.native_min_ms}} | \u2014 | \u2014 | \u2014 |"
+    }
+   ]
+  },
+  {
+   "id": "n01-split",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* `blob_publish` {{n01.split.blob_publish_ms}} ms; `encode` {{n01.split.encode_cpu_ms}} ms of CPU across workers; `analyse` {{n01.split.analyse_cpu_ms}} ms; `digest` {{n01.split.digest_cpu_ms}} ms (thread-additive, so these are not a wall partition)."
+    },
+    {
+     "template": "* control plane: `index_segment` {{n01.split.index_segment_ms}} ms, `manifest_commit` {{n01.split.manifest_commit_ms}} ms."
+    },
+    {
+     "template": "* early barrier: {{n01.split.writeback_busy_ms}} ms busy across lanes, overlapped with encode and publication."
+    }
+   ]
+  },
+  {
+   "id": "n01-result",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| statistic | one lane (pre) | four lanes (shipped) | eight lanes |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| least-contended ms | {{n01.pre.min_ms}} | {{n01.post.min_ms}} | {{n01.best_lane.min_ms}} |"
+    },
+    {
+     "template": "| median ms | {{n01.pre.median_ms}} | {{n01.post.median_ms}} | {{n01.best_lane.median_ms}} |"
+    },
+    {
+     "template": "| p99 ms | {{n01.pre.p99_ms}} | {{n01.post.p99_ms}} | \u2014 |"
+    },
+    {
+     "template": "| footprint B | {{n01.footprint_b}} | {{n01.footprint_b}} | {{n01.footprint_b}} |"
+    },
+    {
+     "template": "The shipped row is **{{n01.ratio_native}}\u00d7** native ({{n01.native_min_ms}} ms); the change is **{{n01.delta_min_pct}} %** on the minimum and **{{n01.delta_median_pct}} %** on the median."
+    }
+   ]
+  },
+  {
+   "id": "n01-identity",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "{{n01.identity.contents}} output content roots, the representation-choice map, the physical byte count, footprint and generation are **identical** for 1 and 8 lanes; only the ObjectIds differ, because the harness derives each object seed from the configuration name."
+    }
+   ]
+  },
+  {
+   "id": "n01-floor",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "On the least-contended shipped repetition the critical path is reader **{{n01.floor.reader_ms}} ms** + encode wall **{{n01.floor.encode_ms}} ms** + publisher finish tail **{{n01.floor.tail_ms}} ms** + commit **{{n01.floor.commit_ms}} ms** = **{{n01.floor.floor_ms}} ms**. The early barrier is {{n01.split.writeback_busy_ms}} ms of work hidden under that path."
+    }
+   ]
+  },
+  {
+   "id": "n01-7b",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| reduced 7B cell | wall ms |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| planned, 8-way streaming | {{n01.7b.planned_ms}} |"
+    },
+    {
+     "template": "| fast-raw, 8-way streaming | {{n01.7b.flat_ms}} |"
+    }
+   ]
+  },
+  {
+   "id": "n01-losses",
+   "file": "bench/RESULTS-n01-write-rung.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* The rung is not met: {{n01.post.min_ms}} ms against 336 ms, and {{n01.post.median_ms}} ms at the median."
+    },
+    {
+     "template": "* p95 is {{n01.post.p95_ms}} ms and p99 {{n01.post.p99_ms}} ms; the host stalled in several repetitions and the raw samples are in the receipt."
+    }
+   ]
+  },
+  {
+   "id": "n02-variants",
+   "file": "bench/RESULTS-n02-durability-tail.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| layout | files | min ms | median ms |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| per-object (shipped) | {{n02.per_object.files}} | {{n02.per_object.min_ms}} | {{n02.per_object.median_ms}} |"
+    },
+    {
+     "template": "| 17 larger files + index | {{n02.fewer.files}} | {{n02.fewer.min_ms}} | {{n02.fewer.median_ms}} |"
+    },
+    {
+     "template": "| one contiguous pack + index | {{n02.pack.files}} | {{n02.pack.min_ms}} | {{n02.pack.median_ms}} |"
+    }
+   ]
+  },
+  {
+   "id": "n02-variants-b",
+   "file": "bench/RESULTS-n02-durability-tail.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| layout | files | min ms | median ms |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| per-object (shipped) | {{n02.per_object.files}} | {{n02.per_object.min_ms}} | {{n02.per_object.median_ms}} |"
+    },
+    {
+     "template": "| 17 larger files + index | {{n02.fewer.files}} | {{n02.fewer.min_ms}} | {{n02.fewer.median_ms}} |"
+    },
+    {
+     "template": "| one contiguous pack + index | {{n02.pack.files}} | {{n02.pack.min_ms}} | {{n02.pack.median_ms}} |"
+    }
+   ]
+  },
+  {
+   "id": "n02-account",
+   "file": "bench/RESULTS-n02-durability-tail.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| term | ms |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| init | {{n02.account.init_ms}} |"
+    },
+    {
+     "template": "| reader | {{n02.account.reader_ms}} |"
+    },
+    {
+     "template": "| encode wall | {{n02.account.encode_ms}} |"
+    },
+    {
+     "template": "| publisher finish tail | {{n02.account.tail_ms}} |"
+    },
+    {
+     "template": "| commit | {{n02.account.commit_ms}} |"
+    },
+    {
+     "template": "| footprint walk | {{n02.account.footprint_ms}} |"
+    },
+    {
+     "template": "| **accounted** | **{{n02.account.accounted_ms}}** |"
+    },
+    {
+     "template": "| **measured wall** | **{{n02.account.wall_ms}}** |"
+    },
+    {
+     "template": "| residual | {{n02.account.residual_ms}} ({{n02.account.residual_pct}} %) |"
+    }
+   ]
+  },
+  {
+   "id": "n02-io",
+   "file": "bench/RESULTS-n02-durability-tail.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* published blob payload: **{{n02.io.payload_b}} B**; backend bytes written: **{{n02.io.backend_b}} B**. The difference is the control plane and source/probe writes, itemised in the receipt."
+    },
+    {
+     "template": "* barriers the store issued: **{{n02.io.fsync_file}}** file barriers and **{{n02.io.fsync_dir}}** directory barriers."
+    }
+   ]
+  },
+  {
+   "id": "n02-paired",
+   "file": "bench/RESULTS-n02-durability-tail.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| layout | paired median saving | bootstrap 95 % interval |"
+    },
+    {
+     "template": "|---|---:|---|"
+    },
+    {
+     "template": "| 17 larger files + index | {{n02.fewer.saving_pct}} % | {{n02.fewer.ci_low_pct}} % .. {{n02.fewer.ci_high_pct}} % |"
+    },
+    {
+     "template": "| one contiguous pack + index | {{n02.pack.saving_pct}} % | {{n02.pack.ci_low_pct}} % .. {{n02.pack.ci_high_pct}} % |"
+    }
+   ]
+  },
+  {
+   "id": "n02-store-level",
+   "file": "bench/RESULTS-n02-durability-tail.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| store-level row | min ms | footprint B |"
+    },
+    {
+     "template": "|---|---:|---:|"
+    },
+    {
+     "template": "| flat plane (`C-pipe4`) | {{n02.store.pipe4_min_ms}} | {{n01.footprint_b}} |"
+    },
+    {
+     "template": "| 1 MiB pack plane (`C-pipe4-pack1m`) | {{n02.store.pack1m_min_ms}} | {{n02.store.pack1m_footprint_b}} |"
+    }
+   ]
+  },
+  {
+   "id": "n05-speedup",
+   "file": "bench/RESULTS-n05-go-parity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{n05.go.speedup}}\u00d7** faster ({{n05.go.exhaustive_ms}} ms \u2192 {{n05.go.twostage_ms}} ms) at the identical footprint of {{n05.go.footprint_b}} B, with 0 errors."
+    }
+   ]
+  },
+  {
+   "id": "n05-result",
+   "file": "bench/RESULTS-n05-go-parity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| arm | wall ms | footprint B | peak RSS KiB |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| Rust `C-pipe4` | {{n05.rust.wall_ms}} | {{n05.rust.footprint_b}} | \u2014 |"
+    },
+    {
+     "template": "| Go exhaustive | {{n05.go.exhaustive_ms}} | {{n05.go.footprint_b}} | {{n05.go.peak_exhaustive_kib}} |"
+    },
+    {
+     "template": "| Go two-stage | {{n05.go.twostage_ms}} | {{n05.go.footprint_b}} | {{n05.go.peak_twostage_kib}} |"
+    }
+   ]
+  },
+  {
+   "id": "n05-agreement",
+   "file": "bench/RESULTS-n05-go-parity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| comparison | tensors |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| same chosen strategy | {{n05.agree.same_strategy}} / {{n05.points_total}} |"
+    },
+    {
+     "template": "| same strategy **and** physical bytes | {{n05.agree.same_bytes}} |"
+    },
+    {
+     "template": "| divergent | {{n05.agree.divergent}} |"
+    },
+    {
+     "template": "| both mode 9, bytes equal | {{n05.agree.mode9_equal}} / {{n05.agree.mode9_tensors}} |"
+    },
+    {
+     "template": "| both raw, bytes equal | {{n05.agree.raw_equal}} / {{n05.agree.raw_tensors}} |"
+    },
+    {
+     "template": "| both zstd, bytes equal | {{n05.agree.zstd_equal}} / {{n05.agree.zstd_tensors}} |"
+    }
+   ]
+  },
+  {
+   "id": "n05-cross",
+   "file": "bench/RESULTS-n05-go-parity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* Rust `verify --full` over the Go store: `ok=true`."
+    },
+    {
+     "template": "* Go `verify --full` over the Rust store: `ok=true`."
+    }
+   ]
+  },
+  {
+   "id": "n05-losses",
+   "file": "bench/RESULTS-n05-go-parity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* {{n05.diverge_count}} tensors diverge in representation choice or physical size; every one is listed in the receipt."
+    },
+    {
+     "template": "* Go two-stage peak RSS is {{n05.go.peak_twostage_kib}} KiB against {{n05.go.peak_exhaustive_kib}} KiB exhaustive: the selector removes encode work but Go still holds the tensor and its candidates."
+    }
+   ]
+  },
+  {
+   "id": "n07-strict",
+   "file": "bench/RESULTS-n07-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{n07.strict.count}} points**: the native anchor ({{n07.A.min_ms}} ms, largest), the level-19-off row ({{n07.t19off.min_ms}} ms, {{n01.footprint_b}} B), and the 1 MiB pack row ({{n07.pack1m.footprint_b}} B, slowest). The shipped default ({{n07.default.min_ms}} ms) is dominated."
+    }
+   ]
+  },
+  {
+   "id": "n07-eligible",
+   "file": "bench/RESULTS-n07-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{n07.eligible.count}} points**: the native anchor and `C-pipe4-sync16` (**{{n07.sync16.min_ms}} ms** at {{n01.footprint_b}} B). The level-19-off row is excluded by policy; the pack rows by plane; the exhaustive planner as a control."
+    }
+   ]
+  },
+  {
+   "id": "n07-table",
+   "file": "bench/RESULTS-n07-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| point | min ms | footprint B | set |"
+    },
+    {
+     "template": "|---|---:|---:|---|"
+    },
+    {
+     "template": "| native anchor | {{n07.A.min_ms}} | 424,439,296 | strict + eligible (comparator) |"
+    },
+    {
+     "template": "| level-19-off | {{n07.t19off.min_ms}} | {{n01.footprint_b}} | strict (ineligible by policy) |"
+    },
+    {
+     "template": "| 1 MiB pack | {{n02.store.pack1m_min_ms}} | {{n07.pack1m.footprint_b}} | strict (ineligible by plane) |"
+    },
+    {
+     "template": "| `C-pipe4-sync16` | {{n07.sync16.min_ms}} | {{n01.footprint_b}} | eligible |"
+    },
+    {
+     "template": "| shipped default | {{n07.default.min_ms}} | {{n01.footprint_b}} | neither (dominated) |"
+    }
+   ]
+  },
+  {
+   "id": "n07-confidence",
+   "file": "bench/RESULTS-n07-pareto.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "{{n07.points.count}} rows are classified; {{n07.single_run.count}} are single-run. Each row carries a bootstrap interval from its own repetitions in the output receipt, and the receipt states that no paired statistic exists for this unpaired data."
+    }
+   ]
   }
  ]
 }
