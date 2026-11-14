@@ -42,7 +42,7 @@ key="$(printf 'ab%.0s' {1..32})"
 wrong="$(printf 'cd%.0s' {1..32})"
 printf 'hello encrypted world' > "$work/plain.bin"
 "$cli" --store "$work/store" init --encryption-key-hex "$key" --encryption-mode convergent >>"$log" 2>&1
-"$cli" --store "$work/store" write /a.bin --file "$work/plain.bin" --encryption-key-hex "$key" >>"$log" 2>&1
+"$cli" --store "$work/store" create /a.bin --file "$work/plain.bin" --encryption-key-hex "$key" >>"$log" 2>&1
 read_back="$("$cli" --store "$work/store" cat /a.bin --encryption-key-hex "$key")"
 [[ "$read_back" == "hello encrypted world" ]] || { echo "encryption: CLI round trip mismatch" >&2; exit 1; }
 "$cli" --store "$work/store" verify --full --encryption-key-hex "$key" >>"$log" 2>&1 || { echo "encryption: verify --full failed" >&2; exit 1; }
