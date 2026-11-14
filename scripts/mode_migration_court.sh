@@ -23,6 +23,16 @@ old_tag="${WEFT_MODE_OLD_TAG:-v0.9.0}"
 old_dir="$root/.docker-cache/mode-old/$old_tag"
 
 if [[ "${WEFT_IN_COURT:-0}" != "1" ]]; then
+  skip() { echo "mode_migration_court: skip $1" >&2; exit 78; }
+  command -v docker >/dev/null 2>&1 || skip "no docker CLI on PATH"
+  docker info >/dev/null 2>&1 || skip "no reachable docker daemon"
+  command -v git >/dev/null 2>&1 || skip "no git CLI on PATH"
+  if [[ ! -f "$old_dir/.exported" ]]; then
+    git -C "$root" rev-parse -q --verify "${old_tag}^{commit}" >/dev/null ||
+      skip "tag $old_tag is not present in the parent repository"
+    git -C "$root/WeftCodec" rev-parse -q --verify "${old_tag}^{commit}" >/dev/null ||
+      skip "tag $old_tag is not present in WeftCodec"
+  fi
   # Export the tagged source on the host (git archive is a file operation, not
   # a build) and then run everything else inside the court.
   mkdir -p "$old_dir"

@@ -16,6 +16,9 @@ set -Eeuo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ "${WEFT_IN_COURT:-0}" != "1" ]]; then
+  skip() { echo "history_check_court: skip $1" >&2; exit 78; }
+  command -v docker >/dev/null 2>&1 || skip "no docker CLI on PATH"
+  docker info >/dev/null 2>&1 || skip "no reachable docker daemon"
   exec "$root/scripts/docker-court.sh" fuse "bash scripts/history_check_court.sh"
 fi
 cd "$root"

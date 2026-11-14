@@ -326,8 +326,10 @@ run_orchestrated_court mw3 mw3 bash scripts/mw3_verify_court.sh
 # with process kills at every publication stage, an MW3 coordinated pass and
 # readers under sweep. The receipt records both the retained roots and the
 # genuinely unreachable blobs the control pass reclaimed. The script assembles
-# its receipt with python3, so it runs in the fuse image (no mount is used).
-run_court fuse "mw_gc" "bash scripts/mw_gc_court.sh"
+# its receipt with python3, so it runs in the fuse image (no mount is used). A
+# host without Docker prints one `mw_gc_court: skip <reason>` line and exits 78.
+run_orchestrated_court mw_gc mw_gc_court \
+  bash scripts/mw_gc_court.sh
 
 # T025 distributed write/read failure court. It owns the MinIO sidecar and the
 # fault-injecting proxy, so it is orchestrated from the host. A host without
@@ -343,7 +345,8 @@ run_orchestrated_court distributed_faults distributed_faults_court \
 # WeftFS import) decides per-key register linearizability, per-domain multi-key
 # prefix consistency, conflict justification and handle monotonicity, and is
 # required to reject six deliberately violating histories.
-run_court fuse "history_check" "bash scripts/history_check_court.sh"
+run_orchestrated_court history_check history_check_court \
+  bash scripts/history_check_court.sh
 
 # T028 explicit writer-mode migration. Orchestrated because it exports the
 # tagged v0.9.0 source on the host and builds that binary in the court, then
@@ -354,7 +357,8 @@ run_orchestrated_court mode_migration mode_migration_court \
 
 # T029 FUSE mutations under optimistic publication. Opt-in only; the court also
 # exercises the default MW1 mount so a refusal cannot leak into it.
-run_court fuse "fuse_mw2" "bash scripts/fuse_mw2_court.sh"
+run_orchestrated_court fuse_mw2 fuse_mw2_court \
+  bash scripts/fuse_mw2_court.sh
 
 # R26 Context Advantage Court: one backend at a time, three arms — the backend
 # alone, a strong application-level metadata baseline, and the WeftFS context
