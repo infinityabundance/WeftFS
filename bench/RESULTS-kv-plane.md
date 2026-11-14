@@ -14,14 +14,17 @@ the generated numbers below carry both.
 | receipt | what it measures | stamp | revision |
 |---|---|---|---|
 | `bench/receipts/kv-prefix-index-20261114T133053Z.json` | index ladder, crash, revocation, index-only scaling | `20261114T133053Z` | `80d6bad` |
-| `bench/receipts/kv-grants-20261114T133000Z.json` | publication batching, grant-cache reads | `20261114T133000Z` | `0a0723f` |
-| `bench/receipts/kv-sidechannel-20261114T133000Z.json` | outcome and timing side channels | `20261114T133000Z` | `0a0723f` |
+| `bench/receipts/kv-grants-20261114T173411Z.json` | publication batching, grant-cache reads | `20261114T173411Z` | `de8e6eb` |
+| `bench/receipts/kv-sidechannel-20261114T173416Z.json` | outcome and timing side channels | `20261114T173416Z` | `de8e6eb` |
 | `bench/receipts/kv-go-parity-20261114T133751Z.json` | Go prefix tier, Ed25519, handoff, per-page cost and percentiles | `20261114T133751Z` | `d6899a3` / Go `2272a31` |
 | `bench/receipts/kv-engine-20261114T133924Z.json` | engine attempt blocker + trace replay | `20261114T133924Z` | `211be28` |
 
 The index receipt was re-measured so its ceiling field reports what the court
 actually achieved rather than the rung it asked for (see §6, first loss). The Go
-receipt was re-run to add nearest-rank p50/p99 to the per-page cost.
+receipt was re-run to add nearest-rank p50/p99 to the per-page cost, and the
+grants and side-channel receipts were re-run with captured logs at a revision
+that contains the ceiling fix. The earlier receipt of each court is retained and
+declared in `docs/superseded-receipts.json`.
 
 All courts ran in `scripts/docker-court.sh` under the unchanged hard limits
 (3 GiB memory / 3 GiB swap, 1024 pids, 4 CPUs, 1 GiB `/tmp` tmpfs).
@@ -102,12 +105,12 @@ Two independent costs were addressed:
   per-read decode as the control.
 
 <!-- BEGIN GENERATED:kv-grants-publish (scripts/perf_numbers.py) -->
-Publication of the same prefix set: single **670.1 ms** / **1,024** commits / **29,353,011 B** on disk versus batched **246.5 ms** / **4** commits / **7,409,001 B** — **2.72×** faster, with an identical record set.
+Publication of the same prefix set: single **704.4 ms** / **1,024** commits / **29,353,011 B** on disk versus batched **263.2 ms** / **4** commits / **7,409,001 B** — **2.68×** faster, with an identical record set.
 <!-- END GENERATED:kv-grants-publish -->
 
 <!-- BEGIN GENERATED:kv-grants-reads (scripts/perf_numbers.py) -->
-Page stream (128 × 4 KiB pages, one grant): grant cache on **38.21 µs** p50 / **75.16 µs** p99 with **255** hits and **1** miss; the per-read decode control is **68.22 µs** p50 / **83.66 µs** p99 — **1.79×**. The canonical descriptor is **229 B**, **5.29 %** of the page.
-A commit invalidates the cached grant: the next read costs **94,546 ns** against **42,019 ns** for a hit.
+Page stream (128 × 4 KiB pages, one grant): grant cache on **38.94 µs** p50 / **51.64 µs** p99 with **255** hits and **1** miss; the per-read decode control is **69.12 µs** p50 / **84.21 µs** p99 — **1.77×**. The canonical descriptor is **229 B**, **5.29 %** of the page.
+A commit invalidates the cached grant: the next read costs **113,773 ns** against **43,872 ns** for a hit.
 <!-- END GENERATED:kv-grants-reads -->
 
 The descriptor is a fixed per-page governance cost; batching publication does
@@ -124,8 +127,8 @@ interleaved round-robin sampling and the arm order alternating every round. The
 same-call control pair calibrates the noise floor.
 
 <!-- BEGIN GENERATED:kv-sidechannel (scripts/perf_numbers.py) -->
-Outcome: **pass** — every cross-tenant, absent and expired probe is denied with one class and one text; **0** stale reads after the revocation. **4,000** samples per arm; same-call control z = **2.88**.
-Timing (p50 / p99, µs): authorized hit **34.04 / 46.99**, absent object **0.06**, foreign tenant **0.41**, wrong root **0.41**, expired grant **0.37**, no envelope **0.32**; with `kv_denial_equalise` the absent arm moves to **0.11**. Size-inference z = **4.40**.
+Outcome: **pass** — every cross-tenant, absent and expired probe is denied with one class and one text; **0** stale reads after the revocation. **4,000** samples per arm; same-call control z = **-3.10**.
+Timing (p50 / p99, µs): authorized hit **33.85 / 44.21**, absent object **0.06**, foreign tenant **0.41**, wrong root **0.42**, expired grant **0.37**, no envelope **0.31**; with `kv_denial_equalise` the absent arm moves to **0.11**. Size-inference z = **3.70**.
 <!-- END GENERATED:kv-sidechannel -->
 
 `kv_denial_equalise` (default off) runs the capability half of the KV preamble

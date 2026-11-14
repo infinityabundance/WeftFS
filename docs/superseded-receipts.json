@@ -94,5 +94,29 @@
   "superseded_by": "bench/receipts/stage-budget-fix-20261113T224055Z.json",
   "reason": "First passing repetition run (90 runs), at a6ac2b2, before the ordered restore pipeline deadlock was found and fixed. The current receipt repeats the module and the pipeline suite at a6ab12e.",
   "declared_in": "bench/RESULTS-stage-budget-fix.md"
+ },
+ {
+  "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+  "superseded_by": "bench/receipts/kv-grants-20261114T173411Z.json",
+  "reason": "Same court re-run at de8e6eb so the receipt has a captured log and a revision that contains the ceiling fix.",
+  "declared_in": "bench/RESULTS-kv-plane.md"
+ },
+ {
+  "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+  "superseded_by": "bench/receipts/kv-sidechannel-20261114T173416Z.json",
+  "reason": "Same court re-run at de8e6eb so the receipt has a captured log and a revision that contains the ceiling fix.",
+  "declared_in": "bench/RESULTS-kv-plane.md"
+ },
+ {
+  "receipt": "bench/receipts/kv-go-parity-20261114T133000Z.json",
+  "superseded_by": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+  "reason": "The superseding run adds nearest-rank p50/p99 to the Go per-page cost and runs at WeftFS-Go 2272a31.",
+  "declared_in": "bench/RESULTS-kv-plane.md"
+ },
+ {
+  "receipt": "bench/receipts/kv-engine-20261114T133000Z.json",
+  "superseded_by": "bench/receipts/kv-engine-20261114T133924Z.json",
+  "reason": "The earlier run did not isolate a previous attempt's partial downloads, so its vLLM --no-deps claim was not established by it. The superseding run cleans /tmp before every attempt and records free space before and after.",
+  "declared_in": "bench/RESULTS-kv-plane.md"
  }
 ]

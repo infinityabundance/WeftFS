@@ -30,15 +30,17 @@ real Ed25519 verification (`Store.KvPrefixGetVerified`), and an engine attempt
 that is recorded as blocked.
 
 **Evidence.** Receipts `kv-prefix-index-20261114T133053Z` (full ladder),
-`kv-grants-20261114T133000Z`, `kv-sidechannel-20261114T133000Z`,
+`kv-grants-20261114T173411Z`, `kv-sidechannel-20261114T173416Z`,
 `kv-go-parity-20261114T133751Z`, `kv-engine-20261114T133924Z`, plus the
 registered-court runs at the aggregate configuration
 (`kv-prefix-index-20261114T133614Z`, `kv-grants-20261114T133607Z`,
-`kv-sidechannel-20261114T133602Z`). Each receipt records its own stamp and
-revision. Analysis: `bench/RESULTS-kv-plane.md`. Four courts are registered in
-`scripts/verify-all.sh` (`kv_prefix_index`, `kv_grants`, `kv_sidechannel`,
-`kv_go_parity`), each with its own exit-78 skip path; the engine court is run on
-demand and is not registered.
+`kv-sidechannel-20261114T133602Z`). The first run of each court is retained and
+declared in `docs/superseded-receipts.json`. Each receipt records its own stamp
+and revision. Analysis: `bench/RESULTS-kv-plane.md`. Four courts are registered
+in `scripts/verify-all.sh` (`kv_prefix_index`, `kv_grants`, `kv_sidechannel`,
+`kv_go_parity`), each with its own exit-78 skip path; all four pass in the
+75/75 aggregate `verify-20261114T162327Z`. The engine court is run on demand and
+is not registered.
 
 **Two honest corrections made after the first measurement.** (1) The index
 receipt recorded the *requested* ladder rung as the end-to-end ceiling, so a run

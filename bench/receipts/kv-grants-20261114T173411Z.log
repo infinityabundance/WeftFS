@@ -1,0 +1,265 @@
+== build ==
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1688:9
+     |
+1688 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1689:9
+     |
+1689 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1690:9
+     |
+1690 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1764:9
+     |
+1764 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3294:13
+     |
+3294 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1760:8
+     |
+1241 | impl Store {
+     | ---------- method in this implementation
+...
+1760 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: `weftfs` (lib) generated 19 warnings (run `cargo fix --lib -p weftfs` to apply 16 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.02s
+== court ==
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g"
+  },
+  "fixture": {
+    "batch": 256,
+    "descriptor_bytes": 229,
+    "descriptor_per_page_percent": 5.295,
+    "page_bytes": 4096,
+    "page_rows": 8,
+    "pages_per_prefix": 2,
+    "prefixes": 1024,
+    "stream_pages": 128
+  },
+  "invalidation": {
+    "hit_ns": 43872,
+    "hit_over_miss": 0.386,
+    "hits_after": 256,
+    "hits_before": 255,
+    "initial_invalidations": 0,
+    "invalidations_after": 1,
+    "miss_after_commit_ns": 113773,
+    "misses_after": 2,
+    "misses_before": 1
+  },
+  "label": "KV page batching and verified-session grant cache; no engine, one host, synthetic pages",
+  "non_claims": [
+    "no inference engine ran",
+    "one host, warm page cache, synthetic pages; no fleet or production claim",
+    "the descriptor is a fixed per-page governance cost; batching publication does not remove it"
+  ],
+  "page_reads": {
+    "bytes_identical": true,
+    "grant_cache_off_control": {
+      "bytes": 524288,
+      "per_page": {
+        "max_us": 86.011,
+        "p50_us": 69.119,
+        "p95_us": 72.094,
+        "p99_us": 84.207,
+        "samples": 128
+      }
+    },
+    "grant_cache_on": {
+      "bytes": 524288,
+      "hits": 255,
+      "misses": 1,
+      "per_page": {
+        "max_us": 59.832,
+        "p50_us": 38.943,
+        "p95_us": 40.345,
+        "p99_us": 51.636,
+        "samples": 128
+      }
+    },
+    "hit_ns": 43872
+  },
+  "publication": {
+    "batched": {
+      "commits": 4,
+      "head": "5ff4454ab712d205a1238714cae747346ab156d98fcc76c6d2b4e19348f43fb4",
+      "per_batch_ms": {
+        "max_us": 68013.063,
+        "p50_us": 67323.506,
+        "p95_us": 68013.063,
+        "p99_us": 68013.063,
+        "samples": 4
+      },
+      "record_set": "bf1c314f0036fc5a09ebfc1391f71688e57e4b5538e84ef1d73f8b713e2cde03",
+      "store_bytes": 7409001,
+      "wall_ms": 263.158
+    },
+    "heads_differ_by_construction": true,
+    "same_records": true,
+    "single": {
+      "commits": 1024,
+      "head": "451a470db00125222f63815af694c93fa357e7995dd2b8c339bb4e3f88ce634f",
+      "per_prefix_ms": {
+        "max_us": 1597.953,
+        "p50_us": 647.649,
+        "p95_us": 1034.25,
+        "p99_us": 1272.465,
+        "samples": 1024
+      },
+      "record_set": "bf1c314f0036fc5a09ebfc1391f71688e57e4b5538e84ef1d73f8b713e2cde03",
+      "store_bytes": 29353011,
+      "wall_ms": 704.406
+    },
+    "speedup": 2.677
+  },
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "de8e6ebaebd754dba2cbecc9654b432f2982858a",
+    "WeftFS-Go": "2272a316813ec276c6e80f5eb3e48ea8d2e2cfd8"
+  },
+  "schema": "weft.kv.grants.bench.v1",
+  "stamp": "20261114T173411Z",
+  "wall_ms": 1208.822
+}
+kv_grants_court: receipt bench/receipts/kv-grants-20261114T173411Z.json
+kv_grants_court: log bench/receipts/kv-grants-20261114T173411Z.log
