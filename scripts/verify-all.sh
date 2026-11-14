@@ -495,14 +495,12 @@ run_orchestrated_court conformance_python conformance_python \
 # live-object cell is not reachable (checkpoint state manifest item bound).
 run_orchestrated_court index_aged index_aged \
   env WEFT_STAMP="$stamp" bash scripts/index_aged_court.sh
-emit_receipt index_aged "bench/receipts/index-aged-court-${stamp}.json"
 
 # DCP checkpoint completion: seven interleaved repetitions of the shipped
 # metadata plan against the forced oracle encoder, plus the kill-after-ack
 # durability control, on the R11 169-entry fixture.
 run_court python "dcp_completion" \
   "cd /work && WEFT_DCPCOMPLETION_STAMP=$stamp WEFT_DCPCOMPLETION_REPS=7 bench/scripts/dcp_completion_court.sh"
-emit_receipt dcp_completion "bench/receipts/dcp-latency-${stamp}.json"
 
 # Context Root cross-language gate: identical IDs and URIs, and each language
 # canonicalizes the other's descriptor URIs.
@@ -615,6 +613,12 @@ skipped="$(grep -c '=skip$' "$results" || true)"
   }
   emit_receipt ceph_rgw "bench/receipts/ceph-rgw-${stamp}.json"
   emit_receipt s3_court "bench/receipts/s3-court-${stamp}.json"
+  if [[ -f "bench/receipts/index-aged-court-${stamp}.json" ]]; then
+    emit_receipt index_aged "bench/receipts/index-aged-court-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/dcp-latency-${stamp}.json" ]]; then
+    emit_receipt dcp_completion "bench/receipts/dcp-latency-${stamp}.json"
+  fi
   if [[ -f "bench/receipts/augmentation-local-${stamp}.json" ]]; then
     emit_receipt augmentation_local "bench/receipts/augmentation-local-${stamp}.json"
   fi
