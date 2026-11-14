@@ -25,6 +25,7 @@ between `BEGIN GENERATED` sentinels; the regions are not hand-edited.
 ## 1. The verdict
 
 <!-- BEGIN GENERATED:ekbloom-context-verdict (scripts/perf_numbers.py) -->
+**Verdict: retired.** G1 (zero incorrect acceptances) holds on every request in every repetition; G2 (p99 margin) fails — E is **138.19 µs** p99 against the stronger conventional baseline's **33.87 µs** (**4.08×**, declared ≤ 0.90×); G3 (equal budget) holds — E retains **1,001,392 B**, M **1,048,576 B**, budget **1,048,576 B**; G4 (correctness under change) holds. The sensitivity control produced **1,806** false acceptances on the same stream, so G1 is not vacuous. Measurement validity: **pass** (stamp 20261114T100000Z, revision 29ae91d0ec45).
 <!-- END GENERATED:ekbloom-context-verdict -->
 
 **The manifested-decision direction is retired.** Under the contract's
@@ -102,6 +103,23 @@ per arm. The p99 cell is supported by 720 samples.
 ## 3. Results
 
 <!-- BEGIN GENERATED:ekbloom-context-results (scripts/perf_numbers.py) -->
+| Arm | p50 µs | p95 µs | p99 µs | max µs | retained B | evaluations | cache hits | manifest hits | manifest misses |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| W — shipped resolver | 21.35 | 27.83 | 38.70 | 9,964.09 | 0 | 72,000 | 0 | 0 | 0 |
+| M-LRU | 11.40 | 26.43 | 34.41 | 6,624.52 | 1,048,576 | 38,249 | 33,751 | 0 | 0 |
+| M-W-TinyLFU | 11.39 | 26.36 | 33.87 | 20,609.83 | 1,048,576 | 38,249 | 33,751 | 0 | 0 |
+| E — M plus manifestation | 18.19 | 49.86 | 138.19 | 5,863.47 | 1,001,392 | 39,509 | 25,630 | 6,861 | 65,139 |
+| C-naive — sensitivity control | 2.48 | 26.15 | 33.40 | 29,350.19 | — | — | — | — | — |
+
+All numbers are over **72,000** measured requests per arm in the full nine-repetition run; the retained column is the maximum over repetitions. The stronger conventional baseline is M-W-TinyLFU because its p99 is the lower of the two M variants (the contract declares the minimum).
+
+| Arm | dependency nodes traversed | backend bytes read |
+|---|---:|---:|
+| W | 271,787 | 57,783,360 |
+| M-LRU | 171,681 | 30,712,276 |
+| E | 188,854 | 31,723,156 |
+
+Fixture: **6,552** subjects, **72,000** measured requests per arm, **80,000** retained raw request rows. E's final manifestation retains **417,176 B** and was rebuilt **306** times for **3,433.2 ms** of construction, all outside the measured request latency.
 <!-- END GENERATED:ekbloom-context-results -->
 
 The p50 win belongs to the **cache**, not the manifestation: M halves W's p50
@@ -114,6 +132,12 @@ because every miss also reads a manifested slot through EKBLOOM.
 ### G1 — zero incorrect acceptances: **holds**
 
 <!-- BEGIN GENERATED:ekbloom-context-g1 (scripts/perf_numbers.py) -->
+| Arm | false acceptances | semantic mismatches |
+|---|---:|---:|
+| M-LRU | 0 | 0 |
+| M-W-TinyLFU | 0 | 0 |
+| E | 0 | 0 |
+| C-naive (control, not an arm) | 1,806 | — |
 <!-- END GENERATED:ekbloom-context-g1 -->
 
 Every M and E verdict agreed with W on every request in every repetition:
@@ -125,6 +149,7 @@ control is the evidence that G1 is not vacuous.
 ### G2 — p99 margin: **fails**
 
 <!-- BEGIN GENERATED:ekbloom-context-g2 (scripts/perf_numbers.py) -->
+E p99 **138.19 µs**; stronger M p99 **33.87 µs**; ratio **4.08×**. Declared pass: `p99_E ≤ 0.90 × p99_M`; the declared non-inferiority band (`≤ 1.10 ×`) also fails. E's p50 is **1.60×** M's p50, so it does not even match the cache at the median.
 <!-- END GENERATED:ekbloom-context-g2 -->
 
 The declared margin was `p99_E ≤ 0.90 × p99_M`, justified in the contract from
@@ -135,6 +160,14 @@ tolerance was widened, and the non-inferiority band (`≤ 1.10 ×`) also fails.
 ### G3 — retained bytes: **holds**
 
 <!-- BEGIN GENERATED:ekbloom-context-g3 (scripts/perf_numbers.py) -->
+| Measure | Bytes |
+|---|---:|
+| E maximum retained | 1,001,392 |
+| M-LRU maximum retained | 1,048,576 |
+| M-W-TinyLFU maximum retained | 1,048,576 |
+| Declared budget | 1,048,576 |
+
+G3 requires E ≤ budget and E ≤ both M variants in every repetition; it holds. The manifestation is charged at its full retained size, not its apparent slot size.
 <!-- END GENERATED:ekbloom-context-g3 -->
 
 E stays under the 1 MiB budget and under M in every repetition. The manifested
@@ -146,6 +179,7 @@ loses G2.
 ### G4 — correctness under change: **holds**
 
 <!-- BEGIN GENERATED:ekbloom-context-g4 (scripts/perf_numbers.py) -->
+Each of the four events (model update at 2,000, revocation at 3,600, missing dependency at 5,200, new snapshot at 6,800) forced a real re-evaluation on the first affected request in M and E, agreed with W, and produced no stale acceptance. The snapshot is in the key, so a manifest entry cannot survive a head change; the authority root and epoch are in the key, so a revocation cannot be served from a cache.
 <!-- END GENERATED:ekbloom-context-g4 -->
 
 After each event the first affected request was a real re-evaluation in M and
@@ -162,12 +196,23 @@ over a vector of keys. It is the primitive behind EKBLOOM's key-sufficiency
 law. Measured (single host, release build, in the bench court):
 
 <!-- BEGIN GENERATED:ekbloom-context-quadratic (scripts/perf_numbers.py) -->
+| Keys | `first_conflict` ms |
+|---:|---:|
+| 1,000 | 0.13 |
+| 4,000 | 1.71 |
+| 16,000 | 25.62 |
+| 64,000 | 398.56 |
 <!-- END GENERATED:ekbloom-context-quadratic -->
 
 The bounded construction (one hash map, first-seen order) at the declared
 sizes:
 
 <!-- BEGIN GENERATED:ekbloom-context-bounded (scripts/perf_numbers.py) -->
+| Keys | Bounded certificate ms |
+|---:|---:|
+| 1,000 | 0.021 |
+| 100,000 | 2.625 |
+| 1,000,000 | 29.249 |
 <!-- END GENERATED:ekbloom-context-bounded -->
 
 At 64k keys the quadratic baseline is already hundreds of milliseconds and its
@@ -179,6 +224,11 @@ court.
 ### 5.2 The manifestation at 1k / 100k / 1M keys
 
 <!-- BEGIN GENERATED:ekbloom-context-scale (scripts/perf_numbers.py) -->
+| Keys | EKBLOOM build ms | source B | manifested B | EKBLOOM p50 ns | index p50 ns | gap × |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1,000 | 1.6 | 167,168 | 60,896 | 1,643 | 20 | 82.2 |
+| 100,000 | 181.5 | 19,981,312 | 6,209,024 | 1,633 | 30 | 54.4 |
+| 1,000,000 | 1,558.1 | 166,221,824 | 60,085,000 | 1,784 | 30 | 59.5 |
 <!-- END GENERATED:ekbloom-context-scale -->
 
 EKBLOOM construction grows linearly with the source and the lookup is flat at
@@ -197,6 +247,11 @@ resident surface (`manifest_resident_surface = false`), so the engine's
 cost:
 
 <!-- BEGIN GENERATED:ekbloom-context-alloc (scripts/perf_numbers.py) -->
+| Arm | allocations/request | bytes/request | allocation calls | allocated bytes | requests |
+|---|---:|---:|---:|---:|---:|
+| W | 271.7 | 25,485 | 19,564,233 | 1,834,933,145 | 72,000 |
+| M-LRU | 149.2 | 13,902 | 10,739,794 | 1,000,948,736 | 72,000 |
+| E | 164.1 | 84,342 | 11,811,686 | 6,072,652,253 | 72,000 |
 <!-- END GENERATED:ekbloom-context-alloc -->
 
 E allocates more per request than M and, because the manifest path allocates
@@ -209,6 +264,7 @@ one.
 ## 6. Lifecycle: the manifestation is collectable and never load-bearing
 
 <!-- BEGIN GENERATED:ekbloom-context-lifecycle (scripts/perf_numbers.py) -->
+Replay **2,000** requests after deleting the manifestation: **0** verdict mismatches; final manifestation **969,576 B**; the candidate-only rule holds.
 <!-- END GENERATED:ekbloom-context-lifecycle -->
 
 After the measured run, the lifecycle phase deleted the final manifestation,

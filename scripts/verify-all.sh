@@ -350,6 +350,17 @@ run_orchestrated_court context_advantage_s3 context_advantage_court \
   env WEFT_CONTEXT_ADVANTAGE_STAMP="$stamp" \
   bash scripts/context_advantage_court.sh --reduced --backend=s3
 
+# EKBLOOM Context Court: one backend, three arms (W shipped resolver; M exact
+# LRU and W-TinyLFU; E M plus an EKBLOOM-manifested certified decision table),
+# four state-change events, nine interleaved repetitions in the cited receipt.
+# The aggregate runs the reduced two-repetition configuration; the full
+# receipt is `bench/receipts/ekbloom-context-20261114T100000Z.json`. A host
+# without Docker, or one that cannot resolve the pinned `ekbloom 0.7.3`
+# offline, prints exactly one `ekbloom_context_court: skip <reason>` line and
+# exits 78; the aggregate records a skip, never a pass.
+run_orchestrated_court ekbloom_context ekbloom_context_court \
+  bash scripts/ekbloom_context_court.sh --reduced --phase=decisions
+
 # R13 third-party conformance distribution: build the bundle in the fuse court,
 # run the reference Rust adapter from the extracted copy only, and verify the
 # bundle with `scripts/verify-receipts.sh` in the court and again on the host

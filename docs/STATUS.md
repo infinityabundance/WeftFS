@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,198** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,205** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11287,3 +11287,35 @@ shipped CLI verb; restore is unaffected by N04; the crash phases are process
 faults. `verify-all.sh` was not re-run for these two courts (the cited receipts
 are the courts themselves), so the aggregate count above still names the last
 full run.
+
+## EKBLOOM Context Court (2026-11-14) — the manifested-decision direction is retired
+
+A fresh court, with its own contract (`bench/CONTRACTS-ekbloom-context.md`,
+committed before measurement), asks whether EKBLOOM's manifested machinery can
+accelerate the context plane's **reasoning** — certified compatibility
+decisions — rather than tensor bytes. It does not revise or rehabilitate the
+retired tensor-codec trial.
+
+<!-- BEGIN GENERATED:ekbloom-context-status (scripts/perf_numbers.py) -->
+**Direction: retired.** E p99 **138.19 µs** against the stronger conventional cache's **33.87 µs** (**4.08×**); E p50 **18.19 µs** against M **11.39 µs**. E retains **1,001,392 B** of the **1,048,576 B** budget (M retains **1,048,576 B**). The insufficient-key control produced **1,806** false acceptances, so G1 is not vacuous. Over **72,000** measured requests per arm (stamp 20261114T100000Z, revision 29ae91d0ec45; `bench/receipts/ekbloom-context-20261114T100000Z.json`).
+Scale: bounded key-sufficiency certificate **29.249 ms** at 1,000,000 keys; EKBLOOM table build **1,558.1 ms** and slot lookup **1,784 ns** p50 versus a conventional index at **30 ns** (**59.5×**); quadratic `first_conflict` **398.56 ms** at only 64,000 keys. Lifecycle: **2,000** replayed requests, **0** mismatches after deleting the manifestation (stamp 20261114T100000Z, revision 97a79d8254c4).
+<!-- END GENERATED:ekbloom-context-status -->
+
+G1 (zero incorrect acceptances) and G4 (correctness under change) hold; G3
+(equal retained-byte budget) holds; G2 (p99 margin) fails. Under the
+retirement rule the manifested-decision direction retires: no decision wire
+format, no shipped decision cache, no planner slot, no `ekbloom` dependency.
+The mechanism was real — the table was built, verified, read through the
+pinned crate's caller-buffer path, and every hit compared the full 144-byte
+sufficient key — but it is slower and larger per useful entry than an
+exact-keyed in-memory cache at the same retained-byte budget. The lifecycle
+phase deleted the manifestation, replayed 2,000 requests, and reproduced every
+verdict; the manifestation is collectable and never load-bearing. Full results,
+every loss and the reproduction commands:
+[`bench/RESULTS-ekbloom-context.md`](../bench/RESULTS-ekbloom-context.md).
+
+Receipts: `bench/receipts/ekbloom-context-20261114T100000Z.json` (decisions),
+`...-scale-20261114T100000Z.json` (1k/100k/1M key-sufficiency, EKBLOOM table
+and conventional index), `...-lifecycle-20261114T100000Z.json`. The court is
+registered in `verify-all.sh` as `ekbloom_context`; the cited aggregate above
+is unchanged until that aggregate is rerun.
