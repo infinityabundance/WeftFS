@@ -385,6 +385,109 @@ fn domain_verify_detects_a_corrupt_chunk() {
 }
 
 #[test]
+fn discovery_maps_each_domain_to_its_live_head() {
+    let (_dir, path) = new_store();
+    let train = register(&path, "train", DomainKind::CheckpointFamily);
+    let eval = register(&path, "eval", DomainKind::CheckpointFamily);
+    {
+        let mut writer = open_domain(&path, train);
+        let plan = plan_file(&writer, b"a.bin", b"a", b"seed-a");
+        commit(&mut writer, "00000000000000000000000000000011", &plan);
+    }
+    let store = open_domain_read(&path, train);
+    let heads = store.discover_heads().unwrap();
+    assert_eq!(heads.len(), 2);
+    for (entry, head) in &heads {
+        // The record names the head object; the value is read from that object.
+        assert_eq!(
+            entry.head(),
+            format!("domains/{}/superblock", entry.id.to_hex())
+        );
+        if entry.id == train {
+            let (generation, commit) = head.expect("train has a head");
+            assert_eq!(generation, 2);
+            let train_view = open_domain_read(&path, train);
+            assert_eq!(commit, train_view.head());
+            assert_eq!(generation, train_view.generation());
+        } else {
+            assert_eq!(entry.id, eval);
+            // Registration publishes a genesis commit, so both have a head.
+            assert_eq!(head.expect("eval has a genesis head").0, 1);
+        }
+    }
+}
+
+#[test]
+fn domain_links_record_lineage_and_never_merge_data() {
+    let (_dir, path) = new_store();
+    let predecessor = register(&path, "train", DomainKind::CheckpointFamily);
+    let successor = register(&path, "train-next", DomainKind::CheckpointFamily);
+    let mut store = open_domain(&path, successor);
+    let link = weftfs::mw3::DomainLink::new(
+        successor,
+        vec![predecessor],
+        vec![2],
+        weftfs::mw3::DomainLinkKind::Split,
+        None,
+    )
+    .unwrap();
+    let id = store.write_domain_link(&link).unwrap();
+    // Idempotent for the identical record.
+    assert_eq!(store.write_domain_link(&link).unwrap(), id);
+    // A successor has exactly one link: a different record is a typed conflict.
+    let other = weftfs::mw3::DomainLink::new(
+        successor,
+        vec![predecessor],
+        vec![3],
+        weftfs::mw3::DomainLinkKind::Split,
+        None,
+    )
+    .unwrap();
+    let err = store.write_domain_link(&other).unwrap_err();
+    assert_eq!(err.class(), Class::Conflict, "{err}");
+    // The record reads back canonically and the successor's data is untouched.
+    let stored = store.domain_link(successor).unwrap().expect("link");
+    assert_eq!(stored, link);
+    assert!(store.lookup(State::ROOT_ID, b"a.bin").is_err());
+    // A split names one predecessor; a merge names two or more.
+    assert!(weftfs::mw3::DomainLink::new(
+        successor,
+        vec![predecessor],
+        vec![1],
+        weftfs::mw3::DomainLinkKind::Merge,
+        None,
+    )
+    .is_err());
+    let third = register(&path, "train-third", DomainKind::CheckpointFamily);
+    let merged = weftfs::mw3::DomainLink::new(
+        successor,
+        vec![predecessor.min(third), predecessor.max(third)],
+        vec![1, 1],
+        weftfs::mw3::DomainLinkKind::Merge,
+        None,
+    )
+    .unwrap();
+    assert!(merged.predecessors.windows(2).all(|w| w[0] < w[1]));
+}
+
+#[test]
+fn a_link_requires_a_registered_successor() {
+    let (_dir, path) = new_store();
+    let mut admin = admin(&path);
+    let missing = weftfs::Hash32::from_bytes([9u8; 32]);
+    let link = weftfs::mw3::DomainLink::new(
+        missing,
+        vec![weftfs::Hash32::from_bytes([8u8; 32])],
+        vec![1],
+        weftfs::mw3::DomainLinkKind::Supersede,
+        None,
+    )
+    .unwrap();
+    let err = admin.write_domain_link(&link).unwrap_err();
+    assert_eq!(err.class(), Class::NotFound, "{err}");
+}
+
+#[test]
 fn read_view_names_a_missing_domain() {
     let (_dir, path) = new_store();
     let domain = register(&path, "train", DomainKind::CheckpointFamily);

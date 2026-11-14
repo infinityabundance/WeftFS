@@ -120,7 +120,9 @@ fn run_worker(
         let (lock, ready) = &*gate;
         let mut go = lock.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         while !*go {
-            go = ready.wait(go).unwrap_or_else(|poisoned| poisoned.into_inner());
+            go = ready
+                .wait(go)
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
         }
     }
     let mut store = Store::open_domain_with_options_and_backend(
@@ -316,6 +318,8 @@ fn main() {
         "p99_ms": percentile(&latencies, 0.99),
         "max_ms": if latencies.is_empty() { 0.0 } else { *latencies.last().unwrap() as f64 / 1e6 },
         "max_consecutive_retries": reports.iter().map(|r| r.max_consecutive).max().unwrap_or(0),
+        "per_writer_max_consecutive_retries": reports.iter().map(|r| r.max_consecutive).collect::<Vec<_>>(),
+        "stalled_writers": reports.iter().filter(|r| r.max_consecutive > 0).count(),
         "gap_commits_read": reports.iter().map(|r| r.gap_reads).sum::<u64>(),
         "gap_commits_cached": reports.iter().map(|r| r.gap_cached).sum::<u64>(),
         "touched_intersections": reports.iter().map(|r| r.touched_intersections).sum::<u64>(),

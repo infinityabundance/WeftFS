@@ -347,6 +347,20 @@ enum Mw3Command {
     },
     /// List the registered domains and the discovery epoch.
     List,
+    /// Record append-only lineage for a split, supersede, or merge
+    /// (`weft.domain.link.v1`). It moves no data and picks no winner.
+    Link {
+        #[arg(long, value_name = "DOMAIN")]
+        successor: String,
+        #[arg(long = "predecessor", value_name = "DOMAIN", required = true)]
+        predecessors: Vec<String>,
+        #[arg(long = "at-generation", value_name = "N")]
+        at_generation: Vec<u64>,
+        #[arg(long, default_value = "split", value_name = "split|supersede|merge")]
+        kind: String,
+        #[arg(long, default_value = "-")]
+        provenance: String,
+    },
     /// Capture a declared read view over the given domains (DomainId hex or a
     /// registered name). This is a capture, not a global linearizable point.
     Capture {
@@ -4220,16 +4234,19 @@ fn run_mw3(
         Mw3Command::List => {
             let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
             let index = store.discover_domains()?;
+            let heads = store.discover_heads()?;
             if json {
-                let domains: Vec<serde_json::Value> = index
-                    .domains
+                let domains: Vec<serde_json::Value> = heads
                     .iter()
-                    .map(|entry| {
+                    .map(|(entry, head)| {
                         serde_json::json!({
                             "domain": entry.id.to_hex(),
                             "name": entry.record.name,
                             "kind": entry.record.kind.as_str(),
                             "scope": entry.record.scope,
+                            "head_key": entry.head(),
+                            "head_generation": head.map(|(generation, _)| generation),
+                            "head": head.map(|(_, commit)| commit.to_hex()),
                             "first_generation": entry.first_generation,
                         })
                     })
@@ -4239,15 +4256,79 @@ fn run_mw3(
                     serde_json::json!({"ok": true, "epoch": index.epoch, "domains": domains})
                 );
             } else {
-                for entry in &index.domains {
-                    println!(
-                        "{} {} {} {}",
-                        entry.id.to_hex(),
-                        entry.record.kind.as_str(),
-                        entry.record.name,
-                        entry.record.scope
-                    );
+                for (entry, head) in &heads {
+                    match head {
+                        Some((generation, commit)) => println!(
+                            "{} {} {} {} {} {}",
+                            entry.id.to_hex(),
+                            entry.record.kind.as_str(),
+                            entry.record.name,
+                            entry.record.scope,
+                            generation,
+                            commit.to_hex()
+                        ),
+                        None => println!(
+                            "{} {} {} {} - -",
+                            entry.id.to_hex(),
+                            entry.record.kind.as_str(),
+                            entry.record.name,
+                            entry.record.scope
+                        ),
+                    }
                 }
+            }
+            Ok(())
+        }
+        Mw3Command::Link {
+            successor,
+            predecessors,
+            at_generation,
+            kind,
+            provenance,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy.clone())?;
+            let index = store.discover_domains()?;
+            drop(store);
+            let successor_ids = resolve(&index, &[successor])?;
+            let predecessor_ids = resolve(&index, &predecessors)?;
+            let mut sorted: Vec<(weftfs::Hash32, u64)> = predecessor_ids
+                .into_iter()
+                .enumerate()
+                .map(|(position, id)| {
+                    let generation = at_generation.get(position).copied().unwrap_or(1);
+                    (id, generation)
+                })
+                .collect();
+            sorted.sort_by_key(|(id, _)| *id);
+            let provenance = if provenance == "-" {
+                None
+            } else {
+                Some(weftfs::Hash32::from_lower_hex(&provenance).map_err(|_| {
+                    Error::invalid_argument("--provenance must be 64 lowercase hex characters or -")
+                })?)
+            };
+            let link = weftfs::mw3::DomainLink::new(
+                successor_ids[0],
+                sorted.iter().map(|(id, _)| *id).collect(),
+                sorted.iter().map(|(_, generation)| *generation).collect(),
+                weftfs::mw3::DomainLinkKind::parse(&kind)?,
+                provenance,
+            )?;
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let id = store.write_domain_link(&link)?;
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "ok": true,
+                        "link": id.to_hex(),
+                        "successor": link.successor.to_hex(),
+                        "predecessors": link.predecessors.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                        "kind": link.kind.as_str(),
+                    })
+                );
+            } else {
+                println!("link {}", id.to_hex());
             }
             Ok(())
         }

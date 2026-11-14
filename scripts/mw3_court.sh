@@ -50,7 +50,7 @@ if [[ "$profile" == "reduced" ]]; then
   CONFLICT_NS=(8 32)
   SCALE_NS=(8 32 256 1024)
 else
-  DISJOINT_NS=(1 2 4 8 16 32)
+  DISJOINT_NS=(1 2 4 8 16 32 64)
   CONFLICT_NS=(2 8 32)
   SCALE_NS=(8 16 32 64 128 256 512 1024)
 fi
@@ -130,35 +130,37 @@ def pick(q):
 def sumfield(name):
     return sum(r.get(name, 0) for r in rows)
 row = {
-    "distribution": distribution,
-    "n": int(n),
-    "count_per_writer": int(count),
-    "requested": int(n) * int(count),
-    "processes": len(rows),
-    "process_failures": int(failed),
-    "committed": committed,
-    "conflicts": conflicts,
-    "aborted": sumfield("aborted"),
-    "attempts": attempts,
-    "retry_amplification": (attempts / committed) if committed else 0.0,
-    "wall_ms": int(wall_ms),
-    "throughput_tx_s": (committed / (int(wall_ms) / 1000.0)) if int(wall_ms) else 0.0,
-    "p50_ms": pick(0.50), "p95_ms": pick(0.95), "p99_ms": pick(0.99),
-    "max_ms": (values[-1] / 1e6) if values else 0.0,
-    "backend_reads": sumfield("backend_reads"),
-    "backend_writes": sumfield("backend_writes"),
-    "bytes_read": sumfield("bytes_read"),
-    "bytes_written": sumfield("bytes_written"),
-    "reads_per_commit": (sumfield("backend_reads") / committed) if committed else 0.0,
-    "writes_per_commit": (sumfield("backend_writes") / committed) if committed else 0.0,
-    "gap_commits_read": sumfield("rebase_gap_commits_read"),
-    "gap_commits_cached": sumfield("rebase_gap_commits_cached"),
-    "touched_intersections": sumfield("rebase_touched_intersections"),
-    "max_consecutive_retries": max((r.get("rebase_max_consecutive_retries", 0) for r in rows), default=0),
-    "rss_sum_kib": sumfield("peak_rss_kib"),
-    "verify_full": verify_ok == "true",
-    "global_reader_refused": global_refused == "true",
-    "errors": [e for r in rows for e in r.get("errors", [])],
+  "distribution": distribution,
+  "client": "process-per-writer",
+  "n": int(n),
+  "count_per_writer": int(count),
+  "requested": int(n) * int(count),
+  "processes": len(rows),
+  "process_failures": int(failed),
+  "committed": committed,
+  "conflicts": conflicts,
+  "aborted": sumfield("aborted"),
+  "attempts": attempts,
+  "retry_amplification": (attempts / committed) if committed else 0.0,
+  "wall_ms": int(wall_ms),
+  "throughput_tx_s": (committed / (int(wall_ms) / 1000.0)) if int(wall_ms) else 0.0,
+  "p50_ms": pick(0.50), "p95_ms": pick(0.95), "p99_ms": pick(0.99),
+  "max_ms": (values[-1] / 1e6) if values else 0.0,
+  "backend_reads": sumfield("backend_reads"),
+  "backend_writes": sumfield("backend_writes"),
+  "backend_requests": sumfield("backend_reads") + sumfield("backend_writes"),
+  "bytes_read": sumfield("bytes_read"),
+  "bytes_written": sumfield("bytes_written"),
+  "reads_per_commit": (sumfield("backend_reads") / committed) if committed else 0.0,
+  "writes_per_commit": (sumfield("backend_writes") / committed) if committed else 0.0,
+  "gap_commits_read": sumfield("rebase_gap_commits_read"),
+  "gap_commits_cached": sumfield("rebase_gap_commits_cached"),
+  "touched_intersections": sumfield("rebase_touched_intersections"),
+  "max_consecutive_retries": max((r.get("rebase_max_consecutive_retries", 0) for r in rows), default=0),
+  "rss_sum_kib": sumfield("peak_rss_kib"),
+  "verify_full": verify_ok == "true",
+  "global_reader_refused": global_refused == "true",
+  "errors": [e for r in rows for e in r.get("errors", [])],
 }
 print(json.dumps(row, sort_keys=True))
 PY
@@ -167,8 +169,7 @@ PY
 mw3_rows="$work/mw3-rows.ndjson"
 : >"$mw3_rows"
 for n in "${DISJOINT_NS[@]}"; do
-  if (( n <= 8 )); then count=500; elif (( n == 16 )); then count=200; else count=100; fi
-  run_mw3_config disjoint "$n" "$count" >>"$mw3_rows"
+  run_mw3_config disjoint "$n" 200 >>"$mw3_rows"
 done
 for n in "${CONFLICT_NS[@]}"; do
   run_mw3_config same-domain "$n" 10 >>"$mw3_rows"
@@ -323,6 +324,9 @@ print(json.dumps({
     "process_failures": int(failed), "attempts": attempts,
     "retry_amplification": (attempts / committed) if committed else 0.0,
     "backend_reads": reads,
+    "backend_writes": sum(r.get("backend_writes", 0) for r in rows),
+    "bytes_read": sum(r.get("bytes_read", 0) for r in rows),
+    "bytes_written": sum(r.get("bytes_written", 0) for r in rows),
     "reads_per_commit": (reads / committed) if committed else 0.0,
     "throughput_tx_s": (committed / (int(wall_ms) / 1000.0)) if int(wall_ms) else 0.0,
     "p50_ms": pick(0.50), "p95_ms": pick(0.95), "p99_ms": pick(0.99),
@@ -330,12 +334,18 @@ print(json.dumps({
     "gap_commits_read": sum(r.get("rebase_gap_commits_read", 0) for r in rows),
     "gap_commits_cached": sum(r.get("rebase_gap_commits_cached", 0) for r in rows),
     "max_consecutive_retries": max((r.get("rebase_max_consecutive_retries", 0) for r in rows), default=0),
+    "max_consecutive_retries_measured": all("rebase_max_consecutive_retries" in r for r in rows),
     "rss_sum_kib": sum(r.get("peak_rss_kib", 0) for r in rows),
 }, sort_keys=True))
 PY
 }
 # Interleaved repetitions: the arms alternate so page-cache warmth and CPU
 # state cannot silently favour one of them.
+before_rev="${WEFT_MW3_BEFORE_REV:-unknown}"
+before_sha="unknown"
+if [[ -n "${WEFT_MW3_BEFORE:-}" && -x "${WEFT_MW3_BEFORE}/example-mw2-writer" ]]; then
+  before_sha="$(sha256sum "${WEFT_MW3_BEFORE}/example-mw2-writer" | cut -d' ' -f1)"
+fi
 for rep in 1 2 3; do
   if [[ -n "${WEFT_MW3_BEFORE:-}" && -x "${WEFT_MW3_BEFORE}/example-mw2-writer" ]]; then
     run_mw2_n32 "before-$rep" "${WEFT_MW3_BEFORE}/example-mw2-writer"
@@ -387,9 +397,10 @@ open(receipt, "a").write("\n")
 print(json.dumps({"receipt": receipt, "rows": len(rows)}))
 PY
 
-python3 - "$retry_rows" "$retry_receipt" "$stamp" "$finished_at" "$log" "$log_sha" <<'PY'
+python3 - "$retry_rows" "$retry_receipt" "$stamp" "$finished_at" "$log" "$log_sha" \
+  "$before_rev" "$before_sha" <<'PY'
 import json, os, sys
-(rows_path, receipt, stamp, finished_at, log, log_sha) = sys.argv[1:]
+(rows_path, receipt, stamp, finished_at, log, log_sha, before_rev, before_sha) = sys.argv[1:]
 rows = [json.loads(line) for line in open(rows_path) if line.strip()]
 def median(values):
     values = sorted(values)
@@ -438,7 +449,8 @@ doc = {
     "limit_pids": os.environ.get("WEFT_COURT_PIDS", "?"),
   },
   "revisions": {"WeftFS": os.environ.get("WEFT_REPO_WEFTFS", "unknown")},
-  "baseline_note": ("before == the tree at WEFT_MW3_BEFORE; after == this tree; "
+  "baseline": {"revision": before_rev, "binary_sha256": before_sha},
+  "baseline_note": ("before == the tree at WEFT_MW3_BEFORE (revision above); after == this tree; "
                     "arms are interleaved and the comparison uses the median of 3 repetitions"
                     if "before" in arms else
                     "no baseline binary was supplied; only the after rows are measured"),
@@ -454,11 +466,14 @@ import json, os, sys
 (rows_path, receipt, stamp, finished_at, log, log_sha) = sys.argv[1:]
 rows = [json.loads(line) for line in open(rows_path) if line.strip()]
 base = next((r.get("throughput_tx_s") for r in rows
-             if r.get("n") == 32 and r.get("mode") == "threads-in-one-process"), 0.0)
+             if r.get("mode") == "threads-in-one-process"), 0.0)
 for row in rows:
-    row["scaling_efficiency"] = (
+    # Efficiency is relative to the smallest compact cell (N=8), which is the
+    # only honest in-process baseline measured: there is no N=1 compact cell.
+    row["scaling_efficiency_vs_smallest_compact"] = (
         row.get("throughput_tx_s", 0.0) / (row["n"] * base)
         if base and row.get("mode") == "threads-in-one-process" and row.get("n") else None)
+    row.pop("scaling_efficiency", None)
 doc = {
   "schema": "weftfs.writer.scale/1",
   "generated_at": finished_at, "stamp": stamp,

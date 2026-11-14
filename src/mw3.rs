@@ -25,12 +25,16 @@ pub const DOMAINS_SCHEMA: &str = "weft.domains.v1";
 pub const VIEW_PIN_SCHEMA: &str = "weft.view.pin.v1";
 /// Hash domain for `view_root`.
 pub const VIEW_DOMAIN: &str = "weft/view/v1";
-/// Schema of the (specified, not implemented) domain link record.
+/// Schema of the append-only domain link record.
 pub const DOMAIN_LINK_SCHEMA: &str = "weft.domain.link.v1";
+/// Hash domain for a derived domain link id.
+pub const DOMAIN_LINK_DOMAIN: &str = "weft/domain/link/v1";
 /// Hard bound on the number of registered domains in one discovery record.
 pub const MAX_DOMAINS: usize = 65_536;
 /// Hard bound on the domains one read view may name.
 pub const MAX_VIEW_DOMAINS: usize = 4_096;
+/// Hard bound on the predecessors one link record may name.
+pub const MAX_LINK_PREDECESSORS: usize = 64;
 
 /// What a domain names. It is part of the identity, so two records with the
 /// same display name but different kinds are different domains.
@@ -170,19 +174,42 @@ impl DomainEntry {
         })
     }
 
+    /// The head **key** of a domain: the object that holds its authoritative
+    /// head. The discovery record maps a domain to this key; the head *value*
+    /// at that key is authoritative and is never cached here.
+    pub fn head_key(domain: Hash32) -> String {
+        format!("domains/{}/superblock", domain.to_hex())
+    }
+
+    /// This entry's head key.
+    pub fn head(&self) -> String {
+        Self::head_key(self.id)
+    }
+
     fn to_value(&self) -> Value {
         wu::map([
             ("id", wu::hash_value(self.id)),
             ("name", Value::Str(self.record.name.clone())),
             ("kind", Value::Str(self.record.kind.as_str().to_owned())),
             ("scope", Value::Str(self.record.scope.clone())),
+            ("head_key", Value::Str(self.head())),
             ("first_generation", Value::U64(self.first_generation)),
         ])
     }
 
     fn from_wcb(value: &Value) -> Result<Self> {
         let map = wu::as_map(value)?;
-        wu::check_keys(map, &["id", "name", "kind", "scope", "first_generation"])?;
+        wu::check_keys(
+            map,
+            &[
+                "id",
+                "name",
+                "kind",
+                "scope",
+                "head_key",
+                "first_generation",
+            ],
+        )?;
         let record = DomainRecord {
             name: wu::get_text(map, "name")?,
             kind: DomainKind::parse(&wu::get_text(map, "kind")?)?,
@@ -193,6 +220,12 @@ impl DomainEntry {
         if record.id()? != id {
             return Err(Error::corrupt(
                 "discovery entry id is not the derived DomainId of its record",
+            ));
+        }
+        let head_key = wu::get_text(map, "head_key")?;
+        if head_key != Self::head_key(id) {
+            return Err(Error::non_canonical(
+                "discovery entry head_key is not the derived head key of its DomainId",
             ));
         }
         Ok(DomainEntry {
@@ -409,6 +442,204 @@ pub fn encode_view_pin(view: &ReadView, principal: &str, pinned_ns: i64) -> Resu
     wu::encode(&value)
 }
 
+/// Why a successor domain exists. It is part of the link identity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DomainLinkKind {
+    Split,
+    Supersede,
+    Merge,
+}
+
+impl DomainLinkKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            DomainLinkKind::Split => "split",
+            DomainLinkKind::Supersede => "supersede",
+            DomainLinkKind::Merge => "merge",
+        }
+    }
+
+    pub fn parse(text: &str) -> Result<Self> {
+        match text {
+            "split" => Ok(DomainLinkKind::Split),
+            "supersede" => Ok(DomainLinkKind::Supersede),
+            "merge" => Ok(DomainLinkKind::Merge),
+            other => Err(Error::invalid_argument(format!(
+                "unknown domain link kind `{other}` (expected split, supersede, or merge)"
+            ))),
+        }
+    }
+}
+
+/// An append-only `weft.domain.link.v1` record.
+///
+/// A split or supersede names exactly one predecessor; a merge names two or
+/// more. The record is published **create-once** under the successor's key, so
+/// ancestry can be added but never rewritten, and the protocol never merges
+/// data on its own: a merge is an explicit republish into a new domain plus
+/// this record.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DomainLink {
+    pub successor: Hash32,
+    pub predecessors: Vec<Hash32>,
+    pub at_generation: Vec<u64>,
+    pub kind: DomainLinkKind,
+    pub provenance: Option<Hash32>,
+}
+
+impl DomainLink {
+    pub fn new(
+        successor: Hash32,
+        predecessors: Vec<Hash32>,
+        at_generation: Vec<u64>,
+        kind: DomainLinkKind,
+        provenance: Option<Hash32>,
+    ) -> Result<Self> {
+        let link = DomainLink {
+            successor,
+            predecessors,
+            at_generation,
+            kind,
+            provenance,
+        };
+        link.validate()?;
+        Ok(link)
+    }
+
+    fn validate(&self) -> Result<()> {
+        if self.predecessors.is_empty() {
+            return Err(Error::invalid_argument(
+                "a domain link must name at least one predecessor",
+            ));
+        }
+        if self.predecessors.len() > MAX_LINK_PREDECESSORS {
+            return Err(Error::limit_exceeded(format!(
+                "a domain link names {} predecessors, above the {MAX_LINK_PREDECESSORS} bound",
+                self.predecessors.len()
+            )));
+        }
+        if self.at_generation.len() != self.predecessors.len() {
+            return Err(Error::invalid_argument(
+                "a domain link needs one at_generation per predecessor",
+            ));
+        }
+        for window in self.predecessors.windows(2) {
+            if window[0] >= window[1] {
+                return Err(Error::non_canonical(
+                    "domain link predecessors must be sorted by unique DomainId",
+                ));
+            }
+        }
+        if self.predecessors.contains(&self.successor) {
+            return Err(Error::invalid_argument(
+                "a domain cannot be its own predecessor",
+            ));
+        }
+        match self.kind {
+            DomainLinkKind::Merge if self.predecessors.len() < 2 => Err(Error::invalid_argument(
+                "a merge link must name two or more predecessors",
+            )),
+            DomainLinkKind::Split | DomainLinkKind::Supersede if self.predecessors.len() != 1 => {
+                Err(Error::invalid_argument(
+                    "a split or supersede link must name exactly one predecessor",
+                ))
+            }
+            _ => Ok(()),
+        }
+    }
+
+    pub fn to_value(&self) -> Value {
+        wu::map([
+            ("schema", Value::Str(DOMAIN_LINK_SCHEMA.to_owned())),
+            ("successor", wu::hash_value(self.successor)),
+            (
+                "predecessors",
+                Value::Array(
+                    self.predecessors
+                        .iter()
+                        .map(|id| wu::hash_value(*id))
+                        .collect(),
+                ),
+            ),
+            (
+                "at_generation",
+                Value::Array(self.at_generation.iter().map(|g| Value::U64(*g)).collect()),
+            ),
+            ("kind", Value::Str(self.kind.as_str().to_owned())),
+            (
+                "provenance",
+                Value::Str(
+                    self.provenance
+                        .map(|id| id.to_hex())
+                        .unwrap_or_else(|| "-".to_owned()),
+                ),
+            ),
+        ])
+    }
+
+    pub fn encode(&self) -> Result<Vec<u8>> {
+        wu::encode(&self.to_value())
+    }
+
+    /// `H("weft/domain/link/v1", WCB(record))`.
+    pub fn id(&self) -> Result<Hash32> {
+        Ok(identity::h(DOMAIN_LINK_DOMAIN, &self.encode()?))
+    }
+
+    pub fn from_wcb(value: &Value) -> Result<Self> {
+        let map = wu::as_map(value)?;
+        wu::check_keys(
+            map,
+            &[
+                "schema",
+                "successor",
+                "predecessors",
+                "at_generation",
+                "kind",
+                "provenance",
+            ],
+        )?;
+        let schema = wu::get_text(map, "schema")?;
+        if schema != DOMAIN_LINK_SCHEMA {
+            return Err(Error::unsupported_version(format!(
+                "domain link schema `{schema}` is not `{DOMAIN_LINK_SCHEMA}`"
+            )));
+        }
+        let predecessors = wu::get_array(map, "predecessors")?
+            .iter()
+            .map(|value| match value {
+                Value::Bytes(bytes) => Hash32::from_slice(bytes).map_err(Error::from),
+                _ => Err(Error::corrupt(
+                    "domain link predecessor is not a 32-byte DomainId",
+                )),
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let at_generation = wu::get_array(map, "at_generation")?
+            .iter()
+            .map(|value| match value {
+                Value::U64(generation) => Ok(*generation),
+                _ => Err(Error::corrupt("domain link at_generation is not a u64")),
+            })
+            .collect::<Result<Vec<_>>>()?;
+        let provenance_text = wu::get_text(map, "provenance")?;
+        let provenance =
+            if provenance_text == "-" {
+                None
+            } else {
+                Some(Hash32::from_lower_hex(&provenance_text).map_err(|_| {
+                    Error::corrupt("domain link provenance is not a lowercase hex id")
+                })?)
+            };
+        DomainLink::new(
+            wu::get_hash(map, "successor")?,
+            predecessors,
+            at_generation,
+            DomainLinkKind::parse(&wu::get_text(map, "kind")?)?,
+            provenance,
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -455,8 +686,17 @@ mod tests {
         let mut b = a;
         b.generation = 2;
         assert_ne!(view_root(&[a]).unwrap(), view_root(&[b]).unwrap());
-        let view = ReadView::capture(vec![a, b]).unwrap();
+        let mut other_domain = a;
+        other_domain.domain = Hash32::from_bytes([1u8; 32]);
+        assert_ne!(
+            view_root(&[a]).unwrap(),
+            view_root(&[other_domain]).unwrap()
+        );
+        let view = ReadView::capture(vec![a, other_domain]).unwrap();
         assert_eq!(view.pairs.len(), 2);
+        // A view names each domain at most once, so the same domain twice is
+        // refused rather than silently collapsed.
         assert!(ReadView::capture(vec![a, a]).is_err());
+        assert!(ReadView::capture(vec![a, b]).is_err());
     }
 }

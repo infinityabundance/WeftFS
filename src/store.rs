@@ -1801,6 +1801,82 @@ impl Store {
         }
     }
 
+    /// Resolve the discovery record into `domain -> head` pairs.
+    ///
+    /// The record enumerates the domains (and names each head's key); this call
+    /// reads each head once. A domain whose head image is absent is reported as
+    /// `None` rather than dropped, because the discovery record is not the
+    /// source of truth.
+    pub fn discover_heads(&self) -> Result<Vec<(crate::mw3::DomainEntry, Option<(u64, Hash32)>)>> {
+        let index = self.discover_domains()?;
+        let mut out = Vec::with_capacity(index.domains.len());
+        for entry in index.domains {
+            let head = self.with_backend(|backend| backend.load_domain_head(&entry.id))?;
+            out.push((entry, head));
+        }
+        Ok(out)
+    }
+
+    /// Publish an append-only `weft.domain.link.v1` record under the
+    /// successor's key.
+    ///
+    /// Create-once: the same record is idempotent and a different record for
+    /// the same successor is `Conflict`. It never moves data and never picks a
+    /// winner; it records ancestry for a split, supersede, or merge.
+    pub fn write_domain_link(&mut self, link: &crate::mw3::DomainLink) -> Result<Hash32> {
+        self.require_writable()?;
+        if self.options.writer_mode != crate::mw2::WriterMode::Sharded {
+            return Err(Error::invalid_argument(
+                "domain links require --writer-mode sharded",
+            ));
+        }
+        if self
+            .with_backend(|backend| backend.load_domain_head(&link.successor))?
+            .is_none()
+        {
+            return Err(Error::not_found(format!(
+                "successor domain {} has no head; register it before linking it",
+                link.successor.to_hex()
+            )));
+        }
+        let bytes = link.encode()?;
+        let id = link.id()?;
+        let key = Key::domain_link(link.successor);
+        match self.with_backend_mut(|backend| backend.put_atomic(&key, &bytes)) {
+            Ok(()) => Ok(id),
+            Err(err) if err.class() == Class::Exists => {
+                let stored = self.with_backend(|backend| backend.read_all(&key))?;
+                if stored == bytes {
+                    Ok(id)
+                } else {
+                    Err(Error::conflict(
+                        "this successor domain already has a different domain link record; \
+                         links are append-only but a successor has exactly one",
+                    ))
+                }
+            }
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Read the link record of one successor domain, if any.
+    pub fn domain_link(&self, successor: Hash32) -> Result<Option<crate::mw3::DomainLink>> {
+        match self.with_backend(|backend| backend.read_all(&Key::domain_link(successor))) {
+            Ok(bytes) => {
+                let value = crate::wcb_util::decode(&bytes)?;
+                let link = crate::mw3::DomainLink::from_wcb(&value)?;
+                if link.successor != successor {
+                    return Err(Error::corrupt(
+                        "a domain link record names a different successor than its key",
+                    ));
+                }
+                Ok(Some(link))
+            }
+            Err(err) if err.class() == Class::NotFound => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
     /// Register an MW3 domain.
     ///
     /// One compare-and-swap on the discovery record, requiring the observed
@@ -7798,9 +7874,7 @@ impl Store {
                         .unwrap_or_else(|poisoned| poisoned.into_inner());
                     for generation in &replayed {
                         if let Some(commit) = cache.get(*generation) {
-                            if !crate::mw2::changed_keys(&commit.commit.ops)
-                                .is_disjoint(&touched)
-                            {
+                            if !crate::mw2::changed_keys(&commit.commit.ops).is_disjoint(&touched) {
                                 intersects = true;
                                 break;
                             }
