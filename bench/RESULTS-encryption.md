@@ -1,20 +1,21 @@
 # T079 — optional encryption at rest: measured cost and the dedup leak
 
 **Date:** 2026-11-14
-**Revision:** WeftFS `5f57858` (the envelope commit is `ab5f181`; the harness
-and court registration follow it, and this is the receipt the registered court
-produces).
+**Revision:** WeftFS `9bd63a5` (the envelope commit is `ab5f181`; the harness,
+the registered court and the docs follow it, and this is the receipt the
+registered court produces at the closing revision).
 **Court:** `weft/bench-court:1` (`sha256:4c6c41fb…`), kernel `7.3.3-1-cachyos`,
 3 GiB / 4 vCPU / 1024 pids, unchanged hard limits, `tmpfs` fixture.
-**Receipt:** `bench/receipts/encryption-20261115T001500Z.json` (every check
-passes), raw log `bench/receipts/encryption-20261115T001500Z.log`.
-**Superseded, retained, not cited:** `encryption-20261114T235500Z.json` and
-`encryption-20261114T233000Z.json` (same measurements and the same checks at
-earlier revisions of the harness; neither is the receipt the registered court
-emits), `encryption-20261114T231500Z.json` (same, and without the
-`environment.revisions` field the numbers generator needs), and
-`encryption-20261114T230000Z.json` (first run: the plane-throughput column was
-mis-scaled by 1024).
+**Receipt:** `bench/receipts/encryption-20261114T234223Z.json` (every check
+passes), raw log `bench/receipts/encryption-20261114T234223Z.log`.
+**Superseded, retained, not cited:** `encryption-20261115T001500Z.json` (same
+checks, but its stamp was supplied by a shell override that was ahead of the
+host clock — the run is real, the stamp is not evidence), and
+`encryption-20261114T235500Z.json`, `encryption-20261114T233000Z.json`,
+`encryption-20261114T231500Z.json` (same measurements at earlier harness
+revisions; the last also lacks the `environment.revisions` field the numbers
+generator needs), and `encryption-20261114T230000Z.json` (first run: the
+plane-throughput column was mis-scaled by 1024).
 
 ## What was measured
 

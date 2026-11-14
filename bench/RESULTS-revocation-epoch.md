@@ -1,6 +1,6 @@
 # Revocation epoch — measured results (T078)
 
-Receipt: `bench/receipts/revocation-epoch-20261115T011000Z.json` + `.log`.
+Receipt: `bench/receipts/revocation-epoch-20261114T234309Z.json` + `.log`.
 Court: rust court (3 GiB / 4 CPUs / 1024 pids, bounded tmpfs), one local store,
 no object backend.
 

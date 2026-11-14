@@ -223,7 +223,7 @@ same in all three arms (**1,216**), which is the leak: the blob name
 is the plaintext hash whichever mode is chosen. The plane itself seals at
 **1,630 MiB/s** and opens at **2,138 MiB/s**
 (convergent) on one core of the bench court; seven interleaved repetitions,
-medians, warm page cache. Source: `bench/receipts/encryption-20261115T001500Z.json`
+medians, warm page cache. Source: `bench/receipts/encryption-20261114T234223Z.json`
 (stamp 20261115T001500Z, revision 5f578584702b).
 <!-- END GENERATED:encryption-headline -->
 
@@ -238,7 +238,7 @@ Interpretation:
   to every object *and* to every manifest.
 
 Raw rows per repetition, the plane microbench, the equality/republish checks
-and the limits are in `bench/receipts/encryption-20261115T001500Z.json`
+and the limits are in `bench/receipts/encryption-20261114T234223Z.json`
 (+ `.log`) and `bench/RESULTS-encryption.md`.
 
 ## 8. Failure classes

@@ -5,7 +5,7 @@ Receipt: `bench/receipts/producer-auth-<stamp>.json` + `.log`, written by
 over the same canonical records; every container keeps the default limits
 (3 GiB / 3 GiB swap / 1024 pids / 4 cpus / bounded tmpfs).
 
-Current receipt: `producer-auth-20261115T010000Z.json`.
+Current receipt: `producer-auth-20261114T234230Z.json`.
 
 <!-- BEGIN GENERATED:producer-auth-verdict (scripts/perf_numbers.py) -->
 **31** checks pass with **0** failures: Rust

@@ -1,6 +1,6 @@
 # Artifact API — measured results (T072)
 
-Receipt: `bench/receipts/artifact-api-20261115T012000Z.json` and its `.log`,
+Receipt: `bench/receipts/artifact-api-20261114T234324Z.json` and its `.log`,
 written by the registered court `scripts/artifact_api_court.sh`.
 
 <!-- BEGIN GENERATED:artifact-api-verdict (scripts/perf_numbers.py) -->

@@ -1,0 +1,143 @@
+{
+  "checks": [
+    {
+      "check": "rust_unit",
+      "result": "pass"
+    },
+    {
+      "check": "rust_build",
+      "result": "pass"
+    },
+    {
+      "check": "go_build",
+      "result": "pass"
+    },
+    {
+      "check": "keygen_a",
+      "result": "pass"
+    },
+    {
+      "check": "keygen_c",
+      "result": "pass"
+    },
+    {
+      "check": "keyset_current",
+      "result": "pass"
+    },
+    {
+      "check": "keyset_rotated",
+      "result": "pass"
+    },
+    {
+      "check": "store_init",
+      "result": "pass"
+    },
+    {
+      "check": "store_dataset",
+      "result": "pass"
+    },
+    {
+      "check": "store_output",
+      "result": "pass"
+    },
+    {
+      "check": "sign_current",
+      "result": "pass"
+    },
+    {
+      "check": "rust_verify_current",
+      "result": "pass"
+    },
+    {
+      "check": "go_verify_current",
+      "result": "pass"
+    },
+    {
+      "check": "python_verify_current",
+      "result": "pass"
+    },
+    {
+      "check": "sign_old",
+      "result": "pass"
+    },
+    {
+      "check": "sign_revoked",
+      "result": "pass"
+    },
+    {
+      "check": "rust_rejects_rotated_current",
+      "result": "pass"
+    },
+    {
+      "check": "rust_accepts_rotated_historical",
+      "result": "pass"
+    },
+    {
+      "check": "go_rejects_rotated_current",
+      "result": "pass"
+    },
+    {
+      "check": "python_rejects_rotated_current",
+      "result": "pass"
+    },
+    {
+      "check": "rust_rejects_revoked",
+      "result": "pass"
+    },
+    {
+      "check": "go_rejects_revoked",
+      "result": "pass"
+    },
+    {
+      "check": "python_rejects_revoked",
+      "result": "pass"
+    },
+    {
+      "check": "rust_rejects_tampered",
+      "result": "pass"
+    },
+    {
+      "check": "go_rejects_tampered",
+      "result": "pass"
+    },
+    {
+      "check": "python_rejects_tampered",
+      "result": "pass"
+    },
+    {
+      "check": "go_sign",
+      "result": "pass"
+    },
+    {
+      "check": "rust_verifies_go",
+      "result": "pass"
+    },
+    {
+      "check": "python_verifies_go",
+      "result": "pass"
+    },
+    {
+      "check": "store_check_ok",
+      "result": "pass"
+    },
+    {
+      "check": "store_check_wrong_input",
+      "result": "pass"
+    }
+  ],
+  "environment": {
+    "courts": "rust (tests + example), go (signer + verifier), python (clean-room verifier)",
+    "label": "single host, synthetic fixture; the signature authenticates a declaration, not execution",
+    "limits": "3 GiB / 3 GiB swap / 1024 pids / 4 cpus / bounded tmpfs",
+    "revisions": {
+      "WeftFS": "9bd63a51657d777d597714a5ae713a56dc5857e5"
+    }
+  },
+  "failed": 0,
+  "generated_utc": "20261114T234230Z",
+  "kind": "producer-auth",
+  "passed": 31,
+  "result": "pass",
+  "schema": "weft.producer-attestation.receipt.v1",
+  "workdir": ".docker-cache/producer-auth-20261114T234230Z"
+}
