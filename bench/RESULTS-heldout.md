@@ -91,6 +91,11 @@ Cold-restore relative error median **0.0478**; write-wall relative error median 
   family. A per-strategy intercept is what the data wants; the declared form
   does not have one, so this is published as a modelling loss rather than fixed
   after the fact.
+- **Repetition.** The per-tensor errors are one measurement per tensor, not
+  repeated measurements of one cell: the contract allows exactly one held-out
+  pass. The only cells in this subphase with N >= 7 paired repetitions are the
+  A/N/B/C/D/E statistics in §6. Every single-pass table here is labelled as
+  such and none is promoted to a headline claim about run-to-run stability.
 - **Write wall is the weak target, and the first pass shows why.** In the
   retained pass the same code and the same strategies wrote the same bytes, and
   the family write wall moved by an order of magnitude between two consecutive
@@ -227,8 +232,9 @@ memory/CPU and thermals were captured before and after. Thermals read
 `unavailable` on this host (no readable `/sys/class/thermal/*/temp` inside the
 container); that is reported, not zeroed.
 
-**Cross-host repeat: not attempted.** No second machine is reachable from this
-workspace, so no cross-host claim is made.
+**Cross-host repeat: not attempted.** `~/.ssh/known_hosts` lists only
+`github.com` and there is no SSH configuration, so no second host is reachable
+from this workspace. No cross-host claim is made.
 
 ## 7. Every loss in this subphase
 
