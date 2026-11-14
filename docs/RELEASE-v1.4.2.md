@@ -111,12 +111,12 @@ must be identified by digest rather than by source tree.
 ## Verification
 
 <!-- BEGIN GENERATED:release-v142-verify (scripts/perf_numbers.py) -->
-`bench/receipts/verify-20261113T033408Z.json`: **47/47** courts pass,
-0 failed, 0 skipped, at WeftFS `52da9888f3726e6af5c364af7707fd98574fc954`.
-Rust all-targets **807** passed / 0 failed (170 result lines);
-FUSE all-targets **850** passed / 0 failed /
+`bench/receipts/verify-20261114T162327Z.json`: **75/75** courts pass,
+0 failed, 0 skipped, at WeftFS `517703200d4837d63233e3ef02c4102f454f9c05`.
+Rust all-targets **933** passed / 0 failed (199 result lines);
+FUSE all-targets **984** passed / 0 failed /
 2 ignored (the two pre-existing kernel/`CAP_SETUID` tests);
-WeftCodec **290** passed. The conformance manifest holds
+WeftCodec **299** passed. The conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`);
 **1,261** claims are audited; `scripts/check-claims.sh`,
 `scripts/perf_numbers.py --check`, spec drift, the conformance manifest/coverage
