@@ -80,6 +80,7 @@ pub mod recovery_first;
 pub mod representation;
 pub mod restore_pipeline;
 pub mod retention;
+pub mod revocation_epoch;
 pub mod s3;
 pub mod safetensors;
 pub mod service_account;
@@ -169,6 +170,10 @@ pub use restore_pipeline::{run_ordered_pipeline, RestorePipelineOptions, Restore
 pub use retention::{
     RetainedArtifact, RetentionBinding, RetentionCandidate, RetentionClass, RetentionClassSummary,
     RetentionGcPlan, RetentionPointer, RetentionRequest, RetentionSignature,
+};
+pub use revocation_epoch::{
+    epoch_id, RevocationEntry, RevocationEpoch, RevocationKind, RevocationObservation,
+    DEFAULT_FRESHNESS_NS, REVOCATION_DENIED,
 };
 pub use s3::{S3Backend, S3Config};
 pub use singleflight::{

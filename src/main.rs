@@ -865,6 +865,12 @@ enum Command {
         #[command(subcommand)]
         command: ArtifactCommand,
     },
+    /// Revocation epochs: the monotonic record a client must observe before
+    /// serving, not a caller-supplied revocation set (T078).
+    Revocation {
+        #[command(subcommand)]
+        command: RevocationCommand,
+    },
     /// Materialize a Context Root as a training-ready, fully verified set.
     Materialize {
         /// Context Root name or `weft://` URI.
@@ -3675,6 +3681,7 @@ fn run(cli: Cli) -> Result<()> {
         }
         Command::Context { command } => run_context(&store, json, policy, command),
         Command::Artifact { command } => run_artifact(&store, json, policy, command),
+        Command::Revocation { command } => run_revocation(&store, json, policy, command),
         Command::Materialize {
             root,
             training_ready,
@@ -7616,6 +7623,153 @@ fn entry_json(entry: &weftfs::artifact_api::ArtifactEntry) -> serde_json::Value 
         "shards": entry.shards,
         "dependencies": entry.dependencies.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
     })
+}
+
+/// `weftfs revocation ...`: the monotonic epoch a client must observe.
+fn run_revocation(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: RevocationCommand,
+) -> Result<()> {
+    use weftfs::revocation_epoch::{RevocationEntry, RevocationKind};
+    match command {
+        RevocationCommand::Show => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            match store.revocation_epoch()? {
+                None => {
+                    if json {
+                        print_json(&json!({"ok": true, "epoch": 0, "present": false}))
+                    } else {
+                        println!("epoch=0 present=false");
+                        Ok(())
+                    }
+                }
+                Some(record) => {
+                    if json {
+                        print_json(&json!({
+                            "ok": true,
+                            "present": true,
+                            "epoch": record.epoch,
+                            "id": record.id()?.to_hex(),
+                            "issued_at_ns": record.issued_at_ns,
+                            "valid_for_ns": record.valid_for_ns,
+                            "prev": record.prev.map(|prev| prev.to_hex()),
+                            "revocations": record.revocations.iter().map(|entry| json!({
+                                "tenant": entry.tenant,
+                                "kind": entry.kind.as_str(),
+                                "id": entry.id.to_hex(),
+                            })).collect::<Vec<_>>(),
+                        }))
+                    } else {
+                        println!("epoch={}", record.epoch);
+                        println!("id={}", record.id()?);
+                        println!("revocations={}", record.revocations.len());
+                        Ok(())
+                    }
+                }
+            }
+        }
+        RevocationCommand::Verify => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            match store.verify_revocation_chain()? {
+                None => {
+                    if json {
+                        print_json(&json!({"ok": true, "epoch": 0, "present": false}))
+                    } else {
+                        println!("ok epoch=0 present=false");
+                        Ok(())
+                    }
+                }
+                Some(record) => {
+                    if json {
+                        print_json(&json!({"ok": true, "epoch": record.epoch,
+                                           "id": record.id()?.to_hex()}))
+                    } else {
+                        println!("ok epoch={}", record.epoch);
+                        Ok(())
+                    }
+                }
+            }
+        }
+        RevocationCommand::Publish {
+            tenant,
+            kind,
+            id,
+            valid_for_secs,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let kind = RevocationKind::parse(&kind)?;
+            let id = Hash32::from_hex(&id)
+                .map_err(|_| Error::invalid_argument("revocation id is not 32-byte hex"))?;
+            let entry = RevocationEntry::new(tenant, kind, id)?;
+            let record = store
+                .publish_revocation_epoch(&[entry], valid_for_secs.saturating_mul(1_000_000_000))?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "epoch": record.epoch,
+                    "id": record.id()?.to_hex(),
+                    "prev": record.prev.map(|prev| prev.to_hex()),
+                    "revocations": record.revocations.len(),
+                    "generation": store.generation(),
+                }))
+            } else {
+                println!("epoch={}", record.epoch);
+                println!("id={}", record.id()?);
+                Ok(())
+            }
+        }
+        RevocationCommand::Observe { max_staleness_secs } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let now = store.clock_now_ns();
+            let observation = store.observe_revocation_epoch(
+                max_staleness_secs.saturating_mul(1_000_000_000) as i64,
+                now,
+            )?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "epoch": observation.epoch,
+                    "id": observation.id.to_hex(),
+                    "observed_at_ns": observation.observed_at_ns,
+                    "max_staleness_ns": observation.max_staleness_ns,
+                }))
+            } else {
+                println!("epoch={}", observation.epoch);
+                println!("id={}", observation.id);
+                Ok(())
+            }
+        }
+    }
+}
+
+/// Revocation epoch verbs.
+#[derive(Subcommand)]
+enum RevocationCommand {
+    /// Show the current epoch record.
+    Show,
+    /// Validate the whole epoch chain (every history record and its links).
+    Verify,
+    /// Publish the next epoch with one added revocation.
+    Publish {
+        #[arg(long)]
+        tenant: String,
+        /// `content` (a content root or object id) or `capability` (an
+        /// envelope id or revocation id).
+        #[arg(long)]
+        kind: String,
+        /// 64 hex digits.
+        #[arg(long)]
+        id: String,
+        #[arg(long = "valid-for-secs", default_value_t = 300u64)]
+        valid_for_secs: u64,
+    },
+    /// Observe the epoch as a client would, and print the freshness contract.
+    Observe {
+        #[arg(long = "max-staleness-secs", default_value_t = 30u64)]
+        max_staleness_secs: u64,
+    },
 }
 
 #[allow(clippy::too_many_arguments)]

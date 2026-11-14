@@ -77,6 +77,10 @@ pub enum Class {
     /// non-disclosing; the class is stable evidence that revocation, not
     /// absence, refused the operation.
     CapabilityRevoked,
+    /// The client's revocation observation is older than the store's current
+    /// epoch, or older than its declared freshness window. A stale client must
+    /// refresh before serving; it must not fall back to the head.
+    StaleEpoch,
     /// Transport/read/write failure.
     Io,
 }
@@ -113,6 +117,7 @@ impl Class {
             Class::Cancelled => "Cancelled",
             Class::SnapshotMissing => "SnapshotMissing",
             Class::CapabilityRevoked => "CapabilityRevoked",
+            Class::StaleEpoch => "StaleEpoch",
             Class::Io => "Io",
         }
     }
@@ -235,6 +240,9 @@ impl Error {
     }
     pub fn capability_revoked(message: impl Into<String>) -> Self {
         Self::new(Class::CapabilityRevoked, message)
+    }
+    pub fn stale_epoch(message: impl Into<String>) -> Self {
+        Self::new(Class::StaleEpoch, message)
     }
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(Class::Io, message)
