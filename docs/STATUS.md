@@ -11608,7 +11608,7 @@ verification receipt is unchanged until it is rerun.
     985 passed / 0 failed / 2 pre-existing ignored; Go `-race` all packages,
     gofmt/vet/CGO=0 clean; claims, perf-numbers, spec drift and conformance are
     run after the documentation commit. `verify-all` was **not** re-run, so the
-    cited aggregate stays `verify-20261114T162327Z` (47/47); the five new courts
+    cited aggregate stays `verify-20261114T162327Z` (47/47); the four new courts
     are registered (see below) and the next aggregate will include them.
   * New courts: `n01_write_rung` (the shipped lane test and the receipt's own
     assertions), `n02_durability_tail` (reduced 2-rep probe), `n05_go_parity`
