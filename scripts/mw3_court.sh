@@ -119,6 +119,10 @@ rows = [json.load(open(p)) for p in sorted(glob.glob(os.path.join(root, "w*.json
 committed = sum(r.get("committed", 0) for r in rows)
 conflicts = sum(r.get("conflicts", 0) for r in rows)
 attempts = sum(r.get("attempts", 0) for r in rows)
+spans = [r.get("wall_ms", 0) for r in rows]
+# End-to-end includes every writer's process start; `steady` is the widest
+# writer span, i.e. the window in which the writers actually overlapped.
+steady_ms = max(spans) if spans else 0
 values = []
 for p in glob.glob(os.path.join(root, "latencies", "*.lat")):
     values.extend(int(line) for line in open(p) if line.strip())
@@ -143,7 +147,10 @@ row = {
   "attempts": attempts,
   "retry_amplification": (attempts / committed) if committed else 0.0,
   "wall_ms": int(wall_ms),
+  "steady_ms": steady_ms,
+  "startup_ms": max(0, int(wall_ms) - steady_ms),
   "throughput_tx_s": (committed / (int(wall_ms) / 1000.0)) if int(wall_ms) else 0.0,
+  "steady_tx_s": (committed / (steady_ms / 1000.0)) if steady_ms else 0.0,
   "p50_ms": pick(0.50), "p95_ms": pick(0.95), "p99_ms": pick(0.99),
   "max_ms": (values[-1] / 1e6) if values else 0.0,
   "backend_reads": sumfield("backend_reads"),
@@ -169,7 +176,7 @@ PY
 mw3_rows="$work/mw3-rows.ndjson"
 : >"$mw3_rows"
 for n in "${DISJOINT_NS[@]}"; do
-  run_mw3_config disjoint "$n" 200 >>"$mw3_rows"
+  run_mw3_config disjoint "$n" 400 >>"$mw3_rows"
 done
 for n in "${CONFLICT_NS[@]}"; do
   run_mw3_config same-domain "$n" 10 >>"$mw3_rows"
@@ -369,10 +376,16 @@ import json, os, sys
 rows = [json.loads(line) for line in open(rows_path) if line.strip()]
 disjoint = [r for r in rows if r["distribution"] == "disjoint"]
 base = next((r["throughput_tx_s"] for r in disjoint if r["n"] == 1), 0.0)
+steady_base = next((r["steady_tx_s"] for r in disjoint if r["n"] == 1), 0.0)
 for row in rows:
     row["scaling_efficiency"] = (
         row["throughput_tx_s"] / (row["n"] * base)
         if row["distribution"] == "disjoint" and base else None)
+    row["steady_efficiency"] = (
+        row["steady_tx_s"] / (row["n"] * steady_base)
+        if row["distribution"] == "disjoint" and steady_base else None)
+    row["tx_per_writer_s"] = (
+        row["throughput_tx_s"] / row["n"] if row["n"] else None)
 doc = {
   "schema": "weftfs.mw3.bench/1",
   "generated_at": finished_at, "stamp": stamp, "profile": profile,
@@ -465,15 +478,21 @@ python3 - "$scale_rows" "$scale_receipt" "$stamp" "$finished_at" "$log" "$log_sh
 import json, os, sys
 (rows_path, receipt, stamp, finished_at, log, log_sha) = sys.argv[1:]
 rows = [json.loads(line) for line in open(rows_path) if line.strip()]
-base = next((r.get("throughput_tx_s") for r in rows
-             if r.get("mode") == "threads-in-one-process"), 0.0)
+best_rate = max(
+    ((r.get("throughput_tx_s", 0.0) / r["n"]) for r in rows
+     if r.get("mode") == "threads-in-one-process" and r.get("n")),
+    default=0.0)
 for row in rows:
-    # Efficiency is relative to the smallest compact cell (N=8), which is the
-    # only honest in-process baseline measured: there is no N=1 compact cell.
-    row["scaling_efficiency_vs_smallest_compact"] = (
-        row.get("throughput_tx_s", 0.0) / (row["n"] * base)
-        if base and row.get("mode") == "threads-in-one-process" and row.get("n") else None)
+    # There is no N=1 compact cell, so a true scale-up efficiency cannot be
+    # formed. Report the per-writer rate and its ratio to the best per-writer
+    # rate observed; 1.0 means "the best per-writer throughput in this court".
+    row["tx_per_writer_s"] = (
+        row.get("throughput_tx_s", 0.0) / row["n"] if row.get("n") else None)
+    row["per_writer_rate_vs_best"] = (
+        row["tx_per_writer_s"] / best_rate
+        if best_rate and row.get("tx_per_writer_s") is not None else None)
     row.pop("scaling_efficiency", None)
+    row.pop("scaling_efficiency_vs_smallest_compact", None)
 doc = {
   "schema": "weftfs.writer.scale/1",
   "generated_at": finished_at, "stamp": stamp,
