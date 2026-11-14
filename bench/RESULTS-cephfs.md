@@ -9,12 +9,13 @@ Receipts:
 
 | Receipt | What it is |
 |---|---|
-| [`augmentation-cephfs-20261114T040000Z.json`](receipts/augmentation-cephfs-20261114T040000Z.json) | **cited.** The frozen augmentation contract court on the CephFS mount: six arms, seven interleaved repetitions, `generated_utc` `20261114T015202Z`, WeftFS `4be2b44a3a6f`. |
-| [`cephfs-20261114T040000Z.json`](receipts/cephfs-20261114T040000Z.json) | **cited.** The backend receipt: image digest, topology, mount method, pool settings, container limits. |
-| [`cephfs-20261114T040000Z.cluster.txt`](receipts/cephfs-20261114T040000Z.cluster.txt) | **cited.** Verbatim `ceph -s` at court start. |
-| [`cephfs-20261114T040000Z.fs.txt`](receipts/cephfs-20261114T040000Z.fs.txt) | **cited.** Verbatim `ceph fs status`. |
-| [`cephfs-20261114T040000Z.log`](receipts/cephfs-20261114T040000Z.log) | **cited.** Raw court log. |
-| [`augmentation-cephfs-20261114T031000Z.json`](receipts/augmentation-cephfs-20261114T031000Z.json) | **cited.** The aggregate court's reduced configuration (16 evenly spaced non-embedding tensors, seven repetitions), which is a genuine measurement but never a published performance claim. |
+| [`augmentation-cephfs-20261114T080000Z.json`](receipts/augmentation-cephfs-20261114T080000Z.json) | **cited.** The frozen augmentation contract court on the CephFS mount: six arms, seven interleaved repetitions, `generated_utc` `20261114T023000Z`, WeftFS `6a584fd7a3f7`. |
+| [`cephfs-20261114T080000Z.json`](receipts/cephfs-20261114T080000Z.json) | **cited.** The backend receipt: image digest, topology, mount method, pool settings, container limits. |
+| [`cephfs-20261114T080000Z.cluster.txt`](receipts/cephfs-20261114T080000Z.cluster.txt) | **cited.** Verbatim `ceph -s` at court start. |
+| [`cephfs-20261114T080000Z.fs.txt`](receipts/cephfs-20261114T080000Z.fs.txt) | **cited.** Verbatim `ceph fs status`. |
+| [`cephfs-20261114T080000Z.log`](receipts/cephfs-20261114T080000Z.log) | **cited.** Raw court log. |
+| [`augmentation-cephfs-20261114T090000Z.json`](receipts/augmentation-cephfs-20261114T090000Z.json) | **cited.** The aggregate court's reduced configuration (16 evenly spaced non-embedding tensors, seven repetitions), which is a genuine measurement but never a published performance claim. |
+| [`augmentation-cephfs-20261114T040000Z.json`](receipts/augmentation-cephfs-20261114T040000Z.json) | **retained, superseded.** The first full run of this method. Its measurement is valid, but two label strings written by the script wrongly said the OSD data directory was a tmpfs; the script was corrected and the court re-run at `20261114T023000Z`. Kept rather than deleted so the correction is auditable. |
 
 ## Deployment
 
@@ -63,12 +64,12 @@ Median of seven interleaved repetitions unless the column says otherwise.
 <!-- BEGIN GENERATED:cephfs-table (scripts/perf_numbers.py) -->
 | row | write min ms | write p50 ms | write p95 ms | cold p50 ms | footprint B | written B | write req | cold req | write RSS KiB | write CPU ms |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `A` | 926.0 | 1,077.0 | 19,319.9 | 981.3 | 424,439,296 | 424,439,296 | 101 | 101 | 270,776 | 110 |
-| `N` | 1,095.3 | 1,117.8 | 18,338.0 | 756.5 | 424,477,171 | 424,477,171 | 104 | 104 | 270,796 | 110 |
-| `B` | 2,462.0 | 10,547.1 | 29,536.8 | 1,284.0 | 424,608,542 | 424,621,048 | 611 | 1,008 | 538,088 | 360 |
-| `C` | 1,864.1 | 2,023.8 | 17,306.1 | 1,783.1 | 282,106,049 | 282,118,555 | 216 | 613 | 690,756 | 1,140 |
-| `D` | 2,578.1 | 3,246.2 | 22,829.0 | 1,428.5 | 424,659,735 | 424,629,900 | 611 | 1,027 | 538,176 | 370 |
-| `E` | 1,958.8 | 2,132.0 | 16,109.0 | 1,853.6 | 282,157,242 | 282,127,407 | 216 | 632 | 690,556 | 1,140 |
+| `A` | 970.5 | 1,092.3 | 9,349.9 | 867.4 | 424,439,296 | 424,439,296 | 101 | 101 | 270,740 | 120 |
+| `N` | 984.9 | 1,112.6 | 15,206.2 | 823.4 | 424,477,171 | 424,477,171 | 104 | 104 | 270,720 | 120 |
+| `B` | 2,450.4 | 2,556.9 | 21,257.5 | 1,301.5 | 424,608,542 | 424,621,048 | 611 | 1,008 | 537,912 | 340 |
+| `C` | 1,848.5 | 1,906.0 | 20,622.6 | 1,800.8 | 282,106,049 | 282,118,555 | 216 | 613 | 690,436 | 1,160 |
+| `D` | 2,581.5 | 2,793.7 | 33,543.0 | 1,409.5 | 424,659,735 | 424,629,900 | 611 | 1,027 | 537,800 | 360 |
+| `E` | 1,976.4 | 2,111.9 | 17,555.8 | 1,844.9 | 282,157,242 | 282,127,407 | 216 | 632 | 690,352 | 1,160 |
 <!-- END GENERATED:cephfs-table -->
 
 ## What won, what lost
@@ -77,10 +78,10 @@ Median of seven interleaved repetitions unless the column says otherwise.
 **The codec wins on bytes on CephFS and loses on time.** C stores
 **33.5 %** fewer physical bytes than A (101 tensors,
 424,439,296 logical bytes, 0 mismatches) and its durable write wall is
-2,023.8 ms p50 (1,864.1 ms least-contended) against A's
-1,077.0 ms — **1.88x** — while its cold restore is
-1,783.1 ms against A's 981.3 ms (1.82x); the
-contract's latency change is -131.3 % (negative is a loss).
+1,906.0 ms p50 (1,848.5 ms least-contended) against A's
+1,092.3 ms — **1.74x** — while its cold restore is
+1,800.8 ms against A's 867.4 ms (2.08x); the
+contract's latency change is -98.4 % (negative is a loss).
 Seven interleaved repetitions; p50 is the median, not the minimum.
 
 The native baseline N is essentially A, so the honest protocol comparison is
@@ -90,17 +91,18 @@ and provenance record cost wall time rather than bytes.
 
 <!-- BEGIN GENERATED:cephfs-losses (scripts/perf_numbers.py) -->
 * **Writes are slower than native on every WeftFS arm.** C's p50 is
-  2,023.8 ms against A's 1,077.0 ms; D is 3,246.2 ms and E
-  2,132.0 ms.
-* **The tail is long and the spread is real.** A's p95 is 19,319.9 ms,
-  B's is 29,536.8 ms and C's is 17,306.1 ms over seven
+  1,906.0 ms against A's 1,092.3 ms; D is 2,793.7 ms and E
+  2,111.9 ms.
+* **The tail is long and the spread is real.** A's p95 is 9,349.9 ms,
+  B's is 21,257.5 ms and C's is 20,622.6 ms over seven
   repetitions on one 4-CPU client; a single-OSD single-node cluster has no
   second OSD or MDS to absorb a pause. The full samples are in the receipt.
-* **Restore is slower with the codec:** 1,783.1 ms against
-  981.3 ms; fewer bytes do not offset decode on this backend.
-* **The crash phases are process faults, not media loss**, and the first
-* **The crash phases are process faults, not media loss**, and the first
-  records it and the shipped court uses a host-directory OSD.
+* **Restore is slower with the codec:** 1,800.8 ms against
+  867.4 ms; fewer bytes do not offset decode on this backend.
+* **The crash phases are process faults, not media loss.** The first full
+  attempt, with a tmpfs OSD, wedged the cluster; the retained log
+  ([`cephfs-20261114T003000Z.log`](receipts/cephfs-20261114T003000Z.log)) records it and the
+  shipped court uses a host-directory OSD.
 * No comparison of any kind is made against another filesystem (rule 13).
 <!-- END GENERATED:cephfs-losses -->
 

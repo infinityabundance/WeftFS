@@ -2,9 +2,9 @@
 # CephFS augmentation court (T030/T038/T081): a real, deployed, mature
 # distributed filesystem with and without the WeftFS augmentation.
 #
-# Topology (recorded in the receipt): one Ceph QUIESCENT demo container from the
-# pinned `quay.io/ceph/demo` image running mon + mgr + one bluestore OSD on a
-# tmpfs and one MDS. CephFS is mounted by `ceph-fuse` (the court kernel has no
+# Topology (recorded in the receipt): one Ceph demo container from the pinned
+# `quay.io/ceph/demo` image running mon + mgr + one bluestore OSD and one MDS.
+# CephFS is mounted by `ceph-fuse` (the court kernel has no
 # `ceph.ko`, and a kernel mount would need host modules) in a second,
 # hard-limited container from the same pinned image, which is also where the
 # measured process runs. The data path is the Ceph client -> MDS/OSD; WeftFS's
@@ -23,7 +23,8 @@
 # This is **single-node Ceph** (one mon, one mgr, one OSD, one MDS, one client).
 # It is not a fleet, not multi-node, not a clustered performance result, and not
 # a cloud result. `fsync` on CephFS orders against the MDS/OSD journal; the OSD
-# data directory is a tmpfs, so this is not a media or power-loss claim either.
+# data directory is a host directory, so this is not a media or power-loss claim
+# either.
 #
 # Usage:
 #   scripts/cephfs_court.sh                # full run (7 interleaved reps)
@@ -302,7 +303,7 @@ receipt = {
         "image": image,
         "image_digest": digest,
         "image_id": image_id,
-        "topology": "single-node: 1 mon, 1 mgr, 1 bluestore OSD (tmpfs), 1 MDS; cephfs_data + cephfs_metadata pools; 1 client",
+        "topology": "single-node: 1 mon, 1 mgr, 1 bluestore OSD, 1 MDS; cephfs_data + cephfs_metadata pools; 1 client",
         "mount": "ceph-fuse in the client container (the court kernel has no ceph.ko; /dev/fuse is present)",
         "mon": mon,
         "osd_data": osd_dir + " (host bind mount on the court filesystem, not a tmpfs; the receipt's non-claims still apply)",
@@ -315,7 +316,7 @@ receipt = {
         },
         "cluster_status_file": cluster_file,
         "fs_status_file": fs_file,
-        "label": "SINGLE-NODE Ceph deployed in one OOM-protected container plus one client container on one host. Not multi-node, not a fleet, not clustered performance, not a cloud result. The OSD data directory is a tmpfs, so no media or power-loss claim.",
+        "label": "SINGLE-NODE Ceph deployed in one OOM-protected container plus one client container on one host. Not multi-node, not a fleet, not clustered performance, not a cloud result. The OSD data directory is a host directory, so no media or power-loss claim is made.",
     },
     "container": {
         "server": {
@@ -347,7 +348,7 @@ receipt = {
         "single-node Ceph on one host, one client, one writer",
         "no fleet, multi-node, clustered, cloud, media or power-loss claim",
         "requests are client-visible I/O operations, not RADOS RPCs",
-        "the OSD data directory is a tmpfs",
+        "the OSD data directory is a host directory, not a tmpfs",
     ],
 }
 with open(out, "w") as handle:
