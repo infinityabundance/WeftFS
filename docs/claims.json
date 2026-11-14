@@ -13842,5 +13842,72 @@
   ],
   "receipt": "bench/receipts/n07-pareto-strict-20261114T204000Z.json",
   "kind": "present"
+ },
+ {
+  "id": "t024_epoch_cas_waits",
+  "claim": "The T024 mechanism document states the epoch acquisition wait is bounded by wall clock, not by a retry count.",
+  "value": "EPOCH_RETRY_BUDGET",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md",
+   "src/gc_epoch.rs"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T214308Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_close_is_conditional",
+  "claim": "The epoch close is conditional and a superseded pass reports gc_epoch_closed = false.",
+  "value": "gc_epoch_closed = false",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md",
+   "bench/RESULTS-mw-t024-t029.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T214308Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_superseded_close_test",
+  "claim": "The deterministic regression test names the invariant it protects: a superseded pass must not rewrite the epoch record.",
+  "value": "a superseded pass must not rewrite the record",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md",
+   "bench/RESULTS-mw-t024-t029.md",
+   "src/store.rs"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T214308Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_court_receipt",
+  "claim": "The T024 court receipt at the fixed revision is cited by the mechanism document and the results document.",
+  "value": "mw-gc-20261114T214308Z.json",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md",
+   "bench/RESULTS-mw-t024-t029.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T214308Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_stress_receipt",
+  "claim": "The T024 repetition proof receipt is cited by the mechanism document and the results document.",
+  "value": "multi-writer-gc-stress-20261114T214326Z.json",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md",
+   "bench/RESULTS-mw-t024-t029.md"
+  ],
+  "receipt": "bench/receipts/multi-writer-gc-stress-20261114T214326Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_concurrent_passes_court",
+  "claim": "Court scenario F is described in the results document.",
+  "value": "two independent processes",
+  "locations": [
+   "bench/RESULTS-mw-t024-t029.md",
+   "docs/MULTI-WRITER-GC.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T214308Z.json",
+  "kind": "present"
  }
 ]

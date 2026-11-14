@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,304** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,310** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11621,3 +11621,95 @@ verification receipt is unchanged until it is rerun.
 * N05 Go 6.61x (36,705.3 -> 5,552.7 ms); 50 divergent tensors of 101.
 * N07 strict set 3 points, eligible set 2 points, 25 rows classified.
 <!-- END GENERATED:n01-n07-status -->
+
+## 2026-11-14 — T024 regression: the GC epoch CAS did not wait, and its close went backwards
+
+CI run 43631714328 (`rust test (store + codec crates, no FUSE feature)`, head
+`581f364`) failed `concurrent_passes_are_serialised_by_the_epoch_cas` on a
+two-core runner:
+
+```
+thread '<unnamed>' (9881) panicked at tests/multi_writer_gc.rs:258:28:
+called `Result::unwrap()` on an `Err` value: Error { class: Busy, message: "another GC pass holds the epoch; retry after it closes" }
+```
+
+**Product defect, not a test flake.** Reproduced on `staging` and traced to two
+independent real defects in `gc/epoch`, both visible only when two passes
+overlap:
+
+* **Acquisition did not wait.** `acquire_gc_epoch` retried a lost
+  compare-and-swap sixteen times with no delay, so a pass spent its whole budget
+  inside the winner's read-verify-write of `gc/epoch` plus the `fsync`s that
+  publish it, then returned `Busy`. Re-injected and measured: with the old loop
+  and the store on a real filesystem, **50 of 50** runs of the barrier test fail
+  with exactly the CI message; with the backoff, **0 of 50**. The retry now uses
+  the deterministic exponential backoff the writer contract already states for a
+  rebase (`spec/WEFT-MULTIWRITER.md` §7: 200 µs doubling to a 25 ms cap, no
+  jitter) for a bounded **wall-clock** budget of 3 s
+  (`gc_epoch::EPOCH_RETRY_BUDGET`). The budget is a duration, not a count: the
+  first version of this fix kept 16 attempts (225.4 ms) and still failed **5 of
+  50** full-suite runs once the store sat on a real filesystem beside eight
+  concurrent suites (retained log
+  `bench/receipts/multi-writer-gc-stress-20261114T213203Z.log`). Exhausting the
+  budget still returns `Busy`, and a refused pass has consumed no epoch and
+  mutated nothing.
+* **The close went backwards.** The epoch was closed with an unconditional
+  replace, so a pass that acquired epoch *N* and finished after a later pass
+  closed *N+1* wrote *N* over *N+1*: the epoch regressed, the record named the
+  older pass and the older cut. Reproduced on `staging` before the fix (1/40 and
+  4/60 suite runs at 4 and 2 CPUs). The close is now a compare-and-swap on the
+  exact bytes this pass published at acquisition; a superseded pass leaves the
+  record alone and reports `gc_epoch_closed = false`. `GcReport` gained that one
+  field; the CLI and the court driver print it.
+* **The sweep did not tolerate its twin.** Two passes can name the same
+  unreachable blob; the loser's `delete` returned `NotFound` and failed the whole
+  pass. "Already gone" is now the outcome it wanted (`delete_if_present`), the
+  batch path falls back to per-key deletes on a lost race, and `deleted_bytes`
+  counts only blobs this pass actually unlinked, so a contested blob is never
+  double counted.
+
+**Tests.** `tests/multi_writer_gc.rs` releases both passes on a
+`std::sync::Barrier` immediately before `gc` and asserts the contract — distinct
+consecutive epochs, no refusal, the record naming the newest pass, `verify`
+clean — never which thread wins. A second case races two passes over the same
+real garbage. The ordering-specific half (an older pass finishing last) cannot
+be produced through the public API, because acquire and close are one call
+inside `gc`; it is therefore deterministic in `src/store.rs::
+gc_epoch_record_tests`, which drives both writes directly and fails with
+`a superseded pass must not rewrite the record` when the old close is put back.
+The remaining sleeps in the file wait on the one-second clock slack, a threshold
+that can only grow under load.
+
+**Court.** `scripts/mw_gc_court.sh` gained scenario F: two independent
+`gc-loop` processes over one store, asserting 24 passes, 24 distinct epochs
+contiguous from 1, disjoint across the loops, zero refusals and a clean
+`verify --full`. Re-recorded at `2b93e5f`:
+`bench/receipts/mw-gc-20261114T214308Z.json` (A–E unchanged). New
+repetition court `scripts/multi_writer_gc_stress.sh`:
+`bench/receipts/multi-writer-gc-stress-20261114T214326Z.json`.
+
+<!-- BEGIN GENERATED:mwt024-status (scripts/perf_numbers.py) -->
+* Two concurrent processes over one store: **24** passes, **24** distinct epochs contiguous from 1, disjoint across the loops, zero refusals, `verify --full` clean.
+* Repetitions: **80** suite runs in **3** arms - **50** at eight-way test threads, **20** beside busy-loop CPU competition, **10** with the court CPU quota lowered to one - **0** failures, **0** timeouts.
+<!-- END GENERATED:mwt024-status -->
+
+Every arm ran the store on the bind-mounted project filesystem
+(`TMPDIR=.docker-cache/mwgc-stress-tmp`), not the court's tmpfs: the defect is a
+wait-budget defect and a tmpfs makes the critical section too short to observe.
+The only limit changed anywhere in this work is `WEFT_CPUS=1` for the
+single-CPU arm; memory (3 GiB/3 GiB), pids (1024) and `WEFT_NPROC` (2048) were
+never raised.
+
+**Gates at `bcae7a1`:** `cargo test --all-targets` in the rust court **940
+passed / 0 failed / 0 ignored** (201 binaries); `cargo test --features fuse
+--all-targets` in the fuse court **991 passed / 0 failed / 2 ignored** (the two
+pre-existing: kernel-7.3 same-inode direct-I/O EIO, and CAP_SETUID absent for
+`permissions_with_allow_other`). Claims, spec drift and the conformance guards
+are recorded with the documentation commit.
+
+**Still not deterministic, stated:** the *ordering* of two concurrent passes
+remains scheduler-dependent, so the integration test cannot by itself reproduce
+"older pass finishes last"; that interleaving is covered deterministically only
+by the in-crate test. A pass that waits more than 3 s for the epoch still
+receives `Busy` by contract. `WeftFS-Go` has no epoch GC, so none of this is
+cross-language. No power-loss, media or fleet claim.

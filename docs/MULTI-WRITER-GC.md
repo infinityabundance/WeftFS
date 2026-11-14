@@ -3,8 +3,9 @@
 Status: **implemented and measured** for the Rust store (`local`, `object`,
 `3fs`, `s3`, `azure`); **not implemented** in `WeftFS-Go`, whose GC remains
 quiescent. Normative text: `spec/WEFT-MULTIWRITER.md` §11 and §15.9. Court:
-`scripts/mw_gc_court.sh`, receipt `bench/receipts/mw-gc-20261114T101410Z.json`
-(revision `fd56f32`).
+`scripts/mw_gc_court.sh`, receipt `bench/receipts/mw-gc-20261114T214308Z.json`
+(revision `2b93e5f`); repetition proof `scripts/multi_writer_gc_stress.sh`,
+receipt `bench/receipts/multi-writer-gc-stress-20261114T214326Z.json`.
 
 ## The retention contract
 
@@ -53,6 +54,30 @@ The publisher side is closed for the helpers: `txn_create_file`,
 `txn_overwrite_file` and the FUSE mutation path re-read their reservation
 immediately before the commit and refuse with `Busy` if it is gone or expired.
 
+### Contention: the acquisition waits, the close is conditional
+
+Two passes may overlap, so both `gc/epoch` writes are compare-and-swaps:
+
+* **Acquisition** retries a lost swap with the deterministic exponential
+  backoff the writer contract already states for a rebase
+  (`spec/WEFT-MULTIWRITER.md` §7): 200 µs doubling to a 25 ms cap, no jitter.
+  The wait is bounded by `EPOCH_RETRY_BUDGET` (3 s) of wall clock, **not** by a
+  retry count, because what a pass waits out is the winner's read-verify-write
+  of the record *plus the `fsync` calls that publish it* — a critical section
+  that grows with storage latency. After the budget the caller gets `Busy`
+  `another GC pass holds the epoch; retry after it closes`, and no epoch was
+  consumed: a refused pass has mutated nothing.
+* **Closing** the epoch is conditional on the record still being the bytes this
+  pass published at acquisition. A pass that acquired epoch *N* and finishes
+  after a later pass closed *N+1* leaves the newer record alone and reports
+  `gc_epoch_closed = false`. An unconditional replace would write *N* over
+  *N+1*: the epoch would go backwards, the record would name the older pass and
+  the older cut, and a later reader could not tell which acquisition was newest.
+* The **sweep** itself tolerates its twin: two passes can name the same
+  unreachable blob, and the loser's unlink returns `NotFound`. "The blob is
+  gone" is the outcome both wanted, so a lost race is not an error, and only
+  blobs a pass actually unlinked are counted in `deleted_bytes`.
+
 ## What the court does
 
 | scenario | what it proves |
@@ -62,12 +87,46 @@ immediately before the commit and refuse with `Busy` if it is gone or expired.
 | C reclaim control | genuinely unreachable blobs *are* reclaimed in the same pass that retains roots (the assertion is not vacuous) |
 | D MW3 | a coordinated pass marks every domain head; a domain-bound handle refuses |
 | E readers | readers racing the sweep see exact bytes or absence, never wrong bytes |
+| F concurrent passes | two independent processes run 12 passes each over one store: every pass acquires its own epoch (1..24, contiguous, disjoint across the loops), none is refused, and `verify --full` is clean |
 
 The receipt records both sides: the reclaimed bytes in scenario C and zero
-reachable-object losses across the kill matrix. The exact figures are generated
+reachable objects lost across the kill matrix. The exact figures are generated
 into `bench/RESULTS-mw-t024-t029.md`.
 
+## Test determinism
+
+`tests/multi_writer_gc.rs` releases the two racing passes on a
+`std::sync::Barrier` immediately before `gc`, so the overlap is guaranteed by
+construction and no assertion depends on which thread wins. It asserts the
+contract — distinct consecutive epochs, no refusal, the record naming the
+newest pass, a clean `verify` — and never an ordering.
+
+The *ordering-specific* half of the contract (an older pass finishing last) is
+not reachable through the public API: `acquire_gc_epoch` and `close_gc_epoch`
+are one call inside `gc`, so a test cannot hold an epoch open across another
+pass. That interleaving is therefore proven deterministically in
+`src/store.rs::gc_epoch_record_tests`, which drives both writes directly:
+acquire on A, acquire on B, close B, then close A, and require the record to
+stay on B's epoch. With the old unconditional close that test fails with
+`a superseded pass must not rewrite the record`.
+
+The acquisition half *is* reachable from a test, and the barrier makes it
+sharp: with the old tight retry loop, 50 of 50 runs of that test fail with the
+CI message once the store is on a real filesystem; with the backoff, 0 of 50
+do. The sleeps that remain in this file wait on the one-second clock slack (a
+wall-clock threshold that can only grow under load), never for another thread.
+
 ## Residual risk
+
+* A pass that loses the epoch compare-and-swap for longer than
+  `EPOCH_RETRY_BUDGET` (3 s of wall clock) is refused `Busy`. That is a bounded
+  refusal, not a correctness failure — the pass consumed no epoch and mutated
+  nothing — but it is a real outcome under a saturated filesystem, and the
+  caller must retry. The wait does not serialise the sweeps: only the epoch
+  number is agreed by the CAS, and two sweeps may still overlap by design.
+* The *order* in which two overlapping passes finish is scheduler-dependent and
+  is deliberately not asserted by any test; see “Test determinism” above for
+  where the ordering-specific invariant is proven instead.
 
 * A publisher that stalls past its reservation deadline and then publishes
   **without** the helper check is outside the protocol; the pass may have

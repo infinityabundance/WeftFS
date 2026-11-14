@@ -2,11 +2,14 @@
 
 Status: implemented and measured (Rust). All five courts pass at revision
 `fd56f32f0625af6a84600e2eb1634c46d0d1a6ef` in the `weft/fuse-court:1` image
-(3 GiB / 4 CPUs / 1024 pids, limits unchanged):
+(3 GiB / 4 CPUs / 1024 pids, limits unchanged). The T024 gate was re-recorded
+at `2b93e5f` after the epoch-CAS regression fix described below, together with
+a repetition proof (see the T024 rows in the table).
 
 | gate | court | receipt |
 |---|---|---|
-| T024 multi-writer GC | `scripts/mw_gc_court.sh` | `bench/receipts/mw-gc-20261114T101410Z.json` |
+| T024 multi-writer GC | `scripts/mw_gc_court.sh` | `bench/receipts/mw-gc-20261114T214308Z.json` |
+| T024 repetition proof | `scripts/multi_writer_gc_stress.sh` | `bench/receipts/multi-writer-gc-stress-20261114T214326Z.json` |
 | T025 distributed faults | `scripts/distributed_faults_court.sh` | `bench/receipts/distributed-faults-20261114T101423Z.json` |
 | T026 history checker | `scripts/history_check_court.sh` | `bench/receipts/history-check-20261114T101358Z.json` |
 | T028 mode migration | `scripts/mode_migration_court.sh` | `bench/receipts/mode-migration-20261114T101419Z.json` |
@@ -33,7 +36,44 @@ emitted from the receipts by `scripts/perf_numbers.py`.
 **T025.** With the acknowledged head lost (S1) the store is at generation **2** after the retry; a duplicated object PUT (S2) leaves **1** object; reordered publications (S3) converge on generation **2**; the stale reader (S5) keeps generation **2**. All seven verdicts are true.
 **T026.** The four generated histories carry **52** transactions, **134** records and **16** reads; every history is accepted and six deliberately violating fixtures are rejected with the expected class.
 **T029.** The Rust suite runs **8** tests; the shell driver uses **6** create processes, **4** rename processes, **4** overwrite processes and **4** link/unlink processes. The same-inode truncating-open control fails **1** time(s) under MW1 and **4** time(s) under MW2, which is why it is recorded as a kernel limitation rather than a transaction loss.
+**T024 concurrent passes.** Two independent processes then ran **24** passes over one store: **24** distinct epochs, contiguous from 1, disjoint across the loops, and no `Busy` refusal. The suite repeated **80** times across **3** arms (8 threads, artificial CPU load, a single CPU) with **0** failures and **0** timeouts.
 <!-- END GENERATED:results-mw-t024-t029 -->
+
+## T024 regression: the epoch CAS did not wait, and its close went backwards
+
+CI run 43631714328 failed `concurrent_passes_are_serialised_by_the_epoch_cas`
+with `Busy: another GC pass holds the epoch; retry after it closes`. Two real
+defects, both only visible when two passes overlap:
+
+* `acquire_gc_epoch` retried a lost compare-and-swap sixteen times **without
+  waiting**, so a pass spent its whole budget inside the other pass's
+  read-verify-write of `gc/epoch` (plus the `fsync`s that publish it). The retry
+  now uses the contract's deterministic backoff (200 µs doubling to 25 ms) for a
+  bounded **wall-clock** budget of 3 s. It is a duration, not an attempt count,
+  because the critical section grows with storage latency: the first version of
+  this fix kept 16 attempts (225.4 ms) and still failed 5 of 50 full-suite runs
+  once the store was on a real filesystem beside eight concurrent suites
+  (retained log `multi-writer-gc-stress-20261114T213203Z.log`).
+* the epoch was closed with an **unconditional replace**, so a pass that
+  acquired an earlier epoch and finished last wrote its older epoch over the
+  newer pass's record. The close is now a compare-and-swap on the bytes this
+  pass published at acquisition; a superseded pass leaves the newer record and
+  reports `gc_epoch_closed = false`.
+* the sweep tolerates its twin: a candidate the other pass unlinked first is
+  `NotFound`, which used to fail the whole pass. "Already gone" is the outcome
+  both wanted, and `deleted_bytes` now counts only blobs this pass actually
+  unlinked, so a contested blob is never double counted.
+
+The regression is proven two ways. The ordering-specific interleaving is not
+reachable through the public API (a test cannot hold an epoch open across
+another pass), so `src/store.rs::gc_epoch_record_tests` drives acquire and
+close directly and fails deterministically with the old close
+(`a superseded pass must not rewrite the record`). The acquisition half is
+reachable: `tests/multi_writer_gc.rs` releases both passes on a barrier
+immediately before `gc`, and with the old tight loop 50 of 50 runs of that test
+fail with the CI message once the store is on a real filesystem, against 0 of
+50 with the backoff. The court gained scenario F: two independent processes,
+24 passes, 24 distinct contiguous epochs, zero refusals.
 
 ## Losses
 
