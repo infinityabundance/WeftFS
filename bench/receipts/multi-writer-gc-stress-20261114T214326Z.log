@@ -1,0 +1,102 @@
+== arm threads8 (WEFT_CPUS=4) ==
++ exec docker run --rm --init --name weft-fuse-court-3473717 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=2b93e5faafbe6c944fdc28113128dcefa2444804 -e WEFT_REPO_WEFTFS_GO=a8e8e7afa85446f9a441c275b7c7bbaedb3bb847 -e WEFT_REPO_WEFTCODEC=34f76203229ed22bfad7495963d84977c6627d27 -e WEFT_REPO_WEFTCODEC_GO=ad53f3c3975e6dc8799d2b67524a30e688d961fd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; WEFT_MWGC_ARM=threads8 WEFT_MWGC_STAMP=20261114T214326Z WEFT_MWGC_FRAGMENT=bench/receipts/.mwgc-stress-20261114T214326Z-threads8.json        WEFT_MWGC_CPUS=4 bash scripts/multi_writer_gc_stress.sh'
+arm=threads8 stamp=20261114T214326Z cpus=4 runs=50 threads=8 load=0
+tmpdir=/work/.docker-cache/mwgc-stress-tmp (bind-mounted project filesystem, not the court tmpfs)
+nproc=16 cgroup_cpu_max=400000 100000
+binary=/work/.docker-cache/target-rust/debug/deps/multi_writer_gc-7377255b7a5aa42b sha256=7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125
+RESULT arm=threads8 run=1 status=pass elapsed_ms=7274
+RESULT arm=threads8 run=2 status=pass elapsed_ms=6846
+RESULT arm=threads8 run=3 status=pass elapsed_ms=7766
+RESULT arm=threads8 run=4 status=pass elapsed_ms=7787
+RESULT arm=threads8 run=5 status=pass elapsed_ms=6950
+RESULT arm=threads8 run=6 status=pass elapsed_ms=7071
+RESULT arm=threads8 run=7 status=pass elapsed_ms=6280
+RESULT arm=threads8 run=8 status=pass elapsed_ms=2934
+RESULT arm=threads8 run=9 status=pass elapsed_ms=4527
+RESULT arm=threads8 run=10 status=pass elapsed_ms=7078
+RESULT arm=threads8 run=11 status=pass elapsed_ms=6895
+RESULT arm=threads8 run=12 status=pass elapsed_ms=7396
+RESULT arm=threads8 run=13 status=pass elapsed_ms=6891
+RESULT arm=threads8 run=14 status=pass elapsed_ms=7253
+RESULT arm=threads8 run=15 status=pass elapsed_ms=6722
+RESULT arm=threads8 run=16 status=pass elapsed_ms=7232
+RESULT arm=threads8 run=17 status=pass elapsed_ms=6889
+RESULT arm=threads8 run=18 status=pass elapsed_ms=3435
+RESULT arm=threads8 run=19 status=pass elapsed_ms=2723
+RESULT arm=threads8 run=20 status=pass elapsed_ms=2633
+RESULT arm=threads8 run=21 status=pass elapsed_ms=2640
+RESULT arm=threads8 run=22 status=pass elapsed_ms=2637
+RESULT arm=threads8 run=23 status=pass elapsed_ms=2632
+RESULT arm=threads8 run=24 status=pass elapsed_ms=2639
+RESULT arm=threads8 run=25 status=pass elapsed_ms=2639
+RESULT arm=threads8 run=26 status=pass elapsed_ms=2635
+RESULT arm=threads8 run=27 status=pass elapsed_ms=2654
+RESULT arm=threads8 run=28 status=pass elapsed_ms=2639
+RESULT arm=threads8 run=29 status=pass elapsed_ms=2637
+RESULT arm=threads8 run=30 status=pass elapsed_ms=2636
+RESULT arm=threads8 run=31 status=pass elapsed_ms=2643
+RESULT arm=threads8 run=32 status=pass elapsed_ms=2636
+RESULT arm=threads8 run=33 status=pass elapsed_ms=2633
+RESULT arm=threads8 run=34 status=pass elapsed_ms=2641
+RESULT arm=threads8 run=35 status=pass elapsed_ms=2651
+RESULT arm=threads8 run=36 status=pass elapsed_ms=2637
+RESULT arm=threads8 run=37 status=pass elapsed_ms=2640
+RESULT arm=threads8 run=38 status=pass elapsed_ms=2634
+RESULT arm=threads8 run=39 status=pass elapsed_ms=2631
+RESULT arm=threads8 run=40 status=pass elapsed_ms=2641
+RESULT arm=threads8 run=41 status=pass elapsed_ms=2635
+RESULT arm=threads8 run=42 status=pass elapsed_ms=2636
+RESULT arm=threads8 run=43 status=pass elapsed_ms=2638
+RESULT arm=threads8 run=44 status=pass elapsed_ms=2637
+RESULT arm=threads8 run=45 status=pass elapsed_ms=2637
+RESULT arm=threads8 run=46 status=pass elapsed_ms=2634
+RESULT arm=threads8 run=47 status=pass elapsed_ms=2644
+RESULT arm=threads8 run=48 status=pass elapsed_ms=2629
+RESULT arm=threads8 run=49 status=pass elapsed_ms=2631
+RESULT arm=threads8 run=50 status=pass elapsed_ms=2642
+{"arm": "threads8", "binary_sha256": "7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125", "cgroup_cpu_max": "400000 100000", "court": "weft/fuse-court:1", "court_cpus_override": "4", "court_cpus_reported": "4", "elapsed_ms": 201761, "failures": 0, "host_nproc": 16, "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e", "load_processes": 0, "runs": 50, "test_threads": 8, "timeouts": 0, "tmpdir": ".docker-cache/mwgc-stress-tmp"}
+== arm load (WEFT_CPUS=4) ==
++ exec docker run --rm --init --name weft-fuse-court-3476755 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=2b93e5faafbe6c944fdc28113128dcefa2444804 -e WEFT_REPO_WEFTFS_GO=a8e8e7afa85446f9a441c275b7c7bbaedb3bb847 -e WEFT_REPO_WEFTCODEC=34f76203229ed22bfad7495963d84977c6627d27 -e WEFT_REPO_WEFTCODEC_GO=ad53f3c3975e6dc8799d2b67524a30e688d961fd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; WEFT_MWGC_ARM=load WEFT_MWGC_STAMP=20261114T214326Z WEFT_MWGC_FRAGMENT=bench/receipts/.mwgc-stress-20261114T214326Z-load.json        WEFT_MWGC_CPUS=4 bash scripts/multi_writer_gc_stress.sh'
+arm=load stamp=20261114T214326Z cpus=4 runs=20 threads=8 load=4
+tmpdir=/work/.docker-cache/mwgc-stress-tmp (bind-mounted project filesystem, not the court tmpfs)
+nproc=16 cgroup_cpu_max=400000 100000
+binary=/work/.docker-cache/target-rust/debug/deps/multi_writer_gc-7377255b7a5aa42b sha256=7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125
+load: 4 busy loops running
+RESULT arm=load run=1 status=pass elapsed_ms=2665
+RESULT arm=load run=2 status=pass elapsed_ms=2637
+RESULT arm=load run=3 status=pass elapsed_ms=2638
+RESULT arm=load run=4 status=pass elapsed_ms=2636
+RESULT arm=load run=5 status=pass elapsed_ms=2662
+RESULT arm=load run=6 status=pass elapsed_ms=2642
+RESULT arm=load run=7 status=pass elapsed_ms=2639
+RESULT arm=load run=8 status=pass elapsed_ms=2636
+RESULT arm=load run=9 status=pass elapsed_ms=2631
+RESULT arm=load run=10 status=pass elapsed_ms=2637
+RESULT arm=load run=11 status=pass elapsed_ms=2642
+RESULT arm=load run=12 status=pass elapsed_ms=2637
+RESULT arm=load run=13 status=pass elapsed_ms=2650
+RESULT arm=load run=14 status=pass elapsed_ms=2643
+RESULT arm=load run=15 status=pass elapsed_ms=2642
+RESULT arm=load run=16 status=pass elapsed_ms=2638
+RESULT arm=load run=17 status=pass elapsed_ms=2650
+RESULT arm=load run=18 status=pass elapsed_ms=2662
+RESULT arm=load run=19 status=pass elapsed_ms=2636
+RESULT arm=load run=20 status=pass elapsed_ms=2639
+{"arm": "load", "binary_sha256": "7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125", "cgroup_cpu_max": "400000 100000", "court": "weft/fuse-court:1", "court_cpus_override": "4", "court_cpus_reported": "4", "elapsed_ms": 52880, "failures": 0, "host_nproc": 16, "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e", "load_processes": 4, "runs": 20, "test_threads": 8, "timeouts": 0, "tmpdir": ".docker-cache/mwgc-stress-tmp"}
+== arm singlecpu (WEFT_CPUS=1) ==
++ exec docker run --rm --init --name weft-fuse-court-3478609 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=1 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/fuse-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=1 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=2b93e5faafbe6c944fdc28113128dcefa2444804 -e WEFT_REPO_WEFTFS_GO=a8e8e7afa85446f9a441c275b7c7bbaedb3bb847 -e WEFT_REPO_WEFTCODEC=34f76203229ed22bfad7495963d84977c6627d27 -e WEFT_REPO_WEFTCODEC_GO=ad53f3c3975e6dc8799d2b67524a30e688d961fd -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/fuse-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; WEFT_MWGC_ARM=singlecpu WEFT_MWGC_STAMP=20261114T214326Z WEFT_MWGC_FRAGMENT=bench/receipts/.mwgc-stress-20261114T214326Z-singlecpu.json        WEFT_MWGC_CPUS=1 bash scripts/multi_writer_gc_stress.sh'
+arm=singlecpu stamp=20261114T214326Z cpus=1 runs=10 threads=8 load=0
+tmpdir=/work/.docker-cache/mwgc-stress-tmp (bind-mounted project filesystem, not the court tmpfs)
+nproc=16 cgroup_cpu_max=100000 100000
+binary=/work/.docker-cache/target-rust/debug/deps/multi_writer_gc-7377255b7a5aa42b sha256=7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125
+RESULT arm=singlecpu run=1 status=pass elapsed_ms=2640
+RESULT arm=singlecpu run=2 status=pass elapsed_ms=2641
+RESULT arm=singlecpu run=3 status=pass elapsed_ms=2636
+RESULT arm=singlecpu run=4 status=pass elapsed_ms=2638
+RESULT arm=singlecpu run=5 status=pass elapsed_ms=2646
+RESULT arm=singlecpu run=6 status=pass elapsed_ms=2637
+RESULT arm=singlecpu run=7 status=pass elapsed_ms=2633
+RESULT arm=singlecpu run=8 status=pass elapsed_ms=2650
+RESULT arm=singlecpu run=9 status=pass elapsed_ms=2654
+RESULT arm=singlecpu run=10 status=pass elapsed_ms=2647
+{"arm": "singlecpu", "binary_sha256": "7e14b40096b5d090341d1f2cad04ceb30dbf4c8c663f4fa776adb0c2d37af125", "cgroup_cpu_max": "100000 100000", "court": "weft/fuse-court:1", "court_cpus_override": "1", "court_cpus_reported": "1", "elapsed_ms": 26431, "failures": 0, "host_nproc": 16, "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e", "load_processes": 0, "runs": 10, "test_threads": 8, "timeouts": 0, "tmpdir": ".docker-cache/mwgc-stress-tmp"}
