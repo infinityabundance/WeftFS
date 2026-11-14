@@ -1,0 +1,389 @@
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g"
+  },
+  "default": {
+    "denial_equalise": false,
+    "grant_cache": {
+      "hits": 27997,
+      "invalidations": 0,
+      "misses": 5
+    },
+    "outcomes": [
+      {
+        "arm": "hit_control_a",
+        "first_failure_text": null,
+        "non_denied_calls": 4000
+      },
+      {
+        "arm": "hit_control_b",
+        "first_failure_text": null,
+        "non_denied_calls": 4000
+      },
+      {
+        "arm": "hit_small",
+        "first_failure_text": null,
+        "non_denied_calls": 4000
+      },
+      {
+        "arm": "foreign_tenant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_big",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "absent_object",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "expired_grant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "no_envelope",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_small",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      }
+    ],
+    "timing": {
+      "arms": [
+        {
+          "arm": "hit_control_a",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 95.679,
+            "p50_us": 34.044,
+            "p95_us": 43.942,
+            "p99_us": 46.988,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.222
+        },
+        {
+          "arm": "hit_control_b",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 93.915,
+            "p50_us": 34.033,
+            "p95_us": 43.842,
+            "p99_us": 46.987,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.222
+        },
+        {
+          "arm": "hit_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 72.475,
+            "p50_us": 15.149,
+            "p95_us": 20.719,
+            "p99_us": 23.143,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.223
+        },
+        {
+          "arm": "foreign_tenant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 6.022,
+            "p50_us": 0.411,
+            "p95_us": 0.611,
+            "p99_us": 0.742,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.168
+        },
+        {
+          "arm": "wrong_root_big",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.751,
+            "p50_us": 0.411,
+            "p95_us": 0.661,
+            "p99_us": 0.751,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.167
+        },
+        {
+          "arm": "absent_object",
+          "distinguishable_from_absent_at_4_sigma": false,
+          "distribution": {
+            "max_us": 10.991,
+            "p50_us": 0.06,
+            "p95_us": 0.09,
+            "p99_us": 0.121,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": 0.0
+        },
+        {
+          "arm": "expired_grant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.801,
+            "p50_us": 0.371,
+            "p95_us": 0.591,
+            "p99_us": 0.661,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.203
+        },
+        {
+          "arm": "no_envelope",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 2.485,
+            "p50_us": 0.321,
+            "p95_us": 0.521,
+            "p99_us": 0.581,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.242
+        },
+        {
+          "arm": "wrong_root_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 9.417,
+            "p50_us": 0.411,
+            "p95_us": 0.651,
+            "p99_us": 0.731,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -78.218
+        }
+      ],
+      "control_z": 2.881,
+      "residual_channels": [
+        "foreign_tenant is separable from an absent object (z=-78.2)",
+        "wrong_root_big is separable from an absent object (z=-78.2)",
+        "expired_grant is separable from an absent object (z=-78.2)",
+        "no_envelope is separable from an absent object (z=-78.2)",
+        "wrong_root_small is separable from an absent object (z=-78.2)"
+      ],
+      "size_inference_distinguishable_at_4_sigma": true,
+      "size_inference_z_big_vs_small": 4.398
+    }
+  },
+  "denial_equalised": {
+    "denial_equalise": true,
+    "grant_cache": {
+      "hits": 31997,
+      "invalidations": 0,
+      "misses": 5
+    },
+    "outcomes": [
+      {
+        "arm": "hit_control_a",
+        "first_failure_text": null,
+        "non_denied_calls": 4000
+      },
+      {
+        "arm": "hit_control_b",
+        "first_failure_text": null,
+        "non_denied_calls": 4000
+      },
+      {
+        "arm": "hit_small",
+        "first_failure_text": null,
+        "non_denied_calls": 4000
+      },
+      {
+        "arm": "foreign_tenant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_big",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "absent_object",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "expired_grant",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "no_envelope",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      },
+      {
+        "arm": "wrong_root_small",
+        "first_failure_text": "Unauthorized: kv page is not available to this principal",
+        "non_denied_calls": 0
+      }
+    ],
+    "timing": {
+      "arms": [
+        {
+          "arm": "hit_control_a",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 66.013,
+            "p50_us": 34.033,
+            "p95_us": 44.032,
+            "p99_us": 47.639,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.908
+        },
+        {
+          "arm": "hit_control_b",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 63.709,
+            "p50_us": 33.993,
+            "p95_us": 44.002,
+            "p99_us": 46.648,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.908
+        },
+        {
+          "arm": "hit_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 46.416,
+            "p50_us": 15.108,
+            "p95_us": 20.688,
+            "p99_us": 22.461,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.909
+        },
+        {
+          "arm": "foreign_tenant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.891,
+            "p50_us": 0.411,
+            "p95_us": 0.601,
+            "p99_us": 0.721,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.833
+        },
+        {
+          "arm": "wrong_root_big",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.921,
+            "p50_us": 0.411,
+            "p95_us": 0.661,
+            "p99_us": 0.751,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.846
+        },
+        {
+          "arm": "absent_object",
+          "distinguishable_from_absent_at_4_sigma": false,
+          "distribution": {
+            "max_us": 1.553,
+            "p50_us": 0.11,
+            "p95_us": 0.15,
+            "p99_us": 0.191,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": 0.0
+        },
+        {
+          "arm": "expired_grant",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.771,
+            "p50_us": 0.371,
+            "p95_us": 0.591,
+            "p99_us": 0.661,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.863
+        },
+        {
+          "arm": "no_envelope",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 2.284,
+            "p50_us": 0.321,
+            "p95_us": 0.521,
+            "p99_us": 0.581,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.79
+        },
+        {
+          "arm": "wrong_root_small",
+          "distinguishable_from_absent_at_4_sigma": true,
+          "distribution": {
+            "max_us": 5.831,
+            "p50_us": 0.411,
+            "p95_us": 0.652,
+            "p99_us": 0.731,
+            "samples": 4000
+          },
+          "mann_whitney_z_vs_absent": -77.881
+        }
+      ],
+      "control_z": 10.148,
+      "residual_channels": [
+        "foreign_tenant is separable from an absent object (z=-77.8)",
+        "wrong_root_big is separable from an absent object (z=-77.8)",
+        "expired_grant is separable from an absent object (z=-77.9)",
+        "no_envelope is separable from an absent object (z=-77.8)",
+        "wrong_root_small is separable from an absent object (z=-77.9)"
+      ],
+      "size_inference_distinguishable_at_4_sigma": true,
+      "size_inference_z_big_vs_small": 7.047
+    }
+  },
+  "hard_failures": [],
+  "label": "KV side-channel and tenant-security court; in-process, one host, synthetic pages",
+  "non_claims": [
+    "not constant-time; the court reports separations, it does not prove them unexploitable",
+    "in-process measurements; a remote attacker also sees network noise and is not modelled",
+    "one host, synthetic pages, warm page cache; no fleet or production claim",
+    "kv_denial_equalise is off by default; enabling it is measured here, not recommended for all deployments"
+  ],
+  "result": "pass",
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "0a0723f4326bbee73a2e9649834799c54739f0a4",
+    "WeftFS-Go": "6ca4c42e19ee480b15359d152aef60513683a7a5"
+  },
+  "revocation": {
+    "get_after": "Unauthorized: kv page is not available to this principal",
+    "reusable_after_indexed": false,
+    "reusable_after_scan": false,
+    "reusable_before": true,
+    "stale_reads_after_revocation": 0
+  },
+  "samples_per_arm": 4000,
+  "schema": "weft.kv.sidechannel.v1",
+  "stamp": "20261114T133000Z",
+  "wall_ms": 711.542
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "weft.kv.go_parity.v1",
+  "stamp": "20261114T133000Z",
+  "revisions": {
+    "WeftFS": "0a0723f4326bbee73a2e9649834799c54739f0a4",
+    "WeftFS-Go": "6ca4c42e19ee480b15359d152aef60513683a7a5"
+  },
+  "label": "WeftFS-Go KV prefix parity: tier, scope checks, Ed25519 verification, bidirectional handoff, per-page cost",
+  "court": {
+    "rust_image": "weft/rust-court:1",
+    "go_image": "weft/go-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "swap": "3g",
+    "pids": 1024,
+    "cpus": 4,
+    "tmp": "1g"
+  },
+  "rust_oracle": {
+    "path": "weftfs (cargo build --release --bin weftfs, no fuse feature)",
+    "note": "the fuse build needs libfuse3, absent from the go court"
+  },
+  "tests": [
+    {
+      "name": "TestKvPrefixTierRoundTripsAndRevokes",
+      "result": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "name": "TestKvBatchIsOneCommitAndAllOrNothing",
+      "result": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "name": "TestKvPrefixGetVerifiesEd25519InGo",
+      "result": "PASS",
+      "seconds": 0.0
+    },
+    {
+      "name": "TestKvPrefixCrossLanguageReadsBothWays",
+      "result": "PASS",
+      "seconds": 0.01
+    },
+    {
+      "name": "TestKvGoCost",
+      "result": "PASS",
+      "seconds": 3.22
+    }
+  ],
+  "test_count": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ed25519": {
+    "decision": "implemented, not merely bounded",
+    "mechanism": "Store.KvPrefixGetVerified loads the stored signed envelope blob and verifies it with WeftCodec-Go capability.Verify (crypto/ed25519), then builds the scope with auth.NewCapability.",
+    "trusted_verifier_boundary_retained": "Store.KvPrefixGet still accepts an already-verified *auth.Capability and is labelled as the historical boundary",
+    "negative_cases": [
+      "tampered blob refused",
+      "grant with unrelated roots refused",
+      "foreign tenant refused",
+      "expired grant refused",
+      "no capability refused"
+    ],
+    "cross_language": "a Go-signed grant is verified by Rust (kv get --envelope) and a Rust-written prefix is read by Go with a Go-verified grant"
+  },
+  "cost": {
+    "alloc_bytes_per_read_prefix": 209528,
+    "alloc_bytes_per_write_prefix": 438576,
+    "generation": 6,
+    "label": "Go per-page cost: batched publication and scoped reads; one host",
+    "one_batch_write_ms": 0.156,
+    "read_page_bytes": 512,
+    "read_per_prefix_ms": 0.131,
+    "read_reps": 200,
+    "schema": "weft.kv.go.cost.v1",
+    "single_write_per_prefix_us": 402.318,
+    "single_write_wall_ms": 102.994,
+    "write_bytes": 4194304,
+    "write_commits": 1,
+    "write_pages": 8192,
+    "write_per_page_us": 359.995,
+    "write_wall_ms": 2949.078
+  },
+  "non_claims": [
+    "no Go index (the T063 persisted index is Rust-only); Go lookup is the oracle scan",
+    "no Go mode-19 or mode-15 writer",
+    "one host, synthetic pages, warm cache; no fleet/cloud claim",
+    "the per-page cost is a single-process measurement, not a service SLO"
+  ]
+}

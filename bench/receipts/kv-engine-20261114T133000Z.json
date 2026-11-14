@@ -1,0 +1,199 @@
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g"
+  },
+  "decision": {
+    "best_policy_by_total_regret": "always_reuse",
+    "declared_prefill_fixed_ns": 2000000,
+    "declared_prefill_ns_per_token": 120000,
+    "grid_per_token_us": [
+      10,
+      50,
+      120,
+      500
+    ],
+    "limitation": "the fixture's prefixes are 512 tokens, so every point on the declared grid is far above break-even; the grid shows the policy is insensitive in this regime, it does not locate a crossover.",
+    "measured_break_even_per_token_us": {
+      "note": "reuse is cheaper than recompute whenever the per-token prefill cost exceeds (measured lookup + measured get) / tokens. Measured, not declared.",
+      "value": 2.119
+    },
+    "note": "regret is computed against an oracle that knows the measured reuse cost and the hypothetical recompute cost in the same row. Only the reuse cost and the local token hashing are measured; every recompute number is the declared/hypothetical prefill model.",
+    "rows": [
+      {
+        "always_recompute_regret_ms": 11344.889,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 10
+      },
+      {
+        "always_recompute_regret_ms": 49232.889,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 50
+      },
+      {
+        "always_recompute_regret_ms": 115536.889,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 120
+      },
+      {
+        "always_recompute_regret_ms": 475472.889,
+        "always_reuse_regret_ms": 0.0,
+        "declared_model_regret_ms": 0.0,
+        "declared_model_reuse_requests": 1700,
+        "oracle_reuse_requests": 1700,
+        "per_token_us": 500
+      }
+    ]
+  },
+  "fixture": {
+    "build_ms": 513.434,
+    "index_build_ms": 2.141,
+    "index_entries": 64,
+    "mix": {
+      "exact": 1400,
+      "extension": 300,
+      "model_drift": 100,
+      "token_drift": 200
+    },
+    "requests": 2000,
+    "shape": {
+      "bytes_per_page_all_layers": 16384,
+      "head_dim": 32,
+      "kv_heads": 2,
+      "layers": 2,
+      "page_rows": 64
+    },
+    "shared_prefixes": 64
+  },
+  "label": "engine-shaped trace replay over real KV prefix records; the engine installation was attempted and blocked (see engine_attempt)",
+  "measured": {
+    "index_stats": {
+      "fallbacks": 0,
+      "loads": 1,
+      "lookups": 2000,
+      "notes": [],
+      "probes": 17200,
+      "rejected_candidates": 0,
+      "rejects": 0
+    },
+    "indexed_mismatches": 0,
+    "lookup_indexed": {
+      "mean_us": 189.93,
+      "p50_us": 199.672,
+      "p95_us": 240.148,
+      "p99_us": 265.135,
+      "samples": 2000
+    },
+    "lookup_scan_exact_only": {
+      "mean_us": 7165.859,
+      "p50_us": 7135.411,
+      "p95_us": 7310.428,
+      "p99_us": 7548.882,
+      "samples": 1400
+    },
+    "reuse_get": {
+      "mean_us": 898.301,
+      "p50_us": 885.253,
+      "p95_us": 999.526,
+      "p99_us": 1091.478,
+      "samples": 1700
+    },
+    "reuse_logical_bytes": 222822400,
+    "reuse_requests": 1700,
+    "token_chain_hash_local": {
+      "mean_us": 87.714,
+      "p50_us": 81.081,
+      "p95_us": 121.807,
+      "p99_us": 123.671,
+      "samples": 2000
+    }
+  },
+  "non_claims": [
+    "no inference engine ran; this is trace replay, and the recompute axis is hypothetical",
+    "the local token-chain hash is a measured lower bound on prefix identification work, not a prefill",
+    "no TTFT, tokens/s or hit-rate claim against any engine",
+    "one host, synthetic trace, warm page cache"
+  ],
+  "revisions": {
+    "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+    "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+    "WeftFS": "0a0723f4326bbee73a2e9649834799c54739f0a4",
+    "WeftFS-Go": "6ca4c42e19ee480b15359d152aef60513683a7a5"
+  },
+  "schema": "weft.kv.trace_replay.v1",
+  "stamp": "20261114T133000Z",
+  "wall_ms": 12683.453,
+  "engine_attempt": {
+    "result": "no inference engine could run in the court",
+    "court_limits": {
+      "memory": "3g",
+      "swap": "3g",
+      "tmpfs_tmp": "1g",
+      "pids": 1024,
+      "cpus": 4,
+      "gpu_devices": "none: ls /dev/nvidia* -> No such file or directory"
+    },
+    "vllm": {
+      "command": "pip install --no-cache-dir --target /tmp/vllm-install vllm",
+      "index_versions": "pip index versions vllm -> vllm (0.33.0)",
+      "error": "ERROR: Could not install packages due to an OSError: [Errno 28] No space left on device",
+      "reason": "CUDA torch build: torch 2.14.0 (554.6 MB) + vllm 0.33.0 (336.4 MB) + tilelang (50.5 MB) + pynvvideocodec (43.2 MB) exceed the 1 GiB /tmp bound before install completes",
+      "no_deps_command": "pip install --no-cache-dir --no-deps --target /tmp/vllm-nodeps vllm",
+      "no_deps_outcome": "the 336.4 MB wheel alone still hits ENOSPC; torch and the CUDA runtime are absent, so even a completed unpack could not import",
+      "captured": "$ pip install --no-cache-dir --target /tmp/vllm-install vllm\nDownloading torch-2.14.0-cp312-cp312-manylinux_2_28_x86_64.whl (554.6 MB)\nDownloading vllm-0.33.0-cp38-abi3-manylinux_2_28_x86_64.whl (336.4 MB)\nDownloading tilelang-0.1.12-cp38-abi3-manylinux...whl (50.5 MB)\nDownloading pynvvideocodec-2.0.4-cp312-cp312-manylinux_2_28_x86_64.whl (43.2 MB)\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n$ pip install --no-cache-dir --no-deps --target /tmp/vllm-nodeps vllm\nDownloading vllm-0.33.0-cp38-abi3-manylinux_2_28_x86_64.whl (336.4 MB)\nInstalling collected packages: vllm\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device"
+    },
+    "sglang": {
+      "commands": [
+        "pip install --no-cache-dir --no-deps --target /tmp/sglang-nodeps sglang",
+        "python3 -c 'import sys; sys.path.insert(0,\"/tmp/sglang-nodeps\"); import sglang'",
+        "pip install --no-cache-dir --target /tmp/sglang-full sglang"
+      ],
+      "no_deps_install": "sglang 0.5.23 (39.0 MB) installs without dependencies",
+      "import_error": "ModuleNotFoundError: No module named 'orjson' (and the rest of the runtime is absent)",
+      "with_deps_error": "ERROR: Could not install packages due to an OSError: [Errno 28] No space left on device while downloading torch-2.14.1 (554.6 MB)",
+      "captured": "## pip install --no-deps --target /tmp/sglang-nodeps sglang\nWARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.\n\n## import sglang (deps absent)\n    from sglang.srt.utils.hf_transformers_patches import apply_all as _apply_hf_patches\n  File \"/tmp/sglang-nodeps/sglang/srt/utils/__init__.py\", line 2, in <module>\n    from sglang.srt.utils.common import *\n  File \"/tmp/sglang-nodeps/sglang/srt/utils/common.py\", line 85, in <module>\n    import orjson\nModuleNotFoundError: No module named 'orjson'\n\n25-py3-none-any.whl (2.6 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 2.6/2.6 MB 17.2 MB/s eta 0:00:00\nDownloading tml_renderers-0.1.0-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (4.7 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 4.7/4.7 MB 20.9 MB/s eta 0:00:00\nDownloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.4 MB)\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501 3.4/3.4 MB 22.9 MB/s eta 0:00:00\nDownloading torch-2.14.1-cp312-cp312-manylinux_2_28_x86_64.whl (554.6 MB)\nERROR: Could not install packages due to an OSError: [Errno 28] No space left on device\n\n   \u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501         449.1/554.6 MB 12.1 MB/s eta 0:00:09\n"
+    },
+    "conclusion": "The 3 GiB memory / 1 GiB /tmp court with no CUDA device cannot host vLLM or SGLang. This is a recorded blocker, not a missing attempt.",
+    "what_would_be_needed": "a host or court with a CUDA device, >=8 GiB of disk for the wheel set and a model that fits the remaining memory; then the real experiment is: same token sequence through the engine with and without the stored prefix pages, comparing TTFT and output identity."
+  },
+  "numbers": {
+    "measured": [
+      "measured.lookup_indexed",
+      "measured.lookup_scan_exact_only",
+      "measured.reuse_get",
+      "measured.token_chain_hash_local",
+      "measured.reuse_logical_bytes",
+      "measured.reuse_requests",
+      "measured.indexed_mismatches",
+      "fixture.build_ms",
+      "fixture.index_build_ms"
+    ],
+    "derived_from_measurement": [
+      "decision.measured_break_even_per_token_us"
+    ],
+    "hypothetical": [
+      "decision.declared_prefill_fixed_ns",
+      "decision.declared_prefill_ns_per_token",
+      "decision.grid_per_token_us",
+      "decision.rows[*].always_reuse_regret_ms",
+      "decision.rows[*].always_recompute_regret_ms",
+      "decision.rows[*].declared_model_regret_ms",
+      "decision.rows[*].oracle_reuse_requests"
+    ],
+    "engine_measured": [],
+    "note": "No TTFT, tokens/s, hit rate or engine cache comparison exists here: no engine ran. The regret grid is a decision analysis over a hypothetical prefill cost; only the reuse costs are observed."
+  },
+  "result": "blocked-no-engine; trace replay completed"
+}
