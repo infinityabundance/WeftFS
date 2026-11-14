@@ -5,6 +5,9 @@ Court: rust court (3 GiB / 4 CPUs / 1024 pids, bounded tmpfs), one local store,
 no object backend.
 
 <!-- BEGIN GENERATED:revocation-epoch-verdict (scripts/perf_numbers.py) -->
+**11** checks pass with **0**
+failures, and the deny-before-decode counter proof is the separate Rust test
+`tests/revocation_epoch.rs` run in the same court.
 <!-- END GENERATED:revocation-epoch-verdict -->
 
 Retained, not cited: `revocation-epoch-20261114T225925Z.json`, measured from a

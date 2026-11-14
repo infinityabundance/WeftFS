@@ -8,6 +8,11 @@ over the same canonical records; every container keeps the default limits
 Current receipt: `producer-auth-20261115T010000Z.json`.
 
 <!-- BEGIN GENERATED:producer-auth-verdict (scripts/perf_numbers.py) -->
+**31** checks pass with **0** failures: Rust
+signs and Rust, Go and the clean-room Python verifier agree on the record; the
+adversarial set (invalid signer, corrupted input root, mismatched output root,
+revoked key, key rotated after signing, valid signature over inputs the store does,
+not contain) is refused with the class the document names.
 <!-- END GENERATED:producer-auth-verdict -->
 
 Retained, not cited: `producer-auth-20261114T225327Z.json`, measured from a tree

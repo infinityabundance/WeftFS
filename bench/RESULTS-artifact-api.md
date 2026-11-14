@@ -4,6 +4,10 @@ Receipt: `bench/receipts/artifact-api-20261115T012000Z.json` and its `.log`,
 written by the registered court `scripts/artifact_api_court.sh`.
 
 <!-- BEGIN GENERATED:artifact-api-verdict (scripts/perf_numbers.py) -->
+**11** checks pass with **0** failures: one Rust
+`ContextPlane`, one Python binding, three consumers (DCP, Orbax, an agent-state
+consumer), and a byte-identity assertion between the checkpoint resolved through
+the API and the same checkpoint read through the legacy adapter path.
 <!-- END GENERATED:artifact-api-verdict -->
 
 Retained, not cited: `artifact-api-20261114T224431Z.json`, produced from a tree
