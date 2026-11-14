@@ -1,0 +1,125 @@
+{
+  "environment": {
+    "court": "weft/fuse-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "evidence": {
+    "log": "bench/receipts/fuse-mw2-20261114T095249Z.log"
+  },
+  "failures": 2,
+  "generated_at": "20261114T095249Z",
+  "mode": "optimistic (MW2 transactions); the default MW1 mount is exercised in H",
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "526489261e72e50c2c850b697dcb7027baee6157"
+    }
+  ],
+  "result": "fail",
+  "role": "T029 FUSE mutations under optimistic publication (MW2)",
+  "rust_suite": {
+    "ok": false,
+    "tests": 8
+  },
+  "schema": "weftfs.fuse_mw2/1",
+  "scope": {
+    "checked": "six concurrent creates, four concurrent renames, four concurrent whole-file overwrites, four concurrent links and unlinks, an fd-spanning reader, eight refusals, offline verify --full, and the default MW1 mount",
+    "label": "one host, one local POSIX namespace, one mount daemon per mode; process-level concurrency",
+    "not_checked": "multi-node mounts, physical power loss, Go parity for FUSE mutations, byte-range writes that are not a whole-file rewrite, write-back/group-commit composition with MW2"
+  },
+  "semantics": {
+    "create": "one transaction: object record + directory entry, precondition Absent",
+    "link": "one new directory entry in one transaction; directories refused",
+    "not_composable": [
+      "--write-back",
+      "--group-commit"
+    ],
+    "overwrite": "read-modify-write of a whole file; the observed version is the precondition",
+    "read": "an open handle reads the version it opened (snapshot isolation)",
+    "refused": [
+      "mkdir",
+      "mknod (all types)",
+      "symlink",
+      "chmod/chown/utimes",
+      "truncate(2)",
+      "setxattr/removexattr",
+      "fallocate",
+      "copy_file_range",
+      "RENAME_EXCHANGE",
+      "a write past the 8 MiB whole-file rewrite bound (E2BIG)"
+    ],
+    "rename": "target entry (and replaced object when unreferenced) plus source entry in one transaction",
+    "unlink": "entry removal plus object/relation removal when the last name goes, one transaction"
+  },
+  "shell": {
+    "a_concurrent_create": {
+      "ok": true,
+      "processes": 6
+    },
+    "b_concurrent_rename": {
+      "ok": true,
+      "processes": 4
+    },
+    "c_concurrent_overwrite": {
+      "final": "writer-3",
+      "ok": false,
+      "processes": 4
+    },
+    "d_concurrent_link_unlink": {
+      "ok": true,
+      "processes": 4
+    },
+    "e_reader_snapshot_isolation": {
+      "ok": true
+    },
+    "f_refusals": {
+      "ok": true,
+      "rows": [
+        {
+          "message_match": true,
+          "operation": "mkdir",
+          "refused": true
+        },
+        {
+          "message_match": true,
+          "operation": "chmod",
+          "refused": true
+        },
+        {
+          "message_match": true,
+          "operation": "symlink",
+          "refused": true
+        },
+        {
+          "message_match": true,
+          "operation": "truncate",
+          "refused": true
+        },
+        {
+          "message_match": true,
+          "operation": "utimes",
+          "refused": true
+        },
+        {
+          "message_match": true,
+          "operation": "fallocate",
+          "refused": true
+        },
+        {
+          "message_match": true,
+          "operation": "oversize_write",
+          "refused": true
+        }
+      ]
+    },
+    "g_verify_full": {
+      "ok": true
+    },
+    "h_mw1_default_unaffected": {
+      "ok": true
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "binaries": {
+    "new_sha256": "4dfeb7573adad68bbdf894866830e092e16d6ccb0b9cfab77e28687c054297b9",
+    "old_sha256": "1239340f9018ed6adde1e800edceda1c872b2e2a973d15a11b7a392e07d9495f",
+    "old_tag": "v0.9.0"
+  },
+  "crash_during_transition": [
+    {
+      "exit": 134,
+      "expected_mode": "optimistic",
+      "hook": "mode_after_validate",
+      "mode_after_crash": "optimistic",
+      "single_authority": true,
+      "verify_full": true
+    },
+    {
+      "exit": 134,
+      "expected_mode": "sharded",
+      "hook": "mode_after_cas",
+      "mode_after_crash": "sharded",
+      "single_authority": true,
+      "verify_full": true
+    }
+  ],
+  "environment": {
+    "court": "weft/fuse-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "evidence": {
+    "log": "bench/receipts/mode-migration-20261114T101419Z.log"
+  },
+  "failures": 0,
+  "fresh_store": {
+    "reader": true,
+    "show": {
+      "effective": "single",
+      "ok": true,
+      "record_present": false,
+      "recorded": null
+    },
+    "single_write": true
+  },
+  "generated_at": "20261114T101419Z",
+  "live_prepared_blocks": true,
+  "mechanism": "the writer mode is one record (`writers`); a migration is one compare-and-swap on it; every writable open is checked against it before the writer lock is taken",
+  "migration_after_resolution": true,
+  "no_dual_authority": {
+    "conforming_binaries": true,
+    "mechanism": "one record, one CAS, every writable open checked before the lock",
+    "outside_the_protocol": "a pre-record binary ignores the record (measured above)",
+    "window": "none for a conforming writer: before the CAS the record says `from` and after it `to`; a writer opening in either window is admitted only for the recorded mode"
+  },
+  "old_binary": {
+    "new_single_writer_still_refused": true,
+    "reader_on_newer_store": true,
+    "record_still_says": "optimistic",
+    "store_verifies_after_old_write": true,
+    "tag": "v0.9.0",
+    "verdict": "a pre-record binary is outside the protocol: it cannot be bound by the mode record, and its write is measured here rather than hidden. This is the documented residual risk; `min_reader` is the forward mechanism.",
+    "writer_on_newer_store_succeeded": true
+  },
+  "optimistic": {
+    "downgrade_refused": true,
+    "show": {
+      "effective": "optimistic",
+      "ok": true,
+      "record_present": true,
+      "recorded": "optimistic"
+    },
+    "single_open_refused": true
+  },
+  "reader_spanning_transition": {
+    "migrated": true,
+    "reader_snapshot_stable": true,
+    "verify_full": true
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+    }
+  ],
+  "result": "pass",
+  "role": "T028 explicit safe mixed-mode migration",
+  "schema": "weftfs.mode_migration/1",
+  "scope": {
+    "checked": "all six transition directions, live prepared transaction, crash at both sides of the CAS, a reader spanning the transition, and the v0.9.0 binary as an old reader and an old writer",
+    "label": "one host, one local POSIX namespace, process-fault proxies for the transition crash",
+    "not_checked": "multi-node coordination, clock skew, a distributed quiescence barrier, Go parity for the migration verb"
+  },
+  "sharded": {
+    "domain_write_verified": true,
+    "downgrade_refused": true,
+    "optimistic_refused": true,
+    "show": {
+      "effective": "sharded",
+      "ok": true,
+      "record_present": true,
+      "recorded": "sharded"
+    },
+    "single_refused": true
+  },
+  "single_to_sharded_refused": true,
+  "transition_table": [
+    {
+      "evidence": "A, B: record created, single writes refused afterwards",
+      "from": "single",
+      "to": "optimistic",
+      "verdict": "allowed"
+    },
+    {
+      "evidence": "C: a live prepared transaction blocks it; D: sharded writes/verify work afterwards",
+      "from": "optimistic",
+      "to": "sharded",
+      "verdict": "allowed with quiescence"
+    },
+    {
+      "evidence": "E",
+      "from": "single",
+      "to": "sharded",
+      "verdict": "refused (UnsupportedVersion)"
+    },
+    {
+      "evidence": "B",
+      "from": "optimistic",
+      "to": "single",
+      "verdict": "refused (downgrade)"
+    },
+    {
+      "evidence": "D",
+      "from": "sharded",
+      "to": "optimistic",
+      "verdict": "refused (downgrade)"
+    },
+    {
+      "evidence": "D",
+      "from": "sharded",
+      "to": "single",
+      "verdict": "refused (downgrade)"
+    }
+  ]
+}

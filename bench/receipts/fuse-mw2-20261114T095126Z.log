@@ -1,0 +1,21 @@
+== T029 FUSE mutation court ==
+kernel: Linux f69c0432f813 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+stamp: 20261114T095126Z
+== 0 Rust integration suite (fuse_mw2) ==
+0: rust_suite_ok=true
+== A concurrent create ==
+A: create_ok=true B: rename_ok=true
+sh: 1: cannot create /tmp/weft-fuse-mw2.rNcMJi/opt-mnt/hot.txt: Input/output error
+FAIL: C: at least one overwrite process failed
+C: overwrite_ok=false final='writer-2'
+D: link_ok=true
+E: snapshot_isolation=true
+FAIL: F: fallocate unexpectedly succeeded
+FAIL: F: a refused operation left a namespace entry behind
+F: refusals_ok=false
+G: verify_full=true
+H: mw1_default_ok=true
+{"receipt": "bench/receipts/fuse-mw2-20261114T095126Z.json", "result": "fail", "failures": 3}
+receipt: bench/receipts/fuse-mw2-20261114T095126Z.json
