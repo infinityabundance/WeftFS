@@ -33,14 +33,19 @@ splits**, and no family appears in two splits.
 | **HELD OUT** | Qwen2.5-7B-Instruct | `Qwen2.5-7B-Instruct.safetensors` | different family scale and a fine-tuned checkpoint; measured **once** |
 
 The 3B validation split is a **bounded deterministic subset** because the court
-is 3 GiB / 4 CPUs and per-tensor planning re-materialises candidates:
-include `model.embed_tokens.weight` if it is at most 768 MiB, then every
-`k`-th remaining tensor in ascending name order, `k` chosen as the smallest
-integer that keeps the subset at or below 96 tensors and 1.5 GiB. The exact
-tensor list is written into the receipt.
+is 3 GiB / 4 CPUs and per-tensor exhaustive planning holds every candidate
+artifact of one tensor at once (raw + level-3 + level-19 + mode-9). The bound is
+**every tensor with `byte_len <= 192 MiB`**, then every `k`-th remaining tensor
+in ascending name order, `k` chosen as the smallest integer that keeps the
+subset at or below 96 tensors and 1.5 GiB. The exact tensor list is written into
+the receipt. The 192 MiB bound is a declared court-memory bound, not a
+result-dependent filter: at 192 MiB the candidate set is at most ~0.8 GiB and
+the court has never OOM-killed that shape.
 
 The 7B held-out split is also bounded, and the bound is **declared now**: every
-tensor with `byte_len <= 160 MiB`, in ascending name order, at most 40 tensors.
+tensor with `byte_len <= 160 MiB`, in ascending name order, at most 40 tensors
+(the same 192 MiB court-memory rule, applied at 160 MiB to leave headroom for a
+container-level peak already measured at ~2.9 GiB on 7B).
 The two 1 GiB tensors (`model.embed_tokens.weight`, `lm_head.weight`) are
 **excluded before measurement** because the measured per-tensor planner peak for
 a 7B tensor was an OOM kill at the 3 GiB court limit (`docs/STATUS.md`, R12).
