@@ -1,0 +1,20 @@
+{
+ "comparison": "C-pipe4-wb1 vs C-pipe4-wb8, same fixture, same seeds, same chunk size",
+ "fields_equal": {
+  "generation": true,
+  "logical_bytes": true,
+  "output_contents": true,
+  "physical_bytes_written": true,
+  "physical_footprint_bytes": true,
+  "publication_ledger": true,
+  "representations": true,
+  "storage": true
+ },
+ "object_ids_note": "ObjectIds differ by design: the harness derives the object seed from the configuration name. The committed content roots, representation choice, byte counts and footprint are compared instead.",
+ "output_contents_count": 101,
+ "schema": "weft.n01.identity.v1",
+ "stamp": "20261114T195000Z",
+ "store_head_wb1": "081efca34dc4981efcce69c0bc71b3655df32b076e221388e8e1e32f27edce6a",
+ "store_head_wb8": "975173ead3416ccf4e89f0394dc71d32e53a4977540279b930ccedf624ecf0fa",
+ "unit_test": "tests/tensor_pipeline.rs::writeback_lanes_do_not_change_a_single_byte asserts identical head, per-object ids and manifest bytes for 1 vs 8 lanes"
+}

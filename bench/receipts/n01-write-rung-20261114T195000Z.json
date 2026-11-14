@@ -1,0 +1,481 @@
+{
+ "change": {
+  "bound": "1..=8 lanes, validated; a failure on any lane fails the pipeline before anything is committed",
+  "invariants": "every published file is still `fdatasync`ed exactly once; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record; no frame, manifest, commit, index or identity byte changes",
+  "what": "the early barrier's `fdatasync` work runs on `writeback_threads` lanes (default min(available_parallelism, 4); `wb1..wb8` selects)",
+  "where": "src/tensor_pipeline.rs (`sync_drained_files`), TensorPipelineOptions::writeback_threads"
+ },
+ "court_checks": {
+  "ablation_encode_counts_exact": true,
+  "all_configs_present": true,
+  "all_restores_exact": true,
+  "at_least_seven_reps": true,
+  "crash_proxy_old_or_new": true,
+  "default_c_matches_official_court": true,
+  "default_c_row_matches_r3_strategies": true,
+  "strategies_stable_across_reps": true,
+  "two_stage_decision_diff_present": true,
+  "two_stage_matches_exhaustive": true,
+  "two_stage_storage_unchanged": true
+ },
+ "court_receipt": "bench/receipts/r22-pareto-20261114T195000Z.json",
+ "court_result": "pass",
+ "fixture": {
+  "bytes": 988097824,
+  "path": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+  "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe"
+ },
+ "floor": {
+  "commit_ms": 9.980742,
+  "encode_wall_ms": 380.825913,
+  "floor_ms": 474.364439,
+  "note": "the 336 ms rung would need the embedding's read+encode chain to fall by about 138 ms; the writeback tail that dominated R22 is now hidden (215.1 ms busy under a 502.4 ms pipeline)",
+  "publisher_finish_tail_ms": 40.412409999999966,
+  "reader_ms": 43.145374,
+  "rule": "reader + encode_wall + (publish_wall - encode_wall) + commit on the least-contended shipped row; the early barrier is fully overlapped, so it is not on this path"
+ },
+ "identity": {
+  "comparison": "C-pipe4-wb1 vs C-pipe4-wb8, same fixture, same seeds, same chunk size",
+  "fields_equal": {
+   "generation": true,
+   "logical_bytes": true,
+   "output_contents": true,
+   "physical_bytes_written": true,
+   "physical_footprint_bytes": true,
+   "publication_ledger": true,
+   "representations": true,
+   "storage": true
+  },
+  "object_ids_note": "ObjectIds differ by design: the harness derives the object seed from the configuration name. The committed content roots, representation choice, byte counts and footprint are compared instead.",
+  "output_contents_count": 101,
+  "schema": "weft.n01.identity.v1",
+  "stamp": "20261114T195000Z",
+  "store_head_wb1": "081efca34dc4981efcce69c0bc71b3655df32b076e221388e8e1e32f27edce6a",
+  "store_head_wb8": "975173ead3416ccf4e89f0394dc71d32e53a4977540279b930ccedf624ecf0fa",
+  "unit_test": "tests/tensor_pipeline.rs::writeback_lanes_do_not_change_a_single_byte asserts identical head, per-object ids and manifest bytes for 1 vs 8 lanes"
+ },
+ "losses": [
+  "the rung is not met: 544.4 ms least-contended against 336 ms",
+  "RSS and CPU are unchanged by the lanes (the work is the same), so the change buys wall only",
+  "8 lanes is not separable from 4 on the median in this session (one 678.0 ms median sample against 579.3 ms); the least-contended values are 542.3 vs 544.4 ms",
+  "the host stalled in several repetitions (p95 is seconds); the paired/least-contended statistic is what the contract uses, and the raw samples are published"
+ ],
+ "method": {
+  "court": "weft/bench-court:1 sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+  "footprint_source": "recursive file walk of the store directory",
+  "interleaving": "seeded Fisher-Yates per repetition (seed 20261114) after the one-position rotation; every row runs once per repetition",
+  "limits": "3 GiB memory == swap, 1024 pids, 4 CPUs, bounded /tmp; unchanged",
+  "repetitions": 7,
+  "statistic": "least-contended (min) is the contract statistic; median, p95 and p99 are published from the same seven samples"
+ },
+ "non_claims": [
+  "single host, one writer, local POSIX backend, warm page cache",
+  "no media, power-loss, fleet, cloud or Go claim",
+  "the pipeline is a store-API path; no shipped CLI verb reaches it"
+ ],
+ "post_change": {
+  "best_lane_config": "C-pipe4-wb8",
+  "best_lane_wall_ms": {
+   "median": 677.959793,
+   "min": 542.28264,
+   "p95": 7600.2514888000005,
+   "p99": 7609.780317760001,
+   "samples": [
+    542.28264,
+    557.594198,
+    574.047888,
+    677.959793,
+    862.6425429999999,
+    7572.459071,
+    7612.162525000001
+   ]
+  },
+  "delta_vs_pre_change_median_pct": 4.831,
+  "delta_vs_pre_change_min_pct": 6.555,
+  "shipped_default_config": "C-pipe4 (4 lanes)",
+  "shipped_wall_ms": {
+   "median": 579.289547,
+   "min": 544.385365,
+   "p95": 4705.516290099996,
+   "p99": 6113.642447619997,
+   "samples": [
+    544.385365,
+    570.3812660000001,
+    578.293711,
+    579.289547,
+    580.780224,
+    598.481664,
+    6465.673987
+   ]
+  }
+ },
+ "pre_change": {
+  "config": "C-pipe4-wb1",
+  "early_barrier": {
+   "applicable": true,
+   "busy_ms": 459.176521,
+   "files": 202,
+   "lanes": 1,
+   "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+   "passes": 9,
+   "publish_sync_kicks": 9
+  },
+  "split_note": "one writeback lane (the R21/R22 default before this change): encode wall 403.5 ms, publication wall 445.4 ms (388.5 ms busy), 202-file early barrier 459.2 ms busy on one thread, commit 9.9 ms at a 582.6 ms wall",
+  "stages_ms": {
+   "encode_busy": 642.080099,
+   "encode_wall": 403.526538,
+   "pipeline_wall": 541.671661,
+   "publish_busy": 388.522539,
+   "publish_wall": 445.445714,
+   "reader": 45.707966
+  },
+  "wall_ms": {
+   "median": 608.695073,
+   "min": 582.570575,
+   "p95": 9191.483498999993,
+   "p99": 11300.640600599996,
+   "samples": [
+    582.570575,
+    592.6225109999999,
+    601.590332,
+    608.695073,
+    617.961059,
+    3039.7752859999996,
+    11827.929876
+   ]
+  }
+ },
+ "revision": {
+  "WeftFS": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+  "WeftFS_Go": "a8e8e7afa85446f9a441c275b7c7bbaedb3bb847",
+  "WeftFS_base": "581f364582811ba488323ed618c88cb8716c49ff",
+  "note": "N01 assembled from the r22 Pareto court receipt and the phase-split / identity evidence. The measurement ran on the tree that became commit 6d79c4c on top of base 581f364; only the receipts and docs were added after the run."
+ },
+ "rows": {
+  "A": {
+   "best_rep_commit_ms": null,
+   "best_rep_early_barrier": {},
+   "best_rep_reader_ms": null,
+   "best_rep_stages_ms": {},
+   "best_rep_tail_ms": null,
+   "cpu_ms": 100.0,
+   "footprint_bytes": 424439296,
+   "peak_rss_kib": 270484.0,
+   "representations": null,
+   "restore_ms": 355.343723,
+   "single_run": false,
+   "wall_ms": {
+    "median": 349.879862,
+    "min": 328.66288199999997,
+    "p95": 5394.622254799999,
+    "p99": 5829.221974159998,
+    "samples": [
+     328.66288199999997,
+     330.791324,
+     332.227654,
+     349.879862,
+     2970.788003,
+     4127.03974,
+     5937.871904
+    ]
+   }
+  },
+  "C": {
+   "best_rep_commit_ms": 324.85912,
+   "best_rep_early_barrier": {},
+   "best_rep_reader_ms": null,
+   "best_rep_stages_ms": {},
+   "best_rep_tail_ms": null,
+   "cpu_ms": 1090.0,
+   "footprint_bytes": 282106049,
+   "peak_rss_kib": 690960.0,
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore_ms": 1401.052015,
+   "single_run": false,
+   "wall_ms": {
+    "median": 1178.093367,
+    "min": 1163.784451,
+    "p95": 7027.9927514999945,
+    "p99": 9024.670501499995,
+    "samples": [
+     1163.784451,
+     1165.403436,
+     1173.628975,
+     1178.093367,
+     1179.400016,
+     1204.3493139999998,
+     9523.839939
+    ]
+   }
+  },
+  "C-legacy": {
+   "best_rep_commit_ms": 154.359511,
+   "best_rep_early_barrier": {},
+   "best_rep_reader_ms": null,
+   "best_rep_stages_ms": {},
+   "best_rep_tail_ms": null,
+   "cpu_ms": 21800.0,
+   "footprint_bytes": 282106049,
+   "peak_rss_kib": 908132.0,
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore_ms": 1407.816767,
+   "single_run": false,
+   "wall_ms": {
+    "median": 6616.697974,
+    "min": 6493.2458750000005,
+    "p95": 14514.50518069999,
+    "p99": 17202.82923853999,
+    "samples": [
+     6493.2458750000005,
+     6527.406908,
+     6595.756486,
+     6616.697974,
+     6618.702914,
+     6673.560012,
+     17874.910253
+    ]
+   }
+  },
+  "C-pipe4": {
+   "best_rep_commit_ms": 9.980742,
+   "best_rep_early_barrier": {
+    "applicable": true,
+    "busy_ms": 215.118828,
+    "files": 202,
+    "lanes": 4,
+    "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+    "passes": 9,
+    "publish_sync_kicks": 9
+   },
+   "best_rep_reader_ms": 43.145374,
+   "best_rep_stages_ms": {
+    "encode_busy": 622.646758,
+    "encode_wall": 380.825913,
+    "pipeline_wall": 502.437222,
+    "publish_busy": 351.507132,
+    "publish_wall": 421.238323,
+    "reader": 43.145374
+   },
+   "best_rep_tail_ms": 78.465935,
+   "cpu_ms": 1170.0,
+   "footprint_bytes": 282106049,
+   "peak_rss_kib": 932048.0,
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore_ms": 1408.146667,
+   "single_run": false,
+   "wall_ms": {
+    "median": 579.289547,
+    "min": 544.385365,
+    "p95": 4705.516290099996,
+    "p99": 6113.642447619997,
+    "samples": [
+     544.385365,
+     570.3812660000001,
+     578.293711,
+     579.289547,
+     580.780224,
+     598.481664,
+     6465.673987
+    ]
+   }
+  },
+  "C-pipe4-wb1": {
+   "best_rep_commit_ms": 9.875733,
+   "best_rep_early_barrier": {
+    "applicable": true,
+    "busy_ms": 459.176521,
+    "files": 202,
+    "lanes": 1,
+    "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+    "passes": 9,
+    "publish_sync_kicks": 9
+   },
+   "best_rep_reader_ms": 45.707966,
+   "best_rep_stages_ms": {
+    "encode_busy": 642.080099,
+    "encode_wall": 403.526538,
+    "pipeline_wall": 541.671661,
+    "publish_busy": 388.522539,
+    "publish_wall": 445.445714,
+    "reader": 45.707966
+   },
+   "best_rep_tail_ms": 92.43715699999996,
+   "cpu_ms": 1160.0,
+   "footprint_bytes": 282106049,
+   "peak_rss_kib": 968020.0,
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore_ms": 1389.805152,
+   "single_run": false,
+   "wall_ms": {
+    "median": 608.695073,
+    "min": 582.570575,
+    "p95": 9191.483498999993,
+    "p99": 11300.640600599996,
+    "samples": [
+     582.570575,
+     592.6225109999999,
+     601.590332,
+     608.695073,
+     617.961059,
+     3039.7752859999996,
+     11827.929876
+    ]
+   }
+  },
+  "C-pipe4-wb8": {
+   "best_rep_commit_ms": 9.891563,
+   "best_rep_early_barrier": {
+    "applicable": true,
+    "busy_ms": 143.936842,
+    "files": 202,
+    "lanes": 8,
+    "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+    "passes": 9,
+    "publish_sync_kicks": 9
+   },
+   "best_rep_reader_ms": 43.840588,
+   "best_rep_stages_ms": {
+    "encode_busy": 616.956532,
+    "encode_wall": 379.863147,
+    "pipeline_wall": 501.600588,
+    "publish_busy": 311.901637,
+    "publish_wall": 420.65884,
+    "reader": 43.840588
+   },
+   "best_rep_tail_ms": 77.89685299999996,
+   "cpu_ms": 1170.0,
+   "footprint_bytes": 282106049,
+   "peak_rss_kib": 989348.0,
+   "representations": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "restore_ms": 1410.103064,
+   "single_run": false,
+   "wall_ms": {
+    "median": 677.959793,
+    "min": 542.28264,
+    "p95": 7600.2514888000005,
+    "p99": 7609.780317760001,
+    "samples": [
+     542.28264,
+     557.594198,
+     574.047888,
+     677.959793,
+     862.6425429999999,
+     7572.459071,
+     7612.162525000001
+    ]
+   }
+  }
+ },
+ "schema": "weft.n01.write-rung.v1",
+ "seven_b_cells": {
+  "flat": 761198.535,
+  "note": "reduced cells with the new default; the changed module is not on the checkpoint path (src/checkpoint.rs never calls the tensor pipeline), so these are a no-regression check, not an equal-treatment comparison",
+  "planned": 225682.285,
+  "receipt": "bench/receipts/scale-7b-20261114T195110Z.json"
+ },
+ "stage_split": {
+  "commit_ms": 9.875557,
+  "commit_phases_ms": {
+   "backend_sync": 1.255831,
+   "index_attest": 0.146052,
+   "index_segment": 4.355028,
+   "manifest_commit": 5.014597
+  },
+  "early_barrier": {
+   "applicable": true,
+   "busy_ms": 209.327551,
+   "files": 202,
+   "lanes": 4,
+   "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
+   "passes": 9,
+   "publish_sync_kicks": 9
+  },
+  "phases_ms": {
+   "analyze": 160.153083,
+   "analyze_mode9": 21.221868,
+   "blob_publish": 297.778658,
+   "digest": 71.173316,
+   "encode": 606.015341,
+   "encode_float_tensor": 186.456875,
+   "encode_zstd": 331.460624,
+   "source_read": 42.760649
+  },
+  "pipeline_stages_ms": {
+   "encode_busy": 670.487585,
+   "encode_wall": 428.599734,
+   "pipeline_wall": 556.449138,
+   "publish_busy": 330.201762,
+   "publish_wall": 469.727083,
+   "reader": 43.162924
+  },
+  "prepare_ms": 556.449138,
+  "publication_ledger": {
+   "accounted_blob_and_control_bytes": 282097842,
+   "backend_bytes_written": 282118555,
+   "backend_writes": 216,
+   "categories": {
+    "commit_records": {
+     "bytes": 76920,
+     "count": 3
+    },
+    "index_segments": {
+     "bytes": 39465,
+     "count": 3
+    },
+    "manifest_blobs": {
+     "bytes": 281977361,
+     "count": 186
+    },
+    "object_blobs": {
+     "bytes": 4096,
+     "count": 16
+    },
+    "superblock": {
+     "count": 3
+    }
+   },
+   "duplicate_blobs": 0,
+   "fsyncs": {
+    "dir": 161,
+    "file": 213,
+    "source": "total from BackendStats, split from StorageBackend::durability_barriers",
+    "total": 374
+   },
+   "note": "counted at the point each artifact is handed to the backend; `unaccounted_bytes` is FORMAT/LOCK/probe/control records",
+   "pack": null,
+   "unaccounted_bytes": 20713
+  },
+  "source": "bench/receipts/n01-phase-split-20261114T195000Z.json (same session; wb4 default; one write, phase profile on)",
+  "wall_ms": 598.0795850000001
+ },
+ "stamp": "20261114T195000Z",
+ "verdict": {
+  "achieved_median_ms": 579.289547,
+  "achieved_min_ms": 544.385365,
+  "best_lane_min_ms": 542.28264,
+  "met": false,
+  "ratio_to_native": 1.6563639973192958,
+  "reason": "the durability tail is hidden by parallel file barriers; the remaining critical path is the embedding's read + encode chain (380.8 ms) plus the final publish and commit",
+  "rung_ms": 336.0
+ }
+}

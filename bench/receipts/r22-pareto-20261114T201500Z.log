@@ -1,0 +1,116 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["C-pipe4", "C-pipe4-pack1m"] reps=7 backend=local
+ablate: === rep 1/7 order=["C-pipe4", "C-pipe4-pack1m"] ===
+ablate: rep 1 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_objects: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_commit_file: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_superblock_write: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+crash-write C-pipe4-pack1m after_objects: exit -1
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+crash-write C-pipe4-pack1m after_commit_file: exit -1
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+crash-write C-pipe4-pack1m after_superblock_write: exit -1
+--- crash-check C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: === rep 2/7 order=["C-pipe4", "C-pipe4-pack1m"] ===
+ablate: rep 2 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: === rep 3/7 order=["C-pipe4-pack1m", "C-pipe4"] ===
+ablate: rep 3 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: === rep 4/7 order=["C-pipe4-pack1m", "C-pipe4"] ===
+ablate: rep 4 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: === rep 5/7 order=["C-pipe4", "C-pipe4-pack1m"] ===
+ablate: rep 5 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: === rep 6/7 order=["C-pipe4", "C-pipe4-pack1m"] ===
+ablate: rep 6 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: === rep 7/7 order=["C-pipe4-pack1m", "C-pipe4"] ===
+ablate: rep 7 config C-pipe4-pack1m write
+--- write C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-pack1m restore
+--- restore C-pipe4-pack1m (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: result=fail receipt=/work/bench/receipts/r22-pareto-20261114T201500Z.json

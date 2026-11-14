@@ -1,0 +1,324 @@
+ablate: fixture /work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors bytes=988097824 sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe subset=101 tensors/424439296 bytes digest=af76622f3780273faa45195ecad2a20538834b6fdf01b8d90adb31f1f8484452
+ablate: configs=["A", "C", "C-legacy", "C-pipe4-wb1", "C-pipe4", "C-pipe4-wb8"] reps=7 backend=local
+ablate: === rep 1/7 order=["C", "C-pipe4", "C-legacy", "A", "C-pipe4-wb8", "C-pipe4-wb1"] ===
+ablate: rep 1 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 1 config C restore
+--- restore C (exit Some(0)) ---
+
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_objects: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_commit_file: exit -1
+--- crash-check C (exit Some(0)) ---
+
+crash-write C after_superblock_write: exit -1
+--- crash-check C (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_objects: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_commit_file: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+crash-write C-pipe4 after_superblock_write: exit -1
+--- crash-check C-pipe4 (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_objects: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_commit_file: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+crash-write C-legacy after_superblock_write: exit -1
+--- crash-check C-legacy (exit Some(0)) ---
+
+ablate: rep 1 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 1 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 1 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+--- crash-check C-pipe4-wb8 (exit Some(0)) ---
+
+crash-write C-pipe4-wb8 after_objects: exit -1
+--- crash-check C-pipe4-wb8 (exit Some(0)) ---
+
+crash-write C-pipe4-wb8 after_commit_file: exit -1
+--- crash-check C-pipe4-wb8 (exit Some(0)) ---
+
+crash-write C-pipe4-wb8 after_superblock_write: exit -1
+--- crash-check C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 1 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+--- crash-check C-pipe4-wb1 (exit Some(0)) ---
+
+crash-write C-pipe4-wb1 after_objects: exit -1
+--- crash-check C-pipe4-wb1 (exit Some(0)) ---
+
+crash-write C-pipe4-wb1 after_commit_file: exit -1
+--- crash-check C-pipe4-wb1 (exit Some(0)) ---
+
+crash-write C-pipe4-wb1 after_superblock_write: exit -1
+--- crash-check C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: === rep 2/7 order=["A", "C-pipe4-wb8", "C", "C-pipe4-wb1", "C-legacy", "C-pipe4"] ===
+ablate: rep 2 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 2 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 2 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 2 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 2 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 2 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 2 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 2 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: === rep 3/7 order=["C-pipe4", "C-legacy", "C", "C-pipe4-wb8", "C-pipe4-wb1", "A"] ===
+ablate: rep 3 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 3 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 3 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 3 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 3 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 3 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 3 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 3 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: === rep 4/7 order=["C", "C-pipe4", "A", "C-pipe4-wb8", "C-legacy", "C-pipe4-wb1"] ===
+ablate: rep 4 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 4 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 4 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 4 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 4 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 4 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 4 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 4 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: === rep 5/7 order=["C-pipe4-wb1", "C-pipe4", "A", "C", "C-legacy", "C-pipe4-wb8"] ===
+ablate: rep 5 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 5 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 5 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 5 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 5 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 5 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 5 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 5 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: === rep 6/7 order=["C-pipe4-wb8", "C", "C-pipe4", "C-pipe4-wb1", "A", "C-legacy"] ===
+ablate: rep 6 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 6 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 6 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 6 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 6 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 6 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 6 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 6 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: === rep 7/7 order=["A", "C", "C-pipe4", "C-pipe4-wb8", "C-pipe4-wb1", "C-legacy"] ===
+ablate: rep 7 config A write
+--- write A (exit Some(0)) ---
+
+ablate: rep 7 config A restore
+--- restore A (exit Some(0)) ---
+
+ablate: cleanup A: No such file or directory (os error 2)
+ablate: rep 7 config C write
+--- write C (exit Some(0)) ---
+
+ablate: rep 7 config C restore
+--- restore C (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 write
+--- write C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4 restore
+--- restore C-pipe4 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-wb8 write
+--- write C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-wb8 restore
+--- restore C-pipe4-wb8 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-wb1 write
+--- write C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 7 config C-pipe4-wb1 restore
+--- restore C-pipe4-wb1 (exit Some(0)) ---
+
+ablate: rep 7 config C-legacy write
+--- write C-legacy (exit Some(0)) ---
+
+ablate: rep 7 config C-legacy restore
+--- restore C-legacy (exit Some(0)) ---
+
+ablate: result=pass receipt=/work/bench/receipts/r22-pareto-20261114T195000Z.json

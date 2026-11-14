@@ -1,0 +1,689 @@
+{
+ "assertions": {
+  "independent_quadratic_frontier_agrees": true,
+  "no_dominated_point_in_eligible_frontier": true,
+  "no_dominated_point_in_strict_frontier": true,
+  "self_test_cases": 4
+ },
+ "axes": [
+  "least_contended_durable_wall_ms",
+  "physical_footprint_bytes"
+ ],
+ "confidence": {
+  "method": "seeded percentile bootstrap (10,000 resamples) of each row's own median wall",
+  "note": "this receipt has repeated but unpaired cells; no paired difference is computed and no significance claim is made",
+  "paired_statistics_available": false,
+  "single_run_rows": []
+ },
+ "definition": "a point is strictly non-dominated iff no other point is <= on both axes and < on one",
+ "eligible_frontier": [
+  "A",
+  "C-pipe4-sync16"
+ ],
+ "excluded_from_eligible": [
+  {
+   "config": "C-legacy",
+   "reason": "exhaustive control planner, not the shipped two-stage policy"
+  },
+  {
+   "config": "C-pipe4-gate4",
+   "reason": "encode-worker count 4; non-default level-19 gate margin"
+  },
+  {
+   "config": "C-pipe4-leeway4",
+   "reason": "encode-worker count 4; non-default level-19 gate margin"
+  },
+  {
+   "config": "C-pipe4-pack1m",
+   "reason": "encode-worker count 4; changes the physical blob plane and therefore the footprint"
+  },
+  {
+   "config": "C-pipe4-pack8m",
+   "reason": "encode-worker count 4; changes the physical blob plane and therefore the footprint"
+  },
+  {
+   "config": "C-pipe4-t19off",
+   "reason": "encode-worker count 4; removes the level-19 candidate that pythia-70m needs (measured win there)"
+  },
+  {
+   "config": "C-pipe4-tm9off",
+   "reason": "encode-worker count 4; removes the mode-9 candidate from the representation portfolio"
+  },
+  {
+   "config": "C-pipe4-zchunk16384",
+   "reason": "encode-worker count 4; changes the codec chunk size from the frozen 64 KiB"
+  },
+  {
+   "config": "C-pipe4-znochunk",
+   "reason": "encode-worker count 4; unchunks the ZSTD frame, breaking the two-stage predictor"
+  }
+ ],
+ "fixture_logical_bytes": 988097824,
+ "included_policies": [
+  {
+   "config": "A",
+   "reason": "native anchor: the same backend without the augmentation (the comparator)"
+  },
+  {
+   "config": "C",
+   "reason": "shipped two-stage planner and default publication"
+  },
+  {
+   "config": "C-pipe2",
+   "reason": "encode-worker count 2"
+  },
+  {
+   "config": "C-pipe4",
+   "reason": "encode-worker count 4"
+  },
+  {
+   "config": "C-pipe4-an1",
+   "reason": "encode-worker count 4; analyse histogram threads 1"
+  },
+  {
+   "config": "C-pipe4-sync16",
+   "reason": "encode-worker count 4; early-barrier granularity 16 MiB"
+  },
+  {
+   "config": "C-pipe4-sync32",
+   "reason": "encode-worker count 4; early-barrier granularity 32 MiB"
+  },
+  {
+   "config": "C-pipe4-tokens1",
+   "reason": "encode-worker count 4; CPU-token budget 1"
+  },
+  {
+   "config": "C-pipe4-tokens2",
+   "reason": "encode-worker count 4; CPU-token budget 2"
+  },
+  {
+   "config": "C-pipe4-tokens4",
+   "reason": "encode-worker count 4; CPU-token budget 4"
+  },
+  {
+   "config": "C-pipe4-zpar1",
+   "reason": "encode-worker count 4; chunk-parallel ZSTD threads 1"
+  },
+  {
+   "config": "C-pipe4-zpar2",
+   "reason": "encode-worker count 4; chunk-parallel ZSTD threads 2"
+  },
+  {
+   "config": "C-pipe4-zpar3",
+   "reason": "encode-worker count 4; chunk-parallel ZSTD threads 3"
+  },
+  {
+   "config": "C-pipe4-zpar4",
+   "reason": "encode-worker count 4; chunk-parallel ZSTD threads 4"
+  },
+  {
+   "config": "C-pipe8",
+   "reason": "encode-worker count 8"
+  },
+  {
+   "config": "E-pipe4",
+   "reason": "encode-worker count 4"
+  }
+ ],
+ "points": [
+  {
+   "config": "A",
+   "eligible": true,
+   "footprint_bytes": 424439296,
+   "host_spread_ratio": 20.72920187952306,
+   "median_bootstrap_95_ms": [
+    337.792,
+    1568.864
+   ],
+   "policy_reason": "native anchor: the same backend without the augmentation (the comparator)",
+   "reprs": null,
+   "reps": 7,
+   "restore_ms": 351.392132,
+   "single_run": false,
+   "wall_median_ms": 339.742039,
+   "wall_min_ms": 332.021252,
+   "wall_p95_ms": 6882.535561
+  },
+  {
+   "config": "C",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 10.54137819437869,
+   "median_bootstrap_95_ms": [
+    1014.413,
+    9166.42
+   ],
+   "policy_reason": "shipped two-stage planner and default publication",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1442.5557,
+   "single_run": false,
+   "wall_median_ms": 1179.351183,
+   "wall_min_ms": 1004.365539,
+   "wall_p95_ms": 10587.396992
+  },
+  {
+   "config": "C-legacy",
+   "eligible": false,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 2.689258128506405,
+   "median_bootstrap_95_ms": [
+    6612.846,
+    15493.902
+   ],
+   "policy_reason": "exhaustive control planner, not the shipped two-stage policy",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1439.722494,
+   "single_run": false,
+   "wall_median_ms": 6670.338181,
+   "wall_min_ms": 6583.835465,
+   "wall_p95_ms": 17705.633040999997
+  },
+  {
+   "config": "C-pipe2",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 14.341533204061752,
+   "median_bootstrap_95_ms": [
+    930.263,
+    13112.989
+   ],
+   "policy_reason": "encode-worker count 2",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1437.2699779999998,
+   "single_run": false,
+   "wall_median_ms": 954.345707,
+   "wall_min_ms": 926.487736,
+   "wall_p95_ms": 13287.254629
+  },
+  {
+   "config": "C-pipe4",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 22.914281515785316,
+   "median_bootstrap_95_ms": [
+    598.526,
+    632.133
+   ],
+   "policy_reason": "encode-worker count 4",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1428.6064239999998,
+   "single_run": false,
+   "wall_median_ms": 600.938083,
+   "wall_min_ms": 592.572121,
+   "wall_p95_ms": 13578.364399
+  },
+  {
+   "config": "C-pipe4-an1",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 20.826620499039812,
+   "median_bootstrap_95_ms": [
+    589.127,
+    721.628
+   ],
+   "policy_reason": "encode-worker count 4; analyse histogram threads 1",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1434.821509,
+   "single_run": false,
+   "wall_median_ms": 614.7380730000001,
+   "wall_min_ms": 586.6075830000001,
+   "wall_p95_ms": 12217.053513
+  },
+  {
+   "config": "C-pipe4-gate4",
+   "eligible": false,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 19.010889839718843,
+   "median_bootstrap_95_ms": [
+    590.315,
+    597.548
+   ],
+   "policy_reason": "encode-worker count 4; non-default level-19 gate margin",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1421.543139,
+   "single_run": false,
+   "wall_median_ms": 594.912632,
+   "wall_min_ms": 586.3233220000001,
+   "wall_p95_ms": 11146.528085
+  },
+  {
+   "config": "C-pipe4-leeway4",
+   "eligible": false,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 5.044095669526576,
+   "median_bootstrap_95_ms": [
+    2571.965,
+    9209.363
+   ],
+   "policy_reason": "encode-worker count 4; non-default level-19 gate margin",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1441.938143,
+   "single_run": false,
+   "wall_median_ms": 2617.620774,
+   "wall_min_ms": 2552.106368,
+   "wall_p95_ms": 12873.068679
+  },
+  {
+   "config": "C-pipe4-pack1m",
+   "eligible": false,
+   "footprint_bytes": 282102521,
+   "host_spread_ratio": 11.290781182249718,
+   "median_bootstrap_95_ms": [
+    972.719,
+    4619.067
+   ],
+   "policy_reason": "encode-worker count 4; changes the physical blob plane and therefore the footprint",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1426.196247,
+   "single_run": false,
+   "wall_median_ms": 1009.954286,
+   "wall_min_ms": 962.738145,
+   "wall_p95_ms": 10870.065731
+  },
+  {
+   "config": "C-pipe4-pack8m",
+   "eligible": false,
+   "footprint_bytes": 282115133,
+   "host_spread_ratio": 17.666838359665512,
+   "median_bootstrap_95_ms": [
+    967.96,
+    981.84
+   ],
+   "policy_reason": "encode-worker count 4; changes the physical blob plane and therefore the footprint",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1430.620272,
+   "single_run": false,
+   "wall_median_ms": 978.702702,
+   "wall_min_ms": 964.428764,
+   "wall_p95_ms": 17038.407083
+  },
+  {
+   "config": "C-pipe4-sync16",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 21.26867702746816,
+   "median_bootstrap_95_ms": [
+    606.108,
+    8951.457
+   ],
+   "policy_reason": "encode-worker count 4; early-barrier granularity 16 MiB",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1434.2608280000002,
+   "single_run": false,
+   "wall_median_ms": 617.103513,
+   "wall_min_ms": 582.00581,
+   "wall_p95_ms": 12378.493601
+  },
+  {
+   "config": "C-pipe4-sync32",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 18.524501766086086,
+   "median_bootstrap_95_ms": [
+    658.01,
+    670.49
+   ],
+   "policy_reason": "encode-worker count 4; early-barrier granularity 32 MiB",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1419.520947,
+   "single_run": false,
+   "wall_median_ms": 665.566056,
+   "wall_min_ms": 627.898044,
+   "wall_p95_ms": 11631.498425
+  },
+  {
+   "config": "C-pipe4-t19off",
+   "eligible": false,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 19.895990933538346,
+   "median_bootstrap_95_ms": [
+    578.705,
+    643.105
+   ],
+   "policy_reason": "encode-worker count 4; removes the level-19 candidate that pythia-70m needs (measured win there)",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1431.431982,
+   "single_run": false,
+   "wall_median_ms": 593.724322,
+   "wall_min_ms": 575.90714,
+   "wall_p95_ms": 11458.243236
+  },
+  {
+   "config": "C-pipe4-tm9off",
+   "eligible": false,
+   "footprint_bytes": 330355860,
+   "host_spread_ratio": 21.290032428419725,
+   "median_bootstrap_95_ms": [
+    595.591,
+    723.167
+   ],
+   "policy_reason": "encode-worker count 4; removes the mode-9 candidate from the representation portfolio",
+   "reprs": {
+    "raw": 16,
+    "zstd": 85
+   },
+   "reps": 7,
+   "restore_ms": 775.186499,
+   "single_run": false,
+   "wall_median_ms": 649.191815,
+   "wall_min_ms": 593.649341,
+   "wall_p95_ms": 12638.813721
+  },
+  {
+   "config": "C-pipe4-tokens1",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 14.024190109584158,
+   "median_bootstrap_95_ms": [
+    920.67,
+    12532.647
+   ],
+   "policy_reason": "encode-worker count 4; CPU-token budget 1",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1444.930048,
+   "single_run": false,
+   "wall_median_ms": 924.601517,
+   "wall_min_ms": 912.773087,
+   "wall_p95_ms": 12800.903299
+  },
+  {
+   "config": "C-pipe4-tokens2",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 14.578356046630335,
+   "median_bootstrap_95_ms": [
+    959.8,
+    7795.973
+   ],
+   "policy_reason": "encode-worker count 4; CPU-token budget 2",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1420.880992,
+   "single_run": false,
+   "wall_median_ms": 982.33924,
+   "wall_min_ms": 959.761955,
+   "wall_p95_ms": 13991.7515
+  },
+  {
+   "config": "C-pipe4-tokens4",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 18.95988921022538,
+   "median_bootstrap_95_ms": [
+    615.188,
+    3072.66
+   ],
+   "policy_reason": "encode-worker count 4; CPU-token budget 4",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1433.952618,
+   "single_run": false,
+   "wall_median_ms": 643.9958529999999,
+   "wall_min_ms": 612.1156960000001,
+   "wall_p95_ms": 11605.64578
+  },
+  {
+   "config": "C-pipe4-zchunk16384",
+   "eligible": false,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 17.233663714709326,
+   "median_bootstrap_95_ms": [
+    676.193,
+    1448.017
+   ],
+   "policy_reason": "encode-worker count 4; changes the codec chunk size from the frozen 64 KiB",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1433.901121,
+   "single_run": false,
+   "wall_median_ms": 703.186419,
+   "wall_min_ms": 671.69444,
+   "wall_p95_ms": 11575.756098
+  },
+  {
+   "config": "C-pipe4-znochunk",
+   "eligible": false,
+   "footprint_bytes": 282103649,
+   "host_spread_ratio": 3.3726085741571543,
+   "median_bootstrap_95_ms": [
+    3531.038,
+    3827.999
+   ],
+   "policy_reason": "encode-worker count 4; unchunks the ZSTD frame, breaking the two-stage predictor",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1436.171503,
+   "single_run": false,
+   "wall_median_ms": 3587.019888,
+   "wall_min_ms": 3518.09017,
+   "wall_p95_ms": 11865.141072
+  },
+  {
+   "config": "C-pipe4-zpar1",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 22.813824772498748,
+   "median_bootstrap_95_ms": [
+    593.563,
+    12874.153
+   ],
+   "policy_reason": "encode-worker count 4; chunk-parallel ZSTD threads 1",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1431.7113660000002,
+   "single_run": false,
+   "wall_median_ms": 611.786366,
+   "wall_min_ms": 592.192009,
+   "wall_p95_ms": 13510.164725
+  },
+  {
+   "config": "C-pipe4-zpar2",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 19.48978674690009,
+   "median_bootstrap_95_ms": [
+    601.944,
+    7020.21
+   ],
+   "policy_reason": "encode-worker count 4; chunk-parallel ZSTD threads 2",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1420.6139440000002,
+   "single_run": false,
+   "wall_median_ms": 620.149589,
+   "wall_min_ms": 598.001483,
+   "wall_p95_ms": 11654.921378
+  },
+  {
+   "config": "C-pipe4-zpar3",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 21.736045214822326,
+   "median_bootstrap_95_ms": [
+    593.692,
+    9186.948
+   ],
+   "policy_reason": "encode-worker count 4; chunk-parallel ZSTD threads 3",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1426.864067,
+   "single_run": false,
+   "wall_median_ms": 608.440871,
+   "wall_min_ms": 593.143545,
+   "wall_p95_ms": 12892.594913
+  },
+  {
+   "config": "C-pipe4-zpar4",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 20.854411440051397,
+   "median_bootstrap_95_ms": [
+    602.308,
+    11404.656
+   ],
+   "policy_reason": "encode-worker count 4; chunk-parallel ZSTD threads 4",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1430.010076,
+   "single_run": false,
+   "wall_median_ms": 618.4976250000001,
+   "wall_min_ms": 584.789121,
+   "wall_p95_ms": 12195.432935
+  },
+  {
+   "config": "C-pipe8",
+   "eligible": true,
+   "footprint_bytes": 282106049,
+   "host_spread_ratio": 20.978715804360075,
+   "median_bootstrap_95_ms": [
+    656.891,
+    4999.406
+   ],
+   "policy_reason": "encode-worker count 8",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1436.395937,
+   "single_run": false,
+   "wall_median_ms": 686.263089,
+   "wall_min_ms": 648.726747,
+   "wall_p95_ms": 13609.45406
+  },
+  {
+   "config": "E-pipe4",
+   "eligible": true,
+   "footprint_bytes": 282157248,
+   "host_spread_ratio": 19.96822103161101,
+   "median_bootstrap_95_ms": [
+    620.082,
+    640.673
+   ],
+   "policy_reason": "encode-worker count 4",
+   "reprs": {
+    "float-tensor": 35,
+    "raw": 16,
+    "zstd": 50
+   },
+   "reps": 7,
+   "restore_ms": 1430.744951,
+   "single_run": false,
+   "wall_median_ms": 621.823833,
+   "wall_min_ms": 603.412948,
+   "wall_p95_ms": 12049.083119
+  }
+ ],
+ "revision": {
+  "WeftFS": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+  "WeftFS_Go": "a8e8e7afa85446f9a441c275b7c7bbaedb3bb847",
+  "WeftFS_base": "581f364582811ba488323ed618c88cb8716c49ff",
+  "note": "N07 generated from the cited R22 receipt by scripts/pareto_strict.py at 6d79c4c; no measurement was run by the generator."
+ },
+ "schema": "weft.n07.pareto-strict.v1",
+ "source_receipt": "bench/receipts/r22-pareto-20261112T230000Z.json",
+ "stamp": "20261114T204000Z",
+ "strict_frontier": [
+  "A",
+  "C-pipe4-pack1m",
+  "C-pipe4-t19off"
+ ]
+}

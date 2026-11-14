@@ -1,0 +1,581 @@
+{
+ "agreement": {
+  "divergent_tensors": 50,
+  "dtype_shape_logical_root_equal": true,
+  "mode9_both": {
+   "bytes_equal": 35,
+   "tensors": 35
+  },
+  "raw_both": {
+   "bytes_equal": 16,
+   "tensors": 16
+  },
+  "same_strategy": 61,
+  "same_strategy_and_bytes": 51,
+  "zstd_both": {
+   "bytes_equal": 0,
+   "tensors": 10
+  }
+ },
+ "cross_verify": {
+  "go_reads_rust_store": "ok=true, full=true, generation=3, 101 objects, 101 manifests, 85 representations",
+  "logs": [
+   "bench/receipts/n05-cross-verify-rust-on-go-20261114T203000Z.log",
+   "bench/receipts/n05-cross-verify-go-on-rust-20261114T203000Z.log"
+  ],
+  "rust_reads_go_store": "ok=true, full=true, generation=3, 101 objects, 101 manifests, 69 representations"
+ },
+ "divergence_causes": [
+  {
+   "cause": "independent ZSTD encoders",
+   "detail": "Rust links libzstd; Go uses klauspost/compress. Both decode every byte the other writes (cross-verify logs), but a ZSTD frame is implementation-defined, so frame length, content id and the byte-minimum choice differ near a crossover.",
+   "measured": "the 35 mode-9 and 16 raw frames are byte-identical; every differing tensor is one where a ZSTD candidate was near the winner, and where both chose zstd the sizes differ slightly (for example 1,120 vs 1,117 B)."
+  },
+  {
+   "cause": "no histogram predictor in Go",
+   "detail": "the Rust analyser predicts mode 9's exact length from an exponent histogram; Go encodes mode 9 and measures it. The frame is identical, so the decision is identical, but Go pays the encode."
+  },
+  {
+   "cause": "per-blob durability in Go",
+   "detail": "Go's local plane fsyncs every published blob immediately; Rust batches a group and issues one deferred barrier. The gate does not compare wall time across the two, but the Go write path cannot reach the Rust wall without that mechanism."
+  },
+  {
+   "cause": "no bounded writer pipeline in Go",
+   "detail": "Rust's encode/publish pipeline with CPU-token scheduling and chunk-parallel ZSTD is not ported. Go encodes and publishes one tensor at a time on one goroutine."
+  }
+ ],
+ "divergences": [
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1705,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.0.input_layernorm.weight",
+   "rust_physical_bytes": 1510,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1117,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.0.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1120,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.0.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1695,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1679,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.1.input_layernorm.weight",
+   "rust_physical_bytes": 1418,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1676,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.1.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1317,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.1.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1641,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1751,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.10.input_layernorm.weight",
+   "rust_physical_bytes": 1491,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1722,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.10.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1462,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.10.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1648,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1727,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.11.input_layernorm.weight",
+   "rust_physical_bytes": 1499,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1730,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.11.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1459,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.11.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1685,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1765,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.12.input_layernorm.weight",
+   "rust_physical_bytes": 1510,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1726,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.12.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1487,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.12.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1657,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1754,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.13.input_layernorm.weight",
+   "rust_physical_bytes": 1472,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1706,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.13.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1451,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.13.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1648,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1713,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.14.input_layernorm.weight",
+   "rust_physical_bytes": 1509,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1663,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.14.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1374,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.14.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1648,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1720,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.15.input_layernorm.weight",
+   "rust_physical_bytes": 1477,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1659,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.15.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1348,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.15.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1640,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1688,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.16.input_layernorm.weight",
+   "rust_physical_bytes": 1487,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1296,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.16.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1306,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.16.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1656,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1654,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.17.input_layernorm.weight",
+   "rust_physical_bytes": 1349,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1660,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.17.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1396,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.17.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1644,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1651,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.18.input_layernorm.weight",
+   "rust_physical_bytes": 1320,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1674,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.18.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1403,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.18.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1647,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1336,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.19.input_layernorm.weight",
+   "rust_physical_bytes": 1351,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1664,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.19.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1358,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.19.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1654,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1660,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.2.input_layernorm.weight",
+   "rust_physical_bytes": 1319,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1244,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.2.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1255,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.2.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1657,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1658,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.20.input_layernorm.weight",
+   "rust_physical_bytes": 1401,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1317,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.20.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1330,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.20.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1641,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1367,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.21.input_layernorm.weight",
+   "rust_physical_bytes": 1378,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1265,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.21.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1253,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.21.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1650,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1338,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.22.input_layernorm.weight",
+   "rust_physical_bytes": 1345,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1218,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.22.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1232,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1792,
+   "go_strategy": "raw",
+   "logical_bytes": 1792,
+   "name": "model.layers.22.self_attn.q_proj.bias",
+   "rust_physical_bytes": 1649,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1709,
+   "go_strategy": "float-tensor",
+   "logical_bytes": 1792,
+   "name": "model.layers.23.input_layernorm.weight",
+   "rust_physical_bytes": 1354,
+   "rust_strategy": "zstd"
+  },
+  {
+   "dtype": "bf16",
+   "go_physical_bytes": 1152,
+   "go_strategy": "zstd",
+   "logical_bytes": 1792,
+   "name": "model.layers.23.post_attention_layernorm.weight",
+   "rust_physical_bytes": 1161,
+   "rust_strategy": "zstd"
+  }
+ ],
+ "gates": {
+  "content_ids_and_choices_agree": {
+   "measured": "50 of 101 tensors choose a different representation or different physical bytes",
+   "met": false,
+   "reason": "independent ZSTD encoders; mode-9 and raw identity is exact"
+  },
+  "go_material_improvement": {
+   "measured": "36705.3 ms -> 5552.7 ms (6.61x), same footprint 282079225 B, 0 errors",
+   "met": true
+  },
+  "recovery_and_error_classes": {
+   "measured": "both stores reopen and pass the other implementation's verify --full; Go tests cover the fallback path and the q8_0 refusal",
+   "met": true
+  }
+ },
+ "go_selector": {
+  "differences": {
+   "frame_id": 0,
+   "logical_root": 0,
+   "manifest_id": 0,
+   "physical_bytes": 0,
+   "strategy": 0
+  },
+  "errors": 0,
+  "footprint_bytes": 282079225,
+  "peak_rss_kib": 1733116,
+  "speedup": 6.610365615913742,
+  "strategies_exhaustive": {
+   "float-tensor": 59,
+   "raw": 32,
+   "zstd": 10
+  },
+  "strategies_two_stage": {
+   "float-tensor": 59,
+   "raw": 32,
+   "zstd": 10
+  },
+  "two_stage_matches_go_exhaustive": true,
+  "wall_ms": {
+   "exhaustive": 36705.278,
+   "two_stage": 5552.685
+  }
+ },
+ "limits": [
+  "one host, warm page cache, one process per arm",
+  "the Go arms write per-blob durable files; the Rust arm uses the R21 pipeline, so the walls are not an apples-to-apples throughput comparison",
+  "no 3B or pythia fixture was re-run for this gate; the 0.5B fixture is the declared comparison",
+  "no fleet, cloud, media or power-loss claim"
+ ],
+ "method": {
+  "chunk_size": 1048576,
+  "courts": {
+   "go": "weft/go-court:1",
+   "limits": "3 GiB memory == swap, 1024 pids, 4 CPUs, bounded /tmp; unchanged",
+   "rust": "weft/bench-court:1"
+  },
+  "fixture": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+  "identity": "per tensor: dtype, shape, logical root, chosen strategy, physical representation bytes, frame id, manifest id; stores cross-verified",
+  "logical_bytes": 424439296,
+  "subset_rule": "model.embed_tokens.weight + 100 evenly spaced, name-sorted non-embedding tensors",
+  "tensors": 101
+ },
+ "revision": {
+  "WeftFS": "6d79c4c312b5b88196091ae0dab898c2692f7901",
+  "WeftFS_Go": "a8e8e7afa85446f9a441c275b7c7bbaedb3bb847",
+  "WeftFS_base": "581f364582811ba488323ed618c88cb8716c49ff",
+  "note": "N05 assembled from the Rust per-tensor write and the two Go harness receipts. Rust ran at 6d79c4c; Go ran at WeftFS-Go a8e8e7a."
+ },
+ "rust": {
+  "footprint_bytes": 282106049,
+  "logical_bytes": 424439296,
+  "strategies": {
+   "float-tensor": 35,
+   "raw": 16,
+   "zstd": 50
+  },
+  "two_stage_matches_exhaustive": true,
+  "two_stage_matches_exhaustive_source": "bench/receipts/r22-pareto-20261114T195000Z.json check two_stage_matches_exhaustive=true (0 of 101 decisions changed)",
+  "wall_ms": 604.044947
+ },
+ "schema": "weft.n05.parity-court.v1",
+ "stamp": "20261114T203000Z"
+}

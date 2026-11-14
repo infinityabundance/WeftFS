@@ -1,0 +1,204 @@
+{
+  "corpus": {
+    "file": "Qwen2.5-7B-Instruct.safetensors",
+    "merge_tool": "bench/scripts/safetensors_merge.py (per-tensor sha256 verified against each shard)",
+    "repo": "Qwen/Qwen2.5-7B-Instruct",
+    "sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+    "shards": 4,
+    "size_bytes": 15231272088
+  },
+  "court": {
+    "cap_drop": "ALL",
+    "cpus": 4,
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "kind": "bench",
+    "memory": "3g",
+    "memory_swap": "3g",
+    "no_new_privileges": true,
+    "nproc": 2048,
+    "pids": 1024,
+    "tmpfs": "1g",
+    "weftcodec_revision": "34f76203229ed22bfad7495963d84977c6627d27",
+    "weftfs_revision": "581f364582811ba488323ed618c88cb8716c49ff"
+  },
+  "disk_headroom_bytes_after": 84055764992,
+  "generated_utc": "20261114T195110Z",
+  "label": "real public checkpoint, single host, warm page cache; not a fleet/media/cloud claim",
+  "log": "bench/receipts/scale-7b-20261114T195110Z.log",
+  "phases": {
+    "catalog": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "catalog_planned": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "flat": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "axis": 0,
+        "backend": {
+          "bytes_read": 15303837180,
+          "bytes_written": 15247335585,
+          "range_reads": 1,
+          "reads": 247122,
+          "writes": 236263
+        },
+        "checkpoint_id": "d062ea21ed90b4ad7f1eee573ff2637272c3259fe73db04807a262f90ba3be4d",
+        "complete": true,
+        "deterministic_seed": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+        "fast_codec": "raw",
+        "generation": 2,
+        "head": "8cd86ce5171c3214c65bf778aeb3da5a8732061e7625f25eeb1d41af7ffda2ad",
+        "manifest_id": "5300434ffea75cea9c593c4fe0d17c8600ca314d6bec30877d5e6d3deae200b0",
+        "manifest_root": "d69ed79cb95db8e7e9608a2a8d192959c2dc704dee8e41513cfa7c441d2df663",
+        "max_ingest_bytes": 1610612736,
+        "mb_per_s": 20.01,
+        "name": "qwen7b",
+        "pack_stats": null,
+        "packed": false,
+        "peak_rss_kib": 362824,
+        "phase": "checkpoint",
+        "profile": null,
+        "reported_source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "shard_objects": 2712,
+        "shard_strategy": "tensor-sharded",
+        "shards": 8,
+        "source": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+        "source_bytes": 15231272088,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes": 15247327175,
+        "tensors": 339,
+        "total_element_bytes": 15231233024,
+        "verify": {
+          "checked_chunks": 233539,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 0,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 761198.535,
+        "write_policy": "fast"
+      }
+    },
+    "ingest": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "ingest_streamed": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "packed": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "planned": {
+      "cgroup_memory_peak_bytes": 3221225472,
+      "exit": 0,
+      "report": {
+        "axis": 0,
+        "backend": {
+          "bytes_read": 10171005364,
+          "bytes_written": 10160464909,
+          "range_reads": 1,
+          "reads": 16306,
+          "writes": 5447
+        },
+        "checkpoint_id": "d062ea21ed90b4ad7f1eee573ff2637272c3259fe73db04807a262f90ba3be4d",
+        "complete": true,
+        "deterministic_seed": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+        "fast_codec": "raw",
+        "generation": 2,
+        "head": "a2dae658b9bea6b9cce0c9d88f35111b170398af7f719c42c234584bcce82275",
+        "manifest_id": "5300434ffea75cea9c593c4fe0d17c8600ca314d6bec30877d5e6d3deae200b0",
+        "manifest_root": "d69ed79cb95db8e7e9608a2a8d192959c2dc704dee8e41513cfa7c441d2df663",
+        "max_ingest_bytes": 1610612736,
+        "mb_per_s": 67.49,
+        "name": "qwen7b",
+        "pack_stats": null,
+        "packed": false,
+        "peak_rss_kib": 402904,
+        "phase": "checkpoint",
+        "profile": null,
+        "reported_source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "shard_objects": 2712,
+        "shard_strategy": "planned",
+        "shards": 8,
+        "source": "/work/.docker-cache/real-corpus/Qwen2.5-7B-Instruct.safetensors",
+        "source_bytes": 15231272088,
+        "source_sha256": "5527ae977f6b2a2fc0add1d76834f1300a607f79aa4bdce1457bd738523c1ef1",
+        "status": "ok",
+        "store_bytes": 10160456499,
+        "tensors": 339,
+        "total_element_bytes": 15231233024,
+        "verify": {
+          "checked_chunks": 691,
+          "checked_manifests": 2713,
+          "checked_objects": 2713,
+          "checked_representations": 2032,
+          "full": true,
+          "generation": 2,
+          "ok": true,
+          "problems": []
+        },
+        "wall_ms": 225682.285,
+        "write_policy": "planned"
+      }
+    },
+    "restore_1": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "restore_4": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "restore_8": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "verify_flat": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "verify_ingest": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "verify_ingest_streamed": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "verify_packed": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    },
+    "verify_planned": {
+      "cgroup_memory_peak_bytes": null,
+      "exit": null,
+      "report": null
+    }
+  },
+  "schema": "weft-scale-7b-court-v1"
+}
