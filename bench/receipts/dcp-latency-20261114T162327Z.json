@@ -1,0 +1,2441 @@
+{
+ "delta_completion_p50_ms": 3.304186975583434,
+ "durability_control": {
+  "acknowledged": true,
+  "close_error": null,
+  "helper_killed": true,
+  "helper_pid": 14,
+  "verified_from_new_process": {
+   "checkpoint": "durability-control",
+   "full": null,
+   "tensors_verified": 169
+  }
+ },
+ "fixture": {
+  "entries": 169,
+  "logical_bytes": 4973360
+ },
+ "interleaved": true,
+ "measured_arm": "auto (shipped metadata plan)",
+ "reference_arm": "reference (oracle encoder, forced)",
+ "reps": 7,
+ "revision": "517703200d4837d63233e3ef02c4102f454f9c05",
+ "rows": [
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.04284,
+     "total_ms": 0.04284
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.023093,
+     "total_ms": 0.876695
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.108142,
+     "total_ms": 0.108142
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.08029,
+     "total_ms": 3.08029
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.04545,
+     "total_ms": 4.04545
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.012132,
+     "total_ms": 0.510177
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.080671,
+     "total_ms": 3.080671
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.036929,
+     "total_ms": 3.036929
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.703827,
+     "total_ms": 25.703827
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 0,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 631,
+     "total_ns": 791
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 8095,
+     "total_ns": 8095
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 361,
+     "total_ns": 361
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 11021,
+     "total_ns": 18625
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 5329,
+     "total_ns": 5329
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 4519,
+     "total_ns": 6633
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 44193,
+     "total_ns": 1874466
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13686,
+     "total_ns": 13686
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 47759,
+     "total_ns": 3049533
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 169487,
+     "total_ns": 6031005
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 168454,
+     "total_ns": 5977964
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 204050,
+     "total_ns": 204050
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2340088,
+     "total_ns": 2362069
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 461601,
+     "total_ns": 461601
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 5260,
+     "total_ns": 5260
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 2985493,
+     "total_ns": 2985493
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 89107,
+     "total_ns": 511769
+    }
+   },
+   "save_ms": 42.20153100322932,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.056776,
+     "total_ms": 0.056776
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.025207,
+     "total_ms": 0.916233
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.109604,
+     "total_ms": 0.109604
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.094245,
+     "total_ms": 3.094245
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 0.766651,
+     "total_ms": 0.766651
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.017202,
+     "total_ms": 0.602736
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.40225,
+     "total_ms": 3.40225
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.052097,
+     "total_ms": 3.052097
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.620462,
+     "total_ms": 25.620462
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 1,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 0,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 921,
+     "total_ns": 1121
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 8686,
+     "total_ns": 8686
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 351,
+     "total_ns": 351
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10960,
+     "total_ns": 18635
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 4889,
+     "total_ns": 4889
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3357,
+     "total_ns": 5701
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 60804,
+     "total_ns": 1940755
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13706,
+     "total_ns": 13706
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 36799,
+     "total_ns": 3034659
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 166471,
+     "total_ns": 5966597
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 166020,
+     "total_ns": 5915205
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 231422,
+     "total_ns": 231422
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2386725,
+     "total_ns": 2408867
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 469055,
+     "total_ns": 469055
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4899,
+     "total_ns": 4899
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3011351,
+     "total_ns": 3011351
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 10039,
+     "total_ns": 478925
+    }
+   },
+   "save_ms": 39.46074505802244,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.043671,
+     "total_ms": 0.043671
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.021169,
+     "total_ms": 0.868125
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.092754,
+     "total_ms": 0.092754
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.114403,
+     "total_ms": 3.114403
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.148954,
+     "total_ms": 4.148954
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.011221,
+     "total_ms": 0.511385
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.154959,
+     "total_ms": 3.154959
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.0753,
+     "total_ms": 3.0753
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.394791,
+     "total_ms": 25.394791
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 1,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 852,
+     "total_ns": 1033
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7664,
+     "total_ns": 7664
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 361,
+     "total_ns": 361
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10870,
+     "total_ns": 18494
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 4889,
+     "total_ns": 4889
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3397,
+     "total_ns": 5722
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 36929,
+     "total_ns": 1795680
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13695,
+     "total_ns": 13695
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 47017,
+     "total_ns": 3049603
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 237112,
+     "total_ns": 5922212
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 236812,
+     "total_ns": 5875043
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 259344,
+     "total_ns": 259344
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2419205,
+     "total_ns": 2441316
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 454398,
+     "total_ns": 454398
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4428,
+     "total_ns": 4428
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3028423,
+     "total_ns": 3028423
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 4168,
+     "total_ns": 406587
+    }
+   },
+   "save_ms": 42.821567971259356,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.047689,
+     "total_ms": 0.047689
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.02169,
+     "total_ms": 0.86888
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.095989,
+     "total_ms": 0.095989
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.191938,
+     "total_ms": 3.191938
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 1.027277,
+     "total_ms": 1.027277
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.01076,
+     "total_ms": 0.502471
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.118471,
+     "total_ms": 3.118471
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.141935,
+     "total_ms": 3.141935
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 26.242283,
+     "total_ms": 26.242283
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 2,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 1,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 902,
+     "total_ns": 1102
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7754,
+     "total_ns": 7754
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 341,
+     "total_ns": 341
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10970,
+     "total_ns": 18675
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 5099,
+     "total_ns": 5099
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3446,
+     "total_ns": 5600
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 43081,
+     "total_ns": 1896756
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13745,
+     "total_ns": 13745
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 37239,
+     "total_ns": 3051886
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 202608,
+     "total_ns": 6177871
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 202097,
+     "total_ns": 6127689
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 239206,
+     "total_ns": 239206
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2471173,
+     "total_ns": 2491180
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 458646,
+     "total_ns": 458646
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4278,
+     "total_ns": 4278
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3087133,
+     "total_ns": 3087133
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 6392,
+     "total_ns": 439568
+    }
+   },
+   "save_ms": 40.220543975010514,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.066935,
+     "total_ms": 0.066935
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.025007,
+     "total_ms": 0.931059
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.111719,
+     "total_ms": 0.111719
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.485596,
+     "total_ms": 3.485596
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.342035,
+     "total_ms": 4.342035
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.015589,
+     "total_ms": 0.655007
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.642819,
+     "total_ms": 3.642819
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.441564,
+     "total_ms": 3.441564
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.329879,
+     "total_ms": 25.329879
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 2,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 892,
+     "total_ns": 1062
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 13575,
+     "total_ns": 13575
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 370,
+     "total_ns": 370
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 11662,
+     "total_ns": 20579
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 5119,
+     "total_ns": 5119
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3316,
+     "total_ns": 5460
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 43772,
+     "total_ns": 1868048
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13685,
+     "total_ns": 13685
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 98874,
+     "total_ns": 3138468
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 161351,
+     "total_ns": 5820763
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 160700,
+     "total_ns": 5772497
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 286345,
+     "total_ns": 286345
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2548327,
+     "total_ns": 2576249
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 608535,
+     "total_ns": 608535
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4789,
+     "total_ns": 4789
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3369780,
+     "total_ns": 3369780
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 4549,
+     "total_ns": 419525
+    }
+   },
+   "save_ms": 43.35442301817238,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.055804,
+     "total_ms": 0.055804
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.021891,
+     "total_ms": 0.870087
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.104085,
+     "total_ms": 0.104085
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.250747,
+     "total_ms": 3.250747
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 0.742085,
+     "total_ms": 0.742085
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.011251,
+     "total_ms": 0.511871
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.154648,
+     "total_ms": 3.154648
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.212978,
+     "total_ms": 3.212978
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.323047,
+     "total_ms": 25.323047
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 3,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 2,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 922,
+     "total_ns": 1123
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7413,
+     "total_ns": 7413
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 350,
+     "total_ns": 350
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10981,
+     "total_ns": 18645
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 6232,
+     "total_ns": 6232
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3937,
+     "total_ns": 6753
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 42449,
+     "total_ns": 1858231
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13705,
+     "total_ns": 13705
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 36879,
+     "total_ns": 3017795
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 173995,
+     "total_ns": 5871277
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 173514,
+     "total_ns": 5824117
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 257240,
+     "total_ns": 257240
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2550611,
+     "total_ns": 2571380
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 456923,
+     "total_ns": 456923
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4689,
+     "total_ns": 4689
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3173383,
+     "total_ns": 3173383
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 10300,
+     "total_ns": 532540
+    }
+   },
+   "save_ms": 38.734629983082414,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.055534,
+     "total_ms": 0.055534
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.0213,
+     "total_ms": 0.878561
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.108543,
+     "total_ms": 0.108543
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.295541,
+     "total_ms": 3.295541
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.288454,
+     "total_ms": 4.288454
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.012954,
+     "total_ms": 0.529495
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.138989,
+     "total_ms": 3.138989
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.254184,
+     "total_ms": 3.254184
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.598551,
+     "total_ms": 25.598551
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 3,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 891,
+     "total_ns": 1072
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 8305,
+     "total_ns": 8305
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 341,
+     "total_ns": 341
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10880,
+     "total_ns": 18524
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 5149,
+     "total_ns": 5149
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3958,
+     "total_ns": 6092
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 81702,
+     "total_ns": 1922102
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13705,
+     "total_ns": 13705
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 36659,
+     "total_ns": 3030097
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 185537,
+     "total_ns": 5925365
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 182852,
+     "total_ns": 5870253
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 269493,
+     "total_ns": 269493
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2581839,
+     "total_ns": 2601195
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 455770,
+     "total_ns": 455770
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4438,
+     "total_ns": 4438
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3212275,
+     "total_ns": 3212275
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 5009,
+     "total_ns": 444811
+    }
+   },
+   "save_ms": 42.83319995738566,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.082554,
+     "total_ms": 0.082554
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.038692,
+     "total_ms": 0.899069
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.116708,
+     "total_ms": 0.116708
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.336658,
+     "total_ms": 3.336658
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 1.010306,
+     "total_ms": 1.010306
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.011372,
+     "total_ms": 0.514028
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.125093,
+     "total_ms": 3.125093
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.282907,
+     "total_ms": 3.282907
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.545742,
+     "total_ms": 25.545742
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 4,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 3,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 891,
+     "total_ns": 1061
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 6833,
+     "total_ns": 6833
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 421,
+     "total_ns": 421
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10940,
+     "total_ns": 18594
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 5310,
+     "total_ns": 5310
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3366,
+     "total_ns": 5419
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 59031,
+     "total_ns": 1891441
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13726,
+     "total_ns": 13726
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 37060,
+     "total_ns": 3021168
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 184474,
+     "total_ns": 5842803
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 184093,
+     "total_ns": 5794994
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 294079,
+     "total_ns": 294079
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2601676,
+     "total_ns": 2621243
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 439671,
+     "total_ns": 439671
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4489,
+     "total_ns": 4489
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3228205,
+     "total_ns": 3228205
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 5650,
+     "total_ns": 459137
+    }
+   },
+   "save_ms": 39.69876898918301,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.061625,
+     "total_ms": 0.061625
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.0212,
+     "total_ms": 0.945439
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.117139,
+     "total_ms": 0.117139
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.554555,
+     "total_ms": 3.554555
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.259851,
+     "total_ms": 4.259851
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.027441,
+     "total_ms": 0.727437
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.707129,
+     "total_ms": 3.707129
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.507046,
+     "total_ms": 3.507046
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.414728,
+     "total_ms": 25.414728
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 4,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 892,
+     "total_ns": 1063
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 9528,
+     "total_ns": 9528
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 340,
+     "total_ns": 340
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10890,
+     "total_ns": 18524
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 4688,
+     "total_ns": 4688
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 2956,
+     "total_ns": 5391
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 39964,
+     "total_ns": 1808938
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13655,
+     "total_ns": 13655
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 102672,
+     "total_ns": 3130420
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 158436,
+     "total_ns": 5809679
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 157945,
+     "total_ns": 5762826
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 293367,
+     "total_ns": 293367
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2812871,
+     "total_ns": 2832828
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 476750,
+     "total_ns": 476750
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4649,
+     "total_ns": 4649
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3446663,
+     "total_ns": 3446663
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 7073,
+     "total_ns": 463849
+    }
+   },
+   "save_ms": 43.80501399282366,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.077695,
+     "total_ms": 0.077695
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.025277,
+     "total_ms": 0.900032
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.102912,
+     "total_ms": 0.102912
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.488672,
+     "total_ms": 3.488672
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 0.724332,
+     "total_ms": 0.724332
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.011992,
+     "total_ms": 0.57396
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.387313,
+     "total_ms": 3.387313
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.449869,
+     "total_ms": 3.449869
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 26.068778,
+     "total_ms": 26.068778
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 5,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 4,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 862,
+     "total_ns": 1032
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7274,
+     "total_ns": 7274
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 360,
+     "total_ns": 360
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10871,
+     "total_ns": 18575
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 7123,
+     "total_ns": 7123
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3316,
+     "total_ns": 5420
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 36869,
+     "total_ns": 1851956
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13706,
+     "total_ns": 13706
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 110436,
+     "total_ns": 3178886
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 187950,
+     "total_ns": 5921332
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 185917,
+     "total_ns": 5870411
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 391390,
+     "total_ns": 391390
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2810666,
+     "total_ns": 2828039
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 456663,
+     "total_ns": 456663
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4488,
+     "total_ns": 4488
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3412099,
+     "total_ns": 3412099
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 8656,
+     "total_ns": 557602
+    }
+   },
+   "save_ms": 40.09454895276576,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.063568,
+     "total_ms": 0.063568
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.020147,
+     "total_ms": 0.875323
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.095167,
+     "total_ms": 0.095167
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.588478,
+     "total_ms": 3.588478
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.070448,
+     "total_ms": 4.070448
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.01112,
+     "total_ms": 0.518978
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.133208,
+     "total_ms": 3.133208
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.551008,
+     "total_ms": 3.551008
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.377198,
+     "total_ms": 25.377198
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 5,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 891,
+     "total_ns": 1072
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7804,
+     "total_ns": 7804
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 350,
+     "total_ns": 350
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10890,
+     "total_ns": 18524
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 12082,
+     "total_ns": 12082
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3517,
+     "total_ns": 5651
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 58479,
+     "total_ns": 1837329
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13675,
+     "total_ns": 13675
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 37089,
+     "total_ns": 3040846
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 239046,
+     "total_ns": 5994102
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 238666,
+     "total_ns": 5946654
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 311902,
+     "total_ns": 311902
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2846363,
+     "total_ns": 2865900
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 457053,
+     "total_ns": 457053
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 3937,
+     "total_ns": 3937
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3502989,
+     "total_ns": 3502989
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 4728,
+     "total_ns": 396441
+    }
+   },
+   "save_ms": 42.35592996701598,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.072135,
+     "total_ms": 0.072135
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.020358,
+     "total_ms": 0.868645
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.107691,
+     "total_ms": 0.107691
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.545819,
+     "total_ms": 3.545819
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 0.692593,
+     "total_ms": 0.692593
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.010509,
+     "total_ms": 0.5085
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.074088,
+     "total_ms": 3.074088
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.496156,
+     "total_ms": 3.496156
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.648615,
+     "total_ms": 25.648615
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 6,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 5,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 891,
+     "total_ns": 1071
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7744,
+     "total_ns": 7744
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 340,
+     "total_ns": 340
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 11010,
+     "total_ns": 18644
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 4979,
+     "total_ns": 4979
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3195,
+     "total_ns": 5258
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 49141,
+     "total_ns": 1865738
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13746,
+     "total_ns": 13746
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 100638,
+     "total_ns": 3112645
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 159839,
+     "total_ns": 5909591
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 159348,
+     "total_ns": 5858368
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 329685,
+     "total_ns": 329685
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2834301,
+     "total_ns": 2855170
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 450170,
+     "total_ns": 450170
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4077,
+     "total_ns": 4077
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3449288,
+     "total_ns": 3449288
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 16841,
+     "total_ns": 420660
+    }
+   },
+   "save_ms": 39.20542891137302,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "reference",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.079729,
+     "total_ms": 0.079729
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.033503,
+     "total_ms": 0.883503
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.095638,
+     "total_ms": 0.095638
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.628092,
+     "total_ms": 3.628092
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 4.057263,
+     "total_ms": 4.057263
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.011902,
+     "total_ms": 0.499302
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.005109,
+     "total_ms": 3.005109
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.591644,
+     "total_ms": 3.591644
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.334939,
+     "total_ms": 25.334939
+    }
+   },
+   "metadata_encode": {
+    "fallbacks": 0,
+    "mode": "reference-forced",
+    "plan_builds": 0,
+    "plan_hits": 0,
+    "requested": "reference"
+   },
+   "rep": 6,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 681,
+     "total_ns": 861
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 8145,
+     "total_ns": 8145
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 351,
+     "total_ns": 351
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10911,
+     "total_ns": 18505
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 4789,
+     "total_ns": 4789
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3196,
+     "total_ns": 5300
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 93655,
+     "total_ns": 1873996
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13665,
+     "total_ns": 13665
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 64540,
+     "total_ns": 3072624
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 239436,
+     "total_ns": 5980560
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 239096,
+     "total_ns": 5931631
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 337821,
+     "total_ns": 337821
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2917566,
+     "total_ns": 2937322
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 455480,
+     "total_ns": 455480
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 4258,
+     "total_ns": 4258
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3544837,
+     "total_ns": 3544837
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 4117,
+     "total_ns": 392482
+    }
+   },
+   "save_ms": 42.3959840554744,
+   "store_delta_bytes": null
+  },
+  {
+   "arm": "auto",
+   "client": {
+    "adapter.allocate_name": {
+     "count": 1,
+     "max_ms": 0.082323,
+     "total_ms": 0.082323
+    },
+    "adapter.hash": {
+     "count": 169,
+     "max_ms": 0.020899,
+     "total_ms": 0.869125
+    },
+    "adapter.manifest_verify": {
+     "count": 1,
+     "max_ms": 0.098855,
+     "total_ms": 0.098855
+    },
+    "adapter.metadata_commit": {
+     "count": 1,
+     "max_ms": 3.636427,
+     "total_ms": 3.636427
+    },
+    "adapter.metadata_serialize": {
+     "count": 1,
+     "max_ms": 0.68558,
+     "total_ms": 0.68558
+    },
+    "adapter.resolve": {
+     "count": 169,
+     "max_ms": 0.01067,
+     "total_ms": 0.504061
+    },
+    "adapter.stage_total": {
+     "count": 1,
+     "max_ms": 3.041417,
+     "total_ms": 3.041417
+    },
+    "client.metadata_request": {
+     "count": 1,
+     "max_ms": 3.597144,
+     "total_ms": 3.597144
+    },
+    "client.write_request": {
+     "count": 1,
+     "max_ms": 25.792873,
+     "total_ms": 25.792873
+    }
+   },
+   "metadata_encode": {
+    "cached_bytes": 52613,
+    "fallbacks": 1,
+    "last_mode": "plan",
+    "mode": "plan",
+    "oracle_checks": 1,
+    "oracle_mismatches": 0,
+    "plan_builds": 1,
+    "plan_evictions": 0,
+    "plan_hits": 7,
+    "plans_cached": 1,
+    "requested": "auto"
+   },
+   "rep": 6,
+   "rust": {
+    "assemble": {
+     "count": 2,
+     "max_ns": 901,
+     "total_ns": 1092
+    },
+    "backend_sync": {
+     "count": 1,
+     "max_ns": 7033,
+     "total_ns": 7033
+    },
+    "blob_hash_manifest": {
+     "count": 1,
+     "max_ns": 361,
+     "total_ns": 361
+    },
+    "blob_hash_object": {
+     "count": 2,
+     "max_ns": 10940,
+     "total_ns": 18574
+    },
+    "blob_io_manifest": {
+     "count": 1,
+     "max_ns": 5581,
+     "total_ns": 5581
+    },
+    "blob_io_object": {
+     "count": 2,
+     "max_ns": 3256,
+     "total_ns": 5400
+    },
+    "blob_publish": {
+     "count": 344,
+     "max_ns": 42309,
+     "total_ns": 1831033
+    },
+    "content_verify": {
+     "count": 1,
+     "max_ns": 13715,
+     "total_ns": 13715
+    },
+    "digest": {
+     "count": 682,
+     "max_ns": 36989,
+     "total_ns": 3026861
+    },
+    "encode": {
+     "count": 169,
+     "max_ns": 320719,
+     "total_ns": 6005261
+    },
+    "encode_zstd": {
+     "count": 169,
+     "max_ns": 320368,
+     "total_ns": 5955701
+    },
+    "index_attest": {
+     "count": 1,
+     "max_ns": 341077,
+     "total_ns": 341077
+    },
+    "index_segment": {
+     "count": 2,
+     "max_ns": 2912396,
+     "total_ns": 2931332
+    },
+    "manifest_commit": {
+     "count": 1,
+     "max_ns": 457434,
+     "total_ns": 457434
+    },
+    "manifest_decode": {
+     "count": 1,
+     "max_ns": 5020,
+     "total_ns": 5020
+    },
+    "metadata_commit": {
+     "count": 1,
+     "max_ns": 3548804,
+     "total_ns": 3548804
+    },
+    "source_read": {
+     "count": 338,
+     "max_ns": 4097,
+     "total_ns": 400817
+    }
+   },
+   "save_ms": 39.51738099567592,
+   "store_delta_bytes": null
+  }
+ ],
+ "schema": "weft.dcp-completion.v1",
+ "splits": {
+  "auto": {
+   "client": {
+    "adapter.allocate_name": {
+     "max_ms": 0.082554,
+     "median_count": 1,
+     "median_ms": 0.072135
+    },
+    "adapter.hash": {
+     "max_ms": 0.916233,
+     "median_count": 169,
+     "median_ms": 0.870087
+    },
+    "adapter.manifest_verify": {
+     "max_ms": 0.116708,
+     "median_count": 1,
+     "median_ms": 0.104085
+    },
+    "adapter.metadata_commit": {
+     "max_ms": 3.636427,
+     "median_count": 1,
+     "median_ms": 3.336658
+    },
+    "adapter.metadata_serialize": {
+     "max_ms": 1.027277,
+     "median_count": 1,
+     "median_ms": 0.742085
+    },
+    "adapter.resolve": {
+     "max_ms": 0.602736,
+     "median_count": 169,
+     "median_ms": 0.511871
+    },
+    "adapter.stage_total": {
+     "max_ms": 3.40225,
+     "median_count": 1,
+     "median_ms": 3.125093
+    },
+    "client.metadata_request": {
+     "max_ms": 3.597144,
+     "median_count": 1,
+     "median_ms": 3.282907
+    },
+    "client.write_request": {
+     "max_ms": 26.242283,
+     "median_count": 1,
+     "median_ms": 25.648615
+    }
+   },
+   "client_accounted_share": 0.8358011125184149,
+   "client_top_level_ms": 33.028671,
+   "rust": {
+    "assemble": {
+     "max_ms": 0.001123,
+     "median_count": 2,
+     "median_ms": 0.001092
+    },
+    "backend_sync": {
+     "max_ms": 0.008686,
+     "median_count": 1,
+     "median_ms": 0.007413
+    },
+    "blob_hash_manifest": {
+     "max_ms": 0.000421,
+     "median_count": 1,
+     "median_ms": 0.000351
+    },
+    "blob_hash_object": {
+     "max_ms": 0.018675,
+     "median_count": 2,
+     "median_ms": 0.018635
+    },
+    "blob_io_manifest": {
+     "max_ms": 0.007123,
+     "median_count": 1,
+     "median_ms": 0.00531
+    },
+    "blob_io_object": {
+     "max_ms": 0.006753,
+     "median_count": 2,
+     "median_ms": 0.00542
+    },
+    "blob_publish": {
+     "max_ms": 1.940755,
+     "median_count": 344,
+     "median_ms": 1.865738
+    },
+    "content_verify": {
+     "max_ms": 0.013746,
+     "median_count": 1,
+     "median_ms": 0.013715
+    },
+    "digest": {
+     "max_ms": 3.178886,
+     "median_count": 682,
+     "median_ms": 3.034659
+    },
+    "encode": {
+     "max_ms": 6.177871,
+     "median_count": 169,
+     "median_ms": 5.921332
+    },
+    "encode_zstd": {
+     "max_ms": 6.127689,
+     "median_count": 169,
+     "median_ms": 5.870411
+    },
+    "index_attest": {
+     "max_ms": 0.39139,
+     "median_count": 1,
+     "median_ms": 0.294079
+    },
+    "index_segment": {
+     "max_ms": 2.931332,
+     "median_count": 2,
+     "median_ms": 2.621243
+    },
+    "manifest_commit": {
+     "max_ms": 0.469055,
+     "median_count": 1,
+     "median_ms": 0.456923
+    },
+    "manifest_decode": {
+     "max_ms": 0.00502,
+     "median_count": 1,
+     "median_ms": 0.004489
+    },
+    "metadata_commit": {
+     "max_ms": 3.548804,
+     "median_count": 1,
+     "median_ms": 3.228205
+    },
+    "source_read": {
+     "max_ms": 0.557602,
+     "median_count": 338,
+     "median_ms": 0.459137
+    }
+   },
+   "rust_top_level_ms": 17.643662,
+   "wall_ms": 39.51738099567592
+  },
+  "reference": {
+   "client": {
+    "adapter.allocate_name": {
+     "max_ms": 0.079729,
+     "median_count": 1,
+     "median_ms": 0.061625
+    },
+    "adapter.hash": {
+     "max_ms": 0.945439,
+     "median_count": 169,
+     "median_ms": 0.878561
+    },
+    "adapter.manifest_verify": {
+     "max_ms": 0.117139,
+     "median_count": 1,
+     "median_ms": 0.108142
+    },
+    "adapter.metadata_commit": {
+     "max_ms": 3.628092,
+     "median_count": 1,
+     "median_ms": 3.485596
+    },
+    "adapter.metadata_serialize": {
+     "max_ms": 4.342035,
+     "median_count": 1,
+     "median_ms": 4.148954
+    },
+    "adapter.resolve": {
+     "max_ms": 0.727437,
+     "median_count": 169,
+     "median_ms": 0.518978
+    },
+    "adapter.stage_total": {
+     "max_ms": 3.707129,
+     "median_count": 1,
+     "median_ms": 3.138989
+    },
+    "client.metadata_request": {
+     "max_ms": 3.591644,
+     "median_count": 1,
+     "median_ms": 3.441564
+    },
+    "client.write_request": {
+     "max_ms": 25.703827,
+     "median_count": 1,
+     "median_ms": 25.394791
+    }
+   },
+   "client_accounted_share": 0.8485933309212106,
+   "client_top_level_ms": 36.338097000000005,
+   "rust": {
+    "assemble": {
+     "max_ms": 0.001072,
+     "median_count": 2,
+     "median_ms": 0.001062
+    },
+    "backend_sync": {
+     "max_ms": 0.013575,
+     "median_count": 1,
+     "median_ms": 0.008145
+    },
+    "blob_hash_manifest": {
+     "max_ms": 0.00037,
+     "median_count": 1,
+     "median_ms": 0.000351
+    },
+    "blob_hash_object": {
+     "max_ms": 0.020579,
+     "median_count": 2,
+     "median_ms": 0.018524
+    },
+    "blob_io_manifest": {
+     "max_ms": 0.012082,
+     "median_count": 1,
+     "median_ms": 0.005119
+    },
+    "blob_io_object": {
+     "max_ms": 0.006633,
+     "median_count": 2,
+     "median_ms": 0.005651
+    },
+    "blob_publish": {
+     "max_ms": 1.922102,
+     "median_count": 344,
+     "median_ms": 1.868048
+    },
+    "content_verify": {
+     "max_ms": 0.013705,
+     "median_count": 1,
+     "median_ms": 0.013685
+    },
+    "digest": {
+     "max_ms": 3.138468,
+     "median_count": 682,
+     "median_ms": 3.049603
+    },
+    "encode": {
+     "max_ms": 6.031005,
+     "median_count": 169,
+     "median_ms": 5.925365
+    },
+    "encode_zstd": {
+     "max_ms": 5.977964,
+     "median_count": 169,
+     "median_ms": 5.875043
+    },
+    "index_attest": {
+     "max_ms": 0.337821,
+     "median_count": 1,
+     "median_ms": 0.286345
+    },
+    "index_segment": {
+     "max_ms": 2.937322,
+     "median_count": 2,
+     "median_ms": 2.601195
+    },
+    "manifest_commit": {
+     "max_ms": 0.608535,
+     "median_count": 1,
+     "median_ms": 0.457053
+    },
+    "manifest_decode": {
+     "max_ms": 0.00526,
+     "median_count": 1,
+     "median_ms": 0.004438
+    },
+    "metadata_commit": {
+     "max_ms": 3.544837,
+     "median_count": 1,
+     "median_ms": 3.36978
+    },
+    "source_read": {
+     "max_ms": 0.511769,
+     "median_count": 338,
+     "median_ms": 0.419525
+    }
+   },
+   "rust_top_level_ms": 17.747544,
+   "wall_ms": 42.821567971259356
+  }
+ },
+ "stamp": "20261114T162327Z",
+ "summaries": {
+  "auto": {
+   "completion_p50_ms": 39.51738099567592,
+   "completion_p95_ms": 40.220543975010514,
+   "completion_samples_ms": [
+    39.46074505802244,
+    40.220543975010514,
+    38.734629983082414,
+    39.69876898918301,
+    40.09454895276576,
+    39.20542891137302,
+    39.51738099567592
+   ],
+   "reps": 7
+  },
+  "reference": {
+   "completion_p50_ms": 42.821567971259356,
+   "completion_p95_ms": 43.80501399282366,
+   "completion_samples_ms": [
+    42.20153100322932,
+    42.821567971259356,
+    43.35442301817238,
+    42.83319995738566,
+    43.80501399282366,
+    42.35592996701598,
+    42.3959840554744
+   ],
+   "reps": 7
+  }
+ },
+ "target_ms": 20.0,
+ "target_reached": false
+}
