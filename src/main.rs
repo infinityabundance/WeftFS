@@ -3402,6 +3402,9 @@ fn run(cli: Cli) -> Result<()> {
                     "reclaimed_packs": report.reclaimed_packs,
                     "reclaimed_pack_bytes": report.reclaimed_pack_bytes,
                     "retained": report.retained,
+                    "gc_epoch": report.gc_epoch,
+                    "gc_run_id": report.gc_run_id,
+                    "gc_epoch_closed": report.gc_epoch_closed,
                     "problems": report.problems,
                 }))
             } else {

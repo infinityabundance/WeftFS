@@ -43,6 +43,8 @@
 //! past the grace. Two writers on different hosts with skewed clocks are not
 //! covered; the courts are one host. See `docs/MULTI-WRITER-GC.md` §6.
 
+use std::time::Duration;
+
 use weftcodec::wcb::Value;
 
 use crate::error::{Class, Error, Result};
@@ -60,6 +62,35 @@ pub const MAX_RESERVATIONS: usize = 4096;
 pub const DEFAULT_RESERVATION_SECS: u64 = 300;
 /// Bounded acquisition retries for the epoch compare-and-swap.
 pub const DEFAULT_EPOCH_ATTEMPTS: u32 = 16;
+/// First backoff step between epoch compare-and-swap attempts.
+pub const EPOCH_RETRY_START: Duration = Duration::from_micros(200);
+/// Ceiling on one backoff step between epoch compare-and-swap attempts.
+pub const EPOCH_RETRY_CAP: Duration = Duration::from_millis(25);
+
+/// Delay before retrying the epoch compare-and-swap after `attempt` lost it.
+///
+/// Deterministic exponential backoff, no jitter, exactly the policy
+/// `spec/WEFT-MULTIWRITER.md` §7 states for a transaction rebase
+/// (`200 µs` doubling to a `25 ms` cap). It matters because losing the CAS is
+/// not a conflict with a *writer*: the winner holds the publication lock only
+/// for its own read-verify-write of `gc/epoch`, a critical section measured in
+/// microseconds to milliseconds. Retrying in a tight loop burns the whole
+/// attempt budget inside that window and turns an ordinary overlap into a
+/// `Busy` refusal (measured: CI run 43631714328, `tests/multi_writer_gc.rs`).
+pub fn epoch_retry_delay(attempt: u32) -> Duration {
+    let step_micros = EPOCH_RETRY_START.as_micros() as u64;
+    let scaled = step_micros.saturating_mul(1u64 << attempt.min(20));
+    Duration::from_micros(scaled.min(EPOCH_RETRY_CAP.as_micros() as u64))
+}
+
+/// Total wall-clock budget the acquisition backoff spends before the final
+/// attempt is refused: the sum of [`epoch_retry_delay`] over
+/// `0..DEFAULT_EPOCH_ATTEMPTS - 1`, i.e. 225.4 ms.
+pub fn epoch_retry_budget() -> Duration {
+    (0..DEFAULT_EPOCH_ATTEMPTS.saturating_sub(1))
+        .map(epoch_retry_delay)
+        .fold(Duration::ZERO, |total, step| total + step)
+}
 
 /// One decoded `gc/epoch` control record.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -455,5 +486,37 @@ mod tests {
         );
         assert_eq!(view.live.len(), 2);
         assert_eq!(view.expired, vec!["c".to_owned()]);
+    }
+
+    #[test]
+    fn the_epoch_retry_schedule_doubles_then_caps_without_jitter() {
+        let micros: Vec<u128> = (0..DEFAULT_EPOCH_ATTEMPTS)
+            .map(|attempt| epoch_retry_delay(attempt).as_micros())
+            .collect();
+        assert_eq!(
+            &micros[..7],
+            &[200, 400, 800, 1_600, 3_200, 6_400, 12_800],
+            "deterministic doubling, no randomised jitter"
+        );
+        assert!(
+            micros[7..].iter().all(|step| *step == 25_000),
+            "capped at 25 ms: {micros:?}"
+        );
+        assert_eq!(
+            epoch_retry_delay(7),
+            epoch_retry_delay(7),
+            "the same attempt always waits the same time"
+        );
+        assert_eq!(epoch_retry_delay(u32::MAX), EPOCH_RETRY_CAP);
+    }
+
+    #[test]
+    fn the_epoch_retry_budget_outlasts_a_publication_critical_section() {
+        // 15 gaps between 16 attempts: seven doubling steps then the cap.
+        assert_eq!(epoch_retry_budget(), Duration::from_micros(225_400));
+        assert!(
+            epoch_retry_budget() > Duration::from_millis(100),
+            "a pass must wait out an ordinary read-verify-write of gc/epoch"
+        );
     }
 }

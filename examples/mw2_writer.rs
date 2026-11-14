@@ -248,6 +248,7 @@ fn gc_report_json(store: &Store, report: &weftfs::store::GcReport) -> serde_json
         "retained": report.retained,
         "gc_epoch": report.gc_epoch,
         "gc_run_id": report.gc_run_id,
+        "gc_epoch_closed": report.gc_epoch_closed,
         "reservations_live": report.reservations_live,
         "reservation_floor_ns": report.reservation_floor_ns,
         "retained_newer_than_cut": report.retained_newer_than_cut,
@@ -846,6 +847,7 @@ fn main() {
                 &args,
             );
             let mut passes = 0u64;
+            let mut closed = 0u64;
             let mut deleted = 0u64;
             let mut deleted_bytes = 0u64;
             let mut retained_newer = 0u64;
@@ -856,6 +858,9 @@ fn main() {
                 match store.gc(true) {
                     Ok(report) => {
                         passes += 1;
+                        if report.gc_epoch_closed {
+                            closed += 1;
+                        }
                         deleted += report.deleted.len() as u64;
                         deleted_bytes += report.deleted_bytes;
                         retained_newer += report.retained_newer_than_cut;
@@ -876,6 +881,7 @@ fn main() {
                 serde_json::json!({
                     "ok": errors.is_empty(),
                     "passes": passes,
+                    "closed": closed,
                     "deleted": deleted,
                     "deleted_bytes": deleted_bytes,
                     "retained_newer_than_cut": retained_newer,

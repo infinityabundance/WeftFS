@@ -219,7 +219,9 @@ fn the_sweep_reclaims_genuinely_unreachable_blobs() {
 
     // The sweep applies a one-second clock slack to its epoch cut so a coarse
     // filesystem timestamp can never make a just-published blob look old. The
-    // replaced version must therefore be older than that.
+    // replaced version must therefore be older than that. The sleep is a wait on
+    // the wall clock's own threshold, not on another thread: it can only grow
+    // under load, so it cannot make this assertion flaky.
     std::thread::sleep(std::time::Duration::from_millis(1_200));
     let report = store.gc(true).unwrap();
     assert!(
@@ -236,35 +238,140 @@ fn the_sweep_reclaims_genuinely_unreachable_blobs() {
     assert!(store.gc_run_record(&report.gc_run_id).unwrap().is_some());
 }
 
-/// Two passes cannot share an epoch: the compare-and-swap serialises them, and
-/// each run is recorded under its own id.
+/// Two passes cannot share an epoch: the compare-and-swap serialises their
+/// acquisitions, and the published record stays on the **newest** epoch even
+/// when the earlier pass finishes last.
+///
+/// Both passes wait on one barrier immediately before `gc`, so the overlap is
+/// guaranteed by construction rather than by spawn order or a sleep. The
+/// assertions are about the contract — two distinct epochs, no refusal, a
+/// monotonic record that names the newest pass — never about which thread won.
 #[test]
 fn concurrent_passes_are_serialised_by_the_epoch_cas() {
     let (_dir, path) = new_store(0);
-    {
-        let _ = open(&path, WriterMode::Optimistic, 0);
-    }
-    let first = std::thread::spawn({
-        let path = path.clone();
-        move || {
+
+    let gate = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let run = |path: std::path::PathBuf, gate: std::sync::Arc<std::sync::Barrier>| {
+        std::thread::spawn(move || {
             let mut store = open(&path, WriterMode::Optimistic, 0);
-            store.gc(true).unwrap().gc_epoch
-        }
-    });
-    let second = std::thread::spawn({
-        let path = path.clone();
-        move || {
-            let mut store = open(&path, WriterMode::Optimistic, 0);
-            store.gc(true).unwrap().gc_epoch
-        }
-    });
-    let a = first.join().unwrap();
-    let b = second.join().unwrap();
-    assert_ne!(a, b, "the two passes must not share an epoch");
+            gate.wait();
+            match store.gc(true) {
+                Ok(report) => (report.gc_epoch, report.gc_run_id, report.gc_epoch_closed),
+                Err(err) => panic!("a concurrent GC pass must not fail: {err}"),
+            }
+        })
+    };
+    let first = run(path.clone(), gate.clone());
+    let second = run(path.clone(), gate.clone());
+    let (a_epoch, a_run, a_closed) = first.join().unwrap();
+    let (b_epoch, b_run, b_closed) = second.join().unwrap();
+
+    // Each pass acquires an epoch of its own, consecutively from 1: no shared
+    // epoch, and no `Busy` refusal from an ordinary overlap.
+    assert_ne!(a_epoch, b_epoch, "the two passes must not share an epoch");
+    let mut acquired = [a_epoch, b_epoch];
+    acquired.sort_unstable();
+    assert_eq!(
+        acquired,
+        [1, 2],
+        "two passes on a fresh store acquire 1 then 2"
+    );
+
+    // The record is the newest pass's, and the newest pass closed it. An older
+    // pass that finished last must not rewrite the epoch downwards.
     let store = open(&path, WriterMode::Optimistic, 0);
-    let epoch = store.gc_epoch().unwrap().unwrap();
-    assert!(epoch.epoch >= 2, "{epoch:?}");
+    let record = store.gc_epoch().unwrap().unwrap();
+    assert_eq!(
+        record.epoch, acquired[1],
+        "the epoch must be the newest acquired, not the last to finish: {record:?}"
+    );
+    let (newest_run, newest_closed) = if a_epoch == record.epoch {
+        (a_run.as_str(), a_closed)
+    } else {
+        (b_run.as_str(), b_closed)
+    };
+    assert_eq!(
+        record.run_id, newest_run,
+        "the record names the newest pass"
+    );
+    assert!(
+        newest_closed,
+        "the newest pass closes its own record: {record:?}"
+    );
+
     assert!(store.verify(true).unwrap().ok);
+}
+
+/// Two passes that name the same unreachable blob must both complete: the
+/// loser's unlink is refused by the filesystem, and "already gone" is the
+/// outcome it wanted, not an error.
+#[test]
+fn concurrent_passes_over_the_same_garbage_both_complete() {
+    let (_dir, path) = new_store(0);
+
+    // Build real garbage: version 1 of a file becomes unreachable when version
+    // 2 is published.
+    {
+        let mut store = open(&path, WriterMode::Optimistic, 0);
+        let plan = plan_file(&store, b"racy.txt", b"first-version", b"seed-racy");
+        let tx = stage(&store, "000000000000000000000000000000f1", &plan);
+        store
+            .execute_transaction(&tx, &TransactionOptions::default())
+            .unwrap();
+        let (manifest, _, size) = store.prepare_content(b"second-version").unwrap();
+        let version = derive_version_id(plan.record.id, manifest, size, NOW + 1, None).unwrap();
+        let mut record = plan.record.clone();
+        record.content = manifest;
+        record.size = size;
+        record.version = version;
+        record.mtime_ns = NOW + 1;
+        let mut tx = store
+            .begin_transaction("000000000000000000000000000000f2")
+            .unwrap();
+        {
+            let state = store.current_state();
+            tx.put_object(state, record.clone()).unwrap();
+            tx.set_tip(state, record.id, version).unwrap();
+        }
+        store
+            .execute_transaction(&tx, &TransactionOptions::default())
+            .unwrap();
+    }
+    // The one-second cut slack, for the same reason as the reclaim control.
+    std::thread::sleep(std::time::Duration::from_millis(1_200));
+
+    let gate = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let run = |path: std::path::PathBuf, gate: std::sync::Arc<std::sync::Barrier>| {
+        std::thread::spawn(move || {
+            let mut store = open(&path, WriterMode::Optimistic, 0);
+            gate.wait();
+            let report = store
+                .gc(true)
+                .unwrap_or_else(|err| panic!("a concurrent pass must not fail: {err}"));
+            (report.gc_epoch, report.deleted.len(), report.deleted_bytes)
+        })
+    };
+    let first = run(path.clone(), gate.clone());
+    let second = run(path.clone(), gate.clone());
+    let (a_epoch, a_deleted, a_bytes) = first.join().unwrap();
+    let (b_epoch, b_deleted, b_bytes) = second.join().unwrap();
+
+    assert_ne!(a_epoch, b_epoch, "the two passes must not share an epoch");
+    assert!(
+        a_deleted + b_deleted >= 2,
+        "the manifest and the chunk are reclaimed once: a={a_deleted} b={b_deleted}"
+    );
+    assert!(a_bytes + b_bytes > 0);
+    assert_eq!(
+        object_bytes(&open(&path, WriterMode::Optimistic, 0), b"racy.txt").unwrap(),
+        b"second-version"
+    );
+    assert!(
+        open(&path, WriterMode::Optimistic, 0)
+            .verify(true)
+            .unwrap()
+            .ok
+    );
 }
 
 /// An abandoned reservation is removed once its deadline passes, and after that

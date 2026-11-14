@@ -16,6 +16,9 @@
 #   D  MW3: two conflict domains, a coordinated pass, per-domain verification.
 #   E  readers concurrent with a sweep: every read is exact or absent, never
 #      wrong bytes.
+#   F  two independent processes run concurrent passes over one store: every
+#      pass acquires its own epoch, none is refused `Busy`, and the epoch stays
+#      monotonic. Regression for the CI run 43631714328 defect.
 #
 # Every hard limit comes from scripts/docker-court.sh; this script adds none and
 # disables none. One host, one local POSIX namespace. No fleet, media or
@@ -266,6 +269,70 @@ if [[ "$e_x_ok" != "true" ]]; then echo "E verify report: $(cat "$e/x.verify.jso
 [[ "$e_x_ok" == "true" ]] || record_failure "E: the concurrent writer's files are not exact"
 
 # ---------------------------------------------------------------------------
+# F. Two concurrent passes from two processes.
+# ---------------------------------------------------------------------------
+echo "== F: two concurrent passes =="
+f="$work/f"
+mkdir -p "$f"
+run_rust init --store "$f/store" >/dev/null
+run_rust garbage --store "$f/store" --writer g --count 12 >"$f/garbage.json"
+# The same one-second cut slack as scenario C, so both passes see the garbage.
+sleep 1.2
+run_rust gc-loop --store "$f/store" --count 12 --interval-ms 1 >"$f/loop-a.json" 2>"$f/loop-a.err" &
+f_a=$!
+run_rust gc-loop --store "$f/store" --count 12 --interval-ms 1 >"$f/loop-b.json" 2>"$f/loop-b.err" &
+f_b=$!
+f_rc_a=0
+f_rc_b=0
+wait "$f_a" || f_rc_a=$?
+wait "$f_b" || f_rc_b=$?
+[[ "$f_rc_a" -eq 0 ]] || record_failure "F: gc loop A exited $f_rc_a ($(tail -c 400 "$f/loop-a.err"))"
+[[ "$f_rc_b" -eq 0 ]] || record_failure "F: gc loop B exited $f_rc_b ($(tail -c 400 "$f/loop-b.err"))"
+f_report="$(python3 - "$f" "$f_rc_a" "$f_rc_b" <<'PY'
+import json, sys
+root, rc_a, rc_b = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+loops = [json.load(open(root + "/loop-a.json")), json.load(open(root + "/loop-b.json"))]
+epochs = [loop.get("epochs", []) for loop in loops]
+union = epochs[0] + epochs[1]
+row = {
+  "passes_total": sum(loop.get("passes", 0) for loop in loops),
+  "closed_total": sum(loop.get("closed", 0) for loop in loops),
+  "deleted_total": sum(loop.get("deleted", 0) for loop in loops),
+  "epochs_distinct": len(set(union)),
+  "epochs_contiguous_from_one": sorted(union) == list(range(1, len(set(union)) + 1)),
+  "disjoint_across_loops": not (set(epochs[0]) & set(epochs[1])),
+  "loops": [{
+    "exit": rc,
+    "ok": bool(loop.get("ok")),
+    "passes": loop.get("passes", 0),
+    "closed": loop.get("closed", 0),
+    "deleted": loop.get("deleted", 0),
+    "epochs": epoch,
+    "errors": loop.get("errors", []),
+  } for loop, rc, epoch in zip(loops, (rc_a, rc_b), epochs)],
+}
+print(json.dumps(row, sort_keys=True))
+PY
+)"
+echo "F: $(python3 -c 'import json,sys; r=json.loads(sys.argv[1]); r["loops"]=[{k:v for k,v in l.items() if k!="epochs"} for l in r["loops"]]; print(json.dumps(r,sort_keys=True))' "$f_report")"
+python3 - "$f_report" <<'PY' || record_failure "F: concurrent passes did not serialise cleanly"
+import json, sys
+r = json.loads(sys.argv[1])
+ok = (all(loop["ok"] for loop in r["loops"])
+      and [loop["exit"] for loop in r["loops"]] == [0, 0]
+      and [loop["passes"] for loop in r["loops"]] == [12, 12]
+      and r["disjoint_across_loops"]
+      and r["epochs_contiguous_from_one"]
+      and r["epochs_distinct"] == r["passes_total"] == 24
+      and r["closed_total"] >= 1
+      and r["deleted_total"] >= 1)
+print("" if ok else json.dumps(r, sort_keys=True))
+raise SystemExit(0 if ok else 1)
+PY
+f_verify=false
+if "$WEFT_BIN" --store "$f/store" verify --full >/dev/null 2>"$f/verify.err"; then f_verify=true; else record_failure "F: verify --full failed"; fi
+
+# ---------------------------------------------------------------------------
 # Receipt
 # ---------------------------------------------------------------------------
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -280,12 +347,13 @@ python3 - "$receipt" "$started_at" "$finished_at" "$duration_ms" "$result" "$fai
   "$rust_sha" "$a_retained" "$a_read_ok" "$a_verify" "$kill_json" "$crash_total" \
   "$b_verify" "$b_names_ok" "$c_deleted" "$c_bytes" "$c_second" "$c_verify" \
   "$d_heads" "$d_verify_ok" "$e_report" "$e_verify" "$e_x_ok" \
+  "$f_report" "$f_verify" \
   "$notes_joined" "$log" "$log_sha" <<'PY'
 import json, os, sys
 (receipt, started, finished, duration, result, failures, rust_sha, a_retained,
  a_read, a_verify, kills, crash_total, b_verify, b_names, c_deleted, c_bytes,
- c_second, c_verify, d_heads, d_verify, e_report, e_verify, e_x, notes, log,
- log_sha) = sys.argv[1:]
+ c_second, c_verify, d_heads, d_verify, e_report, e_verify, e_x, f_report,
+ f_verify, notes, log, log_sha) = sys.argv[1:]
 doc = {
   "schema": "weftfs.mw_gc/1",
   "role": "T024 adversarial court: multi-writer GC and concurrent retention",
@@ -337,12 +405,18 @@ doc = {
   "scenario_e_readers": json.loads(e_report),
   "scenario_e_verify_full": e_verify == "true",
   "scenario_e_concurrent_writer_exact": e_x == "true",
+  "scenario_f_concurrent_passes": dict(
+    json.loads(f_report),
+    verify_full=f_verify == "true",
+    note=("two independent processes; every pass acquired its own epoch and "
+          "none was refused, and the epoch never went backwards"),
+  ),
   "failures": int(failures),
   "notes": [n for n in notes.split("|") if n],
   "result": result,
   "evidence": {"log": log, "log_sha256": log_sha},
   "scope": {
-    "checked": "cross-handle prepared-transaction pins, the blob-publication reservation window, an epoch cut with the age gate disabled, process kills at four publication stages with a concurrent sweep, MW3 domain-head marking, readers under sweep",
+    "checked": "cross-handle prepared-transaction pins, the blob-publication reservation window, an epoch cut with the age gate disabled, process kills at four publication stages with a concurrent sweep, MW3 domain-head marking, readers under sweep, two independent concurrent passes with a shared epoch record",
     "not_checked": "physical power loss or host cache loss; a fleet or multi-node store; a writer that stalls past its reservation deadline (treated as abandoned by design); Go parity for the epoch protocol",
     "label": "one host, one local POSIX namespace, process-fault proxies",
   },

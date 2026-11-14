@@ -490,6 +490,11 @@ pub struct GcReport {
     pub gc_epoch: u64,
     /// T024: identity of this pass, or `-` for a dry run.
     pub gc_run_id: String,
+    /// T024: whether this pass closed its own epoch record. `false` when a
+    /// newer pass opened a later epoch while this one was sweeping, or on a dry
+    /// run: the closing write is conditional on the record this pass published
+    /// at acquisition, so an older pass can never rewrite the epoch backwards.
+    pub gc_epoch_closed: bool,
     /// T024: live publication reservations observed at the acquired epoch.
     pub reservations_live: u64,
     /// T024: the earliest live reservation start, if one protected blobs.
@@ -10784,7 +10789,24 @@ impl Store {
             // One batch so a packed plane republishes one catalog segment per
             // touched segment instead of once per deleted member.
             let keys: Vec<Key> = candidates.iter().map(|(key, _)| key.clone()).collect();
-            self.with_backend_mut(|backend| backend.delete_many(&keys))?;
+            match self.with_backend_mut(|backend| backend.delete_many(&keys)) {
+                Ok(()) => {}
+                Err(err) if err.class() == Class::NotFound => {
+                    // Another pass sweeping concurrently reclaimed at least one
+                    // of these candidates first. "The blob is gone" is the
+                    // outcome this pass wanted, so finish one key at a time
+                    // and count only the blobs this pass actually unlinked.
+                    report.deleted.clear();
+                    report.deleted_bytes = 0;
+                    for (key, len) in &candidates {
+                        if self.delete_if_present(key)? {
+                            report.deleted.push(key.display_path());
+                            report.deleted_bytes = report.deleted_bytes.saturating_add(*len);
+                        }
+                    }
+                }
+                Err(err) => return Err(err),
+            }
             // A pack is reclaimed only once no catalog entry names it; a pack
             // with one live member survives. Unreferenced packs (and catalog
             // segments left by a crash between segment and root publication)
@@ -10817,7 +10839,9 @@ impl Store {
                     continue;
                 };
                 if !record.is_live(self.wall_ns()) {
-                    self.with_backend_mut(|backend| backend.delete(&key))?;
+                    // A concurrent pass may have removed it first; that is the
+                    // same outcome, not a failure.
+                    self.delete_if_present(&key)?;
                     report.deleted_reservations = report.deleted_reservations.saturating_add(1);
                 }
             }
@@ -10853,8 +10877,7 @@ impl Store {
                 for (key, len) in &index_candidates {
                     let display = key.display_path();
                     report.candidates.push(display.clone());
-                    if apply {
-                        self.with_backend_mut(|backend| backend.delete(key))?;
+                    if apply && self.delete_if_present(key)? {
                         report.deleted_indexes.push(display);
                         report.deleted_index_bytes =
                             report.deleted_index_bytes.saturating_add(*len);
@@ -10917,12 +10940,10 @@ impl Store {
             }
             let finished = crate::gc_epoch::GcEpoch {
                 finished_ns: self.wall_ns(),
-                ..acquired
+                ..acquired.clone()
             };
-            match crate::gc_epoch::encode_epoch(&finished).and_then(|bytes| {
-                self.with_backend_mut(|backend| backend.put_replace(&Key::gc_epoch(), &bytes))
-            }) {
-                Ok(()) => {}
+            match self.close_gc_epoch(&acquired, &finished) {
+                Ok(closed) => report.gc_epoch_closed = closed,
                 Err(err) => report
                     .problems
                     .push(format!("cannot close the GC epoch: {err}")),
@@ -10936,8 +10957,15 @@ impl Store {
     /// The CAS is the pass's linearization point: a writer that observes the
     /// old epoch and registers before this returns is covered by the reservation
     /// floor, and one that observes the new epoch registers after the acquisition
-    /// instant. Bounded retries; a contended epoch returns `Busy` rather than
-    /// running two passes under one epoch.
+    /// instant.
+    ///
+    /// A lost race is retried with the deterministic exponential backoff
+    /// [`crate::gc_epoch::epoch_retry_delay`] describes, because the winner is
+    /// not a conflicting writer: it holds the publication lock for its own
+    /// read-verify-write of one small control record. Retrying in a tight loop
+    /// exhausted the budget inside that critical section on a two-core runner.
+    /// Exhausting the whole budget (`epoch_retry_budget`, 225.4 ms) still
+    /// returns `Busy` rather than running two passes under one epoch.
     fn acquire_gc_epoch(&self) -> Result<crate::gc_epoch::GcEpoch> {
         for attempt in 0..crate::gc_epoch::DEFAULT_EPOCH_ATTEMPTS {
             let raw = match self.with_backend(|backend| backend.read_all(&Key::gc_epoch())) {
@@ -10958,25 +10986,75 @@ impl Store {
             };
             let bytes = crate::gc_epoch::encode_epoch(&next)?;
             let token = raw.as_deref().map(crate::planes::control_token);
-            // The default compare-and-swap is read-verify-write. On a POSIX
-            // plane it is atomic only under the short publication lock, which
-            // is exactly the critical section `begin_publication` holds (and
-            // which a native conditional write does not need).
-            let result = self.with_backend_mut(|backend| {
-                backend.begin_publication()?;
-                let out = backend.compare_and_swap(&Key::gc_epoch(), token.as_deref(), &bytes);
-                let _ = backend.end_publication();
-                out
-            });
-            match result {
+            match self.epoch_compare_and_swap(token.as_deref(), &bytes) {
                 Ok(()) => return Ok(next),
-                Err(err) if err.class() == Class::Busy => continue,
+                Err(err) if err.class() == Class::Busy => {
+                    // Another pass is inside its own CAS. Wait it out, then
+                    // re-read the epoch it published.
+                    std::thread::sleep(crate::gc_epoch::epoch_retry_delay(attempt));
+                    continue;
+                }
                 Err(err) => return Err(err),
             }
         }
         Err(Error::busy(
             "another GC pass holds the epoch; retry after it closes",
         ))
+    }
+
+    /// Close this pass's epoch record, conditionally.
+    ///
+    /// The write succeeds only if `gc/epoch` still holds the bytes this pass
+    /// published when it acquired `acquired`. A pass that finishes after a
+    /// later pass has opened a newer epoch must not rewrite the record with its
+    /// older epoch: the epoch is monotonic, the newer acquisition instant is the
+    /// cut a later reader has to see, and the audit record must name the newest
+    /// pass. `Ok(false)` means the record belongs to a newer pass and was left
+    /// untouched.
+    fn close_gc_epoch(
+        &self,
+        acquired: &crate::gc_epoch::GcEpoch,
+        finished: &crate::gc_epoch::GcEpoch,
+    ) -> Result<bool> {
+        let opened = crate::gc_epoch::encode_epoch(acquired)?;
+        let token = crate::planes::control_token(&opened);
+        let bytes = crate::gc_epoch::encode_epoch(finished)?;
+        match self.epoch_compare_and_swap(Some(&token), &bytes) {
+            Ok(()) => Ok(true),
+            Err(err) if err.class() == Class::Busy => Ok(false),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// One conditional write to `gc/epoch`, inside the publication critical
+    /// section.
+    ///
+    /// A POSIX plane implements compare-and-swap as read-verify-write, which is
+    /// atomic only under the short publication lock (exactly the critical
+    /// section `begin_publication` holds); a plane with a native conditional
+    /// write ignores the lock.
+    fn epoch_compare_and_swap(&self, expected: Option<&str>, bytes: &[u8]) -> Result<()> {
+        self.with_backend_mut(|backend| {
+            backend.begin_publication()?;
+            let out = backend.compare_and_swap(&Key::gc_epoch(), expected, bytes);
+            let _ = backend.end_publication();
+            out
+        })
+    }
+
+    /// Delete one key, treating "already absent" as success.
+    ///
+    /// Two passes may sweep concurrently: each marks from its own cut, and both
+    /// may name the same unreachable blob. Whichever wins the unlink satisfies
+    /// the other's objective. Every other error is still an error.
+    ///
+    /// Returns `true` when this call removed the key.
+    fn delete_if_present(&self, key: &Key) -> Result<bool> {
+        match self.with_backend_mut(|backend| backend.delete(key)) {
+            Ok(()) => Ok(true),
+            Err(err) if err.class() == Class::NotFound => Ok(false),
+            Err(err) => Err(err),
+        }
     }
 
     // ---- write budgets (quotas) -----------------------------------------
@@ -14417,5 +14495,120 @@ impl Drop for Store {
         if self.mode == OpenMode::ReadWrite {
             let _ = self.flush_access_counts();
         }
+    }
+}
+
+/// T024 epoch-record tests.
+///
+/// They drive the two compare-and-swap calls a pass makes (`acquire_gc_epoch`
+/// then `close_gc_epoch`) directly, so the "an older pass finishes last"
+/// interleaving is reproduced by construction instead of by racing two threads
+/// and hoping for a particular schedule. The concurrent case is covered by
+/// `tests/multi_writer_gc.rs`.
+#[cfg(test)]
+mod gc_epoch_record_tests {
+    use super::*;
+    use crate::mw2::WriterMode;
+
+    fn open_pair() -> (tempfile::TempDir, Store, Store) {
+        let dir = tempfile::TempDir::new().expect("tempdir");
+        let base = Options {
+            writer_mode: WriterMode::Single,
+            checkpoint_interval: 0,
+            gc_grace_secs: 0,
+            ..Options::default()
+        };
+        drop(Store::init(dir.path(), base).expect("init"));
+        let opts = Options {
+            writer_mode: WriterMode::Optimistic,
+            checkpoint_interval: 0,
+            gc_grace_secs: 0,
+            ..Options::default()
+        };
+        let a = Store::open_with_options(dir.path(), OpenMode::ReadWrite, opts.clone())
+            .expect("open a");
+        let b = Store::open_with_options(dir.path(), OpenMode::ReadWrite, opts).expect("open b");
+        (dir, a, b)
+    }
+
+    fn finish(store: &Store, acquired: &crate::gc_epoch::GcEpoch) -> crate::gc_epoch::GcEpoch {
+        crate::gc_epoch::GcEpoch {
+            finished_ns: store.wall_ns(),
+            ..acquired.clone()
+        }
+    }
+
+    #[test]
+    fn a_pass_that_finishes_after_a_later_one_cannot_regress_the_epoch() {
+        let (_dir, a, b) = open_pair();
+
+        let a_epoch = a.acquire_gc_epoch().expect("a acquires");
+        let b_epoch = b.acquire_gc_epoch().expect("b acquires");
+        assert_eq!(a_epoch.epoch, 1);
+        assert_eq!(b_epoch.epoch, 2, "the epoch is monotonic and consecutive");
+
+        // The newer pass closes first.
+        assert!(
+            b.close_gc_epoch(&b_epoch, &finish(&b, &b_epoch))
+                .expect("b closes"),
+            "the owner closes its own record"
+        );
+
+        // The older pass finishes last. Its close must be a no-op: with an
+        // unconditional replace it used to write epoch 1 over epoch 2.
+        assert!(
+            !a.close_gc_epoch(&a_epoch, &finish(&a, &a_epoch))
+                .expect("a closes"),
+            "a superseded pass must not rewrite the record"
+        );
+        let record = a
+            .gc_epoch()
+            .expect("read epoch")
+            .expect("the epoch record exists");
+        assert_eq!(record.epoch, 2, "a late close must never lower the epoch");
+        assert_eq!(
+            record.run_id, b_epoch.run_id,
+            "the record names the newest pass"
+        );
+        assert!(record.finished_ns >= b_epoch.started_ns);
+
+        // Closing twice is also refused: the record is no longer the one this
+        // pass published.
+        assert!(!b
+            .close_gc_epoch(&b_epoch, &finish(&b, &b_epoch))
+            .expect("second close"));
+        assert_eq!(a.gc_epoch().expect("read").expect("present").epoch, 2);
+    }
+
+    #[test]
+    fn the_owner_closes_its_own_epoch_once() {
+        let (_dir, store, _other) = open_pair();
+        let acquired = store.acquire_gc_epoch().expect("acquire");
+        assert_eq!(acquired.epoch, 1);
+        let finished = finish(&store, &acquired);
+        assert!(store.close_gc_epoch(&acquired, &finished).expect("close"));
+
+        let record = store.gc_epoch().expect("read").expect("present");
+        assert_eq!(record.epoch, 1);
+        assert_eq!(record.run_id, acquired.run_id);
+        assert_eq!(record.finished_ns, finished.finished_ns);
+
+        // A later pass numbers from the closed record, not from scratch.
+        let next = store.acquire_gc_epoch().expect("second acquire");
+        assert_eq!(next.epoch, 2);
+    }
+
+    #[test]
+    fn a_deleted_candidate_is_not_an_error_for_the_second_pass() {
+        let (_dir, store, _other) = open_pair();
+        let key = Key::gc_run("probe");
+        store
+            .with_backend_mut(|backend| backend.put_atomic(&key, b"probe"))
+            .expect("publish probe record");
+        assert!(store.delete_if_present(&key).expect("first delete"));
+        assert!(
+            !store.delete_if_present(&key).expect("second delete"),
+            "a concurrent pass already removed it; the objective is met"
+        );
     }
 }
