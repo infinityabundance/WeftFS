@@ -1,9 +1,16 @@
 # Artifact API — measured results (T072)
 
-Receipt: `bench/receipts/artifact-api-20261114T224431Z.json` (11/11 checks) and
-its `.log`. Retained failing run: `artifact-api-20261114T224412Z.json` (10/11:
-the shared-surface check required `verify`, which the adapters only run when
-`WEFT_ARTIFACT_VERIFY=1`; the court now sets it).
+Receipt: `bench/receipts/artifact-api-20261115T012000Z.json` and its `.log`,
+written by the registered court `scripts/artifact_api_court.sh`.
+
+<!-- BEGIN GENERATED:artifact-api-verdict (scripts/perf_numbers.py) -->
+<!-- END GENERATED:artifact-api-verdict -->
+
+Retained, not cited: `artifact-api-20261114T224431Z.json`, produced from a tree
+ahead of the revision it recorded, and the first failing run
+`artifact-api-20261114T224412Z.json` (the shared-surface check required
+`verify`, which the adapters only run when `WEFT_ARTIFACT_VERIFY=1`; the court
+now sets it).
 
 Environment: python court (3 GiB / 4 CPUs / 1024 pids, `no-new-privileges`,
 bounded `/tmp`), release `weftfs` built in the rust court, `torch 2.15.0+cpu`,

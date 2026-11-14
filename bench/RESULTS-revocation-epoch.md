@@ -1,11 +1,15 @@
 # Revocation epoch — measured results (T078)
 
-Receipt: `bench/receipts/revocation-epoch-20261114T225925Z.json` + `.log`.
-**11 checks, 11 pass, 0 fail.** Court: rust court (3 GiB / 4 CPUs / 1024 pids,
-bounded tmpfs), one local store, no object backend.
+Receipt: `bench/receipts/revocation-epoch-20261115T011000Z.json` + `.log`.
+Court: rust court (3 GiB / 4 CPUs / 1024 pids, bounded tmpfs), one local store,
+no object backend.
 
-The final receipt is regenerated at the closing revision; this one names the
-parent revision in `environment.revisions.WeftFS`.
+<!-- BEGIN GENERATED:revocation-epoch-verdict (scripts/perf_numbers.py) -->
+<!-- END GENERATED:revocation-epoch-verdict -->
+
+Retained, not cited: `revocation-epoch-20261114T225925Z.json`, measured from a
+tree ahead of the revision it recorded; the checks are the same and the receipt
+above supersedes it.
 
 ## What is proven
 

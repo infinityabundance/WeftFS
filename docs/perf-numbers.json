@@ -145,6 +145,18 @@
   {
    "id": "encryption",
    "title": "T079 optional encryption at rest: plain, convergent and random cost on one fixture, seven interleaved repetitions"
+  },
+  {
+   "id": "artifact-api",
+   "title": "T072 artifact API and its three consumers"
+  },
+  {
+   "id": "producer-auth",
+   "title": "T074 producer attestations"
+  },
+  {
+   "id": "revocation-epoch",
+   "title": "T078 revocation epochs and deny-before-decode"
   }
  ],
  "numbers": [
@@ -23313,6 +23325,84 @@
    "stamp": "20261115T001500Z",
    "revision_path": "environment.revisions.WeftFS",
    "revision": "5f578584702b14fa21b5733fef6479f513868607"
+  },
+  {
+   "key": "artifact.passed",
+   "label": "Artifact API court checks passed",
+   "unit": "checks",
+   "group": "artifact-api",
+   "format": "int",
+   "receipt": "bench/receipts/artifact-api-20261115T012000Z.json",
+   "path": "passed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T012000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
+  },
+  {
+   "key": "artifact.failed",
+   "label": "Artifact API court checks failed",
+   "unit": "checks",
+   "group": "artifact-api",
+   "format": "int",
+   "receipt": "bench/receipts/artifact-api-20261115T012000Z.json",
+   "path": "failed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T012000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
+  },
+  {
+   "key": "producer_auth.passed",
+   "label": "Producer attestation court checks passed",
+   "unit": "checks",
+   "group": "producer-auth",
+   "format": "int",
+   "receipt": "bench/receipts/producer-auth-20261115T010000Z.json",
+   "path": "passed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
+  },
+  {
+   "key": "producer_auth.failed",
+   "label": "Producer attestation court checks failed",
+   "unit": "checks",
+   "group": "producer-auth",
+   "format": "int",
+   "receipt": "bench/receipts/producer-auth-20261115T010000Z.json",
+   "path": "failed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
+  },
+  {
+   "key": "revocation_epoch.passed",
+   "label": "Revocation epoch court checks passed",
+   "unit": "checks",
+   "group": "revocation-epoch",
+   "format": "int",
+   "receipt": "bench/receipts/revocation-epoch-20261115T011000Z.json",
+   "path": "passed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T011000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
+  },
+  {
+   "key": "revocation_epoch.failed",
+   "label": "Revocation epoch court checks failed",
+   "unit": "checks",
+   "group": "revocation-epoch",
+   "format": "int",
+   "receipt": "bench/receipts/revocation-epoch-20261115T011000Z.json",
+   "path": "failed",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T011000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
   }
  ],
  "blocks": [
@@ -29312,6 +29402,63 @@
     },
     {
      "template": "  is extra CPU on the critical path with no hardware offload."
+    }
+   ]
+  },
+  {
+   "id": "artifact-api-verdict",
+   "file": "bench/RESULTS-artifact-api.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{artifact.passed}}** checks pass with **{{artifact.failed}}** failures: one Rust"
+    },
+    {
+     "template": "`ContextPlane`, one Python binding, three consumers (DCP, Orbax, an agent-state"
+    },
+    {
+     "template": "consumer), and a byte-identity assertion between the checkpoint resolved through"
+    },
+    {
+     "template": "the API and the same checkpoint read through the legacy adapter path."
+    }
+   ]
+  },
+  {
+   "id": "producer-auth-verdict",
+   "file": "bench/RESULTS-producer-auth.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{producer_auth.passed}}** checks pass with **{{producer_auth.failed}}** failures: Rust"
+    },
+    {
+     "template": "signs and Rust, Go and the clean-room Python verifier agree on the record; the"
+    },
+    {
+     "template": "adversarial set (invalid signer, corrupted input root, mismatched output root,"
+    },
+    {
+     "template": "revoked key, key rotated after signing, valid signature over inputs the store does,"
+    },
+    {
+     "template": "not contain) is refused with the class the document names."
+    }
+   ]
+  },
+  {
+   "id": "revocation-epoch-verdict",
+   "file": "bench/RESULTS-revocation-epoch.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{revocation_epoch.passed}}** checks pass with **{{revocation_epoch.failed}}**"
+    },
+    {
+     "template": "failures, and the deny-before-decode counter proof is the separate Rust test"
+    },
+    {
+     "template": "`tests/revocation_epoch.rs` run in the same court."
     }
    ]
   }

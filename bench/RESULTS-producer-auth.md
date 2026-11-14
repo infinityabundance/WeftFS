@@ -5,9 +5,14 @@ Receipt: `bench/receipts/producer-auth-<stamp>.json` + `.log`, written by
 over the same canonical records; every container keeps the default limits
 (3 GiB / 3 GiB swap / 1024 pids / 4 cpus / bounded tmpfs).
 
-Current receipt: `producer-auth-20261114T225327Z.json` — **31 checks, 31 pass,
-0 fail**. It was measured at a working tree whose parent revision is recorded in
-the receipt; the final receipt is regenerated at the closing revision.
+Current receipt: `producer-auth-20261115T010000Z.json`.
+
+<!-- BEGIN GENERATED:producer-auth-verdict (scripts/perf_numbers.py) -->
+<!-- END GENERATED:producer-auth-verdict -->
+
+Retained, not cited: `producer-auth-20261114T225327Z.json`, measured from a tree
+ahead of the revision it recorded; its checks and its conclusions are the same,
+and the receipt above supersedes it.
 
 ## What is proven
 

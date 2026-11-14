@@ -1,0 +1,298 @@
+{
+  "checks": [
+    {
+      "check": "dcp_exact",
+      "detail": {
+        "bias": "0c38d24f3f0365e6d1f7e2dc3d5035512083eaa80f267bb91ce29c7c489cf264",
+        "block.weight": "f7c7374a84899f89655fc458adbff72e4610d52aab79459011759916282f4f4e",
+        "embed": "b93793036a41a187784c2902dce5398ba05357a89063add532d46e81f745798b"
+      },
+      "ok": true
+    },
+    {
+      "check": "dcp_byte_identical_to_legacy",
+      "detail": {
+        "bias": "0c38d24f3f0365e6d1f7e2dc3d5035512083eaa80f267bb91ce29c7c489cf264",
+        "block.weight": "f7c7374a84899f89655fc458adbff72e4610d52aab79459011759916282f4f4e",
+        "embed": "b93793036a41a187784c2902dce5398ba05357a89063add532d46e81f745798b"
+      },
+      "ok": true
+    },
+    {
+      "check": "dcp_uses_resolve_plan_materialize",
+      "detail": [
+        "materialize",
+        "plan",
+        "resolve",
+        "verify"
+      ],
+      "ok": true
+    },
+    {
+      "check": "orbax_exact",
+      "detail": null,
+      "ok": true
+    },
+    {
+      "check": "orbax_byte_identical_to_legacy",
+      "detail": {
+        "0": "d7d18342c34c1297a6c8dcf342bc3aebceacf9ca25363c985afc2b621b1d706f",
+        "1": "3232de0b23c2d83d3a97a9bcbb8268e46e13695840cd31e12505c3f51402b33c"
+      },
+      "ok": true
+    },
+    {
+      "check": "orbax_uses_resolve_plan_materialize",
+      "detail": [
+        "materialize",
+        "plan",
+        "resolve",
+        "verify"
+      ],
+      "ok": true
+    },
+    {
+      "check": "agent_consumer_runs",
+      "detail": [
+        "materialize",
+        "plan",
+        "resolve",
+        "txn",
+        "verify"
+      ],
+      "ok": true
+    },
+    {
+      "check": "agent_uses_all_six_verbs",
+      "detail": [
+        "materialize",
+        "plan",
+        "resolve",
+        "txn",
+        "verify"
+      ],
+      "ok": true
+    },
+    {
+      "check": "agent_verify_ok",
+      "detail": null,
+      "ok": true
+    },
+    {
+      "check": "agent_transaction_verified",
+      "detail": null,
+      "ok": true
+    },
+    {
+      "check": "three_consumers_share_the_api",
+      "detail": {
+        "agent": [
+          "materialize",
+          "plan",
+          "resolve",
+          "txn",
+          "verify"
+        ],
+        "dcp": [
+          "materialize",
+          "plan",
+          "resolve",
+          "verify"
+        ],
+        "orbax": [
+          "materialize",
+          "plan",
+          "resolve",
+          "verify"
+        ]
+      },
+      "ok": true
+    }
+  ],
+  "consumers": {
+    "agent": {
+      "client_calls": [
+        {
+          "count": 1,
+          "verb": "materialize"
+        },
+        {
+          "count": 1,
+          "verb": "plan"
+        },
+        {
+          "count": 2,
+          "verb": "resolve"
+        },
+        {
+          "count": 2,
+          "verb": "txn"
+        },
+        {
+          "count": 1,
+          "verb": "verify"
+        }
+      ],
+      "label": "agent-state consumer, single host, synthetic fixture, no mount; exercises the same artifact API as the DCP and Orbax adapters",
+      "materialize": {
+        "bytes": 129,
+        "file_sha256": {
+          "models/llama-4.bin": "b2f3d2ef96f5ede9c1ebcc4415effb70bf51b4a240c1596fba3f3d2a65e907e2",
+          "outputs/run-001.bin": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+          "prompts/task.txt": "0a42efa0daa7deb1a0ab53fdd67697ff21d88dbb88cdb4ee5e7085a5a1da03ea"
+        },
+        "files": 3,
+        "plan_root": "77892a1169a822cf850e618045fbcc8c8a87adbd101d53cd59dedd5c9cb3c36b"
+      },
+      "output_files": [
+        "models/llama-4.bin",
+        "outputs/run-001.bin",
+        "prompts/task.txt"
+      ],
+      "output_sha256": {
+        "models/llama-4.bin": "b2f3d2ef96f5ede9c1ebcc4415effb70bf51b4a240c1596fba3f3d2a65e907e2",
+        "outputs/run-001.bin": "2635bb704b0c57b51de0aee31779740a69aba1e8b832486bb8561e00282dcaa7",
+        "prompts/task.txt": "0a42efa0daa7deb1a0ab53fdd67697ff21d88dbb88cdb4ee5e7085a5a1da03ea"
+      },
+      "pin": {
+        "output_content_root": "1f938652937c3400ab3267437df618177b8ea4572911c1ebe44fc76c8367b90c",
+        "output_object_id": "34362f207245e1209524970047b00aea9d9a52ea1c5b90657e58d1e8c873b9f1"
+      },
+      "plan": {
+        "complete": true,
+        "missing": [],
+        "plan_root": "77892a1169a822cf850e618045fbcc8c8a87adbd101d53cd59dedd5c9cb3c36b"
+      },
+      "resolve": {
+        "entries": [
+          {
+            "bytes": 30,
+            "content_root": "bdfe61993ff8c4579228f9a1f0e72ab5c081eb019006a773927d22b92f0e4017",
+            "name": "/models/llama-4.bin"
+          },
+          {
+            "bytes": 43,
+            "content_root": "1f938652937c3400ab3267437df618177b8ea4572911c1ebe44fc76c8367b90c",
+            "name": "/outputs/run-001.bin"
+          },
+          {
+            "bytes": 56,
+            "content_root": "71f76fa6ede76d9a4ddea232ade15477b23407fe0831d0fef476e328ac56e35f",
+            "name": "/prompts/task.txt"
+          }
+        ],
+        "matched_count": 3,
+        "provisional": false,
+        "snapshot": "f2fb94896989687fee6d6d4102fdb1e567525386abfb3d79b9f371c1dad7b97b"
+      },
+      "schema": "weft.agent-state.consumer.v1",
+      "snapshot": "jan",
+      "store": "/tmp/weft-artifact-api-9eqftwg9/agent-store",
+      "transaction_verified": true,
+      "verbs": [
+        "resolve",
+        "plan",
+        "materialize",
+        "verify",
+        "txn",
+        "resolve",
+        "txn"
+      ],
+      "verify": {
+        "ok": true,
+        "output_checked": 3,
+        "problems": [],
+        "store_checked": 3
+      }
+    },
+    "dcp": {
+      "api_sha256": {
+        "bias": "0c38d24f3f0365e6d1f7e2dc3d5035512083eaa80f267bb91ce29c7c489cf264",
+        "block.weight": "f7c7374a84899f89655fc458adbff72e4610d52aab79459011759916282f4f4e",
+        "embed": "b93793036a41a187784c2902dce5398ba05357a89063add532d46e81f745798b"
+      },
+      "api_verbs": [
+        "resolve",
+        "verify",
+        "plan",
+        "resolve",
+        "materialize",
+        "resolve",
+        "materialize",
+        "resolve",
+        "materialize"
+      ],
+      "byte_identical_to_legacy": true,
+      "exact": true,
+      "legacy_sha256": {
+        "bias": "0c38d24f3f0365e6d1f7e2dc3d5035512083eaa80f267bb91ce29c7c489cf264",
+        "block.weight": "f7c7374a84899f89655fc458adbff72e4610d52aab79459011759916282f4f4e",
+        "embed": "b93793036a41a187784c2902dce5398ba05357a89063add532d46e81f745798b"
+      },
+      "legacy_verbs": [],
+      "source_sha256": {
+        "bias": "0c38d24f3f0365e6d1f7e2dc3d5035512083eaa80f267bb91ce29c7c489cf264",
+        "block.weight": "f7c7374a84899f89655fc458adbff72e4610d52aab79459011759916282f4f4e",
+        "embed": "b93793036a41a187784c2902dce5398ba05357a89063add532d46e81f745798b"
+      }
+    },
+    "orbax": {
+      "api_sha256": {
+        "0": "d7d18342c34c1297a6c8dcf342bc3aebceacf9ca25363c985afc2b621b1d706f",
+        "1": "3232de0b23c2d83d3a97a9bcbb8268e46e13695840cd31e12505c3f51402b33c"
+      },
+      "api_verbs": [
+        "plan",
+        "verify",
+        "resolve",
+        "materialize",
+        "resolve",
+        "materialize"
+      ],
+      "byte_identical_to_legacy": true,
+      "exact": true,
+      "legacy_sha256": {
+        "0": "d7d18342c34c1297a6c8dcf342bc3aebceacf9ca25363c985afc2b621b1d706f",
+        "1": "3232de0b23c2d83d3a97a9bcbb8268e46e13695840cd31e12505c3f51402b33c"
+      },
+      "legacy_verbs": []
+    }
+  },
+  "environment": {
+    "cli": "/work/.docker-cache/target-rust/release/weftfs",
+    "court": "python court (3g/4cpu/pids 1024), rust court builds the CLI",
+    "label": "single host, synthetic fixtures, no mount, no fleet, no performance claim; WEFT_ARTIFACT_VERIFY=1 so the adapters exercise the verify verb (cost: every tensor is re-read)",
+    "numpy": "2.5.4",
+    "python": "3.12.16",
+    "revisions": {
+      "WeftFS": "830dabbbf8950a4efdce8d825cbcb1e8653a07cd"
+    }
+  },
+  "failed": 0,
+  "generated_utc": "20261115T012000Z",
+  "kind": "artifact-api",
+  "passed": 11,
+  "result": "pass",
+  "schema": "weft.artifact.api.receipt.v1",
+  "surfaces": {
+    "agent": [
+      "materialize",
+      "plan",
+      "resolve",
+      "txn",
+      "verify"
+    ],
+    "dcp": [
+      "materialize",
+      "plan",
+      "resolve",
+      "verify"
+    ],
+    "orbax": [
+      "materialize",
+      "plan",
+      "resolve",
+      "verify"
+    ]
+  }
+}
