@@ -146,6 +146,7 @@ echo "nproc=$nproc_all cgroup_cpu_max=$cpu_max"
 
 cargo test --test multi_writer_gc --no-run --message-format=json 2>/dev/null \
   | python3 -c 'import json,sys
+found = ""
 for line in sys.stdin:
     try:
         doc = json.loads(line)
@@ -153,8 +154,9 @@ for line in sys.stdin:
         continue
     if doc.get("reason") == "compiler-artifact" and doc.get("executable") \
        and doc.get("target", {}).get("name") == "multi_writer_gc":
-        print(doc["executable"])
-        break' >"$tmpdir/bin.path"
+        found = doc["executable"]
+# Read to EOF: exiting early sends SIGPIPE to cargo and fails the pipeline.
+print(found)' >"$tmpdir/bin.path"
 binary="$(cat "$tmpdir/bin.path")"
 [[ -n "$binary" && -x "$binary" ]] || { echo "cannot locate the test binary" >&2; exit 1; }
 binary_sha="$(sha256sum "$binary" | cut -d' ' -f1)"

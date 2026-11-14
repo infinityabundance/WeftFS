@@ -2649,10 +2649,7 @@ impl Store {
     }
 
     /// Update the KV prefix index counters.
-    pub(crate) fn bump_kv_index(
-        &self,
-        update: impl FnOnce(&mut crate::kv_index::KvIndexStats),
-    ) {
+    pub(crate) fn bump_kv_index(&self, update: impl FnOnce(&mut crate::kv_index::KvIndexStats)) {
         let mut stats = self
             .kv_index_stats
             .lock()
@@ -10964,10 +10961,14 @@ impl Store {
     /// not a conflicting writer: it holds the publication lock for its own
     /// read-verify-write of one small control record. Retrying in a tight loop
     /// exhausted the budget inside that critical section on a two-core runner.
-    /// Exhausting the whole budget (`epoch_retry_budget`, 225.4 ms) still
-    /// returns `Busy` rather than running two passes under one epoch.
+    /// The wait is bounded by [`crate::gc_epoch::EPOCH_RETRY_BUDGET`] of wall
+    /// clock, not by a retry count, because the critical section itself grows
+    /// with storage latency; exhausting that budget still returns `Busy` rather
+    /// than running two passes under one epoch.
     fn acquire_gc_epoch(&self) -> Result<crate::gc_epoch::GcEpoch> {
-        for attempt in 0..crate::gc_epoch::DEFAULT_EPOCH_ATTEMPTS {
+        let deadline = Instant::now() + crate::gc_epoch::epoch_retry_budget();
+        let mut attempt = 0u32;
+        loop {
             let raw = match self.with_backend(|backend| backend.read_all(&Key::gc_epoch())) {
                 Ok(bytes) => Some(bytes),
                 Err(err) if err.class() == Class::NotFound => None,
@@ -10991,8 +10992,12 @@ impl Store {
                 Err(err) if err.class() == Class::Busy => {
                     // Another pass is inside its own CAS. Wait it out, then
                     // re-read the epoch it published.
-                    std::thread::sleep(crate::gc_epoch::epoch_retry_delay(attempt));
-                    continue;
+                    let delay = crate::gc_epoch::epoch_retry_delay(attempt);
+                    if Instant::now() + delay > deadline {
+                        break;
+                    }
+                    std::thread::sleep(delay);
+                    attempt = attempt.wrapping_add(1);
                 }
                 Err(err) => return Err(err),
             }

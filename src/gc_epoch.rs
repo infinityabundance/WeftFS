@@ -60,8 +60,17 @@ pub const GC_RUN_SCHEMA: &str = "weft.gc.run.v1";
 pub const MAX_RESERVATIONS: usize = 4096;
 /// Default reservation lifetime. A writer that stalls longer is abandoned.
 pub const DEFAULT_RESERVATION_SECS: u64 = 300;
-/// Bounded acquisition retries for the epoch compare-and-swap.
-pub const DEFAULT_EPOCH_ATTEMPTS: u32 = 16;
+/// Bounded wall-clock budget for the whole acquisition backoff.
+///
+/// The budget is a *duration*, not an attempt count: what a pass has to wait
+/// out is another pass's read-verify-write of `gc/epoch` plus the `fsync` calls
+/// that publish it, and that critical section grows with storage latency. A
+/// fixed attempt count makes the budget shrink exactly when the machine is
+/// busy — measured: sixteen immediate attempts lost every time once the store
+/// was on a real filesystem beside eight concurrent suites (5 of 50 runs), and
+/// the CI runner hit the same wall with a two-core quota. A 3 s ceiling is far
+/// longer than any single control-record publication and still finite.
+pub const EPOCH_RETRY_BUDGET: Duration = Duration::from_secs(3);
 /// First backoff step between epoch compare-and-swap attempts.
 pub const EPOCH_RETRY_START: Duration = Duration::from_micros(200);
 /// Ceiling on one backoff step between epoch compare-and-swap attempts.
@@ -83,13 +92,9 @@ pub fn epoch_retry_delay(attempt: u32) -> Duration {
     Duration::from_micros(scaled.min(EPOCH_RETRY_CAP.as_micros() as u64))
 }
 
-/// Total wall-clock budget the acquisition backoff spends before the final
-/// attempt is refused: the sum of [`epoch_retry_delay`] over
-/// `0..DEFAULT_EPOCH_ATTEMPTS - 1`, i.e. 225.4 ms.
+/// The acquisition deadline: [`EPOCH_RETRY_BUDGET`] after the first attempt.
 pub fn epoch_retry_budget() -> Duration {
-    (0..DEFAULT_EPOCH_ATTEMPTS.saturating_sub(1))
-        .map(epoch_retry_delay)
-        .fold(Duration::ZERO, |total, step| total + step)
+    EPOCH_RETRY_BUDGET
 }
 
 /// One decoded `gc/epoch` control record.
@@ -490,7 +495,7 @@ mod tests {
 
     #[test]
     fn the_epoch_retry_schedule_doubles_then_caps_without_jitter() {
-        let micros: Vec<u128> = (0..DEFAULT_EPOCH_ATTEMPTS)
+        let micros: Vec<u128> = (0..32)
             .map(|attempt| epoch_retry_delay(attempt).as_micros())
             .collect();
         assert_eq!(
@@ -511,12 +516,22 @@ mod tests {
     }
 
     #[test]
-    fn the_epoch_retry_budget_outlasts_a_publication_critical_section() {
-        // 15 gaps between 16 attempts: seven doubling steps then the cap.
-        assert_eq!(epoch_retry_budget(), Duration::from_micros(225_400));
+    fn the_epoch_retry_budget_is_a_duration_not_an_attempt_count() {
+        // The budget must outlast a control-record publication on a saturated
+        // disk, not merely a fixed number of quick retries: 3 s is ~120 capped
+        // steps, and a fixed 16-attempt loop was measured to expire inside a
+        // legitimate critical section (CI run 43631714328).
+        assert_eq!(epoch_retry_budget(), Duration::from_secs(3));
+        let mut elapsed = Duration::ZERO;
+        let mut steps = 0u32;
+        while elapsed + epoch_retry_delay(steps) <= epoch_retry_budget() {
+            elapsed += epoch_retry_delay(steps);
+            steps += 1;
+        }
         assert!(
-            epoch_retry_budget() > Duration::from_millis(100),
-            "a pass must wait out an ordinary read-verify-write of gc/epoch"
+            steps > 100,
+            "the schedule must fill the budget, got {steps} steps"
         );
+        assert!(elapsed >= Duration::from_secs(2), "{elapsed:?}");
     }
 }
