@@ -85,6 +85,10 @@
   {
    "id": "mw3",
    "title": "MW3 conflict domains, the T021 rebase and the T027 writer envelope (stamp 20261114T025943Z, revision d2a8b7e1)"
+  },
+  {
+   "id": "verifier",
+   "title": "Independent context-plane verifier (Phase 1)"
   }
  ],
  "numbers": [
@@ -13910,6 +13914,110 @@
     "mode": "one-process-per-writer"
    },
    "select_path": "p99_ms"
+  },
+  {
+   "key": "verifier.cases",
+   "label": "Cases run against the frozen corpus",
+   "unit": "count",
+   "group": "verifier",
+   "format": "int",
+   "path": "summary.cases",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.passed",
+   "label": "Cases passed",
+   "unit": "count",
+   "group": "verifier",
+   "format": "int",
+   "path": "summary.passed",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.failed",
+   "label": "Cases failed",
+   "unit": "count",
+   "group": "verifier",
+   "format": "int",
+   "path": "summary.failed",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.skipped",
+   "label": "Cases explicitly skipped",
+   "unit": "count",
+   "group": "verifier",
+   "format": "int",
+   "path": "summary.skipped",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.negative_passed",
+   "label": "Negative-suite cases passed",
+   "unit": "count",
+   "group": "verifier",
+   "format": "int",
+   "path": "summary.negative_passed",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.negative_cases",
+   "label": "Negative-suite cases",
+   "unit": "count",
+   "group": "verifier",
+   "format": "int",
+   "path": "summary.negative_cases",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.freeze_rows",
+   "label": "Identity rows in the freeze matrix",
+   "unit": "rows",
+   "group": "verifier",
+   "format": "int",
+   "path": "freeze_matrix_rows",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
+  },
+  {
+   "key": "verifier.source_lines",
+   "label": "Verifier source lines",
+   "unit": "lines",
+   "group": "verifier",
+   "format": "int",
+   "path": "verifier.source_lines",
+   "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T063213Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "f8f352ba9db37dfa08d9305fe3ba7f9288d6be46"
   }
  ],
  "blocks": [
@@ -18514,6 +18622,16 @@
     },
     {
      "template": "T027 (generated): **{{mw3.s1024.spawned}}** of 1024 writer threads spawn under `--hold` (**{{mw3.s1024.spawn_failures}}** refused by the court's pid bound), peak RSS **{{mw3.s1024.rss_kib}} KiB** = **{{mw3.s1024.bytes_per_writer}} B/writer**; peak aggregate **{{mw3.s16.tx_s}} tx/s** at N=16 (stamp {{mw3.s1024.rss_kib|stamp}}, revision {{mw3.s1024.rss_kib|revision}})."
+    }
+   ]
+  },
+  {
+   "id": "context-plane-verifier",
+   "file": "bench/RESULTS-context-plane-verifier.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "At stamp {{verifier.cases|stamp}} (revision {{verifier.cases|revision}}), the clean-room verifier ran **{{verifier.cases}}** cases against the frozen corpus: **{{verifier.passed}}** passed, **{{verifier.failed}}** failed, **{{verifier.skipped}}** explicitly skipped. The negative suite passed **{{verifier.negative_passed}}/{{verifier.negative_cases}}**. The freeze matrix has **{{verifier.freeze_rows}}** identity rows; the verifier is **{{verifier.source_lines}}** lines of Python. Source: `{{verifier.cases|receipt}}`."
     }
    ]
   }

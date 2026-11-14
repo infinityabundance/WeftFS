@@ -9,12 +9,91 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,176** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,190** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
+
+## 2026-11-14 (Context-plane RFC-0001 Phase 0/1)
+
+**Deliverables.** Three operator-authored proposals are placed verbatim with a
+front-matter status block: `spec/rfc/RFC-0001-context-plane.md`,
+`spec/rfc/RFC-0001-adoption-plan.md`, `spec/rfc/RFC-0001-api.md`. Each states
+**NOT an IETF RFC, NOT ratified, NOT an implementation claim**, keeps the
+supplied baseline line, and adds `placed at revision: f8f352ba9db37dfa08d9305fe3ba7f9288d6be46`
+(the staging head this work was added on top of).
+
+`include/weft_context_plane.h` is a compilable **interface declaration only**:
+no implementation, no exported symbol, no shared library, no binary-
+compatibility certification. It is valid C11 and C++17 under
+`-Wall -Wextra -Werror` (host `cc 16.2.1`/`c++ 16.2.1`, and the rust court's
+gcc via build-essential). The compile gate is `scripts/check-context-plane-header.sh`
+and its two translator units.
+
+`conformance/REQUIREMENTS.md` expands RFC §15 into **38 requirements**. Of these,
+**11** are exercised in full by the frozen corpus, **7** only in part, and **20**
+require new corpus or new implementation work; each row names the existing
+vector paths and the missing fixtures.
+
+**Phase 0 findings.** The mode-registry contradiction was real:
+`WEFTCODEC-FORMAT.md` §3 said `19..127` were reserved, while
+`WEFT-AI-CODEC.md` §0 defines mode 19 `KV_CACHE_PROV` and mode 20
+`ENGRAM_SHARD` as normative and implemented. The framing document was
+reconciled **editorially only**: two rows added, `21..127` reserved, the
+AI-mode rule range extended, §13 allocations completed, and
+`WEFT-AI-CODEC.md` §0 named the normative mode registry. No frame byte, mode
+number, hash domain or vector changed; the same reconciliation was exported
+byte-for-byte into all three submodule mirrors and committed there.
+
+`spec/CONTEXT-PLANE-FREEZE.md` publishes **24 identity rows** plus 15
+descriptor-only schemas, each with its identity, exact hash domain, version,
+normative document and Rust/Go/Python/verifier status. It records the
+divergences (checkpoint is Rust-only; Go provenance is write-only; KV prefix
+and MW3 domains are Rust-only) and states that frozen identities are
+incorporated by reference and unchanged. It also records that several domains
+used by code and vectors (`weft/checkpoint/manifest/v1`, `weft/index/*`,
+`weft/pack/*`, `weft/load/*`, `weft/mw2/key/v1`) are absent from the frozen
+domain table in FORMAT §1.1 — a documentation gap, not a byte disagreement.
+
+The tokenizer identity gap is confirmed in both codec implementations:
+`tokenizer_root` hashes only `{scheme, vocab_size}` (Rust
+`kv_prov::tokenizer_root`, Go `modes.TokenizerRoot`), so it does not bind
+vocabulary contents, merges, normaliser, special tokens or chat-template
+semantics. Mode-19 bytes were not changed.
+
+Two-language vector run at this revision (built in the rust/go courts, run by
+the host-only reference runner): Rust **420 total, 288 pass, 0 fail, 132 skip**
+(`bench/receipts/conformance-rust-20261114T062338Z.json`); Go **420, 288, 0,
+132** (`conformance-go-20261114T062338Z.json`); independent Python reader
+**420, 229, 0, 191** (`conformance-python-20261114T062338Z.json`). All three
+name manifest aggregate
+`6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8` over 420
+vectors. Skips are explicit and are never counted as passes.
+
+**Phase 1 verifier.** `verifier/` is a clean-room Python 3 stdlib-only
+implementation (own BLAKE3, WCB, Ed25519), with no import, FFI or subprocess
+call into WeftFS code. It ran **136 cases, 131 pass, 0 fail, 5 skip**, plus a
+**7/7** negative suite and a **7/7** `weft.provenance.v1` self-test (no frozen
+provenance corpus exists). Receipt
+`bench/receipts/context-plane-verifier-20261114T063213Z.json` (+ `.log`),
+analysis `bench/RESULTS-context-plane-verifier.md`. It is independent of the
+implementation code path but not yet an external third-party implementation;
+the work does not claim otherwise. The eight rules found under-specified in the
+spec text are listed in the verifier README and in the receipt's `unspecified`
+array; the largest are the non-self-contained KV provenance `page` map, the
+selector namespace grammar living in the Context Root document, and the
+provenance record's unstated unknown-key rule.
+
+This subphase assigns no new wire value. It adds two courts to
+`scripts/verify-all.sh`: `context_plane_header` (compile-only) and
+`context_plane_verifier` (clean-room corpus run, with the standard explicit
+skip path). `verify-all.sh` itself was **not** re-run for this subphase; the
+cited aggregate remains `verify-20261113T033408Z.json` (47/47) and the next
+aggregate will include 49 courts. No Go or Python implementation of the new
+proposed schemas exists, and no C ABI implementation exists; those are
+non-claims, not omissions hidden behind prose.
 
 ## 2026-11-14 (T019-T021/T027: MW3 conflict domains, incremental rebase, writer envelope)
 

@@ -57,6 +57,12 @@ run_court go "codec_cross_compare" \
 run_court rust "spec_drift" \
   "bash scripts/check-spec-drift.sh"
 
+# Candidate C ABI declaration: valid C11 and C++17 under -Wall -Wextra -Werror.
+# Compile-only; no library, no exported symbol. The rust court carries gcc/g++
+# from build-essential; on a plain runner `cc`/`c++` serve the same role.
+run_court rust "context_plane_header" \
+  "bash scripts/check-context-plane-header.sh"
+
 # Documentation claim drift: every externally visible claim in docs/claims.json
 # must appear (or be absent) exactly where the manifest says, and cite an
 # existing receipt. Host-only check, so it is invoked directly instead of
@@ -221,6 +227,14 @@ run_orchestrated_court() {
 # `BEGIN GENERATED` marker must have a manifest block. Host-only and fast; an
 # environment without Python >= 3.8 skips with a printed reason (exit 78).
 run_orchestrated_court perf_numbers perf_numbers bash scripts/perf_numbers_court.sh
+
+# Phase 1 independent verifier: clean-room Python (stdlib only) over the frozen
+# context-plane record families. Host-runnable analysis, like the guards; the
+# script prints exactly one `context_plane_verifier: skip <reason>` line and
+# exits 78 when python3 is unavailable, which the aggregate records as a skip.
+# It writes `bench/receipts/context-plane-verifier-<stamp>.json` + `.log`.
+run_orchestrated_court context_plane_verifier context_plane_verifier \
+  bash scripts/context-plane-verifier_court.sh
 
 # X06/X07/X08/N08/N09 resource courts: the one stage budget, the active-handle
 # cap, packed-plane races (Rust scenarios plus Rust<->Go handoff), the restore

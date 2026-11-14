@@ -12534,5 +12534,154 @@
   "stamp": "20261114T025943Z",
   "revision": "d2a8b7e1993c62ea10167c8a9fb6fe7a599cb541",
   "kind": "present"
+ },
+ {
+  "id": "context_plane_rfc_status",
+  "claim": "Every placed context-plane RFC document carries the non-ratification status line.",
+  "value": "NOT an IETF RFC, NOT ratified, NOT an implementation claim",
+  "locations": [
+   "spec/rfc/RFC-0001-context-plane.md",
+   "spec/rfc/RFC-0001-adoption-plan.md",
+   "spec/rfc/RFC-0001-api.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_rfc_placed_revision",
+  "claim": "Every placed context-plane RFC document records the staging revision it was added on top of.",
+  "value": "placed at revision: f8f352ba9db37dfa08d9305fe3ba7f9288d6be46",
+  "locations": [
+   "spec/rfc/RFC-0001-context-plane.md",
+   "spec/rfc/RFC-0001-adoption-plan.md",
+   "spec/rfc/RFC-0001-api.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "mode_registry_authority",
+  "claim": "WEFTCODEC-FORMAT.md names WEFT-AI-CODEC.md section 0 as the normative mode registry, and the freeze document records that authority.",
+  "value": "`WEFT-AI-CODEC.md` \u00a70 is the normative",
+  "locations": [
+   "spec/WEFTCODEC-FORMAT.md",
+   "spec/CONTEXT-PLANE-FREEZE.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "mode_registry_reserved_range",
+  "claim": "The framing document no longer marks values 19 and 20 reserved; 21..127 is the reserved range.",
+  "value": "| 21..127 | \u2014 | reserved; `UnsupportedMode` |",
+  "locations": [
+   "spec/WEFTCODEC-FORMAT.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_freeze_matrix",
+  "claim": "The freeze matrix is published and its identity-row count is recorded.",
+  "value": "24 identity rows",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_tokenizer_gap",
+  "claim": "The freeze record confirms that mode-19 tokenizer_root hashes only scheme and vocab_size.",
+  "value": "`tokenizer_root` hashes only `{scheme, vocab_size}`",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_no_new_wire_value",
+  "claim": "This subphase explicitly assigns no new wire value.",
+  "value": "no new wire value",
+  "locations": [
+   "docs/STATUS.md",
+   "spec/CONTEXT-PLANE-FREEZE.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_verifier_counts",
+  "claim": "docs/STATUS.md records the independent verifier case counts.",
+  "value": "136 cases, 131 pass, 0 fail, 5 skip",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_verifier_independence",
+  "claim": "docs/STATUS.md states the exact independence limitation of the verifier.",
+  "value": "not yet an external third-party implementation",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_header_declaration_only",
+  "claim": "The candidate C ABI document states the header is declaration-only.",
+  "value": "interface declaration only",
+  "locations": [
+   "spec/rfc/RFC-0001-api.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_requirements_matrix",
+  "claim": "docs/STATUS.md names the conformance requirements matrix.",
+  "value": "conformance/REQUIREMENTS.md",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_header_court",
+  "claim": "The compile-only header gate is registered in the aggregate court.",
+  "value": "context_plane_header",
+  "locations": [
+   "scripts/verify-all.sh",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_verifier_court",
+  "claim": "The independent verifier court is registered in the aggregate court.",
+  "value": "context_plane_verifier",
+  "locations": [
+   "scripts/verify-all.sh",
+   "docs/STATUS.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "context_plane_verifier_receipt",
+  "claim": "docs/STATUS.md cites the independent verifier receipt.",
+  "value": "context-plane-verifier-20261114T063213Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-context-plane-verifier.md"
+  ],
+  "receipt": "bench/receipts/context-plane-verifier-20261114T063213Z.json",
+  "kind": "present"
  }
 ]
