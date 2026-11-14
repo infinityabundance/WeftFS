@@ -188,7 +188,7 @@ receipt = {
         "The four ranks contribute through a shared host staging directory; the store publication itself is one process. This is not an N-way parallel store writer.",
         "The model is built deterministically by every rank, so the court can verify any slice locally; it is not a distributed-training accuracy claim.",
         "SIGKILL is a process fault; the host page cache is not dropped.",
-        "A target topology finer than the stored split (8 ranks over a 4-way checkpoint) makes two destination ranks fetch the same stored shard; the measured representation amplification is 2.0 and is published.",
+        "A target topology finer than the stored split makes several destination ranks fetch the same stored shard; the measured representation amplification is published rather than described as parity.",
     ],
     "result": "pass" if all(checks.values()) else "fail",
 }

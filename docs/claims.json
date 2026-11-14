@@ -13049,5 +13049,206 @@
   ],
   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
   "kind": "present"
+ },
+ {
+  "id": "t053_rank_api",
+  "claim": "The store exposes a rank-directed restore entry point.",
+  "value": "pub fn restore_checkpoint_rank",
+  "locations": [
+   "src/checkpoint.rs"
+  ],
+  "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t053_rank_cli",
+  "claim": "The CLI exposes a per-rank restore mode.",
+  "value": "--rank-out",
+  "locations": [
+   "src/main.rs",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t053_rank_doc",
+  "claim": "The results document describes the rank-directed restore.",
+  "value": "rank-directed cross-topology restore",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t055_complete_state",
+  "claim": "The resume court states the complete state it captures.",
+  "value": "bit-generator state and cursor",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t055_sigkill_doc",
+  "claim": "The resume court is documented as SIGKILL and exact.",
+  "value": "SIGKILL, exact resume",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t056_multirank_doc",
+  "claim": "The multi-rank court states its real process/runtime shape.",
+  "value": "Four ranks under `torchrun` with gloo",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t057_gpu_unmeasured",
+  "claim": "The async-save court states that GPU idle time is unmeasured.",
+  "value": "**GPU idle time is unmeasured**",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t057_queue_doc",
+  "claim": "The async court documents the bounded queue.",
+  "value": "`CheckpointSession` queue",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t058_scoped",
+  "claim": "The useful-step court labels its scope.",
+  "value": "layer-scoped",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t059_receipt_schema",
+  "claim": "The materialization receipt schema exists in code.",
+  "value": "weft.materialization.receipt.v1",
+  "locations": [
+   "src/materialization.rs"
+  ],
+  "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t059_verifier",
+  "claim": "The independent receipt verifier is a CLI verb.",
+  "value": "receipt\",\n            \"verify",
+  "locations": [
+   "src/main.rs"
+  ],
+  "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t060_loss",
+  "claim": "The baselines document publishes the missed target.",
+  "value": "the 20 ms target is not met",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t053_court_registered",
+  "claim": "The rank-restore court is registered in the aggregate.",
+  "value": "rank_restore rank_restore_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t055_court_registered",
+  "claim": "The resume court is registered in the aggregate.",
+  "value": "training_resume training_resume_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t056_court_registered",
+  "claim": "The multi-rank court is registered in the aggregate.",
+  "value": "multirank_dcp multirank_dcp_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t057_court_registered",
+  "claim": "The async-save court is registered in the aggregate.",
+  "value": "async_save async_save_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t058_court_registered",
+  "claim": "The useful-step court is registered in the aggregate.",
+  "value": "useful_step useful_step_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t059_court_registered",
+  "claim": "The adapter-receipt court is registered in the aggregate.",
+  "value": "adapters_receipts adapters_receipts_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t060_court_registered",
+  "claim": "The baselines court is registered in the aggregate.",
+  "value": "dcp_orbax_baselines dcp_orbax_baselines_court",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t053_no_gpu_claim",
+  "claim": "The training-gate results document makes no GPU claim.",
+  "value": "GPU overlap is claimed",
+  "locations": [
+   "bench/RESULTS-training-gates.md"
+  ],
+  "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+  "kind": "absent"
  }
 ]

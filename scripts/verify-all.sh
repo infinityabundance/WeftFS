@@ -399,6 +399,56 @@ run_orchestrated_court context_advantage_s3 context_advantage_court \
 run_orchestrated_court ekbloom_context ekbloom_context_court \
   bash scripts/ekbloom_context_court.sh --reduced --phase=decisions
 
+# T053 rank-directed cross-topology restore: stored 8-way, target 1/2/4/8 on
+# the stored axis plus a cross-axis target and a non-divisible refusal. The
+# aggregate uses the reduced 1,8 target set; the full receipt is
+# `bench/receipts/rank-restore-20261114T112449Z.json`. A court that cannot run
+# prints `rank_restore_court: skip <reason>` and exits 78.
+run_orchestrated_court rank_restore rank_restore_court \
+  env WEFT_RANKRESTORE_TOPOLOGIES=1,8 \
+  scripts/docker-court.sh bench "bash bench/scripts/rank_restore_court.sh"
+
+# T055 complete-state resume with SIGKILL, WeftFS and native DCP arms. Reduced
+# to one repetition and two kill points; the full receipts are
+# `training-resume-20261114T115016Z.json` and
+# `training-resume-dcp-20261114T115016Z.json`. A court that cannot run prints
+# `training_resume_court: skip <reason>` and exits 78.
+run_orchestrated_court training_resume training_resume_court \
+  env WEFT_RESUME_STEPS=24 WEFT_RESUME_STEPS_AFTER=8 WEFT_RESUME_REPS=1 \
+  WEFT_RESUME_KILL_REPS=1 WEFT_RESUME_SCENARIOS=step,complete \
+  scripts/docker-court.sh python "bash bench/scripts/training_resume_court.sh"
+
+# T056 four-rank publish and cross-topology load. A court that cannot run prints
+# `multirank_dcp_court: skip <reason>` and exits 78.
+run_orchestrated_court multirank_dcp multirank_dcp_court \
+  scripts/docker-court.sh python "bash bench/scripts/multirank_dcp_court.sh"
+
+# T057 asynchronous save overlap. Reduced repetitions; the full receipt is
+# `async-save-20261114T114340Z.json`. A court that cannot run prints
+# `async_save_court: skip <reason>` and exits 78.
+run_orchestrated_court async_save async_save_court \
+  env WEFT_ASYNC_STEPS=96 WEFT_ASYNC_EVERY=16 WEFT_ASYNC_REPS=1 \
+  scripts/docker-court.sh python "bash bench/scripts/async_save_court.sh"
+
+# T058 recovery-first useful computation (layer-scoped and labelled). A court
+# that cannot run prints `useful_step_court: skip <reason>` and exits 78.
+run_orchestrated_court useful_step useful_step_court \
+  env WEFT_USEFUL_REPS=2 \
+  scripts/docker-court.sh python "bash bench/scripts/useful_step_court.sh"
+
+# T059 adapter materialization receipts on real DCP and Orbax restores. A court
+# that cannot run prints `adapters_receipts_court: skip <reason>` and exits 78.
+run_orchestrated_court adapters_receipts adapters_receipts_court \
+  scripts/docker-court.sh python "bash bench/scripts/adapters_receipts_court.sh"
+
+# T060 DCP / OCDBT baselines. One sweep of four repetitions in the aggregate;
+# the cited receipts are `dcp-orbax-baselines-20261114T115820Z.json` and
+# `-115846Z`. A court that cannot run prints
+# `dcp_orbax_baselines_court: skip <reason>` and exits 78.
+run_orchestrated_court dcp_orbax_baselines dcp_orbax_baselines_court \
+  env WEFT_BASE_REPS=4 \
+  scripts/docker-court.sh python "bash bench/scripts/dcp_orbax_baselines_court.sh"
+
 # R13 third-party conformance distribution: build the bundle in the fuse court,
 # run the reference Rust adapter from the extracted copy only, and verify the
 # bundle with `scripts/verify-receipts.sh` in the court and again on the host

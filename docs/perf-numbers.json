@@ -97,6 +97,10 @@
   {
    "id": "mw-t024-t029",
    "title": "T024-T029 multi-writer GC, distributed faults, history checker and FUSE retention courts"
+  },
+  {
+   "id": "training-gates",
+   "title": "Training-gate courts T053/T055-T060 (2026-11-14): rank restore, resume, multi-rank, async, useful step, receipts, baselines"
   }
  ],
  "numbers": [
@@ -18545,6 +18549,808 @@
    "stamp": "20261114T101315Z",
    "revision_path": "repositories.0.revision",
    "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "tg.rank.amp1",
+   "label": "Rank restore physical amplification, target 1-way on the stored axis",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis0-1way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "read_amplification"
+  },
+  {
+   "key": "tg.rank.amp8",
+   "label": "Rank restore physical amplification, target 8-way on the stored axis",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis0-8way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "read_amplification"
+  },
+  {
+   "key": "tg.rank.repr8",
+   "label": "Rank restore representation amplification, target 8-way",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis0-8way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "representation_amplification"
+  },
+  {
+   "key": "tg.rank.cross_amp",
+   "label": "Rank restore physical amplification, target axis 1 4-way",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis1-4way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "read_amplification"
+  },
+  {
+   "key": "tg.rank.cross_repr",
+   "label": "Rank restore representation amplification, target axis 1 4-way",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis1-4way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "representation_amplification"
+  },
+  {
+   "key": "tg.rank.tensors",
+   "label": "Tensors in the rank-restore fixture",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis0-1way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "tensors"
+  },
+  {
+   "key": "tg.rank.exact",
+   "label": "Tensors restored exactly (target 1-way)",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
+   "list": "configs",
+   "where": {
+    "label": "axis0-1way"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T112449Z",
+   "revision_path": "revision.weftfs",
+   "revision": "c68a7d9c68f93e4989e87446138f06bd3cc1ca84",
+   "select_path": "exact_tensors"
+  },
+  {
+   "key": "tg.resume.weft.control_ms",
+   "label": "WeftFS 48-step control wall",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "list": "control",
+   "where": {
+    "mode": "control",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "wall_ms"
+  },
+  {
+   "key": "tg.resume.weft.ckpt_write_ms",
+   "label": "WeftFS first checkpoint write",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "list": "control",
+   "where": {
+    "mode": "control",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "checkpoint_write_ms.0"
+  },
+  {
+   "key": "tg.resume.weft.kill_to_step_ms",
+   "label": "WeftFS kill to first resumed step",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "list": "kills",
+   "where": {
+    "scenario": "step",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "kill_to_first_step_ms"
+  },
+  {
+   "key": "tg.resume.weft.compared",
+   "label": "WeftFS compared resumed steps (step scenario)",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "list": "kills",
+   "where": {
+    "scenario": "step",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "compared_steps"
+  },
+  {
+   "key": "tg.resume.dcp.control_ms",
+   "label": "DCP 48-step control wall",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-resume-dcp-20261114T115016Z.json",
+   "list": "control",
+   "where": {
+    "mode": "control",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "wall_ms"
+  },
+  {
+   "key": "tg.resume.dcp.ckpt_write_ms",
+   "label": "DCP first checkpoint write",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-resume-dcp-20261114T115016Z.json",
+   "list": "control",
+   "where": {
+    "mode": "control",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "checkpoint_write_ms.0"
+  },
+  {
+   "key": "tg.resume.dcp.kill_to_step_ms",
+   "label": "DCP kill to first resumed step",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-resume-dcp-20261114T115016Z.json",
+   "list": "kills",
+   "where": {
+    "scenario": "step",
+    "rep": 0
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T115016Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+   "select_path": "kill_to_first_step_ms"
+  },
+  {
+   "key": "tg.mr.write_ms",
+   "label": "4-rank checkpoint write (one commit)",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+   "path": "publish.write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115405Z",
+   "revision_path": "revision.weftfs",
+   "revision": "f776d11f47b394f124b5f16e39c6ab2bb8575506"
+  },
+  {
+   "key": "tg.mr.shard_objects",
+   "label": "Shard objects in the 4-rank checkpoint",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+   "path": "publish.shard_objects",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115405Z",
+   "revision_path": "revision.weftfs",
+   "revision": "f776d11f47b394f124b5f16e39c6ab2bb8575506"
+  },
+  {
+   "key": "tg.mr.amp2",
+   "label": "Rank load physical amplification, 4 to 2",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+   "path": "load.by_topology.2.read_amplification",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115405Z",
+   "revision_path": "revision.weftfs",
+   "revision": "f776d11f47b394f124b5f16e39c6ab2bb8575506"
+  },
+  {
+   "key": "tg.mr.repr2",
+   "label": "Rank load representation amplification, 4 to 2",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+   "path": "load.by_topology.2.representation_amplification",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115405Z",
+   "revision_path": "revision.weftfs",
+   "revision": "f776d11f47b394f124b5f16e39c6ab2bb8575506"
+  },
+  {
+   "key": "tg.mr.amp8",
+   "label": "Rank load physical amplification, 4 to 8",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+   "path": "load.by_topology.8.read_amplification",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115405Z",
+   "revision_path": "revision.weftfs",
+   "revision": "f776d11f47b394f124b5f16e39c6ab2bb8575506"
+  },
+  {
+   "key": "tg.mr.repr8",
+   "label": "Rank load representation amplification, 4 to 8",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/multirank-dcp-20261114T115405Z.json",
+   "path": "load.by_topology.8.representation_amplification",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115405Z",
+   "revision_path": "revision.weftfs",
+   "revision": "f776d11f47b394f124b5f16e39c6ab2bb8575506"
+  },
+  {
+   "key": "tg.async.base_p50_ms",
+   "label": "No-checkpoint step p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.none.step_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.async.infl_p50",
+   "label": "Async arm step p50 inflation",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.async.step_inflation_p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.async.infl_p95",
+   "label": "Async arm step p95 inflation",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.async.step_inflation_p95",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.async.outstanding",
+   "label": "Async arm sampled maximum outstanding saves",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.async.max_outstanding_sampled",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.async.drain_ms",
+   "label": "Async arm drain time",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.async.drain_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.queue.infl_p50",
+   "label": "Bounded-queue arm step p50 inflation",
+   "unit": "x",
+   "group": "training-gates",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.queue.step_inflation_p50",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.queue.water",
+   "label": "Bounded-queue high water",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.queue.queue.queue_high_water",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.queue.waits",
+   "label": "Bounded-queue admission waits",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.queue.queue.admission_waits",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.queue.wait_max_ms",
+   "label": "Bounded-queue longest admission wait",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.queue.queue.admission_wait_ms_max",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.queue.drain_ms",
+   "label": "Bounded-queue drain time",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "path": "arms.queue.drain_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T114340Z",
+   "revision_path": "revision.weftfs",
+   "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8"
+  },
+  {
+   "key": "tg.useful.partial_tensors",
+   "label": "Layer-scoped restore tensor count",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.partial_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.full_tensors",
+   "label": "Complete restore tensor count",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.full_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.partial_bytes",
+   "label": "Layer-scoped restore bytes read",
+   "unit": "B",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.partial_bytes_read",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.full_bytes",
+   "label": "Complete restore bytes read",
+   "unit": "B",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.full_bytes_read",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.partial_restore_ms",
+   "label": "Layer-scoped restore time",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.partial_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.full_restore_ms",
+   "label": "Complete restore time",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.full_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.partial_ttf_ms",
+   "label": "Layer-scoped time to first useful step",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.partial_time_to_first_useful_step_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.full_ttf_ms",
+   "label": "Complete-restore time to the same useful step",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.full_time_to_first_useful_step_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.partial_step_ms",
+   "label": "Layer-scoped step time",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.partial_step_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.useful.full_step_ms",
+   "label": "Step time after a complete restore",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "path": "summary.full_step_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115500Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.receipts.dcp.bytes",
+   "label": "DCP materialization receipt size",
+   "unit": "B",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+   "list": "cells",
+   "where": {
+    "adapter": "dcp"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T114039Z",
+   "revision_path": "revision.weftfs",
+   "revision": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+   "select_path": "receipt_bytes"
+  },
+  {
+   "key": "tg.receipts.dcp.entries",
+   "label": "DCP adapter entries bound",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+   "list": "cells",
+   "where": {
+    "adapter": "dcp"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T114039Z",
+   "revision_path": "revision.weftfs",
+   "revision": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+   "select_path": "entries_bound"
+  },
+  {
+   "key": "tg.receipts.dcp.objects",
+   "label": "DCP source objects in the receipt",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+   "list": "cells",
+   "where": {
+    "adapter": "dcp"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T114039Z",
+   "revision_path": "revision.weftfs",
+   "revision": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+   "select_path": "source_objects"
+  },
+  {
+   "key": "tg.receipts.orbax.bytes",
+   "label": "Orbax materialization receipt size",
+   "unit": "B",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+   "list": "cells",
+   "where": {
+    "adapter": "orbax"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T114039Z",
+   "revision_path": "revision.weftfs",
+   "revision": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+   "select_path": "receipt_bytes"
+  },
+  {
+   "key": "tg.receipts.orbax.entries",
+   "label": "Orbax adapter entries bound",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+   "list": "cells",
+   "where": {
+    "adapter": "orbax"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T114039Z",
+   "revision_path": "revision.weftfs",
+   "revision": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+   "select_path": "entries_bound"
+  },
+  {
+   "key": "tg.receipts.orbax.objects",
+   "label": "Orbax source objects in the receipt",
+   "unit": "",
+   "group": "training-gates",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-receipts-20261114T114039Z.json",
+   "list": "cells",
+   "where": {
+    "adapter": "orbax"
+   },
+   "stamp_path": "stamp",
+   "stamp": "20261114T114039Z",
+   "revision_path": "revision.weftfs",
+   "revision": "6f2d9aaf0c804c5ff4773d75d7d095cf091ad979",
+   "select_path": "source_objects"
+  },
+  {
+   "key": "tg.base.weft_session_p50",
+   "label": "WeftFS session save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+   "path": "cells.weft-session.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115846Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.weft_fast_p50",
+   "label": "WeftFS fast-policy save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+   "path": "cells.weft-fast.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115846Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.ocdbt_p50",
+   "label": "Orbax OCDBT save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+   "path": "cells.orbax-ocdbt.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115846Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.dcp_p50",
+   "label": "Native DCP FileSystemWriter save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+   "path": "cells.dcp-fs.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115846Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.store_write_p50",
+   "label": "WeftFS session store-side write p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+   "path": "cells.weft-session.store_write_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115846Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.staging_p50",
+   "label": "WeftFS session staging plus prepare round trip p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115846Z.json",
+   "path": "cells.weft-session.staging_plus_transport_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115846Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.repeat.weft_fast_p50",
+   "label": "Repeat run WeftFS fast-policy save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115820Z.json",
+   "path": "cells.weft-fast.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115820Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.repeat.ocdbt_p50",
+   "label": "Repeat run OCDBT save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115820Z.json",
+   "path": "cells.orbax-ocdbt.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115820Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "tg.base.repeat.dcp_p50",
+   "label": "Repeat run native DCP save p50",
+   "unit": "ms",
+   "group": "training-gates",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/dcp-orbax-baselines-20261114T115820Z.json",
+   "path": "cells.dcp-fs.save_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T115820Z",
+   "revision_path": "revision.weftfs",
+   "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
   }
  ],
  "blocks": [
@@ -23596,6 +24402,95 @@
     },
     {
      "template": "**T029.** The Rust suite runs **{{mwt029.rust_tests}}** tests; the shell driver uses **{{mwt029.creates}}** create processes, **{{mwt029.renames}}** rename processes, **{{mwt029.overwrites}}** overwrite processes and **{{mwt029.links}}** link/unlink processes. The same-inode truncating-open control fails **{{mwt029.mw1_trunc_failures}}** time(s) under MW1 and **{{mwt029.mw2_trunc_failures}}** time(s) under MW2, which is why it is recorded as a kernel limitation rather than a transaction loss."
+    }
+   ]
+  },
+  {
+   "id": "tg-rank",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Physical read amplification for the rank-directed restore is **{{tg.rank.amp1}}\u00d7** at 1-way and **{{tg.rank.amp8}}\u00d7** at 8-way on the stored axis; representation amplification at 8-way is **{{tg.rank.repr8}}\u00d7** across {{tg.rank.tensors}} tensors ({{tg.rank.exact}} exact)."
+    },
+    {
+     "template": "A target split on axis 1 while the checkpoint is stored on axis 0 costs **{{tg.rank.cross_amp}}\u00d7** physical and **{{tg.rank.cross_repr}}\u00d7** representation."
+    }
+   ]
+  },
+  {
+   "id": "tg-resume",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "WeftFS: 48-step control **{{tg.resume.weft.control_ms}} ms**, first checkpoint write **{{tg.resume.weft.ckpt_write_ms}} ms**, kill to first resumed step **{{tg.resume.weft.kill_to_step_ms}} ms**; **{{tg.resume.weft.compared}}** resumed steps compared exactly."
+    },
+    {
+     "template": "DCP: control **{{tg.resume.dcp.control_ms}} ms**, first checkpoint write **{{tg.resume.dcp.ckpt_write_ms}} ms**, kill to first resumed step **{{tg.resume.dcp.kill_to_step_ms}} ms**."
+    }
+   ]
+  },
+  {
+   "id": "tg-multirank",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "4-rank publish: one checkpoint write **{{tg.mr.write_ms}} ms**, **{{tg.mr.shard_objects}}** shard objects; load amplification **{{tg.mr.amp2}}\u00d7** physical / **{{tg.mr.repr2}}\u00d7** representation at 2-way and **{{tg.mr.amp8}}\u00d7** / **{{tg.mr.repr8}}\u00d7** at 8-way."
+    }
+   ]
+  },
+  {
+   "id": "tg-async",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "No-checkpoint step p50 **{{tg.async.base_p50_ms}} ms**. Async worker: step p50 **\u00d7{{tg.async.infl_p50}}**, p95 **\u00d7{{tg.async.infl_p95}}**, maximum outstanding **{{tg.async.outstanding}}**, drain **{{tg.async.drain_ms}} ms**."
+    },
+    {
+     "template": "Bounded queue: step p50 **\u00d7{{tg.queue.infl_p50}}**, high water **{{tg.queue.water}}**, **{{tg.queue.waits}}** admission waits (longest **{{tg.queue.wait_max_ms}} ms**), drain **{{tg.queue.drain_ms}} ms**."
+    }
+   ]
+  },
+  {
+   "id": "tg-useful",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Layer-scoped restore: **{{tg.useful.partial_tensors}}** of **{{tg.useful.full_tensors}}** tensors, **{{tg.useful.partial_bytes}} B** versus **{{tg.useful.full_bytes}} B**, restore **{{tg.useful.partial_restore_ms}} ms** versus **{{tg.useful.full_restore_ms}} ms**, time to first useful step **{{tg.useful.partial_ttf_ms}} ms** versus **{{tg.useful.full_ttf_ms}} ms**; the scoped step itself is **{{tg.useful.partial_step_ms}} ms** versus **{{tg.useful.full_step_ms}} ms**."
+    }
+   ]
+  },
+  {
+   "id": "tg-receipts",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "DCP materialization receipt: **{{tg.receipts.dcp.bytes}} B**, **{{tg.receipts.dcp.entries}}** entries bound, **{{tg.receipts.dcp.objects}}** source objects; Orbax: **{{tg.receipts.orbax.bytes}} B**, **{{tg.receipts.orbax.entries}}** entries, **{{tg.receipts.orbax.objects}}** source objects."
+    }
+   ]
+  },
+  {
+   "id": "tg-baselines",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Save p50: WeftFS session **{{tg.base.weft_session_p50}} ms**, WeftFS fast **{{tg.base.weft_fast_p50}} ms**, OCDBT **{{tg.base.ocdbt_p50}} ms**, native DCP **{{tg.base.dcp_p50}} ms**. Within the WeftFS session, the store write is **{{tg.base.store_write_p50}} ms** and staging plus one prepare round trip is **{{tg.base.staging_p50}} ms**."
+    }
+   ]
+  },
+  {
+   "id": "tg-baselines-repeat",
+   "file": "bench/RESULTS-training-gates.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Repeat run: WeftFS fast **{{tg.base.repeat.weft_fast_p50}} ms**, OCDBT **{{tg.base.repeat.ocdbt_p50}} ms**, native DCP **{{tg.base.repeat.dcp_p50}} ms**."
     }
    ]
   }
