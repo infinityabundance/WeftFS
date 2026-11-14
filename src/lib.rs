@@ -57,6 +57,7 @@ pub mod load_attestation;
 pub mod load_receipt;
 pub mod lock_probe;
 pub mod mw2;
+pub mod mw3;
 pub mod object_cache;
 pub mod packs;
 pub mod parallel;
@@ -115,6 +116,7 @@ pub use load_receipt::{
     LOAD_SET_DOMAIN,
 };
 pub use lock_probe::{LockProbeReport, SectionSummary, TensorLockRow, ThreadProbeRow};
+pub use mw3::{view_root, DomainEntry, DomainIndex, DomainKind, DomainRecord, ReadView, ViewPair};
 pub use object_cache::{CacheKey, CacheScore, ObjectCacheOptions, ObjectCacheStats};
 pub use packs::{PackOptions, PackReclaim, PackStats, PackedBlobPlane};
 pub use parallel::{

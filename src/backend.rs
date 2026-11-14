@@ -101,6 +101,14 @@ pub enum KeyKind {
     Tx,
     /// `writers`: the MW2 writer-mode policy record. Commit plane.
     Writers,
+    /// `domains/<id>/superblock`: an MW3 per-domain two-slot head. Commit plane.
+    DomainSuperblock,
+    /// `domains/<id>/commits/<g>.commit`: an MW3 per-domain commit. Commit plane.
+    DomainCommit,
+    /// `domains.root`: the MW3 discovery record. Commit plane.
+    DomainIndex,
+    /// `domains/<id>/link`: an MW3 split/supersede link record (specified).
+    DomainLink,
 }
 
 impl KeyKind {
@@ -127,6 +135,10 @@ impl KeyKind {
             KeyKind::PackCatalogRoot => "pack-catalog-root",
             KeyKind::Tx => "tx",
             KeyKind::Writers => "writers",
+            KeyKind::DomainSuperblock => "domain-superblock",
+            KeyKind::DomainCommit => "domain-commit",
+            KeyKind::DomainIndex => "domain-index",
+            KeyKind::DomainLink => "domain-link",
         }
     }
 }
@@ -184,6 +196,21 @@ pub enum Key {
     },
     /// The MW2 writer-mode policy record (subphase R4).
     Writers,
+    /// An MW3 per-domain two-slot head image (`domains/<id>/superblock`).
+    DomainSuperblock {
+        domain: Hash32,
+    },
+    /// An MW3 per-domain commit record (`domains/<id>/commits/<g>.commit`).
+    DomainCommit {
+        domain: Hash32,
+        generation: u64,
+    },
+    /// The MW3 discovery record (`domains.root`).
+    DomainIndex,
+    /// An MW3 domain link record (`domains/<id>/link`).
+    DomainLink {
+        domain: Hash32,
+    },
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -275,6 +302,26 @@ impl Key {
         Key::Writers
     }
 
+    /// The MW3 per-domain head image.
+    pub fn domain_superblock(domain: Hash32) -> Key {
+        Key::DomainSuperblock { domain }
+    }
+
+    /// One MW3 per-domain commit record.
+    pub fn domain_commit(domain: Hash32, generation: u64) -> Key {
+        Key::DomainCommit { domain, generation }
+    }
+
+    /// The MW3 discovery record.
+    pub fn domain_index() -> Key {
+        Key::DomainIndex
+    }
+
+    /// One MW3 domain link record.
+    pub fn domain_link(domain: Hash32) -> Key {
+        Key::DomainLink { domain }
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -300,6 +347,10 @@ impl Key {
             Key::PackCatalogRoot => KeyKind::PackCatalogRoot,
             Key::Tx { .. } => KeyKind::Tx,
             Key::Writers => KeyKind::Writers,
+            Key::DomainSuperblock { .. } => KeyKind::DomainSuperblock,
+            Key::DomainCommit { .. } => KeyKind::DomainCommit,
+            Key::DomainIndex => KeyKind::DomainIndex,
+            Key::DomainLink { .. } => KeyKind::DomainLink,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -318,6 +369,10 @@ impl Key {
             | Key::Pack { hash }
             | Key::PackCatalog { hash } => Some(hash.to_hex()[0..2].to_owned()),
             Key::Index { commit } => Some(commit.to_hex()[0..2].to_owned()),
+            Key::DomainSuperblock { domain } | Key::DomainLink { domain } => {
+                Some(domain.to_hex()[0..2].to_owned())
+            }
+            Key::DomainCommit { domain, .. } => Some(domain.to_hex()[0..2].to_owned()),
             _ => None,
         }
     }
@@ -377,6 +432,14 @@ impl Key {
             Key::PackCatalogRoot => "pack-catalog.root".to_owned(),
             Key::Tx { id } => format!("txs/{id}"),
             Key::Writers => "writers".to_owned(),
+            Key::DomainSuperblock { domain } => {
+                format!("domains/{}/superblock", domain.to_hex())
+            }
+            Key::DomainCommit { domain, generation } => {
+                format!("domains/{}/commits/{generation}.commit", domain.to_hex())
+            }
+            Key::DomainIndex => "domains.root".to_owned(),
+            Key::DomainLink { domain } => format!("domains/{}/link", domain.to_hex()),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -1216,6 +1279,23 @@ pub trait StorageBackend: Send {
         Ok(())
     }
 
+    /// MW3: enter the publication critical section of **one domain**.
+    ///
+    /// A per-domain lock is what makes disjoint domains publish concurrently;
+    /// the global `begin_publication` would serialise every domain through one
+    /// lock and remove the scaling the split exists to provide. Planes whose
+    /// conditional write is native have nothing to do.
+    fn begin_domain_publication(&mut self, domain: &Hash32) -> Result<()> {
+        let _ = domain;
+        self.begin_publication()
+    }
+
+    /// MW3: leave one domain's publication critical section.
+    fn end_domain_publication(&mut self, domain: &Hash32) -> Result<()> {
+        let _ = domain;
+        self.end_publication()
+    }
+
     /// Prove this handle may still publish, renewing a provider lease when one
     /// is due, and fail closed when it may not.
     ///
@@ -1544,6 +1624,104 @@ pub trait StorageBackend: Send {
         self.write_at(&Key::superblock(), offset, slot_bytes)
     }
 
+    /// MW3: whether this plane implements per-domain heads.
+    ///
+    /// Only the planes whose key space can carry `domains/<id>/superblock` and
+    /// `domains/<id>/commits/<g>.commit` answer `true`. A plane that does not
+    /// is refused `UnsupportedVersion` for `--writer-mode sharded`; it is never
+    /// downgraded to the global head.
+    fn supports_domain_heads(&self) -> bool {
+        false
+    }
+
+    /// MW3: the published head of one domain, or `None` when the domain head
+    /// image is missing or all-zero.
+    fn load_domain_head(&self, domain: &Hash32) -> Result<Option<(u64, Hash32)>> {
+        let key = Key::domain_superblock(*domain);
+        let image = match self.read_all(&key) {
+            Ok(image) => image,
+            Err(err) if err.class() == crate::error::Class::NotFound => return Ok(None),
+            Err(err) => return Err(err),
+        };
+        if image.len() != crate::format::SUPERBLOCK_BYTES {
+            return Err(Error::corrupt(format!(
+                "domain head {} is {} bytes, expected {}",
+                key.display_path(),
+                image.len(),
+                crate::format::SUPERBLOCK_BYTES
+            )));
+        }
+        Ok(crate::format::decode_superblock(&image)?
+            .into_iter()
+            .flatten()
+            .max_by_key(|slot| slot.generation)
+            .map(|slot| (slot.generation, slot.commit)))
+    }
+
+    /// MW3: publish one domain head iff the plane still reports `expected`.
+    ///
+    /// The read-check-write is the same primitive MW2 uses for the store head,
+    /// under the per-domain key. A POSIX plane must hold `begin_publication` so
+    /// the read-check-write is atomic across processes.
+    fn publish_domain_head_conditional(
+        &mut self,
+        domain: &Hash32,
+        expected: HeadExpectation,
+        generation: u64,
+        commit: Hash32,
+        timestamp_ns: i64,
+        slot_bytes: &[u8],
+    ) -> Result<()> {
+        let _ = timestamp_ns;
+        let key = Key::domain_superblock(*domain);
+        let image = self.read_all(&key)?;
+        let current = crate::format::decode_superblock(&image)?
+            .into_iter()
+            .flatten()
+            .max_by_key(|slot| slot.generation);
+        let matches = match (&current, expected.is_none()) {
+            (None, true) => true,
+            (Some(slot), false) => {
+                slot.generation == expected.generation && slot.commit == expected.commit
+            }
+            _ => false,
+        };
+        if !matches {
+            return Err(Error::busy(format!(
+                "domain {} head publication refused: expected generation {} commit {}, observed {}",
+                domain.to_hex(),
+                expected.generation,
+                expected.commit.to_hex(),
+                current
+                    .as_ref()
+                    .map(|slot| format!("generation {}", slot.generation))
+                    .unwrap_or_else(|| "no head".to_owned())
+            )));
+        }
+        let offset = (generation % 2) * crate::format::SLOT_BYTES as u64;
+        self.write_at(&key, offset, slot_bytes)
+    }
+
+    /// MW3: create a domain's head image if it is absent.
+    fn ensure_domain_layout(&mut self, domain: &Hash32) -> Result<()> {
+        let key = Key::domain_superblock(*domain);
+        match self.exists(&key) {
+            Ok(true) => Ok(()),
+            Ok(false) => match self.create_zeroed(&key, crate::format::SUPERBLOCK_BYTES as u64) {
+                Ok(()) => Ok(()),
+                // A concurrent open created it first; that is success.
+                Err(err) if err.class() == crate::error::Class::Exists => Ok(()),
+                Err(err) => Err(err),
+            },
+            Err(err) => Err(err),
+        }
+    }
+
+    /// MW3: the commit generations present for one domain.
+    fn list_domain_commits(&self, _domain: &Hash32) -> Result<Vec<u64>> {
+        Ok(Vec::new())
+    }
+
     /// Per-plane capabilities when this backend is a split over two planes.
     fn plane_capabilities(&self) -> Option<crate::planes::PlaneCapabilities> {
         None
@@ -1731,6 +1909,21 @@ impl LocalBackend {
             Key::PackCatalogRoot => self.root.join("pack-catalog.root"),
             Key::Tx { id } => self.root.join("txs").join(id),
             Key::Writers => self.root.join("writers"),
+            Key::DomainSuperblock { domain } => self
+                .root
+                .join("domains")
+                .join(domain.to_hex())
+                .join("superblock"),
+            Key::DomainCommit { domain, generation } => self
+                .root
+                .join("domains")
+                .join(domain.to_hex())
+                .join("commits")
+                .join(format!("{generation}.commit")),
+            Key::DomainIndex => self.root.join("domains.root"),
+            Key::DomainLink { domain } => {
+                self.root.join("domains").join(domain.to_hex()).join("link")
+            }
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -1753,6 +1946,10 @@ impl LocalBackend {
             KeyKind::PackCatalogRoot => Some(self.root.clone()),
             KeyKind::Tx => Some(self.root.join("txs")),
             KeyKind::Writers => Some(self.root.clone()),
+            KeyKind::DomainSuperblock => Some(self.root.join("domains")),
+            KeyKind::DomainCommit => Some(self.root.join("domains")),
+            KeyKind::DomainIndex => Some(self.root.clone()),
+            KeyKind::DomainLink => Some(self.root.join("domains")),
             _ => None,
         }
     }
@@ -2263,6 +2460,47 @@ impl StorageBackend for LocalBackend {
         Ok(out)
     }
 
+    fn supports_domain_heads(&self) -> bool {
+        true
+    }
+
+    fn list_domain_commits(&self, domain: &Hash32) -> Result<Vec<u64>> {
+        let dir = self
+            .root
+            .join("domains")
+            .join(domain.to_hex())
+            .join("commits");
+        let entries = match fs::read_dir(&dir) {
+            Ok(entries) => entries,
+            Err(err) if err.kind() == ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(err) => return Err(Error::io(format!("cannot read {}: {err}", dir.display()))),
+        };
+        let mut out = Vec::new();
+        for entry in entries {
+            let entry = entry.map_err(|err| Error::io(format!("cannot read dir entry: {err}")))?;
+            if !entry
+                .file_type()
+                .map_err(|err| Error::io(format!("cannot stat dir entry: {err}")))?
+                .is_file()
+            {
+                continue;
+            }
+            let name = entry.file_name();
+            let Some(name) = name.to_str() else { continue };
+            let Some(stem) = name.strip_suffix(".commit") else {
+                continue;
+            };
+            if stem.is_empty() || !stem.bytes().all(|byte| byte.is_ascii_digit()) {
+                continue;
+            }
+            if let Ok(generation) = stem.parse::<u64>() {
+                out.push(generation);
+            }
+        }
+        out.sort_unstable();
+        Ok(out)
+    }
+
     fn sync(&mut self, key: &Key) -> Result<()> {
         let path = self.path(key);
         let file = File::open(&path)
@@ -2343,6 +2581,19 @@ impl StorageBackend for LocalBackend {
             ));
         }
         let lock = WriterLock::acquire_creating(&self.root.join("LOCK.publish"))?;
+        self.publish_lock = Some(lock);
+        Ok(())
+    }
+
+    fn begin_domain_publication(&mut self, domain: &Hash32) -> Result<()> {
+        if self.publish_lock.is_some() {
+            return Err(Error::invalid_argument(
+                "publication critical section is already open on this backend",
+            ));
+        }
+        let dir = self.root.join("domains").join(domain.to_hex());
+        make_dir(&dir)?;
+        let lock = WriterLock::acquire_creating(&dir.join("LOCK.publish"))?;
         self.publish_lock = Some(lock);
         Ok(())
     }
@@ -2517,6 +2768,12 @@ impl ObjectBackend {
             Key::Tmp { name } => TMP_PREFIX.to_owned() + name,
             Key::Pack { hash } => format!("p-{}", hash.to_hex()),
             Key::PackCatalog { hash } => format!("pc-{}", hash.to_hex()),
+            Key::DomainSuperblock { domain } => format!("ds-{}", domain.to_hex()),
+            Key::DomainCommit { domain, generation } => {
+                format!("dc-{}-{generation}.commit", domain.to_hex())
+            }
+            Key::DomainIndex => "domains.root".to_owned(),
+            Key::DomainLink { domain } => format!("dl-{}", domain.to_hex()),
             Key::PackCatalogRoot | Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
     }

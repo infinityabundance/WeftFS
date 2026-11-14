@@ -834,6 +834,10 @@ pub struct Store {
     /// handle may publish immutable content-addressed blobs but still cannot
     /// publish control state, because `require_writable` checks `mode`.
     blob_worker: bool,
+    /// MW3: the domain this handle publishes to and reads from. `None` for an
+    /// MW1/MW2 handle (the global head). Set only by
+    /// [`Store::open_domain_with_options_and_backend`].
+    domain: Option<Hash32>,
     state: State,
     head: Hash32,
     generation: u64,
@@ -947,6 +951,82 @@ pub struct Store {
     buffered_blob_reads: AtomicU64,
     /// Durable-artifact counters for [`Store::publication_ledger`].
     publication: PublicationCounters,
+    /// T021: bounded cache of parsed intervening commit records, keyed by
+    /// generation. Commits are immutable, so a cache hit cannot be stale; the
+    /// replay still verifies the parent link and falls back to a full reload on
+    /// any mismatch. This is what stops a lost race from re-reading the same
+    /// gap commits on every attempt.
+    commit_delta_cache: Mutex<CommitDeltaCache>,
+    /// T021: consecutive-retry and gap-read statistics for one handle.
+    rebase_stats: Mutex<RebaseStats>,
+}
+
+/// One parsed commit kept for a bounded rebase cache.
+#[derive(Clone)]
+struct CachedCommit {
+    commit: crate::format::Commit,
+    hash: Hash32,
+    wcb_len: u64,
+    ops_bytes: usize,
+}
+
+/// A bounded cache of intervening commit records.
+struct CommitDeltaCache {
+    entries: std::collections::BTreeMap<u64, CachedCommit>,
+    bytes: usize,
+    max_entries: usize,
+    max_bytes: usize,
+}
+
+impl CommitDeltaCache {
+    fn new(max_entries: usize, max_bytes: usize) -> Self {
+        CommitDeltaCache {
+            entries: std::collections::BTreeMap::new(),
+            bytes: 0,
+            max_entries,
+            max_bytes,
+        }
+    }
+
+    fn get(&self, generation: u64) -> Option<&CachedCommit> {
+        self.entries.get(&generation)
+    }
+
+    fn insert(&mut self, generation: u64, value: CachedCommit) {
+        if let Some(previous) = self.entries.insert(generation, value) {
+            self.bytes = self.bytes.saturating_sub(previous.ops_bytes);
+        }
+        if let Some(entry) = self.entries.get(&generation) {
+            self.bytes = self.bytes.saturating_add(entry.ops_bytes);
+        }
+        // Evict whole entries while over a bound. Commits are immutable, so the
+        // eviction order only affects the hit rate, never correctness.
+        while self.entries.len() > self.max_entries || self.bytes > self.max_bytes {
+            let Some((&oldest, _)) = self.entries.iter().next() else {
+                break;
+            };
+            if let Some(removed) = self.entries.remove(&oldest) {
+                self.bytes = self.bytes.saturating_sub(removed.ops_bytes);
+            }
+        }
+    }
+}
+
+/// Retry/gap statistics for one MW2 handle.
+#[derive(Clone, Debug, Default)]
+pub struct RebaseStats {
+    /// Commits the handle read from the backend after losing a race.
+    pub gap_commits_read: u64,
+    /// Gap commits that were served from the bounded cache instead.
+    pub gap_commits_cached: u64,
+    /// Gap commits whose changed keys intersected the transaction's touched set.
+    pub touched_intersections: u64,
+    /// Largest number of consecutive lost publication attempts by one transaction.
+    pub max_consecutive_retries: u64,
+    /// Publication attempts across every transaction this handle executed.
+    pub total_attempts: u64,
+    /// Transactions executed through the optimistic loop.
+    pub transactions: u64,
 }
 
 /// Per-tensor attribution guard used by the restore pipeline when the
@@ -1150,6 +1230,7 @@ impl Store {
             backend: Mutex::new(backend),
             backend_kind,
             blob_worker: false,
+            domain: None,
             state: State::default(),
             head: Hash32::ZERO,
             generation: 0,
@@ -1188,6 +1269,8 @@ impl Store {
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
             buffered_blob_reads: AtomicU64::new(0),
             publication: PublicationCounters::default(),
+            commit_delta_cache: Mutex::new(CommitDeltaCache::new(4096, 32 * 1024 * 1024)),
+            rebase_stats: Mutex::new(RebaseStats::default()),
         };
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
@@ -1265,6 +1348,19 @@ impl Store {
                 backend.label()
             )));
         }
+        // MW3 needs a per-domain head key. A plane that cannot address
+        // `domains/<id>/superblock` is refused, never downgraded to the global
+        // head.
+        if writer_mode == crate::mw2::WriterMode::Sharded
+            && !backend.supports_domain_heads()
+            && !matches!(backend.label(), "object")
+        {
+            return Err(Error::unsupported_version(format!(
+                "sharded (MW3) publication is implemented for the local commit plane in this \
+                 prototype; this backend is `{}`",
+                backend.label()
+            )));
+        }
         let format_bytes = backend.read_all(&Key::format()).map_err(|err| {
             // A transport or authorization failure is not corruption. Keep the
             // I/O class so an operator (and the distributed court) can
@@ -1287,15 +1383,34 @@ impl Store {
             )));
         }
         if mode == OpenMode::ReadWrite {
-            if writer_mode == crate::mw2::WriterMode::Optimistic {
-                // MW2: no exclusive writer. The publication lock is taken for
-                // the short publication critical section only.
+            if writer_mode != crate::mw2::WriterMode::Single {
+                // MW2/MW3: no exclusive writer. The publication lock is taken
+                // for the short publication critical section only.
                 backend.ensure_layout()?;
                 backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
             } else {
                 backend.acquire_writer_lock()?;
                 backend.ensure_layout()?;
                 backend.clean_stale_tmp(DEFAULT_GC_GRACE_SECS)?;
+            }
+        }
+        // A plane may implement `supports_domain_heads` without the full key
+        // set (the object plane's flat naming). The prototype refuses it above
+        // rather than claim a head it cannot list.
+        //
+        // A read-only open must not silently observe an empty namespace when a
+        // store is partitioned into MW3 domains: the global head is undefined
+        // there. Refuse with a typed error instead. A writable single/optimistic
+        // open is already refused by `ensure_writer_policy`.
+        if mode == OpenMode::ReadOnly && writer_mode != crate::mw2::WriterMode::Sharded {
+            if let Ok(Some(stored)) = crate::mw2::WriterMode::policy(&*backend) {
+                if stored == crate::mw2::WriterMode::Sharded {
+                    return Err(Error::unsupported_version(
+                        "this store is partitioned into MW3 conflict domains and has no global \
+                         head; name a domain with --domain (an MW1 reader refuses rather than \
+                         report an empty namespace)",
+                    ));
+                }
             }
         }
         // A read-only open never writes, so it never probes. A writable open
@@ -1352,6 +1467,7 @@ impl Store {
             backend: Mutex::new(backend),
             backend_kind,
             blob_worker: false,
+            domain: None,
             state: recovery.state,
             head: recovery.head,
             generation: recovery.generation,
@@ -1390,6 +1506,8 @@ impl Store {
             buffered_blob_kinds: std::sync::atomic::AtomicU8::new(0),
             buffered_blob_reads: AtomicU64::new(0),
             publication: PublicationCounters::default(),
+            commit_delta_cache: Mutex::new(CommitDeltaCache::new(4096, 32 * 1024 * 1024)),
+            rebase_stats: Mutex::new(RebaseStats::default()),
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
@@ -1442,6 +1560,380 @@ impl Store {
         store.options = options;
         store.apply_read_layer_options();
         Ok(store)
+    }
+
+    // ---- MW3 conflict domains -------------------------------------------
+
+    /// Open a handle bound to one MW3 conflict domain.
+    ///
+    /// `options.writer_mode` **must** be [`crate::mw2::WriterMode::Sharded`];
+    /// nothing is silently enabled. The handle reads and publishes the domain's
+    /// own two-slot head and per-domain commit chain while sharing the global
+    /// content-addressed blob namespace.
+    ///
+    /// The domain's index attestation is disabled in this prototype
+    /// (`options.attest_indexes` is forced off), so its commits are
+    /// `weftfs.commit.v1` records. This is stated in
+    /// `spec/WEFT-MULTIWRITER.md` §15.10 and is not a silent downgrade: the
+    /// handle records the reason in its diagnostics.
+    pub fn open_domain_with_options_and_backend(
+        path: impl AsRef<Path>,
+        mode: OpenMode,
+        mut options: Options,
+        backend_kind: BackendKind,
+        domain: Hash32,
+    ) -> Result<Store> {
+        if options.writer_mode != crate::mw2::WriterMode::Sharded {
+            return Err(Error::invalid_argument(
+                "a domain handle requires --writer-mode sharded; nothing is enabled silently",
+            ));
+        }
+        validate_options(&options)?;
+        let mut store = Self::open_impl_mode(
+            path,
+            mode,
+            false,
+            backend_kind,
+            crate::mw2::WriterMode::Sharded,
+        )?;
+        if mode == OpenMode::ReadOnly {
+            let stored = store.with_backend(|backend| crate::mw2::WriterMode::policy(backend))?;
+            match stored {
+                Some(crate::mw2::WriterMode::Sharded) => {}
+                other => {
+                    return Err(Error::unsupported_version(format!(
+                        "this store is `{}`, not a sharded (MW3) store; --domain is only valid \
+                         on a sharded store",
+                        other.map(|mode| mode.as_str()).unwrap_or("single")
+                    )))
+                }
+            }
+        }
+        store.domain = Some(domain);
+        options.attest_indexes = false;
+        store.options = options;
+        store.apply_read_layer_options();
+        if store.mode == OpenMode::ReadWrite {
+            store.with_backend_mut(|backend| backend.ensure_domain_layout(&domain))?;
+        }
+        store.recover_domain()?;
+        if store.mode == OpenMode::ReadWrite && store.generation == 0 {
+            return Err(Error::not_found(format!(
+                "MW3 domain {} has no genesis commit; register it with `weftfs mw3 register` \
+                 before opening a writable domain handle",
+                domain.to_hex()
+            )));
+        }
+        store.notes.push(
+            "MW3 domain handle: index attestation is disabled in this prototype; commits are \
+             weftfs.commit.v1"
+                .to_owned(),
+        );
+        Ok(store)
+    }
+
+    /// The MW3 domain this handle is bound to, or `None` for a global handle.
+    pub fn domain(&self) -> Option<Hash32> {
+        self.domain
+    }
+
+    fn head_key(&self) -> Key {
+        match self.domain {
+            Some(domain) => Key::domain_superblock(domain),
+            None => Key::superblock(),
+        }
+    }
+
+    fn commit_key(&self, generation: u64) -> Key {
+        match self.domain {
+            Some(domain) => Key::domain_commit(domain, generation),
+            None => Key::commit(generation),
+        }
+    }
+
+    /// The published head this handle publishes against.
+    fn load_head_from_plane(&self) -> Result<Option<(u64, Hash32)>> {
+        match self.domain {
+            Some(domain) => self.with_backend(|backend| backend.load_domain_head(&domain)),
+            None => self.with_backend(|backend| backend.load_published_head()),
+        }
+    }
+
+    /// T021: load one commit through the bounded intervening-change cache.
+    ///
+    /// The second element is `true` when the record came from the cache. A
+    /// cached record is immutable and still parent-checked by the caller, so a
+    /// hit cannot change correctness.
+    fn load_commit_cached(&self, generation: u64) -> Result<(recovery::LoadedCommit, bool)> {
+        {
+            let cache = self
+                .commit_delta_cache
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(cached) = cache.get(generation) {
+                return Ok((
+                    recovery::LoadedCommit {
+                        generation,
+                        hash: cached.hash,
+                        wcb_len: cached.wcb_len,
+                        commit: cached.commit.clone(),
+                    },
+                    true,
+                ));
+            }
+        }
+        let loaded = self.with_backend(|backend| {
+            recovery::load_commit_key_via(backend, &self.commit_key(generation), Some(generation))
+        })?;
+        {
+            let mut cache = self
+                .commit_delta_cache
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            cache.insert(
+                generation,
+                CachedCommit {
+                    commit: loaded.commit.clone(),
+                    hash: loaded.hash,
+                    wcb_len: loaded.wcb_len,
+                    ops_bytes: loaded.wcb_len as usize,
+                },
+            );
+        }
+        Ok((loaded, false))
+    }
+
+    /// T021: retry, gap-read, and starvation statistics for this handle.
+    pub fn rebase_stats(&self) -> RebaseStats {
+        self.rebase_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
+    }
+
+    /// Replay one domain's commit chain from the newest usable checkpoint.
+    fn recover_domain(&mut self) -> Result<()> {
+        let Some(domain) = self.domain else {
+            return Ok(());
+        };
+        let head = self.with_backend(|backend| backend.load_domain_head(&domain))?;
+        let Some((generation, head_id)) = head else {
+            self.state = State::default();
+            self.head = Hash32::ZERO;
+            self.generation = 0;
+            self.next_generation = 1;
+            self.blob_index.clear();
+            self.blob_index_ready = false;
+            return Ok(());
+        };
+        // Bounded checkpoint search: the domain checkpoint interval is a writer
+        // option, so a missing checkpoint is a longer replay, never an error.
+        const CHECKPOINT_SCAN: u64 = 256;
+        let floor = generation.saturating_sub(CHECKPOINT_SCAN).max(1);
+        let mut state = State::default();
+        let mut hash = Hash32::ZERO;
+        let mut next = 1u64;
+        for candidate in (floor..=generation).rev() {
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &self.commit_key(candidate), Some(candidate))
+            })?;
+            let Some(checkpoint) = loaded.commit.checkpoint else {
+                continue;
+            };
+            let bytes =
+                self.with_backend(|backend| backend.read_all(&Key::manifest(checkpoint)))?;
+            let value = crate::wcb_util::decode(&bytes)?;
+            let decoded = crate::format::decode_state(&value)?;
+            if decoded.generation != candidate {
+                continue;
+            }
+            state = decoded;
+            hash = loaded.hash;
+            next = candidate + 1;
+            break;
+        }
+        for candidate in next..=generation {
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &self.commit_key(candidate), Some(candidate))
+            })?;
+            let expected_parent = if hash == Hash32::ZERO {
+                None
+            } else {
+                Some(hash)
+            };
+            if loaded.commit.parent != expected_parent {
+                return Err(Error::corrupt(format!(
+                    "domain {} commit {candidate} does not name the previous commit as parent",
+                    domain.to_hex()
+                )));
+            }
+            state.apply_ops(&loaded.commit.ops)?;
+            state.generation = candidate;
+            hash = loaded.hash;
+        }
+        if hash != head_id {
+            return Err(Error::corrupt(format!(
+                "domain {} head {} does not match the replayed chain ({})",
+                domain.to_hex(),
+                head_id.to_hex(),
+                hash.to_hex()
+            )));
+        }
+        self.state = state;
+        self.head = head_id;
+        self.generation = generation;
+        self.next_generation = generation
+            .checked_add(1)
+            .ok_or_else(|| Error::limit_exceeded("generation counter overflow"))?;
+        self.blob_index.clear();
+        self.blob_index_ready = false;
+        self.load_quota_record();
+        Ok(())
+    }
+
+    /// Read the MW3 discovery record. An absent record means epoch 0 and no
+    /// registered domains; a domain head remains authoritative regardless.
+    pub fn discover_domains(&self) -> Result<crate::mw3::DomainIndex> {
+        match self.with_backend(|backend| backend.read_all(&Key::domain_index())) {
+            Ok(bytes) => crate::mw3::DomainIndex::decode(&bytes),
+            Err(err) if err.class() == Class::NotFound => Ok(crate::mw3::DomainIndex::default()),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Register an MW3 domain.
+    ///
+    /// One compare-and-swap on the discovery record, requiring the observed
+    /// epoch; the per-domain head image is created first, so a crash leaves an
+    /// unregistered head rather than a discovery entry that cannot be read.
+    /// Registering the same record twice is idempotent and does not change the
+    /// epoch.
+    pub fn register_domain(&mut self, record: crate::mw3::DomainRecord) -> Result<Hash32> {
+        self.require_writable()?;
+        if self.options.writer_mode != crate::mw2::WriterMode::Sharded {
+            return Err(Error::invalid_argument(
+                "registering an MW3 domain requires --writer-mode sharded",
+            ));
+        }
+        let entry = crate::mw3::DomainEntry::new(record)?;
+        let id = entry.id;
+        self.with_backend_mut(|backend| backend.ensure_domain_layout(&id))?;
+        // A domain starts with the same namespace-root genesis an MW1 store has,
+        // published through the ordinary commit path (no second implementation).
+        // A domain that already has a head is left alone.
+        if self
+            .with_backend(|backend| backend.load_domain_head(&id))?
+            .is_none()
+        {
+            let saved = (
+                self.domain,
+                std::mem::take(&mut self.state),
+                self.head,
+                self.generation,
+                self.next_generation,
+                self.options.attest_indexes,
+            );
+            self.domain = Some(id);
+            self.state = State::default();
+            self.head = Hash32::ZERO;
+            self.generation = 0;
+            self.next_generation = 1;
+            // Domain commits carry no index attestation in this prototype.
+            self.options.attest_indexes = false;
+            let genesis = self.write_genesis();
+            self.domain = saved.0;
+            self.state = saved.1;
+            self.head = saved.2;
+            self.generation = saved.3;
+            self.next_generation = saved.4;
+            self.options.attest_indexes = saved.5;
+            match genesis {
+                Ok(()) => {}
+                // A concurrent registration published the genesis first.
+                Err(err) if err.class() == Class::Busy => {
+                    if self
+                        .with_backend(|backend| backend.load_domain_head(&id))?
+                        .is_none()
+                    {
+                        return Err(err);
+                    }
+                }
+                Err(err) => return Err(err),
+            }
+        }
+        const MAX_ATTEMPTS: u32 = 64;
+        for _ in 0..MAX_ATTEMPTS {
+            let existing = match self.with_backend(|backend| backend.read_all(&Key::domain_index()))
+            {
+                Ok(bytes) => Some(bytes),
+                Err(err) if err.class() == Class::NotFound => None,
+                Err(err) => return Err(err),
+            };
+            let mut index = match &existing {
+                Some(bytes) => crate::mw3::DomainIndex::decode(bytes)?,
+                None => crate::mw3::DomainIndex::default(),
+            };
+            if !index.insert(entry.clone())? {
+                return Ok(id);
+            }
+            let bytes = index.encode()?;
+            let expected = existing
+                .as_ref()
+                .map(|bytes| crate::planes::control_token(bytes));
+            let result = self.with_backend_mut(|backend| {
+                backend.begin_publication()?;
+                let out =
+                    backend.compare_and_swap(&Key::domain_index(), expected.as_deref(), &bytes);
+                let _ = backend.end_publication();
+                out
+            });
+            match result {
+                Ok(()) => return Ok(id),
+                Err(err) if err.class() == Class::Busy => continue,
+                Err(err) => return Err(err),
+            }
+        }
+        Err(Error::busy(
+            "domain registration lost its discovery-record race 64 times",
+        ))
+    }
+
+    /// Capture a declared read view over the given domains.
+    ///
+    /// Each head is read **once**, in the declared order. The result is a
+    /// capture, not a global linearizable point; §15.4 states the isolation
+    /// sentence. A domain with no head is `NotFound` and names the DomainId.
+    pub fn capture_read_view(&self, domains: &[Hash32]) -> Result<crate::mw3::ReadView> {
+        let mut pairs = Vec::with_capacity(domains.len());
+        for domain in domains {
+            let head = self.with_backend(|backend| backend.load_domain_head(domain))?;
+            let Some((generation, head)) = head else {
+                return Err(Error::not_found(format!(
+                    "no such MW3 domain {} (no head image)",
+                    domain.to_hex()
+                )));
+            };
+            pairs.push(crate::mw3::ViewPair {
+                domain: *domain,
+                generation,
+                head,
+            });
+        }
+        crate::mw3::ReadView::capture(pairs)
+    }
+
+    /// Store a durable cross-domain view pin (`weft.view.pin.v1`) as a
+    /// content-addressed blob. The record states what was observed; it is not a
+    /// retention guarantee in this prototype (§15.5(a)).
+    pub fn write_view_pin(
+        &self,
+        view: &crate::mw3::ReadView,
+        principal: &str,
+        pinned_ns: i64,
+    ) -> Result<Hash32> {
+        self.require_writable()?;
+        let bytes = crate::mw3::encode_view_pin(view, principal, pinned_ns)?;
+        self.store_blob(BlobKind::Manifest, identity::MANIFEST_DOMAIN, &bytes)
     }
 
     /// Confirm or create the writer-mode policy record.
@@ -2345,7 +2837,7 @@ impl Store {
 
     /// Read and validate the commit record for `generation`.
     fn read_commit_record(&self, generation: u64) -> Option<(Vec<u8>, crate::format::Commit)> {
-        let key = Key::commit(generation);
+        let key = self.commit_key(generation);
         let bytes = self.with_backend(|backend| backend.read_all(&key)).ok()?;
         crate::format::decode_commit_file(&bytes).ok()
     }
@@ -7143,10 +7635,13 @@ impl Store {
                 "store is opened read-only; a transaction cannot publish",
             ));
         }
-        if self.options.writer_mode != crate::mw2::WriterMode::Optimistic {
+        if !matches!(
+            self.options.writer_mode,
+            crate::mw2::WriterMode::Optimistic | crate::mw2::WriterMode::Sharded
+        ) {
             return Err(Error::invalid_argument(
-                "transactions require --writer-mode optimistic; the default single-writer \
-                 store keeps its exclusive committer",
+                "transactions require --writer-mode optimistic or sharded; the default \
+                 single-writer store keeps its exclusive committer",
             ));
         }
         Ok(crate::mw2::Transaction {
@@ -7185,9 +7680,12 @@ impl Store {
     /// visible to readers.
     pub fn prepare_transaction(&mut self, tx: &crate::mw2::Transaction) -> Result<()> {
         self.require_writable()?;
-        if self.options.writer_mode != crate::mw2::WriterMode::Optimistic {
+        if !matches!(
+            self.options.writer_mode,
+            crate::mw2::WriterMode::Optimistic | crate::mw2::WriterMode::Sharded
+        ) {
             return Err(Error::invalid_argument(
-                "preparing a transaction requires --writer-mode optimistic",
+                "preparing a transaction requires --writer-mode optimistic or sharded",
             ));
         }
         self.write_tx_record(tx, crate::mw2::TxRecordState::Prepared, None)
@@ -7206,9 +7704,12 @@ impl Store {
         options: &crate::mw2::TransactionOptions,
     ) -> Result<crate::mw2::TransactionOutcome> {
         self.require_writable()?;
-        if self.options.writer_mode != crate::mw2::WriterMode::Optimistic {
+        if !matches!(
+            self.options.writer_mode,
+            crate::mw2::WriterMode::Optimistic | crate::mw2::WriterMode::Sharded
+        ) {
             return Err(Error::invalid_argument(
-                "transactions require --writer-mode optimistic",
+                "transactions require --writer-mode optimistic or sharded",
             ));
         }
         if tx.ops.is_empty() {
@@ -7267,13 +7768,53 @@ impl Store {
         self.write_tx_record(tx, crate::mw2::TxRecordState::Prepared, None)?;
         crash_point("mw2_prepared");
 
+        // Deterministic jitter seed: the transaction's own op digest. Two
+        // writers that collided once therefore do not retry in lockstep, and a
+        // receipt can reproduce the same schedule from the receipt's ids.
+        let jitter_seed = {
+            let digest = tx.digest()?;
+            let mut bytes = [0u8; 8];
+            bytes.copy_from_slice(&digest.as_bytes()[..8]);
+            u64::from_le_bytes(bytes)
+        };
+        let touched = crate::mw2::touched_keys(&tx.ops);
         let mut attempts: u32 = 0;
+        let mut max_consecutive: u32 = 0;
         loop {
             attempts = attempts.saturating_add(1);
+            max_consecutive = max_consecutive.max(attempts.saturating_sub(1));
             // Apply only the commits this handle has not seen, instead of
             // replaying the whole chain. A divergence or a damaged commit
-            // falls back to the authoritative full reload.
-            self.refresh_to_head()?;
+            // falls back to the authoritative full reload. The parsed gap is
+            // kept in a bounded cache, so a second attempt does not re-read
+            // commits it already validated.
+            let replayed = self.refresh_to_head()?;
+            if !replayed.is_empty() && !touched.is_empty() {
+                let mut intersects = false;
+                {
+                    let cache = self
+                        .commit_delta_cache
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    for generation in &replayed {
+                        if let Some(commit) = cache.get(*generation) {
+                            if !crate::mw2::changed_keys(&commit.commit.ops)
+                                .is_disjoint(&touched)
+                            {
+                                intersects = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if intersects {
+                    let mut stats = self
+                        .rebase_stats
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                    stats.touched_intersections = stats.touched_intersections.saturating_add(1);
+                }
+            }
 
             crate::mw2::validate_preconditions(&self.state, tx)?;
             for check in &tx.auth {
@@ -7314,6 +7855,7 @@ impl Store {
                     }
                     self.write_tx_record(tx, crate::mw2::TxRecordState::Committed, Some(hash))?;
                     crash_point("mw2_after_ack");
+                    self.record_rebase_outcome(attempts, max_consecutive);
                     return Ok(crate::mw2::TransactionOutcome {
                         id: tx.id.as_str().to_owned(),
                         commit: hash,
@@ -7330,6 +7872,7 @@ impl Store {
                         options.fail_after_attempts > 0 && attempts >= options.fail_after_attempts;
                     if attempts >= options.max_attempts || forced {
                         self.reload_from_plane()?;
+                        self.record_rebase_outcome(attempts, max_consecutive);
                         return Err(Error::busy(
                             format!(
                             "transaction {} exhausted its {attempts}-attempt budget; outcome is ",
@@ -7337,13 +7880,77 @@ impl Store {
                         ) + "unknown (resolve it by transaction id)",
                         ));
                     }
-                    std::thread::sleep(options.backoff(attempts));
+                    std::thread::sleep(options.backoff_with_jitter(attempts, jitter_seed));
                 }
                 Err(err) => {
                     self.reload_from_plane()?;
+                    self.record_rebase_outcome(attempts, max_consecutive);
                     return Err(err);
                 }
             }
+        }
+    }
+
+    fn record_rebase_outcome(&self, attempts: u32, max_consecutive: u32) {
+        let mut stats = self
+            .rebase_stats
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        stats.transactions = stats.transactions.saturating_add(1);
+        stats.total_attempts = stats.total_attempts.saturating_add(u64::from(attempts));
+        stats.max_consecutive_retries = stats
+            .max_consecutive_retries
+            .max(u64::from(max_consecutive));
+    }
+
+    /// Publish a transaction into an **explicitly named** domain.
+    ///
+    /// This is the entry point a grouped multi-domain request must use, and it
+    /// is where the protocol refuses: the handle is bound to exactly one domain
+    /// (`self.domain`), and a request naming a different one is `CrossDomain`.
+    /// Nothing is re-routed silently.
+    pub fn execute_transaction_in(
+        &mut self,
+        domain: Hash32,
+        tx: &crate::mw2::Transaction,
+        options: &crate::mw2::TransactionOptions,
+    ) -> Result<crate::mw2::TransactionOutcome> {
+        match self.domain {
+            Some(bound) if bound == domain => self.execute_transaction(tx, options),
+            Some(bound) => Err(Error::cross_domain(format!(
+                "transaction targets domain {} but this handle is bound to domain {}; MW3 \
+                 has no cross-domain commit",
+                domain.to_hex(),
+                bound.to_hex()
+            ))),
+            None => Err(Error::cross_domain(
+                "a global (MW1/MW2) handle cannot publish into an MW3 domain; open with \
+                 --writer-mode sharded --domain",
+            )),
+        }
+    }
+
+    /// Publish one grouped transaction across the named domains.
+    ///
+    /// **Refused for two or more domains** (`CrossDomain`): MW3 implements no
+    /// two-phase prepare/commit and no cross-domain atomicity. A single named
+    /// domain is accepted and goes through the ordinary domain path.
+    pub fn execute_transaction_across(
+        &mut self,
+        domains: &[Hash32],
+        tx: &crate::mw2::Transaction,
+        options: &crate::mw2::TransactionOptions,
+    ) -> Result<crate::mw2::TransactionOutcome> {
+        match domains {
+            [] => Err(Error::invalid_argument(
+                "a grouped transaction must name at least one MW3 domain",
+            )),
+            [domain] => self.execute_transaction_in(*domain, tx, options),
+            many => Err(Error::cross_domain(format!(
+                "a grouped transaction names {} domains; MW3 has no cross-domain atomic \
+                 publication and does not degrade to one domain",
+                many.len()
+            ))),
         }
     }
 
@@ -7476,7 +8083,11 @@ impl Store {
         let mut generation = self.generation;
         while generation >= floor {
             let loaded = self.with_backend(|backend| {
-                recovery::load_commit_key_via(backend, &Key::commit(generation), Some(generation))
+                recovery::load_commit_key_via(
+                    backend,
+                    &self.commit_key(generation),
+                    Some(generation),
+                )
             })?;
             let mut ops = loaded.commit.ops.as_slice();
             // The publisher appends the quota accounting op; it is not part of
@@ -7522,7 +8133,11 @@ impl Store {
                 return Ok(hash == commit);
             }
             let loaded = self.with_backend(|backend| {
-                recovery::load_commit_key_via(backend, &Key::commit(generation), Some(generation))
+                recovery::load_commit_key_via(
+                    backend,
+                    &self.commit_key(generation),
+                    Some(generation),
+                )
             })?;
             match loaded.commit.parent {
                 Some(parent) => hash = parent,
@@ -7543,37 +8158,52 @@ impl Store {
     /// per retry; this path is the same replay restricted to the gap. Any
     /// parent mismatch, missing commit, or op failure falls back to the
     /// authoritative full reload, so the fast path can never invent state.
-    fn refresh_to_head(&mut self) -> Result<()> {
-        let plane = self.with_backend(|backend| backend.load_published_head())?;
+    fn refresh_to_head(&mut self) -> Result<Vec<u64>> {
+        let plane = self.load_head_from_plane()?;
         let Some((generation, head)) = plane else {
-            return self.reload_from_plane();
+            self.reload_from_plane()?;
+            return Ok(Vec::new());
         };
         if generation == self.generation && head == self.head {
-            return Ok(());
+            return Ok(Vec::new());
         }
         if generation < self.generation || (generation == self.generation && head != self.head) {
-            return self.reload_from_plane();
+            self.reload_from_plane()?;
+            return Ok(Vec::new());
         }
         let mut state = self.state.clone();
         let mut hash = self.head;
+        let mut replayed = Vec::with_capacity((generation - self.generation) as usize);
+        let mut read = 0u64;
+        let mut cached = 0u64;
         for next in (self.generation + 1)..=generation {
-            let loaded = match self.with_backend(|backend| {
-                recovery::load_commit_key_via(backend, &Key::commit(next), Some(next))
-            }) {
-                Ok(loaded) => loaded,
-                Err(_) => return self.reload_from_plane(),
+            let (loaded, from_cache) = match self.load_commit_cached(next) {
+                Ok(value) => value,
+                Err(_) => {
+                    self.reload_from_plane()?;
+                    return Ok(Vec::new());
+                }
             };
+            if from_cache {
+                cached += 1;
+            } else {
+                read += 1;
+            }
             if loaded.commit.parent != Some(hash) {
-                return self.reload_from_plane();
+                self.reload_from_plane()?;
+                return Ok(Vec::new());
             }
             if state.apply_ops(&loaded.commit.ops).is_err() {
-                return self.reload_from_plane();
+                self.reload_from_plane()?;
+                return Ok(Vec::new());
             }
             state.generation = next;
             hash = loaded.hash;
+            replayed.push(next);
         }
         if hash != head {
-            return self.reload_from_plane();
+            self.reload_from_plane()?;
+            return Ok(Vec::new());
         }
         self.state = state;
         self.head = hash;
@@ -7582,11 +8212,22 @@ impl Store {
         self.blob_index.clear();
         self.blob_index_ready = false;
         self.load_quota_record();
-        Ok(())
+        {
+            let mut stats = self
+                .rebase_stats
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            stats.gap_commits_read = stats.gap_commits_read.saturating_add(read);
+            stats.gap_commits_cached = stats.gap_commits_cached.saturating_add(cached);
+        }
+        Ok(replayed)
     }
 
     /// Re-select the published head and replay its bounded commit chain.
     fn reload_from_plane(&mut self) -> Result<()> {
+        if self.domain.is_some() {
+            return self.recover_domain();
+        }
         let recovery = self.with_backend(|backend| recovery::recover_for_write_via(backend))?;
         self.state = recovery.state;
         self.head = recovery.head;
@@ -7719,9 +8360,160 @@ impl Store {
 
     // ---- verification and GC --------------------------------------------
 
+    /// Verify one MW3 domain: the per-domain head image, the commit chain, each
+    /// object's manifest, and every chunk blob. `full` re-reads every chunk and
+    /// recomputes the whole-file content hash for raw v1 manifests. A
+    /// non-raw representation is counted and reported as not decoded by this
+    /// prototype verifier (the global verifier remains the authority for it).
+    pub fn verify_domain(&self, full: bool) -> Result<VerifyReport> {
+        let Some(domain) = self.domain else {
+            return Err(Error::invalid_argument(
+                "verify_domain requires a handle opened with --domain",
+            ));
+        };
+        let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Verify);
+        let mut report = VerifyReport {
+            full,
+            generation: self.generation,
+            commit: Some(self.head),
+            ..VerifyReport::default()
+        };
+        let head = self.with_backend(|backend| backend.load_domain_head(&domain))?;
+        let Some((generation, head_id)) = head else {
+            report.problems.push(VerifyProblem {
+                class: "Corrupt".to_owned(),
+                detail: format!("domain {} has no valid head slot", domain.to_hex()),
+            });
+            return Ok(report);
+        };
+        report.generation = generation;
+        report.commit = Some(head_id);
+        let mut state = State::default();
+        let mut hash = Hash32::ZERO;
+        for candidate in 1..=generation {
+            let loaded = match self.with_backend(|backend| {
+                recovery::load_commit_key_via(backend, &self.commit_key(candidate), Some(candidate))
+            }) {
+                Ok(loaded) => loaded,
+                Err(err) => {
+                    report.problems.push(VerifyProblem {
+                        class: err.class_name().to_owned(),
+                        detail: err.message().to_owned(),
+                    });
+                    break;
+                }
+            };
+            let expected_parent = if hash == Hash32::ZERO {
+                None
+            } else {
+                Some(hash)
+            };
+            if loaded.commit.parent != expected_parent {
+                report.problems.push(VerifyProblem {
+                    class: "Corrupt".to_owned(),
+                    detail: format!(
+                        "domain {} commit {candidate} does not name the previous commit as \
+                         parent",
+                        domain.to_hex()
+                    ),
+                });
+                break;
+            }
+            if let Err(err) = state.apply_ops(&loaded.commit.ops) {
+                report.problems.push(VerifyProblem {
+                    class: err.class_name().to_owned(),
+                    detail: format!("domain commit {candidate}: {err}"),
+                });
+                break;
+            }
+            if let Some(checkpoint) = loaded.commit.checkpoint {
+                let _ = checkpoint;
+            }
+            state.generation = candidate;
+            hash = loaded.hash;
+            report.checked_commits += 1;
+        }
+        if hash != head_id {
+            report.problems.push(VerifyProblem {
+                class: "Corrupt".to_owned(),
+                detail: format!(
+                    "domain {} head {} does not match the replayed chain ({})",
+                    domain.to_hex(),
+                    head_id.to_hex(),
+                    hash.to_hex()
+                ),
+            });
+        }
+        for record in state.objects.values() {
+            if record.kind != crate::state::ObjectKind::File || record.content == Hash32::ZERO {
+                continue;
+            }
+            report.checked_objects += 1;
+            let manifest = match self
+                .with_backend(|backend| recovery::read_manifest_via(backend, record.content))
+            {
+                Ok(manifest) => manifest,
+                Err(err) => {
+                    report.problems.push(VerifyProblem {
+                        class: err.class_name().to_owned(),
+                        detail: format!(
+                            "domain object {} manifest {}: {err}",
+                            record.id.to_hex(),
+                            record.content.to_hex()
+                        ),
+                    });
+                    continue;
+                }
+            };
+            report.checked_manifests += 1;
+            let mut whole = Vec::new();
+            for chunk in &manifest.chunks {
+                match self.with_backend(|backend| backend.read_all(&Key::object(chunk.hash))) {
+                    Ok(bytes) => {
+                        if bytes.len() as u64 != chunk.len {
+                            report.problems.push(VerifyProblem {
+                                class: "Corrupt".to_owned(),
+                                detail: format!(
+                                    "domain chunk {} is {} bytes, manifest says {}",
+                                    chunk.hash.to_hex(),
+                                    bytes.len(),
+                                    chunk.len
+                                ),
+                            });
+                        }
+                        if full {
+                            whole.extend_from_slice(&bytes);
+                        }
+                        report.checked_chunks += 1;
+                    }
+                    Err(err) => report.problems.push(VerifyProblem {
+                        class: err.class_name().to_owned(),
+                        detail: format!("domain chunk {}: {err}", chunk.hash.to_hex()),
+                    }),
+                }
+            }
+            if full && manifest.representation.is_none() && whole.len() as u64 == manifest.size {
+                if identity::content_hash(&whole) != manifest.content_hash {
+                    report.problems.push(VerifyProblem {
+                        class: "Corrupt".to_owned(),
+                        detail: format!(
+                            "domain object {} whole-file content hash mismatch",
+                            record.id.to_hex()
+                        ),
+                    });
+                }
+            }
+        }
+        report.ok = report.problems.is_empty();
+        Ok(report)
+    }
+
     /// Verify the superblock, commit chain, manifests, and (optionally) every
     /// chunk and whole-file content hash.
     pub fn verify(&self, full: bool) -> Result<VerifyReport> {
+        if self.domain.is_some() {
+            return self.verify_domain(full);
+        }
         let _phase = crate::phase_profile::scope(crate::phase_profile::Phase::Verify);
         let mut report = VerifyReport {
             full,
@@ -8518,6 +9310,13 @@ impl Store {
     /// state manifest. A candidate is only deleted when `apply` is true and it
     /// is older than `gc_grace_secs` (zero disables the age gate).
     pub fn gc(&mut self, apply: bool) -> Result<GcReport> {
+        if self.domain.is_some() || self.options.writer_mode == crate::mw2::WriterMode::Sharded {
+            return Err(Error::unsupported_version(
+                "coordinated cross-domain GC is not implemented for an MW3 store; this prototype \
+                 refuses GC rather than sweep one domain and reclaim another domain's blobs \
+                 (spec/WEFT-MULTIWRITER.md 15.9)",
+            ));
+        }
         self.require_writable()?;
         if self.group_depth != 0 {
             // GC physically deletes blobs; a later group rollback would leave
@@ -8908,7 +9707,7 @@ impl Store {
         let loaded = self.with_backend(|backend| {
             recovery::load_commit_key_via(
                 backend,
-                &Key::commit(self.generation),
+                &self.commit_key(self.generation),
                 Some(self.generation),
             )
         })?;
@@ -9896,7 +10695,9 @@ impl Store {
         crate::phase_profile::timed(crate::phase_profile::Phase::ManifestCommit, || {
             match self.options.writer_mode {
                 crate::mw2::WriterMode::Single => self.publish_commit_single(commit),
-                crate::mw2::WriterMode::Optimistic => self.publish_commit_optimistic(commit),
+                crate::mw2::WriterMode::Optimistic | crate::mw2::WriterMode::Sharded => {
+                    self.publish_commit_optimistic(commit)
+                }
             }
         })
     }
@@ -10035,11 +10836,12 @@ impl Store {
         let wcb = commit.encode()?;
         let hash = identity::commit_id(&wcb);
         let file_bytes = encode_commit_file(&wcb)?;
-        let key = Key::commit(commit.generation);
+        let key = self.commit_key(commit.generation);
         let expected = HeadExpectation {
             generation: self.generation,
             commit: self.head,
         };
+        let domain = self.domain;
         let slot = SuperblockSlot {
             generation: commit.generation,
             commit: hash,
@@ -10058,7 +10860,10 @@ impl Store {
             // makes the create-once check and the head compare-and-swap atomic
             // across processes; on an object-store plane it is a no-op because
             // the conditional writes are native.
-            backend.begin_publication()?;
+            match domain {
+                Some(domain) => backend.begin_domain_publication(&domain)?,
+                None => backend.begin_publication()?,
+            }
             let attempt = (|| -> Result<bool> {
                 crash_point("mw2_before_head");
                 if backend.exists(&key)? {
@@ -10080,14 +10885,25 @@ impl Store {
                     }
                     Err(err) => return Err(err),
                 }
-                match backend.publish_head_conditional(
-                    expected,
-                    commit.generation,
-                    hash,
-                    wcb.len() as u64,
-                    commit.timestamp_ns,
-                    &slot_bytes,
-                ) {
+                let head_result = match domain {
+                    Some(domain) => backend.publish_domain_head_conditional(
+                        &domain,
+                        expected,
+                        commit.generation,
+                        hash,
+                        commit.timestamp_ns,
+                        &slot_bytes,
+                    ),
+                    None => backend.publish_head_conditional(
+                        expected,
+                        commit.generation,
+                        hash,
+                        wcb.len() as u64,
+                        commit.timestamp_ns,
+                        &slot_bytes,
+                    ),
+                };
+                match head_result {
                     Ok(()) => {
                         crash_point("mw2_after_head");
                         Ok(true)
@@ -10101,16 +10917,29 @@ impl Store {
                         // accepts identical bytes, so a twin committer may have
                         // created the same record and published it. Consult the
                         // head and only delete when it cannot name this record.
-                        let observed = backend
-                            .read_all(&Key::superblock())
-                            .ok()
-                            .and_then(|image| crate::format::decode_superblock(&image).ok())
-                            .and_then(|slots| {
-                                slots
-                                    .into_iter()
-                                    .flatten()
-                                    .max_by_key(|slot| slot.generation)
-                            });
+                        let observed = match domain {
+                            Some(domain) => match backend.load_domain_head(&domain) {
+                                Ok(Some((generation, commit))) => {
+                                    Some(crate::format::SuperblockSlot {
+                                        generation,
+                                        commit,
+                                        commit_len: 0,
+                                        timestamp_ns: 0,
+                                    })
+                                }
+                                _ => None,
+                            },
+                            None => backend
+                                .read_all(&Key::superblock())
+                                .ok()
+                                .and_then(|image| crate::format::decode_superblock(&image).ok())
+                                .and_then(|slots| {
+                                    slots
+                                        .into_iter()
+                                        .flatten()
+                                        .max_by_key(|slot| slot.generation)
+                                }),
+                        };
                         match observed {
                             Some(slot)
                                 if slot.generation == commit.generation && slot.commit == hash =>
@@ -10142,7 +10971,10 @@ impl Store {
                     }
                 }
             })();
-            let ended = backend.end_publication();
+            let ended = match domain {
+                Some(domain) => backend.end_domain_publication(&domain),
+                None => backend.end_publication(),
+            };
             match attempt {
                 Ok(value) => {
                     ended?;

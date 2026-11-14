@@ -60,6 +60,9 @@ pub enum Class {
     BudgetExceeded,
     /// A union merge found the same path with different content.
     Conflict,
+    /// The request needs an atomicity across MW3 conflict domains that the
+    /// protocol does not provide. Never a silent single-domain fallback.
+    CrossDomain,
     /// A declared causal dependency is missing, unreachable, or mismatched.
     DependencyMismatch,
     /// The caller cancelled a read while it was waiting for shared work.
@@ -95,6 +98,7 @@ impl Class {
             Class::UnknownSchema => "UnknownSchema",
             Class::BudgetExceeded => "BudgetExceeded",
             Class::Conflict => "Conflict",
+            Class::CrossDomain => "CrossDomain",
             Class::DependencyMismatch => "DependencyMismatch",
             Class::Cancelled => "Cancelled",
             Class::Io => "Io",
@@ -204,6 +208,9 @@ impl Error {
     }
     pub fn conflict(message: impl Into<String>) -> Self {
         Self::new(Class::Conflict, message)
+    }
+    pub fn cross_domain(message: impl Into<String>) -> Self {
+        Self::new(Class::CrossDomain, message)
     }
     pub fn dependency_mismatch(message: impl Into<String>) -> Self {
         Self::new(Class::DependencyMismatch, message)

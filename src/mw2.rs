@@ -41,6 +41,10 @@ pub enum WriterMode {
     Single,
     /// MW2: independent committers using a conditional head publication.
     Optimistic,
+    /// MW3: independent committers in per-domain heads. Opt-in, additive, and
+    /// implemented for the local commit plane only. See `spec/WEFT-MULTIWRITER.md`
+    /// §15.
+    Sharded,
 }
 
 impl Default for WriterMode {
@@ -54,6 +58,7 @@ impl WriterMode {
         match self {
             WriterMode::Single => "single",
             WriterMode::Optimistic => "optimistic",
+            WriterMode::Sharded => "sharded",
         }
     }
 
@@ -61,8 +66,9 @@ impl WriterMode {
         match text {
             "single" => Ok(WriterMode::Single),
             "optimistic" => Ok(WriterMode::Optimistic),
+            "sharded" => Ok(WriterMode::Sharded),
             other => Err(Error::invalid_argument(format!(
-                "unknown writer mode `{other}` (expected single or optimistic)"
+                "unknown writer mode `{other}` (expected single, optimistic, or sharded)"
             ))),
         }
     }
@@ -103,6 +109,25 @@ impl TransactionOptions {
             .saturating_mul(1u64 << shift)
             .min(self.backoff_max_millis.saturating_mul(1000));
         std::time::Duration::from_micros(micros)
+    }
+
+    /// Bounded exponential backoff with **deterministic jitter**.
+    ///
+    /// The jitter is a splitmix64 of `(seed, attempt)` scaled to 75–125 % of the
+    /// exponential delay. It is reproducible from the transaction's own digest,
+    /// so a run is repeatable while two writers that collided once do not
+    /// collide again in lockstep. Bounded: never below 75 % of the base, never
+    /// above `backoff_max_millis`.
+    pub fn backoff_with_jitter(&self, attempt: u32, seed: u64) -> std::time::Duration {
+        let base = self.backoff(attempt).as_micros() as u64;
+        let mut z = seed ^ (u64::from(attempt)).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^= z >> 31;
+        let percent = 750 + (z % 501);
+        let micros = base.saturating_mul(percent) / 1000;
+        let capped = micros.min(self.backoff_max_millis.saturating_mul(1000));
+        std::time::Duration::from_micros(capped)
     }
 }
 
@@ -702,6 +727,41 @@ pub fn same_ops(left: &[Op], right: &[Op]) -> bool {
             .iter()
             .zip(right.iter())
             .all(|(a, b)| a.to_value() == b.to_value())
+}
+
+/// One state key a transaction touches, as a stable fingerprint.
+///
+/// `kind` separates namespaces: 0 object, 1 entry, 2 relation, 3 snapshot,
+/// 4 tip. The id is the canonical identity in that namespace (a snapshot name
+/// is hashed, because a name is not a 32-byte id).
+pub type TouchedKey = (u8, Hash32);
+
+const KEY_DOMAIN: &str = "weft/mw2/key/v1";
+
+fn touched_op_key(op: &Op) -> Option<TouchedKey> {
+    match op {
+        Op::PutObject(record) => Some((0, record.id)),
+        Op::DeleteObject(id) => Some((0, *id)),
+        Op::PutEntry(record) => Some((1, record.id)),
+        Op::DelEntry(id) => Some((1, *id)),
+        Op::PutRelation(record) => Some((2, record.id)),
+        Op::DelRelation(id) => Some((2, *id)),
+        Op::SetSnapshot { name, .. } => Some((3, identity::h(KEY_DOMAIN, name.as_bytes()))),
+        Op::SetTip { object, .. } => Some((4, *object)),
+        Op::SetQuotaUsage(_) => None,
+    }
+}
+
+/// The exact read/write key set of one transaction. Validation consults only
+/// these keys; nothing else can conflict with it.
+pub fn touched_keys(ops: &[Op]) -> std::collections::BTreeSet<TouchedKey> {
+    ops.iter().filter_map(touched_op_key).collect()
+}
+
+/// The keys one intervening commit changed. Used to decide whether a rebase
+/// needs a touched-key check at all.
+pub fn changed_keys(ops: &[Op]) -> std::collections::BTreeSet<TouchedKey> {
+    touched_keys(ops)
 }
 
 #[cfg(test)]

@@ -151,6 +151,10 @@ fn read_superblock(args: &[String], path: &str) -> Option<(u64, Hash32, Vec<u8>)
     Some((slot.generation, slot.commit, image))
 }
 
+fn domain_arg(args: &[String]) -> Option<weftfs::Hash32> {
+    arg(args, "--domain").and_then(|text| weftfs::Hash32::from_lower_hex(&text).ok())
+}
+
 fn open_driver(
     path: &str,
     mode: OpenMode,
@@ -159,9 +163,26 @@ fn open_driver(
     backend: &str,
     args: &[String],
 ) -> Store {
-    let opts = options(writer_mode, now);
-    Store::open_with_options_and_backend(path, mode, opts, backend_kind(args, backend))
-        .expect("open store")
+    // `--domain` selects an MW3 conflict domain; the writer mode is then
+    // `sharded`. Nothing is upgraded silently: the caller passes the domain.
+    match domain_arg(args) {
+        Some(domain) => {
+            let opts = options(WriterMode::Sharded, now);
+            Store::open_domain_with_options_and_backend(
+                path,
+                mode,
+                opts,
+                backend_kind(args, backend),
+                domain,
+            )
+            .expect("open domain store")
+        }
+        None => {
+            let opts = options(writer_mode, now);
+            Store::open_with_options_and_backend(path, mode, opts, backend_kind(args, backend))
+                .expect("open store")
+        }
+    }
 }
 
 fn list_count(args: &[String], path: &str, kind: KeyKind) -> u64 {
@@ -481,12 +502,19 @@ fn main() {
                 }
             }
             let stats = store.backend_stats();
+            let rebase = store.rebase_stats();
             let (cpu_user1, cpu_sys1) = cpu_ms();
             println!(
                 "{}",
                 serde_json::json!({
                     "ok": errors.is_empty(),
                     "writer": writer,
+                    "domain": domain_arg(&args).map(|id| hex(id)),
+                    "rebase_gap_commits_read": rebase.gap_commits_read,
+                    "rebase_gap_commits_cached": rebase.gap_commits_cached,
+                    "rebase_touched_intersections": rebase.touched_intersections,
+                    "rebase_max_consecutive_retries": rebase.max_consecutive_retries,
+                    "rebase_total_attempts": rebase.total_attempts,
                     "committed": committed,
                     "conflicts": conflicts,
                     "aborted": aborted,
@@ -505,6 +533,30 @@ fn main() {
                     "generation": store.generation(),
                 })
             );
+        }
+        "register" => {
+            let name = arg(&args, "--name").unwrap_or_else(|| "domain".to_owned());
+            let kind = arg(&args, "--kind").unwrap_or_else(|| "checkpoint_family".to_owned());
+            let scope = arg(&args, "--scope").unwrap_or_default();
+            let mut store = Store::open_with_options_and_backend(
+                &store_path,
+                OpenMode::ReadWrite,
+                options(WriterMode::Sharded, now),
+                backend_kind(&args, &backend_name),
+            )
+            .expect("open sharded store");
+            let record = weftfs::mw3::DomainRecord::new(
+                name,
+                weftfs::mw3::DomainKind::parse(&kind).expect("domain kind"),
+                scope,
+            )
+            .expect("domain record");
+            let id = store.register_domain(record).expect("register domain");
+            if args.iter().any(|value| value == "--plain") {
+                println!("{}", hex(id));
+            } else {
+                println!("{}", serde_json::json!({"ok": true, "domain": hex(id)}));
+            }
         }
         "outcome" => {
             let tx_id = arg(&args, "--tx-id").expect("--tx-id");

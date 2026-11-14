@@ -111,10 +111,16 @@ struct Cli {
     #[arg(
         long = "writer-mode",
         global = true,
-        value_name = "single|optimistic",
+        value_name = "single|optimistic|sharded",
         default_value = "single"
     )]
     writer_mode: String,
+    /// MW3 conflict domain (64 hex characters, the derived `DomainId`). Only
+    /// valid with `--writer-mode sharded`. Every command that opens the store
+    /// reads and publishes that domain's head and commit chain. See
+    /// `spec/WEFT-MULTIWRITER.md` §15.
+    #[arg(long = "domain", global = true, value_name = "HEX32")]
+    domain: Option<String>,
     /// Optional blob plane for a split store: immutable chunks, manifests, and
     /// indexes live here while commit/control state stays on `--commit-backend`.
     /// Omitted means "same as --backend", i.e. the historical single backend.
@@ -328,7 +334,47 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
+enum Mw3Command {
+    /// Register a conflict domain (one compare-and-swap on the discovery
+    /// record; nothing is enabled silently).
+    Register {
+        #[arg(long)]
+        name: String,
+        #[arg(long, value_name = "checkpoint_family|model_branch|namespace|root")]
+        kind: String,
+        #[arg(long, default_value = "")]
+        scope: String,
+    },
+    /// List the registered domains and the discovery epoch.
+    List,
+    /// Capture a declared read view over the given domains (DomainId hex or a
+    /// registered name). This is a capture, not a global linearizable point.
+    Capture {
+        #[arg(long = "of", value_name = "DOMAIN")]
+        of: Vec<String>,
+    },
+    /// Capture a read view and store a durable `weft.view.pin.v1` record.
+    Pin {
+        #[arg(long = "of", value_name = "DOMAIN")]
+        of: Vec<String>,
+        #[arg(long, default_value = "local")]
+        principal: String,
+    },
+}
+
+fn parse_domain_id(text: &str) -> Result<weftfs::Hash32> {
+    let hash = weftfs::Hash32::from_lower_hex(text)
+        .map_err(|_| Error::invalid_argument("--domain must be 64 lowercase hex characters"))?;
+    Ok(hash)
+}
+
+#[derive(Subcommand)]
 enum Command {
+    /// MW3 conflict domains: register, discover, and capture a read view.
+    Mw3 {
+        #[command(subcommand)]
+        command: Mw3Command,
+    },
     /// Initialize a new store.
     Init {
         #[arg(long)]
@@ -1802,6 +1848,8 @@ struct OpenPolicy {
     cache_bytes: u64,
     cache_entries: usize,
     writer_mode: weftfs::mw2::WriterMode,
+    /// MW3: the conflict domain this handle is bound to, if any.
+    domain: Option<weftfs::Hash32>,
 }
 
 impl OpenPolicy {
@@ -1991,6 +2039,7 @@ fn run(cli: Cli) -> Result<()> {
         representation,
         backend,
         writer_mode,
+        domain,
         blob_backend,
         commit_backend,
         blob_root,
@@ -2075,6 +2124,10 @@ fn run(cli: Cli) -> Result<()> {
         fixed_timestamp_ns,
         representation: parse_representation(&representation)?,
         writer_mode: weftfs::mw2::WriterMode::parse(&writer_mode)?,
+        domain: match domain.as_deref() {
+            Some(text) => Some(parse_domain_id(text)?),
+            None => None,
+        },
         content_identity: parse_content_identity(
             content_identity.as_deref().unwrap_or("whole-file"),
         )?,
@@ -2143,6 +2196,20 @@ fn run(cli: Cli) -> Result<()> {
     // the only identity it can use. An explicit `--content-identity whole-file`
     // still wins and is refused by the writer rather than silently upgraded.
     let mut policy = policy;
+    if policy.domain.is_some() && policy.writer_mode != weftfs::mw2::WriterMode::Sharded {
+        return Err(Error::invalid_argument(
+            "--domain requires --writer-mode sharded; nothing is enabled silently",
+        ));
+    }
+    if policy.writer_mode == weftfs::mw2::WriterMode::Sharded
+        && policy.domain.is_none()
+        && matches!(&command, Command::Verify { .. } | Command::Gc { .. })
+    {
+        return Err(Error::invalid_argument(
+            "a sharded store has no global head; pass --domain to verify or refuse GC \
+             (coordinated cross-domain GC is not implemented)",
+        ));
+    }
     if policy.representation == RepresentationMode::Overlay && content_identity.is_none() {
         policy.content_identity = ContentIdentity::MerkleV3;
     }
@@ -2167,6 +2234,7 @@ fn run(cli: Cli) -> Result<()> {
         }
     };
     match command {
+        Command::Mw3 { command } => run_mw3(&store, json, policy, command),
         Command::Init {
             uid,
             gid,
@@ -4065,7 +4133,191 @@ fn run(cli: Cli) -> Result<()> {
 }
 
 fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Result<Store> {
-    Store::open_with_options_and_backend(path, mode, policy.options(), policy.kind()?)
+    match policy.domain {
+        Some(domain) => Store::open_domain_with_options_and_backend(
+            path,
+            mode,
+            policy.options(),
+            policy.kind()?,
+            domain,
+        ),
+        None => Store::open_with_options_and_backend(path, mode, policy.options(), policy.kind()?),
+    }
+}
+
+/// `weftfs mw3 ...`: register a conflict domain, list them, or capture a view.
+fn run_mw3(
+    store_path: &PathBuf,
+    json: bool,
+    mut policy: OpenPolicy,
+    command: Mw3Command,
+) -> Result<()> {
+    policy.writer_mode = weftfs::mw2::WriterMode::Sharded;
+    policy.domain = None;
+    let resolve =
+        |index: &weftfs::mw3::DomainIndex, tokens: &[String]| -> Result<Vec<weftfs::Hash32>> {
+            let mut out = Vec::with_capacity(tokens.len());
+            for token in tokens {
+                if let Ok(id) = weftfs::Hash32::from_lower_hex(token) {
+                    if index.find(&id).is_none() {
+                        // The head is authoritative even when discovery is behind;
+                        // accept a well-formed id and let `capture_read_view`
+                        // return NotFound when there is no head.
+                        out.push(id);
+                        continue;
+                    }
+                    out.push(id);
+                    continue;
+                }
+                let matches: Vec<&weftfs::mw3::DomainEntry> = index
+                    .domains
+                    .iter()
+                    .filter(|entry| entry.record.name == *token)
+                    .collect();
+                match matches.len() {
+                    0 => {
+                        return Err(Error::not_found(format!(
+                            "no registered domain named `{token}`"
+                        )))
+                    }
+                    1 => out.push(matches[0].id),
+                    _ => {
+                        return Err(Error::ambiguous(format!(
+                            "domain name `{token}` matches {} registered domains; pass a DomainId",
+                            matches.len()
+                        )))
+                    }
+                }
+            }
+            Ok(out)
+        };
+    match command {
+        Mw3Command::Register { name, kind, scope } => {
+            let record = weftfs::mw3::DomainRecord::new(
+                name,
+                weftfs::mw3::DomainKind::parse(&kind)?,
+                scope,
+            )?;
+            let id = record.id()?;
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            store.register_domain(record)?;
+            let index = store.discover_domains()?;
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "ok": true,
+                        "domain": id.to_hex(),
+                        "epoch": index.epoch,
+                        "registered": index.domains.len(),
+                    })
+                );
+            } else {
+                println!("{}", id.to_hex());
+            }
+            Ok(())
+        }
+        Mw3Command::List => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let index = store.discover_domains()?;
+            if json {
+                let domains: Vec<serde_json::Value> = index
+                    .domains
+                    .iter()
+                    .map(|entry| {
+                        serde_json::json!({
+                            "domain": entry.id.to_hex(),
+                            "name": entry.record.name,
+                            "kind": entry.record.kind.as_str(),
+                            "scope": entry.record.scope,
+                            "first_generation": entry.first_generation,
+                        })
+                    })
+                    .collect();
+                println!(
+                    "{}",
+                    serde_json::json!({"ok": true, "epoch": index.epoch, "domains": domains})
+                );
+            } else {
+                for entry in &index.domains {
+                    println!(
+                        "{} {} {} {}",
+                        entry.id.to_hex(),
+                        entry.record.kind.as_str(),
+                        entry.record.name,
+                        entry.record.scope
+                    );
+                }
+            }
+            Ok(())
+        }
+        Mw3Command::Capture { of } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let index = store.discover_domains()?;
+            let ids = resolve(&index, &of)?;
+            let view = store.capture_read_view(&ids)?;
+            print_view(json, &view);
+            Ok(())
+        }
+        Mw3Command::Pin { of, principal } => {
+            let store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let index = store.discover_domains()?;
+            let ids = resolve(&index, &of)?;
+            let view = store.capture_read_view(&ids)?;
+            let now = store.clock_now_ns();
+            let pin = store.write_view_pin(&view, &principal, now)?;
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "ok": true,
+                        "capture_kind": "sequential",
+                        "view_root": view.view_root.to_hex(),
+                        "pin": pin.to_hex(),
+                    })
+                );
+            } else {
+                print_view(false, &view);
+                println!("pin {}", pin.to_hex());
+            }
+            Ok(())
+        }
+    }
+}
+
+fn print_view(json: bool, view: &weftfs::mw3::ReadView) {
+    if json {
+        let pairs: Vec<serde_json::Value> = view
+            .pairs
+            .iter()
+            .map(|pair| {
+                serde_json::json!({
+                    "domain": pair.domain.to_hex(),
+                    "generation": pair.generation,
+                    "head": pair.head.to_hex(),
+                })
+            })
+            .collect();
+        println!(
+            "{}",
+            serde_json::json!({
+                "ok": true,
+                "capture_kind": "sequential",
+                "view_root": view.view_root.to_hex(),
+                "pairs": pairs,
+            })
+        );
+    } else {
+        println!("view {}", view.view_root.to_hex());
+        for pair in &view.pairs {
+            println!(
+                "{} {} {}",
+                pair.domain.to_hex(),
+                pair.generation,
+                pair.head.to_hex()
+            );
+        }
+    }
 }
 
 /// One `checkpoint` subcommand (`weftfs checkpoint` alone still forces a
