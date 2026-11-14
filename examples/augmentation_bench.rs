@@ -531,7 +531,7 @@ fn parse_args() -> Result<Args, String> {
                         .parse()
                         .map_err(|_| "--order-seed must be an integer".to_owned())?,
                 )
-            },
+            }
             "--pipeline-workers" => {
                 args.pipeline_workers = Some(
                     value("--pipeline-workers")?
@@ -1232,6 +1232,7 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
         two_stage_off_mode9: false,
         pipeline_window_mib: None,
         analyse_threads: None,
+        writeback_threads: None,
     };
     // Suffixes compose with `-`: `noz19-percommit` is the R17 attribution row
     // with the historical per-commit publication, `pack1m-group` is a packed
@@ -1297,6 +1298,19 @@ fn ablation_flags(key: &str) -> Result<ConfigFlags, String> {
                     ));
                 }
                 flags.pipeline_workers = workers;
+            }
+            // N01: early-barrier lanes (`wb2`, `wb4`, ...). Each file is still
+            // `fdatasync`ed exactly once; only the wall time they take changes.
+            part if part.starts_with("wb") => {
+                let lanes: usize = part[2..].parse().map_err(|_| {
+                    format!("configuration `{key}` has no numeric writeback lane count")
+                })?;
+                if lanes == 0 || lanes > 8 {
+                    return Err(format!(
+                        "configuration `{key}` asks for {lanes} writeback lanes (bound 1..=8)"
+                    ));
+                }
+                flags.writeback_threads = Some(lanes);
             }
             // ---- R22 sweep dimensions -------------------------------------
             // Chunk-parallel ZSTD threads inside one tensor: `zpar1`..`zpar8`.
@@ -1484,6 +1498,8 @@ struct ConfigFlags {
     pipeline_window_mib: Option<u64>,
     /// R22.2: analyse-histogram threads (`an1` = sequential).
     analyse_threads: Option<usize>,
+    /// N01: early-barrier lanes (`wb1`..`wb8`).
+    writeback_threads: Option<usize>,
 }
 
 fn uses_protocol(config: &str) -> bool {
@@ -1684,6 +1700,7 @@ fn pipeline_stats_json(stats: &weftfs::tensor_pipeline::TensorPipelineStats) -> 
             "publish_bytes": stats.publish_bytes,
             "worker_bytes": stats.worker_bytes,
             "publish_sync_bytes": stats.publish_sync_bytes,
+            "writeback_threads": stats.writeback_threads,
             "candidate_parallel_min_bytes": stats.candidate_parallel_min_bytes,
             "reservation_bound_bytes": stats.reservation_bound_bytes,
         },
@@ -1723,6 +1740,7 @@ fn pipeline_stats_json(stats: &weftfs::tensor_pipeline::TensorPipelineStats) -> 
             "passes": stats.writeback_passes,
             "files": stats.writeback_files,
             "busy_ms": stats.writeback_ms,
+            "lanes": stats.writeback_threads,
             "publish_sync_kicks": stats.publish_sync_kicks,
             "note": "file fsyncs performed on the writeback thread while encoding continued; the commit's own barrier still closes the batch and fsyncs every remaining file and directory before the commit record. On a provider-ack backend there is no published file to drain, so `applicable` is false and no barrier is claimed",
         },
@@ -1751,6 +1769,7 @@ fn write_weftfs(
         pipeline_sync_bytes,
         pipeline_cpu_tokens_flag,
         pipeline_window_mib,
+        writeback_threads,
         ..
     } = flags;
     let group_commit = publication.group_commit();
@@ -1831,6 +1850,9 @@ fn write_weftfs(
         }
         if let Some(value) = args.pipeline_sync_bytes.or(pipeline_sync_bytes) {
             popts.publish_sync_bytes = value;
+        }
+        if let Some(lanes) = writeback_threads {
+            popts.writeback_threads = lanes;
         }
         if let Some(value) = args.pipeline_candidate_min_bytes {
             popts.candidate_parallel_min_bytes = value;
@@ -3523,7 +3545,11 @@ fn assemble(
             "subset_rule": "embedding + evenly spaced N name-sorted non-embedding tensors",
             "max_others": args.max_others,
             "include_embedding": args.include_embedding,
-            "interleaving": "configuration order rotated by one position per repetition; every repetition runs every arm",
+            "interleaving": if args.order_seed.is_some() {
+                "configuration order rotated by one position per repetition and then shuffled with the recorded seed; every repetition runs every arm"
+            } else {
+                "configuration order rotated by one position per repetition; every repetition runs every arm"
+            },
             "quiesce_between_cells": args.quiesce,
             "order_seed": args.order_seed,
         },
@@ -4203,6 +4229,23 @@ fn ablate(args: &Args) -> Result<(), String> {
         let mut order = keys.clone();
         let rotation = (rep - 1) % order.len();
         order.rotate_left(rotation);
+        if let Some(seed) = args.order_seed {
+            // Seeded Fisher-Yates (the same generator the paired court uses),
+            // so the interleaving is randomised rather than a fixed rotation.
+            // Every configuration still runs exactly once per repetition.
+            let mut state = seed
+                .wrapping_add(rep as u64)
+                .wrapping_mul(0x9e37_79b9_7f4a_7c15)
+                | 1;
+            for i in (1..order.len()).rev() {
+                state ^= state >> 12;
+                state ^= state << 25;
+                state ^= state >> 27;
+                let value = state.wrapping_mul(0x2545_f491_4f6c_dd1d);
+                let j = (value as usize) % (i + 1);
+                order.swap(i, j);
+            }
+        }
         orders.push(json!({ "rep": rep, "order": order }));
         append_log(
             &mut log,
@@ -4805,7 +4848,10 @@ fn run(args: Args) -> Result<(), String> {
         if let Some(seed) = args.order_seed {
             // Seeded Fisher-Yates: the repetition's order is random but
             // reproducible, and every arm still runs exactly once.
-            let mut state = seed.wrapping_add(rep as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+            let mut state = seed
+                .wrapping_add(rep as u64)
+                .wrapping_mul(0x9e37_79b9_7f4a_7c15)
+                | 1;
             for i in (1..order.len()).rev() {
                 state ^= state >> 12;
                 state ^= state << 25;

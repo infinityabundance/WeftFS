@@ -99,6 +99,10 @@ if [[ -f "$official" ]]; then
 else
   echo "r22_pareto_court: warning: no contract-court receipt at $official; the identity check will be absent" >&2
 fi
+order_args=()
+if [[ -n "${WEFT_R22_ORDER_SEED:-}" ]]; then
+  order_args=(--order-seed "$WEFT_R22_ORDER_SEED")
+fi
 cargo run --release --quiet --example augmentation_bench -- ablate \
   --fixture "$fixture" \
   --work "$work" \
@@ -109,6 +113,7 @@ cargo run --release --quiet --example augmentation_bench -- ablate \
   --max-others 100 --include-embedding 1 \
   --backend local --chunk-size 1048576 --seed weft-augmentation-r3 \
   "${official_args[@]}" \
+  "${order_args[@]}" \
   --force
 
 echo "r22_pareto_court: receipt $receipt"

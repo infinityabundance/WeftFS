@@ -145,6 +145,15 @@ pub struct TensorPipelineOptions {
     /// record. It only stops the whole group's writeback from landing on the
     /// critical path of the last barrier.
     pub publish_sync_bytes: u64,
+    /// Threads the early barrier uses to `fdatasync` the drained files. Defaults
+    /// to `min(available_parallelism, 4)`: the measured win is per-file barrier
+    /// latency, so a few lanes capture most of it, and the lanes are I/O-bound
+    /// rather than CPU-bound. `1` keeps the historical single lane. More lanes
+    /// issue the same per-file barriers concurrently, so the number of durable
+    /// bytes is unchanged and only the wall time they take can move. The commit's
+    /// own barrier still closes the batch and `fsync`s every remaining file and
+    /// directory before the commit record.
+    pub writeback_threads: usize,
     /// The one process-wide admission object, when the caller opted in (N09).
     ///
     /// The encode side charges its busy encoder threads and worker-reserved
@@ -181,6 +190,7 @@ impl Default for TensorPipelineOptions {
             worker_bytes: DEFAULT_WORKER_BYTES,
             candidate_parallel_min_bytes: DEFAULT_CANDIDATE_PARALLEL_MIN_BYTES,
             publish_sync_bytes: DEFAULT_PUBLISH_SYNC_BYTES,
+            writeback_threads: threads.clamp(1, 4),
             budget: None,
         }
     }
@@ -203,6 +213,11 @@ impl TensorPipelineOptions {
         if self.cpu_tokens == 0 || self.cpu_tokens > self.encode_threads.saturating_mul(2) {
             return Err(Error::invalid_argument(
                 "pipeline cpu_tokens must be between 1 and twice the encode thread count",
+            ));
+        }
+        if self.writeback_threads == 0 || self.writeback_threads > 8 {
+            return Err(Error::invalid_argument(
+                "pipeline writeback_threads must be between 1 and 8",
             ));
         }
         for (name, value) in [
@@ -264,6 +279,7 @@ pub struct TensorPipelineStats {
     pub publish_bytes: u64,
     pub worker_bytes: u64,
     pub publish_sync_bytes: u64,
+    pub writeback_threads: usize,
     pub candidate_parallel_min_bytes: u64,
     /// `reservation_bound_bytes(largest tensor)`.
     pub reservation_bound_bytes: u64,
@@ -384,6 +400,7 @@ impl Store {
                 publish_bytes: options.publish_bytes,
                 worker_bytes: options.worker_bytes,
                 publish_sync_bytes: options.publish_sync_bytes,
+                writeback_threads: options.writeback_threads,
                 candidate_parallel_min_bytes: options.candidate_parallel_min_bytes,
                 durability_model: if self.backend_durability_is_provider_ack() {
                     "provider-ack"
@@ -640,36 +657,16 @@ impl Store {
                     };
                     let Some(batch) = batch else { return };
                     let started = Instant::now();
-                    let mut synced = 0u64;
-                    for path in &batch {
-                        match std::fs::File::open(path) {
-                            Ok(file) => {
-                                if let Err(err) = file.sync_data() {
-                                    let error = Error::io(format!(
-                                        "early barrier cannot fsync {}: {err}",
-                                        path.display()
-                                    ));
-                                    let mut state = lock_wb(writeback);
-                                    if state.error.is_none() {
-                                        state.error = Some(error);
-                                    }
-                                    return;
-                                }
-                                synced += 1;
+                    let synced = match sync_drained_files(&batch, options.writeback_threads) {
+                        Ok(synced) => synced,
+                        Err(err) => {
+                            let mut state = lock_wb(writeback);
+                            if state.error.is_none() {
+                                state.error = Some(err);
                             }
-                            Err(err) => {
-                                let error = Error::io(format!(
-                                    "early barrier cannot open {}: {err}",
-                                    path.display()
-                                ));
-                                let mut state = lock_wb(writeback);
-                                if state.error.is_none() {
-                                    state.error = Some(error);
-                                }
-                                return;
-                            }
+                            return;
                         }
-                    }
+                    };
                     let elapsed = started.elapsed().as_nanos() as usize;
                     let mut state = lock_wb(writeback);
                     state.files = state.files.saturating_add(synced);
@@ -683,7 +680,6 @@ impl Store {
                         }
                         return;
                     }
-                    let _ = options;
                 });
             }
 
@@ -910,6 +906,7 @@ impl Store {
             publish_bytes: options.publish_bytes,
             worker_bytes: options.worker_bytes,
             publish_sync_bytes: options.publish_sync_bytes,
+            writeback_threads: options.writeback_threads,
             candidate_parallel_min_bytes: options.candidate_parallel_min_bytes,
             reservation_bound_bytes: options.reservation_bound_bytes(largest),
             observed_max_staging_bytes: max_staging as u64,
@@ -1386,6 +1383,82 @@ fn intersect_total(intervals: &[StageInterval], other: &[StageInterval]) -> u64 
         }
     }
     total
+}
+
+/// `fdatasync` every drained file, on `lanes` threads.
+///
+/// The number of barriers is exactly `batch.len()` on every lane count: the
+/// lanes partition the batch round-robin so no lane can be handed every large
+/// frame, and each file is opened and `sync_data`d exactly once. A failure on
+/// any lane is returned after every lane has joined, so a failed pipeline still
+/// publishes nothing.
+fn sync_drained_files(batch: &[std::path::PathBuf], lanes: usize) -> Result<u64> {
+    let lanes = lanes.clamp(1, 8).min(batch.len().max(1));
+    let sync_one = |path: &std::path::Path| -> Result<()> {
+        let file = std::fs::File::open(path).map_err(|err| {
+            Error::io(format!(
+                "early barrier cannot open {}: {err}",
+                path.display()
+            ))
+        })?;
+        file.sync_data().map_err(|err| {
+            Error::io(format!(
+                "early barrier cannot fsync {}: {err}",
+                path.display()
+            ))
+        })
+    };
+    if lanes <= 1 {
+        let mut synced = 0u64;
+        for path in batch {
+            sync_one(path.as_path())?;
+            synced += 1;
+        }
+        return Ok(synced);
+    }
+    let mut partitions: Vec<Vec<&std::path::Path>> = vec![Vec::new(); lanes];
+    for (index, path) in batch.iter().enumerate() {
+        partitions[index % lanes].push(path.as_path());
+    }
+    let mut outcomes: Vec<Result<u64>> = (0..lanes).map(|_| Ok(0)).collect();
+    std::thread::scope(|scope| {
+        let mut handles = Vec::with_capacity(lanes);
+        for (index, partition) in partitions.into_iter().enumerate() {
+            let sync_one = &sync_one;
+            handles.push((
+                index,
+                scope.spawn(move || {
+                    let mut synced = 0u64;
+                    for path in partition {
+                        sync_one(path)?;
+                        synced += 1;
+                    }
+                    Ok::<u64, Error>(synced)
+                }),
+            ));
+        }
+        for (index, handle) in handles {
+            outcomes[index] = handle
+                .join()
+                .unwrap_or_else(|_| Err(Error::io("early barrier lane panicked")));
+        }
+    });
+    let mut total = 0u64;
+    let mut first_error: Option<Error> = None;
+    for outcome in outcomes {
+        match outcome {
+            Ok(count) => total = total.saturating_add(count),
+            Err(err) => {
+                if first_error.is_none() {
+                    first_error = Some(err);
+                }
+            }
+        }
+    }
+    match first_error {
+        Some(err) => Err(err),
+        None => Ok(total),
+    }
 }
 
 const _: fn() = || {

@@ -204,7 +204,10 @@ fn every_worker_count_publishes_the_same_bytes() {
         // every manifest and the whole commit chain decode and match.
         let reopened = Store::open_with_options(&root, OpenMode::ReadWrite, opts()).unwrap();
         let report = reopened.verify(true).unwrap();
-        assert!(report.ok, "verify --full failed at {workers} workers: {report:?}");
+        assert!(
+            report.ok,
+            "verify --full failed at {workers} workers: {report:?}"
+        );
         assert_eq!(report.checked_objects, 4, "every tensor object was checked");
         assert!(report.checked_representations >= 1);
         drop(reopened);
@@ -226,6 +229,27 @@ fn every_worker_count_publishes_the_same_bytes() {
             }
         }
     }
+}
+
+#[test]
+fn writeback_lanes_do_not_change_a_single_byte() {
+    let dir = tempdir().unwrap();
+    let mut one = TensorPipelineOptions::default();
+    one.encode_threads = 2;
+    one.cpu_tokens = 2;
+    one.writeback_threads = 1;
+    let a = write_group(&dir.path().join("wb1"), &one, false).unwrap();
+
+    let mut lanes = one.clone();
+    lanes.writeback_threads = 8;
+    let b = write_group(&dir.path().join("wb8"), &lanes, false).unwrap();
+    // The lanes only change *when* each file is `fdatasync`ed. Every barrier is
+    // still issued exactly once per published file, so the committed state
+    // cannot move: head, per-object ids and manifest bytes are identical.
+    assert_eq!(b.stats.writeback_threads, 8);
+    assert_eq!(a.head, b.head);
+    assert_eq!(a.objects, b.objects);
+    assert_eq!(a.manifests, b.manifests);
 }
 
 #[test]
