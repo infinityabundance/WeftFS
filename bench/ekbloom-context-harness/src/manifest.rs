@@ -381,3 +381,67 @@ impl ManifestTable {
         Ok(out)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn entry() -> Entry {
+        Entry {
+            key: [7u8; 32],
+            subject: [1u8; 32],
+            contract: [2u8; 32],
+            page_id: [5u8; 32],
+            content: [6u8; 32],
+            snapshot: [3u8; 32],
+            authority: [4u8; 32],
+            epoch: 11,
+            verdict: 1,
+            reason: 9,
+        }
+    }
+
+    fn material(e: &Entry) -> [u8; KEY_AREA_LEN] {
+        key_material(
+            weftfs::Hash32::from_bytes(e.subject),
+            weftfs::Hash32::from_bytes(e.contract),
+            weftfs::Hash32::from_bytes(e.snapshot),
+            weftfs::Hash32::from_bytes(e.authority),
+            e.epoch,
+            weftfs::Hash32::from_bytes(e.page_id),
+            weftfs::Hash32::from_bytes(e.content),
+        )
+    }
+
+    /// The manifestation is an accelerator, never an authority: a slot whose
+    /// 16-byte prefix matches but whose 144-byte core differs must return no
+    /// verdict at all. This is the candidate-only rule the contract declares.
+    #[test]
+    fn a_prefix_candidate_never_returns_a_verdict() {
+        let dir = std::env::temp_dir().join(format!(
+            "ekbctx-manifest-prefix-{}-{}",
+            std::process::id(),
+            line!()
+        ));
+        fs::create_dir_all(&dir).expect("temp dir");
+        let path = dir.join("table.ekb");
+        let e = entry();
+        let (mut table, _report) = ManifestTable::build(&path, &[e], 1 << 20, 1).expect("build");
+        let m = material(&e);
+
+        let hit = table
+            .lookup(&e.key, &m[0..KEY_CORE_LEN])
+            .expect("the exact key hits");
+        assert_eq!(hit.verdict, e.verdict);
+        assert_eq!(hit.reason, e.reason);
+
+        let mut altered = m;
+        altered[8] ^= 0xff;
+        assert!(
+            table.lookup(&e.key, &altered[0..KEY_CORE_LEN]).is_none(),
+            "a different core with the same prefix must not return a verdict"
+        );
+
+        fs::remove_dir_all(&dir).ok();
+    }
+}

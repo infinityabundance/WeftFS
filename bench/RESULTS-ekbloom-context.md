@@ -331,8 +331,11 @@ scripts/docker-court.sh bench "cd /work && bash scripts/ekbloom_context_court.sh
 The harness pins `ekbloom = "=0.7.3"` and builds with `--locked`; the exact
 crate checksum is in the receipt. The shipped dependency graph contains no
 `ekbloom`: the court logs `shipped graph ekbloom mentions=0` from
-`cargo tree -e normal`. The unit tests for the caches and the manifest
-candidate-only rule run in the court before the measurement (3 passed).
+`cargo tree -e normal`. The unit tests for both caches and for the
+manifestation's candidate-only rule run in the court before the measurement;
+the candidate-only test asserts that a prefix hit whose 144-byte core differs
+returns no verdict at all. The test module is `#[cfg(test)]`, does not enter the
+release binary, and changes no measured number.
 
 **Registration check.** The aggregate runs the reduced two-repetition
 configuration (`--reduced --phase=decisions`). That configuration was executed
