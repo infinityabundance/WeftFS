@@ -121,6 +121,23 @@ Recommendation implied by the numbers: verify a grant once per session (or per
 lease) and carry the `VerifiedEnvelope` in the principal; do not re-verify per
 page. A page smaller than ~4 KiB is dominated by governance, not payload.
 
+### 4.1 Verified-session grant cache (T065)
+
+The store now caches the **decoded** grant per handle, keyed by
+`(envelope, store generation, revocation epoch)`. It never caches an
+authorization decision: every read still evaluates the validity window, the
+tenant, the namespace, the root grant and POSIX/ACL rules against the cached
+decode. Any commit or revocation changes the key and forces a fresh decode, so
+a cached grant cannot outlive the state it was computed from.
+`Options::kv_grant_cache = false` restores the per-read decode as the control,
+and `Store::kv_grant_cache_counters` reports hits, misses and invalidations.
+
+The denial path is also measurable and, with `Options::kv_denial_equalise`
+(default off), it can run the capability half of the preamble on a failure so an
+absent object costs closer to a present-but-unauthorized one. That narrows a
+timing difference; it does not make the denial constant-time. The adversarial
+court and every residual channel are in `bench/RESULTS-kv-plane.md`.
+
 ## 5. What this does **not** claim
 
 * Not constant-time. The denial text is identical and the outcomes are

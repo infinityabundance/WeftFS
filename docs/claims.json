@@ -13250,5 +13250,167 @@
   ],
   "receipt": "bench/receipts/rank-restore-20261114T112449Z.json",
   "kind": "absent"
+ },
+ {
+  "id": "t063_index_generation_coupled",
+  "claim": "The KV prefix index is bound to the commit generation it describes.",
+  "value": "generation-coupled",
+  "locations": [
+   "bench/RESULTS-kv-plane.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t063_index_crash_never_partial",
+  "claim": "A crash during index publication never leaves a valid-but-partial index.",
+  "value": "never yields a valid-but-partial index",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t063_ceiling_is_achieved",
+  "claim": "The end-to-end ladder reports the prefixes actually written, not the requested rung.",
+  "value": "11,776",
+  "locations": [
+   "bench/RESULTS-kv-plane.md",
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t063_index_court_registered",
+  "claim": "The KV prefix index court is registered in the aggregate.",
+  "value": "kv_prefix_index",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t065_grant_cache_key",
+  "claim": "The grant cache is keyed by envelope, store generation and revocation epoch.",
+  "value": "envelope + generation + revocation epoch",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t065_batching_one_commit",
+  "claim": "Batched prefix publication writes many prefixes in one commit.",
+  "value": "one commit record",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t067_false_disclosure_is_hard_failure",
+  "claim": "A false cross-tenant disclosure fails the court exactly like a false accept.",
+  "value": "false cross-tenant disclosure is a hard failure",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t067_not_constant_time",
+  "claim": "The side-channel court does not claim constant-time behaviour.",
+  "value": "No mitigation makes this constant-time",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t067_sidechannel_court_registered",
+  "claim": "The KV side-channel court is registered in the aggregate.",
+  "value": "kv_sidechannel",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t068_go_ed25519_implemented",
+  "claim": "WeftFS-Go verifies KV grant envelopes with Ed25519 in Go, not behind a trusted-verifier boundary.",
+  "value": "Ed25519 decision: implemented, not a trusted-verifier boundary",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t068_go_court_registered",
+  "claim": "The Go KV parity court is registered in the aggregate.",
+  "value": "kv_go_parity",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t068_no_go_index",
+  "claim": "WeftFS-Go has no persisted KV prefix index.",
+  "value": "Go has no persisted index",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x17_no_engine_ran",
+  "claim": "No inference engine could run in the court.",
+  "value": "No inference engine could run in the court",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x17_engine_court_not_registered",
+  "claim": "The inference-engine court is not registered in the aggregate.",
+  "value": "run on demand",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "x17_no_gpu_claim",
+  "claim": "The KV results document makes no GPU claim.",
+  "value": "measured on a GPU",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+  "kind": "absent"
+ },
+ {
+  "id": "x17_no_serving_claim",
+  "claim": "The KV results document makes no production-serving claim.",
+  "value": "production-serving claim holds",
+  "locations": [
+   "bench/RESULTS-kv-plane.md"
+  ],
+  "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+  "kind": "absent"
  }
 ]

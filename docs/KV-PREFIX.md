@@ -199,8 +199,9 @@ re-reads and parses every prefix record. See §9.
 
 Residual:
 
-* `kv_prefix_lookup` parses every prefix record (10.4 ms at 101 prefixes). A
-  persisted KV index is not implemented.
+* `kv_prefix_lookup` parses every prefix record. A **persisted index now
+  exists** (`src/kv_index.rs`, T063): see §11. The scan remains the oracle and
+  the fallback.
 * Page-level dedup requires the child's new pages to be supplied by the caller;
   the store does not derive them from a token stream.
 * No Go parity for the prefix record, the chain, or the decision.
@@ -218,6 +219,36 @@ store them as `weft.kv.prefix.v1` pages, then for a request that extends the
 prefix (a) import the stored pages into the engine's cache and (b) recompute the
 prefix, and compare time-to-first-token and output identity. Until that runs,
 this subphase is a storage-side primitive with a declared decision model.
+
+## 11. The persisted index and revocation (T063)
+
+`src/kv_index.rs` adds a derived, persisted index. Each **page-aligned prefix
+boundary** is keyed by `(identity_root, token_chain_root)`, where
+`identity_root = H("weft/kv/prefix-identity/v1", WCB(tenant, model,
+tokenizer_hash, attention_hash, dtype, head_count, head_dim, layer_count,
+page_rows))`. A lookup walks the request's page blocks once, carrying the frozen
+token chain, and probes the index at each boundary; the longest verified match
+wins. An entry is used only after the record it names is read, re-hashed, and
+re-run through the compatibility rule.
+
+The index is **generation-coupled and fail-closed**: the root record names the
+commit generation and head, its immutable segment digests, the live entry count
+and an XOR accumulator over the entries. A load requires all of them; anything
+else is refused and the oracle scan answers. Mutations append one delta segment
+(bounded at `MAX_KV_INDEX_DELTAS`); past the bound the index is left stale and
+rebuilt by `weftfs kv index-build`. A crash between the segment and the root
+leaves an unreferenced segment, never a dangling root.
+
+Partial-tail prefixes (a last page that is not page-aligned) are not indexed; if
+any exist, an index miss falls back to the oracle.
+
+**Revocation** is a separate additive record (`weft.kv.revocation.v1`, §12). The
+prefix record is never deleted, so a snapshot that predates the revocation still
+reads it. A revoked prefix is never returned by either lookup path, and `kv get`
+reports it exactly like an absent name. Revocation is idempotent and monotone:
+the epoch is the number of revocation records.
+
+Measured results and every loss are in `bench/RESULTS-kv-plane.md`.
 
 ## 10. Reproduction
 

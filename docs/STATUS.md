@@ -16,6 +16,57 @@ court; the entries below this block are a chronological log of subphases, quoted
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
 
+## 2026-11-14 (T063/T065/T067/T068/X17: KV context plane)
+
+**Deliverables.** A persisted, generation-coupled KV prefix index
+(`src/kv_index.rs`): canonical prefix identity, page-boundary keys over the
+frozen token chain, immutable content-addressed segments, a root record that
+binds the commit generation, head, segment digests and an entry accumulator, and
+bounded delta maintenance. Batched prefix publication
+(`kv_prefix_put_batch_seeded`) and a verified-session grant cache keyed by
+envelope + generation + revocation epoch. Canonical revocation records
+(`weft.kv.revocation.v1`). A measured side-channel court, the Go prefix tier with
+real Ed25519 verification (`Store.KvPrefixGetVerified`), and an engine attempt
+that is recorded as blocked.
+
+**Evidence.** Receipts `kv-prefix-index-20261114T133053Z` (full ladder),
+`kv-grants-20261114T133000Z`, `kv-sidechannel-20261114T133000Z`,
+`kv-go-parity-20261114T133751Z`, `kv-engine-20261114T133924Z`, plus the
+registered-court runs at the aggregate configuration
+(`kv-prefix-index-20261114T133614Z`, `kv-grants-20261114T133607Z`,
+`kv-sidechannel-20261114T133602Z`). Each receipt records its own stamp and
+revision. Analysis: `bench/RESULTS-kv-plane.md`. Four courts are registered in
+`scripts/verify-all.sh` (`kv_prefix_index`, `kv_grants`, `kv_sidechannel`,
+`kv_go_parity`), each with its own exit-78 skip path; the engine court is run on
+demand and is not registered.
+
+**Two honest corrections made after the first measurement.** (1) The index
+receipt recorded the *requested* ladder rung as the end-to-end ceiling, so a run
+that asked for 20,000 prefixes and died at 11,776 was reported as a 20,000-prefix
+ceiling; the harness now records `requested` and `achieved` separately and the
+receipt was re-measured at `80d6bad`. (2) The engine receipt's "`--no-deps` still
+fits nowhere" claim had not isolated the previous attempt's downloads; the court
+now cleans `/tmp` before every install and records free space before and after,
+and the blocker reproduces from a clean 1,024 MiB tmpfs.
+
+**Result.** Indexed lookup replaces the oracle scan (the scan stays as the
+differential reference and the fallback); a crash between the index's two
+durable publications never yields a valid-but-partial index; revocation is
+bounded and never returns a revoked prefix; cross-tenant probes are denied with
+identical class and text; the Go tier reads Rust-written prefixes and Rust reads
+Go-written ones with a Go-signed, Rust-verified grant.
+
+**Losses (all in the results document).** The end-to-end ladder is bounded by
+the court's `/tmp`, not by the index (11,776 prefixes were written of a requested
+20,000 rung); partial-tail prefixes are not indexed; every commit invalidates
+the grant cache; existence remains separable by timing at nanosecond resolution
+(equalisation narrows, does not close); Go batching is a small win and Go
+allocation per read/write was not reduced (no breakdown measured, so no share is
+attributed); Go has no persisted index; **no inference engine ran** (vLLM's 727.0
+MiB wheel set exhausts the 1 GiB `/tmp`; SGLang installs with `--no-deps` but
+cannot import without `orjson`; there is no `/dev/nvidia*`), so all prefill,
+TTFT and token-rate numbers are hypothetical.
+
 ## 2026-11-14 (T053, T055-T060 training gates)
 
 **Deliverables.** A rank-directed cross-topology restore API and CLI

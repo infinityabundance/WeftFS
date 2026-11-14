@@ -150,6 +150,26 @@ run_court bench "recovery_load" \
 run_court rust "kv_capability" \
   "WEFT_KV_REPS=1000 bash bench/scripts/kv_capability_court.sh"
 
+# KV context plane (T063): the persisted, generation-coupled prefix index
+# against the oracle scan on the same fixture. Reduced for the aggregate — two
+# ladder rungs and a 100k-entry index-only row; the full run (three rungs plus
+# the 1M-entry row and the achieved ceiling) is
+# `bench/receipts/kv-prefix-index-20261114T133053Z.json`, cited in
+# `bench/RESULTS-kv-plane.md`.
+run_court bench "kv_prefix_index" \
+  "WEFT_KV_INDEX_LADDER=1000,5000 WEFT_KV_INDEX_ONLY_MAX=100000 bash bench/scripts/kv_index_court.sh"
+
+# KV context plane (T065): batched page publication and the verified-session
+# grant cache, with the per-read decode as the control.
+run_court bench "kv_grants" \
+  "bash bench/scripts/kv_grants_court.sh"
+
+# KV context plane (T067): cross-tenant, absent, wrong-root and expired probes
+# must be denied identically; the example exits non-zero on a false disclosure.
+# Reduced to the minimum accepted per-arm sample count (1,000).
+run_court bench "kv_sidechannel" \
+  "WEFT_KV_SAMPLES=1000 bash bench/scripts/kv_sidechannel_court.sh"
+
 # Prepare/commit checkpoint split at 1/2/4/8 ranks on the real Qwen base. This
 # script orchestrates its own bench court, so it is invoked directly.
 echo "=== parallel_checkpoint ===" | tee -a "$log"
@@ -227,6 +247,13 @@ run_orchestrated_court() {
 # `BEGIN GENERATED` marker must have a manifest block. Host-only and fast; an
 # environment without Python >= 3.8 skips with a printed reason (exit 78).
 run_orchestrated_court perf_numbers perf_numbers bash scripts/perf_numbers_court.sh
+
+# KV context plane (T068/X10): WeftFS-Go prefix-tier parity. It orchestrates two
+# courts itself (a rust court builds the standalone `weftfs` oracle, the go
+# court runs `TestKv*`), so it is invoked directly. A host without Docker or
+# without both images prints `kv_go_parity_court: skip <reason>` and exits 78.
+run_orchestrated_court kv_go_parity kv_go_parity_court \
+  bash bench/scripts/kv_go_parity_court.sh
 
 # Phase 1 independent verifier: clean-room Python (stdlib only) over the frozen
 # context-plane record families. Host-runnable analysis, like the guards; the

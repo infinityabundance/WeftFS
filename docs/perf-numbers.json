@@ -101,6 +101,10 @@
   {
    "id": "training-gates",
    "title": "Training-gate courts T053/T055-T060 (2026-11-14): rank restore, resume, multi-rank, async, useful step, receipts, baselines"
+  },
+  {
+   "id": "kvplane",
+   "title": "KV context plane (T063/T065/T067/T068/X17), receipts stamped 20261114T133000Z (index 20261114T133053Z)"
   }
  ],
  "numbers": [
@@ -19351,6 +19355,1260 @@
    "stamp": "20261114T115820Z",
    "revision_path": "revision.weftfs",
    "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024"
+  },
+  {
+   "key": "kv.idx.n1000.p50",
+   "label": "indexed lookup p50 at N=1000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.lookup_indexed.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.p95",
+   "label": "indexed lookup p95 at N=1000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.lookup_indexed.p95_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.p99",
+   "label": "indexed lookup p99 at N=1000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.lookup_indexed.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.scan",
+   "label": "oracle scan p50 at N=1000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.lookup_scan.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.bytes",
+   "label": "index bytes at N=1000",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.index_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.reopen",
+   "label": "reopen at N=1000",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.reopen_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.first",
+   "label": "first indexed lookup after reopen at N=1000",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.first_indexed_lookup_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n1000.speedup",
+   "label": "scan/indexed p50 ratio at N=1000",
+   "unit": "x",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "expr": "{kv.idx.n1000.scan}/{kv.idx.n1000.p50}"
+  },
+  {
+   "key": "kv.idx.n5000.p50",
+   "label": "indexed lookup p50 at N=5000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.lookup_indexed.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.p95",
+   "label": "indexed lookup p95 at N=5000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.lookup_indexed.p95_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.p99",
+   "label": "indexed lookup p99 at N=5000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.lookup_indexed.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.scan",
+   "label": "oracle scan p50 at N=5000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.lookup_scan.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.bytes",
+   "label": "index bytes at N=5000",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.index_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.reopen",
+   "label": "reopen at N=5000",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.reopen_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.first",
+   "label": "first indexed lookup after reopen at N=5000",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.first_indexed_lookup_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.speedup",
+   "label": "scan/indexed p50 ratio at N=5000",
+   "unit": "x",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "expr": "{kv.idx.n5000.scan}/{kv.idx.n5000.p50}"
+  },
+  {
+   "key": "kv.idx.n10000.p50",
+   "label": "indexed lookup p50 at N=10000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.lookup_indexed.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.p95",
+   "label": "indexed lookup p95 at N=10000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.lookup_indexed.p95_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.p99",
+   "label": "indexed lookup p99 at N=10000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.lookup_indexed.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.scan",
+   "label": "oracle scan p50 at N=10000",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.lookup_scan.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.bytes",
+   "label": "index bytes at N=10000",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.index_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.reopen",
+   "label": "reopen at N=10000",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.reopen_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.first",
+   "label": "first indexed lookup after reopen at N=10000",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.first_indexed_lookup_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.speedup",
+   "label": "scan/indexed p50 ratio at N=10000",
+   "unit": "x",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "expr": "{kv.idx.n10000.scan}/{kv.idx.n10000.p50}"
+  },
+  {
+   "key": "kv.idx.ceiling",
+   "label": "end-to-end ceiling: prefixes durably written when /tmp filled",
+   "unit": "prefixes",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "end_to_end_ceiling.achieved",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.io1m.bytes",
+   "label": "index-only 1M segment",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "index_only.3.segment_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.io1m.encode",
+   "label": "index-only 1M encode",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "index_only.3.encode_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.io1m.decode",
+   "label": "index-only 1M decode",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "index_only.3.decode_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.io1m.probe",
+   "label": "index-only 1M probe p50",
+   "unit": "ns",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "index_only.3.probe.p50_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.io1m.rss",
+   "label": "index-only 1M peak RSS",
+   "unit": "KiB",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "index_only.3.peak_rss_kib",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.crash.mismatch0",
+   "label": "crash-case mismatches (after base)",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "crash.0.mismatches",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.crash.mismatch1",
+   "label": "crash-case mismatches (after root)",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "crash.1.mismatches",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.rev.before",
+   "label": "entries before revocation",
+   "unit": "entries",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "revocation.entries_before",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.rev.after",
+   "label": "entries after the delta chain",
+   "unit": "entries",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "revocation.entries_after",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.rev.rebuild",
+   "label": "entries after rebuild",
+   "unit": "entries",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "revocation.rebuild_entries",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.rev.each",
+   "label": "revocation cost each",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "revocation.revoke_ms_each",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.rev.returned",
+   "label": "revoked prefixes returned by either path",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "revocation.revoked_returns_across_both_paths",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.grants.pub.single",
+   "label": "single-commit publication wall",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.single.wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.pub.batch",
+   "label": "batched publication wall",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.batched.wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.pub.speedup",
+   "label": "publication speedup",
+   "unit": "x",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.speedup",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.pub.single_commits",
+   "label": "commits in the single path",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.single.commits",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.pub.batch_commits",
+   "label": "commits in the batched path",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.batched.commits",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.pub.single_bytes",
+   "label": "store bytes in the single path",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.single.store_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.pub.batch_bytes",
+   "label": "store bytes in the batched path",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "publication.batched.store_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.read.on_p50",
+   "label": "grant-cache read p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "page_reads.grant_cache_on.per_page.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.read.on_p99",
+   "label": "grant-cache read p99",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "page_reads.grant_cache_on.per_page.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.read.off_p50",
+   "label": "control read p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "page_reads.grant_cache_off_control.per_page.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.read.off_p99",
+   "label": "control read p99",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "page_reads.grant_cache_off_control.per_page.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.read.speedup",
+   "label": "grant-cache read speedup",
+   "unit": "x",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "expr": "{kv.grants.read.off_p50}/{kv.grants.read.on_p50}"
+  },
+  {
+   "key": "kv.grants.read.hits",
+   "label": "grant-cache hits in the stream",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "page_reads.grant_cache_on.hits",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.read.misses",
+   "label": "grant-cache misses in the stream",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "page_reads.grant_cache_on.misses",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.descriptor_b",
+   "label": "canonical descriptor bytes",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "fixture.descriptor_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.descriptor_pct",
+   "label": "descriptor share of a page",
+   "unit": "%",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "fixture.descriptor_per_page_percent",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.inval.hit",
+   "label": "read hit",
+   "unit": "ns",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "invalidation.hit_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.grants.inval.miss",
+   "label": "read after a commit (miss)",
+   "unit": "ns",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-grants-20261114T133000Z.json",
+   "path": "invalidation.miss_after_commit_ns",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.samples",
+   "label": "samples per arm",
+   "unit": "samples",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "samples_per_arm",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.control_z",
+   "label": "control z (hit vs hit)",
+   "unit": "z",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.control_z",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.size_z",
+   "label": "size-inference z (big vs small denial)",
+   "unit": "z",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.size_inference_z_big_vs_small",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.hit_p50",
+   "label": "authorized hit p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.0.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.hit_p99",
+   "label": "authorized hit p99",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.0.distribution.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.absent_p50",
+   "label": "absent object denial p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.5.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.foreign_p50",
+   "label": "foreign-tenant denial p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.3.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.wrong_root_p50",
+   "label": "wrong-root denial p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.4.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.expired_p50",
+   "label": "expired-grant denial p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.6.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.noenv_p50",
+   "label": "no-envelope denial p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "default.timing.arms.7.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.absent_eq_p50",
+   "label": "absent denial p50 with equalisation",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "denial_equalised.timing.arms.5.distribution.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.result",
+   "label": "side-channel court result",
+   "unit": "text",
+   "group": "kvplane",
+   "format": "text",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "result",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.sc.rev.stale",
+   "label": "stale reads after a revocation",
+   "unit": "reads",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-sidechannel-20261114T133000Z.json",
+   "path": "revocation.stale_reads_after_revocation",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133000Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "0a0723f4326bbee73a2e9649834799c54739f0a4"
+  },
+  {
+   "key": "kv.go.tests.passed",
+   "label": "Go parity tests passed",
+   "unit": "tests",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "test_count.passed",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.tests.failed",
+   "label": "Go parity tests failed",
+   "unit": "tests",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "test_count.failed",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.tests.skipped",
+   "label": "Go parity tests skipped",
+   "unit": "tests",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "test_count.skipped",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.write_per_page",
+   "label": "Go batched write per page",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.write_per_page_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.write_commits",
+   "label": "Go batched write commits",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.write_commits",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.single_per_prefix",
+   "label": "Go single write per prefix",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.single_write_per_prefix_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.read_ms",
+   "label": "Go verified read per prefix",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.read_per_prefix_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.alloc_read",
+   "label": "Go allocated bytes per prefix read",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.alloc_bytes_per_read_prefix",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.alloc_write",
+   "label": "Go allocated bytes per prefix write",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.alloc_bytes_per_write_prefix",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.eng.lookup_p50",
+   "label": "trace replay indexed lookup p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.lookup_indexed.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.scan_p50",
+   "label": "trace replay oracle scan p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.lookup_scan_exact_only.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.get_p50",
+   "label": "trace replay reuse get p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.reuse_get.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.get_p99",
+   "label": "trace replay reuse get p99",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.reuse_get.p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.hash_p50",
+   "label": "trace replay local token-chain hash p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.token_chain_hash_local.p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.break_even",
+   "label": "measured reuse/recompute break-even",
+   "unit": "us/token",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "decision.measured_break_even_per_token_us.value",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.reuse_requests",
+   "label": "requests that reused a prefix",
+   "unit": "requests",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.reuse_requests",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.mismatches",
+   "label": "indexed/scan mismatches",
+   "unit": "count",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "measured.indexed_mismatches",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.regret10",
+   "label": "always-recompute regret at 10 us/token",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "decision.rows.0.always_recompute_regret_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.regret50",
+   "label": "always-recompute regret at 50 us/token",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "decision.rows.1.always_recompute_regret_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.regret120",
+   "label": "always-recompute regret at 120 us/token",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "decision.rows.2.always_recompute_regret_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.regret500",
+   "label": "always-recompute regret at 500 us/token",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "decision.rows.3.always_recompute_regret_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.eng.result",
+   "label": "engine attempt result",
+   "unit": "text",
+   "group": "kvplane",
+   "format": "text",
+   "receipt": "bench/receipts/kv-engine-20261114T133924Z.json",
+   "path": "engine_attempt.result",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133924Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "211be289709bf1e763b8597c40756d4db5b69bea"
+  },
+  {
+   "key": "kv.idx.n1000.store_bytes",
+   "label": "store bytes at N=1000",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.0.store_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n5000.store_bytes",
+   "label": "store bytes at N=5000",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.1.store_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.n10000.store_bytes",
+   "label": "store bytes at N=10000",
+   "unit": "B",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "ladder.2.store_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.idx.ceiling_requested",
+   "label": "rung requested when the end-to-end ceiling was hit",
+   "unit": "prefixes",
+   "group": "kvplane",
+   "format": "int",
+   "receipt": "bench/receipts/kv-prefix-index-20261114T133053Z.json",
+   "path": "end_to_end_ceiling.requested",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133053Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "80d6badd72e3b38eea36e899414a075dbd175b1c"
+  },
+  {
+   "key": "kv.go.read_p50_ms",
+   "label": "verified Go read, p50",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.read_p50_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.read_p99_ms",
+   "label": "verified Go read, p99",
+   "unit": "ms",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.read_p99_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.write_p50_us",
+   "label": "single-prefix Go write, p50",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.single_write_p50_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
+  },
+  {
+   "key": "kv.go.write_p99_us",
+   "label": "single-prefix Go write, p99",
+   "unit": "us",
+   "group": "kvplane",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/kv-go-parity-20261114T133751Z.json",
+   "path": "cost.single_write_p99_us",
+   "stamp_path": "stamp",
+   "stamp": "20261114T133751Z",
+   "revision_path": "revisions.WeftFS",
+   "revision": "d6899a3ce68b6175a57cc838a635345ef0c8c375"
   }
  ],
  "blocks": [
@@ -24491,6 +25749,107 @@
    "rows": [
     {
      "template": "Repeat run: WeftFS fast **{{tg.base.repeat.weft_fast_p50}} ms**, OCDBT **{{tg.base.repeat.ocdbt_p50}} ms**, native DCP **{{tg.base.repeat.dcp_p50}} ms**."
+    }
+   ]
+  },
+  {
+   "id": "kv-index-ladder",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| N | indexed p50 | p95 | p99 | oracle scan p50 | scan/index | index bytes | store bytes | reopen | first indexed lookup |"
+    },
+    {
+     "template": "|---|---|---|---|---|---|---|---|---|---|"
+    },
+    {
+     "template": "| 1,000 | {{kv.idx.n1000.p50}} \u00b5s | {{kv.idx.n1000.p95}} \u00b5s | {{kv.idx.n1000.p99}} \u00b5s | {{kv.idx.n1000.scan}} \u00b5s | {{kv.idx.n1000.speedup}}\u00d7 | {{kv.idx.n1000.bytes}} B | {{kv.idx.n1000.store_bytes}} B | {{kv.idx.n1000.reopen}} ms | {{kv.idx.n1000.first}} ms |"
+    },
+    {
+     "template": "| 5,000 | {{kv.idx.n5000.p50}} \u00b5s | {{kv.idx.n5000.p95}} \u00b5s | {{kv.idx.n5000.p99}} \u00b5s | {{kv.idx.n5000.scan}} \u00b5s | {{kv.idx.n5000.speedup}}\u00d7 | {{kv.idx.n5000.bytes}} B | {{kv.idx.n5000.store_bytes}} B | {{kv.idx.n5000.reopen}} ms | {{kv.idx.n5000.first}} ms |"
+    },
+    {
+     "template": "| 10,000 | {{kv.idx.n10000.p50}} \u00b5s | {{kv.idx.n10000.p95}} \u00b5s | {{kv.idx.n10000.p99}} \u00b5s | {{kv.idx.n10000.scan}} \u00b5s | {{kv.idx.n10000.speedup}}\u00d7 | {{kv.idx.n10000.bytes}} B | {{kv.idx.n10000.store_bytes}} B | {{kv.idx.n10000.reopen}} ms | {{kv.idx.n10000.first}} ms |"
+    }
+   ]
+  },
+  {
+   "id": "kv-index-only",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The largest index-only rung is **N = 1,000,000**: segment **{{kv.idx.io1m.bytes}} B**, encode **{{kv.idx.io1m.encode}} ms**, decode **{{kv.idx.io1m.decode}} ms**, 200 probes at p50 **{{kv.idx.io1m.probe}} ns**, peak RSS **{{kv.idx.io1m.rss}} KiB** (including the entry vector, the encoded copy and the decoded copy)."
+    }
+   ]
+  },
+  {
+   "id": "kv-index-crash",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "End-to-end ceiling: the ladder asked for **{{kv.idx.ceiling_requested}}** prefixes and the court's `/tmp` ran out after **{{kv.idx.ceiling}}** were durably written. Crash after the base segment leaves **no** root (the next reader rebuilds); crash after the root leaves a **valid** index; both cases produced **{{kv.idx.crash.mismatch0}}** and **{{kv.idx.crash.mismatch1}}** mismatches against the oracle. Revocation over one prefix in ten: **{{kv.idx.rev.before}}** entries before, **{{kv.idx.rev.after}}** after the bounded delta chain, **{{kv.idx.rev.rebuild}}** after one rebuild, **{{kv.idx.rev.each}} ms** per revocation, revoked prefixes returned by either path = **{{kv.idx.rev.returned}}**."
+    }
+   ]
+  },
+  {
+   "id": "kv-grants-publish",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Publication of the same prefix set: single **{{kv.grants.pub.single}} ms** / **{{kv.grants.pub.single_commits}}** commits / **{{kv.grants.pub.single_bytes}} B** on disk versus batched **{{kv.grants.pub.batch}} ms** / **{{kv.grants.pub.batch_commits}}** commits / **{{kv.grants.pub.batch_bytes}} B** \u2014 **{{kv.grants.pub.speedup}}\u00d7** faster, with an identical record set."
+    }
+   ]
+  },
+  {
+   "id": "kv-grants-reads",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Page stream (128 \u00d7 4 KiB pages, one grant): grant cache on **{{kv.grants.read.on_p50}} \u00b5s** p50 / **{{kv.grants.read.on_p99}} \u00b5s** p99 with **{{kv.grants.read.hits}}** hits and **{{kv.grants.read.misses}}** miss; the per-read decode control is **{{kv.grants.read.off_p50}} \u00b5s** p50 / **{{kv.grants.read.off_p99}} \u00b5s** p99 \u2014 **{{kv.grants.read.speedup}}\u00d7**. The canonical descriptor is **{{kv.grants.descriptor_b}} B**, **{{kv.grants.descriptor_pct}} %** of the page."
+    },
+    {
+     "template": "A commit invalidates the cached grant: the next read costs **{{kv.grants.inval.miss}} ns** against **{{kv.grants.inval.hit}} ns** for a hit."
+    }
+   ]
+  },
+  {
+   "id": "kv-sidechannel",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Outcome: **{{kv.sc.result}}** \u2014 every cross-tenant, absent and expired probe is denied with one class and one text; **{{kv.sc.rev.stale}}** stale reads after the revocation. **{{kv.sc.samples}}** samples per arm; same-call control z = **{{kv.sc.control_z}}**."
+    },
+    {
+     "template": "Timing (p50 / p99, \u00b5s): authorized hit **{{kv.sc.hit_p50}} / {{kv.sc.hit_p99}}**, absent object **{{kv.sc.absent_p50}}**, foreign tenant **{{kv.sc.foreign_p50}}**, wrong root **{{kv.sc.wrong_root_p50}}**, expired grant **{{kv.sc.expired_p50}}**, no envelope **{{kv.sc.noenv_p50}}**; with `kv_denial_equalise` the absent arm moves to **{{kv.sc.absent_eq_p50}}**. Size-inference z = **{{kv.sc.size_z}}**."
+    }
+   ]
+  },
+  {
+   "id": "kv-go-parity",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Tests: **{{kv.go.tests.passed}} passed / {{kv.go.tests.failed}} failed / {{kv.go.tests.skipped}} skipped**, including the bidirectional handoff. Batched write of 4 MiB in **{{kv.go.write_commits}}** commit: **{{kv.go.write_per_page}} \u00b5s** per page; a single-prefix commit is **{{kv.go.single_per_prefix}} \u00b5s** per prefix (p50 **{{kv.go.write_p50_us}}** / p99 **{{kv.go.write_p99_us}}** \u00b5s). A verified read of a one-page prefix is **{{kv.go.read_ms}} ms** (p50 **{{kv.go.read_p50_ms}}** / p99 **{{kv.go.read_p99_ms}}** ms), allocating **{{kv.go.alloc_read}} B** per read and **{{kv.go.alloc_write}} B** per write."
+    }
+   ]
+  },
+  {
+   "id": "kv-engine",
+   "file": "bench/RESULTS-kv-plane.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Engine attempt: **{{kv.eng.result}}**. Trace replay over **{{kv.eng.reuse_requests}}** reuse requests: indexed lookup **{{kv.eng.lookup_p50}} \u00b5s** p50 against the oracle scan **{{kv.eng.scan_p50}} \u00b5s**, reuse get **{{kv.eng.get_p50}} \u00b5s** p50 / **{{kv.eng.get_p99}} \u00b5s** p99, local token-chain hash **{{kv.eng.hash_p50}} \u00b5s**; mismatches **{{kv.eng.mismatches}}**."
+    },
+    {
+     "template": "Measured break-even is **{{kv.eng.break_even}} \u00b5s/token**: reuse is cheaper than recompute whenever the per-token prefill cost exceeds it. Against the hypothetical grid, always-recompute regret is **{{kv.eng.regret10}} ms** at 10 \u00b5s/token, **{{kv.eng.regret50}} ms** at 50, **{{kv.eng.regret120}} ms** at 120 and **{{kv.eng.regret500}} ms** at 500; always-reuse and the declared model have zero regret in every cell because this fixture's prefixes are long."
     }
    ]
   }
