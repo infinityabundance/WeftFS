@@ -1,0 +1,318 @@
+{
+  "binaries": {
+    "driver_sha256": "8feb48b70a9094b55040e9404b2b01b9eaf0dc6b5291cf756a195de815fb7fda",
+    "proxy_sha256": "20dbdb4fbde94c9fae8736b856744c2ccb019b9de880f9249a874293e212d9ad"
+  },
+  "environment": {
+    "backend": "MinIO (official release binary, started by the court)",
+    "clients": "independent mw2_writer processes; one process per writer",
+    "court": "weft/fuse-court:1",
+    "direct_endpoint": "http://weft-fault-minio-38545:9000",
+    "fault_surface": "userspace HTTP/1.1 forwarding proxy (scripts/fault_proxy.py)",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024",
+    "server_label": "minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)",
+    "server_release": "RELEASE.2025-04-22T22-12-26Z",
+    "server_sha256": "53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c"
+  },
+  "evidence": {
+    "log": "bench/receipts/distributed-faults-20261114T083937Z.log"
+  },
+  "failures": 0,
+  "fault_model": {
+    "actions": [
+      "forward",
+      "delay_request",
+      "delay_response",
+      "drop",
+      "after_apply_drop",
+      "after_apply_truncate",
+      "abort_after_apply",
+      "duplicate"
+    ],
+    "ambiguous_success": "after_apply_* forwards the request, waits for the upstream to apply it, and then destroys the response",
+    "not_modeled": "node partition, server crash, clock skew, packet loss inside the kernel, multi-host ordering"
+  },
+  "generated_at": "20261114T083937Z",
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "868ad2fca44c06a0af5a9f6035fbf92ff93bd9dd"
+    }
+  ],
+  "result": "pass",
+  "role": "T025 distributed write/read failure court",
+  "scenarios": [
+    {
+      "fault_schedule": {
+        "label": "s1",
+        "rules": [
+          {
+            "action": "after_apply_drop",
+            "method": "PUT",
+            "occurrence": 1,
+            "path_regex": "/superblock$"
+          }
+        ]
+      },
+      "file_exact": true,
+      "generation_after_fault": 2,
+      "generation_after_retry": 2,
+      "no_second_commit": true,
+      "ok": true,
+      "outcome_before_retry": "unknown",
+      "retry": {
+        "aborted": 0,
+        "attempts": 0,
+        "backend_reads": 21,
+        "backend_writes": 6,
+        "bytes_read": 13963,
+        "bytes_written": 485,
+        "committed": 1,
+        "conflicts": 0,
+        "cpu_sys_ms": 0,
+        "cpu_user_ms": 0,
+        "domain": null,
+        "elapsed_ms": 2,
+        "errors": [],
+        "generation": 2,
+        "head": "9d844e0cb30d1aa2b124745c1e977baf8d234beca8eca31d433ffe3a0fe8f1ec",
+        "logical_bytes": 4,
+        "ok": true,
+        "peak_rss_kib": 14088,
+        "rebase_gap_commits_cached": 0,
+        "rebase_gap_commits_read": 0,
+        "rebase_max_consecutive_retries": 0,
+        "rebase_total_attempts": 0,
+        "rebase_touched_intersections": 0,
+        "writer": "s1"
+      },
+      "retry_idempotent": true,
+      "scenario": "s1_head_ack_dropped",
+      "verify_full": true,
+      "writer": {
+        "aborted": 0,
+        "attempts": 0,
+        "backend_reads": 21,
+        "backend_writes": 10,
+        "bytes_read": 31496,
+        "bytes_written": 1588,
+        "committed": 0,
+        "conflicts": 0,
+        "cpu_sys_ms": 0,
+        "cpu_user_ms": 0,
+        "domain": null,
+        "elapsed_ms": 16,
+        "errors": [
+          "Io: S3 PUT s3://weft-dist-20261114t083937z-s1/superblock failed: http://127.0.0.1:54673/weft-dist-20261114t083937z-s1/superblock: Network Error: Unexpected EOF"
+        ],
+        "generation": 2,
+        "head": "9d844e0cb30d1aa2b124745c1e977baf8d234beca8eca31d433ffe3a0fe8f1ec",
+        "logical_bytes": 0,
+        "ok": false,
+        "peak_rss_kib": 14316,
+        "rebase_gap_commits_cached": 0,
+        "rebase_gap_commits_read": 0,
+        "rebase_max_consecutive_retries": 0,
+        "rebase_total_attempts": 1,
+        "rebase_touched_intersections": 0,
+        "writer": "s1"
+      },
+      "writer_ambiguous": true
+    },
+    {
+      "committed": 1,
+      "errors": [],
+      "fault_schedule": {
+        "label": "s2",
+        "rules": [
+          {
+            "action": "duplicate",
+            "method": "PUT",
+            "occurrence": 1,
+            "path_regex": "/objects/"
+          }
+        ]
+      },
+      "file_exact": true,
+      "objects_after": 1,
+      "objects_before": 0,
+      "ok": true,
+      "scenario": "s2_duplicate_put",
+      "verify_full": true
+    },
+    {
+      "a": {
+        "aborted": 0,
+        "attempts": 0,
+        "backend_reads": 17,
+        "backend_writes": 9,
+        "bytes_read": 30388,
+        "bytes_written": 706,
+        "committed": 0,
+        "conflicts": 1,
+        "cpu_sys_ms": 0,
+        "cpu_user_ms": 0,
+        "domain": null,
+        "elapsed_ms": 49,
+        "errors": [],
+        "generation": 2,
+        "head": "8551c6c9574189ba3dee66218f1b5d3b709bdfa630ff3c52e18394e3c5f4e7b0",
+        "logical_bytes": 0,
+        "ok": true,
+        "peak_rss_kib": 14152,
+        "rebase_gap_commits_cached": 0,
+        "rebase_gap_commits_read": 1,
+        "rebase_max_consecutive_retries": 0,
+        "rebase_total_attempts": 0,
+        "rebase_touched_intersections": 1,
+        "writer": "a"
+      },
+      "b": {
+        "aborted": 0,
+        "attempts": 1,
+        "backend_reads": 15,
+        "backend_writes": 12,
+        "bytes_read": 19865,
+        "bytes_written": 10092,
+        "committed": 1,
+        "conflicts": 0,
+        "cpu_sys_ms": 0,
+        "cpu_user_ms": 0,
+        "domain": null,
+        "elapsed_ms": 11,
+        "errors": [],
+        "generation": 2,
+        "head": "8551c6c9574189ba3dee66218f1b5d3b709bdfa630ff3c52e18394e3c5f4e7b0",
+        "logical_bytes": 3,
+        "ok": true,
+        "peak_rss_kib": 14124,
+        "rebase_gap_commits_cached": 0,
+        "rebase_gap_commits_read": 0,
+        "rebase_max_consecutive_retries": 0,
+        "rebase_total_attempts": 1,
+        "rebase_touched_intersections": 0,
+        "writer": "b"
+      },
+      "committed": 1,
+      "fault_schedule": {
+        "label": "s3",
+        "rules": [
+          {
+            "action": "delay_request:400",
+            "method": "PUT",
+            "occurrence": 2,
+            "path_regex": "/superblock$"
+          }
+        ]
+      },
+      "ok": true,
+      "scenario": "s3_reordered_concurrent",
+      "typed_losers": 1,
+      "verify_full": true,
+      "winner_content_len": 3
+    },
+    {
+      "fault_schedule": {
+        "label": "s4",
+        "rules": [
+          {
+            "action": "delay_request:300",
+            "method": "PUT",
+            "occurrence": 1,
+            "path_regex": "/superblock$"
+          }
+        ]
+      },
+      "file_exact": true,
+      "killed": true,
+      "ok": true,
+      "outcome_before_retry": "unknown",
+      "retry_committed": 1,
+      "scenario": "s4_kill_between_prepare_and_commit",
+      "verify_full": true
+    },
+    {
+      "after_len": 3,
+      "before_len": 3,
+      "fault_schedule": {
+        "label": "s5",
+        "rules": []
+      },
+      "fresh_len": 3,
+      "new_reader_sees_newer": true,
+      "ok": true,
+      "reader_generation": 2,
+      "ready_generation": 2,
+      "scenario": "s5_stale_reader",
+      "stale_reader_unchanged": true,
+      "verify_full": true
+    },
+    {
+      "fault_schedule": {
+        "label": "s6",
+        "rules": [
+          {
+            "action": "after_apply_drop",
+            "method": "PUT",
+            "occurrence": 1,
+            "path_regex": "/commits/"
+          }
+        ]
+      },
+      "file_exact": true,
+      "generation_before_retry": 1,
+      "ok": true,
+      "outcome_before_retry": "unknown",
+      "retry_committed": 1,
+      "scenario": "s6_commit_record_ack_dropped",
+      "verify_full": true,
+      "writer": {
+        "aborted": 0,
+        "attempts": 0,
+        "backend_reads": 18,
+        "backend_writes": 9,
+        "bytes_read": 29917,
+        "bytes_written": 706,
+        "committed": 0,
+        "conflicts": 0,
+        "cpu_sys_ms": 0,
+        "cpu_user_ms": 0,
+        "domain": null,
+        "elapsed_ms": 11,
+        "errors": [
+          "Io: S3 PUT s3://weft-dist-20261114t083937z-s6/commits/2.commit failed: http://127.0.0.1:44717/weft-dist-20261114t083937z-s6/commits/2.commit: Network Error: Unexpected EOF"
+        ],
+        "generation": 1,
+        "head": "a130c63e1acd1d6bee83ae026748b166c718b4bfd7e1850087a63b7f3eae375b",
+        "logical_bytes": 0,
+        "ok": false,
+        "peak_rss_kib": 14360,
+        "rebase_gap_commits_cached": 0,
+        "rebase_gap_commits_read": 0,
+        "rebase_max_consecutive_retries": 0,
+        "rebase_total_attempts": 1,
+        "rebase_touched_intersections": 0,
+        "writer": "r"
+      },
+      "writer_ambiguous": true
+    }
+  ],
+  "schema": "weftfs.distributed_faults/1",
+  "scope": {
+    "checked": "acknowledged-then-lost head and commit-record responses, duplicated PUT, reordered concurrent head publications, a client killed between prepare and commit, a stale reader, and every outcome resolved through the shipped transaction-outcome path",
+    "label": "one host, one backend instance, proxy-level faults; NOT a partition of physical nodes, not a server crash, not media or power loss",
+    "not_checked": "multi-host clusters, consensus, quorum, clock skew, physical network partitions, server-side crashes, Go parity"
+  },
+  "verdicts": {
+    "ambiguous_success_resolved": true,
+    "duplicated_request_idempotent": true,
+    "kill_between_prepare_and_commit_resolved": true,
+    "no_acknowledged_lost_update": true,
+    "no_blind_overwrite": true,
+    "no_partial_checkpoint": true,
+    "stale_reader_snapshot_isolated": true
+  }
+}

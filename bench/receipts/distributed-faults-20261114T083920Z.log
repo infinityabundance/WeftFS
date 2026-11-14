@@ -1,0 +1,174 @@
+== T025 distributed write/read failure court ==
+kernel: Linux 483d05e96ccf 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1
+limit: memory=3g cpus=4 pids=1024
+direct endpoint: http://weft-fault-minio-36710:9000
+label: one host, one backend instance, proxy-level faults, not a node partition
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1654:9
+     |
+1654 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1655:9
+     |
+1655 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1656:9
+     |
+1656 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1730:9
+     |
+1730 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3018:13
+     |
+3018 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1700:8
+     |
+1212 | impl Store {
+     | ---------- method in this implementation
+...
+1700 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: unused import: `HeadExpectation`
+  --> examples/mw2_writer.rs:37:36
+   |
+37 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, KeyKind, StorageBackend};
+   |                                    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `StorageBackend`
+  --> examples/mw2_writer.rs:37:81
+   |
+37 | use weftfs::backend::{BackendKind, HeadExpectation, Key as BackendKey, KeyKind, StorageBackend};
+   |                                                                                 ^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> examples/mw2_writer.rs:142:9
+    |
+142 |     let mut plane = backend_kind(args, &backend(args))
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `open_store` is never used
+   --> examples/mw2_writer.rs:115:4
+    |
+115 | fn open_store(
+    |    ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+== build ==
+driver sha256=8feb48b70a9094b55040e9404b2b01b9eaf0dc6b5291cf756a195de815fb7fda proxy sha256=20dbdb4fbde94c9fae8736b856744c2ccb019b9de880f9249a874293e212d9ad
+== S1 head acknowledged-then-lost ==
+S1: {"file_exact": true, "generation_after_fault": 2, "generation_after_retry": 2, "no_second_commit": true, "ok": true, "outcome_before_retry": "unknown", "retry": {"aborted": 0, "attempts": 0, "backend_reads": 21, "backend_writes": 6, "bytes_read": 13963, "bytes_written": 485, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "domain": null, "elapsed_ms": 2, "errors": [], "generation": 2, "head": "9d844e0cb30d1aa2b124745c1e977baf8d234beca8eca31d433ffe3a0fe8f1ec", "logical_bytes": 4, "ok": true, "peak_rss_kib": 14052, "rebase_gap_commits_cached": 0, "rebase_gap_commits_read": 0, "rebase_max_consecutive_retries": 0, "rebase_total_attempts": 0, "rebase_touched_intersections": 0, "writer": "s1"}, "retry_idempotent": true, "verify_full": true, "writer": {"aborted": 0, "attempts": 0, "backend_reads": 21, "backend_writes": 10, "bytes_read": 31496, "bytes_written": 1588, "committed": 0, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "domain": null, "elapsed_ms": 16, "errors": ["Io: S3 PUT s3://weft-dist-20261114t083920z-s1/superblock failed: http://127.0.0.1:50577/weft-dist-20261114t083920z-s1/superblock: Network Error: Unexpected EOF"], "generation": 2, "head": "9d844e0cb30d1aa2b124745c1e977baf8d234beca8eca31d433ffe3a0fe8f1ec", "logical_bytes": 0, "ok": false, "peak_rss_kib": 13888, "rebase_gap_commits_cached": 0, "rebase_gap_commits_read": 0, "rebase_max_consecutive_retries": 0, "rebase_total_attempts": 1, "rebase_touched_intersections": 0, "writer": "s1"}, "writer_ambiguous": true}
+== S2 duplicated blob PUT ==
+S2: {"committed": 1, "errors": [], "file_exact": true, "objects_after": 1, "objects_before": 0, "ok": true, "verify_full": true}
+== S3 reordered concurrent writers ==
+S3: {"a": {"aborted": 0, "attempts": 1, "backend_reads": 14, "backend_writes": 13, "bytes_read": 19772, "bytes_written": 10185, "committed": 1, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 0, "domain": null, "elapsed_ms": 10, "errors": [], "generation": 2, "head": "1798b77f7ecea5569f26f17ae4dde1ffaed7c53fc05ad57a0d5a3a82e4d76b9e", "logical_bytes": 3, "ok": true, "peak_rss_kib": 14100, "rebase_gap_commits_cached": 0, "rebase_gap_commits_read": 0, "rebase_max_consecutive_retries": 0, "rebase_total_attempts": 1, "rebase_touched_intersections": 0, "writer": "a"}, "b": {"aborted": 0, "attempts": 0, "backend_reads": 17, "backend_writes": 8, "bytes_read": 29602, "bytes_written": 613, "committed": 0, "conflicts": 1, "cpu_sys_ms": 0, "cpu_user_ms": 0, "domain": null, "elapsed_ms": 58, "errors": [], "generation": 2, "head": "1798b77f7ecea5569f26f17ae4dde1ffaed7c53fc05ad57a0d5a3a82e4d76b9e", "logical_bytes": 0, "ok": true, "peak_rss_kib": 13944, "rebase_gap_commits_cached": 0, "rebase_gap_commits_read": 1, "rebase_max_consecutive_retries": 0, "rebase_total_attempts": 0, "rebase_touched_intersections": 1, "writer": "b"}, "committed": 1, "ok": true, "typed_losers": 1, "verify_full": true, "winner_content_len": 3}
+== S4 client killed between prepare and commit ==
+S4: {"file_exact": true, "killed": true, "ok": true, "outcome_before_retry": "unknown", "retry_committed": 1, "verify_full": true}
+== S5 stale reader ==
+S5: {"after_len": 3, "before_len": 3, "fresh_len": 3, "new_reader_sees_newer": true, "ok": true, "reader_generation": 2, "ready_generation": 2, "stale_reader_unchanged": true}
+== S6 commit record acknowledged-then-lost ==
+S6: {"file_exact": true, "generation_before_retry": 1, "ok": true, "outcome_before_retry": "unknown", "retry_committed": 1, "verify_full": true, "writer": {"aborted": 0, "attempts": 0, "backend_reads": 18, "backend_writes": 9, "bytes_read": 29917, "bytes_written": 706, "committed": 0, "conflicts": 0, "cpu_sys_ms": 0, "cpu_user_ms": 10, "domain": null, "elapsed_ms": 11, "errors": ["Io: S3 PUT s3://weft-dist-20261114t083920z-s6/commits/2.commit failed: http://127.0.0.1:56397/weft-dist-20261114t083920z-s6/commits/2.commit: Network Error: Unexpected EOF"], "generation": 1, "head": "a130c63e1acd1d6bee83ae026748b166c718b4bfd7e1850087a63b7f3eae375b", "logical_bytes": 0, "ok": false, "peak_rss_kib": 13800, "rebase_gap_commits_cached": 0, "rebase_gap_commits_read": 0, "rebase_max_consecutive_retries": 0, "rebase_total_attempts": 1, "rebase_touched_intersections": 0, "writer": "r"}, "writer_ambiguous": true}
+{"receipt": "bench/receipts/distributed-faults-20261114T083920Z.json", "result": "pass", "verdicts": {"no_acknowledged_lost_update": true, "no_partial_checkpoint": false, "no_blind_overwrite": true, "ambiguous_success_resolved": true, "duplicated_request_idempotent": true, "kill_between_prepare_and_commit_resolved": true, "stale_reader_snapshot_isolated": true}}
+receipt: bench/receipts/distributed-faults-20261114T083920Z.json

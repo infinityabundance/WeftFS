@@ -12701,7 +12701,27 @@ impl Store {
                     Err(err) if err.class() == crate::error::Class::NotFound => {}
                     Err(err) => return Err(err),
                 }
-                backend.put_atomic(&key, bytes)?;
+                match backend.put_atomic(&key, bytes) {
+                    Ok(()) => {}
+                    Err(err) if err.class() == Class::Exists => {
+                        // At-least-once delivery (a retried or duplicated PUT)
+                        // must be idempotent: the object is content-addressed,
+                        // so an existing blob with the same bytes is success.
+                        // A different body under the same name is corruption.
+                        let existing = backend.read_all(&key)?;
+                        if identity::h(domain, &existing) != hash {
+                            return Err(Error::corrupt(format!(
+                                "blob {} appeared concurrently with different bytes",
+                                key.display_path()
+                            )));
+                        }
+                        self.publication
+                            .duplicate_blobs
+                            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                        return Ok(hash);
+                    }
+                    Err(err) => return Err(err),
+                }
                 let (count, byte_count) = match kind {
                     BlobKind::Object => (
                         &self.publication.object_blobs,

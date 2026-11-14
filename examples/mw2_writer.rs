@@ -1059,6 +1059,52 @@ fn main() {
                 serde_json::json!({"ok": true, "writer": writer, "replaced": replaced})
             );
         }
+        "overwrite" => {
+            // Replace an existing file's content: a new object version with the
+            // observed version as the precondition, in one transaction.
+            let name = arg(&args, "--name").unwrap_or_else(|| "overwrite.bin".to_owned());
+            let content = arg(&args, "--content").unwrap_or_else(|| "overwrite".to_owned());
+            let tx_id = arg(&args, "--tx-id")
+                .unwrap_or_else(|| "0000000000000000000000000000beef".to_owned());
+            let mut store = open_driver(
+                &store_path,
+                OpenMode::ReadWrite,
+                WriterMode::Optimistic,
+                now,
+                &backend_name,
+                &args,
+            );
+            let object_id = store
+                .lookup(State::ROOT_ID, name.as_bytes())
+                .expect("lookup");
+            let old = store.current_state().objects[&object_id].clone();
+            let (manifest, _, size) = store.prepare_content(content.as_bytes()).expect("content");
+            let version = derive_version_id(object_id, manifest, size, now + 1, None).expect("v");
+            let mut record = old.clone();
+            record.content = manifest;
+            record.size = size;
+            record.version = version;
+            record.mtime_ns = now + 1;
+            let mut tx = store.begin_transaction(&tx_id).expect("begin");
+            {
+                let state = store.current_state();
+                tx.put_object(state, record).expect("put object");
+                tx.set_tip(state, object_id, version).expect("tip");
+            }
+            let outcome = store
+                .execute_transaction(&tx, &TransactionOptions::default())
+                .expect("execute");
+            println!(
+                "{}",
+                serde_json::json!({
+                    "ok": true,
+                    "object_id": hex(object_id),
+                    "generation": outcome.generation,
+                    "size": size,
+                    "read": read_named(&store, &name),
+                })
+            );
+        }
         "read-loop" => {
             // Repeated whole-file reads for a concurrent-reader court. Reports
             // every read that returned wrong bytes, not just the last one.
