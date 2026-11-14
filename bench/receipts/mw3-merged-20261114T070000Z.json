@@ -1,0 +1,2174 @@
+{
+  "aggregation": "median across runs; `spread` records min/max per numeric field",
+  "contract": "spec/WEFT-MULTIWRITER.md section 15; bench/CONTRACTS-multiwriter.md section 8",
+  "environment": {
+    "court": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "evidence": {
+    "log": "bench/receipts/mw3-20261114T065404Z.log",
+    "log_sha256": "1ffbcbed23caf3656b30de1d84f47845b49a0adc39afa177c1eccf36a5e1c5c1"
+  },
+  "generated_at": "2026-11-14T06:54:15Z",
+  "isolation": "per-domain linearizable publication; the read view is a sequential capture, never a global linearizable point",
+  "merged_from": [
+    {
+      "receipt": "bench/receipts/mw3-20261114T065404Z.json",
+      "sha256": "0beccd39f7c9d45b5b8107a19f561e1ec40803b91c577ea6d993bf5609f0d4ef",
+      "stamp": "20261114T065404Z"
+    },
+    {
+      "receipt": "bench/receipts/mw3-20261114T065415Z.json",
+      "sha256": "7addd146d6923f801675719965ae62fd1893a7a0a16f53bf5d5559ad8e142c9e",
+      "stamp": "20261114T065415Z"
+    },
+    {
+      "receipt": "bench/receipts/mw3-20261114T065426Z.json",
+      "sha256": "d47fb0383aaba4d6d97ae57cbcc9fbe28e52915052ac8c1c4c01636420db45fe",
+      "stamp": "20261114T065426Z"
+    },
+    {
+      "receipt": "bench/receipts/mw3-20261114T065450Z.json",
+      "sha256": "74af53c07abb6ba6c4157381137739bd1c8430cb3573b49493fd7c167ba612f2",
+      "stamp": "20261114T065450Z"
+    },
+    {
+      "receipt": "bench/receipts/mw3-20261114T065502Z.json",
+      "sha256": "74d958f70fc7e8b74fc01732d68f28596324eb381ce30ea8cd8ebf595a0d54e3",
+      "stamp": "20261114T065502Z"
+    },
+    {
+      "receipt": "bench/receipts/mw3-20261114T065513Z.json",
+      "sha256": "f0b8912ecf8a5442568aa15f29dc8e6555b4d48a4299d41923b2989c62c782bc",
+      "stamp": "20261114T065513Z"
+    },
+    {
+      "receipt": "bench/receipts/mw3-20261114T065524Z.json",
+      "sha256": "7e53aba55f3b3342f59849c0bd90cb586c9f8978f5fc3ed73273c6f4f8a62350",
+      "stamp": "20261114T065524Z"
+    }
+  ],
+  "not_claimed": [
+    "fleet/multi-node",
+    "cross-domain atomicity",
+    "coordinated GC",
+    "physical power loss",
+    "Go MW3 parity"
+  ],
+  "profile": "full",
+  "revisions": {
+    "WeftFS": "2dc840e13dda3b099bcd1911be1defead8512eca"
+  },
+  "rows": [
+    {
+      "aborted": 0,
+      "attempts": 400,
+      "backend_reads": 1218,
+      "backend_requests": 3621,
+      "backend_writes": 2403,
+      "bytes_read": 6659258,
+      "bytes_written": 2134928,
+      "client": "process-per-writer",
+      "committed": 400,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 0.169786,
+      "n": 1,
+      "p50_ms": 0.061855,
+      "p95_ms": 0.075712,
+      "p99_ms": 0.111307,
+      "process_failures": 0,
+      "processes": 1,
+      "reads_per_commit": 3.045,
+      "requested": 400,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 6428,
+      "scaling_efficiency": 1.0,
+      "startup_ms": 1,
+      "steady_efficiency": 1.0,
+      "steady_ms": 35,
+      "steady_tx_s": 11428.571428571428,
+      "throughput_tx_s": 11111.111111111111,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 11111.111111111111,
+      "verify_full": true,
+      "wall_ms": 36,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 800,
+      "backend_reads": 2436,
+      "backend_requests": 7242,
+      "backend_writes": 4806,
+      "bytes_read": 13318516,
+      "bytes_written": 4269856,
+      "client": "process-per-writer",
+      "committed": 800,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 0.230691,
+      "n": 2,
+      "p50_ms": 0.063769,
+      "p95_ms": 0.081612,
+      "p99_ms": 0.111929,
+      "process_failures": 0,
+      "processes": 2,
+      "reads_per_commit": 3.045,
+      "requested": 800,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 13020,
+      "scaling_efficiency": 0.972972972972973,
+      "startup_ms": 1,
+      "steady_efficiency": 0.9722222222222223,
+      "steady_ms": 36,
+      "steady_tx_s": 22222.222222222223,
+      "throughput_tx_s": 21621.621621621623,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 10810.810810810812,
+      "verify_full": true,
+      "wall_ms": 37,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 1600,
+      "backend_reads": 4872,
+      "backend_requests": 14484,
+      "backend_writes": 9612,
+      "bytes_read": 26637032,
+      "bytes_written": 8539712,
+      "client": "process-per-writer",
+      "committed": 1600,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 1.069656,
+      "n": 4,
+      "p50_ms": 0.065913,
+      "p95_ms": 0.089327,
+      "p99_ms": 0.14457,
+      "process_failures": 0,
+      "processes": 4,
+      "reads_per_commit": 3.045,
+      "requested": 1600,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 25940,
+      "scaling_efficiency": 0.9,
+      "startup_ms": 1,
+      "steady_efficiency": 0.8974358974358975,
+      "steady_ms": 39,
+      "steady_tx_s": 41025.64102564102,
+      "throughput_tx_s": 40000.0,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 10000.0,
+      "verify_full": true,
+      "wall_ms": 40,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 3200,
+      "backend_reads": 9744,
+      "backend_requests": 28968,
+      "backend_writes": 19224,
+      "bytes_read": 53274064,
+      "bytes_written": 17079424,
+      "client": "process-per-writer",
+      "committed": 3200,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 1.831106,
+      "n": 8,
+      "p50_ms": 0.086532,
+      "p95_ms": 0.129442,
+      "p99_ms": 0.213939,
+      "process_failures": 0,
+      "processes": 8,
+      "reads_per_commit": 3.045,
+      "requested": 3200,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 51788,
+      "scaling_efficiency": 0.631578947368421,
+      "startup_ms": 2,
+      "steady_efficiency": 0.6250000000000001,
+      "steady_ms": 56,
+      "steady_tx_s": 57142.857142857145,
+      "throughput_tx_s": 56140.35087719298,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 7017.543859649122,
+      "verify_full": true,
+      "wall_ms": 57,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 6400,
+      "backend_reads": 19488,
+      "backend_requests": 57936,
+      "backend_writes": 38448,
+      "bytes_read": 106548128,
+      "bytes_written": 34163648,
+      "client": "process-per-writer",
+      "committed": 6400,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 70.318026,
+      "n": 16,
+      "p50_ms": 0.142857,
+      "p95_ms": 0.419693,
+      "p99_ms": 1.092147,
+      "process_failures": 0,
+      "processes": 16,
+      "reads_per_commit": 3.045,
+      "requested": 6400,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 103332,
+      "scaling_efficiency": 0.1469387755102041,
+      "startup_ms": 2,
+      "steady_efficiency": 0.14462809917355374,
+      "steady_ms": 242,
+      "steady_tx_s": 26446.280991735537,
+      "throughput_tx_s": 26122.448979591838,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 1632.6530612244899,
+      "verify_full": true,
+      "wall_ms": 245,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 12800,
+      "backend_reads": 38976,
+      "backend_requests": 115872,
+      "backend_writes": 76896,
+      "bytes_read": 213096256,
+      "bytes_written": 68335296,
+      "client": "process-per-writer",
+      "committed": 12800,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 70.882921,
+      "n": 32,
+      "p50_ms": 0.16106,
+      "p95_ms": 1.460244,
+      "p99_ms": 48.768173,
+      "process_failures": 0,
+      "processes": 32,
+      "reads_per_commit": 3.045,
+      "requested": 12800,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 206380,
+      "scaling_efficiency": 0.05970149253731343,
+      "startup_ms": 2,
+      "steady_efficiency": 0.05823627287853578,
+      "steady_ms": 601,
+      "steady_tx_s": 21297.83693843594,
+      "throughput_tx_s": 21227.197346600333,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 663.3499170812604,
+      "verify_full": true,
+      "wall_ms": 603,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 25600,
+      "backend_reads": 77952,
+      "backend_requests": 231744,
+      "backend_writes": 153792,
+      "bytes_read": 426192512,
+      "bytes_written": 136678592,
+      "client": "process-per-writer",
+      "committed": 25600,
+      "conflicts": 0,
+      "count_per_writer": 400,
+      "distribution": "disjoint",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 0,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 73.985108,
+      "n": 64,
+      "p50_ms": 0.175618,
+      "p95_ms": 3.608903,
+      "p99_ms": 67.78456,
+      "process_failures": 0,
+      "processes": 64,
+      "reads_per_commit": 3.045,
+      "requested": 25600,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 414812,
+      "scaling_efficiency": 0.027586206896551727,
+      "startup_ms": 4,
+      "steady_efficiency": 0.02688172043010753,
+      "steady_ms": 1302,
+      "steady_tx_s": 19662.05837173579,
+      "throughput_tx_s": 19616.858237547895,
+      "touched_intersections": 0,
+      "tx_per_writer_s": 306.51340996168585,
+      "verify_full": true,
+      "wall_ms": 1305,
+      "writes_per_commit": 6.0075
+    },
+    {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 60,
+      "backend_requests": 129,
+      "backend_writes": 69,
+      "bytes_read": 213839,
+      "bytes_written": 12911,
+      "client": "process-per-writer",
+      "committed": 1,
+      "conflicts": 19,
+      "count_per_writer": 10,
+      "distribution": "same-domain",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 1,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 0.08079,
+      "n": 2,
+      "p50_ms": 0.019356,
+      "p95_ms": 0.056776,
+      "p99_ms": 0.08079,
+      "process_failures": 0,
+      "processes": 2,
+      "reads_per_commit": 60.0,
+      "requested": 20,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 11888,
+      "scaling_efficiency": null,
+      "startup_ms": 1,
+      "steady_efficiency": null,
+      "steady_ms": 0,
+      "steady_tx_s": 0.0,
+      "throughput_tx_s": 1000.0,
+      "touched_intersections": 1,
+      "tx_per_writer_s": 500.0,
+      "verify_full": true,
+      "wall_ms": 1,
+      "writes_per_commit": 69.0
+    },
+    {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 240,
+      "backend_requests": 507,
+      "backend_writes": 267,
+      "bytes_read": 834941,
+      "bytes_written": 36779,
+      "client": "process-per-writer",
+      "committed": 1,
+      "conflicts": 79,
+      "count_per_writer": 10,
+      "distribution": "same-domain",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 1,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 0.119202,
+      "n": 8,
+      "p50_ms": 0.02639,
+      "p95_ms": 0.062707,
+      "p99_ms": 0.098854,
+      "process_failures": 0,
+      "processes": 8,
+      "reads_per_commit": 240.0,
+      "requested": 80,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 46772,
+      "scaling_efficiency": null,
+      "startup_ms": 2,
+      "steady_efficiency": null,
+      "steady_ms": 0,
+      "steady_tx_s": 0.0,
+      "throughput_tx_s": 500.0,
+      "touched_intersections": 1,
+      "tx_per_writer_s": 62.5,
+      "verify_full": true,
+      "wall_ms": 2,
+      "writes_per_commit": 267.0
+    },
+    {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 960,
+      "backend_requests": 2019,
+      "backend_writes": 1059,
+      "bytes_read": 3319349,
+      "bytes_written": 132471,
+      "client": "process-per-writer",
+      "committed": 1,
+      "conflicts": 319,
+      "count_per_writer": 10,
+      "distribution": "same-domain",
+      "errors": [],
+      "gap_commits_cached": 0,
+      "gap_commits_read": 1,
+      "global_reader_refused": true,
+      "max_consecutive_retries": 0,
+      "max_ms": 0.485897,
+      "n": 32,
+      "p50_ms": 0.038202,
+      "p95_ms": 0.221693,
+      "p99_ms": 0.464556,
+      "process_failures": 0,
+      "processes": 32,
+      "reads_per_commit": 960.0,
+      "requested": 320,
+      "retry_amplification": 1.0,
+      "rss_sum_kib": 187924,
+      "scaling_efficiency": null,
+      "startup_ms": 4,
+      "steady_efficiency": null,
+      "steady_ms": 2,
+      "steady_tx_s": 500.0,
+      "throughput_tx_s": 166.66666666666666,
+      "touched_intersections": 1,
+      "tx_per_writer_s": 5.208333333333333,
+      "verify_full": true,
+      "wall_ms": 6,
+      "writes_per_commit": 1059.0
+    }
+  ],
+  "runs": 7,
+  "scaling_efficiency_base": 11428.571428571428,
+  "schema": "weftfs.mw3.bench/1",
+  "spread": {
+    "disjoint/1": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 1218,
+        "min": 1218,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 3621,
+        "min": 3621,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 2403,
+        "min": 2403,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 6659258,
+        "min": 6659258,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 2134928,
+        "min": 2134928,
+        "runs": 7
+      },
+      "committed": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 0.437306,
+        "min": 0.135513,
+        "runs": 7
+      },
+      "n": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.063989,
+        "min": 0.061235,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.094527,
+        "min": 0.073838,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.157524,
+        "min": 0.095108,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 6576,
+        "min": 6312,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 2,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 36,
+        "min": 34,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 11764.70588235294,
+        "min": 11111.111111111111,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 11428.571428571428,
+        "min": 10526.315789473685,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 11428.571428571428,
+        "min": 10526.315789473685,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 38,
+        "min": 35,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "disjoint/16": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 6400,
+        "min": 6400,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 19488,
+        "min": 19488,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 57936,
+        "min": 57936,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 38448,
+        "min": 38448,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 106548128,
+        "min": 106548128,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 34163648,
+        "min": 34163648,
+        "runs": 7
+      },
+      "committed": {
+        "max": 6400,
+        "min": 6400,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 71.736132,
+        "min": 69.163282,
+        "runs": 7
+      },
+      "n": {
+        "max": 16,
+        "min": 16,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.146784,
+        "min": 0.139951,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.505002,
+        "min": 0.335025,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 1.145867,
+        "min": 0.897034,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 16,
+        "min": 16,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 6400,
+        "min": 6400,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 103708,
+        "min": 102968,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 0.15546218487394958,
+        "min": 0.11726384364820847,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 3,
+        "min": 2,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 0.14893617021276598,
+        "min": 0.11513157894736845,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 304,
+        "min": 235,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 27234.04255319149,
+        "min": 21052.63157894737,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 27004.2194092827,
+        "min": 20846.905537459283,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 1687.7637130801688,
+        "min": 1302.9315960912052,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 307,
+        "min": 237,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "disjoint/2": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 800,
+        "min": 800,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 2436,
+        "min": 2436,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 7242,
+        "min": 7242,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 4806,
+        "min": 4806,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 13318516,
+        "min": 13318516,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 4269856,
+        "min": 4269856,
+        "runs": 7
+      },
+      "committed": {
+        "max": 800,
+        "min": 800,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 1.24348,
+        "min": 0.17156,
+        "runs": 7
+      },
+      "n": {
+        "max": 2,
+        "min": 2,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.065954,
+        "min": 0.063138,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.098814,
+        "min": 0.078156,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.138589,
+        "min": 0.099666,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 2,
+        "min": 2,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 800,
+        "min": 800,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 13092,
+        "min": 12756,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 1.0,
+        "min": 0.9268292682926829,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 0.972972972972973,
+        "min": 0.9,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 40,
+        "min": 36,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 22222.222222222223,
+        "min": 20000.0,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 21621.621621621623,
+        "min": 19512.19512195122,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 10810.810810810812,
+        "min": 9756.09756097561,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 41,
+        "min": 37,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "disjoint/32": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 12800,
+        "min": 12800,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 38976,
+        "min": 38976,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 115872,
+        "min": 115872,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 76896,
+        "min": 76896,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 213096256,
+        "min": 213096256,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 68335296,
+        "min": 68335296,
+        "runs": 7
+      },
+      "committed": {
+        "max": 12800,
+        "min": 12800,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 71.474945,
+        "min": 70.648493,
+        "runs": 7
+      },
+      "n": {
+        "max": 32,
+        "min": 32,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.166851,
+        "min": 0.157093,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 1.630933,
+        "min": 1.386177,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 57.705888,
+        "min": 24.310314,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 32,
+        "min": 32,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 12800,
+        "min": 12800,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 207724,
+        "min": 206104,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 0.06260296540362438,
+        "min": 0.058823529411764705,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 5,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 0.05982905982905984,
+        "min": 0.05608974358974359,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 624,
+        "min": 582,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 21993.127147766325,
+        "min": 20512.82051282051,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 21917.808219178085,
+        "min": 20349.761526232116,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 684.9315068493152,
+        "min": 635.9300476947536,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 629,
+        "min": 584,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "disjoint/4": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 1600,
+        "min": 1600,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 4872,
+        "min": 4872,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 14484,
+        "min": 14484,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 9612,
+        "min": 9612,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 26637032,
+        "min": 26637032,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 8539712,
+        "min": 8539712,
+        "runs": 7
+      },
+      "committed": {
+        "max": 1600,
+        "min": 1600,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 1.655889,
+        "min": 0.273631,
+        "runs": 7
+      },
+      "n": {
+        "max": 4,
+        "min": 4,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.067175,
+        "min": 0.065181,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.10221,
+        "min": 0.079859,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.174596,
+        "min": 0.136394,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 4,
+        "min": 4,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 1600,
+        "min": 1600,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 26192,
+        "min": 25764,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 0.95,
+        "min": 0.8780487804878049,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 2,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 0.923076923076923,
+        "min": 0.8750000000000001,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 41,
+        "min": 38,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 42105.26315789474,
+        "min": 39024.39024390244,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 41025.64102564102,
+        "min": 38095.23809523809,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 10256.410256410256,
+        "min": 9523.809523809523,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 42,
+        "min": 39,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "disjoint/64": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 25600,
+        "min": 25600,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 77952,
+        "min": 77952,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 231744,
+        "min": 231744,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 153792,
+        "min": 153792,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 426192512,
+        "min": 426192512,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 136678592,
+        "min": 136678592,
+        "runs": 7
+      },
+      "committed": {
+        "max": 25600,
+        "min": 25600,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 78.552639,
+        "min": 73.481468,
+        "runs": 7
+      },
+      "n": {
+        "max": 64,
+        "min": 64,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.179675,
+        "min": 0.169516,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 4.132139,
+        "min": 3.497255,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 68.333053,
+        "min": 66.61049,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 64,
+        "min": 64,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 25600,
+        "min": 25600,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 415456,
+        "min": 413868,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 0.02840059790732436,
+        "min": 0.026041666666666668,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 6,
+        "min": 3,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 0.027667984189723327,
+        "min": 0.025373134328358207,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 1343,
+        "min": 1265,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 20237.15415019763,
+        "min": 19061.80193596426,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 20141.620771046422,
+        "min": 18977.020014825797,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 314.71282454760035,
+        "min": 296.5159377316531,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 1349,
+        "min": 1271,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "disjoint/8": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 3200,
+        "min": 3200,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 9744,
+        "min": 9744,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 28968,
+        "min": 28968,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 19224,
+        "min": 19224,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 53274064,
+        "min": 53274064,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 17079424,
+        "min": 17079424,
+        "runs": 7
+      },
+      "committed": {
+        "max": 3200,
+        "min": 3200,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 400,
+        "min": 400,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 17.259921,
+        "min": 0.447305,
+        "runs": 7
+      },
+      "n": {
+        "max": 8,
+        "min": 8,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.09109,
+        "min": 0.077755,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.147064,
+        "min": 0.121788,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.331178,
+        "min": 0.192409,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 8,
+        "min": 8,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 3.045,
+        "min": 3.045,
+        "runs": 7
+      },
+      "requested": {
+        "max": 3200,
+        "min": 3200,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 52084,
+        "min": 51640,
+        "runs": 7
+      },
+      "scaling_efficiency": {
+        "max": 0.6785714285714285,
+        "min": 0.4931506849315069,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 3,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_efficiency": {
+        "max": 0.6792452830188679,
+        "min": 0.4929577464788733,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 71,
+        "min": 53,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 60377.35849056604,
+        "min": 45070.42253521127,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 57142.857142857145,
+        "min": 43835.61643835617,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 7142.857142857143,
+        "min": 5479.452054794521,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 73,
+        "min": 56,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 6.0075,
+        "min": 6.0075,
+        "runs": 7
+      }
+    },
+    "same-domain/2": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 61,
+        "min": 60,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 130,
+        "min": 129,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 69,
+        "min": 69,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 222031,
+        "min": 213839,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 12911,
+        "min": 12911,
+        "runs": 7
+      },
+      "committed": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 19,
+        "min": 19,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 10,
+        "min": 10,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 1,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 0.325056,
+        "min": 0.078777,
+        "runs": 7
+      },
+      "n": {
+        "max": 2,
+        "min": 2,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.022913,
+        "min": 0.018174,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.087573,
+        "min": 0.026329,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.325056,
+        "min": 0.078777,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 2,
+        "min": 2,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 61.0,
+        "min": 60.0,
+        "runs": 7
+      },
+      "requested": {
+        "max": 20,
+        "min": 20,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 12092,
+        "min": 11476,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 0.0,
+        "min": 0.0,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 1000.0,
+        "min": 1000.0,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 1,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 500.0,
+        "min": 500.0,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 69.0,
+        "min": 69.0,
+        "runs": 7
+      }
+    },
+    "same-domain/32": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 961,
+        "min": 960,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 2020,
+        "min": 2019,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 1059,
+        "min": 1059,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 3327353,
+        "min": 3319161,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 132471,
+        "min": 132471,
+        "runs": 7
+      },
+      "committed": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 319,
+        "min": 319,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 10,
+        "min": 10,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 2,
+        "min": 1,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 1.214205,
+        "min": 0.173263,
+        "runs": 7
+      },
+      "n": {
+        "max": 32,
+        "min": 32,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.045004,
+        "min": 0.03186,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.502327,
+        "min": 0.049222,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.927901,
+        "min": 0.08565,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 32,
+        "min": 32,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 961.0,
+        "min": 960.0,
+        "runs": 7
+      },
+      "requested": {
+        "max": 320,
+        "min": 320,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 188660,
+        "min": 187352,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 4,
+        "min": 2,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 5,
+        "min": 1,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 1000.0,
+        "min": 200.0,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 200.0,
+        "min": 142.85714285714286,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 2,
+        "min": 1,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 6.25,
+        "min": 4.464285714285714,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 7,
+        "min": 5,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 1059.0,
+        "min": 1059.0,
+        "runs": 7
+      }
+    },
+    "same-domain/8": {
+      "aborted": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "attempts": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "backend_reads": {
+        "max": 240,
+        "min": 240,
+        "runs": 7
+      },
+      "backend_requests": {
+        "max": 507,
+        "min": 507,
+        "runs": 7
+      },
+      "backend_writes": {
+        "max": 267,
+        "min": 267,
+        "runs": 7
+      },
+      "bytes_read": {
+        "max": 835129,
+        "min": 834941,
+        "runs": 7
+      },
+      "bytes_written": {
+        "max": 36779,
+        "min": 36779,
+        "runs": 7
+      },
+      "committed": {
+        "max": 1,
+        "min": 1,
+        "runs": 7
+      },
+      "conflicts": {
+        "max": 79,
+        "min": 79,
+        "runs": 7
+      },
+      "count_per_writer": {
+        "max": 10,
+        "min": 10,
+        "runs": 7
+      },
+      "gap_commits_cached": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "gap_commits_read": {
+        "max": 1,
+        "min": 0,
+        "runs": 7
+      },
+      "max_consecutive_retries": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "max_ms": {
+        "max": 0.281615,
+        "min": 0.077214,
+        "runs": 7
+      },
+      "n": {
+        "max": 8,
+        "min": 8,
+        "runs": 7
+      },
+      "p50_ms": {
+        "max": 0.028523,
+        "min": 0.022311,
+        "runs": 7
+      },
+      "p95_ms": {
+        "max": 0.088966,
+        "min": 0.039864,
+        "runs": 7
+      },
+      "p99_ms": {
+        "max": 0.12908,
+        "min": 0.046216,
+        "runs": 7
+      },
+      "process_failures": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "processes": {
+        "max": 8,
+        "min": 8,
+        "runs": 7
+      },
+      "reads_per_commit": {
+        "max": 240.0,
+        "min": 240.0,
+        "runs": 7
+      },
+      "requested": {
+        "max": 80,
+        "min": 80,
+        "runs": 7
+      },
+      "retry_amplification": {
+        "max": 1.0,
+        "min": 1.0,
+        "runs": 7
+      },
+      "rss_sum_kib": {
+        "max": 47292,
+        "min": 46324,
+        "runs": 7
+      },
+      "startup_ms": {
+        "max": 3,
+        "min": 2,
+        "runs": 7
+      },
+      "steady_ms": {
+        "max": 0,
+        "min": 0,
+        "runs": 7
+      },
+      "steady_tx_s": {
+        "max": 0.0,
+        "min": 0.0,
+        "runs": 7
+      },
+      "throughput_tx_s": {
+        "max": 500.0,
+        "min": 333.3333333333333,
+        "runs": 7
+      },
+      "touched_intersections": {
+        "max": 1,
+        "min": 0,
+        "runs": 7
+      },
+      "tx_per_writer_s": {
+        "max": 62.5,
+        "min": 41.666666666666664,
+        "runs": 7
+      },
+      "wall_ms": {
+        "max": 3,
+        "min": 2,
+        "runs": 7
+      },
+      "writes_per_commit": {
+        "max": 267.0,
+        "min": 267.0,
+        "runs": 7
+      }
+    }
+  },
+  "stamp": "20261114T070000Z"
+}

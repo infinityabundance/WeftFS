@@ -60,7 +60,7 @@ def merge(receipts, out_path, schema, stamp):
         for field, value in row.items():
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 continue
-            values = [float(run[key][field]) for run in ordered
+            values = [run[key][field] for run in ordered
                       if isinstance(run[key].get(field), (int, float))]
             if not values:
                 continue
@@ -124,10 +124,75 @@ def merge(receipts, out_path, schema, stamp):
     return document
 
 
+def merge_retry_runs(receipts, out_path, stamp):
+    """Summarise several T021 before/after receipts.
+
+    Each court invocation is one sample of a bimodal retry schedule, so a
+    single run's delta is not the result. This keeps every run's own
+    before/after pair and adds the median across runs, so a regression cannot
+    be hidden by an average.
+    """
+    docs = [json.load(open(path)) for path in receipts]
+    revisions = {json.dumps(doc.get("revisions"), sort_keys=True) for doc in docs}
+    if len(revisions) != 1:
+        raise SystemExit("merge: sources were not produced at one revision")
+    rows = []
+    for index, doc in enumerate(docs):
+        arms = doc["arms"]
+        before = arms["before"]["reads_per_commit_median"]
+        after = arms["after"]["reads_per_commit_median"]
+        rows.append({
+            "run": index + 1,
+            "stamp": doc["stamp"],
+            "before_rpc": before,
+            "after_rpc": after,
+            "rpc_delta_percent": (after - before) / before * 100.0 if before else None,
+            "before_p99_ms": arms["before"]["p99_ms_median"],
+            "after_p99_ms": arms["after"]["p99_ms_median"],
+            "before_tx_s": arms["before"]["throughput_tx_s_median"],
+            "after_tx_s": arms["after"]["throughput_tx_s_median"],
+            "before_amp": arms["before"]["retry_amplification_median"],
+            "after_amp": arms["after"]["retry_amplification_median"],
+            "after_cache_hits": arms["after"]["gap_commits_cached_median"],
+            "after_gap_reads": arms["after"]["gap_commits_read_median"],
+            "repetitions_per_arm": arms["after"]["repetitions"],
+        })
+    def median(field):
+        values = sorted(row[field] for row in rows if row[field] is not None)
+        return values[len(values) // 2] if values else None
+    medians = {field: median(field) for field in (
+        "before_rpc", "after_rpc", "rpc_delta_percent", "before_p99_ms",
+        "after_p99_ms", "before_tx_s", "after_tx_s", "before_amp", "after_amp",
+        "after_cache_hits", "after_gap_reads")}
+    improvements = sum(1 for row in rows if (row["rpc_delta_percent"] or 0) < 0)
+    p99_improvements = sum(
+        1 for row in rows if row["after_p99_ms"] < row["before_p99_ms"])
+    document = {
+        "schema": "weftfs.mw2.retry.runs/1",
+        "stamp": stamp,
+        "runs": len(rows),
+        "sources": [
+            {"receipt": path, "stamp": doc.get("stamp"), "sha256": sha256(path)}
+            for path, doc in zip(receipts, docs)
+        ],
+        "revisions": docs[0].get("revisions"),
+        "baseline": docs[0].get("baseline"),
+        "environment": docs[0].get("environment"),
+        "method": docs[0].get("method"),
+        "rows": rows,
+        "medians": medians,
+        "runs_with_lower_reads_per_commit": improvements,
+        "runs_with_lower_p99": p99_improvements,
+    }
+    json.dump(document, open(out_path, "w"), indent=2, sort_keys=True)
+    open(out_path, "a").write("\n")
+    return document
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--schema", required=True,
-                        help="weftfs.mw3.bench/1 or weftfs.writer.scale/1")
+                        help="weftfs.mw3.bench/1, weftfs.writer.scale/1, or retry-runs")
     parser.add_argument("--stamp", required=True)
     parser.add_argument("-o", "--out", required=True)
     parser.add_argument("receipts", nargs="+")
@@ -135,6 +200,11 @@ def main(argv=None):
     for path in args.receipts:
         if not os.path.isfile(path):
             raise SystemExit("merge: missing receipt %s" % path)
+    if args.schema == "retry-runs":
+        document = merge_retry_runs(args.receipts, args.out, args.stamp)
+        print(json.dumps({"out": args.out, "runs": document["runs"],
+                          "medians": document["medians"]}))
+        return 0
     document = merge(args.receipts, args.out, args.schema, args.stamp)
     print(json.dumps({"out": args.out, "runs": document["runs"],
                       "rows": len(document["rows"])}))
