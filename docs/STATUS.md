@@ -11319,3 +11319,13 @@ Receipts: `bench/receipts/ekbloom-context-20261114T100000Z.json` (decisions),
 and conventional index), `...-lifecycle-20261114T100000Z.json`. The court is
 registered in `verify-all.sh` as `ekbloom_context`; the cited aggregate above
 is unchanged until that aggregate is rerun.
+
+Registration was exercised once at WeftFS `271ba35` with the aggregate's own
+configuration (`--reduced --phase=decisions`). It independently reproduced the
+structural verdict (G1 and G4 hold, G3 holds, G2 fails, the sensitivity
+control non-vacuous, `direction=retired`) and wrote
+`bench/receipts/ekbloom-context-20261114T080131Z.json` plus its lifecycle
+receipt. The same commit corrected the runner's failure path: a container exit
+78 is now propagated as a skip carrying the container's own reason, where it
+previously became a hard failure with the reason left in `run.log`. The
+measurement path, arms, gates and budget are untouched.

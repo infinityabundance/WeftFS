@@ -320,6 +320,16 @@ crate checksum is in the receipt. The shipped dependency graph contains no
 `cargo tree -e normal`. The unit tests for the caches and the manifest
 candidate-only rule run in the court before the measurement (3 passed).
 
+**Registration check.** The aggregate runs the reduced two-repetition
+configuration (`--reduced --phase=decisions`). That configuration was executed
+at WeftFS `271ba35` and independently reproduced the structural verdict: G1 and
+G4 hold, G3 holds, G2 fails, the sensitivity control is non-vacuous, and
+`direction=retired`. Its receipt is
+`bench/receipts/ekbloom-context-20261114T080131Z.json`; the lifecycle receipt
+has the same stamp. The same commit fixed the runner so a container exit 78 is
+propagated as a skip with the container's own reason; the measurement path,
+arms, gates and budget did not change.
+
 ## 10. Pre-measurement corrections
 
 The contract retains its corrections verbatim: 51 contracts (not 48), the
