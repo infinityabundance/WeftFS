@@ -1,0 +1,24 @@
+[package]
+name = "ekbloom-context-harness"
+version = "0.1.0"
+edition = "2021"
+# The pinned upstream crate declares rust-version 1.89. This crate exists only
+# to measure it inside the court and is deliberately NOT a member of the WeftFS
+# workspace (see `exclude` in the root Cargo.toml), so it cannot raise the
+# published `weftfs` MSRV.
+rust-version = "1.89"
+publish = false
+
+[dependencies]
+# Exact pin. No caret range anywhere: a different version is a new contract.
+ekbloom = "=0.7.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
+zstd = "0.13"
+# The shipped store and codec, imported as path dependencies so W evaluates
+# through the real resolver. The harness depends on the repository; the
+# repository never depends on the harness.
+weftfs = { path = "../.." }
+weftcodec = { path = "../../WeftCodec" }

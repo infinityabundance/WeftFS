@@ -6,18 +6,27 @@ workload, the sample count, the gates and the retirement rule. Nothing here is
 edited after a measurement; a changed rule is a new contract version and a new
 receipt.
 
-**Pre-measurement corrections (version 1, before any run).** Two editorial
-errors were found while building the harness, before the court was executed.
-Neither changes an arm, a gate, a margin, the workload or the retirement rule.
-(1) §5.1 said "48 consumer contracts" and then listed 4 compatible + 9 variants
-+ 4 absent per branch, which is 17 per branch and **51** in total; the list is
-honoured and the total is corrected to **51**. (2) §2 said the manifest key area
-is 144 bytes per entry; a manifest hit must also complete the post-lookup
-presence check without re-reading the subject scope record, so the key area is
-**208 bytes** (the 144-byte key material plus the 32-byte page id and the
-32-byte page content root). A manifest entry is therefore **64 + 208 = 272
-bytes**, larger than a cache entry. This correction makes E's byte position
-*worse*, not better, and was made before any receipt existed.
+**Pre-measurement corrections (version 1, before any run).** Four editorial or
+implementation errors were found while building the harness, before the court
+was executed. None changes an arm, a gate, a margin, the workload's request
+shares or the retirement rule. (1) §5.1 said "48 consumer contracts" and then
+listed 4 compatible + 9 variants + 4 absent per branch, which is 17 per branch
+and **51** in total; the list is honoured and the total is corrected to **51**.
+(2) §2 said the manifest key area is 144 bytes per entry; a manifest hit must
+also complete the post-lookup presence check without re-reading the subject
+scope record, so the key area is **208 bytes** (the 144-byte key material plus
+the 32-byte page id and the 32-byte page content root). A manifest entry is
+therefore **64 + 208 = 272 bytes**, larger than a cache entry. This correction
+makes E's byte position *worse*, not better. (3) The first smoke fixture (512 KV
+pages, 96 hot pairs, 512 warm pairs) produced only about 3,300 distinct
+decisions, below the §5.2 declared pressure condition of more than 4,096. The
+fixture is enlarged to 2,048 KV pages and 128 tensor regions per branch and the
+hot/warm sets to 2,048/4,096 pairs. The request count, bucket shares, events,
+samples, arms, gates and margin are unchanged. (4) E's cache arena reserves 10 %
+of `B - manifest_bytes` for hash-map capacity rounding, so E's total retained
+bytes stay at or below M's; the cache itself is sized by an exact fit. This
+tightens E, never widens it. All four corrections were made before any receipt
+existed.
 
 **Read against.** WeftFS `20640d3aca9de377293640352ba2ec70ad7e13a2`,
 WeftCodec `d808f254ca9ead037bacd3fb937e2b5d3d3f5abb`,
@@ -108,10 +117,15 @@ re-checks) plus a manifested **certified decision table** built with the pinned
   encoded as one `.ekb` object with `create_auto_within_budget` and
   `ManifestationProfile::Sparse { interval: 1024 }` (the profile the retired
   trial used, chosen before measurement for determinism, not tuned);
-* E opens the object once with `ekbloom::OpenObject` and reads a slot with
-  `OpenObject::read_into` (caller buffer, no allocation); a candidate hit reads
-  the exact full key from the key area with a second `read_into` and compares it
-  byte-for-byte before any verdict is returned;
+* E reads through the crate's **bounded engine** (`ekbloom::engine::ReadyObject`
+  + `Engine::read_into`) on the in-memory `EkbloomBody` produced by
+  `create_auto_within_budget`. The `.ekb` file is still written and its length
+  is reported; the retained accounting charges the manifestation once, at
+  `max(file_bytes, body.physical_bytes())`. The file-backed
+  `OpenObject::read_into` path is measured as a diagnostic and reported beside
+  E, because its dispatch tries checkpoint replay before the
+  directly-addressable core; the contract asks for the caller-buffer path when
+  the crate exposes one. The engine path is the gating E.
 * lookup order is **cache → manifestation → evaluate**; the manifestation is an
   overflow for entries the cache has evicted, not a replacement for the cache;
 * the conventional cache budget is `B - manifest_bytes` (recomputed after every
@@ -358,10 +372,11 @@ dimensions, not tensor values.
   root, attention configuration, positional policy, and tenant
   (`tenant-b0`, `tenant-b1`, `tenant-b2`).
 * **192 Context Roots** (64 per branch), each naming a subject set.
-* **1,632 KV-page subjects** (512 per branch) and **96 tensor-region keys**
-  (32 per branch), written as mode-19 provenance-bound pages through the shipped
+* **6,144 KV-page subjects** (2,048 per branch) and **384 tensor-region keys**
+  (128 per branch), written as mode-19 provenance-bound pages through the shipped
   `Store::write_kv_prov_page`, 1,024 logical bytes per page, one page per
-  object. Each has a subject scope record.
+  object. Each has a subject scope record. Twenty-four additional subjects (8
+  per branch) have a scope record and **no page object** from `S0`.
 * **51 consumer contracts** per the rule: per branch, 4 compatible contracts
   (differing only in the token-history root), 9 single-dimension variants
   (`model`, `adapter`, `tokenizer`, `attention`, `positional`, `dtype/geometry`,
@@ -382,15 +397,20 @@ dimensions, not tensor values.
 | missing required dimension | 3 % | 240 | `unproven` |
 | missing evidence | 3 % | 240 | `unproven` |
 
-Hot requests are drawn from a fixed 96-pair set under a deterministic Zipf-like
-weight (80 % of hot draws hit 24 pairs). Warm requests use a fixed 512-pair set
-uniformly. Cold requests are uniform over all `(subject, compatible contract)`
-pairs and include pairs never seen before. The two `unproven` buckets use
-contracts with an absent dimension and 24 subjects whose page object is absent
-from `S0` (missing dependency by construction), respectively.
+Hot requests are drawn from a fixed 2,048-pair set under a deterministic
+Zipf-like weight (80 % of hot draws hit 512 pairs). Warm requests use a fixed
+4,096-pair set uniformly. Cold requests are uniform over all `(subject,
+compatible contract)` pairs and include pairs never seen before. The two
+`unproven` buckets use contracts with an absent dimension and the 24 subjects
+whose page object is absent from `S0` (missing dependency by construction),
+respectively.
 
 Distinct decisions exceed `B / 256 ≈ 4,096` by construction; the cold bucket and
-the variant buckets fill the tail.
+the variant buckets fill the tail. (The first smoke fixture, with 512 KV pages
+and the original 96/512 hot/warm sets, produced only about 3,300 distinct
+decisions — below this declared pressure condition. That was a pre-measurement
+fixture defect, corrected here by enlarging the subject pool and the hot/warm
+sets; no arm, gate, margin, request count or bucket share changed.)
 
 ### 5.3 State-change events (fixed request indices)
 
