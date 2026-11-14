@@ -1,0 +1,94 @@
+{
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "pids": "1024",
+    "revisions": {
+      "WeftCodec": "d808f254ca9ead037bacd3fb937e2b5d3d3f5abb",
+      "WeftCodec-Go": "f7b9de1bf1685d10fe186499d71d4b1b692baa1e",
+      "WeftFS": "97a79d8254c48868fb69b1db29ad16491788bd80",
+      "WeftFS-Go": "eda27bf89cf55a5fee4489fbed5cca12d6c8aaa1"
+    }
+  },
+  "errors": [],
+  "generated_utc": "20261114T100000Z",
+  "note": "the quadratic baseline was measured through 64k keys; 100k and 1M were not timed because the measured growth is quadratic and the projection exceeds the phase cap",
+  "quadratic_first_conflict": [
+    {
+      "conflict": false,
+      "keys": 1000,
+      "ms": 0.134241
+    },
+    {
+      "conflict": false,
+      "keys": 4000,
+      "ms": 1.709549
+    },
+    {
+      "conflict": false,
+      "keys": 16000,
+      "ms": 25.617093
+    },
+    {
+      "conflict": false,
+      "keys": 64000,
+      "ms": 398.556232
+    }
+  ],
+  "rows": [
+    {
+      "bounded_certificate_ms": 0.02147,
+      "bounded_conflict": false,
+      "ekbloom_build_ms": 1.619191,
+      "ekbloom_file_bytes": 60896,
+      "ekbloom_lookup_p50_ns": 1643.0,
+      "ekbloom_lookup_p95_ns": 2735.0,
+      "ekbloom_lookup_reads": 10000,
+      "ekbloom_physical_bytes": 60478,
+      "ekbloom_source_bytes": 167168,
+      "index_build_ms": 0.009318,
+      "index_lookup_p50_ns": 20.0,
+      "index_lookup_p95_ns": 30.0,
+      "keys": 1000
+    },
+    {
+      "bounded_certificate_ms": 2.625418,
+      "bounded_conflict": false,
+      "ekbloom_build_ms": 181.471621,
+      "ekbloom_file_bytes": 6209024,
+      "ekbloom_lookup_p50_ns": 1633.0,
+      "ekbloom_lookup_p95_ns": 2795.0,
+      "ekbloom_lookup_reads": 10000,
+      "ekbloom_physical_bytes": 6208608,
+      "ekbloom_source_bytes": 19981312,
+      "index_build_ms": 1.104621,
+      "index_lookup_p50_ns": 30.0,
+      "index_lookup_p95_ns": 50.0,
+      "keys": 100000
+    },
+    {
+      "bounded_certificate_ms": 29.249409,
+      "bounded_conflict": false,
+      "ekbloom_build_ms": 1558.110435,
+      "ekbloom_file_bytes": 60085000,
+      "ekbloom_lookup_p50_ns": 1784.0,
+      "ekbloom_lookup_p95_ns": 2985.0,
+      "ekbloom_lookup_reads": 10000,
+      "ekbloom_physical_bytes": 60084579,
+      "ekbloom_source_bytes": 166221824,
+      "index_build_ms": 25.882668000000002,
+      "index_lookup_p50_ns": 30.0,
+      "index_lookup_p95_ns": 41.0,
+      "keys": 1000000
+    }
+  ],
+  "schema": "weft.ekbloom_context.scale.v1",
+  "sizes": [
+    1000,
+    100000,
+    1000000
+  ]
+}
