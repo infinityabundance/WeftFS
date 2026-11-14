@@ -4,6 +4,9 @@
 # Host:  bash scripts/mw_gc_court.sh
 # Court: bash scripts/docker-court.sh fuse "bash scripts/mw_gc_court.sh"
 #
+# The receipt is assembled with python3, which the minimal rust court does not
+# ship, so the court is the fuse image. No FUSE mount is used by this court.
+#
 # Scenarios
 #   A  reservation window: a writer publishes a blob, a *different* handle runs
 #      a GC pass with the age gate disabled, then the writer publishes.
@@ -25,7 +28,7 @@ set -Eeuo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ "${WEFT_IN_COURT:-0}" != "1" ]]; then
-  exec "$root/scripts/docker-court.sh" rust "bash scripts/mw_gc_court.sh"
+  exec "$root/scripts/docker-court.sh" fuse "bash scripts/mw_gc_court.sh"
 fi
 cd "$root"
 

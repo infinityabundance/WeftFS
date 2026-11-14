@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,205** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,225** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11340,3 +11340,76 @@ creates each page through `Store::create_file`, whose ObjectId seed is
 `os_random_32`. Every arm within a repetition still shares one base head and one
 request stream, so the comparison is within-run and valid; cross-run byte
 identity is not claimed.
+
+## 2026-11-14 — T024-T029: multi-writer GC, distributed faults, history checker, migration, FUSE under MW2
+
+All five gates are implemented and measured on `staging` at WeftFS
+`fd56f32f0625af6a84600e2eb1634c46d0d1a6ef` (the receipts were produced after
+the code commit; the docs/receipts commit follows). MW1 remains the default
+everywhere; MW2/MW3 stay opt-in and versioned; nothing is silently enabled.
+
+* **T024 multi-writer GC and concurrent retention.** GC is now an epoch-fenced
+  pass: one compare-and-swap on `gc/epoch`, then the publication reservations,
+  then the head (and every MW3 domain head), then mark and sweep. A blob is a
+  candidate only when unmarked and older than both the cut and the reservation
+  floor. The cross-writer case is by construction: a prepared transaction from
+  writer A is either behind a live reservation or already in the head, so a
+  pass started by writer B cannot reclaim its blobs. Transaction helpers
+  re-read the reservation immediately before the commit and refuse `Busy` when
+  it is gone or expired. Court: `scripts/mw_gc_court.sh`, receipt
+  `bench/receipts/mw-gc-20261114T101410Z.json` (pass, no reachable-object loss
+  across the kill matrix; the control pass reclaimed genuinely unreachable
+  blobs, so the retention assertions are not vacuous). MW3: a global sharded
+  handle runs one coordinated pass; a domain-bound handle still refuses.
+  Mechanism: [`docs/MULTI-WRITER-GC.md`](MULTI-WRITER-GC.md).
+* **T025 distributed write/read failure court.** Independent client processes
+  behind a userspace fault-injecting proxy in front of one loopback MinIO
+  instance: acknowledged-then-lost head and commit responses, duplicated PUT,
+  reordered publications, a client killed between prepare and commit, a stale
+  reader, and a conditional write applied with its acknowledgement dropped.
+  Every ambiguous outcome is resolved through the shipped transaction-outcome
+  path, and the seven verdicts are computed from the resulting store. It is
+  one host, one backend instance, proxy-level faults — **not** a partition of
+  physical nodes. Receipt
+  `bench/receipts/distributed-faults-20261114T101423Z.json`; schedule and
+  non-claims in [`docs/DISTRIBUTED-FAULTS.md`](DISTRIBUTED-FAULTS.md).
+* **T026 independent transactional history checker.** The store emits
+  `weft.history.v1` JSON Lines only when asked; `verifier/history_check.py` is a
+  stdlib program that imports no WeftFS code and decides per-key register
+  linearizability against the publication order, per-domain multi-key prefix
+  consistency, conflict justification and handle monotonicity. It deliberately
+  does **not** assert global serializability across MW3 domains. Four generated
+  histories are accepted; six deliberately violating histories are rejected
+  with the expected class; two valid controls are accepted. Receipt
+  `bench/receipts/history-check-20261114T101358Z.json` (histories committed
+  beside it). [`docs/HISTORY-CHECKER.md`](HISTORY-CHECKER.md).
+* **T028 explicit safe mixed-mode migration.** The writer mode is one record;
+  a migration is one compare-and-swap; every writable open checks the record
+  before taking the exclusive writer lock. `single → optimistic` and
+  `optimistic → sharded` (with quiescence and no live prepared transaction) are
+  allowed; every downgrade and `single → sharded` are refused with a typed
+  error. The court runs the full matrix, both crash sides of the CAS, a reader
+  spanning the transition, and the real v0.9.0 binary as an old reader and old
+  writer. `no_dual_authority=true` for conforming binaries; a pre-record binary
+  is measured as the documented residual hazard. Receipt
+  `bench/receipts/mode-migration-20261114T101419Z.json`.
+  [`docs/MODE-MIGRATION.md`](MODE-MIGRATION.md).
+* **T029 FUSE mutations under MW2.** Opt-in `--writer-mode optimistic`; the
+  default MW1 mount is untouched. Create, whole-file overwrite, unlink/rmdir,
+  rename and link are one transaction each; an open handle keeps its snapshot
+  across a concurrent overwrite. `mkdir`, `mknod`, `symlink`, chmod/chown/utimes,
+  `truncate(2)`, xattrs, `fallocate`, `copy_file_range` and `RENAME_EXCHANGE`
+  are refused `EOPNOTSUPP`; writes past the rewrite bound are `E2BIG`. The mount
+  refuses `--write-back`/`--group-commit`. Court:
+  `scripts/fuse_mw2_court.sh`, receipt
+  `bench/receipts/fuse-mw2-20261114T101315Z.json` (Rust suite plus
+  multi-process shell scenarios; the same-inode truncating-open control fails
+  under both MW1 and MW2 on kernel 7.3 and is recorded as a pre-existing kernel
+  limitation). [`docs/FUSE-MW2.md`](FUSE-MW2.md).
+
+Spec: WEFT-MULTIWRITER §11 (retention contract and residual risk), §15.9
+(coordinated MW3 pass), §16 (migration), §17 (FUSE under MW2). All five courts
+are registered in `scripts/verify-all.sh`; the cited aggregate above is
+unchanged until that aggregate is rerun. Rust-only except where noted; no Go
+parity for the epoch protocol, the migration verb, history emission or
+optimistic FUSE mutations. No physical power-loss, media, fleet or cloud claim.

@@ -322,6 +322,40 @@ run_orchestrated_court cephfs cephfs_court \
 # pass.
 run_orchestrated_court mw3 mw3 bash scripts/mw3_verify_court.sh
 
+# T024 multi-writer GC: epoch CAS, publication reservations, a concurrent sweep
+# with process kills at every publication stage, an MW3 coordinated pass and
+# readers under sweep. The receipt records both the retained roots and the
+# genuinely unreachable blobs the control pass reclaimed. The script assembles
+# its receipt with python3, so it runs in the fuse image (no mount is used).
+run_court fuse "mw_gc" "bash scripts/mw_gc_court.sh"
+
+# T025 distributed write/read failure court. It owns the MinIO sidecar and the
+# fault-injecting proxy, so it is orchestrated from the host. A host without
+# Docker, curl or an obtainable pinned MinIO release prints exactly one
+# `distributed_faults_court: skip <reason>` line and exits 78; the aggregate
+# records a skip, never a pass. One host, one backend instance, proxy-level
+# faults: not a partition of physical nodes.
+run_orchestrated_court distributed_faults distributed_faults_court \
+  bash scripts/distributed_faults_court.sh
+
+# T026 independent transactional history checker. The store emits
+# `weft.history.v1` JSON Lines; `verifier/history_check.py` (stdlib only, no
+# WeftFS import) decides per-key register linearizability, per-domain multi-key
+# prefix consistency, conflict justification and handle monotonicity, and is
+# required to reject six deliberately violating histories.
+run_court fuse "history_check" "bash scripts/history_check_court.sh"
+
+# T028 explicit writer-mode migration. Orchestrated because it exports the
+# tagged v0.9.0 source on the host and builds that binary in the court, then
+# runs the whole transition matrix, both crash sides of the CAS and a reader
+# spanning the transition.
+run_orchestrated_court mode_migration mode_migration_court \
+  bash scripts/mode_migration_court.sh
+
+# T029 FUSE mutations under optimistic publication. Opt-in only; the court also
+# exercises the default MW1 mount so a refusal cannot leak into it.
+run_court fuse "fuse_mw2" "bash scripts/fuse_mw2_court.sh"
+
 # R26 Context Advantage Court: one backend at a time, three arms — the backend
 # alone, a strong application-level metadata baseline, and the WeftFS context
 # plane — interleaved with the arm order rotated per repetition. This court is

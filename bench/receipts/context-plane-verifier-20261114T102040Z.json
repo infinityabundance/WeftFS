@@ -1,0 +1,1441 @@
+{
+ "cases": [
+  {
+   "computed": "fe5b6642a2beb7f5b4ca5e46d8b051a507494194043f427dfc5f22a20231fb95",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/001_valid_envelope.json"
+  },
+  {
+   "computed": "3949f4979005d220045f7f16e8a0e5eb9a2ccadf7c5950db77516d87ba99499a",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/002_valid_minimal_envelope.json"
+  },
+  {
+   "computed": "BadSignature",
+   "detail": "refused with the declared class",
+   "expect": "BadSignature",
+   "expected": "BadSignature",
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/101_bad_signature.json"
+  },
+  {
+   "computed": "WrongGrantee",
+   "detail": "refused with the declared class",
+   "expect": "WrongGrantee",
+   "expected": "WrongGrantee",
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/102_wrong_grantee.json"
+  },
+  {
+   "computed": "Expired",
+   "detail": "refused with the declared class",
+   "expect": "Expired",
+   "expected": "Expired",
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/103_expired.json"
+  },
+  {
+   "computed": "Revoked",
+   "detail": "refused with the declared class",
+   "expect": "Revoked",
+   "expected": "Revoked",
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/104_revoked.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "capability",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/capability/105_non_canonical.json"
+  },
+  {
+   "computed": "77475fa35f898c07f43c6ca1b6a8b30da44468825e0dcd8a0249442ba86ec15c",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/001_single_parent.json"
+  },
+  {
+   "computed": "58f09b15991e2de83a8f689327a928d31e3df8c80cf44562293377316b6c92ae",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/002_two_parents_unsorted_input.json"
+  },
+  {
+   "computed": "41c5d31f9a62e7bc57e52a5aafbac806830aae08265b8f99ea330a70c46f2100",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/003_three_parents.json"
+  },
+  {
+   "computed": "fe2d8422572489a70dc533dffa9a891fd36d99f496f16aab85254fff147ab7cc",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/004_empty_closure.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/101_unsorted.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/102_duplicate.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/103_closure_missing_parent.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/104_zero_entry.json"
+  },
+  {
+   "computed": "UnknownSchema",
+   "detail": "refused with the declared class",
+   "expect": "UnknownSchema",
+   "expected": "UnknownSchema",
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/105_unknown_schema.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "causal",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/causal/106_unknown_key.json"
+  },
+  {
+   "computed": null,
+   "detail": "superseded reserved-mode vector",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "skip",
+   "path": "WeftCodec/conformance/v1/codec/017_unknown_mode_reserved19.json"
+  },
+  {
+   "computed": "53f70ff51a49496af01dc87e7002fa7ef7fe1ab5c192bdb326d0868b1f01a41a",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/001_root_true.json"
+  },
+  {
+   "computed": "190b59a2510cf402fe0e4c8a3e8bc8a72d2b60e5c0ee4ed9ca8ce2787bc56af2",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/002_root_filter_budget.json"
+  },
+  {
+   "computed": "ce702e74220a98d9b3b36e007860b20ee2404ef0f735085c8f942c9b29acfc02",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/003_root_causal_capability.json"
+  },
+  {
+   "computed": "dc6433a13d94842a972b37ab141f1911d02f533a043e7f662c57571b403b7e5a",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/004_root_descriptor_escaping.json"
+  },
+  {
+   "computed": "f4d84a7e21f100e7e01d4788bd538b0a50db11b1b0b9a4293e510c12e31bbc26",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/005_root_custom_resolver.json"
+  },
+  {
+   "computed": "b61f96f46c6231f057b2dc64fcb602c5a48622a855d99fb4b600e075e10209be",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/006_root_empty_causal.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/101_unsorted_causal.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/102_duplicate_causal.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/103_zero_snapshot.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/104_selector_id_mismatch.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/105_namespace_mismatch.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/106_bad_namespace.json"
+  },
+  {
+   "computed": "UnknownSchema",
+   "detail": "refused with the declared class",
+   "expect": "UnknownSchema",
+   "expected": "UnknownSchema",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/107_unknown_schema.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/108_bad_budget_zero.json"
+  },
+  {
+   "computed": "UnsupportedVersion",
+   "detail": "refused with the declared class",
+   "expect": "UnsupportedVersion",
+   "expected": "UnsupportedVersion",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/109_unknown_ordering.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "context_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/context/110_unknown_key.json"
+  },
+  {
+   "computed": "13ae8e46f36d3b722dfebbe410f72bb34df4d07dfc798dbb082c567ea0fec3e0",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/001_bf16_single_layer.json"
+  },
+  {
+   "computed": "913fa1ae28dd1d6e12ce953c9426be0eb71a44d719c2cb49bfa0161dcd9fd9c2",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/002_fp16_adapter_set.json"
+  },
+  {
+   "computed": "f531e36b20fec963bca98e517074b5fbfba893825aa924bfd0ceec603b27f11f",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/003_fp32_multi_layer.json"
+  },
+  {
+   "computed": "30fb597c561643e6cfaee179da9303719fc8227c237233d0ec3e1022f5be4866",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/004_empty_adapter_set.json"
+  },
+  {
+   "computed": "a11552a3d68fc72a03d507bd1db3024e6c4afd23ef86e45b0ade3199e0b1b327",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/005_tenant_salt_a.json"
+  },
+  {
+   "computed": "ed45bd635cb4714144f05817e07a5d1e9de6a79e3a50c9a3a6c171cbe7c8729c",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/006_tenant_salt_b.json"
+  },
+  {
+   "computed": "c1c8eb8722b30ab582e81f2d2e6dd6ae0bb3d6cb400ba4000eb2768123cfe7d6",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/007_extension_dimension.json"
+  },
+  {
+   "computed": "48441368028524d95fc5562ea684f70142bc1ec9577632ba7ac6f18b254c2e0d",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/008_two_pages.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/101_missing_salt.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/102_unknown_dimension.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/103_duplicate_dimension.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/104_unsorted_extensions.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/105_adapter_root_mismatch.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/106_tokenizer_mismatch.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/107_attention_mismatch.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/108_layout_mismatch.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/109_payload_truncated.json"
+  },
+  {
+   "computed": "Corrupt",
+   "detail": "refused with the declared class",
+   "expect": "Corrupt",
+   "expected": "Corrupt",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/110_payload_hash_mismatch.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/111_descriptor_non_canonical.json"
+  },
+  {
+   "computed": null,
+   "detail": "superseded by 112_reserved_mode_21",
+   "expect": "ok",
+   "expected": null,
+   "family": "kv_prov",
+   "outcome": "skip",
+   "path": "WeftCodec/conformance/v1/kv-prov/112_reserved_mode_20.json"
+  },
+  {
+   "computed": "UnsupportedMode",
+   "detail": "refused with the declared class",
+   "expect": "UnsupportedMode",
+   "expected": "UnsupportedMode",
+   "family": "kv_prov",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/kv-prov/112_reserved_mode_21.json"
+  },
+  {
+   "computed": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/001_select_true.json"
+  },
+  {
+   "computed": "fa432203a49bdcbf3345619794058e3b1dd17c43303298ccf260c4f8cf1e3280",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/002_select_false.json"
+  },
+  {
+   "computed": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/003_select_not_false.json"
+  },
+  {
+   "computed": "42f316f8fe4b54a3781d22f4e4660aa7c85123a79bd66c7c90db62a1d910a4b9",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/004_select_not_not_true.json"
+  },
+  {
+   "computed": "f2d22f2a28dc328f44807807fa4056d9f84fd348e8bfda38e59cbaf87cd7f6c2",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/005_select_has_attrs_project.json"
+  },
+  {
+   "computed": "104e7328656502ef285bade87b1aaf9cdf49bdad07a68a0cc2a04ba162dc01ad",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/006_select_tag_demo.json"
+  },
+  {
+   "computed": "1b734bfbb8ac5ca652d00f151f315984bb4beea556f5930724304104e759d387",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/007_select_relation_derived_from_obj_0011223.json"
+  },
+  {
+   "computed": "1b525d41c53008ce30804f68907100d4178013085fbf50eee90fee77724b770d",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/008_select_attrs_project_demo.json"
+  },
+  {
+   "computed": "5a79825d46bc1a1565b82c9e16b8b4435d330b1051b7b0f5ee1a682d1a7f16a9",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/009_select_attrs_size_10.json"
+  },
+  {
+   "computed": "da1af625a9d9b5e28e7cc999c3d0c346f776c77147c312d070d156299f61461d",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/010_select_attrs_size_1.json"
+  },
+  {
+   "computed": "cd1f5abf6081fef5ac42b23c619f0270e8b77185367898c90968b5d0a9d3fea5",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/011_select_attrs_size_10_and_attrs_size_0.json"
+  },
+  {
+   "computed": "acdeee75886298f35d19e4041f81a03f0c1f3391ee2267383cf3c2772e66a997",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/012_select_attrs_a_1_and_attrs_b_2_and_attrs.json"
+  },
+  {
+   "computed": "e544fddf3cbe114d64bdeb669c7d319f0e2356ac6c4e09cb6a8026784bb252ab",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/013_select_attrs_a_1_or_attrs_b_2_or_attrs_c.json"
+  },
+  {
+   "computed": "614cfe9a1e06d88057f447295aedecc48882accf53ac5447eecf4532bed9c078",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/014_select_not_has_attrs_x.json"
+  },
+  {
+   "computed": "17fbb895fa469b3af7a441a8021f16c26b0597793bc6452339f636747523d81b",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/015_select_attrs_x_1_order_by_attrs_seq_desc.json"
+  },
+  {
+   "computed": "5c503feb3d0505304b1386e0f34ccecc27996bba94f9a548e1388b4fbb77d8d8",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/016_select_attrs_x_1_order_by_attrs_seq_asc.json"
+  },
+  {
+   "computed": "88456990964b5e0c56a0e58f075fd5f68c356fad32e219ea49c2c5c7ea6405bd",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/017_select_attrs_x_1_offset_0.json"
+  },
+  {
+   "computed": "5398923e1386f112d076849251425cc4b257a3e9f8430449197be68ecfc2ba7a",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/018_select_attrs_x_1_and_attrs_y_2.json"
+  },
+  {
+   "computed": "bcd629a2d8ca1ec66944d20135d0dd06bf1a1438ad2f6f0ea976b5de017df503",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/019_select_attrs_y_2_and_attrs_x_1.json"
+  },
+  {
+   "computed": "02e1864a2b1d5c31a90dbf26339eccd1ca6cfee8144eeedd890dd39b6ca5b0a4",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/020_select_attrs_e_u00e9_ud83d_ude00_n_t.json"
+  },
+  {
+   "computed": "443b92b2853bf24c1376b07cc0dd6fb14bcc66d3f13cbb0b723e0ff90d0c02c4",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/021_select_attrs_p_null.json"
+  },
+  {
+   "computed": "6bd275be3dbbdcc6c3d43caf83d20248c864eda430ceb7d03f40077dc5bf056a",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "selector",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/selectors/022_select_attrs_b_true_and_attrs_n_false.json"
+  },
+  {
+   "computed": "89fd826b81eed818ccd8f51fe9a32682d357df1bf256317d713b9c91df697b42",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/001_root_none_bf16.json"
+  },
+  {
+   "computed": "0e172128ed1203d2d115a46980304328401b2570b8df0342f465373402c2fb08",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/002_root_mantissa_bf16_bits3.json"
+  },
+  {
+   "computed": "f06337b6a3b92a2acda847fc9a67db04084fea769f47f0066fdf13e2f59cd8f3",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/003_root_block_quantize_fp32_b128_l256.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/101_unknown_scheme.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/102_bits_out_of_range.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/103_block_size_not_divisor.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/104_shape_mismatch.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/105_levels_zero.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "semantic_root",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/semantic-root/106_non_finite_policy.json"
+  },
+  {
+   "computed": "405f5648e0bfeaf6b5ed17fcbcc435cefa97f411f67a3bd21d9cd2c6de6a7e24",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/001_null.json"
+  },
+  {
+   "computed": "66249a2d07afb316478a72019f7bacf28a09cf77a313f905cbb1a8065b58b5a1",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/002_true.json"
+  },
+  {
+   "computed": "beffce1fb71b00ca0170bca19ff211c72cf751e21fb06b146a62abd56e0a5030",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/003_false.json"
+  },
+  {
+   "computed": "5dbe7772a954000ade3cbab5e90c06b25de1aa5bf5442729e7719d7d2910d3e8",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/004_u64_zero.json"
+  },
+  {
+   "computed": "4ccce4b378e11c3f8b63a81d4d574873b44b4602d22768e6610f476a0b4bf0f9",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/005_u64_max.json"
+  },
+  {
+   "computed": "6f8a851c6f53b8bd2875f127cb50aa9ec5089c21e343a2e9903f5ce4e1288681",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/006_i64_min.json"
+  },
+  {
+   "computed": "fa5f0099d4f015377ed25c692fa9870c9799de5e6f3aa9c303bc283df52f1f74",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/007_i64_neg_one.json"
+  },
+  {
+   "computed": "f446ff3806b40e2cdca3926d67c7d32376de52b77ffc53ea26ccb6a0691d111c",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/008_timestamp.json"
+  },
+  {
+   "computed": "dc3ad0b7a78bf7dca33af213d7f94e931462d8d6acd3ccbe0d8231c2ac0e2592",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/009_text.json"
+  },
+  {
+   "computed": "7f6e57c32ec80e2618f4972df6eed3f34bb3e161037528481a980ae41f7ec1ae",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/010_bytes.json"
+  },
+  {
+   "computed": "6ead183bb2aa84d270a0395b9b26233b238f2fde74e806580b57d3f87e840e4f",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/011_array.json"
+  },
+  {
+   "computed": "0922ae944955935ba7411bb019b0cf426d5e7d83682612e76e331bc1fba5b92f",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/012_map.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/013_non_minimal_varint.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/014_unsorted_map_keys.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/015_duplicate_map_keys.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/016_non_text_map_key.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/017_trailing_bytes.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/018_unknown_tag.json"
+  },
+  {
+   "computed": "Malformed",
+   "detail": "refused with the declared class",
+   "expect": "Malformed",
+   "expected": "Malformed",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/019_truncated_text.json"
+  },
+  {
+   "computed": "LimitExceeded",
+   "detail": "refused with the declared class",
+   "expect": "LimitExceeded",
+   "expected": "LimitExceeded",
+   "family": "wcb",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/structured/020_depth_limit.json"
+  },
+  {
+   "computed": "db917ad3857754269d4952c2d10555230e67719f80fe2d9d5a0160f577cd1e7c",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/001_logical_bf16_2x3x4.json"
+  },
+  {
+   "computed": "d05e2f47fe7db0af74a034421536cd2e69c67b0db83bb377efa47f9ba8085846",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/002_logical_f32_3.json"
+  },
+  {
+   "computed": "d661974cc767d3328ca006d5edbb9f919de5471ae7b2f923114386baa2ce04d1",
+   "detail": "identity and canonical bytes verified",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/003_logical_i8_2x2.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/101_logical_rank_zero.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/102_logical_zero_dimension.json"
+  },
+  {
+   "computed": "LimitExceeded",
+   "detail": "refused with the declared class",
+   "expect": "LimitExceeded",
+   "expected": "LimitExceeded",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/103_logical_product_overflow.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/104_logical_element_count_mismatch.json"
+  },
+  {
+   "computed": "UnknownSchema",
+   "detail": "refused with the declared class",
+   "expect": "UnknownSchema",
+   "expected": "UnknownSchema",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/105_logical_unknown_schema.json"
+  },
+  {
+   "computed": "UnsupportedFeature",
+   "detail": "refused with the declared class",
+   "expect": "UnsupportedFeature",
+   "expected": "UnsupportedFeature",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/106_logical_unknown_dtype.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/107_logical_short_values_hash.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/108_logical_unknown_key.json"
+  },
+  {
+   "computed": "LimitExceeded",
+   "detail": "refused with the declared class",
+   "expect": "LimitExceeded",
+   "expected": "LimitExceeded",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/109_logical_rank_exceeds_limit.json"
+  },
+  {
+   "computed": "LimitExceeded",
+   "detail": "refused with the declared class",
+   "expect": "LimitExceeded",
+   "expected": "LimitExceeded",
+   "family": "tensor_logical",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/110_logical_count_exceeds_limit.json"
+  },
+  {
+   "computed": null,
+   "detail": "layout descriptor is canonical and self-consistent",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/201_layout_row_major.json"
+  },
+  {
+   "computed": null,
+   "detail": "layout descriptor is canonical and self-consistent",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/202_layout_column_major.json"
+  },
+  {
+   "computed": null,
+   "detail": "layout descriptor is canonical and self-consistent",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/203_layout_blocked.json"
+  },
+  {
+   "computed": null,
+   "detail": "layout descriptor is canonical and self-consistent",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/204_layout_sharded.json"
+  },
+  {
+   "computed": "UnsupportedFeature",
+   "detail": "refused with the declared class",
+   "expect": "UnsupportedFeature",
+   "expected": "UnsupportedFeature",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/301_layout_unknown_layout.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/302_sharded_not_divisible.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/303_shard_index_out_of_range.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/304_sharded_zero_shards.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/305_blocked_rank_mismatch.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/306_blocked_zero_block.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/307_column_major_rank_zero.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/308_layout_extra_field.json"
+  },
+  {
+   "computed": "NonCanonical",
+   "detail": "refused with the declared class",
+   "expect": "NonCanonical",
+   "expected": "NonCanonical",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/309_shard_axis_out_of_range.json"
+  },
+  {
+   "computed": "LimitExceeded",
+   "detail": "refused with the declared class",
+   "expect": "LimitExceeded",
+   "expected": "LimitExceeded",
+   "family": "tensor_layout",
+   "outcome": "pass",
+   "path": "/mnt/1tb_kingston/WeftFS/WeftCodec/conformance/v1/tensor/310_layout_shape_overflow.json"
+  },
+  {
+   "computed": null,
+   "detail": "shard-set container is outside the reader families",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_other",
+   "outcome": "skip",
+   "path": "WeftCodec/conformance/v1/tensor/401_shards_bf16_4x3x2_axis0.json"
+  },
+  {
+   "computed": null,
+   "detail": "shard-set container is outside the reader families",
+   "expect": "ok",
+   "expected": null,
+   "family": "tensor_other",
+   "outcome": "skip",
+   "path": "WeftCodec/conformance/v1/tensor/402_shards_f32_4x3x2_axis1.json"
+  },
+  {
+   "computed": null,
+   "detail": "composite store-level vector, not a single record",
+   "expect": "ok",
+   "expected": null,
+   "family": "context_other",
+   "outcome": "skip",
+   "path": "conformance/context/v1/causal_versions.json"
+  }
+ ],
+ "environment": {
+  "blake3": "pure-Python implementation in verifier/blake3.py",
+  "implementation": "verifier/ (stdlib only)",
+  "python": "3.14.10",
+  "revisions": {
+   "WeftCodec": "34f76203229ed22bfad7495963d84977c6627d27",
+   "WeftCodec-Go": "ad53f3c3975e6dc8799d2b67524a30e688d961fd",
+   "WeftFS": "78d0617f3e68c4a96c4696310af59d8bcdbfcd03",
+   "WeftFS-Go": "76648a414908caad0c4f0d972e2c8433e5a73826"
+  }
+ },
+ "families": {
+  "capability": {
+   "fail": 0,
+   "pass": 7,
+   "skip": 0,
+   "total": 7
+  },
+  "causal": {
+   "fail": 0,
+   "pass": 10,
+   "skip": 0,
+   "total": 10
+  },
+  "context_other": {
+   "fail": 0,
+   "pass": 0,
+   "skip": 1,
+   "total": 1
+  },
+  "context_root": {
+   "fail": 0,
+   "pass": 16,
+   "skip": 0,
+   "total": 16
+  },
+  "kv_prov": {
+   "fail": 0,
+   "pass": 20,
+   "skip": 2,
+   "total": 22
+  },
+  "selector": {
+   "fail": 0,
+   "pass": 22,
+   "skip": 0,
+   "total": 22
+  },
+  "semantic_root": {
+   "fail": 0,
+   "pass": 9,
+   "skip": 0,
+   "total": 9
+  },
+  "tensor_layout": {
+   "fail": 0,
+   "pass": 14,
+   "skip": 0,
+   "total": 14
+  },
+  "tensor_logical": {
+   "fail": 0,
+   "pass": 13,
+   "skip": 0,
+   "total": 13
+  },
+  "tensor_other": {
+   "fail": 0,
+   "pass": 0,
+   "skip": 2,
+   "total": 2
+  },
+  "wcb": {
+   "fail": 0,
+   "pass": 20,
+   "skip": 0,
+   "total": 20
+  }
+ },
+ "freeze_matrix_rows": 24,
+ "generated_utc": "20261114T102040Z",
+ "manifest": {
+  "aggregate_sha256": "6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8",
+  "path": "conformance/manifest.json",
+  "vector_count": 420
+ },
+ "negative_suite": [
+  {
+   "detail": "refused with NonCanonical (acceptable for this case)",
+   "expect": null,
+   "name": "flipped_byte",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with NonCanonical",
+   "expect": "NonCanonical",
+   "name": "noncanonical_map_order",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with NonCanonical",
+   "expect": "NonCanonical",
+   "name": "duplicate_key",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with NonCanonical",
+   "expect": "NonCanonical",
+   "name": "extra_unknown_key",
+   "outcome": "pass"
+  },
+  {
+   "detail": "accepted as canonical",
+   "expect": null,
+   "name": "wrong_hash_domain",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with Malformed",
+   "expect": "Malformed",
+   "name": "truncated_record",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with LimitExceeded",
+   "expect": "LimitExceeded",
+   "name": "oversized_record",
+   "outcome": "pass"
+  }
+ ],
+ "provenance_self_test": [
+  {
+   "detail": "accepted as canonical",
+   "expect": null,
+   "name": "provenance_positive",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with NonCanonical",
+   "expect": "NonCanonical",
+   "name": "provenance_unsorted_inputs",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with NonCanonical",
+   "expect": "NonCanonical",
+   "name": "provenance_duplicate_outputs",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with NonCanonical",
+   "expect": "NonCanonical",
+   "name": "provenance_unknown_key",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with Malformed",
+   "expect": "Malformed",
+   "name": "provenance_truncated",
+   "outcome": "pass"
+  },
+  {
+   "detail": "refused with LimitExceeded",
+   "expect": "LimitExceeded",
+   "name": "provenance_oversized_params",
+   "outcome": "pass"
+  },
+  {
+   "detail": "accepted as canonical",
+   "expect": null,
+   "name": "provenance_wrong_domain",
+   "outcome": "pass"
+  }
+ ],
+ "schema": "weft.context_plane_verifier.v1",
+ "summary": {
+  "cases": 136,
+  "failed": 0,
+  "negative_cases": 7,
+  "negative_passed": 7,
+  "passed": 131,
+  "provenance_self_test_cases": 7,
+  "provenance_self_test_passed": 7,
+  "result": "pass",
+  "skipped": 5
+ },
+ "unspecified": [
+  "Selector value typing: `WEFT-SELECTORS.md` \u00a72 says a `value` is a WCB scalar and that timestamps use tag 0x09 'when the runtime value is temporal', but the text grammar has no timestamp literal and does not say whether a decoded `attr_eq` timestamp is accepted. This verifier accepts text, u64, i64, bool, null and timestamp; that choice is not stated in the selector document.",
+  "Selector namespace grammar is not restated in `WEFT-SELECTORS.md`; this verifier applies the namespace grammar from `WEFT-CONTEXT-ROOT.md` \u00a73.1.",
+  "Context Root `causal` array ordering is defined in `WEFT-CAUSAL.md` \u00a71.1, not in the Context Root record table. A reader that implements only `WEFT-CONTEXT-ROOT.md` cannot validate the array.",
+  "KV provenance \u00a73.2 says the `page` map is the mode-12 descriptor 'verbatim' but does not restate its key types or cross-checks. This verifier had to read `WEFT-AI-CODEC.md` \u00a713.2/\u00a713.4 to implement it; the KV document is not self-contained.",
+  "`WEFT-PROVENANCE.md` \u00a72 lists the record fields but never says whether an unknown top-level key is rejected. Every other frozen record schema says so explicitly. This verifier rejects one (NonCanonical) and records the choice; the spec should state it.",
+  "`WEFT-PROVENANCE.md` \u00a72 shows `inputs[].object` as an optional hint but does not say whether an absent hint is encoded as `null` or by omitting the key. This verifier accepts both forms and does not normalise them.",
+  "The frozen hash-domain table in `WEFTCODEC-FORMAT.md` \u00a71.1 omits several domains that code and vectors use, including `weft/checkpoint/manifest/v1`, `weft/index/state/v1`, `weft/pack/*`, `weft/load/*` and `weft/mw2/key/v1`.",
+  "`WEFT-TENSOR.md` \u00a73 fixes the logical record key set and error classes, but the `values_hash` preimage for `q8_0`/`q4_0` is defined in \u00a72.1 with a separate scale/zero-point byte concatenation. A logical-record-only reader cannot check the hash without the tensor layer."
+ ],
+ "verifier": {
+  "files": [
+   "blake3.py",
+   "ed25519.py",
+   "hashing.py",
+   "history_check.py",
+   "records.py",
+   "verify_corpus.py",
+   "wcb.py"
+  ],
+  "independence": "Authored by the same organisation from the published text. Independent of the implementation code path, not an external third-party implementation.",
+  "language": "Python",
+  "linkage": "none: no import, FFI or subprocess call into WeftFS code",
+  "source_lines": 3037,
+  "source_sha256": "2c8ef97f7cb9f670adb2da5c719f48a489ea433b60e47d05c774c73f81d99ed9",
+  "stdlib_only": true
+ }
+}

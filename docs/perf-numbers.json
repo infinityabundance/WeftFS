@@ -93,6 +93,10 @@
   {
    "id": "ekbloom-context",
    "title": "EKBLOOM Context Court (fresh court, 2026-11-14): W / M-LRU / M-W-TinyLFU / E / C-naive"
+  },
+  {
+   "id": "mw-t024-t029",
+   "title": "T024-T029 multi-writer GC, distributed faults, history checker and FUSE retention courts"
   }
  ],
  "numbers": [
@@ -18242,6 +18246,305 @@
    "stamp": "20261114T100000Z",
    "revision_path": "environment.revisions.WeftFS",
    "revision": "29ae91d0ec452ea33f8fcd42180d2b7900a8272a"
+  },
+  {
+   "key": "mwt024.kills",
+   "label": "T024 process kills, each with a concurrent sweep",
+   "unit": "kills",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_b_kill_matrix.crashes",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.lost",
+   "label": "T024 reachable objects lost across the kill matrix",
+   "unit": "objects",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_b_kill_matrix.reachable_objects_lost",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.reclaimed_blobs",
+   "label": "T024 genuinely unreachable blobs reclaimed by the control pass",
+   "unit": "blobs",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_c_reclaim_control.first_pass_deleted_blobs",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.reclaimed_bytes",
+   "label": "T024 genuinely unreachable bytes reclaimed by the control pass",
+   "unit": "B",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_c_reclaim_control.first_pass_deleted_bytes",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.second_pass",
+   "label": "T024 blobs reclaimed by an immediate second pass",
+   "unit": "blobs",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_c_reclaim_control.second_pass_deleted_blobs",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.reads",
+   "label": "T024 reads completed while a sweep ran",
+   "unit": "reads",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_e_readers.reads",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.readers",
+   "label": "T024 concurrent readers during the sweep",
+   "unit": "readers",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_e_readers.readers",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.domain_heads",
+   "label": "T024 MW3 domain heads marked by one coordinated pass",
+   "unit": "heads",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_d_mw3.domain_heads_marked",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt024.retained",
+   "label": "T024 blobs retained by the cut or reservation floor in the window scenario",
+   "unit": "blobs",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+   "path": "scenario_a_reservation_window.retained_by_cut_or_floor",
+   "stamp_path": "generated_at",
+   "stamp": "2026-11-14T10:14:15Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt025.s1_generation",
+   "label": "T025 acknowledged-then-lost head: generation after the fault",
+   "unit": "generation",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+   "path": "scenarios.0.generation_after_fault",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt025.s2_objects",
+   "label": "T025 duplicated object PUT: objects after the idempotent retry",
+   "unit": "objects",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+   "path": "scenarios.1.objects_after",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt025.s3_generation",
+   "label": "T025 reordered concurrent publications: winner generation",
+   "unit": "generation",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+   "path": "scenarios.2.a.generation",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt025.s5_reader_generation",
+   "label": "T025 stale reader: generation the reader kept",
+   "unit": "generation",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+   "path": "scenarios.4.reader_generation",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101423Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt026.transactions",
+   "label": "T026 transactions across the four generated histories",
+   "unit": "transactions",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/history-check-20261114T101358Z.json",
+   "path": "coverage.transactions",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101358Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt026.records",
+   "label": "T026 history records across the four generated histories",
+   "unit": "records",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/history-check-20261114T101358Z.json",
+   "path": "coverage.records",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101358Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt026.reads",
+   "label": "T026 recorded reads across the four generated histories",
+   "unit": "reads",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/history-check-20261114T101358Z.json",
+   "path": "coverage.reads",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101358Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.rust_tests",
+   "label": "T029 Rust integration tests in the court",
+   "unit": "tests",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "rust_suite.tests",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.creates",
+   "label": "T029 concurrent create processes",
+   "unit": "processes",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "shell.a_concurrent_create.processes",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.renames",
+   "label": "T029 concurrent rename processes",
+   "unit": "processes",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "shell.b_concurrent_rename.processes",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.overwrites",
+   "label": "T029 concurrent overwrite processes",
+   "unit": "processes",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "shell.c_concurrent_overwrite.processes",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.links",
+   "label": "T029 concurrent link/unlink processes",
+   "unit": "processes",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "shell.d_concurrent_link_unlink.processes",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.mw1_trunc_failures",
+   "label": "T029 same-inode truncating-open control failures under MW1",
+   "unit": "failures",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "same_inode_trunc_control.mw1_failures_of_12",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
+  },
+  {
+   "key": "mwt029.mw2_trunc_failures",
+   "label": "T029 same-inode truncating-open control failures under MW2",
+   "unit": "failures",
+   "group": "mw-t024-t029",
+   "format": "int",
+   "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+   "path": "same_inode_trunc_control.mw2_failures_of_12",
+   "stamp_path": "generated_at",
+   "stamp": "20261114T101315Z",
+   "revision_path": "repositories.0.revision",
+   "revision": "fd56f32f0625af6a84600e2eb1634c46d0d1a6ef"
   }
  ],
  "blocks": [
@@ -23274,6 +23577,25 @@
     },
     {
      "template": "8. **E avoids fewer evaluations than M.** E's reuse avoided **{{ekbctx.e.avoided}}** evaluations against M-LRU's **{{ekbctx.m.lru.avoided}}**: the manifestation displaces cache budget and then pays its own lookup on a cache miss."
+    }
+   ]
+  },
+  {
+   "id": "results-mw-t024-t029",
+   "file": "bench/RESULTS-mw-t024-t029.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**T024.** The adversarial pass reclaimed **{{mwt024.reclaimed_blobs}}** genuinely unreachable blobs (**{{mwt024.reclaimed_bytes}} B**) in its control pass, reclaimed **{{mwt024.second_pass}}** on an immediate second pass, and lost **{{mwt024.lost}}** reachable objects across **{{mwt024.kills}}** process kills. It retained **{{mwt024.retained}}** blobs by cut/floor in the reservation-window scenario, marked **{{mwt024.domain_heads}}** MW3 domain heads in one coordinated pass, and served **{{mwt024.reads}}** reads to **{{mwt024.readers}}** concurrent readers during the sweep."
+    },
+    {
+     "template": "**T025.** With the acknowledged head lost (S1) the store is at generation **{{mwt025.s1_generation}}** after the retry; a duplicated object PUT (S2) leaves **{{mwt025.s2_objects}}** object; reordered publications (S3) converge on generation **{{mwt025.s3_generation}}**; the stale reader (S5) keeps generation **{{mwt025.s5_reader_generation}}**. All seven verdicts are true."
+    },
+    {
+     "template": "**T026.** The four generated histories carry **{{mwt026.transactions}}** transactions, **{{mwt026.records}}** records and **{{mwt026.reads}}** reads; every history is accepted and six deliberately violating fixtures are rejected with the expected class."
+    },
+    {
+     "template": "**T029.** The Rust suite runs **{{mwt029.rust_tests}}** tests; the shell driver uses **{{mwt029.creates}}** create processes, **{{mwt029.renames}}** rename processes, **{{mwt029.overwrites}}** overwrite processes and **{{mwt029.links}}** link/unlink processes. The same-inode truncating-open control fails **{{mwt029.mw1_trunc_failures}}** time(s) under MW1 and **{{mwt029.mw2_trunc_failures}}** time(s) under MW2, which is why it is recorded as a kernel limitation rather than a transaction loss."
     }
    ]
   }

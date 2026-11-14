@@ -12849,5 +12849,205 @@
   ],
   "receipt": "bench/receipts/ekbloom-context-20261114T100000Z.json",
   "kind": "present"
+ },
+ {
+  "id": "t024_order_is_normative",
+  "claim": "The spec states the epoch/reservation/head order is what makes the cross-writer case safe.",
+  "value": "The order is what makes the cross-writer case safe.",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_cross_writer",
+  "claim": "The GC mechanism document states a GC started by one writer cannot reclaim another writer's prepared blobs.",
+  "value": "cannot reclaim writer A's prepared blobs",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_single_cut",
+  "claim": "The spec states the exact acquisition instant is the cut in single-writer mode.",
+  "value": "the exact acquisition instant is the cut",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_residual",
+  "claim": "The GC document states the stalled-publisher residual risk.",
+  "value": "A publisher that stalls past its reservation deadline",
+  "locations": [
+   "docs/MULTI-WRITER-GC.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_reclaim_control",
+  "claim": "The results document records that the control pass reclaimed genuinely unreachable blobs.",
+  "value": "genuinely unreachable blobs",
+  "locations": [
+   "bench/RESULTS-mw-t024-t029.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_mw3_coordinated",
+  "claim": "The spec states an unbound sharded handle runs a coordinated pass.",
+  "value": "runs a coordinated pass",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t025_not_a_partition",
+  "claim": "The distributed court states it is not a partition of physical nodes.",
+  "value": "a partition of physical nodes",
+  "locations": [
+   "docs/DISTRIBUTED-FAULTS.md"
+  ],
+  "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t025_ambiguous_success",
+  "claim": "The distributed court names the genuine ambiguous-success action.",
+  "value": "after_apply_drop",
+  "locations": [
+   "docs/DISTRIBUTED-FAULTS.md"
+  ],
+  "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t025_verdicts",
+  "claim": "The results document records that all seven distributed verdicts are true.",
+  "value": "All seven verdicts are true",
+  "locations": [
+   "bench/RESULTS-mw-t024-t029.md"
+  ],
+  "receipt": "bench/receipts/distributed-faults-20261114T101423Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t026_per_key",
+  "claim": "The history checker states the per-key register property it checks.",
+  "value": "Register linearizability per key",
+  "locations": [
+   "docs/HISTORY-CHECKER.md"
+  ],
+  "receipt": "bench/receipts/history-check-20261114T101358Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t026_not_global",
+  "claim": "The history checker states it does not check global serializability.",
+  "value": "Global serializability across MW3 conflict domains",
+  "locations": [
+   "docs/HISTORY-CHECKER.md"
+  ],
+  "receipt": "bench/receipts/history-check-20261114T101358Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t026_violations",
+  "claim": "The history checker requires the violating fixtures to be rejected.",
+  "value": "deliberately violating histories are supplied",
+  "locations": [
+   "docs/HISTORY-CHECKER.md"
+  ],
+  "receipt": "bench/receipts/history-check-20261114T101358Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t028_no_dual",
+  "claim": "The migration document states two conforming writers cannot both be authoritative.",
+  "value": "Two conforming writers cannot both be authoritative",
+  "locations": [
+   "docs/MODE-MIGRATION.md"
+  ],
+  "receipt": "bench/receipts/mode-migration-20261114T101419Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t028_downgrades",
+  "claim": "The spec transition table refuses every downgrade.",
+  "value": "**refused** `UnsupportedVersion`",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/mode-migration-20261114T101419Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t028_pre_record",
+  "claim": "The migration document names the pre-record binary residual hazard.",
+  "value": "pre-record binaries",
+  "locations": [
+   "docs/MODE-MIGRATION.md"
+  ],
+  "receipt": "bench/receipts/mode-migration-20261114T101419Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t029_refusals",
+  "claim": "The FUSE document lists the refused mkdir operation.",
+  "value": "for `mkdir`",
+  "locations": [
+   "docs/FUSE-MW2.md"
+  ],
+  "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t029_kernel_control",
+  "claim": "The FUSE document records the pre-existing kernel truncating-open limitation.",
+  "value": "pre-existing kernel 7.3",
+  "locations": [
+   "docs/FUSE-MW2.md"
+  ],
+  "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t029_mw1_default",
+  "claim": "The FUSE document states MW1 remains the default.",
+  "value": "MW1 remains the default",
+  "locations": [
+   "docs/FUSE-MW2.md"
+  ],
+  "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t029_spec_section",
+  "claim": "The spec has a FUSE-under-MW2 section.",
+  "value": "## 17. FUSE file mutations under MW2 (opt-in)",
+  "locations": [
+   "spec/WEFT-MULTIWRITER.md"
+  ],
+  "receipt": "bench/receipts/fuse-mw2-20261114T101315Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t024_t029_status",
+  "claim": "docs/STATUS.md records the dated T024-T029 entry.",
+  "value": "T024 multi-writer GC and concurrent retention",
+  "locations": [
+   "docs/STATUS.md"
+  ],
+  "receipt": "bench/receipts/mw-gc-20261114T101410Z.json",
+  "kind": "present"
  }
 ]
