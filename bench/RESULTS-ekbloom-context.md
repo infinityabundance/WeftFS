@@ -153,7 +153,7 @@ E p99 **138.19 µs**; stronger M p99 **33.87 µs**; ratio **4.08×**. Declared p
 <!-- END GENERATED:ekbloom-context-g2 -->
 
 The declared margin was `p99_E ≤ 0.90 × p99_M`, justified in the contract from
-the published court reproducibility spread (1.6 %) and the R8 cache's 5.65× p50
+the published court reproducibility spread and the R8 cache's measured p50
 reuse win. E misses it by a wide margin. The number was not re-tuned, no
 tolerance was widened, and the non-inferiority band (`≤ 1.10 ×`) also fails.
 
@@ -215,8 +215,7 @@ sizes:
 | 1,000,000 | 29.249 |
 <!-- END GENERATED:ekbloom-context-bounded -->
 
-At 64k keys the quadratic baseline is already hundreds of milliseconds and its
-measured growth is quadratic; the 100k and 1M rows were not timed and are
+The measured growth is quadratic; the 100k and 1M rows were not timed and are
 reported as a projection, not a measurement. The bounded construction is used
 by the harness for every certificate; no quadratic construction runs inside the
 court.
@@ -231,12 +230,11 @@ court.
 | 1,000,000 | 1,558.1 | 166,221,824 | 60,085,000 | 1,784 | 30 | 59.5 |
 <!-- END GENERATED:ekbloom-context-scale -->
 
-EKBLOOM construction grows linearly with the source and the lookup is flat at
-1.6–1.8 µs p50 across three orders of magnitude. The conventional index is
-55–90× faster per lookup at every size. The 1M table fit the court: 166 MB
-source, 60 MB manifested file, 1.6 s to build. **Largest size run: 1,000,000
-keys.** No size was skipped; the quadratic baseline's ceiling is the measured
-64k row.
+EKBLOOM construction grows with the source and the lookup is flat across the
+three orders of magnitude in the table. The conventional index is far faster
+per lookup at every size. The 1M table fit the court. **Largest size run:
+1,000,000 keys.** No size was skipped; the quadratic baseline's ceiling is the
+measured 64k row.
 
 ### 5.3 The call boundary
 
@@ -268,8 +266,8 @@ Replay **2,000** requests after deleting the manifestation: **0** verdict mismat
 <!-- END GENERATED:ekbloom-context-lifecycle -->
 
 After the measured run, the lifecycle phase deleted the final manifestation,
-dropped the cache and the open table, and replayed 2,000 requests. Every
-verdict and reason matched both the pre-deletion answer and a fresh W
+dropped the cache and the open table, and replayed the measured request stream.
+Every verdict and reason matched both the pre-deletion answer and a fresh W
 evaluation. The manifest is a cache of deterministically recomputable
 decisions; correctness never depends on it surviving. This is the lifecycle
 contract the contract promised: a generation is immutable, and the whole
@@ -277,27 +275,15 @@ generation is collectable at any time.
 
 ## 7. Every loss
 
-1. **G2 is lost, decisively.** E's p99 is **4.08×** M's, not 0.90×. The
-   manifest is a slower path than an exact-keyed in-memory cache.
-2. **E's p50 is worse than M's.** The manifest consumes cache budget; the
-   remaining cache is smaller and the manifest lookup costs more than a cache
-   probe.
-3. **E's retained bytes are not free.** The manifestation is **417,176 B** at
-   the end of the run, and E stays under the budget only by giving the cache
-   less than M has. The manifest entry (272 B) is larger than a cache entry
-   (256 B), so the manifestation cannot win on compactness either.
-4. **The manifestation costs construction.** **3,433 ms** over **306** rebuilds
-   in the measured run, all outside request latency and reported separately. A
-   service that rebuilt this table at the same cadence would pay that CPU.
-5. **The manifest's hit path allocates.** E allocates more bytes per request
-   than W because the pinned crate's engine fell back to `read_counted`; the
-   caller-buffer API does not by itself remove the allocation.
-6. **`first_conflict` does not scale.** It is quadratic in distinct keys and
-   was stopped at 64k; the bounded construction is required for the declared
-   1M certificate.
-7. **The conventional index wins the lookup axis at every size.** 20–30 ns
-   versus 1.6–1.8 µs is a 55–90× gap that the manifestation's persistence does
-   not close in this workload.
+<!-- BEGIN GENERATED:ekbloom-context-losses (scripts/perf_numbers.py) -->
+1. **G2 is lost, decisively.** E's p99 is **4.08×** the stronger M's (138.19 µs vs 33.87 µs), not 0.90×. The manifest is a slower path than an exact-keyed in-memory cache.
+2. **E's p50 is worse than M's.** E is **1.60×** M's p50 (18.19 µs vs 11.39 µs): the manifest consumes cache budget and its lookup costs more than a cache probe.
+3. **E's retained bytes are not free.** The final manifestation is **417,176 B**; E retains **1,001,392 B** in total versus M's **1,048,576 B**. E stays under the budget only by giving the cache less than M has, and a manifest entry is larger than a cache entry.
+4. **The manifestation costs construction.** **3,433.2 ms** over **306** rebuilds in the measured run, all outside request latency and reported separately. A service rebuilding at that cadence would pay that CPU.
+5. **The manifest's hit path allocates.** E allocates **84,342 B/request** versus W's **25,485 B** and M-LRU's **13,902 B** because the pinned crate's engine fell back to `read_counted`; the caller-buffer API does not by itself remove the allocation.
+6. **`first_conflict` does not scale.** **398.56 ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **29.249 ms** at 1,000,000 keys.
+7. **The conventional index wins the lookup axis at every size.** The gap is **82.2×** at 1k, **54.4×** at 100k and **59.5×** at 1M; the manifestation's persistence does not close it in this workload.
+<!-- END GENERATED:ekbloom-context-losses -->
 
 ## 8. Non-claims
 

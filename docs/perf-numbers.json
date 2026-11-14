@@ -23188,6 +23188,34 @@
      "template": "Scale: bounded key-sufficiency certificate **{{ekbctx.scale.1m.bounded}} ms** at 1,000,000 keys; EKBLOOM table build **{{ekbctx.scale.1m.build}} ms** and slot lookup **{{ekbctx.scale.1m.lookup}} ns** p50 versus a conventional index at **{{ekbctx.scale.1m.index}} ns** (**{{ekbctx.scale.1m.gap}}\u00d7**); quadratic `first_conflict` **{{ekbctx.quad.64k}} ms** at only 64,000 keys. Lifecycle: **{{ekbctx.life.replay}}** replayed requests, **{{ekbctx.life.mismatches}}** mismatches after deleting the manifestation (stamp {{ekbctx.scale.1m.build|stamp}}, revision {{ekbctx.scale.1m.build|revision}})."
     }
    ]
+  },
+  {
+   "id": "ekbloom-context-losses",
+   "file": "bench/RESULTS-ekbloom-context.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "1. **G2 is lost, decisively.** E's p99 is **{{ekbctx.e.ratio}}\u00d7** the stronger M's ({{ekbctx.e.p99}} \u00b5s vs {{ekbctx.m.tf.p99}} \u00b5s), not 0.90\u00d7. The manifest is a slower path than an exact-keyed in-memory cache."
+    },
+    {
+     "template": "2. **E's p50 is worse than M's.** E is **{{ekbctx.e.p50_ratio}}\u00d7** M's p50 ({{ekbctx.e.p50}} \u00b5s vs {{ekbctx.m.tf.p50}} \u00b5s): the manifest consumes cache budget and its lookup costs more than a cache probe."
+    },
+    {
+     "template": "3. **E's retained bytes are not free.** The final manifestation is **{{ekbctx.e.manifest}} B**; E retains **{{ekbctx.e.retained}} B** in total versus M's **{{ekbctx.m.tf.retained}} B**. E stays under the budget only by giving the cache less than M has, and a manifest entry is larger than a cache entry."
+    },
+    {
+     "template": "4. **The manifestation costs construction.** **{{ekbctx.e.build_ms}} ms** over **{{ekbctx.e.builds}}** rebuilds in the measured run, all outside request latency and reported separately. A service rebuilding at that cadence would pay that CPU."
+    },
+    {
+     "template": "5. **The manifest's hit path allocates.** E allocates **{{ekbctx.e.allocb_per_req}} B/request** versus W's **{{ekbctx.w.allocb_per_req}} B** and M-LRU's **{{ekbctx.m.lru.allocb_per_req}} B** because the pinned crate's engine fell back to `read_counted`; the caller-buffer API does not by itself remove the allocation."
+    },
+    {
+     "template": "6. **`first_conflict` does not scale.** **{{ekbctx.quad.64k}} ms** at 64,000 keys, with quadratic measured growth; the bounded construction takes **{{ekbctx.scale.1m.bounded}} ms** at 1,000,000 keys."
+    },
+    {
+     "template": "7. **The conventional index wins the lookup axis at every size.** The gap is **{{ekbctx.scale.1k.gap}}\u00d7** at 1k, **{{ekbctx.scale.100k.gap}}\u00d7** at 100k and **{{ekbctx.scale.1m.gap}}\u00d7** at 1M; the manifestation's persistence does not close it in this workload."
+    }
+   ]
   }
  ]
 }
