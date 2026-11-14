@@ -276,6 +276,28 @@ run_orchestrated_court augmentation_local augmentation_court \
   env WEFT_AUGMENTATION_REDUCED=1 WEFT_AUGMENTATION_STAMP="$stamp" \
   bash scripts/augmentation_court.sh --local
 
+# N04: the bounded writer pipeline on a remote object backend. One real MinIO
+# server, the six contract arms with the pipelined WeftFS rows, the provider
+# fault adversarial court and the S3 fencing suite. The aggregate uses the
+# frozen reduced subset with seven repetitions; the full published court is
+# `augmentation-minio-20261113T190000Z.json` / `n04-object-pipeline-20261113T190000Z.json`,
+# cited in `bench/RESULTS-object-pipeline.md`. A court that cannot run prints
+# `object_pipeline_court: skip <reason>` and exits 78; the aggregate records a
+# skip, never a pass.
+run_orchestrated_court object_pipeline object_pipeline_court \
+  env WEFT_N04_STAMP="$stamp" bash scripts/object_pipeline_court.sh --reduced
+
+# T030/T038/T081: a real deployed Ceph 19.2.0 (mon+mgr+OSD+MDS) with CephFS
+# mounted by ceph-fuse in a second hard-limited container, and the same
+# A/N/B/C/D/E court rooted on that mount. The aggregate uses the frozen reduced
+# subset with seven repetitions; the full published court is
+# `augmentation-cephfs-20261114T040000Z.json`, cited in
+# `bench/RESULTS-cephfs.md`. Single node, labelled; not a fleet or clustered
+# result. A court that cannot run prints `cephfs_court: skip <reason>` and exits
+# 78; the aggregate records a skip, never a pass.
+run_orchestrated_court cephfs cephfs_court \
+  env WEFT_CEPHFS_STAMP="$stamp" bash scripts/cephfs_court.sh --reduced
+
 # R26 Context Advantage Court: one backend at a time, three arms — the backend
 # alone, a strong application-level metadata baseline, and the WeftFS context
 # plane — interleaved with the arm order rotated per repetition. This court is
@@ -445,6 +467,12 @@ skipped="$(grep -c '=skip$' "$results" || true)"
   emit_receipt s3_court "bench/receipts/s3-court-${stamp}.json"
   if [[ -f "bench/receipts/augmentation-local-${stamp}.json" ]]; then
     emit_receipt augmentation_local "bench/receipts/augmentation-local-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/n04-object-pipeline-${stamp}.json" ]]; then
+    emit_receipt object_pipeline "bench/receipts/n04-object-pipeline-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/cephfs-${stamp}.json" ]]; then
+    emit_receipt cephfs "bench/receipts/cephfs-${stamp}.json"
   fi
   if [[ -f "bench/receipts/conformance-bundle-${stamp}.json" ]]; then
     emit_receipt conformance_bundle "bench/receipts/conformance-bundle-${stamp}.json"

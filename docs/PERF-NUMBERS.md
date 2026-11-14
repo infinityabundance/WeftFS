@@ -388,6 +388,82 @@ loss (efficiency falls with N). Receipt
 | `mw.minio_n4_tx_s` | 212.8 | tx/s | MW2 MinIO throughput at N=4 | `bench/receipts/bench-multiwriter-20261109T150423Z.json` | 20261109T150423Z | b0bcbc5e4ded |
 <!-- END GENERATED:perf-catalog-multiwriter -->
 
+## N04: the object-backend writer pipeline (real MinIO)
+
+One loopback MinIO server, six contract arms and four pipelined rows, seven
+interleaved repetitions. Source: `bench/receipts/augmentation-minio-20261113T190000Z.json`;
+analysis: [`bench/RESULTS-object-pipeline.md`](bench/RESULTS-object-pipeline.md).
+
+<!-- BEGIN GENERATED:perf-catalog-n04 (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `n04.reps` | 7 | count | repetitions in the N04 court | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.tensors` | 101 | count | tensors restored by every arm | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.logical_b` | 424,439,296 | B | logical bytes in the subset | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.mismatches` | 0 | count | SHA-256 mismatches across every arm | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.a_write_p50` | 846.6 | ms | A durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.b_write_p50` | 1,480.7 | ms | B durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.b_pipe4_write_p50` | 1,391.8 | ms | B-pipe4 durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.c_write_p50` | 1,275.6 | ms | C durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.c_pipe4_write_p50` | 858.7 | ms | C-pipe4 durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.d_write_p50` | 1,513.6 | ms | D durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.d_pipe4_write_p50` | 1,412.7 | ms | D-pipe4 durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.e_write_p50` | 1,295.5 | ms | E durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.e_pipe4_write_p50` | 865.4 | ms | E-pipe4 durable write wall, p50 of repetitions | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.cpipe_write_min` | 826.9 | ms | C-pipe4 durable write wall, least-contended repetition | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.a_cold_p50` | 307.7 | ms | A cold restore wall, p50 | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.cpipe_cold_p50` | 1,520.4 | ms | C-pipe4 cold restore wall, p50 | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.cpipe_storage_pct` | 33.5 | % | C-pipe4 physical-footprint reduction against A | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.epipe_storage_pct` | 33.5 | % | E-pipe4 physical-footprint reduction against A | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.c_rss` | 691,960 | KiB | C write peak RSS, p50 | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.cpipe_rss` | 938,376 | KiB | C-pipe4 write peak RSS, p50 | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.c_cpu` | 1,220 | ms | C write CPU user+sys, p50 | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.cpipe_cpu` | 1,350 | ms | C-pipe4 write CPU user+sys, p50 | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.puts` | 43 | count | PUT requests in the adverse baseline write | `bench/receipts/n04-object-pipeline-20261113T190000Z.json` | 20261113T190000Z | 37a03c0dbb62 |
+| `n04.fault_target` | 30 | count | the PUT index the fault proxy targets | `bench/receipts/n04-object-pipeline-20261113T190000Z.json` | 20261113T190000Z | 37a03c0dbb62 |
+| `n04.pipe_b_pct` | 6.0 | % | B write-wall change from the pipeline | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.pipe_c_pct` | 32.7 | % | C write-wall change from the pipeline | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.pipe_d_pct` | 6.7 | % | D write-wall change from the pipeline | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.pipe_e_pct` | 33.2 | % | E write-wall change from the pipeline | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+| `n04.cpipe_vs_a_ratio` | 1.01 | ratio | C-pipe4 write wall divided by A's | `bench/receipts/augmentation-minio-20261113T190000Z.json` | 20261114T000237Z | 37a03c0dbb62 |
+<!-- END GENERATED:perf-catalog-n04 -->
+
+## Single-node CephFS (T030/T038/T081)
+
+A real deployed Ceph 19.2.0 with an MDS, mounted with `ceph-fuse`, six arms,
+seven interleaved repetitions. Source:
+`bench/receipts/augmentation-cephfs-20261114T040000Z.json`; analysis:
+[`bench/RESULTS-cephfs.md`](bench/RESULTS-cephfs.md).
+
+<!-- BEGIN GENERATED:perf-catalog-cephfs (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `cephfs.reps` | 7 | count | repetitions | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.tensors` | 101 | count | tensors restored by every arm | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.logical_b` | 424,439,296 | B | logical bytes in the subset | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.mismatches` | 0 | count | SHA-256 mismatches across every arm | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.a_write_p50` | 1,077.0 | ms | A durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.a_write_p95` | 19,319.9 | ms | A durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.b_write_p50` | 10,547.1 | ms | B durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.b_write_p95` | 29,536.8 | ms | B durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_write_p50` | 2,023.8 | ms | C durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_write_p95` | 17,306.1 | ms | C durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.d_write_p50` | 3,246.2 | ms | D durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.d_write_p95` | 22,829.0 | ms | D durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.e_write_p50` | 2,132.0 | ms | E durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.e_write_p95` | 16,109.0 | ms | E durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.n_write_p50` | 1,117.8 | ms | N durable write wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.n_write_p95` | 18,338.0 | ms | N durable write wall, p95 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_write_min` | 1,864.1 | ms | C durable write wall, least-contended | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.a_cold_p50` | 981.3 | ms | A cold restore wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_cold_p50` | 1,783.1 | ms | C cold restore wall, p50 | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_storage_pct` | 33.5 | % | C physical-footprint reduction against A | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.e_storage_pct` | 33.5 | % | E physical-footprint reduction against A | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_latency_pct` | -131.3 | % | C cold-restore latency change against A | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_vs_a_write_ratio` | 1.88 | ratio | C write wall divided by A's | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+| `cephfs.c_vs_a_cold_ratio` | 1.82 | ratio | C cold restore divided by A's | `bench/receipts/augmentation-cephfs-20261114T040000Z.json` | 20261114T015202Z | 4be2b44a3a6f |
+<!-- END GENERATED:perf-catalog-cephfs -->
+
 ## Verification, conformance and claims counts
 
 <!-- BEGIN GENERATED:perf-catalog-verification (scripts/perf_numbers.py) -->
@@ -401,7 +477,7 @@ loss (efficiency falls with N). Receipt
 | `verify.revision` | 52da9888f3726e6af5c364af7707fd98574fc954 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261113T033408Z.json` | 20261113T033408Z | 52da9888f372 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,146 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,160 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 807 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261113T033408Z.tests.json` | 94321513d150e4b52d8ce4e3f534189a93041e5d5d9f5d3651d1ac830459e12a | bench/receip |

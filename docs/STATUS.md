@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **807** tests pass; FUSE **850** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,146** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,160** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11122,3 +11122,36 @@ superseded.
 Go equivalent exists: `WeftFS-Go` has no stage-admission primitive (quota
 admission is a per-commit byte budget). Physical power loss, fleet and cloud
 remain unclaimed.
+
+## N04 / T030 / T038 / T081 (2026-11-14, staging)
+
+**N04 — the writer pipeline on a remote object backend.** The R21 pipeline now
+knows how a backend expresses durability (`StorageBackend::
+durability_is_provider_ack`; S3, GCS and Azure are provider-ack, local /
+immutable-object / POSIX are file-barrier, a split store follows its blob
+plane). On a provider-ack backend the publisher records acknowledged bytes,
+issues no barrier, and claims none; the ordering rule is unchanged. A real
+deadlock was found and fixed by the adverse court: the publisher returned on a
+publication error without closing the early-barrier queue, so the scope joined a
+parked thread forever. The six-arm court plus four pipelined rows runs on the
+pinned MinIO in the court, with seven interleaved repetitions, and the adverse
+court proves provider abort and lost acknowledgement both fail closed and retry
+to the reference head. Evidence and every loss:
+[`bench/RESULTS-object-pipeline.md`](../bench/RESULTS-object-pipeline.md).
+
+**T030/T038/T081 — one deployed distributed filesystem.** CephFS is running:
+Ceph `19.2.0 (squid)` from the pinned demo image, one mon, one mgr, one
+bluestore OSD and one MDS, mounted with `ceph-fuse` in a second hard-limited
+container (the court kernel has no `ceph.ko`), and the same A/N/B/C/D/E court
+runs on that mount with no WeftFS FUSE in the data path. JuiceFS and GlusterFS
+were not attempted because CephFS worked. Evidence, the deployment record and
+every loss: [`bench/RESULTS-cephfs.md`](../bench/RESULTS-cephfs.md). The
+deployment is **single-node** and is labelled as such everywhere; it is not a
+fleet, clustered, cloud, media or power-loss result.
+
+**Not claimed.** No cloud or live-provider run; the MinIO and Ceph servers are
+loopback containers on one host; the pipelined writer is a store API, not a
+shipped CLI verb; restore is unaffected by N04; the crash phases are process
+faults. `verify-all.sh` was not re-run for these two courts (the cited receipts
+are the courts themselves), so the aggregate count above still names the last
+full run.

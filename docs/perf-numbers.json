@@ -73,6 +73,14 @@
   {
    "id": "aged",
    "title": "Aged-store index court (T012/N13) and DCP completion (X02)"
+  },
+  {
+   "id": "n04-minio",
+   "title": "N04 object-backend writer pipeline on real MinIO, seven interleaved repetitions"
+  },
+  {
+   "id": "cephfs",
+   "title": "T030/T038/T081 single-node CephFS augmentation court, seven interleaved repetitions"
   }
  ],
  "numbers": [
@@ -4422,7 +4430,7 @@
   {
    "key": "ca.tol.p50",
    "label": "declared fast-path p50 tolerance (W / N)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4435,7 +4443,7 @@
   {
    "key": "ca.tol.p95",
    "label": "declared fast-path p95 tolerance (W / N)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4448,7 +4456,7 @@
   {
    "key": "ca.tol.bytes",
    "label": "declared fast-path backend-byte tolerance (W / N)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4461,7 +4469,7 @@
   {
    "key": "ca.n.p50",
    "label": "N fast-path p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4474,7 +4482,7 @@
   {
    "key": "ca.n.p95",
    "label": "N fast-path p95",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4695,7 +4703,7 @@
   {
    "key": "ca.m.p50",
    "label": "M fast-path p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4708,7 +4716,7 @@
   {
    "key": "ca.m.p95",
    "label": "M fast-path p95",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4929,7 +4937,7 @@
   {
    "key": "ca.w.p50",
    "label": "W fast-path p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -4942,7 +4950,7 @@
   {
    "key": "ca.w.p95",
    "label": "W fast-path p95",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5189,7 +5197,7 @@
   {
    "key": "ca.recompute",
    "label": "measured recompute of one page (scalar kernel)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5202,7 +5210,7 @@
   {
    "key": "ca.ratio.w_n_p50",
    "label": "W / N fast-path p50",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5215,7 +5223,7 @@
   {
    "key": "ca.ratio.w_n_p95",
    "label": "W / N fast-path p95",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5228,7 +5236,7 @@
   {
    "key": "ca.ratio.m_n_p50",
    "label": "M / N fast-path p50",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5241,7 +5249,7 @@
   {
    "key": "ca.ratio.m_n_p95",
    "label": "M / N fast-path p95",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5254,7 +5262,7 @@
   {
    "key": "ca.ratio.w_n_bytes",
    "label": "W / N backend bytes per request",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:3",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5267,7 +5275,7 @@
   {
    "key": "ca.mode12_decode",
    "label": "mode-12 decode p50 of the same page",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5280,7 +5288,7 @@
   {
    "key": "ca.mode19_decode",
    "label": "mode-19 decode p50 of the same page",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5293,7 +5301,7 @@
   {
    "key": "ca.prov_ratio",
    "label": "mode-19 / mode-12 decode",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:3",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5340,7 +5348,7 @@
   {
    "key": "ca.ratio.w_m_rec_backend",
    "label": "W / M recovery backend bytes",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.w.rec_backend} / {ca.m.rec_backend}"
@@ -5348,7 +5356,7 @@
   {
    "key": "ca.ratio.w_m_rec_wall",
    "label": "W / M recovery wall",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.w.rec_wall} / {ca.m.rec_wall}"
@@ -5421,7 +5429,7 @@
   {
    "key": "ca.n.resolve",
    "label": "N path resolution",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5434,7 +5442,7 @@
   {
    "key": "ca.n.obj_io",
    "label": "N object blob I/O",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5447,7 +5455,7 @@
   {
    "key": "ca.n.blob_hash",
    "label": "N object blob hash",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5460,7 +5468,7 @@
   {
    "key": "ca.n.manifest_io",
    "label": "N manifest I/O",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5473,7 +5481,7 @@
   {
    "key": "ca.n.manifest_hash",
    "label": "N manifest hash",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5486,7 +5494,7 @@
   {
    "key": "ca.n.manifest_decode",
    "label": "N manifest decode",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5499,7 +5507,7 @@
   {
    "key": "ca.n.assemble",
    "label": "N chunk assembly",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5512,7 +5520,7 @@
   {
    "key": "ca.n.content_verify",
    "label": "N whole-content verification",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5525,7 +5533,7 @@
   {
    "key": "ca.n.compare",
    "label": "N exactness compare",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5538,7 +5546,7 @@
   {
    "key": "ca.n.instrumented",
    "label": "N instrumented wall",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5551,7 +5559,7 @@
   {
    "key": "ca.n.residual",
    "label": "N unnamed residual",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5564,7 +5572,7 @@
   {
    "key": "ca.w.resolve",
    "label": "W path resolution",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5577,7 +5585,7 @@
   {
    "key": "ca.w.auth_state",
    "label": "W object-record lookup",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5590,7 +5598,7 @@
   {
    "key": "ca.w.auth_descriptor",
    "label": "W descriptor decode + identity",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5603,7 +5611,7 @@
   {
    "key": "ca.w.auth_capability",
    "label": "W capability envelope + grants",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5616,7 +5624,7 @@
   {
    "key": "ca.w.auth_posix",
    "label": "W POSIX / ACL",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5629,7 +5637,7 @@
   {
    "key": "ca.w.obj_io",
    "label": "W object blob I/O",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5642,7 +5650,7 @@
   {
    "key": "ca.w.blob_hash",
    "label": "W object blob hash",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5655,7 +5663,7 @@
   {
    "key": "ca.w.manifest_io",
    "label": "W manifest I/O",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5668,7 +5676,7 @@
   {
    "key": "ca.w.manifest_hash",
    "label": "W manifest hash",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5681,7 +5689,7 @@
   {
    "key": "ca.w.manifest_decode",
    "label": "W manifest decode",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5694,7 +5702,7 @@
   {
    "key": "ca.w.assemble",
    "label": "W chunk assembly",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5707,7 +5715,7 @@
   {
    "key": "ca.w.content_verify",
    "label": "W whole-content verification",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5720,7 +5728,7 @@
   {
    "key": "ca.w.frame_parse",
    "label": "W frame parse + checksum",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5733,7 +5741,7 @@
   {
    "key": "ca.w.decode",
    "label": "W payload decode",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5746,7 +5754,7 @@
   {
    "key": "ca.w.compare",
    "label": "W exactness compare",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5759,7 +5767,7 @@
   {
    "key": "ca.w.instrumented",
    "label": "W instrumented wall",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5772,7 +5780,7 @@
   {
    "key": "ca.w.residual",
    "label": "W unnamed residual",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5785,7 +5793,7 @@
   {
    "key": "ca.w.auth_total",
    "label": "W total authorization preamble",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.w.auth_state} + {ca.w.auth_descriptor} + {ca.w.auth_capability} + {ca.w.auth_posix}"
@@ -5793,7 +5801,7 @@
   {
    "key": "ca.w.overhead_vs_n",
    "label": "W instrumented wall minus N instrumented wall",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.w.instrumented} - {ca.n.instrumented}"
@@ -5801,7 +5809,7 @@
   {
    "key": "ca.w.decode_planes",
    "label": "mode-19 byte planes (unpack + join), p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5814,7 +5822,7 @@
   {
    "key": "ca.w.decode_hash",
    "label": "mode-19 reconstructed-page hash, p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5827,7 +5835,7 @@
   {
    "key": "ca.w.decode_desc",
    "label": "mode-19 descriptor parse, p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5840,7 +5848,7 @@
   {
    "key": "ca.w.decode_root",
    "label": "mode-19 descriptor identity (re-encode + hash), p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5853,7 +5861,7 @@
   {
    "key": "ca.w.decode_all",
    "label": "mode-19 decode, p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -5866,7 +5874,7 @@
   {
    "key": "ca.w.decode_alloc",
    "label": "mode-19 decode not covered by the named components, p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.w.decode_all} - {ca.w.decode_planes} - {ca.w.decode_hash} - {ca.w.decode_desc} - {ca.w.decode_root}"
@@ -6015,7 +6023,7 @@
   {
    "key": "ca.r26.w.p50",
    "label": "R26 W fast-path p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
@@ -6028,7 +6036,7 @@
   {
    "key": "ca.r26.w.p95",
    "label": "R26 W fast-path p95",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
@@ -6041,7 +6049,7 @@
   {
    "key": "ca.r26.n.p50",
    "label": "R26 N fast-path p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
@@ -6054,7 +6062,7 @@
   {
    "key": "ca.r26.n.p95",
    "label": "R26 N fast-path p95",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T054528Z.json",
@@ -6182,7 +6190,7 @@
   {
    "key": "ca.r27.w.p50",
    "label": "R27 W fast-path p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T061907Z.json",
@@ -6195,7 +6203,7 @@
   {
    "key": "ca.r27.w.p95",
    "label": "R27 W fast-path p95",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T061907Z.json",
@@ -6208,7 +6216,7 @@
   {
    "key": "ca.r27.ratio.w_n_p50",
    "label": "R27 W/N p50 ratio",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T061907Z.json",
@@ -6221,7 +6229,7 @@
   {
    "key": "ca.r27.ratio.w_n_p95",
    "label": "R27 W/N p95 ratio",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T061907Z.json",
@@ -6271,7 +6279,7 @@
   {
    "key": "ca.n.rec_output_p50",
    "label": "N recovery per-output p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -6297,7 +6305,7 @@
   {
    "key": "ca.m.rec_output_p50",
    "label": "M recovery per-output p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -6323,7 +6331,7 @@
   {
    "key": "ca.w.rec_output_p50",
    "label": "W recovery per-output p50",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -6386,7 +6394,7 @@
   {
    "key": "ca.repr.huffman_us",
    "label": "shipped huffman-canonical-v1 payload step",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -6412,7 +6420,7 @@
   {
    "key": "ca.repr.raw_us",
    "label": "raw-payload floor: one allocation and one copy",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -6438,7 +6446,7 @@
   {
    "key": "ca.repr.ratio",
    "label": "shipped payload step over the raw-copy floor",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-20261113T072921Z.json",
@@ -6472,7 +6480,7 @@
   {
    "key": "cas.n.p50",
    "label": "N fast-path p50 (MinIO)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -6485,7 +6493,7 @@
   {
    "key": "cas.n.p95",
    "label": "N fast-path p95 (MinIO)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -6680,7 +6688,7 @@
   {
    "key": "cas.m.p50",
    "label": "M fast-path p50 (MinIO)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -6693,7 +6701,7 @@
   {
    "key": "cas.m.p95",
    "label": "M fast-path p95 (MinIO)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -6888,7 +6896,7 @@
   {
    "key": "cas.w.p50",
    "label": "W fast-path p50 (MinIO)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -6901,7 +6909,7 @@
   {
    "key": "cas.w.p95",
    "label": "W fast-path p95 (MinIO)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7109,7 +7117,7 @@
   {
    "key": "cas.tol.p50",
    "label": "declared fast-path p50 tolerance (MinIO row)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7122,7 +7130,7 @@
   {
    "key": "cas.tol.p95",
    "label": "declared fast-path p95 tolerance (MinIO row)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7135,7 +7143,7 @@
   {
    "key": "cas.tol.bytes",
    "label": "declared fast-path byte tolerance (MinIO row)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7148,7 +7156,7 @@
   {
    "key": "cas.ratio.w_n_p50",
    "label": "W / N fast-path p50 (MinIO)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7161,7 +7169,7 @@
   {
    "key": "cas.ratio.w_n_p95",
    "label": "W / N fast-path p95 (MinIO)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7174,7 +7182,7 @@
   {
    "key": "cas.ratio.w_n_bytes",
    "label": "W / N backend bytes per request (MinIO)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:3",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7187,7 +7195,7 @@
   {
    "key": "cas.ratio.m_n_p50",
    "label": "M / N fast-path p50 (MinIO)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage-s3",
    "format": "fixed:2",
    "receipt": "bench/receipts/context-advantage-s3-20261113T073016Z.json",
@@ -7252,7 +7260,7 @@
   {
    "key": "cas.derived.decode_penalty_us",
    "label": "W's fast-path decode penalty over N, local row (derived)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "expr": "{ca.w.p50} - {ca.n.p50}"
@@ -7260,7 +7268,7 @@
   {
    "key": "cas.derived.rtt_us",
    "label": "per-request backend cost on the MinIO row, derived from N (derived)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "expr": "({cas.n.p50} - {ca.n.p50}) / {cas.n.req_per_read}"
@@ -7268,7 +7276,7 @@
   {
    "key": "cas.derived.predicted_w_p50_us",
    "label": "W p50 the two-point model predicts on MinIO (derived)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "expr": "{cas.n.req_per_read} * {cas.derived.rtt_us} + {ca.w.p50}"
@@ -7284,7 +7292,7 @@
   {
    "key": "cas.derived.crossover_rtt_us",
    "label": "per-request cost at which W / N reaches the declared p50 tolerance (derived)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage-s3",
    "format": "fixed:1",
    "expr": "({ca.w.p50} - {ca.tol.p50} * {ca.n.p50}) / (({ca.tol.p50} - 1) * {ca.n.req_per_read})"
@@ -7308,7 +7316,7 @@
   {
    "key": "ca.floor.nopayload_us",
    "label": "W fast-path p50 with the whole payload decode removed (derived)",
-   "unit": "\u00b5s",
+   "unit": "µs",
    "group": "context-advantage",
    "format": "fixed:1",
    "expr": "{ca.w.p50} - {ca.w.decode_planes}"
@@ -7316,7 +7324,7 @@
   {
    "key": "ca.floor.nopayload_ratio",
    "label": "that floor as a multiple of N's p50 (derived)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "({ca.w.p50} - {ca.w.decode_planes}) / {ca.n.p50}"
@@ -7324,7 +7332,7 @@
   {
    "key": "ca.repr.raw_payload_ratio",
    "label": "raw page payload as a multiple of the shipped frames on the same pages (derived)",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "context-advantage",
    "format": "fixed:2",
    "expr": "{ca.page_bytes} * {ca.pages} / {ca.w.frame_bytes}"
@@ -7561,7 +7569,7 @@
   {
    "key": "ekb.e2.ratio",
    "label": "E2 EKBLOOM bytes over shipped-planner bytes",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "ekbloom",
    "format": "fixed:6",
    "expr": "{ekb.e2.body} / {ekb.e2.planned}"
@@ -7863,7 +7871,7 @@
   {
    "key": "ekb.e3.e_over_w",
    "label": "E3 E footprint over W footprint",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "ekbloom",
    "format": "fixed:5",
    "expr": "{ekb.e3.e_foot} / {ekb.e3.w_foot}"
@@ -7871,7 +7879,7 @@
   {
    "key": "ekb.e3.e_over_a",
    "label": "E3 E footprint over A footprint",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "ekbloom",
    "format": "fixed:5",
    "expr": "{ekb.e3.e_foot} / {ekb.e3.a_foot}"
@@ -7879,7 +7887,7 @@
   {
    "key": "ekb.e3.p95_e_over_best",
    "label": "E3 E p95 over the best baseline p95",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "ekbloom",
    "format": "fixed:2",
    "expr": "{ekb.e3.p95_e} / {ekb.e3.p95_best}"
@@ -7887,7 +7895,7 @@
   {
    "key": "ekb.e3.p95_w_over_e",
    "label": "E3 W p95 over E p95",
-   "unit": "\u00d7",
+   "unit": "×",
    "group": "ekbloom",
    "format": "fixed:2",
    "expr": "{ekb.e3.p95_w} / {ekb.e3.p95_e}"
@@ -11173,6 +11181,660 @@
    "revision_path": "revision",
    "revision": "a6ab12eb667b9d77c6b61a5958c10ac367282469",
    "path": "fuse.ignored"
+  },
+  {
+   "key": "n04.reps",
+   "label": "repetitions in the N04 court",
+   "unit": "count",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configuration.reps",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.tensors",
+   "label": "tensors restored by every arm",
+   "unit": "count",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.A.summary.exactness.tensors_verified",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.logical_b",
+   "label": "logical bytes in the subset",
+   "unit": "B",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "subset.logical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.mismatches",
+   "label": "SHA-256 mismatches across every arm",
+   "unit": "count",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.A.summary.exactness.mismatches",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.a_write_p50",
+   "label": "A durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.A.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.b_write_p50",
+   "label": "B durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.B.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.b_pipe4_write_p50",
+   "label": "B-pipe4 durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.B-pipe4.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.c_write_p50",
+   "label": "C durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.c_pipe4_write_p50",
+   "label": "C-pipe4 durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C-pipe4.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.d_write_p50",
+   "label": "D durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.D.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.d_pipe4_write_p50",
+   "label": "D-pipe4 durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.D-pipe4.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.e_write_p50",
+   "label": "E durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.E.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.e_pipe4_write_p50",
+   "label": "E-pipe4 durable write wall, p50 of repetitions",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.E-pipe4.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.cpipe_write_min",
+   "label": "C-pipe4 durable write wall, least-contended repetition",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C-pipe4.stats.write_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.a_cold_p50",
+   "label": "A cold restore wall, p50",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.A.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.cpipe_cold_p50",
+   "label": "C-pipe4 cold restore wall, p50",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C-pipe4.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.cpipe_storage_pct",
+   "label": "C-pipe4 physical-footprint reduction against A",
+   "unit": "%",
+   "group": "n04-minio",
+   "format": "pct:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "deltas_vs_A.C-pipe4.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.epipe_storage_pct",
+   "label": "E-pipe4 physical-footprint reduction against A",
+   "unit": "%",
+   "group": "n04-minio",
+   "format": "pct:1",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "deltas_vs_A.E-pipe4.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.c_rss",
+   "label": "C write peak RSS, p50",
+   "unit": "KiB",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C.stats.write_peak_rss_kib.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.cpipe_rss",
+   "label": "C-pipe4 write peak RSS, p50",
+   "unit": "KiB",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C-pipe4.stats.write_peak_rss_kib.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.c_cpu",
+   "label": "C write CPU user+sys, p50",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C.stats.write_cpu_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.cpipe_cpu",
+   "label": "C-pipe4 write CPU user+sys, p50",
+   "unit": "ms",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+   "path": "configurations.C-pipe4.stats.write_cpu_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T000237Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.puts",
+   "label": "PUT requests in the adverse baseline write",
+   "unit": "count",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/n04-object-pipeline-20261113T190000Z.json",
+   "path": "adverse.baseline_put_count",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T190000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.fault_target",
+   "label": "the PUT index the fault proxy targets",
+   "unit": "count",
+   "group": "n04-minio",
+   "format": "int",
+   "receipt": "bench/receipts/n04-object-pipeline-20261113T190000Z.json",
+   "path": "adverse.put_target",
+   "stamp_path": "generated_utc",
+   "stamp": "20261113T190000Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+  },
+  {
+   "key": "n04.pipe_b_pct",
+   "label": "B write-wall change from the pipeline",
+   "unit": "%",
+   "group": "n04-minio",
+   "format": "pct:1",
+   "expr": "100*({n04.b_write_p50}-{n04.b_pipe4_write_p50})/{n04.b_write_p50}"
+  },
+  {
+   "key": "n04.pipe_c_pct",
+   "label": "C write-wall change from the pipeline",
+   "unit": "%",
+   "group": "n04-minio",
+   "format": "pct:1",
+   "expr": "100*({n04.c_write_p50}-{n04.c_pipe4_write_p50})/{n04.c_write_p50}"
+  },
+  {
+   "key": "n04.pipe_d_pct",
+   "label": "D write-wall change from the pipeline",
+   "unit": "%",
+   "group": "n04-minio",
+   "format": "pct:1",
+   "expr": "100*({n04.d_write_p50}-{n04.d_pipe4_write_p50})/{n04.d_write_p50}"
+  },
+  {
+   "key": "n04.pipe_e_pct",
+   "label": "E write-wall change from the pipeline",
+   "unit": "%",
+   "group": "n04-minio",
+   "format": "pct:1",
+   "expr": "100*({n04.e_write_p50}-{n04.e_pipe4_write_p50})/{n04.e_write_p50}"
+  },
+  {
+   "key": "n04.cpipe_vs_a_ratio",
+   "label": "C-pipe4 write wall divided by A's",
+   "unit": "ratio",
+   "group": "n04-minio",
+   "format": "ratio:2",
+   "expr": "{n04.c_pipe4_write_p50}/{n04.a_write_p50}"
+  },
+  {
+   "key": "cephfs.reps",
+   "label": "repetitions",
+   "unit": "count",
+   "group": "cephfs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configuration.reps",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.tensors",
+   "label": "tensors restored by every arm",
+   "unit": "count",
+   "group": "cephfs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.A.summary.exactness.tensors_verified",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.logical_b",
+   "label": "logical bytes in the subset",
+   "unit": "B",
+   "group": "cephfs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "subset.logical_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.mismatches",
+   "label": "SHA-256 mismatches across every arm",
+   "unit": "count",
+   "group": "cephfs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.A.summary.exactness.mismatches",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.a_write_p50",
+   "label": "A durable write wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.A.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.a_write_p95",
+   "label": "A durable write wall, p95",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.A.stats.write_wall_ms.p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.b_write_p50",
+   "label": "B durable write wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.B.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.b_write_p95",
+   "label": "B durable write wall, p95",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.B.stats.write_wall_ms.p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_write_p50",
+   "label": "C durable write wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.C.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_write_p95",
+   "label": "C durable write wall, p95",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.C.stats.write_wall_ms.p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.d_write_p50",
+   "label": "D durable write wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.D.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.d_write_p95",
+   "label": "D durable write wall, p95",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.D.stats.write_wall_ms.p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.e_write_p50",
+   "label": "E durable write wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.E.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.e_write_p95",
+   "label": "E durable write wall, p95",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.E.stats.write_wall_ms.p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.n_write_p50",
+   "label": "N durable write wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.N.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.n_write_p95",
+   "label": "N durable write wall, p95",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.N.stats.write_wall_ms.p95",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_write_min",
+   "label": "C durable write wall, least-contended",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.C.stats.write_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.a_cold_p50",
+   "label": "A cold restore wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.A.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_cold_p50",
+   "label": "C cold restore wall, p50",
+   "unit": "ms",
+   "group": "cephfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "configurations.C.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_storage_pct",
+   "label": "C physical-footprint reduction against A",
+   "unit": "%",
+   "group": "cephfs",
+   "format": "pct:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "deltas_vs_A.C.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.e_storage_pct",
+   "label": "E physical-footprint reduction against A",
+   "unit": "%",
+   "group": "cephfs",
+   "format": "pct:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "deltas_vs_A.E.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_latency_pct",
+   "label": "C cold-restore latency change against A",
+   "unit": "%",
+   "group": "cephfs",
+   "format": "pct:1",
+   "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+   "path": "deltas_vs_A.C.latency_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261114T015202Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+  },
+  {
+   "key": "cephfs.c_vs_a_write_ratio",
+   "label": "C write wall divided by A's",
+   "unit": "ratio",
+   "group": "cephfs",
+   "format": "ratio:2",
+   "expr": "{cephfs.c_write_p50}/{cephfs.a_write_p50}"
+  },
+  {
+   "key": "cephfs.c_vs_a_cold_ratio",
+   "label": "C cold restore divided by A's",
+   "unit": "ratio",
+   "group": "cephfs",
+   "format": "ratio:2",
+   "expr": "{cephfs.c_cold_p50}/{cephfs.a_cold_p50}"
   }
  ],
  "blocks": [
@@ -11197,16 +11859,16 @@
      "template": "**{{contract.C.ms_p50}} ms** p50 on 4 CPUs in the 3 GiB court, and publishes"
     },
     {
-     "template": "**{{contract.C.foot_b}} B** \u2014 **{{contract.C.storage_pct}} %** fewer physical bytes than the same"
+     "template": "**{{contract.C.foot_b}} B** — **{{contract.C.storage_pct}} %** fewer physical bytes than the same"
     },
     {
      "template": "backend's native per-tensor path (arm A, **{{contract.A.ms_min}} ms**, {{contract.A.foot_b}} B)."
     },
     {
-     "template": "That is **{{contract.C.ratio}}\u00d7** the native wall: native parity is not reached. All 101 restores"
+     "template": "That is **{{contract.C.ratio}}×** the native wall: native parity is not reached. All 101 restores"
     },
     {
-     "template": "are byte-exact. The \u2248{{frontier.c.ms_min}} ms frontier in"
+     "template": "are byte-exact. The ≈{{frontier.c.ms_min}} ms frontier in"
     },
     {
      "template": "[`bench/RESULTS-pareto.md`](bench/RESULTS-pareto.md) is a store-API row, **not** the shipped"
@@ -11231,16 +11893,16 @@
      "template": "|---|---|---|"
     },
     {
-     "template": "| Does reconstruction reduce stored bytes? | Qwen2.5-0.5B base \u2192 Instruct family: **{{family.total_b}} B** (**{{family.data_b}} B** of tensor data) versus **{{family.independent_zstd_b}} B** for independent per-tensor `zstd -19` (**{{family.zstd_delta_pct}} %** smaller) and **{{family.zipnn_b}} B** for ZipNN 0.5.4 (**{{family.zipnn_delta_pct}} %** under). | `{{family.total_b|receipt}}`, `{{family.independent_zstd_b|receipt}}` (stamp {{family.total_b|stamp}}, revision {{family.total_b|revision}}), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md) |"
+     "template": "| Does reconstruction reduce stored bytes? | Qwen2.5-0.5B base → Instruct family: **{{family.total_b}} B** (**{{family.data_b}} B** of tensor data) versus **{{family.independent_zstd_b}} B** for independent per-tensor `zstd -19` (**{{family.zstd_delta_pct}} %** smaller) and **{{family.zipnn_b}} B** for ZipNN 0.5.4 (**{{family.zipnn_delta_pct}} %** under). | `{{family.total_b|receipt}}`, `{{family.independent_zstd_b|receipt}}` (stamp {{family.total_b|stamp}}, revision {{family.total_b|revision}}), [`bench/RESULTS-real-model.md`](bench/RESULTS-real-model.md) |"
     },
     {
-     "template": "| Does independent tiling make region reads cheap? | Qwen embedding one-row read: **{{tiles.row1_mode9_ms}} ms** as one mode-9 frame \u2192 **{{tiles.row1_tiled_ms}} ms** with tiles (**{{tiles.speedup_row1}}\u00d7**), at **+{{tiles.byte_overhead_pct}} %** physical bytes; a 100-row read falls from **{{tiles.row100_mode9_ms}} ms** to **{{tiles.row100_tiled_ms}} ms** (**{{tiles.speedup_row100}}\u00d7**). | `{{tiles.row1_mode9_ms|receipt}}` (stamp {{tiles.row1_mode9_ms|stamp}}, revision {{tiles.row1_mode9_ms|revision}}), [`bench/RESULTS-mode17.md`](bench/RESULTS-mode17.md) |"
+     "template": "| Does independent tiling make region reads cheap? | Qwen embedding one-row read: **{{tiles.row1_mode9_ms}} ms** as one mode-9 frame → **{{tiles.row1_tiled_ms}} ms** with tiles (**{{tiles.speedup_row1}}×**), at **+{{tiles.byte_overhead_pct}} %** physical bytes; a 100-row read falls from **{{tiles.row100_mode9_ms}} ms** to **{{tiles.row100_tiled_ms}} ms** (**{{tiles.speedup_row100}}×**). | `{{tiles.row1_mode9_ms|receipt}}` (stamp {{tiles.row1_mode9_ms|stamp}}, revision {{tiles.row1_mode9_ms|revision}}), [`bench/RESULTS-mode17.md`](bench/RESULTS-mode17.md) |"
     },
     {
      "template": "| What exactness and recovery evidence exists? | **{{verify.passed}}/{{verify.courts}}** verification courts pass at parent `{{verify.revision|revision}}` (stamp {{verify.stamp}}); **{{conformance.vectors}}** conformance vectors; **{{crash.requested}}/{{crash.requested}}** crash iterations with **{{crash.bad}}** bad states. | `{{verify.passed|receipt}}`, `conformance/manifest.json`, `{{crash.requested|receipt}}` |"
     },
     {
-     "template": "| Does multi-writer publication scale? | **No, and it is published as a loss:** {{mw.n1_tx_s}} tx/s at N=1 \u2192 {{mw.n32_tx_s}} tx/s at N=32 (efficiency **{{mw.n32_efficiency}}**) on the local backend; a hot name yields exactly one winner and typed conflicts. MinIO N=4: {{mw.minio_n4_tx_s}} tx/s. | `{{mw.n1_tx_s|receipt}}` (stamp {{mw.n1_tx_s|stamp}}, revision {{mw.n1_tx_s|revision}}), [`bench/RESULTS-multiwriter.md`](bench/RESULTS-multiwriter.md) |"
+     "template": "| Does multi-writer publication scale? | **No, and it is published as a loss:** {{mw.n1_tx_s}} tx/s at N=1 → {{mw.n32_tx_s}} tx/s at N=32 (efficiency **{{mw.n32_efficiency}}**) on the local backend; a hot name yields exactly one winner and typed conflicts. MinIO N=4: {{mw.minio_n4_tx_s}} tx/s. | `{{mw.n1_tx_s|receipt}}` (stamp {{mw.n1_tx_s|stamp}}, revision {{mw.n1_tx_s|revision}}), [`bench/RESULTS-multiwriter.md`](bench/RESULTS-multiwriter.md) |"
     }
    ]
   },
@@ -11250,7 +11912,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "**Implemented** (store core, no FUSE) \u2014 the Rust all-targets suite passes: **{{tests.rust_store_passed}}** tests in {{tests.rust_store_binaries}} test-result groups, 0 failed, in the {{verify.passed}}/{{verify.courts}} aggregate; see [`docs/store-status.md`](docs/store-status.md)"
+     "template": "**Implemented** (store core, no FUSE) — the Rust all-targets suite passes: **{{tests.rust_store_passed}}** tests in {{tests.rust_store_binaries}} test-result groups, 0 failed, in the {{verify.passed}}/{{verify.courts}} aggregate; see [`docs/store-status.md`](docs/store-status.md)"
     }
    ],
    "inline": true
@@ -11261,7 +11923,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "**Implemented** \u2014 the FUSE all-targets suite passes: **{{tests.rust_fuse_passed}}** passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} `#[ignore]`d in the {{verify.passed}}/{{verify.courts}} aggregate log; ownership needs `CAP_SETUID`, and same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately \u2014 see [`docs/fuse-status.md`](docs/fuse-status.md)"
+     "template": "**Implemented** — the FUSE all-targets suite passes: **{{tests.rust_fuse_passed}}** passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} `#[ignore]`d in the {{verify.passed}}/{{verify.courts}} aggregate log; ownership needs `CAP_SETUID`, and same-inode direct-I/O concurrency hits a reproducible kernel/fuser EIO. Store-level atomicity is tested separately — see [`docs/fuse-status.md`](docs/fuse-status.md)"
     }
    ],
    "inline": true
@@ -11272,7 +11934,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "**v1.4.2 released** \u2014 per-repo GHCR images and crates.io crates, per-repo GitHub releases, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-{{verify.stamp}}.json` (**{{verify.passed}}/{{verify.courts}}**, {{verify.failed}} failed, {{verify.skipped}} skipped) at parent `{{verify.revision|revision}}`. The authoritative inventory is `scripts/verify-all.sh`. Losses and gaps are published in the `bench/RESULTS-*.md` files listed there; no performance-superiority claim is made. See [`docs/RELEASE-v1.4.2.md`](docs/RELEASE-v1.4.2.md); the previous notes are [`docs/RELEASE-v1.4.1.md`](docs/RELEASE-v1.4.1.md) and [`docs/RELEASE-v1.4.0.md`](docs/RELEASE-v1.4.0.md)."
+     "template": "**v1.4.2 released** — per-repo GHCR images and crates.io crates, per-repo GitHub releases, and the codec/store/`fio`/FUSE comparative suites exist. Latest full verification: `bench/receipts/verify-{{verify.stamp}}.json` (**{{verify.passed}}/{{verify.courts}}**, {{verify.failed}} failed, {{verify.skipped}} skipped) at parent `{{verify.revision|revision}}`. The authoritative inventory is `scripts/verify-all.sh`. Losses and gaps are published in the `bench/RESULTS-*.md` files listed there; no performance-superiority claim is made. See [`docs/RELEASE-v1.4.2.md`](docs/RELEASE-v1.4.2.md); the previous notes are [`docs/RELEASE-v1.4.1.md`](docs/RELEASE-v1.4.1.md) and [`docs/RELEASE-v1.4.0.md`](docs/RELEASE-v1.4.0.md)."
     }
    ],
    "inline": true
@@ -11283,25 +11945,25 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "- **The compressed write, {{write.speedup_r17}}\u00d7 faster and still not at native parity.** The"
+     "template": "- **The compressed write, {{write.speedup_r17}}× faster and still not at native parity.** The"
     },
     {
      "template": "  durable write of the 101-tensor fixture goes from **{{ladder.r17_ms}} ms** (R17, where"
     },
     {
-     "template": "  ZSTD-19 was {{ladder.r17_zstd19_ms}} ms \u2014 the largest single term \u2014 for zero chosen tensors) to"
+     "template": "  ZSTD-19 was {{ladder.r17_zstd19_ms}} ms — the largest single term — for zero chosen tensors) to"
     },
     {
      "template": "  **{{write.r22.min_ms}} ms** least-contended / {{write.r22.med_ms}} ms median (R22) at an"
     },
     {
-     "template": "  unchanged **{{write.r22.footprint_b}} B** \u2014 {{write.reduction_pct}} % below the native control's"
+     "template": "  unchanged **{{write.r22.footprint_b}} B** — {{write.reduction_pct}} % below the native control's"
     },
     {
-     "template": "  {{write.a.footprint_b}} B. G1/G2/G3 are met; the \u2264 336 ms native rung is **not**"
+     "template": "  {{write.a.footprint_b}} B. G1/G2/G3 are met; the ≤ 336 ms native rung is **not**"
     },
     {
-     "template": "  ({{write.ratio}}\u00d7 A), and the measured limiter (the {{write.r22.barrier_ms}} ms durable"
+     "template": "  ({{write.ratio}}× A), and the measured limiter (the {{write.r22.barrier_ms}} ms durable"
     },
     {
      "template": "  writeback of {{write.r22.barrier_files}} files plus a {{write.r22.publish_wall_ms}} ms publication wall) is"
@@ -11328,7 +11990,7 @@
      "template": "- **Checkpoint sessions and a bounded queue (R12c).** A reused"
     },
     {
-     "template": "  `CheckpointSession` takes warm completion p50 from **{{session.persave_warm_p50_ms}} \u2192 {{session.session_warm_p50_ms}} ms** at a"
+     "template": "  `CheckpointSession` takes warm completion p50 from **{{session.persave_warm_p50_ms}} → {{session.session_warm_p50_ms}} ms** at a"
     },
     {
      "template": "  4-step interval; a bounded queue (default 2 outstanding) turns a timing-decided"
@@ -11337,7 +11999,7 @@
      "template": "  race into a documented admission bound and cuts the 1-step loop wall"
     },
     {
-     "template": "  **{{queue.baseline_wall_ms}} \u2192 {{queue.bounded_wall_ms}} ms** with 96/96 saves landed and no silent skip. Losses:"
+     "template": "  **{{queue.baseline_wall_ms}} → {{queue.bounded_wall_ms}} ms** with 96/96 saves landed and no silent skip. Losses:"
     },
     {
      "template": "  completion p95 and RSS get worse and the queue cannot make a save finish"
@@ -11352,7 +12014,7 @@
      "template": "- **Incremental index and metadata (R12c).** Publish no longer rebuilds the"
     },
     {
-     "template": "  selector index: commit p50 is **{{index.baseline_commit_p50_ms}} \u2192 {{index.post_commit_p50_ms}} ms** at 1k"
+     "template": "  selector index: commit p50 is **{{index.baseline_commit_p50_ms}} → {{index.post_commit_p50_ms}} ms** at 1k"
     },
     {
      "template": "  generations and {{index.post_commit_p50_100k_ms}} ms at 100k, at byte-identical index bytes, with a real GC"
@@ -11361,7 +12023,7 @@
      "template": "  defect (one shared retained-chain bound) found and fixed; DCP metadata encoding falls"
     },
     {
-     "template": "  **{{dcp.reference_p50_ms}} \u2192 {{dcp.path_p50_ms}} ms** behind an oracle-checked plan. Analysis"
+     "template": "  **{{dcp.reference_p50_ms}} → {{dcp.path_p50_ms}} ms** behind an oracle-checked plan. Analysis"
     },
     {
      "template": "  [`bench/RESULTS-incremental-index.md`](bench/RESULTS-incremental-index.md),"
@@ -11388,7 +12050,7 @@
      "template": "  Evidence: `bench/receipts/r14d-go-suite-20261112T221649Z.json`."
     },
     {
-     "template": "- **Verification.** `bench/receipts/verify-{{verify.v140.stamp}}.json` \u2014 **{{verify.v140.passed}}/{{verify.v140.courts}}**"
+     "template": "- **Verification.** `bench/receipts/verify-{{verify.v140.stamp}}.json` — **{{verify.v140.passed}}/{{verify.v140.courts}}**"
     },
     {
      "template": "  courts pass, {{verify.v140.failed}} failed, {{verify.v140.skipped}} skipped, at parent `{{verify.v140.revision|revision}}`"
@@ -11410,10 +12072,10 @@
      "template": "**At a glance (generated from receipts).** v1.4.2 is released. The cited aggregate is"
     },
     {
-     "template": "`bench/receipts/verify-{{verify.stamp}}.json` \u2014 **{{verify.passed}}/{{verify.courts}}** courts pass,"
+     "template": "`bench/receipts/verify-{{verify.stamp}}.json` — **{{verify.passed}}/{{verify.courts}}** courts pass,"
     },
     {
-     "template": "{{verify.failed}} failed, {{verify.skipped}} skipped \u2014 at WeftFS `{{verify.revision}}`."
+     "template": "{{verify.failed}} failed, {{verify.skipped}} skipped — at WeftFS `{{verify.revision}}`."
     },
     {
      "template": "The shipped planned write is **{{contract.C.ms_min}} ms** least-contended /"
@@ -11422,7 +12084,7 @@
      "template": "{{contract.C.ms_p50}} ms p50 at **{{contract.C.foot_b}} B** ({{contract.C.storage_pct}} % below"
     },
     {
-     "template": "the native control, {{contract.C.ratio}}\u00d7 its wall). Rust all-targets"
+     "template": "the native control, {{contract.C.ratio}}× its wall). Rust all-targets"
     },
     {
      "template": "**{{tests.rust_store_passed}}** tests pass; FUSE **{{tests.rust_fuse_passed}}** passed /"
@@ -11465,13 +12127,13 @@
      "template": "least-contended and **{{contract.C.ms_p50}} ms** p50 in the 3 GiB / 4-CPU court, and publishes"
     },
     {
-     "template": "**{{contract.C.foot_b}} B** \u2014 **{{contract.C.storage_pct}} %** fewer physical bytes than the same"
+     "template": "**{{contract.C.foot_b}} B** — **{{contract.C.storage_pct}} %** fewer physical bytes than the same"
     },
     {
      "template": "backend's native per-tensor path (arm A, **{{contract.A.ms_min}} ms**, {{contract.A.foot_b}} B)."
     },
     {
-     "template": "That is **{{contract.C.ratio}}\u00d7** the native wall: native parity is **not** reached. Every one of"
+     "template": "That is **{{contract.C.ratio}}×** the native wall: native parity is **not** reached. Every one of"
     },
     {
      "template": "the 101 restores is byte-exact, and the chosen representations are identical across all"
@@ -11486,16 +12148,16 @@
      "template": ""
     },
     {
-     "template": "The separately measured **frontier** \u2014 arm C driven through the bounded prepare/publish"
+     "template": "The separately measured **frontier** — arm C driven through the bounded prepare/publish"
     },
     {
-     "template": "pipeline (`Store::prepare_tensor_group_pipelined`) \u2014 is **{{frontier.c.ms_min}} ms**"
+     "template": "pipeline (`Store::prepare_tensor_group_pipelined`) — is **{{frontier.c.ms_min}} ms**"
     },
     {
-     "template": "({{frontier.c.ratio}}\u00d7 A) at {{frontier.c.foot_b}} B on the same fixture, but no shipped CLI verb"
+     "template": "({{frontier.c.ratio}}× A) at {{frontier.c.foot_b}} B on the same fixture, but no shipped CLI verb"
     },
     {
-     "template": "reaches that composition. It is not the default and is not claimed as one (\u00a73.1)."
+     "template": "reaches that composition. It is not the default and is not claimed as one (§3.1)."
     }
    ]
   },
@@ -11536,13 +12198,13 @@
      "template": "|---|---|"
     },
     {
-     "template": "| Did the compressed write get faster? | **Yes, {{write.speedup_r17}}\u00d7**: {{ladder.r17_ms}} ms at R17 to **{{write.r22.min_ms}} ms** least-contended / {{write.r22.med_ms}} ms median at R22, at the same {{write.r22.footprint_b}} B |"
+     "template": "| Did the compressed write get faster? | **Yes, {{write.speedup_r17}}×**: {{ladder.r17_ms}} ms at R17 to **{{write.r22.min_ms}} ms** least-contended / {{write.r22.med_ms}} ms median at R22, at the same {{write.r22.footprint_b}} B |"
     },
     {
-     "template": "| Did it reach native parity? | **No.** The native per-tensor control A is {{write.a.min_ms}}\u2013{{write.a.med_ms}} ms; {{write.r22.min_ms}} ms is **{{write.ratio}}\u00d7 A**. The \u2264 336 ms rung is **not met**, and the limiter is stated in \u00a76 |"
+     "template": "| Did it reach native parity? | **No.** The native per-tensor control A is {{write.a.min_ms}}–{{write.a.med_ms}} ms; {{write.r22.min_ms}} ms is **{{write.ratio}}× A**. The ≤ 336 ms rung is **not met**, and the limiter is stated in §6 |"
     },
     {
-     "template": "| Did the bytes change? | **No.** Every planned row publishes {{write.r22.footprint_b}} B \u2014 **{{write.reduction_pct}} %** below A's {{write.a.footprint_b}} B \u2014 and every restores 101/101 exactly |"
+     "template": "| Did the bytes change? | **No.** Every planned row publishes {{write.r22.footprint_b}} B — **{{write.reduction_pct}} %** below A's {{write.a.footprint_b}} B — and every restores 101/101 exactly |"
     }
    ]
   },
@@ -11558,25 +12220,25 @@
      "template": "|---|---:|---:|---|---|"
     },
     {
-     "template": "| R17 (start) | {{ladder.r17_ms}} ms | {{ladder.r17_footprint_b}} B | nothing \u2014 this is the attribution baseline | `write-cost-ablation-20261112T052203Z` |"
+     "template": "| R17 (start) | {{ladder.r17_ms}} ms | {{ladder.r17_footprint_b}} B | nothing — this is the attribution baseline | `write-cost-ablation-20261112T052203Z` |"
     },
     {
-     "template": "| R18 | {{ladder.r18_ms}} ms | {{ladder.r18_footprint_b}} B | exact two-stage planner: analyse \u2192 select \u2192 materialise; level 19 conditional, not deleted | `planner-two-stage-20261112T081151Z` |"
+     "template": "| R18 | {{ladder.r18_ms}} ms | {{ladder.r18_footprint_b}} B | exact two-stage planner: analyse → select → materialise; level 19 conditional, not deleted | `planner-two-stage-20261112T081151Z` |"
     },
     {
-     "template": "| R19 | {{ladder.r19_ms}} ms | {{ladder.r18_footprint_b}} B | byte-identical mode-9 encoder, {{ladder.r19_speedup}}\u00d7 sequential / {{ladder.r19_speedup_threaded}}\u00d7 at four emission threads | `mode9-encoder-20261112T160000Z`, `r19-wall-after-20261112T140000Z` |"
+     "template": "| R19 | {{ladder.r19_ms}} ms | {{ladder.r18_footprint_b}} B | byte-identical mode-9 encoder, {{ladder.r19_speedup}}× sequential / {{ladder.r19_speedup_threaded}}× at four emission threads | `mode9-encoder-20261112T160000Z`, `r19-wall-after-20261112T140000Z` |"
     },
     {
      "template": "| R20 | {{ladder.r20_ms}} ms | **{{write.r22.footprint_b}} B** | one group commit and **one** durability barrier per checkpoint | `r20-publication-20261112T150000Z` |"
     },
     {
-     "template": "| R21 | {{ladder.r21_ms}} ms | {{write.r22.footprint_b}} B | bounded reader \u2192 N encoders \u2192 one publisher pipeline plus the early-barrier writeback thread | `r21-pipeline-20261112T201500Z` |"
+     "template": "| R21 | {{ladder.r21_ms}} ms | {{write.r22.footprint_b}} B | bounded reader → N encoders → one publisher pipeline plus the early-barrier writeback thread | `r21-pipeline-20261112T201500Z` |"
     },
     {
      "template": "| **R22 (shipped)** | **{{write.r22.min_ms}} ms** (median {{write.r22.med_ms}}) | **{{write.r22.footprint_b}} B** | chunk-parallel ZSTD (byte-identical), exact parallel analyse, measured defaults | `r22-pareto-20261112T230000Z` |"
     },
     {
-     "template": "| **target** | **\u2264 336 ms** | \u2265 first-success band | **not met** | \u2014 |"
+     "template": "| **target** | **≤ 336 ms** | ≥ first-success band | **not met** | — |"
     }
    ]
   },
@@ -11592,10 +12254,10 @@
      "template": "|---|---|---|"
     },
     {
-     "template": "| durable write wall | G1 \u2264 3,360 / G2 \u2264 1,344 / G3 \u2264 672 / final \u2264 336 ms | **{{write.r22.min_ms}} min / {{write.r22.med_ms}} median \u2192 G3 met; final not met ({{write.ratio}}\u00d7 A)** |"
+     "template": "| durable write wall | G1 ≤ 3,360 / G2 ≤ 1,344 / G3 ≤ 672 / final ≤ 336 ms | **{{write.r22.min_ms}} min / {{write.r22.med_ms}} median → G3 met; final not met ({{write.ratio}}× A)** |"
     },
     {
-     "template": "| physical footprint | \u2264 340,000,000 first / \u2264 284,140,000 final | **{{write.r22.footprint_b}} B** (final band, {{write.reduction_pct}} % below A) |"
+     "template": "| physical footprint | ≤ 340,000,000 first / ≤ 284,140,000 final | **{{write.r22.footprint_b}} B** (final band, {{write.reduction_pct}} % below A) |"
     },
     {
      "template": "| exact restores | 101/101 | **101/101** in every row, `mismatches: 0` |"
@@ -11607,7 +12269,7 @@
      "template": "| court limits | unchanged | 4 CPUs / 3 GiB; peak RSS {{write.r22.rss_kib}} KiB ({{write.r22.rss_kib}} KiB of 3,145,728 KiB available), 0 OOM, 0 pids refusals |"
     },
     {
-     "template": "| Rust/Go format compatibility | no regression | Rust {{tests.v140.rust_store_passed}}/0/0, FUSE {{tests.v140.rust_fuse_passed}}/0/{{tests.v140.rust_fuse_ignored}} ignored, Rust\u2194Go cross gate passed, `verify --full` ok on a chunk-parallel-written store |"
+     "template": "| Rust/Go format compatibility | no regression | Rust {{tests.v140.rust_store_passed}}/0/0, FUSE {{tests.v140.rust_fuse_passed}}/0/{{tests.v140.rust_fuse_ignored}} ignored, Rust↔Go cross gate passed, `verify --full` ok on a chunk-parallel-written store |"
     }
    ]
   },
@@ -11657,7 +12319,7 @@
      "template": "**Headline.** Chunk-parallel ZSTD is implemented, proved byte-identical, and"
     },
     {
-     "template": "**does not move the frozen fixture's write wall** \u2014 it cuts the 272 MB"
+     "template": "**does not move the frozen fixture's write wall** — it cuts the 272 MB"
     },
     {
      "template": "embedding's level-3 frame, but publication and the durability barrier are the"
@@ -11666,7 +12328,7 @@
      "template": "binder at this operating point. The **frontier row `C-pipe4`** is **{{write.r22.min_ms}} ms**"
     },
     {
-     "template": "least-contended / {{write.r22.med_ms}} ms median ({{write.ratio}}\u00d7 A) at"
+     "template": "least-contended / {{write.r22.med_ms}} ms median ({{write.ratio}}× A) at"
     },
     {
      "template": "{{write.r22.footprint_b}} B, but it drives"
@@ -11681,7 +12343,7 @@
      "template": "contract court (`augmentation-local-20261113T004000Z.json`). The final rung"
     },
     {
-     "template": "(\u2264 336 ms) is **not reached**; \u00a77 states the measured limiter."
+     "template": "(≤ 336 ms) is **not reached**; §7 states the measured limiter."
     }
    ]
   },
@@ -11697,10 +12359,10 @@
      "template": "|---|---|---|"
     },
     {
-     "template": "| durable write wall | G1 \u2264 3,360 / G2 \u2264 1,344 / G3 \u2264 672 / final \u2264 336 ms | **{{write.r22.min_ms}} min / {{write.r22.med_ms}} median** \u2192 **G3 met**, final **not met** ({{write.ratio}}\u00d7 A) |"
+     "template": "| durable write wall | G1 ≤ 3,360 / G2 ≤ 1,344 / G3 ≤ 672 / final ≤ 336 ms | **{{write.r22.min_ms}} min / {{write.r22.med_ms}} median** → **G3 met**, final **not met** ({{write.ratio}}× A) |"
     },
     {
-     "template": "| physical footprint | \u2264 340,000,000 first / \u2264 284,140,000 final | **{{write.r22.footprint_b}} B** (final band, {{write.reduction_pct}} % below A) |"
+     "template": "| physical footprint | ≤ 340,000,000 first / ≤ 284,140,000 final | **{{write.r22.footprint_b}} B** (final band, {{write.reduction_pct}} % below A) |"
     },
     {
      "template": "| exact restores | 101/101 | **101/101**, `all_restores_exact: true` in every row, `mismatches: 0` |"
@@ -11712,7 +12374,7 @@
      "template": "| 4-CPU / 3 GiB court | unchanged | unchanged; peak RSS {{write.r22.rss_kib}} KiB, 0 OOM, 0 pids refusals |"
     },
     {
-     "template": "| Rust/Go format compatibility | no regression | Rust {{tests.rust_store_passed}}/0/0, FUSE {{tests.rust_fuse_passed}}/0/{{tests.rust_fuse_ignored}} ignored, Rust\u2194Go cross gate `all checks passed`, `verify --full` ok on a chunk-parallel-written store |"
+     "template": "| Rust/Go format compatibility | no regression | Rust {{tests.rust_store_passed}}/0/0, FUSE {{tests.rust_fuse_passed}}/0/{{tests.rust_fuse_ignored}} ignored, Rust↔Go cross gate `all checks passed`, `verify --full` ok on a chunk-parallel-written store |"
     }
    ]
   },
@@ -11722,7 +12384,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "The target is \u2264 336 ms (native parity). The measurement is {{write.r22.min_ms}} ms."
+     "template": "The target is ≤ 336 ms (native parity). The measurement is {{write.r22.min_ms}} ms."
     },
     {
      "template": "Two terms account for it:"
@@ -11773,7 +12435,7 @@
      "template": "publisher busy time from {{write.r22.publish_busy_ms}} ms to {{write.r22.pack_publish_busy_ms}} ms and to"
     },
     {
-     "template": "eliminate every writeback file \u2014 it loses only because sealing and the catalog"
+     "template": "eliminate every writeback file — it loses only because sealing and the catalog"
     },
     {
      "template": "publish are charged to the publisher (total {{write.r22.pack_min_ms}} ms). Moving pack"
@@ -11792,13 +12454,13 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| `cargo test --all-targets` (rust court) | **{{tests.rust_store_passed}} passed / 0 failed** \u2014 log `bench/receipts/r22-rust-tests.log` |"
+     "template": "| `cargo test --all-targets` (rust court) | **{{tests.rust_store_passed}} passed / 0 failed** — log `bench/receipts/r22-rust-tests.log` |"
     },
     {
-     "template": "| `cargo test --features fuse --all-targets` (fuse court) | **{{tests.rust_fuse_passed}} passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} ignored** \u2014 log `bench/receipts/r22-fuse-tests.log` |"
+     "template": "| `cargo test --features fuse --all-targets` (fuse court) | **{{tests.rust_fuse_passed}} passed / {{tests.rust_fuse_failed}} failed / {{tests.rust_fuse_ignored}} ignored** — log `bench/receipts/r22-fuse-tests.log` |"
     },
     {
-     "template": "| `WeftCodec` `cargo test --all-targets` (rust court) | **{{tests.rust_codec_passed}} passed / 0 failed** \u2014 log `bench/receipts/r22-weftcodec-tests.log` |"
+     "template": "| `WeftCodec` `cargo test --all-targets` (rust court) | **{{tests.rust_codec_passed}} passed / 0 failed** — log `bench/receipts/r22-weftcodec-tests.log` |"
     }
    ]
   },
@@ -11995,7 +12657,7 @@
     "suffix": ".",
     "format_wall": "fixed:1",
     "format_bytes": "int",
-    "excluded_note": "`C-pipe4-t19off` is excluded by policy: disabling the level-19 gate wins on this fixture and loses pythia-70m (\u00a76.1).",
+    "excluded_note": "`C-pipe4-t19off` is excluded by policy: disabling the level-19 gate wins on this fixture and loses pythia-70m (§6.1).",
     "stamp_path": "generated_utc",
     "stamp": "20261112T202816Z",
     "revision_path": "environment.revisions.WeftFS",
@@ -12215,13 +12877,13 @@
      "template": "  instead of a helper process per checkpoint. Warm completion p50 falls"
     },
     {
-     "template": "  **{{session.persave_warm_p50_ms}} \u2192 {{session.session_warm_p50_ms}} ms** at a 4-step interval; loop wall"
+     "template": "  **{{session.persave_warm_p50_ms}} → {{session.session_warm_p50_ms}} ms** at a 4-step interval; loop wall"
     },
     {
-     "template": "  {{session.persave_loop_wall_ms}} \u2192 **{{session.session_loop_wall_ms}} ms**; training-thread pause p50"
+     "template": "  {{session.persave_loop_wall_ms}} → **{{session.session_loop_wall_ms}} ms**; training-thread pause p50"
     },
     {
-     "template": "  {{session.persave_pause_p50_ms}} \u2192 **{{session.session_pause_p50_ms}} ms**. Every resumed state and next-step loss bit in"
+     "template": "  {{session.persave_pause_p50_ms}} → **{{session.session_pause_p50_ms}} ms**. Every resumed state and next-step loss bit in"
     },
     {
      "template": "  the receipt matched. Receipt `training-goodput-session-20261111T220500Z.json`."
@@ -12230,16 +12892,16 @@
      "template": "* **Operation-derived incremental index (item 2).** Publish no longer calls"
     },
     {
-     "template": "  `StateIndex::build`. Commit p50 is **{{index.baseline_commit_p50_ms}} \u2192 {{index.post_commit_p50_ms}} ms** at 1k"
+     "template": "  `StateIndex::build`. Commit p50 is **{{index.baseline_commit_p50_ms}} → {{index.post_commit_p50_ms}} ms** at 1k"
     },
     {
-     "template": "  generations and {{index.post_commit_p50_100k_ms}} ms at 100k \u2014 flat while history grows 100\u00d7 \u2014 with"
+     "template": "  generations and {{index.post_commit_p50_100k_ms}} ms at 100k — flat while history grows 100× — with"
     },
     {
      "template": "  byte-identical index segments; 10k live objects fall"
     },
     {
-     "template": "  {{index.live10k_baseline_ms}} \u2192 **{{index.live10k_post_ms}} ms**. A same-revision control with maintenance disabled"
+     "template": "  {{index.live10k_baseline_ms}} → **{{index.live10k_post_ms}} ms**. A same-revision control with maintenance disabled"
     },
     {
      "template": "  reproduces the baseline. Receipts"
@@ -12248,7 +12910,7 @@
      "template": "  `incremental-index-20261111T220000Z-baseline-delta-live64`,"
     },
     {
-     "template": "  `\u2026T230000Z-post-delta-live64`, `\u2026T235000Z-post-delta-live10000`; analysis"
+     "template": "  `…T230000Z-post-delta-live64`, `…T235000Z-post-delta-live10000`; analysis"
     },
     {
      "template": "  [`bench/RESULTS-incremental-index.md`](../bench/RESULTS-incremental-index.md)."
@@ -12269,7 +12931,7 @@
      "template": "  snapshots still load their full chain. Retained failures:"
     },
     {
-     "template": "  `index-gc-bound-20261111T190100Z-prefix-8roots.json`, `\u2026T194000Z-prefix-tail.json`."
+     "template": "  `index-gc-bound-20261111T190100Z-prefix-8roots.json`, `…T194000Z-prefix-tail.json`."
     },
     {
      "template": "* **DCP metadata encoding (item 3).** The pure-Python canonical encoder cost"
@@ -12287,7 +12949,7 @@
      "template": "  use; the first call pays a {{dcp.path_first_ms}} ms plan build. Receipts"
     },
     {
-     "template": "  `dcp-metadata-20261111T230500Z.json`, `\u2026T235500Z.json`."
+     "template": "  `dcp-metadata-20261111T230500Z.json`, `…T235500Z.json`."
     },
     {
      "template": "* **Bounded checkpoint queue (item 4).** `CheckpointSession` admits saves under"
@@ -12299,10 +12961,10 @@
      "template": "  a 30 s ceiling; a refusal is `QueueFull` naming every bound and publishes"
     },
     {
-     "template": "  nothing. At a 1-step interval the loop wall falls **{{queue.baseline_wall_ms}} \u2192 {{queue.bounded_wall_ms}} ms**"
+     "template": "  nothing. At a 1-step interval the loop wall falls **{{queue.baseline_wall_ms}} → {{queue.bounded_wall_ms}} ms**"
     },
     {
-     "template": "  ({{queue.baseline_warm_p50_ms}} \u2192 {{queue.bounded_warm_p50_ms}} ms warm p50, {{queue.bounded_warm_p95_ms}} ms p95), every save lands,"
+     "template": "  ({{queue.baseline_warm_p50_ms}} → {{queue.bounded_warm_p50_ms}} ms warm p50, {{queue.bounded_warm_p95_ms}} ms p95), every save lands,"
     },
     {
      "template": "  `no_silent_skips` is true and every cell drains to `outstanding 0`. Receipt"
@@ -12370,7 +13032,7 @@
     "exclude": [
      "C-pipe4-t19off"
     ],
-    "excluded_note": "`C-pipe4-t19off` is excluded by policy: disabling the level-19 gate wins on this fixture and loses pythia-70m (see `RESULTS-pareto.md` \u00a76.1)."
+    "excluded_note": "`C-pipe4-t19off` is excluded by policy: disabling the level-19 gate wins on this fixture and loses pythia-70m (see `RESULTS-pareto.md` §6.1)."
    }
   },
   {
@@ -12413,7 +13075,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "* **Native parity is not reached** ({{write.ratio}}\u00d7 A) and the \u2264 336 ms rung is not met."
+     "template": "* **Native parity is not reached** ({{write.ratio}}× A) and the ≤ 336 ms rung is not met."
     },
     {
      "template": "* **R18 missed its wall gate** while meeting storage: analysis cost was real and"
@@ -12434,22 +13096,22 @@
      "template": "  ({{write.r22.pipe2_min_ms}} ms)."
     },
     {
-     "template": "* **RSS and CPU rise.** Peak RSS {{write.a.rss_kib}} \u2192 {{write.r22.rss_kib}} KiB"
+     "template": "* **RSS and CPU rise.** Peak RSS {{write.a.rss_kib}} → {{write.r22.rss_kib}} KiB"
     },
     {
-     "template": "  ({{write.r22.rss_court_pct}} % of the 3 GiB court, {{write.r22.rss_ratio}}\u00d7 native) and CPU"
+     "template": "  ({{write.r22.rss_court_pct}} % of the 3 GiB court, {{write.r22.rss_ratio}}× native) and CPU"
     },
     {
-     "template": "  {{write.a.cpu_ms}} \u2192 {{write.r22.cpu_ms}} ms."
+     "template": "  {{write.a.cpu_ms}} → {{write.r22.cpu_ms}} ms."
     },
     {
      "template": "* **The pack plane loses for the third time** ({{write.r22.pack_min_ms}} ms against"
     },
     {
-     "template": "  {{write.r22.min_ms}} ms, {{write.r22.pack_ratio}}\u00d7). It halves publisher busy time"
+     "template": "  {{write.r22.min_ms}} ms, {{write.r22.pack_ratio}}×). It halves publisher busy time"
     },
     {
-     "template": "  ({{write.r22.publish_busy_ms}} \u2192 {{write.r22.pack_publish_busy_ms}} ms) and removes every writeback file, but"
+     "template": "  ({{write.r22.publish_busy_ms}} → {{write.r22.pack_publish_busy_ms}} ms) and removes every writeback file, but"
     },
     {
      "template": "  sealing and catalog publication cost more at this operating point."
@@ -12461,7 +13123,7 @@
      "template": "  {{write.r22.znochunk_saved_b}} B."
     },
     {
-     "template": "* **A level-19 gate with 4 MiB of leeway is {{write.r22.leeway_ratio}}\u00d7 slower for zero"
+     "template": "* **A level-19 gate with 4 MiB of leeway is {{write.r22.leeway_ratio}}× slower for zero"
     },
     {
      "template": "  bytes.**"
@@ -12482,16 +13144,16 @@
      "template": "  value moved 2.5 %; only differences larger than ~10 % are treated as real."
     },
     {
-     "template": "  Superseded sweeps (`r22-pareto-20261112T220000Z`, `\u2026T193000Z`, `\u2026T190000Z`,"
+     "template": "  Superseded sweeps (`r22-pareto-20261112T220000Z`, `…T193000Z`, `…T190000Z`,"
     },
     {
-     "template": "  `\u2026T165731Z`) are retained and not cited."
+     "template": "  `…T165731Z`) are retained and not cited."
     },
     {
      "template": "* **Host degradation is disclosed.** Between clean runs the host's durability"
     },
     {
-     "template": "  path fell from 1.28 GB/s to 125\u2013180 MB/s and the native control wrote the"
+     "template": "  path fell from 1.28 GB/s to 125–180 MB/s and the native control wrote the"
     },
     {
      "template": "  fixture in 11,482.6 ms; those attempts produced no cited row"
@@ -12503,7 +13165,7 @@
      "template": "  retained)."
     },
     {
-     "template": "* **R12c items 1\u20134 each publish losses**: a 4-step clean-step p50 rise and a"
+     "template": "* **R12c items 1–4 each publish losses**: a 4-step clean-step p50 rise and a"
     },
     {
      "template": "  32-step loop wall that is worse (sessions); index bytes still grow in the"
@@ -12574,7 +13236,7 @@
      "template": "  {{write.r22.min_ms}} ms). It does halve publisher busy time"
     },
     {
-     "template": "  ({{write.r22.publish_busy_ms}} \u2192 {{write.r22.pack_publish_busy_ms}} ms) and removes every writeback file,"
+     "template": "  ({{write.r22.publish_busy_ms}} → {{write.r22.pack_publish_busy_ms}} ms) and removes every writeback file,"
     },
     {
      "template": "  but sealing packs and publishing catalog segments costs more than the"
@@ -12586,7 +13248,7 @@
      "template": "* `leeway4` (a level-19 gate that tolerates a 4 MiB predicted loss) is"
     },
     {
-     "template": "  **{{write.r22.leeway_ratio}}\u00d7 slower** for **zero** bytes saved: the R18 gate is doing real"
+     "template": "  **{{write.r22.leeway_ratio}}× slower** for **zero** bytes saved: the R18 gate is doing real"
     },
     {
      "template": "  work."
@@ -12629,7 +13291,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "This sweep is **{{pareto.configs}} configurations \u00d7 {{pareto.reps}} interleaved repetitions**, **{{pareto.checks}}/{{pareto.checks}} checks pass**, on the {{write.fixture.tensors}}-tensor fixture ({{write.fixture.logical_b}} logical bytes) in the 4-CPU / 3 GiB court."
+     "template": "This sweep is **{{pareto.configs}} configurations × {{pareto.reps}} interleaved repetitions**, **{{pareto.checks}}/{{pareto.checks}} checks pass**, on the {{write.fixture.tensors}}-tensor fixture ({{write.fixture.logical_b}} logical bytes) in the 4-CPU / 3 GiB court."
     }
    ]
   },
@@ -12699,13 +13361,13 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "* **Model family:** Qwen2.5-0.5B base \u2192 Instruct stores in **{{family.total_b}} B**"
+     "template": "* **Model family:** Qwen2.5-0.5B base → Instruct stores in **{{family.total_b}} B**"
     },
     {
      "template": "  ({{family.data_b}} B of tensor data) versus **{{family.independent_zstd_b}} B** for independent"
     },
     {
-     "template": "  per-tensor `zstd -19` \u2014 **{{family.zstd_delta_pct}} % smaller**, and {{family.zipnn_delta_pct}} % under ZipNN's"
+     "template": "  per-tensor `zstd -19` — **{{family.zstd_delta_pct}} % smaller**, and {{family.zipnn_delta_pct}} % under ZipNN's"
     },
     {
      "template": "  {{family.zipnn_b}} B."
@@ -12714,16 +13376,16 @@
      "template": "* **Region reads:** a one-row read of the Qwen embedding takes **{{tiles.row1_mode9_ms}} ms** as"
     },
     {
-     "template": "  one mode-9 frame but **{{tiles.row1_tiled_ms}} ms** as independently decodable tiles \u2014 **{{tiles.speedup_row1}}\u00d7**"
+     "template": "  one mode-9 frame but **{{tiles.row1_tiled_ms}} ms** as independently decodable tiles — **{{tiles.speedup_row1}}×**"
     },
     {
      "template": "  faster, because only the intersecting tiles are decoded; a 100-row read falls"
     },
     {
-     "template": "  from **{{tiles.row100_mode9_ms}} ms** to **{{tiles.row100_tiled_ms}} ms** (**{{tiles.speedup_row100}}\u00d7**). The cost is"
+     "template": "  from **{{tiles.row100_mode9_ms}} ms** to **{{tiles.row100_tiled_ms}} ms** (**{{tiles.speedup_row100}}×**). The cost is"
     },
     {
-     "template": "  **+{{tiles.byte_overhead_pct}} % bytes and a {{tiles.write_ratio}}\u00d7 write**, which is why the planner only chooses"
+     "template": "  **+{{tiles.byte_overhead_pct}} % bytes and a {{tiles.write_ratio}}× write**, which is why the planner only chooses"
     },
     {
      "template": "  tiles when the access pattern pays the write back."
@@ -12826,34 +13488,34 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| Rung | Stamp | Planned write (ms, least-contended) | Footprint (B) | \u00d7 native A | Shipped CLI reaches it? |"
+     "template": "| Rung | Stamp | Planned write (ms, least-contended) | Footprint (B) | × native A | Shipped CLI reaches it? |"
     },
     {
      "template": "|---|---|---:|---:|---:|---|"
     },
     {
-     "template": "| R3 | `{{hist.r3.c_wall_ms|stamp}}` | {{hist.r3.c_wall_ms}} | {{ladder.r3_footprint_b}} | {{ladder.r3_ratio}}\u00d7 | yes: sequential planned writer, one commit per tensor |"
+     "template": "| R3 | `{{hist.r3.c_wall_ms|stamp}}` | {{hist.r3.c_wall_ms}} | {{ladder.r3_footprint_b}} | {{ladder.r3_ratio}}× | yes: sequential planned writer, one commit per tensor |"
     },
     {
-     "template": "| R17 | `{{ladder.r17_ms|stamp}}` | {{ladder.r17_ms}} | {{ladder.r17_footprint_b}} | {{ladder.r17_ratio}}\u00d7 | yes: same writer, cost attributed |"
+     "template": "| R17 | `{{ladder.r17_ms|stamp}}` | {{ladder.r17_ms}} | {{ladder.r17_footprint_b}} | {{ladder.r17_ratio}}× | yes: same writer, cost attributed |"
     },
     {
-     "template": "| R18 | `{{ladder.r18_ms|stamp}}` | {{ladder.r18_ms}} | {{ladder.r18_footprint_b}} | {{ladder.r18_ratio}}\u00d7 | yes: two-stage planner |"
+     "template": "| R18 | `{{ladder.r18_ms|stamp}}` | {{ladder.r18_ms}} | {{ladder.r18_footprint_b}} | {{ladder.r18_ratio}}× | yes: two-stage planner |"
     },
     {
-     "template": "| R19 | `{{ladder.r19_ms|stamp}}` | {{ladder.r19_ms}} | {{ladder.r19_footprint_b}} | {{ladder.r19_ratio}}\u00d7 | yes: mode-9 encoder |"
+     "template": "| R19 | `{{ladder.r19_ms|stamp}}` | {{ladder.r19_ms}} | {{ladder.r19_footprint_b}} | {{ladder.r19_ratio}}× | yes: mode-9 encoder |"
     },
     {
-     "template": "| R20 | `{{ladder.r20_ms|stamp}}` | {{ladder.r20_ms}} | {{ladder.r20_footprint_b}} | {{ladder.r20_ratio}}\u00d7 | yes: group commit + deferred barrier |"
+     "template": "| R20 | `{{ladder.r20_ms|stamp}}` | {{ladder.r20_ms}} | {{ladder.r20_footprint_b}} | {{ladder.r20_ratio}}× | yes: group commit + deferred barrier |"
     },
     {
-     "template": "| R21 | `{{ladder.r21_ms|stamp}}` | {{ladder.r21_ms}} | {{ladder.r21_footprint_b}} | {{ladder.r21_ratio}}\u00d7 | **no**: pipeline store API |"
+     "template": "| R21 | `{{ladder.r21_ms|stamp}}` | {{ladder.r21_ms}} | {{ladder.r21_footprint_b}} | {{ladder.r21_ratio}}× | **no**: pipeline store API |"
     },
     {
-     "template": "| R22 | `{{ladder.r22_ms|stamp}}` | {{ladder.r22_ms}} | {{ladder.r22_footprint_b}} | {{ladder.r22_ratio}}\u00d7 | **no**: pipeline store API |"
+     "template": "| R22 | `{{ladder.r22_ms|stamp}}` | {{ladder.r22_ms}} | {{ladder.r22_footprint_b}} | {{ladder.r22_ratio}}× | **no**: pipeline store API |"
     },
     {
-     "template": "| R25 (current) | `{{ladder.r25_ms|stamp}}` | {{ladder.r25_ms}} | {{ladder.r25_footprint_b}} | {{ladder.r25_ratio}}\u00d7 | **yes: this is the shipped default** |"
+     "template": "| R25 (current) | `{{ladder.r25_ms|stamp}}` | {{ladder.r25_ms}} | {{ladder.r25_footprint_b}} | {{ladder.r25_ratio}}× | **yes: this is the shipped default** |"
     }
    ]
   },
@@ -12863,22 +13525,22 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| Fixture | Logical bytes | A native (ms) | C shipped (ms) | \u00d7 A | C footprint (B) | Fewer bytes than A |"
+     "template": "| Fixture | Logical bytes | A native (ms) | C shipped (ms) | × A | C footprint (B) | Fewer bytes than A |"
     },
     {
      "template": "|---|---:|---:|---:|---:|---:|---:|"
     },
     {
-     "template": "| Qwen2.5-0.5B-Instruct, 101 tensors | {{family.qwen05.logical_b}} | {{family.qwen05.a_ms}} | {{family.qwen05.c_ms}} | {{family.qwen05.ratio}}\u00d7 | {{family.qwen05.c_foot_b}} | {{family.qwen05.storage_pct}} % |"
+     "template": "| Qwen2.5-0.5B-Instruct, 101 tensors | {{family.qwen05.logical_b}} | {{family.qwen05.a_ms}} | {{family.qwen05.c_ms}} | {{family.qwen05.ratio}}× | {{family.qwen05.c_foot_b}} | {{family.qwen05.storage_pct}} % |"
     },
     {
-     "template": "| Qwen2.5-3B-Instruct, 9 tensors | {{family.qwen3b.logical_b}} | {{family.qwen3b.a_ms}} | {{family.qwen3b.c_ms}} | {{family.qwen3b.ratio}}\u00d7 | {{family.qwen3b.c_foot_b}} | {{family.qwen3b.storage_pct}} % |"
+     "template": "| Qwen2.5-3B-Instruct, 9 tensors | {{family.qwen3b.logical_b}} | {{family.qwen3b.a_ms}} | {{family.qwen3b.c_ms}} | {{family.qwen3b.ratio}}× | {{family.qwen3b.c_foot_b}} | {{family.qwen3b.storage_pct}} % |"
     },
     {
-     "template": "| pythia-70m step 0, 76 tensors | {{family.pythia0.logical_b}} | {{family.pythia0.a_ms}} | {{family.pythia0.c_ms}} | {{family.pythia0.ratio}}\u00d7 | {{family.pythia0.c_foot_b}} | {{family.pythia0.storage_pct}} % |"
+     "template": "| pythia-70m step 0, 76 tensors | {{family.pythia0.logical_b}} | {{family.pythia0.a_ms}} | {{family.pythia0.c_ms}} | {{family.pythia0.ratio}}× | {{family.pythia0.c_foot_b}} | {{family.pythia0.storage_pct}} % |"
     },
     {
-     "template": "| pythia-70m step 8, 76 tensors | {{family.pythia8.logical_b}} | {{family.pythia8.a_ms}} | {{family.pythia8.c_ms}} | {{family.pythia8.ratio}}\u00d7 | {{family.pythia8.c_foot_b}} | {{family.pythia8.storage_pct}} % |"
+     "template": "| pythia-70m step 8, 76 tensors | {{family.pythia8.logical_b}} | {{family.pythia8.a_ms}} | {{family.pythia8.c_ms}} | {{family.pythia8.ratio}}× | {{family.pythia8.c_foot_b}} | {{family.pythia8.storage_pct}} % |"
     }
    ]
   },
@@ -12924,13 +13586,13 @@
      "template": "{{contract.C.ms_p50}} ms p50 for **{{contract.C.foot_b}} B**, **{{contract.C.storage_pct}} %** below A's"
     },
     {
-     "template": "{{contract.A.foot_b}} B, at **{{contract.C.ratio}}\u00d7** A's {{contract.A.ms_min}} ms. Receipt"
+     "template": "{{contract.A.foot_b}} B, at **{{contract.C.ratio}}×** A's {{contract.A.ms_min}} ms. Receipt"
     },
     {
      "template": "`{{contract.C.ms_min|receipt}}` (stamp {{contract.C.ms_min|stamp}}, revision"
     },
     {
-     "template": "{{contract.C.ms_min|revision}}). The frontier row in \u00a73.1 of the paper is not the shipped default."
+     "template": "{{contract.C.ms_min|revision}}). The frontier row in §3.1 of the paper is not the shipped default."
     }
    ]
   },
@@ -12946,10 +13608,10 @@
      "template": "|---|---|"
     },
     {
-     "template": "| How does the shipped write compare with the last release's headline? | The shipped planned write is **{{contract.C.ms_min}} ms** least-contended / {{contract.C.ms_p50}} ms p50 at {{contract.C.foot_b}} B. The R3 contract measured {{hist.r3.c_wall_ms}} ms at {{ladder.r3_footprint_b}} B (stamp {{hist.r3.c_wall_ms|stamp}}, revision {{hist.r3.c_wall_ms|revision}}); the intermediate rungs are in \u00a7\"Write ladder\". |"
+     "template": "| How does the shipped write compare with the last release's headline? | The shipped planned write is **{{contract.C.ms_min}} ms** least-contended / {{contract.C.ms_p50}} ms p50 at {{contract.C.foot_b}} B. The R3 contract measured {{hist.r3.c_wall_ms}} ms at {{ladder.r3_footprint_b}} B (stamp {{hist.r3.c_wall_ms|stamp}}, revision {{hist.r3.c_wall_ms|revision}}); the intermediate rungs are in §\"Write ladder\". |"
     },
     {
-     "template": "| Did it reach native parity? | **No.** Native A is {{contract.A.ms_min}} ms, so the shipped write is **{{contract.C.ratio}}\u00d7 A** for {{contract.C.storage_pct}} % fewer bytes. The separately measured frontier is {{frontier.c.ms_min}} ms ({{frontier.c.ratio}}\u00d7 A) but no shipped CLI verb reaches it. |"
+     "template": "| Did it reach native parity? | **No.** Native A is {{contract.A.ms_min}} ms, so the shipped write is **{{contract.C.ratio}}× A** for {{contract.C.storage_pct}} % fewer bytes. The separately measured frontier is {{frontier.c.ms_min}} ms ({{frontier.c.ratio}}× A) but no shipped CLI verb reaches it. |"
     },
     {
      "template": "| Did any byte change? | **No.** No frozen wire, on-disk, manifest, commit, index, identity or conformance byte changed. Every planned row publishes {{contract.C.foot_b}} B in the R25 court and restores 101/101 exactly. |"
@@ -12962,34 +13624,34 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| Rung | Stamp | Planned write (ms, least-contended) | Footprint (B) | \u00d7 native A | Shipped CLI reaches it? |"
+     "template": "| Rung | Stamp | Planned write (ms, least-contended) | Footprint (B) | × native A | Shipped CLI reaches it? |"
     },
     {
      "template": "|---|---|---:|---:|---:|---|"
     },
     {
-     "template": "| R3 | `{{hist.r3.c_wall_ms|stamp}}` | {{hist.r3.c_wall_ms}} | {{ladder.r3_footprint_b}} | {{ladder.r3_ratio}}\u00d7 | yes: sequential planned writer, one commit per tensor |"
+     "template": "| R3 | `{{hist.r3.c_wall_ms|stamp}}` | {{hist.r3.c_wall_ms}} | {{ladder.r3_footprint_b}} | {{ladder.r3_ratio}}× | yes: sequential planned writer, one commit per tensor |"
     },
     {
-     "template": "| R17 | `{{ladder.r17_ms|stamp}}` | {{ladder.r17_ms}} | {{ladder.r17_footprint_b}} | {{ladder.r17_ratio}}\u00d7 | yes: same writer, cost attributed |"
+     "template": "| R17 | `{{ladder.r17_ms|stamp}}` | {{ladder.r17_ms}} | {{ladder.r17_footprint_b}} | {{ladder.r17_ratio}}× | yes: same writer, cost attributed |"
     },
     {
-     "template": "| R18 | `{{ladder.r18_ms|stamp}}` | {{ladder.r18_ms}} | {{ladder.r18_footprint_b}} | {{ladder.r18_ratio}}\u00d7 | yes: two-stage planner |"
+     "template": "| R18 | `{{ladder.r18_ms|stamp}}` | {{ladder.r18_ms}} | {{ladder.r18_footprint_b}} | {{ladder.r18_ratio}}× | yes: two-stage planner |"
     },
     {
-     "template": "| R19 | `{{ladder.r19_ms|stamp}}` | {{ladder.r19_ms}} | {{ladder.r19_footprint_b}} | {{ladder.r19_ratio}}\u00d7 | yes: mode-9 encoder |"
+     "template": "| R19 | `{{ladder.r19_ms|stamp}}` | {{ladder.r19_ms}} | {{ladder.r19_footprint_b}} | {{ladder.r19_ratio}}× | yes: mode-9 encoder |"
     },
     {
-     "template": "| R20 | `{{ladder.r20_ms|stamp}}` | {{ladder.r20_ms}} | {{ladder.r20_footprint_b}} | {{ladder.r20_ratio}}\u00d7 | yes: group commit + deferred barrier |"
+     "template": "| R20 | `{{ladder.r20_ms|stamp}}` | {{ladder.r20_ms}} | {{ladder.r20_footprint_b}} | {{ladder.r20_ratio}}× | yes: group commit + deferred barrier |"
     },
     {
-     "template": "| R21 | `{{ladder.r21_ms|stamp}}` | {{ladder.r21_ms}} | {{ladder.r21_footprint_b}} | {{ladder.r21_ratio}}\u00d7 | **no**: pipeline store API |"
+     "template": "| R21 | `{{ladder.r21_ms|stamp}}` | {{ladder.r21_ms}} | {{ladder.r21_footprint_b}} | {{ladder.r21_ratio}}× | **no**: pipeline store API |"
     },
     {
-     "template": "| R22 | `{{ladder.r22_ms|stamp}}` | {{ladder.r22_ms}} | {{ladder.r22_footprint_b}} | {{ladder.r22_ratio}}\u00d7 | **no**: pipeline store API |"
+     "template": "| R22 | `{{ladder.r22_ms|stamp}}` | {{ladder.r22_ms}} | {{ladder.r22_footprint_b}} | {{ladder.r22_ratio}}× | **no**: pipeline store API |"
     },
     {
-     "template": "| R25 (current) | `{{ladder.r25_ms|stamp}}` | {{ladder.r25_ms}} | {{ladder.r25_footprint_b}} | {{ladder.r25_ratio}}\u00d7 | **yes: this is the shipped default** |"
+     "template": "| R25 (current) | `{{ladder.r25_ms|stamp}}` | {{ladder.r25_ms}} | {{ladder.r25_footprint_b}} | {{ladder.r25_ratio}}× | **yes: this is the shipped default** |"
     }
    ]
   },
@@ -12999,22 +13661,22 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| Fixture | Logical bytes | A native (ms) | C shipped (ms) | \u00d7 A | C footprint (B) | Fewer bytes than A |"
+     "template": "| Fixture | Logical bytes | A native (ms) | C shipped (ms) | × A | C footprint (B) | Fewer bytes than A |"
     },
     {
      "template": "|---|---:|---:|---:|---:|---:|---:|"
     },
     {
-     "template": "| Qwen2.5-0.5B-Instruct, 101 tensors | {{family.qwen05.logical_b}} | {{family.qwen05.a_ms}} | {{family.qwen05.c_ms}} | {{family.qwen05.ratio}}\u00d7 | {{family.qwen05.c_foot_b}} | {{family.qwen05.storage_pct}} % |"
+     "template": "| Qwen2.5-0.5B-Instruct, 101 tensors | {{family.qwen05.logical_b}} | {{family.qwen05.a_ms}} | {{family.qwen05.c_ms}} | {{family.qwen05.ratio}}× | {{family.qwen05.c_foot_b}} | {{family.qwen05.storage_pct}} % |"
     },
     {
-     "template": "| Qwen2.5-3B-Instruct, 9 tensors | {{family.qwen3b.logical_b}} | {{family.qwen3b.a_ms}} | {{family.qwen3b.c_ms}} | {{family.qwen3b.ratio}}\u00d7 | {{family.qwen3b.c_foot_b}} | {{family.qwen3b.storage_pct}} % |"
+     "template": "| Qwen2.5-3B-Instruct, 9 tensors | {{family.qwen3b.logical_b}} | {{family.qwen3b.a_ms}} | {{family.qwen3b.c_ms}} | {{family.qwen3b.ratio}}× | {{family.qwen3b.c_foot_b}} | {{family.qwen3b.storage_pct}} % |"
     },
     {
-     "template": "| pythia-70m step 0, 76 tensors | {{family.pythia0.logical_b}} | {{family.pythia0.a_ms}} | {{family.pythia0.c_ms}} | {{family.pythia0.ratio}}\u00d7 | {{family.pythia0.c_foot_b}} | {{family.pythia0.storage_pct}} % |"
+     "template": "| pythia-70m step 0, 76 tensors | {{family.pythia0.logical_b}} | {{family.pythia0.a_ms}} | {{family.pythia0.c_ms}} | {{family.pythia0.ratio}}× | {{family.pythia0.c_foot_b}} | {{family.pythia0.storage_pct}} % |"
     },
     {
-     "template": "| pythia-70m step 8, 76 tensors | {{family.pythia8.logical_b}} | {{family.pythia8.a_ms}} | {{family.pythia8.c_ms}} | {{family.pythia8.ratio}}\u00d7 | {{family.pythia8.c_foot_b}} | {{family.pythia8.storage_pct}} % |"
+     "template": "| pythia-70m step 8, 76 tensors | {{family.pythia8.logical_b}} | {{family.pythia8.a_ms}} | {{family.pythia8.c_ms}} | {{family.pythia8.ratio}}× | {{family.pythia8.c_foot_b}} | {{family.pythia8.storage_pct}} % |"
     }
    ]
   },
@@ -13088,22 +13750,22 @@
      "template": "> against a measured lifecycle cost surface. When this is done, exactness"
     },
     {
-     "template": "> and selective reconstruction are affordable \u2014 but the surface is not"
+     "template": "> and selective reconstruction are affordable — but the surface is not"
     },
     {
      "template": "> globally favourable: on one write-dominated workload the shipped"
     },
     {
-     "template": "> augmentation is **{{contract.C.ratio}}\u00d7** slower to write for"
+     "template": "> augmentation is **{{contract.C.ratio}}×** slower to write for"
     },
     {
      "template": "> **{{contract.C.storage_pct}} %** fewer physical bytes, the same design's"
     },
     {
-     "template": "> measured frontier is **{{frontier.c.ratio}}\u00d7**, and on a 32-bit"
+     "template": "> measured frontier is **{{frontier.c.ratio}}×**, and on a 32-bit"
     },
     {
-     "template": "> `FLOAT_TENSOR` workload it is **{{family.pythia0.ratio}}\u00d7** slower.**"
+     "template": "> `FLOAT_TENSOR` workload it is **{{family.pythia0.ratio}}×** slower.**"
     },
     {
      "template": ""
@@ -13118,7 +13780,7 @@
      "template": "to attack. Our contribution is not a faster store. It is a set of identities,"
     },
     {
-     "template": "refusals, and cost terms whose predictions can be checked \u2014 and falsified \u2014"
+     "template": "refusals, and cost terms whose predictions can be checked — and falsified —"
     },
     {
      "template": "from committed artifacts without rerunning our courts. The headline numbers"
@@ -13185,7 +13847,7 @@
      "template": "(receipt `overlay-20261106T103115Z.json`) the COW run, the overlay run and the"
     },
     {
-     "template": "post-compaction run all produced content root `c00367f0\u2026`"
+     "template": "post-compaction run all produced content root `c00367f0…`"
     }
    ]
   },
@@ -13201,7 +13863,7 @@
      "template": "bytes by {{contract.C.storage_pct}} % and raises the durable write wall from"
     },
     {
-     "template": "{{contract.A.ms_min}} ms to {{contract.C.ms_min}} ms ({{contract.C.ratio}}\u00d7), with"
+     "template": "{{contract.A.ms_min}} ms to {{contract.C.ms_min}} ms ({{contract.C.ratio}}×), with"
     },
     {
      "template": "{{contract.C.cpu_ms}} ms of write CPU versus {{contract.A.cpu_ms}} ms for the native"
@@ -13238,25 +13900,25 @@
      "template": "**Measured (R25).** At 424,439,296 logical bytes the pass-through row B costs"
     },
     {
-     "template": "{{contract.B.ratio}}\u00d7 the native wall ({{contract.A.ms_min}} \u2192 {{contract.B.ms_min}} ms)"
+     "template": "{{contract.B.ratio}}× the native wall ({{contract.A.ms_min}} → {{contract.B.ms_min}} ms)"
     },
     {
      "template": "and changes physical bytes by {{contract.B.storage_pct}} %; the protocol row D costs"
     },
     {
-     "template": "{{contract.D.ratio}}\u00d7; the codec row C saves {{contract.C.storage_pct}} % and costs"
+     "template": "{{contract.D.ratio}}×; the codec row C saves {{contract.C.storage_pct}} % and costs"
     },
     {
-     "template": "{{contract.C.ratio}}\u00d7; combined E saves {{contract.E.storage_pct}} % and costs"
+     "template": "{{contract.C.ratio}}×; combined E saves {{contract.E.storage_pct}} % and costs"
     },
     {
-     "template": "{{contract.E.ratio}}\u00d7. Over MinIO the same two rows are A"
+     "template": "{{contract.E.ratio}}×. Over MinIO the same two rows are A"
     },
     {
      "template": "{{contract.minio.A.ms_min}} ms and C {{contract.minio.C.ms_min}} ms"
     },
     {
-     "template": "({{contract.minio.C.ratio}}\u00d7) for {{contract.C.storage_pct}} % fewer bytes. The"
+     "template": "({{contract.minio.C.ratio}}×) for {{contract.C.storage_pct}} % fewer bytes. The"
     },
     {
      "template": "protocol layer over raw changes bytes by {{contract.D.storage_pct}} % (a negative"
@@ -13456,13 +14118,13 @@
      "template": "**Availability:** after the metadata database was removed, M reused **{{ca.m.loss_reused}} of {{ca.loss_total}}** pages and W reused **{{ca.w.loss_reused}} of {{ca.loss_total}}** byte-exactly."
     },
     {
-     "template": "**Fast path, declared tolerance measured and failed:** W **{{ca.w.p50}}** \u00b5s p50 against N's **{{ca.n.p50}}** \u00b5s = **{{ca.ratio.w_n_p50}}\u00d7** (declared \u2264 {{ca.tol.p50}}\u00d7); W **{{ca.w.p95}}** \u00b5s p95 against N's **{{ca.n.p95}}** \u00b5s = **{{ca.ratio.w_n_p95}}\u00d7** (declared \u2264 {{ca.tol.p95}}\u00d7); W reads **{{ca.ratio.w_n_bytes}}\u00d7** N's backend bytes per request (declared \u2264 {{ca.tol.bytes}}\u00d7)."
+     "template": "**Fast path, declared tolerance measured and failed:** W **{{ca.w.p50}}** µs p50 against N's **{{ca.n.p50}}** µs = **{{ca.ratio.w_n_p50}}×** (declared ≤ {{ca.tol.p50}}×); W **{{ca.w.p95}}** µs p95 against N's **{{ca.n.p95}}** µs = **{{ca.ratio.w_n_p95}}×** (declared ≤ {{ca.tol.p95}}×); W reads **{{ca.ratio.w_n_bytes}}×** N's backend bytes per request (declared ≤ {{ca.tol.bytes}}×)."
     },
     {
-     "template": "**Recovery:** W and M both materialize **{{ca.m.rec_logical}}** B for the identical demanded output set; W reads **{{ca.ratio.w_m_rec_backend}}\u00d7** M's backend bytes (**{{ca.w.rec_backend}}** B against **{{ca.m.rec_backend}}** B) and takes **{{ca.ratio.w_m_rec_wall}}\u00d7** M's wall time, after resolving the checkpoint manifest once per pass instead of once per demanded tensor."
+     "template": "**Recovery:** W and M both materialize **{{ca.m.rec_logical}}** B for the identical demanded output set; W reads **{{ca.ratio.w_m_rec_backend}}×** M's backend bytes (**{{ca.w.rec_backend}}** B against **{{ca.m.rec_backend}}** B) and takes **{{ca.ratio.w_m_rec_wall}}×** M's wall time, after resolving the checkpoint manifest once per pass instead of once per demanded tensor."
     },
     {
-     "template": "**Second backend, same tolerances (one loopback MinIO process):** W **{{cas.w.p50}}** \u00b5s p50 against N's **{{cas.n.p50}}** \u00b5s = **{{cas.ratio.w_n_p50}}\u00d7** (declared \u2264 {{cas.tol.p50}}\u00d7) and **{{cas.ratio.w_n_p95}}\u00d7** at p95 (declared \u2264 {{cas.tol.p95}}\u00d7), at **{{cas.ratio.w_n_bytes}}\u00d7** N's backend bytes per request; the gate is **met** here. The same safety and availability results hold on both rows."
+     "template": "**Second backend, same tolerances (one loopback MinIO process):** W **{{cas.w.p50}}** µs p50 against N's **{{cas.n.p50}}** µs = **{{cas.ratio.w_n_p50}}×** (declared ≤ {{cas.tol.p50}}×) and **{{cas.ratio.w_n_p95}}×** at p95 (declared ≤ {{cas.tol.p95}}×), at **{{cas.ratio.w_n_bytes}}×** N's backend bytes per request; the gate is **met** here. The same safety and availability results hold on both rows."
     },
     {
      "template": "**Only one capability claim survives:** provenance-safe reuse that outlives the application's metadata database, and a refusal that reads nothing. Every performance claim on the local POSIX row failed or tied; the second row meets the declared tolerance and is published as neutrality, never as a win. No tolerance was widened for either row."
@@ -13481,10 +14143,10 @@
      "template": "|---|---:|---:|---:|"
     },
     {
-     "template": "| fast-path p50 (\u00b5s) | {{ca.n.p50}} | {{ca.m.p50}} | {{ca.w.p50}} |"
+     "template": "| fast-path p50 (µs) | {{ca.n.p50}} | {{ca.m.p50}} | {{ca.w.p50}} |"
     },
     {
-     "template": "| fast-path p95 (\u00b5s) | {{ca.n.p95}} | {{ca.m.p95}} | {{ca.w.p95}} |"
+     "template": "| fast-path p95 (µs) | {{ca.n.p95}} | {{ca.m.p95}} | {{ca.w.p95}} |"
     },
     {
      "template": "| backend bytes per fast-path request | {{ca.n.bytes_per_req}} | {{ca.m.bytes_per_req}} | {{ca.w.bytes_per_req}} |"
@@ -13496,7 +14158,7 @@
      "template": "| cross-scope probes accepted | {{ca.n.accepted}} | {{ca.m.accepted}} | {{ca.w.accepted}} |"
     },
     {
-     "template": "| \u2026 of which returned the wrong payload | {{ca.n.wrong}} | {{ca.m.wrong}} | {{ca.w.wrong}} |"
+     "template": "| … of which returned the wrong payload | {{ca.n.wrong}} | {{ca.m.wrong}} | {{ca.w.wrong}} |"
     },
     {
      "template": "| cross-scope probes refused | {{ca.n.denied}} | {{ca.m.denied}} | {{ca.w.denied}} |"
@@ -13529,7 +14191,7 @@
      "template": ""
     },
     {
-     "template": "Measured recompute of one page (the same scalar kernel in every arm): **{{ca.recompute}} \u00b5s**. The workload was {{ca.pages}} pages of {{ca.page_bytes}} logical bytes and {{ca.probes}} cross-scope probes."
+     "template": "Measured recompute of one page (the same scalar kernel in every arm): **{{ca.recompute}} µs**. The workload was {{ca.pages}} pages of {{ca.page_bytes}} logical bytes and {{ca.probes}} cross-scope probes."
     }
    ]
   },
@@ -13719,7 +14381,7 @@
      "template": ""
     },
     {
-     "template": "For the same output set W reads **{{ca.ratio.w_m_rec_backend}}\u00d7** M's backend bytes and takes **{{ca.ratio.w_m_rec_wall}}\u00d7** M's wall time. N's row is the full restore the contract lets it do. The fixture is {{ca.tensors}} tensors of {{ca.tensor_bytes}} B, two activation blobs and one derived artifact."
+     "template": "For the same output set W reads **{{ca.ratio.w_m_rec_backend}}×** M's backend bytes and takes **{{ca.ratio.w_m_rec_wall}}×** M's wall time. N's row is the full restore the contract lets it do. The fixture is {{ca.tensors}} tensors of {{ca.tensor_bytes}} B, two activation blobs and one derived artifact."
     }
    ]
   },
@@ -13772,13 +14434,13 @@
      "template": "|---|---:|---:|---:|---:|"
     },
     {
-     "template": "| p50 (\u00b5s) | {{ca.n.p50}} | {{ca.m.p50}} | {{ca.w.p50}} | W \u2264 {{ca.tol.p50}}\u00d7 N |"
+     "template": "| p50 (µs) | {{ca.n.p50}} | {{ca.m.p50}} | {{ca.w.p50}} | W ≤ {{ca.tol.p50}}× N |"
     },
     {
-     "template": "| p95 (\u00b5s) | {{ca.n.p95}} | {{ca.m.p95}} | {{ca.w.p95}} | W \u2264 {{ca.tol.p95}}\u00d7 N |"
+     "template": "| p95 (µs) | {{ca.n.p95}} | {{ca.m.p95}} | {{ca.w.p95}} | W ≤ {{ca.tol.p95}}× N |"
     },
     {
-     "template": "| backend bytes per request | {{ca.n.bytes_per_req}} | {{ca.m.bytes_per_req}} | {{ca.w.bytes_per_req}} | W \u2264 {{ca.tol.bytes}}\u00d7 N |"
+     "template": "| backend bytes per request | {{ca.n.bytes_per_req}} | {{ca.m.bytes_per_req}} | {{ca.w.bytes_per_req}} | W ≤ {{ca.tol.bytes}}× N |"
     },
     {
      "template": ""
@@ -13790,13 +14452,13 @@
      "template": "|---|---:|---:|"
     },
     {
-     "template": "| p50 | {{ca.ratio.m_n_p50}}\u00d7 | {{ca.ratio.w_n_p50}}\u00d7 |"
+     "template": "| p50 | {{ca.ratio.m_n_p50}}× | {{ca.ratio.w_n_p50}}× |"
     },
     {
-     "template": "| p95 | {{ca.ratio.m_n_p95}}\u00d7 | {{ca.ratio.w_n_p95}}\u00d7 |"
+     "template": "| p95 | {{ca.ratio.m_n_p95}}× | {{ca.ratio.w_n_p95}}× |"
     },
     {
-     "template": "| backend bytes per request | | {{ca.ratio.w_n_bytes}}\u00d7 |"
+     "template": "| backend bytes per request | | {{ca.ratio.w_n_bytes}}× |"
     }
    ]
   },
@@ -13806,7 +14468,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| phase, \u00b5s per fast-path read | N | W |"
+     "template": "| phase, µs per fast-path read | N | W |"
     },
     {
      "template": "|---|---:|---:|"
@@ -13815,16 +14477,16 @@
      "template": "| path resolution | {{ca.n.resolve}} | {{ca.w.resolve}} |"
     },
     {
-     "template": "| object-record lookup | \u2014 | {{ca.w.auth_state}} |"
+     "template": "| object-record lookup | — | {{ca.w.auth_state}} |"
     },
     {
-     "template": "| descriptor decode + identity | \u2014 | {{ca.w.auth_descriptor}} |"
+     "template": "| descriptor decode + identity | — | {{ca.w.auth_descriptor}} |"
     },
     {
-     "template": "| capability envelope + grants | \u2014 | {{ca.w.auth_capability}} |"
+     "template": "| capability envelope + grants | — | {{ca.w.auth_capability}} |"
     },
     {
-     "template": "| POSIX / ACL | \u2014 | {{ca.w.auth_posix}} |"
+     "template": "| POSIX / ACL | — | {{ca.w.auth_posix}} |"
     },
     {
      "template": "| manifest read (I/O) | {{ca.n.manifest_io}} | {{ca.w.manifest_io}} |"
@@ -13848,10 +14510,10 @@
      "template": "| whole-content verification | {{ca.n.content_verify}} | {{ca.w.content_verify}} |"
     },
     {
-     "template": "| frame parse + checksum | \u2014 | {{ca.w.frame_parse}} |"
+     "template": "| frame parse + checksum | — | {{ca.w.frame_parse}} |"
     },
     {
-     "template": "| payload decode | \u2014 | {{ca.w.decode}} |"
+     "template": "| payload decode | — | {{ca.w.decode}} |"
     },
     {
      "template": "| exactness compare | {{ca.n.compare}} | {{ca.w.compare}} |"
@@ -13866,7 +14528,7 @@
      "template": ""
     },
     {
-     "template": "W's whole authorization preamble \u2014 object record, descriptor, capability, POSIX \u2014 is **{{ca.w.auth_total}} \u00b5s** per read. The instrumented ledger runs **{{ca.w.overhead_vs_n}} \u00b5s** per read above N's, and **{{ca.w.decode_share}}\u00d7** the uninstrumented W p50 is a single phase: the payload decode."
+     "template": "W's whole authorization preamble — object record, descriptor, capability, POSIX — is **{{ca.w.auth_total}} µs** per read. The instrumented ledger runs **{{ca.w.overhead_vs_n}} µs** per read above N's, and **{{ca.w.decode_share}}×** the uninstrumented W p50 is a single phase: the payload decode."
     }
    ]
   },
@@ -13876,7 +14538,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "W's fast-path p50 moved from **{{ca.r26.w.p50}} \u00b5s** (R26) to **{{ca.r27.w.p50}} \u00b5s** \u2014 **{{ca.r27.p50_reduction_pct}} %** lower \u2014 and p95 from **{{ca.r26.w.p95}} \u00b5s** to **{{ca.r27.w.p95}} \u00b5s** (**{{ca.r27.p95_reduction_pct}} %**). Against N that is **{{ca.r26.ratio.w_n_p50}}\u00d7 \u2192 {{ca.r27.ratio.w_n_p50}}\u00d7** at p50 and **{{ca.r26.ratio.w_n_p95}}\u00d7 \u2192 {{ca.r27.ratio.w_n_p95}}\u00d7** at p95. The gate needs **{{ca.tol.p50}}\u00d7** / **{{ca.tol.p95}}\u00d7**, so it was still missed. Those duplications are the R27 change and remain in force."
+     "template": "W's fast-path p50 moved from **{{ca.r26.w.p50}} µs** (R26) to **{{ca.r27.w.p50}} µs** — **{{ca.r27.p50_reduction_pct}} %** lower — and p95 from **{{ca.r26.w.p95}} µs** to **{{ca.r27.w.p95}} µs** (**{{ca.r27.p95_reduction_pct}} %**). Against N that is **{{ca.r26.ratio.w_n_p50}}× → {{ca.r27.ratio.w_n_p50}}×** at p50 and **{{ca.r26.ratio.w_n_p95}}× → {{ca.r27.ratio.w_n_p95}}×** at p95. The gate needs **{{ca.tol.p50}}×** / **{{ca.tol.p95}}×**, so it was still missed. Those duplications are the R27 change and remain in force."
     }
    ]
   },
@@ -13886,7 +14548,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| mode-19 decode, in memory | p50 \u00b5s |"
+     "template": "| mode-19 decode, in memory | p50 µs |"
     },
     {
      "template": "|---|---:|"
@@ -13913,7 +14575,7 @@
      "template": ""
     },
     {
-     "template": "The same page as a mode-12 frame decodes in **{{ca.mode12_decode}} \u00b5s**, so the provenance descriptor itself is **{{ca.prov_ratio}}\u00d7** the decode it wraps, and the frame is **{{ca.frame_delta_pct}} %** larger. What fills the rest is the byte-plane codec the wire format fixes for modes 9\u201319, not the context plane's logic."
+     "template": "The same page as a mode-12 frame decodes in **{{ca.mode12_decode}} µs**, so the provenance descriptor itself is **{{ca.prov_ratio}}×** the decode it wraps, and the frame is **{{ca.frame_delta_pct}} %** larger. What fills the rest is the byte-plane codec the wire format fixes for modes 9–19, not the context plane's logic."
     }
    ]
   },
@@ -13923,7 +14585,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "Mode-12 decode p50 **{{ca.mode12_decode}} \u00b5s**, mode-19 **{{ca.mode19_decode}} \u00b5s**, ratio **{{ca.prov_ratio}}\u00d7**. At the eight-page scale the mode-19 frames are **{{ca.w.frame_bytes}} B** against **{{ca.w.mode12_bytes}} B** for the same pages as mode-12 frames: **+{{ca.frame_delta_pct}} %**, which is the descriptor."
+     "template": "Mode-12 decode p50 **{{ca.mode12_decode}} µs**, mode-19 **{{ca.mode19_decode}} µs**, ratio **{{ca.prov_ratio}}×**. At the eight-page scale the mode-19 frames are **{{ca.w.frame_bytes}} B** against **{{ca.w.mode12_bytes}} B** for the same pages as mode-12 frames: **+{{ca.frame_delta_pct}} %**, which is the descriptor."
     }
    ]
   },
@@ -13939,13 +14601,13 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "* **C1** W p50 \u2264 {{ca.tol.p50}} \u00d7 N p50"
+     "template": "* **C1** W p50 ≤ {{ca.tol.p50}} × N p50"
     },
     {
-     "template": "* **C2** W p95 \u2264 {{ca.tol.p95}} \u00d7 N p95"
+     "template": "* **C2** W p95 ≤ {{ca.tol.p95}} × N p95"
     },
     {
-     "template": "* **C3** W backend bytes per request \u2264 {{ca.tol.bytes}} \u00d7 N"
+     "template": "* **C3** W backend bytes per request ≤ {{ca.tol.bytes}} × N"
     },
     {
      "template": "* **C4** every fast-path read is byte-exact"
@@ -13958,7 +14620,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "R28 did not change the fast path. W's p50 is **{{ca.w.p50}} \u00b5s** against R27's **{{ca.r27.w.p50}} \u00b5s** and p95 **{{ca.w.p95}} \u00b5s** against **{{ca.r27.w.p95}} \u00b5s** (R27 receipt `context-advantage-20261113T061907Z`), so the ratio to N is **{{ca.ratio.w_n_p50}}\u00d7** at p50 and **{{ca.ratio.w_n_p95}}\u00d7** at p95 and the declared **{{ca.tol.p50}}\u00d7** / **{{ca.tol.p95}}\u00d7** is still missed. What R28 changed is recovery: W's backend bytes fell from **{{ca.r27.w.rec_backend}} B** to **{{ca.w.rec_backend}} B** and its wall from **{{ca.r27.w.rec_wall}} ms** to **{{ca.w.rec_wall}} ms**."
+     "template": "R28 did not change the fast path. W's p50 is **{{ca.w.p50}} µs** against R27's **{{ca.r27.w.p50}} µs** and p95 **{{ca.w.p95}} µs** against **{{ca.r27.w.p95}} µs** (R27 receipt `context-advantage-20261113T061907Z`), so the ratio to N is **{{ca.ratio.w_n_p50}}×** at p50 and **{{ca.ratio.w_n_p95}}×** at p95 and the declared **{{ca.tol.p50}}×** / **{{ca.tol.p95}}×** is still missed. What R28 changed is recovery: W's backend bytes fell from **{{ca.r27.w.rec_backend}} B** to **{{ca.w.rec_backend}} B** and its wall from **{{ca.r27.w.rec_wall}} ms** to **{{ca.w.rec_wall}} ms**."
     }
    ]
   },
@@ -13995,7 +14657,7 @@
      "template": ""
     },
     {
-     "template": "The **{{ca.rec_manifest_loads_removed}}** eliminated loads of **{{ca.rec_manifest_load_cost}} B** each are the whole **{{ca.rec_gap_closed_bytes}} B** reduction, and the ledger's section counts agree (`blob_io_manifest` {{ca.w.rec_manifest_reads}} against R27's {{ca.r27.w.rec_manifest_reads}}). What is left is decode and root recomputation, not metadata: W's per-output restore p50 is **{{ca.w.rec_output_p50}} \u00b5s** against M's **{{ca.m.rec_output_p50}} \u00b5s** over **{{ca.w.rec_outputs}}** outputs."
+     "template": "The **{{ca.rec_manifest_loads_removed}}** eliminated loads of **{{ca.rec_manifest_load_cost}} B** each are the whole **{{ca.rec_gap_closed_bytes}} B** reduction, and the ledger's section counts agree (`blob_io_manifest` {{ca.w.rec_manifest_reads}} against R27's {{ca.r27.w.rec_manifest_reads}}). What is left is decode and root recomputation, not metadata: W's per-output restore p50 is **{{ca.w.rec_output_p50}} µs** against M's **{{ca.m.rec_output_p50}} µs** over **{{ca.w.rec_outputs}}** outputs."
     }
    ]
   },
@@ -14005,7 +14667,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| payload step, same page, in memory | p50 \u00b5s | MB/s |"
+     "template": "| payload step, same page, in memory | p50 µs | MB/s |"
     },
     {
      "template": "|---|---:|---:|"
@@ -14020,7 +14682,7 @@
      "template": ""
     },
     {
-     "template": "The shipped payload step is **{{ca.repr.ratio}}\u00d7** the copy on the same {{ca.repr.page_bytes}} B. The copy is a floor, not a shipped codec: the wire format fixes `huffman-canonical-v1` for modes 9-19, so no provenance-bound page with a raw payload exists to measure end to end. **The storage delta of this receipt is zero**: no representation changed, the eight pages re-encode to the same {{ca.w.frame_bytes}} B of mode-19 frames, and the store footprint is unchanged from R27. Whether replacing the payload step alone would meet C1 is not established here \u2014 the store path's Huffman cost is bounded only between the in-memory row above and the ledger's payload-decode row, which also contains the page hash, the descriptor parse and the descriptor identity a raw representation would still pay. The design is `docs/KV-PROV-REPRESENTATION.md`; it is not implemented and nothing here claims it would win."
+     "template": "The shipped payload step is **{{ca.repr.ratio}}×** the copy on the same {{ca.repr.page_bytes}} B. The copy is a floor, not a shipped codec: the wire format fixes `huffman-canonical-v1` for modes 9-19, so no provenance-bound page with a raw payload exists to measure end to end. **The storage delta of this receipt is zero**: no representation changed, the eight pages re-encode to the same {{ca.w.frame_bytes}} B of mode-19 frames, and the store footprint is unchanged from R27. Whether replacing the payload step alone would meet C1 is not established here — the store path's Huffman cost is bounded only between the in-memory row above and the ledger's payload-decode row, which also contains the page hash, the descriptor parse and the descriptor identity a raw representation would still pay. The design is `docs/KV-PROV-REPRESENTATION.md`; it is not implemented and nothing here claims it would win."
     }
    ]
   },
@@ -14054,7 +14716,7 @@
      "template": "backend alone; `M` a strong application-level metadata baseline (zstd-3"
     },
     {
-     "template": "payloads, a canonical manifest, a key\u2192value index on the request's five"
+     "template": "payloads, a canonical manifest, a key→value index on the request's five"
     },
     {
      "template": "dimensions plus position, full value validation before reuse, TTL/eviction and"
@@ -14108,19 +14770,19 @@
      "template": "**The honest negative.** On the local POSIX data plane the fast path misses its"
     },
     {
-     "template": "declared tolerance, and the tolerance was not widened: `W` **{{ca.w.p50}} \u00b5s**"
+     "template": "declared tolerance, and the tolerance was not widened: `W` **{{ca.w.p50}} µs**"
     },
     {
-     "template": "p50 against `N` **{{ca.n.p50}} \u00b5s** is **{{ca.ratio.w_n_p50}}\u00d7** (declared"
+     "template": "p50 against `N` **{{ca.n.p50}} µs** is **{{ca.ratio.w_n_p50}}×** (declared"
     },
     {
-     "template": "\u2264 {{ca.tol.p50}}\u00d7), **{{ca.ratio.w_n_p95}}\u00d7** at p95 (declared \u2264 {{ca.tol.p95}}\u00d7)."
+     "template": "≤ {{ca.tol.p50}}×), **{{ca.ratio.w_n_p95}}×** at p95 (declared ≤ {{ca.tol.p95}}×)."
     },
     {
      "template": "The cause is the backend's cost model, not the protocol: `W` reads"
     },
     {
-     "template": "**{{ca.ratio.w_n_bytes}}\u00d7** `N`'s backend bytes per request, so where a byte is"
+     "template": "**{{ca.ratio.w_n_bytes}}×** `N`'s backend bytes per request, so where a byte is"
     },
     {
      "template": "nearly free the codec's decode is the whole bill."
@@ -14129,31 +14791,31 @@
      "template": ""
     },
     {
-     "template": "**The same gate, where a byte costs something \u2014 measured.** On one loopback"
+     "template": "**The same gate, where a byte costs something — measured.** On one loopback"
     },
     {
      "template": "MinIO process, same arms, same fixture, same tolerances: `W`"
     },
     {
-     "template": "**{{cas.w.p50}} \u00b5s** against `N` **{{cas.n.p50}} \u00b5s** is"
+     "template": "**{{cas.w.p50}} µs** against `N` **{{cas.n.p50}} µs** is"
     },
     {
-     "template": "**{{cas.ratio.w_n_p50}}\u00d7** p50 and **{{cas.ratio.w_n_p95}}\u00d7** p95, at the same"
+     "template": "**{{cas.ratio.w_n_p50}}×** p50 and **{{cas.ratio.w_n_p95}}×** p95, at the same"
     },
     {
-     "template": "**{{cas.ratio.w_n_bytes}}\u00d7** byte ratio. That is neutrality, not a win: `W` is"
+     "template": "**{{cas.ratio.w_n_bytes}}×** byte ratio. That is neutrality, not a win: `W` is"
     },
     {
-     "template": "still slower than the floor. The crossover between the two rows is \u2248"
+     "template": "still slower than the floor. The crossover between the two rows is ≈"
     },
     {
-     "template": "**{{cas.derived.crossover_rtt_us}} \u00b5s** of backend round-trip per request, and"
+     "template": "**{{cas.derived.crossover_rtt_us}} µs** of backend round-trip per request, and"
     },
     {
-     "template": "the byte-price crossover is \u2248 **{{cas.derived.byte_price_ns}} ns/B**"
+     "template": "the byte-price crossover is ≈ **{{cas.derived.byte_price_ns}} ns/B**"
     },
     {
-     "template": "(\u2248 **{{cas.derived.byte_price_mb_s}} MB/s** of byte-proportional throughput)."
+     "template": "(≈ **{{cas.derived.byte_price_mb_s}} MB/s** of byte-proportional throughput)."
     },
     {
      "template": "Both crossovers are *derived* from the two measured receipts, not swept."
@@ -14177,16 +14839,16 @@
      "template": "([`docs/KV-PROV-REPRESENTATION.md`](docs/KV-PROV-REPRESENTATION.md)): on these"
     },
     {
-     "template": "pages a raw payload would cost **{{ca.repr.raw_payload_ratio}}\u00d7** the shipped"
+     "template": "pages a raw payload would cost **{{ca.repr.raw_payload_ratio}}×** the shipped"
     },
     {
      "template": "frames (**+{{ca.repr.raw_payload_delta_pct}} %** storage), and even removing the"
     },
     {
-     "template": "entire payload step leaves a **{{ca.floor.nopayload_us}} \u00b5s** floor, which is"
+     "template": "entire payload step leaves a **{{ca.floor.nopayload_us}} µs** floor, which is"
     },
     {
-     "template": "**{{ca.floor.nopayload_ratio}}\u00d7** `N`. It would not rescue the local gate."
+     "template": "**{{ca.floor.nopayload_ratio}}×** `N`. It would not rescue the local gate."
     }
    ]
   },
@@ -14202,10 +14864,10 @@
      "template": "|---|---:|---:|---:|"
     },
     {
-     "template": "| fast-path p50 (\u00b5s) | {{cas.n.p50}} | {{cas.m.p50}} | {{cas.w.p50}} |"
+     "template": "| fast-path p50 (µs) | {{cas.n.p50}} | {{cas.m.p50}} | {{cas.w.p50}} |"
     },
     {
-     "template": "| fast-path p95 (\u00b5s) | {{cas.n.p95}} | {{cas.m.p95}} | {{cas.w.p95}} |"
+     "template": "| fast-path p95 (µs) | {{cas.n.p95}} | {{cas.m.p95}} | {{cas.w.p95}} |"
     },
     {
      "template": "| backend bytes per fast-path request | {{cas.n.bytes_per_req}} | {{cas.m.bytes_per_req}} | {{cas.w.bytes_per_req}} |"
@@ -14256,13 +14918,13 @@
      "template": ""
     },
     {
-     "template": "Declared and unchanged: **{{cas.tol.p50}}\u00d7** p50, **{{cas.tol.p95}}\u00d7** p95, **{{cas.tol.bytes}}\u00d7** bytes (C1\u2013C3, contract \u00a73)."
+     "template": "Declared and unchanged: **{{cas.tol.p50}}×** p50, **{{cas.tol.p95}}×** p95, **{{cas.tol.bytes}}×** bytes (C1–C3, contract §3)."
     },
     {
-     "template": "Measured on this row: W / N **{{cas.ratio.w_n_p50}}\u00d7** p50, **{{cas.ratio.w_n_p95}}\u00d7** p95, **{{cas.ratio.w_n_bytes}}\u00d7** bytes;"
+     "template": "Measured on this row: W / N **{{cas.ratio.w_n_p50}}×** p50, **{{cas.ratio.w_n_p95}}×** p95, **{{cas.ratio.w_n_bytes}}×** bytes;"
     },
     {
-     "template": "M / N **{{cas.ratio.m_n_p50}}\u00d7** p50. **C1, C2 and C3 hold on this backend.**"
+     "template": "M / N **{{cas.ratio.m_n_p50}}×** p50. **C1, C2 and C3 hold on this backend.**"
     },
     {
      "template": "{{cas.pages}} pages, {{cas.probes}} cross-scope probes, seven interleaved repetitions, one loopback MinIO process."
@@ -14271,13 +14933,13 @@
      "template": ""
     },
     {
-     "template": "The structural results are identical to the local row, which is the test of the protocol: N still accepts every cross-scope request whose model matches and returns another scope's payload, M still refuses all of them but reads payload bytes to do it, W refuses all of them with zero bytes read and zero bytes returned, and only W survives the loss of the metadata database. The bytes each arm reads per fast-path request are **the same numbers as the local row** \u2014 the same logical reads on a different transport \u2014 and every arm issues the same number of backend requests per read, so the byte and request counts are not distorted by the move."
+     "template": "The structural results are identical to the local row, which is the test of the protocol: N still accepts every cross-scope request whose model matches and returns another scope's payload, M still refuses all of them but reads payload bytes to do it, W refuses all of them with zero bytes read and zero bytes returned, and only W survives the loss of the metadata database. The bytes each arm reads per fast-path request are **the same numbers as the local row** — the same logical reads on a different transport — and every arm issues the same number of backend requests per read, so the byte and request counts are not distorted by the move."
     },
     {
      "template": ""
     },
     {
-     "template": "What changes is the ratio, and it changes by roughly an order of magnitude: on this backend the fixed decode penalty is amortised against a per-request cost two orders of magnitude larger, so W's **{{cas.ratio.w_n_p50}}\u00d7** is inside the declared **{{cas.tol.p50}}\u00d7**. That is not a claim that the plane is fast here. It is a claim that the plane's overhead is small relative to what the backend charges for a byte and a round trip \u2014 the condition under which a context plane is worth deploying. It is also why the honest negative stays on the front page: on the backend where bytes are free, the same overhead is the whole bill."
+     "template": "What changes is the ratio, and it changes by roughly an order of magnitude: on this backend the fixed decode penalty is amortised against a per-request cost two orders of magnitude larger, so W's **{{cas.ratio.w_n_p50}}×** is inside the declared **{{cas.tol.p50}}×**. That is not a claim that the plane is fast here. It is a claim that the plane's overhead is small relative to what the backend charges for a byte and a round trip — the condition under which a context plane is worth deploying. It is also why the honest negative stays on the front page: on the backend where bytes are free, the same overhead is the whole bill."
     }
    ]
   },
@@ -14296,25 +14958,25 @@
      "template": "| backend requests per fast-path read, all arms, local row | {{ca.n.req_per_read}} / {{ca.m.req_per_read}} / {{ca.w.req_per_read}} | measured |"
     },
     {
-     "template": "| W's decode penalty over N on the local row (backend cost \u2248 0) | {{cas.derived.decode_penalty_us}} \u00b5s | derived |"
+     "template": "| W's decode penalty over N on the local row (backend cost ≈ 0) | {{cas.derived.decode_penalty_us}} µs | derived |"
     },
     {
-     "template": "| per-request backend cost on the MinIO row, from N | {{cas.derived.rtt_us}} \u00b5s | derived |"
+     "template": "| per-request backend cost on the MinIO row, from N | {{cas.derived.rtt_us}} µs | derived |"
     },
     {
-     "template": "| W p50 the two-point model predicts on MinIO | {{cas.derived.predicted_w_p50_us}} \u00b5s | derived |"
+     "template": "| W p50 the two-point model predicts on MinIO | {{cas.derived.predicted_w_p50_us}} µs | derived |"
     },
     {
      "template": "| model minus measured W p50 on MinIO | +{{cas.derived.prediction_error_pct}} % | derived |"
     },
     {
-     "template": "| per-request cost at which W / N reaches the declared {{ca.tol.p50}}\u00d7 p50 tolerance | {{cas.derived.crossover_rtt_us}} \u00b5s | derived |"
+     "template": "| per-request cost at which W / N reaches the declared {{ca.tol.p50}}× p50 tolerance | {{cas.derived.crossover_rtt_us}} µs | derived |"
     },
     {
      "template": "| backend bytes W saves per fast-path read versus N | {{cas.bytes_saved.w_vs_n}} B | measured |"
     },
     {
-     "template": "| per-byte cost at which that saving repays W's {{cas.derived.decode_penalty_us}} \u00b5s decode penalty | {{cas.derived.byte_price_ns}} ns/B | derived |"
+     "template": "| per-byte cost at which that saving repays W's {{cas.derived.decode_penalty_us}} µs decode penalty | {{cas.derived.byte_price_ns}} ns/B | derived |"
     },
     {
      "template": "| the same break-even as byte-proportional throughput | {{cas.derived.byte_price_mb_s}} MB/s | derived |"
@@ -14333,25 +14995,25 @@
      "template": "|---|---:|"
     },
     {
-     "template": "| payload step, shipped `huffman-canonical-v1` | {{ca.repr.huffman_us}} \u00b5s |"
+     "template": "| payload step, shipped `huffman-canonical-v1` | {{ca.repr.huffman_us}} µs |"
     },
     {
-     "template": "| payload step, raw-copy floor | {{ca.repr.raw_us}} \u00b5s |"
+     "template": "| payload step, raw-copy floor | {{ca.repr.raw_us}} µs |"
     },
     {
-     "template": "| shipped payload step / raw-copy floor | {{ca.repr.ratio}}\u00d7 |"
+     "template": "| shipped payload step / raw-copy floor | {{ca.repr.ratio}}× |"
     },
     {
-     "template": "| eight pages stored raw instead of as mode-19 frames | {{ca.repr.raw_payload_ratio}}\u00d7 (**+{{ca.repr.raw_payload_delta_pct}} %**) |"
+     "template": "| eight pages stored raw instead of as mode-19 frames | {{ca.repr.raw_payload_ratio}}× (**+{{ca.repr.raw_payload_delta_pct}} %**) |"
     },
     {
-     "template": "| W p50 with the entire payload step removed | {{ca.floor.nopayload_us}} \u00b5s |"
+     "template": "| W p50 with the entire payload step removed | {{ca.floor.nopayload_us}} µs |"
     },
     {
-     "template": "| that floor against N (the best `raw-le-v1` could do on local POSIX) | {{ca.floor.nopayload_ratio}}\u00d7 |"
+     "template": "| that floor against N (the best `raw-le-v1` could do on local POSIX) | {{ca.floor.nopayload_ratio}}× |"
     },
     {
-     "template": "| W / N p50 on MinIO loopback, shipped codec, tolerance met | {{cas.ratio.w_n_p50}}\u00d7 |"
+     "template": "| W / N p50 on MinIO loopback, shipped codec, tolerance met | {{cas.ratio.w_n_p50}}× |"
     },
     {
      "template": ""
@@ -14363,13 +15025,13 @@
      "template": ""
     },
     {
-     "template": "1. **It cannot rescue the local gate.** Even with the entire payload step removed, the remaining fast-path work is **{{ca.floor.nopayload_ratio}}\u00d7** N \u2014 above the declared **{{ca.tol.p50}}\u00d7** \u2014 because the normative per-read reconstructed-page hash, the descriptor parse, the descriptor identity and the decode-buffer first touch all survive a raw payload. Only a range read that skips whole-page verification could go below that floor, and that is a different contract, not a representation change."
+     "template": "1. **It cannot rescue the local gate.** Even with the entire payload step removed, the remaining fast-path work is **{{ca.floor.nopayload_ratio}}×** N — above the declared **{{ca.tol.p50}}×** — because the normative per-read reconstructed-page hash, the descriptor parse, the descriptor identity and the decode-buffer first touch all survive a raw payload. Only a range read that skips whole-page verification could go below that floor, and that is a different contract, not a representation change."
     },
     {
-     "template": "2. **It is not needed for the gate on the second backend.** The shipped codec already measures **{{cas.ratio.w_n_p50}}\u00d7** there against the declared **{{cas.tol.p50}}\u00d7**. `raw-le-v1` would not change a decision the planner makes on either measured backend."
+     "template": "2. **It is not needed for the gate on the second backend.** The shipped codec already measures **{{cas.ratio.w_n_p50}}×** there against the declared **{{cas.tol.p50}}×**. `raw-le-v1` would not change a decision the planner makes on either measured backend."
     },
     {
-     "template": "3. **It would cost storage where storage is the scarce thing.** On the same pages the raw payload is **{{ca.repr.raw_payload_ratio}}\u00d7** the shipped frames \u2014 **+{{ca.repr.raw_payload_delta_pct}} %** on the page payload. On a backend where a byte is the expensive resource, paying that to remove a copy is the wrong direction."
+     "template": "3. **It would cost storage where storage is the scarce thing.** On the same pages the raw payload is **{{ca.repr.raw_payload_ratio}}×** the shipped frames — **+{{ca.repr.raw_payload_delta_pct}} %** on the page payload. On a backend where a byte is the expensive resource, paying that to remove a copy is the wrong direction."
     },
     {
      "template": "4. **It would cost compatibility.** An additive value in a frozen field costs two encoders, two decoders, three spec mirrors, a conformance vector set and a reserved-value reject rule in both languages, plus the `scope_root` derivation that keeps identity representation-independent. That is a real increment, and it buys no measured decision today."
@@ -14378,7 +15040,7 @@
      "template": ""
     },
     {
-     "template": "So the design stays specified and unimplemented. The strongest statement the programme can make about hot-page representations is the one already in \u00a76.2\u2013\u00a76.3: the payload codec the wire format fixes is the cost, and on the local row it is the whole cost. If a later court measures a page-hot workload with free bytes **and** a decode-dominated critical path whose floor is inside tolerance, `raw-le-v1` becomes worth building, and its own court \u2014 design step 5 \u2014 would be the thing that decides it. Nothing in this session claims it would win."
+     "template": "So the design stays specified and unimplemented. The strongest statement the programme can make about hot-page representations is the one already in §6.2–§6.3: the payload codec the wire format fixes is the cost, and on the local row it is the whole cost. If a later court measures a page-hot workload with free bytes **and** a decode-dominated critical path whose floor is inside tolerance, `raw-le-v1` becomes worth building, and its own court — design step 5 — would be the thing that decides it. Nothing in this session claims it would win."
     }
    ]
   },
@@ -14388,13 +15050,13 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "**Verdict: retired.** Three gates ran. `EKB-E1` (boundary, exactness and resource bound) **passed** on **{{ekb.e1.exact}}/{{ekb.e1.objects}}** objects with **{{ekb.e1.refused}}** refused and no limit breach. `EKB-E2` (space) was **lost**: EKBLOOM's aggregate container is **{{ekb.e2.ratio}}\u00d7** the shipped planner's own footprint, with **{{ekb.e2.losses}}** per-object losses and **{{ekb.e2.wins}}** wins. `EKB-E3` (bounded random access) was **lost** on both declared conditions: its retained footprint is **{{ekb.e3.e_over_w}}\u00d7** the shipped tiled representation, and its pooled p95 is **{{ekb.e3.p95_e_over_best}}\u00d7** the best baseline's. Under `docs/EKBLOOM-PLAN.md` \u00a78.2, two lost portfolio axes retire the line: no payload mode, no planner slot, no `ekbloom` dependency."
+     "template": "**Verdict: retired.** Three gates ran. `EKB-E1` (boundary, exactness and resource bound) **passed** on **{{ekb.e1.exact}}/{{ekb.e1.objects}}** objects with **{{ekb.e1.refused}}** refused and no limit breach. `EKB-E2` (space) was **lost**: EKBLOOM's aggregate container is **{{ekb.e2.ratio}}×** the shipped planner's own footprint, with **{{ekb.e2.losses}}** per-object losses and **{{ekb.e2.wins}}** wins. `EKB-E3` (bounded random access) was **lost** on both declared conditions: its retained footprint is **{{ekb.e3.e_over_w}}×** the shipped tiled representation, and its pooled p95 is **{{ekb.e3.p95_e_over_best}}×** the best baseline's. Under `docs/EKBLOOM-PLAN.md` §8.2, two lost portfolio axes retire the line: no payload mode, no planner slot, no `ekbloom` dependency."
     },
     {
      "template": ""
     },
     {
-     "template": "That is the whole result. The bounded-step mechanism itself worked \u2014 see \u00a75 \u2014 but a working mechanism is not a portfolio win, and this document keeps the two apart everywhere. A retire verdict is a **successful** `EKB-X22` under `docs/EKBLOOM-PLAN.md` \u00a74.8; leaving the verdict open would have been the failure mode."
+     "template": "That is the whole result. The bounded-step mechanism itself worked — see §5 — but a working mechanism is not a portfolio win, and this document keeps the two apart everywhere. A retire verdict is a **successful** `EKB-X22` under `docs/EKBLOOM-PLAN.md` §4.8; leaving the verdict open would have been the failure mode."
     }
    ]
   },
@@ -14410,13 +15072,13 @@
      "template": "|---|---:|---:|---|"
     },
     {
-     "template": "| `EKB-E1` | {{ekb.e1.objects}} | {{ekb.e1.logical_bytes}} | every tensor of both containers, ascending name order (contract \u00a73.1) |"
+     "template": "| `EKB-E1` | {{ekb.e1.objects}} | {{ekb.e1.logical_bytes}} | every tensor of both containers, ascending name order (contract §3.1) |"
     },
     {
-     "template": "| `EKB-E2` | {{ekb.e2.objects}} | {{ekb.e2.logical_bytes}} | every k-th tensor per `(dtype, shape)` class, `k = ceil(class_size / 8)` (contract \u00a73.2) |"
+     "template": "| `EKB-E2` | {{ekb.e2.objects}} | {{ekb.e2.logical_bytes}} | every k-th tensor per `(dtype, shape)` class, `k = ceil(class_size / 8)` (contract §3.2) |"
     },
     {
-     "template": "| `EKB-E3` | {{ekb.e3.objects}} | {{ekb.e3.logical_bytes}} | the lexicographically smallest tensor per shape class, both containers independently (contract \u00a79.2) |"
+     "template": "| `EKB-E3` | {{ekb.e3.objects}} | {{ekb.e3.logical_bytes}} | the lexicographically smallest tensor per shape class, both containers independently (contract §9.2) |"
     }
    ]
   },
@@ -14457,16 +15119,16 @@
      "template": "|---|---:|---:|---:|"
     },
     {
-     "template": "| aggregate retained bytes | {{ekb.e2.body}} | {{ekb.e2.planned}} | {{ekb.e2.ratio}}\u00d7 |"
+     "template": "| aggregate retained bytes | {{ekb.e2.body}} | {{ekb.e2.planned}} | {{ekb.e2.ratio}}× |"
     },
     {
-     "template": "| raw element bytes (reference floor) | \u2014 | {{ekb.e2.logical_bytes}} | \u2014 |"
+     "template": "| raw element bytes (reference floor) | — | {{ekb.e2.logical_bytes}} | — |"
     },
     {
-     "template": "| per-object wins / losses | {{ekb.e2.wins}} / {{ekb.e2.losses}} | \u2014 | \u2014 |"
+     "template": "| per-object wins / losses | {{ekb.e2.wins}} / {{ekb.e2.losses}} | — | — |"
     },
     {
-     "template": "| largest single per-object loss | {{ekb.e2.largest_loss}} | \u2014 | \u2014 |"
+     "template": "| largest single per-object loss | {{ekb.e2.largest_loss}} | — | — |"
     },
     {
      "template": ""
@@ -14488,19 +15150,19 @@
      "template": "|---|---:|"
     },
     {
-     "template": "| W \u2014 WeftFS mode-15 `TENSOR_TILED` region reads | {{ekb.e3.w_foot}} B |"
+     "template": "| W — WeftFS mode-15 `TENSOR_TILED` region reads | {{ekb.e3.w_foot}} B |"
     },
     {
-     "template": "| A \u2014 raw payload + manifest + index | {{ekb.e3.a_foot}} B |"
+     "template": "| A — raw payload + manifest + index | {{ekb.e3.a_foot}} B |"
     },
     {
-     "template": "| E \u2014 EKBLOOM `.ekb` containers | {{ekb.e3.e_foot}} B |"
+     "template": "| E — EKBLOOM `.ekb` containers | {{ekb.e3.e_foot}} B |"
     },
     {
      "template": ""
     },
     {
-     "template": "G2 requires E strictly below **both** W and A. E is **{{ekb.e3.e_over_w}}\u00d7** W (larger) and **{{ekb.e3.e_over_a}}\u00d7** A (smaller). The condition fails because the shipped tiled representation, not the raw baseline, is the smaller footprint."
+     "template": "G2 requires E strictly below **both** W and A. E is **{{ekb.e3.e_over_w}}×** W (larger) and **{{ekb.e3.e_over_a}}×** A (smaller). The condition fails because the shipped tiled representation, not the raw baseline, is the smaller footprint."
     }
    ]
   },
@@ -14528,7 +15190,7 @@
      "template": ""
     },
     {
-     "template": "With `p95_best = min(p95_W, p95_A)` = {{ekb.e3.p95_best}} ns (A), E's p95 is **{{ekb.e3.p95_e_over_best}}\u00d7** the best baseline \u2014 far outside the borrowed tolerance \u2014 while still being **{{ekb.e3.p95_w_over_e}}\u00d7** faster than W on the same statistic. The second fact is real and does not satisfy the gate: W is not the p95 baseline."
+     "template": "With `p95_best = min(p95_W, p95_A)` = {{ekb.e3.p95_best}} ns (A), E's p95 is **{{ekb.e3.p95_e_over_best}}×** the best baseline — far outside the borrowed tolerance — while still being **{{ekb.e3.p95_w_over_e}}×** faster than W on the same statistic. The second fact is real and does not satisfy the gate: W is not the p95 baseline."
     }
    ]
   },
@@ -14572,31 +15234,31 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "**`EKB-E2` is lost on space.** EKBLOOM's aggregate container is **{{ekb.e2.ratio}}\u00d7** the shipped planner's footprint and loses **every** object: **{{ekb.e2.losses}}** losses, **{{ekb.e2.wins}}** wins, and **{{ekb.e2.largest_loss}} B** at the single worst object (the Instruct embedding). A tie would also have been a loss for portfolio purposes; this is not even a tie."
+     "template": "**`EKB-E2` is lost on space.** EKBLOOM's aggregate container is **{{ekb.e2.ratio}}×** the shipped planner's footprint and loses **every** object: **{{ekb.e2.losses}}** losses, **{{ekb.e2.wins}}** wins, and **{{ekb.e2.largest_loss}} B** at the single worst object (the Instruct embedding). A tie would also have been a loss for portfolio purposes; this is not even a tie."
     },
     {
      "template": ""
     },
     {
-     "template": "**`EKB-E3` is lost on footprint.** EKBLOOM's retained footprint was **{{ekb.e3.e_over_w}}\u00d7 W** \u2014 larger than WeftFS mode-15 tiling \u2014 and **{{ekb.e3.e_over_a}}\u00d7 A**, smaller only than the raw baseline. EKBLOOM's own claim is a footprint claim at non-evicting hot access, so losing footprint to the representation WeftFS already ships removes the premise of the claim on this corpus."
+     "template": "**`EKB-E3` is lost on footprint.** EKBLOOM's retained footprint was **{{ekb.e3.e_over_w}}× W** — larger than WeftFS mode-15 tiling — and **{{ekb.e3.e_over_a}}× A**, smaller only than the raw baseline. EKBLOOM's own claim is a footprint claim at non-evicting hot access, so losing footprint to the representation WeftFS already ships removes the premise of the claim on this corpus."
     },
     {
      "template": ""
     },
     {
-     "template": "**`EKB-E3` is lost on p95.** EKBLOOM's pooled p95 was **{{ekb.e3.p95_e_over_best}}\u00d7 A**, the raw-plus-manifest-plus-index baseline, against the declared non-inferiority tolerance, while being **{{ekb.e3.p95_w_over_e}}\u00d7 faster than W** on the same statistic. That is why the baseline matters: the application-level baseline, not the tiled store, is the thing a bounded small read has to beat or match, and it does not."
+     "template": "**`EKB-E3` is lost on p95.** EKBLOOM's pooled p95 was **{{ekb.e3.p95_e_over_best}}× A**, the raw-plus-manifest-plus-index baseline, against the declared non-inferiority tolerance, while being **{{ekb.e3.p95_w_over_e}}× faster than W** on the same statistic. That is why the baseline matters: the application-level baseline, not the tiled store, is the thing a bounded small read has to beat or match, and it does not."
     },
     {
      "template": ""
     },
     {
-     "template": "**E's read is not free.** E fetched **{{ekb.e3.backend_e_bytes}} B** per read over **{{ekb.e3.backend_e_reqs}}** requests against A's **{{ekb.e3.backend_a_bytes}} B** over **{{ekb.e3.backend_a_reqs}}**; its container open validates by streaming the body, and that I/O is reported separately and excluded from read latency by contract \u00a79.4. Neither fact re-frames the gate; both explain why an encoded bounded read is slower than a direct `pread` of the requested range."
+     "template": "**E's read is not free.** E fetched **{{ekb.e3.backend_e_bytes}} B** per read over **{{ekb.e3.backend_e_reqs}}** requests against A's **{{ekb.e3.backend_a_bytes}} B** over **{{ekb.e3.backend_a_reqs}}**; its container open validates by streaming the body, and that I/O is reported separately and excluded from read latency by contract §9.4. Neither fact re-frames the gate; both explain why an encoded bounded read is slower than a direct `pread` of the requested range."
     },
     {
      "template": ""
     },
     {
-     "template": "**The mechanism itself was real.** The in-memory `Engine` probe decoded **{{ekb.e3.probe_requests}}** requests exactly \u2014 every one of them \u2014 with **no positioning-bound violation**: the receipt's `C_engine_bound` check passes, and for each request `read_counted_steps` stayed within `worst_case_steps_for`. EKBLOOM's bounded step count is a genuine property of the codec. **The mechanism working is not the same as the portfolio winning**, and this document does not convert one into the other: the bounded read was exact and bounded, and it was still larger than the tiled representation and far slower than the raw baseline."
+     "template": "**The mechanism itself was real.** The in-memory `Engine` probe decoded **{{ekb.e3.probe_requests}}** requests exactly — every one of them — with **no positioning-bound violation**: the receipt's `C_engine_bound` check passes, and for each request `read_counted_steps` stayed within `worst_case_steps_for`. EKBLOOM's bounded step count is a genuine property of the codec. **The mechanism working is not the same as the portfolio winning**, and this document does not convert one into the other: the bounded read was exact and bounded, and it was still larger than the tiled representation and far slower than the raw baseline."
     }
    ]
   },
@@ -14659,7 +15321,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "The retained negative run passed **{{azm2n.scenarios_passed}}** of eight scenarios and **{{azm2n.checks_passed}}/{{azm2n.checks}}** checks, with **{{azm2n.failures}}** failures \u2014 all of them in S6, and all of them reachable-data losses."
+     "template": "The retained negative run passed **{{azm2n.scenarios_passed}}** of eight scenarios and **{{azm2n.checks_passed}}/{{azm2n.checks}}** checks, with **{{azm2n.failures}}** failures — all of them in S6, and all of them reachable-data losses."
     }
    ]
   },
@@ -14699,10 +15361,10 @@
      "template": "**{{scale7b.mode9.small_oneshot_rss}} KiB** peak RSS; streamed **{{scale7b.mode9.small_stream_ms}} ms** at"
     },
     {
-     "template": "**{{scale7b.mode9.small_stream_rss}} KiB** \u2014 **{{scale7b.mode9.small_rss_ratio}}\u00d7** less memory and"
+     "template": "**{{scale7b.mode9.small_stream_rss}} KiB** — **{{scale7b.mode9.small_rss_ratio}}×** less memory and"
     },
     {
-     "template": "**{{scale7b.mode9.small_wall_ratio}}\u00d7** the one-shot wall."
+     "template": "**{{scale7b.mode9.small_wall_ratio}}×** the one-shot wall."
     },
     {
      "template": ""
@@ -14714,10 +15376,10 @@
      "template": "**{{scale7b.mode9.large_oneshot_rss}} KiB**; streamed **{{scale7b.mode9.large_stream_ms}} ms** at"
     },
     {
-     "template": "**{{scale7b.mode9.large_stream_rss}} KiB** \u2014 **{{scale7b.mode9.large_rss_ratio}}\u00d7** less memory and"
+     "template": "**{{scale7b.mode9.large_stream_rss}} KiB** — **{{scale7b.mode9.large_rss_ratio}}×** less memory and"
     },
     {
-     "template": "**{{scale7b.mode9.large_wall_ratio}}\u00d7** the one-shot wall."
+     "template": "**{{scale7b.mode9.large_wall_ratio}}×** the one-shot wall."
     },
     {
      "template": ""
@@ -14857,7 +15519,7 @@
      "template": "**{{scale7b.before.segments}}** segment publishes and **{{scale7b.before.root_publishes}}** root"
     },
     {
-     "template": "publications \u2014 +51.16 % bytes over the source, quoted from that receipt's own analysis."
+     "template": "publications — +51.16 % bytes over the source, quoted from that receipt's own analysis."
     }
    ]
   },
@@ -14916,10 +15578,10 @@
      "template": "{{scale7b.before.segments}} before); restore is **{{scale7b.restore4.mbs}} MB/s** at 4 workers; and the"
     },
     {
-     "template": "streaming mode-9 encoder is **{{scale7b.mode9.large_rss_ratio}}\u00d7** smaller and"
+     "template": "streaming mode-9 encoder is **{{scale7b.mode9.large_rss_ratio}}×** smaller and"
     },
     {
-     "template": "**{{scale7b.mode9.large_wall_ratio}}\u00d7** the one-shot wall on a 1.09 GB tensor."
+     "template": "**{{scale7b.mode9.large_wall_ratio}}×** the one-shot wall on a 1.09 GB tensor."
     }
    ]
   },
@@ -14957,19 +15619,19 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "* **X06**: at cap 4 the best row is **{{budget.x06.cap4_best_ms}} ms** p50 (2 tensor workers, 2 shard workers) and the measured default is **{{budget.x06.cap4_recommended_ms}} ms**; the unbudgeted 4\u00d74 control is **{{budget.x06.control_4x4_ms}} ms**, so the cap costs **+{{budget.x06.cap4_over_control_pct}} %** on this fixture. At cap 1 the best is **{{budget.x06.cap1_best_ms}} ms**; at cap 8 the default reaches **{{budget.x06.cap8_recommended_ms}} ms**."
+     "template": "* **X06**: at cap 4 the best row is **{{budget.x06.cap4_best_ms}} ms** p50 (2 tensor workers, 2 shard workers) and the measured default is **{{budget.x06.cap4_recommended_ms}} ms**; the unbudgeted 4×4 control is **{{budget.x06.control_4x4_ms}} ms**, so the cap costs **+{{budget.x06.cap4_over_control_pct}} %** on this fixture. At cap 1 the best is **{{budget.x06.cap1_best_ms}} ms**; at cap 8 the default reaches **{{budget.x06.cap8_recommended_ms}} ms**."
     },
     {
-     "template": "* **N08 dominant tensor**: one 64 MiB, 8-shard tensor restores in **{{budget.n08.dominant_shard1_ms}} ms** with one shard worker and **{{budget.n08.dominant_shard2_ms}} ms** with two \u2014 shard parallelism is the only restore-side lever for a single dominant tensor."
+     "template": "* **N08 dominant tensor**: one 64 MiB, 8-shard tensor restores in **{{budget.n08.dominant_shard1_ms}} ms** with one shard worker and **{{budget.n08.dominant_shard2_ms}} ms** with two — shard parallelism is the only restore-side lever for a single dominant tensor."
     },
     {
-     "template": "* **N08 100-tensor restore** (100 \u00d7 1 MiB, 4 tensor workers): **{{budget.n08.c100_new_ms}} ms** p50 with the worker-side SHA-256 and no copy; **{{budget.n08.c100_copy_ms}} ms** with the pre-N08 copy restored and **{{budget.n08.c100_writersha_ms}} ms** with the writer-side SHA-256 control. Neither change is a win at this scale. A 2-row region read is **{{budget.n08.c100_region_ms}} ms**; the resumed 10-tensor usable set is **{{budget.n08.c100_resume_ms}} ms**."
+     "template": "* **N08 100-tensor restore** (100 × 1 MiB, 4 tensor workers): **{{budget.n08.c100_new_ms}} ms** p50 with the worker-side SHA-256 and no copy; **{{budget.n08.c100_copy_ms}} ms** with the pre-N08 copy restored and **{{budget.n08.c100_writersha_ms}} ms** with the writer-side SHA-256 control. Neither change is a win at this scale. A 2-row region read is **{{budget.n08.c100_region_ms}} ms**; the resumed 10-tensor usable set is **{{budget.n08.c100_resume_ms}} ms**."
     },
     {
-     "template": "* **X07**: 16 capped readers reach **{{budget.x07.cap64_16_rs}} reads/s**; at 128 readers the uncapped control reaches **{{budget.x07.control_128_rs}} reads/s** and the cap of 64 yields **{{budget.x07.cap64_128_rs}} reads/s** \u2014 the cap costs a factor of about four exactly where it binds."
+     "template": "* **X07**: 16 capped readers reach **{{budget.x07.cap64_16_rs}} reads/s**; at 128 readers the uncapped control reaches **{{budget.x07.control_128_rs}} reads/s** and the cap of 64 yields **{{budget.x07.cap64_128_rs}} reads/s** — the cap costs a factor of about four exactly where it binds."
     },
     {
-     "template": "* **N09**: running the encode and restore stages concurrently takes **{{budget.n09.cap4_over_seq}}\u00d7** the sequential pair at cap 4 and **{{budget.n09.cap8_over_seq}}\u00d7** at cap 8. The policy bounds both stages; it does not promise an overlap win."
+     "template": "* **N09**: running the encode and restore stages concurrently takes **{{budget.n09.cap4_over_seq}}×** the sequential pair at cap 4 and **{{budget.n09.cap8_over_seq}}×** at cap 8. The policy bounds both stages; it does not promise an overlap win."
     }
    ]
   },
@@ -15139,6 +15801,499 @@
      "template": "`cargo test --features fuse --all-targets` (fuse court): **{{stage_budget.suites.fuse_suites}}** suites, **{{stage_budget.suites.fuse_passed}}** passed, **{{stage_budget.suites.fuse_failed}}** failed, **{{stage_budget.suites.fuse_ignored}}** ignored."
     }
    ]
+  },
+  {
+   "id": "n04-fixture",
+   "file": "bench/RESULTS-object-pipeline.md",
+   "kind": "lines",
+   "inline": true,
+   "rows": [
+    {
+     "template": "{{n04.tensors}} tensors and {{n04.logical_b}} logical bytes, identical in every arm and every repetition."
+    }
+   ]
+  },
+  {
+   "id": "n04-table",
+   "file": "bench/RESULTS-object-pipeline.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/augmentation-minio-20261113T190000Z.json",
+    "array": "configurations",
+    "order": [
+     "A",
+     "N",
+     "B",
+     "B-pipe4",
+     "C",
+     "C-pipe4",
+     "D",
+     "D-pipe4",
+     "E",
+     "E-pipe4"
+    ],
+    "columns": [
+     {
+      "header": "row",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "write min ms",
+      "path": "stats.write_wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p50 ms",
+      "path": "stats.write_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p95 ms",
+      "path": "stats.write_wall_ms.p95",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "cold p50 ms",
+      "path": "stats.cold_restore_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "stats.physical_footprint_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "written B",
+      "path": "stats.physical_bytes_written.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write req",
+      "path": "stats.write_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "cold req",
+      "path": "stats.cold_read_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write RSS KiB",
+      "path": "stats.write_peak_rss_kib.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write CPU ms",
+      "path": "stats.write_cpu_ms.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261114T000237Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "37a03c0dbb62213547e380e8d7ceb4eb7870e654"
+   }
+  },
+  {
+   "id": "n04-pipeline",
+   "file": "bench/RESULTS-object-pipeline.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| arm | sequential p50 ms | pipelined p50 ms | change |"
+    },
+    {
+     "template": "|---|---:|---:|---:|"
+    },
+    {
+     "template": "| B pass-through | {{n04.b_write_p50}} | {{n04.b_pipe4_write_p50}} | **{{n04.pipe_b_pct}} %** |"
+    },
+    {
+     "template": "| C codec | {{n04.c_write_p50}} | {{n04.c_pipe4_write_p50}} | **{{n04.pipe_c_pct}} %** |"
+    },
+    {
+     "template": "| D protocol | {{n04.d_write_p50}} | {{n04.d_pipe4_write_p50}} | **{{n04.pipe_d_pct}} %** |"
+    },
+    {
+     "template": "| E combined | {{n04.e_write_p50}} | {{n04.e_pipe4_write_p50}} | **{{n04.pipe_e_pct}} %** |"
+    },
+    {
+     "template": "Positive means the pipeline shortened the wall."
+    }
+   ]
+  },
+  {
+   "id": "n04-headline",
+   "file": "bench/RESULTS-object-pipeline.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**On a remote object backend the pipeline is the difference between the codec"
+    },
+    {
+     "template": "losing badly and the codec being nearly free.** C's durable write wall falls"
+    },
+    {
+     "template": "from {{n04.c_write_p50}} ms to {{n04.c_pipe4_write_p50}} ms ({{n04.cpipe_write_min}} ms least-contended),"
+    },
+    {
+     "template": "which is **{{n04.cpipe_vs_a_ratio}}x** the native per-object path's {{n04.a_write_p50}} ms while"
+    },
+    {
+     "template": "storing **{{n04.cpipe_storage_pct}} %** fewer physical bytes. The storage win is the"
+    },
+    {
+     "template": "codec's; the write-time win is the pipeline overlapping encode with the many"
+    },
+    {
+     "template": "small PUTs a compressed representation produces."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "Cold restore is unchanged by the pipeline and remains the codec's cost:"
+    },
+    {
+     "template": "{{n04.cpipe_cold_p50}} ms against A's {{n04.a_cold_p50}} ms (A reads one object per tensor; C reads"
+    },
+    {
+     "template": "fewer bytes but decodes them). All {{n04.tensors}} tensors restored byte-exact in every"
+    },
+    {
+     "template": "arm, with {{n04.mismatches}} mismatches."
+    }
+   ]
+  },
+  {
+   "id": "n04-losses",
+   "file": "bench/RESULTS-object-pipeline.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **The pipeline costs memory and CPU.** C-pipe4's write peak RSS is"
+    },
+    {
+     "template": "  {{n04.cpipe_rss}} KiB against {{n04.c_rss}} KiB for sequential C, and its write CPU is"
+    },
+    {
+     "template": "  {{n04.cpipe_cpu}} ms against {{n04.c_cpu}} ms. Four encoders hold up to four tensors'"
+    },
+    {
+     "template": "  working sets at once by design; the byte reservations bound it, they do not"
+    },
+    {
+     "template": "  remove it."
+    },
+    {
+     "template": "* **The pipeline does not help B or D as much as it helps C/E.** They publish raw"
+    },
+    {
+     "template": "  blobs, so publication, not encoding, dominates; the overlap has less to hide."
+    },
+    {
+     "template": "* **The pipelined rows are not shipped.** No CLI verb reaches"
+    },
+    {
+     "template": "  `Store::prepare_tensor_group_pipelined`; every `-pipe4` row is an ablation."
+    },
+    {
+     "template": "* **E-pipe4 keeps {{n04.epipe_storage_pct}} %** of the storage reduction, so the protocol layer"
+    },
+    {
+     "template": "  adds no measurable footprint on top of the codec."
+    },
+    {
+     "template": "* Restore is single-threaded per tensor here; the R13 pipelined restore is a"
+    },
+    {
+     "template": "  separate API and was not used in this court."
+    }
+   ]
+  },
+  {
+   "id": "n04-adverse",
+   "file": "bench/RESULTS-object-pipeline.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The baseline write issues {{n04.puts}} PUTs; the fault target is PUT"
+    },
+    {
+     "template": "{{n04.fault_target}}, which the proxy log shows is a `manifests/` blob."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "| scenario | provider behaviour | writer result | reopen | retry |"
+    },
+    {
+     "template": "|---|---|---|---|---|"
+    },
+    {
+     "template": "| `abort` | connection dropped before the write is applied | fails closed (`Io`, `Unexpected EOF`) | previous head, `verify --full` clean, no visible entry | reaches the reference head and manifest ids |"
+    },
+    {
+     "template": "| `lost-ack` | write applied, acknowledgement withheld | fails closed (`Io`, `Unexpected EOF`) | previous head, `verify --full` clean | reaches the reference head; already-published blobs are accepted, not rewritten |"
+    },
+    {
+     "template": "| `stale-reader` | none | a second handle commits | the open reader stays pinned and sees no new entry | a fresh reader sees the commit |"
+    },
+    {
+     "template": "| stale conditional write | client presents an old `If-Match` | `s3_fencing` suite: refused | head unchanged | — |"
+    }
+   ]
+  },
+  {
+   "id": "cephfs-table",
+   "file": "bench/RESULTS-cephfs.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+    "array": "configurations",
+    "order": [
+     "A",
+     "N",
+     "B",
+     "C",
+     "D",
+     "E"
+    ],
+    "columns": [
+     {
+      "header": "row",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "write min ms",
+      "path": "stats.write_wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p50 ms",
+      "path": "stats.write_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p95 ms",
+      "path": "stats.write_wall_ms.p95",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "cold p50 ms",
+      "path": "stats.cold_restore_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "stats.physical_footprint_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "written B",
+      "path": "stats.physical_bytes_written.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write req",
+      "path": "stats.write_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "cold req",
+      "path": "stats.cold_read_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write RSS KiB",
+      "path": "stats.write_peak_rss_kib.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write CPU ms",
+      "path": "stats.write_cpu_ms.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261114T015202Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+   }
+  },
+  {
+   "id": "cephfs-crash",
+   "file": "bench/RESULTS-cephfs.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/augmentation-cephfs-20261114T040000Z.json",
+    "array": "configurations",
+    "order": [
+     "B",
+     "C",
+     "D",
+     "E"
+    ],
+    "columns": [
+     {
+      "header": "row",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "status",
+      "path": "crash.status",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "old",
+      "path": "crash.old",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "new",
+      "path": "crash.new",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "partial",
+      "path": "crash.partial",
+      "format": "int",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261114T015202Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "4be2b44a3a6fd68ffdff8fdf7489c1395f5481e3"
+   }
+  },
+  {
+   "id": "cephfs-headline",
+   "file": "bench/RESULTS-cephfs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**The codec wins on bytes on CephFS and loses on time.** C stores"
+    },
+    {
+     "template": "**{{cephfs.c_storage_pct}} %** fewer physical bytes than A ({{cephfs.tensors}} tensors,"
+    },
+    {
+     "template": "{{cephfs.logical_b}} logical bytes, {{cephfs.mismatches}} mismatches) and its durable write wall is"
+    },
+    {
+     "template": "{{cephfs.c_write_p50}} ms p50 ({{cephfs.c_write_min}} ms least-contended) against A's"
+    },
+    {
+     "template": "{{cephfs.a_write_p50}} ms — **{{cephfs.c_vs_a_write_ratio}}x** — while its cold restore is"
+    },
+    {
+     "template": "{{cephfs.c_cold_p50}} ms against A's {{cephfs.a_cold_p50}} ms ({{cephfs.c_vs_a_cold_ratio}}x); the"
+    },
+    {
+     "template": "contract's latency change is {{cephfs.c_latency_pct}} % (negative is a loss)."
+    },
+    {
+     "template": "Seven interleaved repetitions; p50 is the median, not the minimum."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "The native baseline N is essentially A, so the honest protocol comparison is"
+    },
+    {
+     "template": "D-vs-N, and at this object count D's snapshot, Context Root, selector resolution"
+    },
+    {
+     "template": "and provenance record cost wall time rather than bytes."
+    }
+   ]
+  },
+  {
+   "id": "cephfs-losses",
+   "file": "bench/RESULTS-cephfs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Writes are slower than native on every WeftFS arm.** C's p50 is"
+    },
+    {
+     "template": "  {{cephfs.c_write_p50}} ms against A's {{cephfs.a_write_p50}} ms; D is {{cephfs.d_write_p50}} ms and E"
+    },
+    {
+     "template": "  {{cephfs.e_write_p50}} ms."
+    },
+    {
+     "template": "* **The tail is long and the spread is real.** A's p95 is {{cephfs.a_write_p95}} ms,"
+    },
+    {
+     "template": "  B's is {{cephfs.b_write_p95}} ms and C's is {{cephfs.c_write_p95}} ms over seven"
+    },
+    {
+     "template": "  repetitions on one 4-CPU client; a single-OSD single-node cluster has no"
+    },
+    {
+     "template": "  second OSD or MDS to absorb a pause. The full samples are in the receipt."
+    },
+    {
+     "template": "* **Restore is slower with the codec:** {{cephfs.c_cold_p50}} ms against"
+    },
+    {
+     "template": "  {{cephfs.a_cold_p50}} ms; fewer bytes do not offset decode on this backend."
+    },
+    {
+     "template": "* **The crash phases are process faults, not media loss**, and the first"
+    },
+    {
+     "template": "* **The crash phases are process faults, not media loss**, and the first"
+    },
+    {
+     "template": "  records it and the shipped court uses a host-directory OSD."
+    },
+    {
+     "template": "* No comparison of any kind is made against another filesystem (rule 13)."
+    }
+   ]
+  },
+  {
+   "id": "perf-catalog-n04",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "n04-minio"
+  },
+  {
+   "id": "perf-catalog-cephfs",
+   "file": "docs/PERF-NUMBERS.md",
+   "kind": "catalog",
+   "group": "cephfs"
   }
  ]
 }
