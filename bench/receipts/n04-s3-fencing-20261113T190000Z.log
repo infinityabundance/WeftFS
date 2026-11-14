@@ -1,0 +1,178 @@
++ exec docker run --rm --init --name weft-rust-court-2240401 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=37a03c0dbb62213547e380e8d7ceb4eb7870e654 -e WEFT_REPO_WEFTFS_GO=9257ee6b13156ec666248be8fe9193b4f5d6840e -e WEFT_REPO_WEFTCODEC=7c8dac37867626a4c45273933c8c99927a58728e -e WEFT_REPO_WEFTCODEC_GO=329c4cdffe914a7d22c9eee87429fe926f3b2c93 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_S3_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_BUCKET=weft-n04-20261113t190000z -e WEFT_S3_REGION=us-east-1 -e WEFT_S3_ACCESS_KEY=weftcourt -e WEFT_S3_SECRET_KEY=weftcourt-secret -e WEFT_S3_LOCK_LEASE_SECS=60 -e WEFT_S3_FENCE_LEASE_SECS=3 -e WEFT_S3_TEST_ENDPOINT=http://10.213.88.10:9000 -e WEFT_S3_TEST_PREFIX=weft-n04-test-20261113t190000z -e 'WEFT_S3_SERVER_LABEL=minio version RELEASE.2025-04-22T22-12-26Z (commit-id=0d7408fc9969caf07de6a8c3a84f9fbb10a6739e)' -e WEFT_S3_SERVER_RELEASE=RELEASE.2025-04-22T22-12-26Z -e WEFT_S3_SERVER_SHA256=53e2a2cb16c5366ea6fbbc479c19ddb4c6a0948273e752f740fb1fbf27bb817c -e WEFT_S3_CONTAINER_IMAGE=debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc --network weft-n04-net-2186347 weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && cargo test --test s3_fencing -- --test-threads=1 --nocapture'
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1515:9
+     |
+1515 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1516:9
+     |
+1516 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1517:9
+     |
+1517 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:2390:13
+     |
+2390 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: `weftfs` (lib) generated 15 warnings (run `cargo fix --lib -p weftfs` to apply 13 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:5816:8
+     |
+5816 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:5823:8
+     |
+5823 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:5840:7
+     |
+5840 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:5842:4
+     |
+5842 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:5875:4
+     |
+5875 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: `weftfs` (bin "weftfs") generated 5 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/s3_fencing.rs (.docker-cache/target-rust/debug/deps/s3_fencing-2c51040fc6fd7f32)
+
+running 11 tests
+test a_replaced_lock_record_makes_the_stale_publication_fail_412 ... ok
+test child_fenced_writer ... ok
+test child_fenced_writer_after_fence ... ok
+test expired_lease_blocks_publication_without_a_successor ... ok
+test fencing_token_is_monotonic_across_reclaims ... ok
+test observer_reads_the_published_lock_without_a_lease ... ok
+test paused_after_the_fence_cannot_publish_after_a_takeover ... ok
+test paused_writer_is_fenced_after_a_lease_reclaim ... ok
+test release_of_a_replaced_lock_fails_closed ... ok
+test renewal_keeps_the_writer_valid ... ok
+test two_writers_racing_on_release_leave_one_valid_lock ... release/acquire race 0: acquired after 2 attempt(s)
+release/acquire race 1: acquired after 2 attempt(s)
+release/acquire race 2: acquired after 2 attempt(s)
+release/acquire race 3: acquired after 2 attempt(s)
+release/acquire race 4: acquired after 2 attempt(s)
+release/acquire race 5: acquired after 2 attempt(s)
+release/acquire race 6: acquired after 2 attempt(s)
+release/acquire race 7: acquired after 2 attempt(s)
+release/acquire race 8: acquired after 2 attempt(s)
+release/acquire race 9: acquired after 2 attempt(s)
+release/acquire race 10: acquired after 2 attempt(s)
+release/acquire race 11: acquired after 2 attempt(s)
+release/acquire race 12: acquired after 2 attempt(s)
+release/acquire race 13: acquired after 2 attempt(s)
+release/acquire race 14: acquired after 2 attempt(s)
+release/acquire race 15: acquired after 2 attempt(s)
+release/acquire race 16: acquired after 2 attempt(s)
+release/acquire race 17: acquired after 2 attempt(s)
+release/acquire race 18: acquired after 2 attempt(s)
+release/acquire race 19: acquired after 2 attempt(s)
+ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.78s
+
