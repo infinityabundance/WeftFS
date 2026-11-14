@@ -1105,6 +1105,52 @@ fn main() {
                 })
             );
         }
+        "read-multi" => {
+            // Read several names from one handle without refreshing it, so every
+            // read observes the same generation. The history then shows a
+            // multi-key read at one point, which the checker can test for
+            // prefix consistency.
+            let names = arg(&args, "--names").unwrap_or_else(|| "a.bin,b.bin".to_owned());
+            let store = open_driver(
+                &store_path,
+                OpenMode::ReadOnly,
+                WriterMode::Optimistic,
+                now,
+                &backend_name,
+                &args,
+            );
+            let mut rows = Vec::new();
+            for name in names.split(',').filter(|name| !name.is_empty()) {
+                match store.lookup(State::ROOT_ID, name.as_bytes()) {
+                    Ok(id) => match store.read_object(id) {
+                        Ok(bytes) => rows.push(serde_json::json!({
+                            "name": name,
+                            "object_id": hex(id),
+                            "len": bytes.len(),
+                            "content_hash": hex(identity::content_hash(&bytes)),
+                        })),
+                        Err(err) => rows.push(serde_json::json!({
+                            "name": name, "error": err.to_string(),
+                        })),
+                    },
+                    Err(err) if err.class() == weftfs::error::Class::NotFound => {
+                        rows.push(serde_json::json!({"name": name, "present": false}))
+                    }
+                    Err(err) => rows.push(serde_json::json!({
+                        "name": name, "error": err.to_string(),
+                    })),
+                }
+            }
+            println!(
+                "{}",
+                serde_json::json!({
+                    "ok": rows.iter().all(|row| row.get("error").is_none()),
+                    "generation": store.generation(),
+                    "handle": store.history_handle(),
+                    "reads": rows,
+                })
+            );
+        }
         "read-loop" => {
             // Repeated whole-file reads for a concurrent-reader court. Reports
             // every read that returned wrong bytes, not just the last one.

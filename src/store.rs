@@ -212,6 +212,11 @@ pub struct Options {
     /// the oracle and the fallback. Turning it off reproduces the pre-incremental
     /// writer (a whole-state build on every publish) for differential courts.
     pub incremental_index_maintenance: bool,
+    /// T026: append transaction/read history to this path as JSON Lines
+    /// (`weft.history.v1`). `None` (the default) emits nothing; `WEFT_HISTORY`
+    /// overrides at open. An observation channel only — no store decision
+    /// reads it and a failed write never fails an operation.
+    pub history_path: Option<String>,
     /// MW2 writer policy. `Single` (the default) is MW1: an exclusive writer
     /// holds `LOCK` and no concurrent committer is admitted. `Optimistic`
     /// publishes through a conditional head compare-and-swap and is implemented
@@ -253,6 +258,7 @@ impl Default for Options {
             incremental_index: true,
             incremental_index_maintenance: true,
             writer_mode: crate::mw2::WriterMode::Single,
+            history_path: None,
             defer_group_blob_sync: true,
         }
     }
@@ -1019,6 +1025,10 @@ pub struct Store {
     commit_delta_cache: Mutex<CommitDeltaCache>,
     /// T021: consecutive-retry and gap-read statistics for one handle.
     rebase_stats: Mutex<RebaseStats>,
+    /// T026: optional JSONL history sink, opened once at open.
+    history: Option<crate::history::HistorySink>,
+    /// Identity of this handle in the history (stable for the handle's life).
+    history_handle: String,
 }
 
 /// One parsed commit kept for a bounded rebase cache.
@@ -1331,7 +1341,11 @@ impl Store {
             publication: PublicationCounters::default(),
             commit_delta_cache: Mutex::new(CommitDeltaCache::new(4096, 32 * 1024 * 1024)),
             rebase_stats: Mutex::new(RebaseStats::default()),
+            history: None,
+            history_handle: format!("pid:{}:{}", std::process::id(), self_wall_ns()),
         };
+        let history_options = store.options.clone();
+        store.attach_history(&history_options)?;
         store.write_genesis()?;
         if !store.options.quotas.is_empty() {
             store.install_quota_policy(store.options.quotas.clone())?;
@@ -1568,12 +1582,16 @@ impl Store {
             publication: PublicationCounters::default(),
             commit_delta_cache: Mutex::new(CommitDeltaCache::new(4096, 32 * 1024 * 1024)),
             rebase_stats: Mutex::new(RebaseStats::default()),
+            history: None,
+            history_handle: format!("pid:{}:{}", std::process::id(), self_wall_ns()),
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
             store.ensure_writer_policy(writer_mode)?;
         }
         store.options.writer_mode = writer_mode;
+        let history_options = store.options.clone();
+        store.attach_history(&history_options)?;
         Ok(store)
     }
 
@@ -1619,6 +1637,8 @@ impl Store {
         }
         store.options = options;
         store.apply_read_layer_options();
+        let history_options = store.options.clone();
+        store.attach_history(&history_options)?;
         Ok(store)
     }
 
@@ -1673,6 +1693,8 @@ impl Store {
         options.attest_indexes = false;
         store.options = options;
         store.apply_read_layer_options();
+        let history_options = store.options.clone();
+        store.attach_history(&history_options)?;
         if store.mode == OpenMode::ReadWrite {
             store.with_backend_mut(|backend| backend.ensure_domain_layout(&domain))?;
         }
@@ -2123,6 +2145,36 @@ impl Store {
             }
             Err(err) => Err(err),
         }
+    }
+
+    /// Open or replace the T026 history sink from the final options.
+    ///
+    /// An explicitly named path that cannot be opened fails the open: a caller
+    /// that asked for a history must not silently get none.
+    fn attach_history(&mut self, options: &Options) -> Result<()> {
+        self.history = crate::history::HistorySink::from_options(options)?;
+        Ok(())
+    }
+
+    /// Append one history record when a sink is configured.
+    pub(crate) fn emit_history(&self, mut event: serde_json::Value) {
+        let Some(sink) = self.history.as_ref() else {
+            return;
+        };
+        if let serde_json::Value::Object(map) = &mut event {
+            map.entry("handle".to_owned())
+                .or_insert_with(|| serde_json::json!(self.history_handle));
+            if let Some(domain) = self.domain {
+                map.entry("domain".to_owned())
+                    .or_insert_with(|| serde_json::json!(domain.to_hex()));
+            }
+        }
+        sink.emit(event);
+    }
+
+    /// The handle identity recorded in the history.
+    pub fn history_handle(&self) -> &str {
+        &self.history_handle
     }
 
     /// Re-derive the R8 read layers from `self.options`.
@@ -3786,6 +3838,49 @@ impl Store {
 
     /// Look up `(parent, name)` and return the target object id.
     pub fn lookup(&self, parent: Hash32, name: &[u8]) -> Result<Hash32> {
+        let recording = self.history.is_some();
+        let key = format!("entry:{}:{}", parent.to_hex(), hex_bytes(name));
+        if recording {
+            self.emit_history(serde_json::json!({
+                "event": "read-invoke",
+                "kind": "lookup",
+                "key": key,
+                "read_generation": self.generation,
+            }));
+        }
+        let result = self.lookup_inner(parent, name);
+        if recording {
+            match &result {
+                Ok(target) => self.emit_history(serde_json::json!({
+                    "event": "read-response",
+                    "kind": "lookup",
+                    "key": key,
+                    "value": format!("target:{}", target.to_hex()),
+                    "read_generation": self.generation,
+                })),
+                Err(err) if err.class() == Class::NotFound => self.emit_history(
+                    serde_json::json!({
+                        "event": "read-response",
+                        "kind": "lookup",
+                        "key": key,
+                        "value": serde_json::Value::Null,
+                        "read_generation": self.generation,
+                    }),
+                ),
+                Err(err) => self.emit_history(serde_json::json!({
+                    "event": "read-response",
+                    "kind": "lookup",
+                    "key": key,
+                    "error": err.to_string(),
+                    "class": err.class().as_str(),
+                    "read_generation": self.generation,
+                })),
+            }
+        }
+        result
+    }
+
+    fn lookup_inner(&self, parent: Hash32, name: &[u8]) -> Result<Hash32> {
         self.state.lookup(parent, name)
     }
 
@@ -3855,6 +3950,49 @@ impl Store {
     /// exactly the shipped path. Callers that have authorized a read should use
     /// [`Store::read_object_authorized`].
     pub fn read_object(&self, id: Hash32) -> Result<Vec<u8>> {
+        let recording = self.history.is_some();
+        let key = format!("object:{}", id.to_hex());
+        let value = self.state.objects.get(&id).map(|record| {
+            format!(
+                "content:{}:{}:{}",
+                record.content.to_hex(),
+                record.size,
+                record.version.to_hex()
+            )
+        });
+        if recording {
+            self.emit_history(serde_json::json!({
+                "event": "read-invoke",
+                "kind": "object",
+                "key": key,
+                "read_generation": self.generation,
+            }));
+        }
+        let result = self.read_object_unrecorded(id);
+        if recording {
+            match &result {
+                Ok(bytes) => self.emit_history(serde_json::json!({
+                    "event": "read-response",
+                    "kind": "object",
+                    "key": key,
+                    "value": value,
+                    "byte_len": bytes.len(),
+                    "read_generation": self.generation,
+                })),
+                Err(err) => self.emit_history(serde_json::json!({
+                    "event": "read-response",
+                    "kind": "object",
+                    "key": key,
+                    "error": err.to_string(),
+                    "class": err.class().as_str(),
+                    "read_generation": self.generation,
+                })),
+            }
+        }
+        result
+    }
+
+    fn read_object_unrecorded(&self, id: Hash32) -> Result<Vec<u8>> {
         let bytes = self.read_object_inner(id, None, None)?;
         self.note_object_read(id);
         Ok(bytes)
@@ -7834,7 +7972,65 @@ impl Store {
     /// publishes the commit with a conditional head compare-and-swap. A lost
     /// race retries only when the conflict table proves the ops still apply;
     /// otherwise the typed conflict is returned. The retry budget is hard.
+    ///
+    /// T026: when a history sink is configured this is the **only** place a
+    /// transaction's invocation and response are recorded, so a multi-attempt
+    /// transaction appears as one operation with its final outcome and its
+    /// attempt count.
     pub fn execute_transaction(
+        &mut self,
+        tx: &crate::mw2::Transaction,
+        options: &crate::mw2::TransactionOptions,
+    ) -> Result<crate::mw2::TransactionOutcome> {
+        let recording = self.history.is_some();
+        if recording {
+            let ops: Vec<serde_json::Value> =
+                transaction_history_ops(tx).into_iter().map(|op| op.to_json()).collect();
+            let preconditions: Vec<serde_json::Value> = tx
+                .preconditions
+                .iter()
+                .map(|pre| {
+                    serde_json::json!({
+                        "label": pre.label,
+                        "expected": describe_pre_value(&pre.expected),
+                        "idempotent": pre.idempotent.as_ref().map(describe_pre_value),
+                    })
+                })
+                .collect();
+            self.emit_history(serde_json::json!({
+                "event": "tx-invoke",
+                "tx": tx.id.as_str(),
+                "base_generation": tx.base_head_generation(),
+                "ops": ops,
+                "preconditions": preconditions,
+            }));
+        }
+        let result = self.execute_transaction_inner(tx, options);
+        if recording {
+            match &result {
+                Ok(outcome) => self.emit_history(serde_json::json!({
+                    "event": "tx-response",
+                    "tx": tx.id.as_str(),
+                    "outcome": if outcome.idempotent { "idempotent" } else { "committed" },
+                    "generation": outcome.generation,
+                    "commit": outcome.commit.to_hex(),
+                    "attempts": outcome.attempts,
+                    "observed_generation": self.generation,
+                })),
+                Err(err) => self.emit_history(serde_json::json!({
+                    "event": "tx-response",
+                    "tx": tx.id.as_str(),
+                    "outcome": "rejected",
+                    "class": err.class().as_str(),
+                    "error": err.to_string(),
+                    "observed_generation": self.generation,
+                })),
+            }
+        }
+        result
+    }
+
+    fn execute_transaction_inner(
         &mut self,
         tx: &crate::mw2::Transaction,
         options: &crate::mw2::TransactionOptions,
@@ -13089,6 +13285,134 @@ fn resolve_in(state: &State, path: &str) -> Result<Hash32> {
 /// tensor representation (any ordinary byte rewrite).
 fn strip_tensor_attrs(attrs: &mut BTreeMap<String, Value>) {
     attrs.retain(|key, _| !key.starts_with("weft.tensor."));
+}
+
+/// One op as the history records it: a canonical key, an optional value, and
+/// the op kind. Purely observational — no store decision reads it.
+struct HistoryOp {
+    op: &'static str,
+    key: String,
+    value: Option<String>,
+}
+
+impl HistoryOp {
+    fn to_json(self) -> serde_json::Value {
+        serde_json::json!({"op": self.op, "key": self.key, "value": self.value})
+    }
+}
+
+fn hex_bytes(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push_str(&format!("{byte:02x}"));
+    }
+    out
+}
+
+fn describe_pre_value(value: &crate::mw2::PreValue) -> serde_json::Value {
+    match value {
+        crate::mw2::PreValue::Absent => serde_json::json!({"kind": "absent"}),
+        crate::mw2::PreValue::Hash(hash) => serde_json::json!({"kind": "hash", "hash": hash.to_hex()}),
+        crate::mw2::PreValue::Entry(record) => serde_json::json!({
+            "kind": "entry",
+            "entry": record.id.to_hex(),
+            "target": record.target.to_hex(),
+        }),
+    }
+}
+
+/// Canonical key/value for every op in a transaction, in op order.
+///
+/// The keys are the registers the checker reasons about: `entry:` for a
+/// directory name, `object:` for an object id, `relation:`, `snapshot:`, `tip:`.
+/// A `del_entry` op carries only the entry id, so its key is recovered from the
+/// op's own precondition (which holds the observed entry record).
+fn transaction_history_ops(tx: &crate::mw2::Transaction) -> Vec<HistoryOp> {
+    let mut out = Vec::with_capacity(tx.ops.len());
+    for (index, op) in tx.ops.iter().enumerate() {
+        let pre = tx.preconditions.get(index);
+        let history_op = match op {
+            Op::PutObject(record) => HistoryOp {
+                op: "put_object",
+                key: format!("object:{}", record.id.to_hex()),
+                value: Some(format!(
+                    "content:{}:{}:{}",
+                    record.content.to_hex(),
+                    record.size,
+                    record.version.to_hex()
+                )),
+            },
+            Op::DeleteObject(id) => HistoryOp {
+                op: "delete_object",
+                key: format!("object:{}", id.to_hex()),
+                value: None,
+            },
+            Op::PutEntry(record) => HistoryOp {
+                op: "put_entry",
+                key: format!(
+                    "entry:{}:{}",
+                    record.parent.to_hex(),
+                    hex_bytes(&record.name)
+                ),
+                value: Some(format!("target:{}", record.target.to_hex())),
+            },
+            Op::DelEntry(id) => {
+                let key = match pre.map(|pre| &pre.expected) {
+                    Some(crate::mw2::PreValue::Entry(record)) => format!(
+                        "entry:{}:{}",
+                        record.parent.to_hex(),
+                        hex_bytes(&record.name)
+                    ),
+                    _ => format!("entry-id:{}", id.to_hex()),
+                };
+                HistoryOp {
+                    op: "del_entry",
+                    key,
+                    value: None,
+                }
+            }
+            Op::PutRelation(record) => HistoryOp {
+                op: "put_relation",
+                key: format!("relation:{}", record.id.to_hex()),
+                value: Some(format!(
+                    "assert:{}:{}:{}",
+                    record.subject.to_hex(),
+                    record.predicate,
+                    record.kind.as_str()
+                )),
+            },
+            Op::DelRelation(id) => HistoryOp {
+                op: "del_relation",
+                key: format!("relation:{}", id.to_hex()),
+                value: None,
+            },
+            Op::SetSnapshot { name, commit } => HistoryOp {
+                op: "set_snapshot",
+                key: format!("snapshot:{name}"),
+                value: Some(format!("commit:{}", commit.to_hex())),
+            },
+            Op::SetTip { object, version } => HistoryOp {
+                op: "set_tip",
+                key: format!("tip:{}", object.to_hex()),
+                value: Some(format!("version:{}", version.to_hex())),
+            },
+            Op::SetQuotaUsage(_) => HistoryOp {
+                op: "set_quota_usage",
+                key: "quota".to_owned(),
+                value: None,
+            },
+        };
+        out.push(history_op);
+    }
+    out
+}
+
+/// Wall-clock nanoseconds for a handle identity (never a fixture timestamp).
+fn self_wall_ns() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or(0)
 }
 
 fn mark_state(

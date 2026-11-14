@@ -48,6 +48,7 @@ pub mod format;
 pub mod fuse;
 pub mod gc_epoch;
 pub mod gcs;
+pub mod history;
 pub mod identity;
 pub(crate) mod index;
 pub(crate) mod index_chain;
