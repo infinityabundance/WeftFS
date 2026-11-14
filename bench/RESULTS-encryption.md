@@ -65,8 +65,8 @@ each arm.
 <!-- BEGIN GENERATED:encryption-plane (scripts/perf_numbers.py) -->
 | mode | seal MiB/s | open MiB/s |
 |---|---:|---:|
-| `convergent` | 1,568 | 2,127 |
-| `random` | 1,618 | 2,655 |
+| `convergent` | 1,630 | 2,138 |
+| `random` | 1,696 | 2,675 |
 <!-- END GENERATED:encryption-plane -->
 
 `random` opens faster than `convergent` because the convergent header carries a
@@ -100,10 +100,10 @@ and still leaks equality through the name.
 ## Losses
 
 <!-- BEGIN GENERATED:encryption-losses (scripts/perf_numbers.py) -->
-* **Wall:** write median plain 52.7 ms, convergent 95.3 ms
-  (1.81x), random 94.0 ms (1.78x); read
-  median plain 39.7 ms, convergent 78.9 ms
-  (1.99x), random 65.4 ms (1.65x).
+* **Wall:** write median plain 52.4 ms, convergent 93.6 ms
+  (1.79x), random 93.1 ms (1.78x); read
+  median plain 39.3 ms, convergent 77.3 ms
+  (1.97x), random 64.8 ms (1.65x).
 * **Bytes:** footprint plain 72,574,425 B, both envelope modes
   72,739,961 B (+0.228 %).
 * **CPU:** the write phase's CPU delta is published in the table above; the envelope
