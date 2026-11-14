@@ -32,7 +32,7 @@ and byte caps) was declared before measurement and is applied by rule, not by
 inspecting errors.
 
 <!-- BEGIN GENERATED:heldout-fit (scripts/perf_numbers.py) -->
-Fit: **366** tensors measured across two whole families. Every coefficient below was fitted on those tensors only, before any validation or held-out measurement existed.
+Fit: **366** tensors measured across two whole families. Every coefficient below was fitted on those tensors only, before any validation or held-out measurement existed. The fitted `raw` decode slope is **8,139,406,165** ns/MiB: it is an origin-constrained least squares over sub-kilobyte tensors where the fixed per-read cost dominates, and it is the direct cause of the restore-tail loss.
 <!-- END GENERATED:heldout-fit -->
 
 **Gate 1, as frozen, fails.** `CONTRACTS-heldout.md` §8 asked that "no tensor
@@ -83,9 +83,14 @@ Cold-restore relative error median **0.0478**; write-wall relative error median 
   and a size-blind ratio predicts the large-tensor winner for small tensors.
   The product's own `1/64` eligibility rule removes some of these mistakes but
   not all of them, because eligibility compares *predicted* sizes.
-- **Restore wall predicts well at the median** and badly in the tail: a few
-  tensors' per-read cost is dominated by fixed manifest/index work that the
-  pooled intercept cannot track.
+- **Restore wall predicts well at the median** and badly in the tail. The tail
+  has a specific, named cause: the contract fixes each decode rate as a slope
+  **through the origin**, and the `raw` slope is fitted on sub-kilobyte tensors
+  where a fixed per-read cost dominates. The fitted slope is therefore far above
+  the other strategies and over-predicts small `raw` reads on the validation
+  family. A per-strategy intercept is what the data wants; the declared form
+  does not have one, so this is published as a modelling loss rather than fixed
+  after the fact.
 - **Write wall is the weak target, and the first pass shows why.** In the
   retained pass the same code and the same strategies wrote the same bytes, and
   the family write wall moved by an order of magnitude between two consecutive
@@ -244,6 +249,10 @@ workspace, so no cross-host claim is made.
 8. The paired write-wall ladder does not survive at N=10 on this host.
 9. The model predicts decode **wall** time; its reuse for decode CPU is a proxy
    and over-predicts, because a read's CPU time is a fraction of its wall time.
+10. The origin-constrained `raw` decode slope is fitted on sub-kilobyte tensors
+    and over-predicts small raw reads by more than an order of magnitude on the
+    validation family. The declared functional form has no intercept, and it was
+    not changed after the held-out pass.
 
 ## 8. What is not claimed
 

@@ -1023,6 +1023,7 @@ time. They are not current claims.
 | `heldout.ho.restore_ms` | 4,362.1 | ms | Held-out measured restore wall | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
 | `heldout.ho.sla_accepted` | 3 | count | Held-out SLAs accepted | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
 | `heldout.ho.sla_missed` | 0 | count | Held-out SLAs missed | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
+| `heldout.fit.decode_raw_ns_per_mib` | 8,139,406,165 | ns/MiB | Fitted decode slope for the raw strategy | `bench/receipts/heldout-planner-20261114T175023Z.json` | 20261114T175023Z | 523c51d20c4e |
 <!-- END GENERATED:perf-catalog-heldout -->
 
 <!-- BEGIN GENERATED:perf-catalog-oracle (scripts/perf_numbers.py) -->

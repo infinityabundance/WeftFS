@@ -21470,6 +21470,19 @@
    "stamp": "20261114T185845Z",
    "revision_path": "revision",
    "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
+  },
+  {
+   "key": "heldout.fit.decode_raw_ns_per_mib",
+   "label": "Fitted decode slope for the raw strategy",
+   "unit": "ns/MiB",
+   "group": "heldout",
+   "format": "int",
+   "receipt": "bench/receipts/heldout-planner-20261114T175023Z.json",
+   "path": "fit.model.body.decode_ns_per_mib.raw.value",
+   "stamp_path": "stamp",
+   "stamp": "20261114T175023Z",
+   "revision_path": "revision",
+   "revision": "523c51d20c4eebfd8508eae0cd105952c0df6940"
   }
  ],
  "blocks": [
@@ -26720,7 +26733,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "Fit: **{{heldout.fit.tensors}}** tensors measured across two whole families. Every coefficient below was fitted on those tensors only, before any validation or held-out measurement existed."
+     "template": "Fit: **{{heldout.fit.tensors}}** tensors measured across two whole families. Every coefficient below was fitted on those tensors only, before any validation or held-out measurement existed. The fitted `raw` decode slope is **{{heldout.fit.decode_raw_ns_per_mib}}** ns/MiB: it is an origin-constrained least squares over sub-kilobyte tensors where the fixed per-read cost dominates, and it is the direct cause of the restore-tail loss."
     }
    ]
   },
