@@ -792,3 +792,152 @@ def test_direct_container_matches_the_staged_path(store, tmp_path):
             roots[label] = rows
     assert roots["staged"] == roots["direct"]
     verify_checkpoint(second, "direct", full=True, weftfs_cli=WEFTFS_CLI)
+
+
+# ---------------------------------------------------------------------------
+# T059: materialization receipts on a real restore
+
+
+def _run_weftfs(store, args):
+    command = [str(WEFTFS_CLI), "--store", str(store), *[str(a) for a in args]]
+    return subprocess.run(command, capture_output=True, text=True, check=False)
+
+
+@requires_torch
+def test_materialization_receipt_binds_every_restored_entry(store, tmp_path):
+    model = SmallModel()
+    source = {name: value.detach().clone() for name, value in model.state_dict().items()}
+    writer = WeftStorageWriter(
+        "withreceipt", store_root=store, topology=4, shard_strategy="zstd"
+    )
+    dcp.save(model.state_dict(), storage_writer=writer, no_dist=True)
+
+    receipt = tmp_path / "materialization.wcb"
+    target = SmallModel()
+    reader = WeftStorageReader(
+        "withreceipt", store_root=store, materialization_receipt=receipt
+    )
+    dcp.load(target.state_dict(), storage_reader=reader, no_dist=True)
+    _assert_state_equal(source, target.state_dict())
+
+    assert receipt.is_file(), "the reader did not ask the store for a receipt"
+    report = reader.stats["materialization"]
+    assert report is not None
+    assert report["schema"] == "weft.materialization.receipt.v1"
+    assert report["entries"] == len(source)
+    assert report["verification"]["ok"] is True
+    assert report["verification"]["tensors_checked"] == len(source)
+    adapter_path = Path(report["adapter_receipt"])
+    assert adapter_path.read_bytes()
+
+    # The store-derived rows carry source objects and a destination offset.
+    value = wcb.decode(receipt.read_bytes())
+    for row in value["tensors"]:
+        assert row["verification"] == "exact"
+        assert row["source_objects"], row["name"]
+        assert row["destination"]["kind"] == "checkpoint-tensor"
+    # ...and the adapter receipt names the same set.
+    adapter = wcb.decode(adapter_path.read_bytes())
+    assert adapter["schema"] == "weft.adapter.receipt.v1"
+    assert adapter["adapter"] == "dcp"
+    assert len(adapter["entries"]) == len(source)
+
+    # Independent verification in a separate process.
+    proc = _run_weftfs(
+        store,
+        [
+            "--json",
+            "receipt",
+            "verify",
+            "--receipt",
+            str(receipt),
+            "--adapter",
+            str(adapter_path),
+        ],
+    )
+    assert proc.returncode == 0, proc.stderr
+    verified = json.loads(proc.stdout)
+    assert verified["ok"] is True
+    assert verified["adapter_entries_checked"] == len(source)
+
+    # A canonical rewrite of one adapter entry (sha256, set_root unchanged)
+    # is refused by the independent verifier.
+    tampered = dict(adapter)
+    tampered["entries"] = [dict(entry) for entry in adapter["entries"]]
+    digest = bytearray(tampered["entries"][0]["sha256"])
+    digest[0] ^= 0xFF
+    tampered["entries"][0]["sha256"] = bytes(digest)
+    tampered_path = tmp_path / "tampered.adapter.wcb"
+    tampered_path.write_bytes(wcb.encode(tampered))
+    proc = _run_weftfs(
+        store,
+        [
+            "receipt",
+            "verify",
+            "--receipt",
+            str(receipt),
+            "--adapter",
+            str(tampered_path),
+        ],
+    )
+    assert proc.returncode != 0
+    assert "mismatch" in proc.stdout
+
+
+@requires_torch
+def test_materialization_receipt_refuses_a_wrong_restore(store, tmp_path, monkeypatch):
+    model = SmallModel()
+    writer = WeftStorageWriter("receiptrefuse", store_root=store, topology=1)
+    dcp.save(model.state_dict(), storage_writer=writer, no_dist=True)
+
+    from weftcodec import dcp as dcp_module
+
+    original = dcp_module.tensor_digest
+
+    def _mutated(data, dtype, shape):
+        digest = original(data, dtype, shape)
+        digest["sha256"] = b"\x00" * 32
+        return digest
+
+    monkeypatch.setattr(dcp_module, "tensor_digest", _mutated)
+    target = SmallModel()
+    receipt = tmp_path / "refused.wcb"
+    reader = WeftStorageReader(
+        "receiptrefuse", store_root=store, materialization_receipt=receipt
+    )
+    # DCP wraps adapter errors in a `CheckpointException`, which inherits from
+    # `BaseException` (not `Exception`) in torch 2.15; assert the fail-closed
+    # outcome: no adapter binding is written and no report exists.
+    with pytest.raises(BaseException):
+        dcp.load(target.state_dict(), storage_reader=reader, no_dist=True)
+    assert reader.stats["materialization"] is None
+    assert not (tmp_path / "refused.wcb.adapter.wcb").exists()
+
+    # The guard itself names the mismatch when called directly.
+    from weftcodec.materialization import (
+        MaterializationReceiptError,
+        emit_adapter_receipt,
+    )
+
+    with pytest.raises(MaterializationReceiptError) as excinfo:
+        emit_adapter_receipt(
+            store_root=store,
+            checkpoint="receiptrefuse",
+            rows=[
+                {
+                    "fqn": "bias",
+                    "tensor_name": "bias",
+                    "dtype": "f32",
+                    "shape": (16,),
+                    "bytes": 64,
+                    "sha256": b"\x00" * 32,
+                    "content_root": b"\x00" * 32,
+                }
+            ],
+            adapter="dcp",
+            producer="test",
+            receipt_path=tmp_path / "direct.wcb",
+            verify=False,
+        )
+    assert "sha256 mismatch" in str(excinfo.value)
+    assert not (tmp_path / "direct.wcb.adapter.wcb").exists()

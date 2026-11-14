@@ -743,6 +743,11 @@ enum Command {
         #[command(subcommand)]
         command: Option<CheckpointCommand>,
     },
+    /// Independently verify a materialization receipt against the store.
+    Receipt {
+        #[command(subcommand)]
+        command: ReceiptCommand,
+    },
     /// Choose a parent graph for an ordered checkpoint trajectory.
     ///
     /// Prices every earlier-version parent with the shipped tensor planner,
@@ -1384,6 +1389,31 @@ enum CheckpointCommand {
     Verify {
         #[arg(long)]
         name: String,
+    },
+    /// Re-read a checkpoint and write a canonical
+    /// `weft.materialization.receipt.v1` (per-tensor logical root, source
+    /// objects, bytes, destination offset, verification outcome).
+    Receipt {
+        #[arg(long)]
+        name: String,
+        /// Output file for the canonical WCB receipt.
+        #[arg(long = "out", value_name = "FILE")]
+        out: PathBuf,
+        /// Replica label recorded in the receipt.
+        #[arg(long, default_value = "local")]
+        replica: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum ReceiptCommand {
+    /// Independently verify a materialization receipt against the store,
+    /// optionally together with an adapter-binding receipt.
+    Verify {
+        #[arg(long = "receipt", value_name = "FILE")]
+        receipt: PathBuf,
+        #[arg(long = "adapter", value_name = "FILE")]
+        adapter: Option<PathBuf>,
     },
 }
 
@@ -3410,6 +3440,56 @@ fn run(cli: Cli) -> Result<()> {
             }
             Some(subcommand) => run_checkpoint(&store, json, policy, subcommand),
         },
+        Command::Receipt { command } => match command {
+            ReceiptCommand::Verify { receipt, adapter } => {
+                let bytes = fs::read(&receipt)
+                    .map_err(|err| Error::io(format!("{}: {err}", receipt.display())))?;
+                let adapter_bytes = match &adapter {
+                    Some(path) => Some(
+                        fs::read(path)
+                            .map_err(|err| Error::io(format!("{}: {err}", path.display())))?,
+                    ),
+                    None => None,
+                };
+                let store = open_store(&store, OpenMode::ReadOnly, policy)?;
+                let report = weftfs::materialization::verify_receipt(
+                    &store,
+                    &bytes,
+                    adapter_bytes.as_deref(),
+                )?;
+                let ok = report.ok();
+                if json {
+                    print_json(&json!({
+                        "receipt": receipt.display().to_string(),
+                        "adapter": adapter.map(|path| path.display().to_string()),
+                        "tensors_checked": report.tensors_checked,
+                        "objects_checked": report.objects_checked,
+                        "adapter_entries_checked": report.adapter_entries_checked,
+                        "mismatches": report.mismatches,
+                        "ok": ok,
+                    }))
+                    .ok();
+                } else {
+                    println!("receipt={}", receipt.display());
+                    println!("tensors_checked={}", report.tensors_checked);
+                    println!("objects_checked={}", report.objects_checked);
+                    println!("adapter_entries_checked={}", report.adapter_entries_checked);
+                    println!("mismatches={}", report.mismatches.len());
+                    for mismatch in &report.mismatches {
+                        println!("mismatch={mismatch}");
+                    }
+                    println!("ok={ok}");
+                }
+                if ok {
+                    Ok(())
+                } else {
+                    Err(Error::corrupt(format!(
+                        "materialization receipt verification found {} mismatch(es)",
+                        report.mismatches.len()
+                    )))
+                }
+            }
+        },
         Command::PlanParents {
             versions,
             max_depth,
@@ -5228,6 +5308,33 @@ fn run_checkpoint(
             } else {
                 println!("checkpoint={name}");
                 println!("tensors_verified={verified}");
+                Ok(())
+            }
+        }
+        CheckpointCommand::Receipt { name, out, replica } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let receipt = store.materialization_receipt(&name, &replica)?;
+            let bytes = receipt.encode()?;
+            fs::write(&out, &bytes)
+                .map_err(|err| Error::io(format!("{}: {err}", out.display())))?;
+            let root = receipt.root()?;
+            if json {
+                print_json(&json!({
+                    "checkpoint": receipt.checkpoint,
+                    "manifest_root": receipt.manifest_root.to_hex(),
+                    "manifest_id": receipt.manifest_id.to_hex(),
+                    "receipt_root": root.to_hex(),
+                    "set_root": receipt.set_root.to_hex(),
+                    "tensors": receipt.tensors.len(),
+                    "bytes_produced": receipt.bytes_produced,
+                    "objects_read": receipt.objects_read,
+                    "backend_bytes_read": receipt.backend_bytes_read,
+                    "wall_ms": receipt.wall_ms,
+                    "path": out.display().to_string(),
+                }))
+            } else {
+                println!("receipt_root={root}");
+                println!("{}", receipt.summary());
                 Ok(())
             }
         }

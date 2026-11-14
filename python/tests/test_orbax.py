@@ -560,3 +560,65 @@ finally:
     )
     assert proc.returncode == 0, proc.stderr
     assert proc.stdout.strip() == "OK"
+
+
+# ---------------------------------------------------------------------------
+# T059: materialization receipts on a real Orbax restore
+
+
+@requires
+def test_materialization_receipt_on_real_restore(store, sharding, tmp_path):
+    handler = wo.WeftOrbaxHandler(
+        weftfs_cli=WEFTFS_CLI,
+        staging_bytes=8 << 20,
+        materialization_receipt=tmp_path / "orbax-materialization.wcb",
+    )
+    try:
+        source = _shard(_tree(), sharding)
+        directory = tmp_path / "ckpt"
+        _save(handler, store, directory, "orbaxreceipt", source)
+
+        target = _target(source, sharding)
+        restored = handler.restore(directory, wo.WeftRestoreArgs(item=target))
+        _assert_exact(source, restored)
+
+        report = handler.stats["materialization"]
+        assert report is not None
+        assert report["schema"] == "weft.materialization.receipt.v1"
+        assert report["entries"] == len(wo.flatten_pytree(source))
+        assert report["verification"]["ok"] is True
+        adapter_path = Path(report["adapter_receipt"])
+        assert adapter_path.is_file()
+        adapter = wcb.decode(adapter_path.read_bytes())
+        assert adapter["schema"] == "weft.adapter.receipt.v1"
+        assert adapter["adapter"] == "orbax"
+
+        receipt_path = Path(report["materialization_receipt"])
+        value = wcb.decode(receipt_path.read_bytes())
+        for row in value["tensors"]:
+            assert row["source_objects"], row["name"]
+            assert row["destination"]["kind"] == "checkpoint-tensor"
+
+        proc = subprocess.run(
+            [
+                str(WEFTFS_CLI),
+                "--store",
+                str(store),
+                "--json",
+                "receipt",
+                "verify",
+                "--receipt",
+                str(receipt_path),
+                "--adapter",
+                str(adapter_path),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert proc.returncode == 0, proc.stderr
+        verified = json.loads(proc.stdout)
+        assert verified["ok"] is True
+        assert verified["adapter_entries_checked"] == report["entries"]
+    finally:
+        handler.close()

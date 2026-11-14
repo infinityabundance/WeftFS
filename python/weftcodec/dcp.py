@@ -59,6 +59,7 @@ from . import varint, wcb, wcb_fast
 from .errors import LimitExceeded
 from .hashing import content_root
 from .limits import Limits
+from .materialization import emit_adapter_receipt, tensor_digest
 from .service import (
     CheckpointService,
     ServiceError,
@@ -3272,6 +3273,8 @@ class WeftStorageReader(_StorageReaderBase):
         timeout=DEFAULT_TIMEOUT_SECONDS,
         allow_manifest_synthesis=True,
         import_restored=False,
+        materialization_receipt=None,
+        replica="dcp",
     ):
         self._path = _validate_checkpoint_id(path)
         self.store_root = Path(store_root)
@@ -3288,6 +3291,14 @@ class WeftStorageReader(_StorageReaderBase):
             )
         self._store = _Storage(self.store_root, cli=weftfs_cli, timeout=timeout)
         self._store.requires_store()
+        # Opt-in: after a read, bind every restored tensor to a store-derived
+        # `weft.materialization.receipt.v1` and run the independent verifier.
+        self.materialization_receipt = materialization_receipt or os.environ.get(
+            "WEFT_MATERIALIZATION_RECEIPT"
+        )
+        self._replica = str(replica)
+        self._materialization_rows = {}
+        self._materialization_report = None
         self._service_cli = _default_cli(weftfs_cli)
         self._timeout = float(timeout)
         self._service = None
@@ -3355,6 +3366,7 @@ class WeftStorageReader(_StorageReaderBase):
                 "service": (
                     None if self._service is None else dict(self._service.stats)
                 ),
+                "materialization": self._materialization_report,
             }
         )
         return payload
@@ -3369,6 +3381,8 @@ class WeftStorageReader(_StorageReaderBase):
             self._metadata_source = None
             self._storage_data = None
             self._stats = {"restores": 0, "entries_restored": 0, "restored_bytes": 0}
+            self._materialization_rows = {}
+            self._materialization_report = None
         return None
 
     def _resolve_storage_name(self):
@@ -3645,11 +3659,25 @@ class WeftStorageReader(_StorageReaderBase):
 
         entries = sorted(items_by_entry)
         handles = self._restore(entries)
+        restored_rows = {}
         try:
             for entry in entries:
                 info = items_by_entry[entry][0][1]
                 handle = handles[entry]
                 buffer = handle.buffer
+                if self.materialization_receipt:
+                    # `buffer.dtype` is the canonical (safetensors) spelling the
+                    # store recorded; `info.dtype` is the Torch spelling.
+                    digest = tensor_digest(
+                        buffer.view, buffer.dtype, tuple(buffer.shape)
+                    )
+                    for read_item, _info in items_by_entry[entry]:
+                        fqn = read_item.dest_index.fqn
+                        restored_rows[fqn] = {
+                            "fqn": fqn,
+                            "tensor_name": entry,
+                            **digest,
+                        }
                 for read_item, _info in items_by_entry[entry]:
                     item_type = getattr(read_item.type, "name", str(read_item.type))
                     if item_type == "BYTE_IO":
@@ -3682,6 +3710,20 @@ class WeftStorageReader(_StorageReaderBase):
                     del narrowed, base
         finally:
             self._release_handles(handles)
+            if self.materialization_receipt and restored_rows:
+                self._materialization_rows.update(restored_rows)
+                rows = list(self._materialization_rows.values())
+                self._materialization_report = emit_adapter_receipt(
+                    store_root=self.store_root,
+                    checkpoint=self._storage_name,
+                    rows=rows,
+                    adapter="dcp",
+                    producer="weftcodec.dcp",
+                    receipt_path=self.materialization_receipt,
+                    replica=self._replica,
+                    cli=self._service_cli,
+                    timeout=self._timeout,
+                )
 
 
 # ---------------------------------------------------------------------------

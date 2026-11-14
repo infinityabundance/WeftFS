@@ -64,6 +64,7 @@ from .dcp import (
     verify_checkpoint,
 )
 from .hashing import content_root
+from .materialization import emit_adapter_receipt, tensor_digest
 from .service import CheckpointService, ServiceError
 from .dcp import _default_cli
 
@@ -796,6 +797,8 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         max_workers=1,
         weftfs_cli=None,
         timeout=DEFAULT_TIMEOUT_SECONDS,
+        materialization_receipt=None,
+        replica="orbax",
     ):
         staging_bytes = int(staging_bytes)
         if staging_bytes <= 0:
@@ -814,6 +817,13 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         self._service_root = None
         self._lock = threading.RLock()
         self._last_result = None
+        self._materialization_report = None
+        self._replica = str(replica)
+        # Opt-in: emit a store-derived materialization receipt and an adapter
+        # binding after a full-tree restore, then run the independent verifier.
+        self.materialization_receipt = materialization_receipt or os.environ.get(
+            "WEFT_MATERIALIZATION_RECEIPT"
+        )
         self._stats = {
             "saves": 0,
             "restores": 0,
@@ -843,6 +853,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         if result is not None:
             payload["last_save"] = result.stats()
         payload["staging_bytes"] = self.staging_bytes
+        payload["materialization"] = self._materialization_report
         return payload
 
     @property
@@ -1154,6 +1165,7 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
         all_entries = metadata.by_entry()
         full = len(wanted) == len(all_entries)
         buffers = {}
+        restored_rows = {}
         try:
             for leaf in wanted:
                 try:
@@ -1178,6 +1190,14 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                         "leaf %r restored content root %s != recorded %s"
                         % (leaf.path, actual.hex(), leaf.content_root.hex())
                     )
+                if self.materialization_receipt:
+                    restored_rows[leaf.path] = {
+                        "fqn": leaf.path,
+                        "tensor_name": leaf.entry,
+                        **tensor_digest(
+                            buffer.view, leaf.dtype, tuple(buffer.shape)
+                        ),
+                    }
                 buffers[leaf.entry] = buffer
             _record_restore_stats(
                 self, len(wanted), sum(buffer.size for buffer in buffers.values())
@@ -1192,6 +1212,18 @@ class WeftOrbaxHandler(_AsyncCheckpointHandler):
                         shape=leaf_meta.shape,
                         target=target_leaf,
                     )
+                )
+            if self.materialization_receipt and restored_rows:
+                self._materialization_report = emit_adapter_receipt(
+                    store_root=_pointer["store_root"],
+                    checkpoint=storage_name,
+                    rows=list(restored_rows.values()),
+                    adapter="orbax",
+                    producer="weftcodec.orbax",
+                    receipt_path=self.materialization_receipt,
+                    replica=self._replica,
+                    cli=self._service_cli,
+                    timeout=self.timeout,
                 )
             return _JAX.tree_util.tree_unflatten(_treedef(target), restored_leaves)
         finally:

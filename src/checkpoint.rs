@@ -3259,6 +3259,176 @@ impl Store {
         })
     }
 
+    /// Re-read every stored shard and recompute every root, producing the rows
+    /// a `weft.materialization.receipt.v1` is built from.
+    ///
+    /// The emitter and the offline verifier share this derivation, so a
+    /// receipt is checked against the store by exactly the code that wrote it,
+    /// in a separate process and with fresh reads. Nothing in the receipt is a
+    /// root of trust: every field is recomputed first.
+    ///
+    /// Returns the manifest, its identity, the manifest object id, and rows in
+    /// container order.
+    #[allow(clippy::type_complexity)]
+    pub fn derive_materialization_rows(
+        &self,
+        name: &str,
+    ) -> Result<(
+        CheckpointManifest,
+        Hash32,
+        Hash32,
+        Vec<crate::materialization::MaterializationTensor>,
+    )> {
+        use crate::materialization::{MaterializationObject, MaterializationTensor};
+
+        let (manifest_id, manifest) = self.load_checkpoint_with_id(name)?;
+        let manifest_root = manifest.root()?;
+        let limits = Limits::default();
+        let tiles = crate::parallel::TileDecodeOptions::default();
+        let mut rows = Vec::with_capacity(manifest.tensors.len());
+        for tensor in &manifest.tensors {
+            let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+            let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+                Error::unsupported_version(format!(
+                    "tensor `{}` dtype `{}` has no physical layout",
+                    tensor.name, tensor.dtype
+                ))
+            })?;
+            let mut shards: Vec<&CheckpointShard> = tensor.shards.iter().collect();
+            shards.sort_by_key(|shard| shard.index);
+            let mut payloads = Vec::with_capacity(shards.len());
+            let mut objects = Vec::with_capacity(shards.len());
+            for shard in &shards {
+                let (bytes, _units) =
+                    self.read_shard(name, tensor, shard, None, None, false, &tiles)?;
+                if bytes.len() as u64 != shard.byte_len {
+                    return Err(context(
+                        &tensor.name,
+                        shard,
+                        Error::corrupt(format!(
+                            "shard payload is {} bytes but the manifest records {}",
+                            bytes.len(),
+                            shard.byte_len
+                        )),
+                    ));
+                }
+                let shard_content = identity::content_hash(&bytes);
+                if shard_content != shard.content_root {
+                    return Err(context(
+                        &tensor.name,
+                        shard,
+                        Error::corrupt("shard content root mismatch"),
+                    ));
+                }
+                let shard_shape =
+                    tc::shard_shape(&tensor.shape, shard.axis, shard.shards, shard.index)?;
+                let shard_root = tc::logical_root(physical, &shard_shape, &bytes, &limits)?;
+                if shard_root != shard.logical_root {
+                    return Err(context(
+                        &tensor.name,
+                        shard,
+                        Error::corrupt("shard logical root mismatch"),
+                    ));
+                }
+                objects.push(MaterializationObject {
+                    index: shard.index,
+                    object_name: shard.object_name.clone(),
+                    object_id: shard.object_id,
+                    content_root: shard_content,
+                    logical_root: shard_root,
+                    byte_len: shard.byte_len,
+                });
+                payloads.push(bytes);
+            }
+            let bytes = PhysicalTensor::sharded(
+                physical,
+                &tensor.shape,
+                tensor.shards[0].axis,
+                payloads,
+                &limits,
+            )?
+            .assemble_with_limits(&limits)?;
+            if bytes.len() as u64 != tensor.element_bytes {
+                return Err(Error::corrupt(format!(
+                    "checkpoint tensor `{}` reassembled to {} bytes, manifest records {}",
+                    tensor.name,
+                    bytes.len(),
+                    tensor.element_bytes
+                )));
+            }
+            let content_root = identity::content_hash(&bytes);
+            if content_root != tensor.content_root {
+                return Err(Error::corrupt(format!(
+                    "checkpoint tensor `{}` content root mismatch after reassembly",
+                    tensor.name
+                )));
+            }
+            let logical_root = tc::logical_root(physical, &tensor.shape, &bytes, &limits)?;
+            if logical_root != tensor.logical_root {
+                return Err(Error::corrupt(format!(
+                    "checkpoint tensor `{}` logical root mismatch after reassembly",
+                    tensor.name
+                )));
+            }
+            rows.push(MaterializationTensor {
+                name: tensor.name.clone(),
+                dtype: tensor.dtype.clone(),
+                shape: tensor.shape.clone(),
+                logical_root,
+                content_root,
+                sha256: safetensors::sha256(&bytes),
+                bytes: bytes.len() as u64,
+                source_objects: objects,
+                destination_offset: tensor.source_offset,
+                shard_count: u32::try_from(tensor.shards.len())
+                    .map_err(|_| Error::corrupt("shard count does not fit u32"))?,
+                verification: "exact".to_owned(),
+            });
+        }
+        Ok((manifest, manifest_root, manifest_id, rows))
+    }
+
+    /// Produce a `weft.materialization.receipt.v1` for a checkpoint by
+    /// re-reading it from the store.
+    pub fn materialization_receipt(
+        &self,
+        name: &str,
+        replica: &str,
+    ) -> Result<crate::materialization::MaterializationReceipt> {
+        use crate::materialization::MaterializationReceipt;
+
+        let started = std::time::Instant::now();
+        let before = self.backend_stats();
+        let (manifest, manifest_root, manifest_id, mut rows) =
+            self.derive_materialization_rows(name)?;
+        rows.sort_by(|a, b| a.name.cmp(&b.name));
+        let after = self.backend_stats();
+        let delta = after.delta_since(&before);
+        let set_root = MaterializationReceipt::roster_root(
+            &rows
+                .iter()
+                .map(|row| (row.name.clone(), row.logical_root))
+                .collect::<Vec<_>>(),
+        )?;
+        let bytes_produced: u64 = rows.iter().map(|row| row.bytes).sum();
+        let source_sha256 = manifest.source_sha256.as_ref().map(|digest| *digest);
+        Ok(MaterializationReceipt {
+            checkpoint: name.to_owned(),
+            manifest_root,
+            manifest_id,
+            replica: replica.to_owned(),
+            tensors: rows,
+            set_root,
+            bytes_produced,
+            objects_read: delta.reads + delta.range_reads,
+            backend_bytes_read: delta.bytes_read,
+            store_reads: delta.reads + delta.range_reads,
+            wall_ms: started.elapsed().as_millis() as u64,
+            source_file_bytes: manifest.source_file_bytes,
+            source_sha256,
+        })
+    }
+
     /// Restore exactly one named tensor's payload from a manifest the caller
     /// already loaded.
     ///
