@@ -10213,9 +10213,21 @@ impl Store {
         // The same clock slack the floor uses. A blob published just after the
         // acquisition can carry an mtime truncated below it; treating the cut
         // as `acquired - slack` retains that blob instead of reclaiming it.
+        //
+        // Only modes with a concurrent publisher need that tolerance. A
+        // single-writer pass holds the exclusive writer lock, so no publication
+        // can be in flight while it marks and sweeps; the exact acquisition
+        // instant is then the correct cut and a freshly unlinked blob is
+        // reclaimable immediately. Applying the slack unconditionally made a
+        // single-writer sweep silently skip every blob younger than 1 s.
+        let concurrent_publishers =
+            sharded || self.options.writer_mode == crate::mw2::WriterMode::Optimistic;
         let cut = CollectUnmarkedCut {
-            acquired_ns: acquired_ns
-                .saturating_sub(crate::gc_epoch::ReservationView::CLOCK_SLACK_NS),
+            acquired_ns: if concurrent_publishers {
+                acquired_ns.saturating_sub(crate::gc_epoch::ReservationView::CLOCK_SLACK_NS)
+            } else {
+                acquired_ns
+            },
             floor_ns: view.floor_ns,
         };
 
