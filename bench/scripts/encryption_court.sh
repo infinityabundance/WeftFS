@@ -32,9 +32,32 @@ fi
 echo "== encryption store suite ==" | tee -a "$log"
 cargo test --test encryption >>"$log" 2>&1
 
+echo "== encryption CLI smoke (flags, wrong key, no key, ciphertext on disk) ==" | tee -a "$log"
+cargo build --release --bin weftfs >>"$log" 2>&1
+target="${CARGO_TARGET_DIR:-$root/.docker-cache/target-rust}"
+cli="$target/release/weftfs"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+key="$(printf 'ab%.0s' {1..32})"
+wrong="$(printf 'cd%.0s' {1..32})"
+printf 'hello encrypted world' > "$work/plain.bin"
+"$cli" --store "$work/store" init --encryption-key-hex "$key" --encryption-mode convergent >>"$log" 2>&1
+"$cli" --store "$work/store" write /a.bin --file "$work/plain.bin" --encryption-key-hex "$key" >>"$log" 2>&1
+read_back="$("$cli" --store "$work/store" cat /a.bin --encryption-key-hex "$key")"
+[[ "$read_back" == "hello encrypted world" ]] || { echo "encryption: CLI round trip mismatch" >&2; exit 1; }
+"$cli" --store "$work/store" verify --full --encryption-key-hex "$key" >>"$log" 2>&1 || { echo "encryption: verify --full failed" >&2; exit 1; }
+"$cli" --store "$work/store" info --json --encryption-key-hex "$key" >>"$log" 2>&1 || { echo "encryption: info failed" >&2; exit 1; }
+if "$cli" --store "$work/store" cat /a.bin --encryption-key-hex "$wrong" >>"$log" 2>&1; then
+  echo "encryption: a wrong key read succeeded" >&2; exit 1
+fi
+if "$cli" --store "$work/store" cat /a.bin >>"$log" 2>&1; then
+  echo "encryption: a keyless read succeeded" >&2; exit 1
+fi
+first_object="$(find "$work/store/objects" -type f | head -1)"
+[[ "$(head -c 6 "$first_object")" == "WEFTE1" ]] || { echo "encryption: an object is not enveloped" >&2; exit 1; }
+echo "CLI smoke: round trip exact, verify --full ok, wrong key refused, keyless read refused, object carries WEFTE1" >>"$log"
 echo "== encryption interleaved cost bench ==" | tee -a "$log"
 cargo build --release --example encryption_bench >>"$log" 2>&1
-target="${CARGO_TARGET_DIR:-$root/.docker-cache/target-rust}"
 "$target/release/examples/encryption_bench" --out "$receipt" --reps "${WEFT_ENCRYPTION_REPS:-7}" \
   >>"$log" 2>&1
 
