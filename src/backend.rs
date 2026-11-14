@@ -109,6 +109,13 @@ pub enum KeyKind {
     DomainIndex,
     /// `domains/<id>/link`: an MW3 split/supersede link record (specified).
     DomainLink,
+    /// `gc/epoch`: the multi-writer GC epoch control record (subphase T024).
+    GcEpoch,
+    /// `gc/reservations/<tx id>`: a writer's pre-publication reservation
+    /// (subphase T024).
+    Reservation,
+    /// `gc/runs/<run id>`: one completed GC run, kept for audit only.
+    GcRun,
 }
 
 impl KeyKind {
@@ -139,6 +146,9 @@ impl KeyKind {
             KeyKind::DomainCommit => "domain-commit",
             KeyKind::DomainIndex => "domain-index",
             KeyKind::DomainLink => "domain-link",
+            KeyKind::GcEpoch => "gc-epoch",
+            KeyKind::Reservation => "reservation",
+            KeyKind::GcRun => "gc-run",
         }
     }
 }
@@ -210,6 +220,16 @@ pub enum Key {
     /// An MW3 domain link record (`domains/<id>/link`).
     DomainLink {
         domain: Hash32,
+    },
+    /// The multi-writer GC epoch record (`gc/epoch`).
+    GcEpoch,
+    /// One publication reservation (`gc/reservations/<tx id>`).
+    Reservation {
+        tx_id: String,
+    },
+    /// One completed GC run record (`gc/runs/<run id>`).
+    GcRun {
+        run_id: String,
     },
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
@@ -322,6 +342,25 @@ impl Key {
         Key::DomainLink { domain }
     }
 
+    /// The multi-writer GC epoch control record.
+    pub fn gc_epoch() -> Key {
+        Key::GcEpoch
+    }
+
+    /// One publication reservation.
+    pub fn reservation(tx_id: impl Into<String>) -> Key {
+        Key::Reservation {
+            tx_id: tx_id.into(),
+        }
+    }
+
+    /// One completed GC run record.
+    pub fn gc_run(run_id: impl Into<String>) -> Key {
+        Key::GcRun {
+            run_id: run_id.into(),
+        }
+    }
+
     pub fn prefix(kind: KeyKind) -> Key {
         Key::Prefix(kind)
     }
@@ -351,6 +390,9 @@ impl Key {
             Key::DomainCommit { .. } => KeyKind::DomainCommit,
             Key::DomainIndex => KeyKind::DomainIndex,
             Key::DomainLink { .. } => KeyKind::DomainLink,
+            Key::GcEpoch => KeyKind::GcEpoch,
+            Key::Reservation { .. } => KeyKind::Reservation,
+            Key::GcRun { .. } => KeyKind::GcRun,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -388,6 +430,8 @@ impl Key {
             | Key::PackCatalog { .. }
             | Key::PackCatalogRoot => None,
             Key::Tx { id } => Some(id),
+            Key::Reservation { tx_id } => Some(tx_id),
+            Key::GcRun { run_id } => Some(run_id),
             Key::SnapshotRef { name } | Key::Tag { name } | Key::Tmp { name } => Some(name),
             Key::Other { name, .. } => Some(name),
             _ => None,
@@ -440,6 +484,9 @@ impl Key {
             }
             Key::DomainIndex => "domains.root".to_owned(),
             Key::DomainLink { domain } => format!("domains/{}/link", domain.to_hex()),
+            Key::GcEpoch => "gc/epoch".to_owned(),
+            Key::Reservation { tx_id } => format!("gc/reservations/{tx_id}"),
+            Key::GcRun { run_id } => format!("gc/runs/{run_id}"),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -463,6 +510,9 @@ pub(crate) fn list_prefix_path(kind: KeyKind) -> Option<&'static str> {
         KeyKind::Pack => Some("packs/"),
         KeyKind::PackCatalog => Some("pack-catalog/"),
         KeyKind::Tx => Some("txs/"),
+        KeyKind::DomainSuperblock => Some("domains/"),
+        KeyKind::Reservation => Some("gc/reservations/"),
+        KeyKind::GcRun => Some("gc/runs/"),
         _ => None,
     }
 }
@@ -495,6 +545,8 @@ pub(crate) fn classify_listed_key(kind: KeyKind, relative: &str) -> Option<Key> 
             Some(Key::index(commit))
         }
         KeyKind::Tx => Some(Key::tx(relative.to_owned())),
+        KeyKind::Reservation => Some(Key::reservation(relative.to_owned())),
+        KeyKind::GcRun => Some(Key::gc_run(relative.to_owned())),
         KeyKind::Commit => {
             let stem = relative.strip_suffix(".commit")?;
             if stem.is_empty() || !stem.bytes().all(|byte| byte.is_ascii_digit()) {
@@ -505,6 +557,13 @@ pub(crate) fn classify_listed_key(kind: KeyKind, relative: &str) -> Option<Key> 
         KeyKind::SnapshotRef => Some(Key::snapshot_ref(relative)),
         KeyKind::Tag => Some(Key::tag(relative)),
         KeyKind::Tmp => Some(Key::tmp(relative)),
+        KeyKind::DomainSuperblock => {
+            let (id, name) = relative.split_once('/')?;
+            if name != "superblock" {
+                return None;
+            }
+            Some(Key::domain_superblock(Hash32::from_lower_hex(id).ok()?))
+        }
         KeyKind::Access => match relative {
             "counts.v1" => Some(Key::access_counts()),
             "journal.v1" => Some(Key::access_journal()),
@@ -1924,6 +1983,9 @@ impl LocalBackend {
             Key::DomainLink { domain } => {
                 self.root.join("domains").join(domain.to_hex()).join("link")
             }
+            Key::GcEpoch => self.root.join("gc").join("epoch"),
+            Key::Reservation { tx_id } => self.root.join("gc").join("reservations").join(tx_id),
+            Key::GcRun { run_id } => self.root.join("gc").join("runs").join(run_id),
             Key::Prefix(_) | Key::Other { .. } => self.root.clone(),
         }
     }
@@ -1950,6 +2012,9 @@ impl LocalBackend {
             KeyKind::DomainCommit => Some(self.root.join("domains")),
             KeyKind::DomainIndex => Some(self.root.clone()),
             KeyKind::DomainLink => Some(self.root.join("domains")),
+            KeyKind::GcEpoch => Some(self.root.join("gc")),
+            KeyKind::Reservation => Some(self.root.join("gc").join("reservations")),
+            KeyKind::GcRun => Some(self.root.join("gc").join("runs")),
             _ => None,
         }
     }
@@ -2399,6 +2464,7 @@ impl StorageBackend for LocalBackend {
                 | KeyKind::Index
                 | KeyKind::Pack
                 | KeyKind::PackCatalog
+                | KeyKind::DomainSuperblock
         );
         let entries = match fs::read_dir(&dir) {
             Ok(entries) => entries,
@@ -2639,6 +2705,13 @@ impl StorageBackend for LocalBackend {
 
 fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
     match kind {
+        KeyKind::DomainSuperblock => {
+            if name != "superblock" {
+                return None;
+            }
+            let domain = Hash32::from_lower_hex(shard).ok()?;
+            Some(Key::domain_superblock(domain))
+        }
         KeyKind::Object | KeyKind::Manifest => {
             let hash = Hash32::from_lower_hex(name).ok()?;
             if &hash.to_hex()[0..2] != shard {
@@ -2669,6 +2742,8 @@ fn classify_local(kind: KeyKind, shard: &str, name: &str) -> Option<Key> {
         KeyKind::Tag => Some(Key::tag(name)),
         KeyKind::Tmp => Some(Key::tmp(name)),
         KeyKind::Tx => Some(Key::tx(name)),
+        KeyKind::Reservation => Some(Key::reservation(name)),
+        KeyKind::GcRun => Some(Key::gc_run(name)),
         KeyKind::Quota => {
             if name == "quota" {
                 Some(Key::quota())
@@ -2774,6 +2849,9 @@ impl ObjectBackend {
             }
             Key::DomainIndex => "domains.root".to_owned(),
             Key::DomainLink { domain } => format!("dl-{}", domain.to_hex()),
+            Key::GcEpoch => "gc-epoch".to_owned(),
+            Key::Reservation { tx_id } => format!("gr-{tx_id}"),
+            Key::GcRun { run_id } => format!("gg-{run_id}"),
             Key::PackCatalogRoot | Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
     }

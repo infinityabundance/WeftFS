@@ -46,6 +46,7 @@ pub(crate) mod fence_pause;
 pub mod format;
 #[cfg(feature = "fuse")]
 pub mod fuse;
+pub mod gc_epoch;
 pub mod gcs;
 pub mod identity;
 pub(crate) mod index;

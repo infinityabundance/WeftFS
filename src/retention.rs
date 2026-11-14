@@ -1123,6 +1123,7 @@ impl Store {
             &reach.manifests,
             now,
             grace,
+            None,
             &mut collector,
         )?);
         raw.extend(collect_unmarked(
@@ -1131,6 +1132,7 @@ impl Store {
             &reach.chunks,
             now,
             grace,
+            None,
             &mut collector,
         )?);
         plan.problems.extend(collector.problems);

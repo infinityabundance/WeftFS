@@ -163,6 +163,11 @@ fn open_driver(
     backend: &str,
     args: &[String],
 ) -> Store {
+    // `--writer-mode` overrides the caller's default (T024 needs a global
+    // sharded administration handle, which has no domain).
+    let writer_mode = arg(args, "--writer-mode")
+        .and_then(|text| WriterMode::parse(&text).ok())
+        .unwrap_or(writer_mode);
     // `--domain` selects an MW3 conflict domain; the writer mode is then
     // `sharded`. Nothing is upgraded silently: the caller passes the domain.
     match domain_arg(args) {
@@ -223,6 +228,35 @@ fn arm_ambiguous_exit() {
 
 fn error_report(err: &weftfs::Error) -> serde_json::Value {
     serde_json::json!({"ok": false, "class": err.class().as_str(), "error": err.to_string()})
+}
+
+/// The full T024 GC report, as the court records it.
+fn gc_report_json(store: &Store, report: &weftfs::store::GcReport) -> serde_json::Value {
+    serde_json::json!({
+        "ok": true,
+        "applied": report.applied,
+        "marked_chunks": report.marked_chunks,
+        "marked_manifests": report.marked_manifests,
+        "candidates": report.candidates.len(),
+        "deleted": report.deleted.len(),
+        "deleted_bytes": report.deleted_bytes,
+        "deleted_indexes": report.deleted_indexes.len(),
+        "deleted_index_bytes": report.deleted_index_bytes,
+        "reclaimed_packs": report.reclaimed_packs,
+        "reclaimed_pack_bytes": report.reclaimed_pack_bytes,
+        "removed_orphans": report.removed_orphans.len(),
+        "retained": report.retained,
+        "gc_epoch": report.gc_epoch,
+        "gc_run_id": report.gc_run_id,
+        "reservations_live": report.reservations_live,
+        "reservation_floor_ns": report.reservation_floor_ns,
+        "retained_newer_than_cut": report.retained_newer_than_cut,
+        "retained_reservation_floor": report.retained_reservation_floor,
+        "deleted_reservations": report.deleted_reservations,
+        "domain_heads_marked": report.domain_heads_marked,
+        "problems": report.problems,
+        "generation": store.generation(),
+    })
 }
 
 /// Read one named file from a held handle without refreshing its head.
@@ -392,6 +426,10 @@ fn main() {
             let pause_ms: u64 = arg(&args, "--pause-before-execute-ms")
                 .and_then(|text| text.parse().ok())
                 .unwrap_or(0);
+            // T024: take a publication reservation before publishing each
+            // transaction's blobs. Opt-in so the pre-existing performance
+            // courts keep their measured path unchanged.
+            let reserve = args.iter().any(|value| value == "--reserve");
             let (cpu_user0, cpu_sys0) = cpu_ms();
             let mut store = open_driver(
                 &store_path,
@@ -420,6 +458,21 @@ fn main() {
                 };
                 let content = format!("{writer}:{index}");
                 let seed = format!("{writer}:{index}:seed");
+                let tx_id = match (&explicit_tx, count) {
+                    (Some(id), 1) => id.clone(),
+                    _ => identity::h("weft/tx/id/v1", format!("{writer}:{index}").as_bytes())
+                        .to_hex()[..32]
+                        .to_owned(),
+                };
+                let reservation = if reserve {
+                    Some(
+                        store
+                            .reserve_publication(&tx_id)
+                            .expect("publication reservation"),
+                    )
+                } else {
+                    None
+                };
                 let prepare_started = Instant::now();
                 let (manifest, _, size) =
                     store.prepare_content(content.as_bytes()).expect("content");
@@ -446,12 +499,6 @@ fn main() {
                     parent: State::ROOT_ID,
                     name: name.as_bytes().to_vec(),
                     target: object_id,
-                };
-                let tx_id = match (&explicit_tx, count) {
-                    (Some(id), 1) => id.clone(),
-                    _ => identity::h("weft/tx/id/v1", format!("{writer}:{index}").as_bytes())
-                        .to_hex()[..32]
-                        .to_owned(),
                 };
                 let mut tx = store.begin_transaction(tx_id).expect("begin");
                 {
@@ -482,6 +529,15 @@ fn main() {
                 }
                 if let Some(file) = latency_file.as_mut() {
                     let _ = writeln!(file, "{}", commit_started.elapsed().as_nanos());
+                }
+                // T024 protocol: the reservation is released only after the
+                // commit is durable. Releasing before publication would leave a
+                // window in which a pass sees neither the reservation nor the
+                // commit.
+                if let Some(reservation) = &reservation {
+                    if let Err(err) = store.release_reservation(reservation) {
+                        errors.push(format!("release reservation: {err}"));
+                    }
                 }
                 match outcome {
                     Ok(outcome) => {
@@ -766,23 +822,293 @@ fn main() {
                 &args,
             );
             match store.gc(apply) {
-                Ok(report) => println!(
-                    "{}",
-                    serde_json::json!({
-                        "ok": true,
-                        "applied": report.applied,
-                        "marked_chunks": report.marked_chunks,
-                        "marked_manifests": report.marked_manifests,
-                        "candidates": report.candidates.len(),
-                        "deleted": report.deleted.len(),
-                        "deleted_bytes": report.deleted_bytes,
-                        "deleted_index_bytes": report.deleted_index_bytes,
-                        "removed_orphans": report.removed_orphans.len(),
-                        "generation": store.generation(),
-                    })
-                ),
+                Ok(report) => println!("{}", gc_report_json(&store, &report)),
                 Err(err) => println!("{}", error_report(&err)),
             }
+        }
+        "gc-loop" => {
+            let count: u64 = arg(&args, "--count")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(10);
+            let interval_ms: u64 = arg(&args, "--interval-ms")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(0);
+            let mut store = open_driver(
+                &store_path,
+                OpenMode::ReadWrite,
+                WriterMode::Optimistic,
+                now,
+                &backend_name,
+                &args,
+            );
+            let mut passes = 0u64;
+            let mut deleted = 0u64;
+            let mut deleted_bytes = 0u64;
+            let mut retained_newer = 0u64;
+            let mut retained_floor = 0u64;
+            let mut errors = Vec::new();
+            let mut epochs = Vec::new();
+            for _ in 0..count {
+                match store.gc(true) {
+                    Ok(report) => {
+                        passes += 1;
+                        deleted += report.deleted.len() as u64;
+                        deleted_bytes += report.deleted_bytes;
+                        retained_newer += report.retained_newer_than_cut;
+                        retained_floor += report.retained_reservation_floor;
+                        epochs.push(report.gc_epoch);
+                    }
+                    Err(err) => {
+                        errors.push(err.to_string());
+                        break;
+                    }
+                }
+                if interval_ms > 0 {
+                    std::thread::sleep(std::time::Duration::from_millis(interval_ms));
+                }
+            }
+            println!(
+                "{}",
+                serde_json::json!({
+                    "ok": errors.is_empty(),
+                    "passes": passes,
+                    "deleted": deleted,
+                    "deleted_bytes": deleted_bytes,
+                    "retained_newer_than_cut": retained_newer,
+                    "retained_reservation_floor": retained_floor,
+                    "epochs": epochs,
+                    "errors": errors,
+                })
+            );
+        }
+        "reserve-write" => {
+            // A writer that reserves, publishes its blobs, and only then builds
+            // the transaction record. `--ready` is touched after the blob is
+            // published and `--gate` is waited for before the record is
+            // written, so a court can run a GC pass inside that window.
+            let writer = arg(&args, "--writer").unwrap_or_else(|| "w0".to_owned());
+            let name = arg(&args, "--name").unwrap_or_else(|| "reserved.bin".to_owned());
+            let content = arg(&args, "--content").unwrap_or_else(|| "reserved".to_owned());
+            let seed = arg(&args, "--seed").unwrap_or_else(|| "reserved-seed".to_owned());
+            let tx_id = arg(&args, "--tx-id")
+                .unwrap_or_else(|| "0000000000000000000000000000beef".to_owned());
+            let hold_ms: u64 = arg(&args, "--hold-ms")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(30_000);
+            let mut store = open_driver(
+                &store_path,
+                OpenMode::ReadWrite,
+                WriterMode::Optimistic,
+                now,
+                &backend_name,
+                &args,
+            );
+            let reservation = store.reserve_publication(&tx_id).expect("reservation");
+            let (manifest, _, size) = store.prepare_content(content.as_bytes()).expect("content");
+            if let Some(path) = arg(&args, "--ready") {
+                std::fs::write(&path, b"published\n").expect("ready file");
+            }
+            if let Some(gate) = arg(&args, "--gate") {
+                let deadline = Instant::now() + std::time::Duration::from_millis(hold_ms);
+                while !std::path::Path::new(&gate).exists() {
+                    if Instant::now() > deadline {
+                        println!(
+                            "{}",
+                            serde_json::json!({"ok": false, "error": "gate timeout"})
+                        );
+                        std::process::exit(3);
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+            }
+            let object_id = identity::object_id_from_seed(seed.as_bytes());
+            let version = derive_version_id(object_id, manifest, size, now, None).expect("version");
+            let record = ObjectRecord {
+                id: object_id,
+                kind: ObjectKind::File,
+                mode: 0o644,
+                uid: 0,
+                gid: 0,
+                mtime_ns: now,
+                version,
+                content: manifest,
+                size,
+                attrs: BTreeMap::new(),
+            };
+            let entry = EntryRecord {
+                id: derive_entry_id(State::ROOT_ID, name.as_bytes()).expect("entry id"),
+                parent: State::ROOT_ID,
+                name: name.as_bytes().to_vec(),
+                target: object_id,
+            };
+            let mut tx = store.begin_transaction(&tx_id).expect("begin");
+            {
+                let state = store.current_state();
+                tx.put_object_create(record).expect("put object");
+                tx.put_entry_create(entry).expect("put entry");
+                tx.set_tip(state, object_id, version).expect("tip");
+            }
+            let outcome = store
+                .execute_transaction(&tx, &TransactionOptions::default())
+                .expect("execute");
+            // Release only after the commit is durable (T024 protocol).
+            store
+                .release_reservation(&reservation)
+                .expect("release reservation");
+            let read_back = read_named(&store, &name);
+            println!(
+                "{}",
+                serde_json::json!({
+                    "ok": true,
+                    "writer": writer,
+                    "manifest": hex(manifest),
+                    "content_hash": hex(identity::content_hash(content.as_bytes())),
+                    "generation": outcome.generation,
+                    "read": read_back,
+                })
+            );
+        }
+        "garbage" => {
+            // Create `count` files and then replace each with different content,
+            // leaving the previous versions unreachable but present on disk.
+            let writer = arg(&args, "--writer").unwrap_or_else(|| "g".to_owned());
+            let count: u64 = arg(&args, "--count")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(8);
+            let mut store = open_driver(
+                &store_path,
+                OpenMode::ReadWrite,
+                WriterMode::Optimistic,
+                now,
+                &backend_name,
+                &args,
+            );
+            let mut replaced = 0u64;
+            for index in 0..count {
+                let name = writer.clone() + "-g-" + &format!("{index:06}");
+                let first = format!("garbage-{index}-first");
+                let second = format!("garbage-{index}-second");
+                let (manifest, _, size) = store.prepare_content(first.as_bytes()).expect("v1");
+                let object_id =
+                    identity::object_id_from_seed(format!("{writer}:g:{index}").as_bytes());
+                let version =
+                    derive_version_id(object_id, manifest, size, now, None).expect("version");
+                let record = ObjectRecord {
+                    id: object_id,
+                    kind: ObjectKind::File,
+                    mode: 0o644,
+                    uid: 0,
+                    gid: 0,
+                    mtime_ns: now,
+                    version,
+                    content: manifest,
+                    size,
+                    attrs: BTreeMap::new(),
+                };
+                let entry = EntryRecord {
+                    id: derive_entry_id(State::ROOT_ID, name.as_bytes()).expect("entry"),
+                    parent: State::ROOT_ID,
+                    name: name.as_bytes().to_vec(),
+                    target: object_id,
+                };
+                let tx_id = identity::h(
+                    "weft/tx/id/v1",
+                    format!("{writer}:garbage:a:{index}").as_bytes(),
+                )
+                .to_hex()[..32]
+                    .to_owned();
+                let mut tx = store.begin_transaction(tx_id).expect("begin");
+                {
+                    tx.put_object_create(record.clone()).expect("put");
+                    tx.put_entry_create(entry).expect("entry");
+                    tx.set_tip(store.current_state(), object_id, version)
+                        .expect("tip");
+                }
+                store
+                    .execute_transaction(&tx, &TransactionOptions::default())
+                    .expect("execute v1");
+
+                let (manifest2, _, size2) = store.prepare_content(second.as_bytes()).expect("v2");
+                let version2 =
+                    derive_version_id(object_id, manifest2, size2, now + 1, None).expect("v2");
+                let mut record2 = record;
+                record2.content = manifest2;
+                record2.size = size2;
+                record2.version = version2;
+                record2.mtime_ns = now + 1;
+                let tx_id2 = identity::h(
+                    "weft/tx/id/v1",
+                    format!("{writer}:garbage:b:{index}").as_bytes(),
+                )
+                .to_hex()[..32]
+                    .to_owned();
+                let mut tx2 = store.begin_transaction(tx_id2).expect("begin");
+                {
+                    tx2.put_object(store.current_state(), record2)
+                        .expect("put2");
+                    tx2.set_tip(store.current_state(), object_id, version2)
+                        .expect("tip2");
+                }
+                store
+                    .execute_transaction(&tx2, &TransactionOptions::default())
+                    .expect("execute v2");
+                replaced += 1;
+            }
+            println!(
+                "{}",
+                serde_json::json!({"ok": true, "writer": writer, "replaced": replaced})
+            );
+        }
+        "read-loop" => {
+            // Repeated whole-file reads for a concurrent-reader court. Reports
+            // every read that returned wrong bytes, not just the last one.
+            let writer = arg(&args, "--writer").unwrap_or_else(|| "w0".to_owned());
+            let count: u64 = arg(&args, "--count")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(10);
+            let rounds: u64 = arg(&args, "--rounds")
+                .and_then(|text| text.parse().ok())
+                .unwrap_or(20);
+            let store = open_driver(
+                &store_path,
+                OpenMode::ReadOnly,
+                WriterMode::Optimistic,
+                now,
+                &backend_name,
+                &args,
+            );
+            let mut reads = 0u64;
+            let mut absent = 0u64;
+            let mut mismatches = Vec::new();
+            for _ in 0..rounds {
+                for index in 0..count {
+                    let name = format!("{writer}-{index:06}");
+                    let expected = format!("{writer}:{index}");
+                    match store.lookup(State::ROOT_ID, name.as_bytes()) {
+                        Ok(id) => match store.read_object(id) {
+                            Ok(bytes) => {
+                                reads += 1;
+                                if bytes != expected.as_bytes() {
+                                    mismatches.push(format!("{name}: wrong bytes"));
+                                }
+                            }
+                            Err(err) => mismatches.push(format!("{name}: {err}")),
+                        },
+                        Err(err) if err.class() == weftfs::error::Class::NotFound => absent += 1,
+                        Err(err) => mismatches.push(format!("{name}: {err}")),
+                    }
+                }
+            }
+            println!(
+                "{}",
+                serde_json::json!({
+                    "ok": mismatches.is_empty(),
+                    "reader": writer,
+                    "reads": reads,
+                    "absent": absent,
+                    "mismatches": mismatches,
+                })
+            );
         }
         "single" => {
             let name = arg(&args, "--name").unwrap_or_else(|| "single.bin".to_owned());

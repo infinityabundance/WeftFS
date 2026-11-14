@@ -149,6 +149,10 @@ pub struct Options {
     pub chunk_size: u64,
     pub checkpoint_interval: u64,
     pub gc_grace_secs: u64,
+    /// T024: lifetime of one pre-publication reservation. A writer that stalls
+    /// past its reservation is abandoned exactly like a prepared transaction
+    /// past `gc_grace_secs`. See `src/gc_epoch.rs`.
+    pub gc_reservation_secs: u64,
     /// Test/fixture clock override: every generated mtime and commit timestamp.
     pub fixed_timestamp_ns: Option<i64>,
     /// Physical representation policy. `Raw` (the default) writes the frozen
@@ -229,6 +233,7 @@ impl Default for Options {
             chunk_size: DEFAULT_CHUNK_SIZE,
             checkpoint_interval: DEFAULT_CHECKPOINT_INTERVAL,
             gc_grace_secs: DEFAULT_GC_GRACE_SECS,
+            gc_reservation_secs: crate::gc_epoch::DEFAULT_RESERVATION_SECS,
             fixed_timestamp_ns: None,
             representation: RepresentationMode::Raw,
             content_identity: ContentIdentity::WholeFileV1,
@@ -386,6 +391,40 @@ pub struct VerifyReport {
     pub problems: Vec<VerifyProblem>,
 }
 
+/// A writer's pre-publication retention reservation (T024).
+///
+/// Written **before** the first blob of a transaction is published and removed
+/// by [`Store::release_reservation`] after the prepared record (or the commit)
+/// names those blobs. While the record exists, a GC pass that acquired its epoch
+/// at or after the reservation protects a blob by the reservation floor. The
+/// handle deliberately does not borrow the store: a writer must be able to take
+/// `&mut Store` to publish while the reservation is still on disk. A handle that
+/// is never released is harmless — the record expires at its deadline and a
+/// later pass removes it.
+#[derive(Clone, Debug)]
+pub struct PublicationReservation {
+    key_id: String,
+    record: crate::gc_epoch::Reservation,
+}
+
+impl PublicationReservation {
+    /// The epoch this writer observed before registering.
+    pub fn epoch(&self) -> u64 {
+        self.record.epoch
+    }
+
+    /// The instant this reservation was taken; the pass's floor is the
+    /// earliest such instant among live reservations.
+    pub fn started_ns(&self) -> i64 {
+        self.record.started_ns
+    }
+
+    /// The reservation record's on-disk identity (a digest, not the tx id).
+    pub fn key_id(&self) -> &str {
+        &self.key_id
+    }
+}
+
 /// A GC candidate/deletion record.
 #[derive(Clone, Debug, Default)]
 pub struct GcReport {
@@ -427,6 +466,25 @@ pub struct GcReport {
     /// Unreferenced object records removed in a dedicated commit (a crash left
     /// an unlinked-but-pinned object behind).
     pub removed_orphans: Vec<String>,
+    /// T024: the epoch this pass acquired. `0` when no pass has ever acquired
+    /// one and this was a dry run.
+    pub gc_epoch: u64,
+    /// T024: identity of this pass, or `-` for a dry run.
+    pub gc_run_id: String,
+    /// T024: live publication reservations observed at the acquired epoch.
+    pub reservations_live: u64,
+    /// T024: the earliest live reservation start, if one protected blobs.
+    pub reservation_floor_ns: Option<i64>,
+    /// T024: unreferenced data blobs retained because they are newer than the
+    /// epoch acquisition instant (a concurrent publisher).
+    pub retained_newer_than_cut: u64,
+    /// T024: unreferenced data blobs retained because a live reservation that
+    /// predates the epoch acquisition protects them.
+    pub retained_reservation_floor: u64,
+    /// T024: expired reservation records removed by an applied pass.
+    pub deleted_reservations: u64,
+    /// MW3: domain heads marked by a coordinated pass (0 for MW1/MW2).
+    pub domain_heads_marked: u64,
     pub problems: Vec<String>,
 }
 
@@ -442,6 +500,8 @@ pub(crate) struct Reachability {
     pub manifests: BTreeSet<Hash32>,
     pub chunks: BTreeSet<Hash32>,
     pub origins: BTreeMap<Hash32, BTreeSet<String>>,
+    /// MW3: domain heads whose state was marked as a root by this pass.
+    pub domain_heads: u64,
 }
 
 impl Reachability {
@@ -9282,6 +9342,258 @@ impl Store {
         }
     }
 
+    // ---- T024: multi-writer GC epochs and reservations -------------------
+
+    /// The current multi-writer GC epoch, or `None` when no pass has ever
+    /// acquired one (epoch 0).
+    pub fn gc_epoch(&self) -> Result<Option<crate::gc_epoch::GcEpoch>> {
+        match self.with_backend(|backend| backend.read_all(&Key::gc_epoch())) {
+            Ok(bytes) => Ok(Some(crate::gc_epoch::decode_epoch(&bytes)?)),
+            Err(err) if err.class() == Class::NotFound => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Every publication reservation currently recorded, decoded and bounded.
+    pub fn gc_reservations(&self) -> Result<Vec<crate::gc_epoch::Reservation>> {
+        let keys =
+            self.with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Reservation)))?;
+        if keys.len() > crate::gc_epoch::MAX_RESERVATIONS {
+            return Err(Error::limit_exceeded(format!(
+                "{} publication reservations exceed the {}-record bound",
+                keys.len(),
+                crate::gc_epoch::MAX_RESERVATIONS
+            )));
+        }
+        let mut out = Vec::with_capacity(keys.len());
+        for key in keys {
+            let bytes = self.with_backend(|backend| backend.read_all(&key))?;
+            out.push(crate::gc_epoch::decode_reservation(&bytes)?);
+        }
+        Ok(out)
+    }
+
+    /// Read one completed GC run record (an audit record, never a root).
+    pub fn gc_run_record(&self, run_id: &str) -> Result<Option<crate::gc_epoch::GcRun>> {
+        match self.with_backend(|backend| backend.read_all(&Key::gc_run(run_id))) {
+            Ok(bytes) => Ok(Some(crate::gc_epoch::decode_run(&bytes)?)),
+            Err(err) if err.class() == Class::NotFound => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Register a publication reservation **before** publishing any blob that no
+    /// commit names yet (T024).
+    ///
+    /// The record is create-once under a key derived from the transaction id and
+    /// the reservation instant, so a retry never races a previous attempt and
+    /// never leaves a gap in which no record protects the writer's blobs. The
+    /// returned guard removes it on drop; callers may also release it early.
+    ///
+    /// Only an optimistic (MW2) or sharded (MW3) writable handle may take one.
+    /// A single-writer store needs no reservation: its exclusive writer is the
+    /// only publisher, and GC is an administration step on the same handle.
+    pub fn reserve_publication(&self, tx_id: &str) -> Result<PublicationReservation> {
+        self.require_writable()?;
+        if !matches!(
+            self.options.writer_mode,
+            crate::mw2::WriterMode::Optimistic | crate::mw2::WriterMode::Sharded
+        ) {
+            return Err(Error::invalid_argument(
+                "publication reservations are only meaningful for --writer-mode optimistic or \
+                 sharded; a single-writer store has one exclusive publisher",
+            ));
+        }
+        if tx_id.is_empty() || tx_id.len() > 128 {
+            return Err(Error::invalid_argument(
+                "a reservation transaction id must be 1..=128 bytes",
+            ));
+        }
+        let now_ns = self.wall_ns();
+        let epoch = self.gc_epoch()?.map(|record| record.epoch).unwrap_or(0);
+        let deadline_ns = now_ns.saturating_add(
+            i64::try_from(
+                self.options
+                    .gc_reservation_secs
+                    .saturating_mul(1_000_000_000),
+            )
+            .unwrap_or(i64::MAX),
+        );
+        let record = crate::gc_epoch::Reservation {
+            tx_id: tx_id.to_owned(),
+            epoch,
+            started_ns: now_ns,
+            deadline_ns,
+            owner: format!("pid:{}", std::process::id()),
+        };
+        crate::gc_epoch::validate_reservation_deadline(record.started_ns, record.deadline_ns)?;
+        let bytes = crate::gc_epoch::encode_reservation(&record)?;
+        // The file name is a digest so an arbitrary transaction id can never
+        // escape the reservation namespace.
+        let key_id = identity::h(
+            "weft/gc/reservation-key/v1",
+            format!("{tx_id}:{now_ns}").as_bytes(),
+        )
+        .to_hex();
+        match self
+            .with_backend_mut(|backend| backend.put_atomic(&Key::reservation(&key_id), &bytes))
+        {
+            Ok(()) => {}
+            Err(err) if err.class() == Class::Exists => {
+                // Identical bytes for the same instant: idempotent.
+                let stored =
+                    self.with_backend(|backend| backend.read_all(&Key::reservation(&key_id)))?;
+                if stored != bytes {
+                    return Err(err);
+                }
+            }
+            Err(err) => return Err(err),
+        }
+        Ok(PublicationReservation { key_id, record })
+    }
+
+    /// Remove one publication reservation. Idempotent: a record already gone is
+    /// success. A failure is returned, because a caller that is about to publish
+    /// should know its protection was not lifted (it is still safe, only
+    /// over-retained).
+    pub fn release_reservation(&self, reservation: &PublicationReservation) -> Result<()> {
+        self.release_publication_reservation(reservation.key_id())
+    }
+
+    fn release_publication_reservation(&self, key_id: &str) -> Result<()> {
+        match self.with_backend_mut(|backend| backend.delete(&Key::reservation(key_id))) {
+            Ok(()) => Ok(()),
+            Err(err) if err.class() == Class::NotFound => Ok(()),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Every domain id that has a head image in the store, sorted.
+    ///
+    /// `domains.root` is a discovery aid, so GC may not rely on it to decide
+    /// which heads are authoritative: a head absent from the record is still a
+    /// root (spec §15.3).
+    pub fn domain_ids(&self) -> Result<Vec<Hash32>> {
+        let keys = self
+            .with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::DomainSuperblock)))?;
+        let mut out = Vec::new();
+        for key in keys {
+            match key {
+                Key::DomainSuperblock { domain } => out.push(domain),
+                Key::Other { name, .. } => {
+                    // `domains/<id>/` also holds `LOCK.publish` (the short
+                    // publication lock) and `link` (lineage). Only an
+                    // unreadable *head* name is an error.
+                    if name.ends_with("/superblock") {
+                        return Err(Error::corrupt(format!(
+                            "unrecognized domain head entry {name}"
+                        )));
+                    }
+                }
+                _ => {}
+            }
+        }
+        out.sort_unstable();
+        out.dedup();
+        Ok(out)
+    }
+
+    /// Replay one domain's published chain into a state, by the same rules as
+    /// [`Store::recover_domain`] (bounded checkpoint scan, exact parent links,
+    /// head equality). Used by the coordinated GC pass, which must mark every
+    /// domain head without rebinding this handle.
+    fn domain_state_for_gc(&self, domain: Hash32) -> Result<Option<State>> {
+        let Some((generation, head_id)) =
+            self.with_backend(|backend| backend.load_domain_head(&domain))?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(self.domain_state_at(domain, generation, head_id)?))
+    }
+
+    /// Replay one domain's chain up to a specific published head.
+    fn domain_state_at(&self, domain: Hash32, generation: u64, head_id: Hash32) -> Result<State> {
+        const CHECKPOINT_SCAN: u64 = 256;
+        let floor = generation.saturating_sub(CHECKPOINT_SCAN).max(1);
+        let mut state = State::default();
+        let mut hash = Hash32::ZERO;
+        let mut next = 1u64;
+        for candidate in (floor..=generation).rev() {
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(
+                    backend,
+                    &Key::domain_commit(domain, candidate),
+                    Some(candidate),
+                )
+            })?;
+            let Some(checkpoint) = loaded.commit.checkpoint else {
+                continue;
+            };
+            let bytes =
+                self.with_backend(|backend| backend.read_all(&Key::manifest(checkpoint)))?;
+            let value = crate::wcb_util::decode(&bytes)?;
+            let decoded = crate::format::decode_state(&value)?;
+            if decoded.generation != candidate {
+                continue;
+            }
+            state = decoded;
+            hash = loaded.hash;
+            next = candidate + 1;
+            break;
+        }
+        for candidate in next..=generation {
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(
+                    backend,
+                    &Key::domain_commit(domain, candidate),
+                    Some(candidate),
+                )
+            })?;
+            let expected_parent = if hash == Hash32::ZERO {
+                None
+            } else {
+                Some(hash)
+            };
+            if loaded.commit.parent != expected_parent {
+                return Err(Error::corrupt(format!(
+                    "domain {} commit {candidate} does not name the previous commit as parent",
+                    domain.to_hex()
+                )));
+            }
+            state.apply_ops(&loaded.commit.ops)?;
+            state.generation = candidate;
+            hash = loaded.hash;
+        }
+        if hash != head_id {
+            return Err(Error::corrupt(format!(
+                "domain {} head {} does not match the replayed chain ({})",
+                domain.to_hex(),
+                head_id.to_hex(),
+                hash.to_hex()
+            )));
+        }
+        Ok(state)
+    }
+
+    /// Find the generation of one commit hash in a domain's chain. Used to
+    /// resolve a domain snapshot name to its commit for GC marking.
+    fn domain_generation_of(&self, domain: Hash32, commit: Hash32) -> Result<Option<u64>> {
+        let generations = self.with_backend(|backend| backend.list_domain_commits(&domain))?;
+        for generation in generations {
+            let loaded = self.with_backend(|backend| {
+                recovery::load_commit_key_via(
+                    backend,
+                    &Key::domain_commit(domain, generation),
+                    Some(generation),
+                )
+            })?;
+            if loaded.hash == commit {
+                return Ok(Some(generation));
+            }
+        }
+        Ok(None)
+    }
+
     /// Compute the reachable blob set and the root label that retained each
     /// blob, exactly as [`Store::gc`] does.
     ///
@@ -9330,6 +9642,64 @@ impl Store {
             &format!("head:{}", self.head.to_hex()),
             problems,
         );
+
+        // MW3: every domain head is a root, whether or not `domains.root`
+        // names it. Each domain's snapshot pointers and checkpoint manifests
+        // are roots inside that domain exactly as they are globally.
+        if self.options.writer_mode == crate::mw2::WriterMode::Sharded {
+            for domain in self.domain_ids()? {
+                let Some(state) = self.domain_state_for_gc(domain)? else {
+                    continue;
+                };
+                let origin = format!("domain:{}", domain.to_hex());
+                mark_state(self, &state, &mut reach, &origin, problems);
+                reach.domain_heads = reach.domain_heads.saturating_add(1);
+
+                let mut snapshot_commits: Vec<Hash32> = state.snapshots.values().copied().collect();
+                snapshot_commits.sort_unstable();
+                for commit in snapshot_commits {
+                    match self.domain_generation_of(domain, commit)? {
+                        Some(generation) => {
+                            let at = self.domain_state_at(domain, generation, commit)?;
+                            mark_state(
+                                self,
+                                &at,
+                                &mut reach,
+                                &format!("domain-snapshot:{}:{}", domain.to_hex(), commit.to_hex()),
+                                problems,
+                            );
+                        }
+                        None => problems.push(format!(
+                            "domain {} snapshot {} is not in the domain chain",
+                            domain.to_hex(),
+                            commit.to_hex()
+                        )),
+                    }
+                }
+
+                let generations =
+                    self.with_backend(|backend| backend.list_domain_commits(&domain))?;
+                for generation in generations {
+                    let loaded = self.with_backend(|backend| {
+                        recovery::load_commit_key_via(
+                            backend,
+                            &Key::domain_commit(domain, generation),
+                            Some(generation),
+                        )
+                    })?;
+                    if let Some(checkpoint) = loaded.commit.checkpoint {
+                        reach.mark_manifest(checkpoint, &origin);
+                        match self.read_state_manifest_keyed(checkpoint) {
+                            Ok(at) => mark_state(self, &at, &mut reach, &origin, problems),
+                            Err(err) => problems.push(format!(
+                                "domain {} checkpoint {checkpoint} is unreadable: {err}",
+                                domain.to_hex()
+                            )),
+                        }
+                    }
+                }
+            }
+        }
 
         let mut snapshot_commits: Vec<Hash32> = self.state.snapshots.values().copied().collect();
         snapshot_commits.sort_unstable();
@@ -9380,17 +9750,18 @@ impl Store {
 
     /// Mark-and-sweep GC over unreachable chunks and manifests.
     ///
-    /// Roots: current state, every snapshot commit state, and every checkpoint
-    /// state manifest. A candidate is only deleted when `apply` is true and it
-    /// is older than `gc_grace_secs` (zero disables the age gate).
+    /// Roots: the published head (refreshed first on an optimistic handle),
+    /// every snapshot commit state, every checkpoint state manifest, every
+    /// live prepared transaction's pins, every live publication reservation,
+    /// and — on a sharded store — every domain head's state.
+    ///
+    /// A candidate is deleted when `apply` is true, it is older than
+    /// `gc_grace_secs` (zero disables the age gate), it is older than the
+    /// instant this pass acquired its GC epoch, and it is older than every live
+    /// reservation taken at or before that epoch. The epoch compare-and-swap is
+    /// the pass's linearization point; see `spec/WEFT-MULTIWRITER.md` §11 and
+    /// `docs/MULTI-WRITER-GC.md`.
     pub fn gc(&mut self, apply: bool) -> Result<GcReport> {
-        if self.domain.is_some() || self.options.writer_mode == crate::mw2::WriterMode::Sharded {
-            return Err(Error::unsupported_version(
-                "coordinated cross-domain GC is not implemented for an MW3 store; this prototype \
-                 refuses GC rather than sweep one domain and reclaim another domain's blobs \
-                 (spec/WEFT-MULTIWRITER.md 15.9)",
-            ));
-        }
         self.require_writable()?;
         if self.group_depth != 0 {
             // GC physically deletes blobs; a later group rollback would leave
@@ -9399,17 +9770,98 @@ impl Store {
                 "gc cannot run inside a group commit",
             ));
         }
+        let sharded = self.options.writer_mode == crate::mw2::WriterMode::Sharded;
+        if self.domain.is_some() {
+            return Err(Error::unsupported_version(
+                "a domain-bound handle cannot run a coordinated multi-domain GC; open a global \
+                 handle with --writer-mode sharded and no --domain (spec/WEFT-MULTIWRITER.md \
+                 15.9)",
+            ));
+        }
         let mut report = GcReport {
             applied: apply,
             ..GcReport::default()
         };
 
+        // A concurrent publisher makes the age gate insufficient on a plane
+        // that cannot report a modification time: the cut and the reservation
+        // floor are both expressed in that clock. Refuse rather than guess.
+        if sharded || self.options.writer_mode == crate::mw2::WriterMode::Optimistic {
+            let can_report_age = self
+                .with_backend(|backend| backend.modified(&Key::format()))?
+                .is_some();
+            if !can_report_age {
+                return Err(Error::unsupported_version(
+                    "this backend cannot report a blob modification time, so a multi-writer GC \
+                     pass cannot prove a blob is older than its epoch cut; refusing rather than \
+                     reclaim data a concurrent publisher may still name",
+                ));
+            }
+        }
+
+        // Acquire the epoch. A dry run observes the current epoch without
+        // acquiring one (it deletes nothing, so it protects nothing).
+        let acquired = if apply {
+            self.acquire_gc_epoch()?
+        } else {
+            self.gc_epoch()?.unwrap_or(crate::gc_epoch::GcEpoch {
+                epoch: 0,
+                run_id: "-".to_owned(),
+                started_ns: self.wall_ns(),
+                finished_ns: self.wall_ns(),
+                owner: "dry-run".to_owned(),
+            })
+        };
+        report.gc_epoch = acquired.epoch;
+        report.gc_run_id = acquired.run_id.clone();
+        let acquired_ns = acquired.started_ns;
+
+        // Reservations taken at or before the acquired epoch are this pass's
+        // protection interval. Expired ones are abandoned and removed on apply.
+        //
+        // Order matters and is normative:
+        //   epoch (cut) -> reservations (floor) -> head (roots) -> blobs.
+        // A writer releases its reservation only after its commit is durable, so
+        //   * a reservation read here is still live and its floor protects the
+        //     writer's blobs;
+        //   * a reservation already released means the commit landed before this
+        //     read, so the head read immediately below names it;
+        //   * a reservation created later means its blobs are newer than the cut.
+        let reservations = self.gc_reservations()?;
+        let view =
+            crate::gc_epoch::ReservationView::build(reservations, acquired.epoch, self.wall_ns());
+        report.reservations_live = view.live.len() as u64;
+        report.reservation_floor_ns = if view.floor_ns == crate::gc_epoch::ReservationView::NO_FLOOR
+        {
+            None
+        } else {
+            Some(view.floor_ns)
+        };
+        // The same clock slack the floor uses. A blob published just after the
+        // acquisition can carry an mtime truncated below it; treating the cut
+        // as `acquired - slack` retains that blob instead of reclaiming it.
+        let cut = CollectUnmarkedCut {
+            acquired_ns: acquired_ns
+                .saturating_sub(crate::gc_epoch::ReservationView::CLOCK_SLACK_NS),
+            floor_ns: view.floor_ns,
+        };
+
+        // A pass must observe the published head **after** it has read the
+        // reservations: reading the head first would let a commit that landed
+        // in between be neither in the root set nor behind a reservation. An
+        // optimistic handle's in-memory state may lag a winner's commit; a
+        // refresh failure fails the pass closed.
+        if self.options.writer_mode == crate::mw2::WriterMode::Optimistic {
+            self.refresh_to_head()?;
+        }
+
         // A pinned unlinked object is a normal open-handle retention. If the
         // process crashed with such a handle, an unreferenced object record can
         // remain in the commit chain; `gc --apply` removes those records in a
         // commit so the blobs become unreachable. Pinned and relation-targeted
-        // objects are never removed here.
-        if apply {
+        // objects are never removed here. A sharded global handle has no global
+        // head to publish that removal to, so it is skipped and reported.
+        if apply && !sharded {
             let orphan_ids: Vec<Hash32> = self
                 .state
                 .objects
@@ -9436,6 +9888,12 @@ impl Store {
                 self.commit_ops(ops, false)?;
                 report.removed_orphans = orphan_ids.iter().map(|id| id.to_hex()).collect();
             }
+        } else if apply && sharded {
+            report.problems.push(
+                "sharded pass: unlinked-object-record removal is skipped (no global head to \
+                 publish it to); domain states are marked instead"
+                    .to_owned(),
+            );
         }
 
         let mut expired_tx: Vec<Key> = Vec::new();
@@ -9444,6 +9902,7 @@ impl Store {
 
         report.marked_manifests = reach.manifests.len() as u64;
         report.marked_chunks = reach.chunks.len() as u64;
+        report.domain_heads_marked = reach.domain_heads;
 
         let now = SystemTime::now();
         let grace = self.options.gc_grace_secs;
@@ -9454,6 +9913,7 @@ impl Store {
             &reach.manifests,
             now,
             grace,
+            Some(&cut),
             &mut report,
         )?);
         candidates.extend(collect_unmarked(
@@ -9462,6 +9922,7 @@ impl Store {
             &reach.chunks,
             now,
             grace,
+            Some(&cut),
             &mut report,
         )?);
         candidates.sort_by(|a, b| a.0.cmp(&b.0));
@@ -9495,6 +9956,25 @@ impl Store {
         if apply {
             for key in expired_tx {
                 let _ = self.with_backend_mut(|backend| backend.delete(&key));
+            }
+            // Expired publication reservations are abandoned for the same
+            // reason, and their records are removed so the floor cannot grow
+            // without bound. Their blobs were already protected this pass by
+            // the reservation floor, so nothing is deleted here that the floor
+            // retained.
+            let keys = self
+                .with_backend(|backend| backend.list_prefix(&Key::prefix(KeyKind::Reservation)))?;
+            for key in keys {
+                let Ok(bytes) = self.with_backend(|backend| backend.read_all(&key)) else {
+                    continue;
+                };
+                let Ok(record) = crate::gc_epoch::decode_reservation(&bytes) else {
+                    continue;
+                };
+                if !record.is_live(self.wall_ns()) {
+                    self.with_backend_mut(|backend| backend.delete(&key))?;
+                    report.deleted_reservations = report.deleted_reservations.saturating_add(1);
+                }
             }
         }
 
@@ -9553,7 +10033,105 @@ impl Store {
             .deleted_bytes
             .saturating_add(report.deleted_index_bytes)
             .saturating_add(report.reclaimed_pack_bytes);
+
+        // Record the pass and close its epoch. The run record is an audit
+        // artifact: it is never a root and never repairs anything. A failure to
+        // write it is reported, not turned into a data-safety failure.
+        if apply {
+            let run = crate::gc_epoch::GcRun {
+                run_id: acquired.run_id.clone(),
+                epoch: acquired.epoch,
+                started_ns: acquired.started_ns,
+                finished_ns: self.wall_ns(),
+                applied: true,
+                reservations_live: report.reservations_live,
+                reservation_floor_ns: report
+                    .reservation_floor_ns
+                    .unwrap_or(crate::gc_epoch::ReservationView::NO_FLOOR),
+                retained_newer_than_cut: report.retained_newer_than_cut,
+                retained_reservation_floor: report.retained_reservation_floor,
+                marked_manifests: report.marked_manifests,
+                marked_chunks: report.marked_chunks,
+                deleted_blobs: report.deleted.len() as u64,
+                deleted_bytes: report.deleted_bytes,
+                deleted_indexes: report.deleted_indexes.len() as u64,
+                deleted_reservations: report.deleted_reservations,
+                removed_orphans: report.removed_orphans.len() as u64,
+                domain_heads_marked: report.domain_heads_marked,
+            };
+            match crate::gc_epoch::encode_run(&run).and_then(|bytes| {
+                self.with_backend_mut(|backend| {
+                    backend.put_atomic(&Key::gc_run(&run.run_id), &bytes)
+                })
+            }) {
+                Ok(()) => {}
+                Err(err) if err.class() == Class::Exists => {}
+                Err(err) => report
+                    .problems
+                    .push(format!("cannot record the GC run: {err}")),
+            }
+            let finished = crate::gc_epoch::GcEpoch {
+                finished_ns: self.wall_ns(),
+                ..acquired
+            };
+            match crate::gc_epoch::encode_epoch(&finished).and_then(|bytes| {
+                self.with_backend_mut(|backend| backend.put_replace(&Key::gc_epoch(), &bytes))
+            }) {
+                Ok(()) => {}
+                Err(err) => report
+                    .problems
+                    .push(format!("cannot close the GC epoch: {err}")),
+            }
+        }
         Ok(report)
+    }
+
+    /// Acquire the next GC epoch with one compare-and-swap and return it.
+    ///
+    /// The CAS is the pass's linearization point: a writer that observes the
+    /// old epoch and registers before this returns is covered by the reservation
+    /// floor, and one that observes the new epoch registers after the acquisition
+    /// instant. Bounded retries; a contended epoch returns `Busy` rather than
+    /// running two passes under one epoch.
+    fn acquire_gc_epoch(&self) -> Result<crate::gc_epoch::GcEpoch> {
+        for attempt in 0..crate::gc_epoch::DEFAULT_EPOCH_ATTEMPTS {
+            let raw = match self.with_backend(|backend| backend.read_all(&Key::gc_epoch())) {
+                Ok(bytes) => Some(bytes),
+                Err(err) if err.class() == Class::NotFound => None,
+                Err(err) => return Err(err),
+            };
+            let current = match &raw {
+                Some(bytes) => Some(crate::gc_epoch::decode_epoch(bytes)?),
+                None => None,
+            };
+            let next = crate::gc_epoch::GcEpoch {
+                epoch: current.as_ref().map(|record| record.epoch).unwrap_or(0) + 1,
+                run_id: format!("{}-{}-{}", self.wall_ns(), std::process::id(), attempt),
+                started_ns: self.wall_ns(),
+                finished_ns: self.wall_ns(),
+                owner: format!("pid:{}", std::process::id()),
+            };
+            let bytes = crate::gc_epoch::encode_epoch(&next)?;
+            let token = raw.as_deref().map(crate::planes::control_token);
+            // The default compare-and-swap is read-verify-write. On a POSIX
+            // plane it is atomic only under the short publication lock, which
+            // is exactly the critical section `begin_publication` holds (and
+            // which a native conditional write does not need).
+            let result = self.with_backend_mut(|backend| {
+                backend.begin_publication()?;
+                let out = backend.compare_and_swap(&Key::gc_epoch(), token.as_deref(), &bytes);
+                let _ = backend.end_publication();
+                out
+            });
+            match result {
+                Ok(()) => return Ok(next),
+                Err(err) if err.class() == Class::Busy => continue,
+                Err(err) => return Err(err),
+            }
+        }
+        Err(Error::busy(
+            "another GC pass holds the epoch; retry after it closes",
+        ))
     }
 
     // ---- write budgets (quotas) -----------------------------------------
@@ -10440,6 +11018,21 @@ impl Store {
         if let Some(fixed) = self.options.fixed_timestamp_ns {
             return fixed;
         }
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .ok()
+            .and_then(|duration| i64::try_from(duration.as_nanos()).ok())
+            .unwrap_or(0)
+    }
+
+    /// The real wall clock, independent of the fixture override.
+    ///
+    /// T024 uses this for anything compared with a backend modification time:
+    /// the GC epoch acquisition instant, a publication reservation's start and
+    /// deadline, and the reservation liveness test. A fixed fixture timestamp
+    /// is for produced state (mtimes, commit timestamps, record `updated_ns`),
+    /// never for a comparison against the filesystem's own clock.
+    pub(crate) fn wall_ns(&self) -> i64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .ok()
@@ -12721,12 +13314,29 @@ fn collect_unreachable_indexes(
     Ok(out)
 }
 
+impl CollectUnmarkedCut {
+    fn permits(&self, modified_ns: i64) -> bool {
+        // Neither arm is a candidate: one is newer than the pass's acquisition
+        // instant, the other is protected by an earlier live reservation.
+        modified_ns < self.acquired_ns && modified_ns < self.floor_ns
+    }
+}
+
+/// T024: the epoch cut a GC pass applies to unmarked blobs.
+pub(crate) struct CollectUnmarkedCut {
+    /// Instant the pass acquired its epoch.
+    pub acquired_ns: i64,
+    /// Earliest live reservation start taken at or before the acquisition.
+    pub floor_ns: i64,
+}
+
 pub(crate) fn collect_unmarked(
     store: &Store,
     kind: KeyKind,
     marked: &BTreeSet<Hash32>,
     now: SystemTime,
     grace_secs: u64,
+    cut: Option<&CollectUnmarkedCut>,
     report: &mut GcReport,
 ) -> Result<Vec<(Key, u64)>> {
     let mut out = Vec::new();
@@ -12745,6 +13355,25 @@ pub(crate) fn collect_unmarked(
         if marked.contains(&hash) {
             report.retained += 1;
             continue;
+        }
+        if let Some(cut) = cut {
+            // The epoch cut is only usable on a plane that reports a real
+            // modification time. A plane that cannot is refused by `gc` before
+            // it gets here (see `Store::gc`), so the only `None` here is a
+            // single-writer pass with no concurrent publisher.
+            if let Some(modified) = store.with_backend(|backend| backend.modified(&key))? {
+                if !cut.permits(system_time_ns(modified)) {
+                    report.retained = report.retained.saturating_add(1);
+                    if system_time_ns(modified) >= cut.acquired_ns {
+                        report.retained_newer_than_cut =
+                            report.retained_newer_than_cut.saturating_add(1);
+                    } else {
+                        report.retained_reservation_floor =
+                            report.retained_reservation_floor.saturating_add(1);
+                    }
+                    continue;
+                }
+            }
         }
         if grace_secs > 0 {
             let age = store
@@ -12769,6 +13398,17 @@ pub(crate) fn collect_unmarked(
         out.push((key, len));
     }
     Ok(out)
+}
+
+/// T024: one `SystemTime` as nanoseconds since the Unix epoch (negative before
+/// it, clamped at `i64` bounds). Only used for the GC epoch cut.
+pub(crate) fn system_time_ns(time: SystemTime) -> i64 {
+    match time.duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(duration) => i64::try_from(duration.as_nanos()).unwrap_or(i64::MAX),
+        Err(err) => i64::try_from(err.duration().as_nanos())
+            .map(|value| -value)
+            .unwrap_or(i64::MIN),
+    }
 }
 
 // Keep the format constants referenced in this module's documentation visible
