@@ -12175,12 +12175,14 @@ the aggregate was **not** re-run, so the cited verification receipt is still
     "ms" when the receipt field is nanoseconds. `cc.build_ms` is now an
     expression over a printed `cc.build_ns` (3.230 ms), so the reader sees both
     and the manifest has no unconsumed number.
-  * P03 measured, unchanged conclusion, new numbers: cold ready-check below the
-    earlier P7 77,250.0 ms (receipt `training-ready-20261105T171104Z`, revision
-    `807d2ee`); time-to-ready is larger because it includes materialization
-    (97,106.3 ms cold / 63,406.8 ms warm at `10fde89`), and on this stamp the
-    **warm** materialize was 16.1 % slower than the cold one — published as a
-    loss, not a cache effect.
+  * P03 measured, unchanged conclusion, new numbers: the cold ready-check is
+    below the earlier P7 check of 77,247.5 ms (receipt
+    `training-ready-20261105T171104Z`, revision `807d2ee`); time-to-ready adds
+    materialization (97,106.3 ms cold / 63,406.8 ms warm at `10fde89`), which is
+    close to that same P7 court's `materialize` of 98,136.3 ms, so the total is
+    not a regression against the one earlier end-to-end number. On this stamp the
+    **warm** materialize was 16.1 % slower than the cold one and writes a second
+    output directory — published as a loss, not a cache effect.
   * Gates at the final tree: `check-claims` 1395 OK, `perf_numbers --check`
     2037 numbers / 265 blocks OK, `check-spec-drift` (81 comparisons),
     conformance manifest and coverage, `context-plane-verifier_court` and

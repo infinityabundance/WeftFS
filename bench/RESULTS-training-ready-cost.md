@@ -71,20 +71,22 @@ court.
 | Savings from a warm check | 42,481.1 (867.3×) |
 <!-- END GENERATED:trc-table -->
 
-The cold check in the table is below the 77,250.0 ms of the earlier P7 court
-(receipt `bench/receipts/training-ready-20261105T171104Z.json`, stamp
-`20261105T171104Z`, revision `807d2ee`); the shard layout and a warm cache
-differ. The cache removes that validation, and the warm/cold ratio is in the
-table.
+The cold check in the table is below the 77,247.5 ms check of the earlier P7
+court (receipt `bench/receipts/training-ready-20261105T171104Z.json`, stamp
+`20261105T171104Z`, revision `807d2eee24b9720b297c2160d6a17d46fe92a5fe`); the
+shard layout and a warm cache differ. The cache removes that validation, and
+the warm/cold ratio is in the table.
 
 The achieved **time-to-ready** is in the table: 97,106.3 ms cold and
-63,406.8 ms warm. That materially exceeds the earlier 77,250.0 ms P7 number,
-because time-to-ready now includes materialization and the P7 court measured
-the ready-check alone. The check alone is 42,530.2 ms cold — below the earlier
-number — and the dominant term of time-to-ready is materialization, not
-validation: decode plus the output write, cold and warm, in the table. The cache
-does **not** skip materialization: `materialize --training-ready` always
-re-verifies and writes, so a warm load still pays the decode + write cost.
+63,406.8 ms warm. The cold total is close to that same P7 court's
+`materialize` (98,136.3 ms, same receipt) — the quantity that writes a ready
+directory — while the P7 *check* was 77,247.5 ms. So the total is not a
+regression against the one earlier end-to-end number; it is the same work, and
+the check alone is now well below the earlier check. The dominant term of
+time-to-ready is materialization, not validation: decode plus the output write,
+cold and warm, in the table. The cache does **not** skip materialization:
+`materialize --training-ready` always re-verifies and writes, so a warm load
+still pays the decode + write cost.
 
 The time-to-ready numbers are published as measured and are not re-framed. In
 this run the **warm** materialize (63,355.9 ms) is 16.1 % **slower** than the
