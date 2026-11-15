@@ -66,6 +66,23 @@ fixture="${WEFT_AUG_FIXTURE:-$repo_root/.docker-cache/real-corpus/Qwen2.5-0.5B-I
 fixture_sha256="${WEFT_AUG_FIXTURE_SHA256:-fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe}"
 [[ -f "$fixture" ]] || skip "fixture $fixture is not present"
 
+# Ceph refuses to start a monitor on a filesystem that is at or below 5% free
+# (`mon data avail crit`), and this court puts the OSD data directory on the
+# host filesystem, so a nearly-full host is an environment the court cannot
+# run in. Measured failure without this preflight: the aggregate run of
+# 20261115T170940Z started the container at 5.7% free and `ceph-mon` aborted
+# with "monitor data filesystem reached concerning levels of available storage
+# space (available: 5% 74 GiB)" before an MDS ever came up. The 6% floor keeps
+# one point of headroom for what the OSD writes while the court runs.
+avail_b="$(df -B1 --output=avail "$repo_root" | tail -1 | tr -d ' ')"
+size_b="$(df -B1 --output=size "$repo_root" | tail -1 | tr -d ' ')"
+if [[ -n "$avail_b" && -n "$size_b" && "$size_b" -gt 0 ]]; then
+  free_pct=$(( 100 * avail_b / size_b ))
+  if (( free_pct < 6 )); then
+    skip "host filesystem holds ${free_pct}% free ($(( avail_b / 1073741824 )) GiB); Ceph mon refuses below 5% and the OSD data directory lives there"
+  fi
+fi
+
 ceph_image="${WEFT_CEPH_IMAGE:-quay.io/ceph/demo@sha256:522483cf07cfce6386b8e18a3edfa88a1b32c688dee231d0a6962b1513557723}"
 subnet="${WEFT_CEPHFS_SUBNET:-10.213.89.0/24}"
 gateway="${subnet%.*}.1"
