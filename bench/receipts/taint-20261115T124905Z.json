@@ -1,7 +1,7 @@
 {
  "schema": "weft.taint-court/v1",
- "stamp": "20261115T112434Z",
- "generated_utc": "20261115T112434Z",
+ "stamp": "20261115T124905Z",
+ "generated_utc": "20261115T124905Z",
  "environment": {
   "image": "weft/rust-court:1",
   "image_id": null,
@@ -10,10 +10,10 @@
   "cpus": null,
   "pids": null,
   "revisions": {
-   "WeftFS": "63ad66caf3e8d593ff13580a01977991391fe226",
-   "WeftCodec": "c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297",
-   "WeftCodec-Go": "0db8016132bcfda3e86907724743abd2555efa7b",
-   "WeftFS-Go": "71a9338d78d69ca87ec48e5f2bc9e9305406162b"
+   "WeftFS": "4dfca3102a1f5c482941043feea9e5df22fabff4",
+   "WeftCodec": "5a1c51fcc458cd1ef8c8503643b23d7d35ee7b7a",
+   "WeftCodec-Go": "023147c20d81b6b981cb2f76194797ea002d6245",
+   "WeftFS-Go": "2c91aeae4d47d639c49a04d73bd373049828ee37"
   }
  },
  "checks": [
@@ -66,18 +66,18 @@
  "passed": 9,
  "failed": 0,
  "result": "pass",
- "trace_us": 55,
+ "trace_us": 46,
  "reads": 2000,
  "read_ns": {
-  "gate_miss_p50": 9508,
-  "no_quarantine_p50": 6612,
-  "refused_p50": 45746
+  "gate_miss_p50": 7113,
+  "no_quarantine_p50": 6222,
+  "refused_p50": 41007
  },
- "gate_overhead_ns": 2896,
- "refusal_overhead_ns": 39134,
+ "gate_overhead_ns": 891,
+ "refusal_overhead_ns": 34785,
  "signer_public_key": "48075a597e721a156e2e0799de5cc0c5324dc6e7eaf1cdd46250868ec53215dd",
- "quarantine_record": "fa969a4829923136efe31721cc40b3bc0eec965658e62a149bcbd2b4a8ed870f",
+ "quarantine_record": "95185319a559f1a83183184880ee1398cb649f527c159e3bccce8e049cb2e98f",
  "method": "One dataset member, one model declaration, two raw checkpoints, one provenance receipt per checkpoint. Reads are 2,000 warm whole-object reads of one checkpoint manifest object in three states: no quarantine state at all, one unrelated quarantine present (gate lookup miss), and the branch quarantined (gate hit and refusal). Traces are the forward+backward walk over exactly these records.",
- "log": "bench/receipts/taint-20261115T112434Z.log",
- "log_sha256": "473a4e43de3449b3c8d7bb9d903bdc650d5681b26a25ea3c5192b5de1c4a42af"
+ "log": "bench/receipts/taint-20261115T124905Z.log",
+ "log_sha256": "9a20a752a3b08dd59ff99d1f607e9de2051afb13e74735f1e0a7eeb97e222131"
 }

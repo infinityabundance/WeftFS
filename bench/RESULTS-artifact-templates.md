@@ -1,7 +1,7 @@
 # T077 — evaluation and synthetic-data artifact templates
 
-Receipt: `bench/receipts/artifact-templates-20261115T112223Z.json` (stamp
-`20261115T112223Z`, WeftFS revision `d6e5957`). Raw log beside it. Normative
+Receipt: `bench/receipts/artifact-templates-20261115T124915Z.json` (stamp
+`20261115T124915Z`, WeftFS revision `d6e5957`). Raw log beside it. Normative
 record definition:
 [`spec/WEFT-ARTIFACT-TEMPLATES.md`](../spec/WEFT-ARTIFACT-TEMPLATES.md).
 
@@ -47,7 +47,7 @@ canonical WCB record.
 ## 4. Results
 
 <!-- BEGIN GENERATED:artifact-template-costs (scripts/perf_numbers.py) -->
-The evaluation record is **496 B** and the synthetic-data record is **375 B**. Recording the evaluation run takes **5,639,771,304 ns**; replaying it, which re-reads its **4,194,304 B** metrics artifact plus the three declared inputs, takes **1,232,721 ns**; replaying the synthetic-data run takes **19,697 ns**.
+The evaluation record is **496 B** and the synthetic-data record is **375 B**. Recording the evaluation run takes **38,674,270 ns**; replaying it, which re-reads its **4,194,304 B** metrics artifact plus the three declared inputs, takes **1,252,089 ns**; replaying the synthetic-data run takes **18,374 ns**.
 <!-- END GENERATED:artifact-template-costs -->
 
 A template costs a canonical WCB record and a replay pass over the declared

@@ -1,7 +1,7 @@
 # T080 — bounded background maintenance
 
-Receipt: `bench/receipts/maintenance-20261115T112447Z.json` (stamp
-`20261115T112447Z`, WeftFS revision `63ad66c`). Raw log beside it. Normative
+Receipt: `bench/receipts/maintenance-20261115T124918Z.json` (stamp
+`20261115T124918Z`, WeftFS revision `63ad66c`). Raw log beside it. Normative
 record definition: [`spec/WEFT-MAINTENANCE.md`](../spec/WEFT-MAINTENANCE.md).
 
 ## 1. What was built
@@ -33,7 +33,7 @@ state is a GC root and would legitimately keep garbage).
 ## 3. Bounded interference
 
 <!-- BEGIN GENERATED:maintenance-interference (scripts/perf_numbers.py) -->
-Two arms of **12,000** warm whole-object reads on 4 CPUs. Control p50/p95/p99: **12,373 / 15,429 / 15,930 ns**. With maintenance active at a declared **4,194,304 B/s** ceiling and **10%** duty cycle: **12,564 / 14,377 / 15,680 ns**, ratios **1.02 / 0.93 / 0.98**. The pass took **7,619 ms** and achieved **141,848 B/s** — below the declared ceiling because it is scan-bound and duty-limited.
+Two arms of **12,000** warm whole-object reads on 4 CPUs. Control p50/p95/p99: **12,003 / 12,964 / 14,457 ns**. With maintenance active at a declared **4,194,304 B/s** ceiling and **10%** duty cycle: **12,062 / 12,403 / 13,725 ns**, ratios **1.00 / 0.96 / 0.95**. The pass took **7,179 ms** and achieved **150,539 B/s** — below the declared ceiling because it is scan-bound and duty-limited.
 <!-- END GENERATED:maintenance-interference -->
 
 The measured cost is small. In this run two of the three ratios are at or

@@ -1,7 +1,7 @@
 # T073 — portable authenticated range proofs
 
-Receipt: `bench/receipts/range-proof-20261115T114737Z.json` (stamp
-`20261115T114737Z`, WeftFS revision `63ad66c`). Raw log beside it. Normative
+Receipt: `bench/receipts/range-proof-20261115T124611Z.json` (stamp
+`20261115T124611Z`, WeftFS revision `63ad66c`). Raw log beside it. Normative
 record definition: [`spec/WEFT-RANGE-PROOF.md`](../spec/WEFT-RANGE-PROOF.md).
 
 ## 1. What was built
@@ -55,28 +55,28 @@ verification strategies on the same bytes.
 <!-- BEGIN GENERATED:range-proof-table (scripts/perf_numbers.py) -->
 | case | chunk | region | leaves | proof B | chunk B | verify ns | store ns | full ns | adv |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| nano-16k-c4k-64 | 4,096 | 64 | 1 | 504 | 4,096 | 66,124 | 67,616 | 32,260 | 0.49 |
-| nano-16k-c4k-16384 | 4,096 | 16,384 | 4 | 1,047 | 16,384 | 80,561 | 98,835 | 32,260 | 0.40 |
-| tiny-64k-c4k-64 | 4,096 | 64 | 1 | 614 | 4,096 | 73,418 | 76,974 | 98,404 | 1.34 |
-| tiny-64k-c4k-4096 | 4,096 | 4,096 | 2 | 906 | 8,192 | 79,849 | 88,936 | 98,404 | 1.23 |
-| tiny-64k-c4k-65536 | 4,096 | 65,536 | 16 | 4,975 | 65,536 | 145,903 | 222,286 | 98,404 | 0.67 |
-| mid-4m-c4k-64 | 4,096 | 64 | 1 | 946 | 4,096 | 726,578 | 733,431 | 5,749,491 | 7.91 |
-| mid-4m-c4k-4096 | 4,096 | 4,096 | 2 | 1,568 | 8,192 | 738,651 | 746,165 | 5,749,491 | 7.78 |
-| mid-4m-c4k-65536 | 4,096 | 65,536 | 17 | 10,880 | 69,632 | 829,340 | 910,693 | 5,749,491 | 6.93 |
-| mid-4m-c4k-1048576 | 4,096 | 1,048,576 | 257 | 159,539 | 1,052,672 | 2,191,408 | 3,451,905 | 5,749,491 | 2.62 |
-| mid-4m-c4k-4194304 | 4,096 | 4,194,304 | 1,024 | 634,564 | 4,194,304 | 6,468,827 | 11,519,381 | 5,749,491 | 0.89 |
-| mid-32m-c64k-4096 | 65,536 | 4,096 | 1 | 895 | 65,536 | 417,631 | 429,123 | 11,207,056 | 26.83 |
-| mid-32m-c64k-65536 | 65,536 | 65,536 | 2 | 1,464 | 131,072 | 442,558 | 464,759 | 11,207,056 | 25.32 |
-| mid-32m-c64k-1048576 | 65,536 | 1,048,576 | 17 | 9,967 | 1,114,112 | 756,906 | 957,530 | 11,207,056 | 14.81 |
-| mid-32m-c64k-8388608 | 65,536 | 8,388,608 | 129 | 73,380 | 8,454,144 | 2,908,177 | 4,440,043 | 11,207,056 | 3.85 |
-| wide-8m-c64k-s8-4096 | 65,536 | 4,096 | 1 | 618 | 65,536 | 104,766 | 115,576 | 331,470 | 3.16 |
-| wide-8m-c64k-s8-1048576 | 65,536 | 1,048,576 | 16 | 4,995 | 1,048,576 | 394,969 | 583,882 | 331,470 | 0.84 |
+| nano-16k-c4k-64 | 4,096 | 64 | 1 | 504 | 4,096 | 62,767 | 66,444 | 36,658 | 0.58 |
+| nano-16k-c4k-16384 | 4,096 | 16,384 | 4 | 1,047 | 16,384 | 79,328 | 98,213 | 36,658 | 0.46 |
+| tiny-64k-c4k-64 | 4,096 | 64 | 1 | 614 | 4,096 | 72,866 | 76,273 | 110,487 | 1.52 |
+| tiny-64k-c4k-4096 | 4,096 | 4,096 | 2 | 906 | 8,192 | 79,418 | 88,675 | 110,487 | 1.39 |
+| tiny-64k-c4k-65536 | 4,096 | 65,536 | 16 | 4,975 | 65,536 | 145,252 | 223,197 | 110,487 | 0.76 |
+| mid-4m-c4k-64 | 4,096 | 64 | 1 | 946 | 4,096 | 704,897 | 708,072 | 5,961,213 | 8.46 |
+| mid-4m-c4k-4096 | 4,096 | 4,096 | 2 | 1,568 | 8,192 | 742,207 | 771,050 | 5,961,213 | 8.03 |
+| mid-4m-c4k-65536 | 4,096 | 65,536 | 17 | 10,880 | 69,632 | 867,751 | 946,779 | 5,961,213 | 6.87 |
+| mid-4m-c4k-1048576 | 4,096 | 1,048,576 | 257 | 159,539 | 1,052,672 | 2,304,173 | 3,391,484 | 5,961,213 | 2.59 |
+| mid-4m-c4k-4194304 | 4,096 | 4,194,304 | 1,024 | 634,564 | 4,194,304 | 6,425,350 | 11,452,799 | 5,961,213 | 0.93 |
+| mid-32m-c64k-4096 | 65,536 | 4,096 | 1 | 895 | 65,536 | 405,528 | 417,069 | 11,307,378 | 27.88 |
+| mid-32m-c64k-65536 | 65,536 | 65,536 | 2 | 1,464 | 131,072 | 428,590 | 451,683 | 11,307,378 | 26.38 |
+| mid-32m-c64k-1048576 | 65,536 | 1,048,576 | 17 | 9,967 | 1,114,112 | 748,808 | 949,633 | 11,307,378 | 15.10 |
+| mid-32m-c64k-8388608 | 65,536 | 8,388,608 | 129 | 73,380 | 8,454,144 | 2,874,829 | 4,428,631 | 11,307,378 | 3.93 |
+| wide-8m-c64k-s8-4096 | 65,536 | 4,096 | 1 | 618 | 65,536 | 104,866 | 115,716 | 330,397 | 3.15 |
+| wide-8m-c64k-s8-1048576 | 65,536 | 1,048,576 | 16 | 4,995 | 1,048,576 | 390,900 | 582,118 | 330,397 | 0.85 |
 <!-- END GENERATED:range-proof-table -->
 
 A ratio above 1.00 means the proof is cheaper than whole-object verification.
 
 <!-- BEGIN GENERATED:range-proof-summary (scripts/perf_numbers.py) -->
-Breaking the table down: the proof costs **0.49x** the whole-object check on a 16 KiB object, **0.67x** for the whole 64 KiB object, **0.89x** for the whole 4 MiB object and **0.84x** for a whole 1 MiB shard (below 1.00 means whole-object verification is cheaper). Above 1.00 the proof wins: **7.78x** for a 4 KiB region of the 4 MiB object and **3.85x** for an 8 MiB region of the 32 MiB object.
+Breaking the table down: the proof costs **0.58x** the whole-object check on a 16 KiB object, **0.76x** for the whole 64 KiB object, **0.93x** for the whole 4 MiB object and **0.85x** for a whole 1 MiB shard (below 1.00 means whole-object verification is cheaper). Above 1.00 the proof wins: **8.03x** for a 4 KiB region of the 4 MiB object and **3.93x** for an 8 MiB region of the 32 MiB object.
 <!-- END GENERATED:range-proof-summary -->
 
 The break-even is the covered object's size, not the region's: a proof's fixed
@@ -88,7 +88,7 @@ that the proof wins until the region covers the whole object.
 ### 3.2 The independent verifier
 
 <!-- BEGIN GENERATED:range-proof-components (scripts/perf_numbers.py) -->
-The independent verifier pays **2,111,128 ns** for one Ed25519 verification and **2,756,654 ns** for one 4 KiB BLAKE3, both in pure Python (medians of five on the court host).
+The independent verifier pays **2,154,624 ns** for one Ed25519 verification and **2,764,102 ns** for one 4 KiB BLAKE3, both in pure Python (medians of five on the court host).
 <!-- END GENERATED:range-proof-components -->
 
 The independent verifier's cost is dominated by its pure-Python Ed25519 check

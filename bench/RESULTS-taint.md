@@ -1,6 +1,6 @@
 # T075 — taint tracing and quarantine
 
-Receipt: `bench/receipts/taint-20261115T112434Z.json` (stamp `20261115T112434Z`,
+Receipt: `bench/receipts/taint-20261115T124905Z.json` (stamp `20261115T124905Z`,
 WeftFS revision `63ad66c`). Raw log beside it. Normative record definition:
 [`spec/WEFT-TAINT.md`](../spec/WEFT-TAINT.md).
 
@@ -43,7 +43,7 @@ an input. Then:
 ## 3. Results
 
 <!-- BEGIN GENERATED:taint-costs (scripts/perf_numbers.py) -->
-Trace and gate cost, medians of 2,000 warm whole-object reads on one host: a trace of this fixture takes **55 µs**; a plain read takes **6,612 ns**; with the gate present and not matching it takes **9,508 ns** (**+2,896 ns**); a refused read takes **45,746 ns** (**+39,134 ns**).
+Trace and gate cost, medians of 2,000 warm whole-object reads on one host: a trace of this fixture takes **46 µs**; a plain read takes **6,222 ns**; with the gate present and not matching it takes **7,113 ns** (**+891 ns**); a refused read takes **41,007 ns** (**+34,785 ns**).
 <!-- END GENERATED:taint-costs -->
 
 The mechanism is cheap where it must be: the gate is a namespace lookup on the

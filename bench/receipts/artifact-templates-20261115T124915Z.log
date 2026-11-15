@@ -1,6 +1,6 @@
-+ exec docker run --rm --init --name weft-rust-court-2238934 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=63ad66caf3e8d593ff13580a01977991391fe226 -e WEFT_REPO_WEFTFS_GO=71a9338d78d69ca87ec48e5f2bc9e9305406162b -e WEFT_REPO_WEFTCODEC=c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297 -e WEFT_REPO_WEFTCODEC_GO=0db8016132bcfda3e86907724743abd2555efa7b -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c $'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; \n  set -Eeuo pipefail\n  cd /work\n  cargo test --test taint --quiet 2>&1 | tail -3\n  cargo run --release --quiet --example taint_court --     --out .docker-cache/taint-court --json .docker-cache/taint-court/result.json\n  cat .docker-cache/taint-court/result.json\n'
-............
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
++ exec docker run --rm --init --name weft-rust-court-2458219 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=4dfca3102a1f5c482941043feea9e5df22fabff4 -e WEFT_REPO_WEFTFS_GO=2c91aeae4d47d639c49a04d73bd373049828ee37 -e WEFT_REPO_WEFTCODEC=5a1c51fcc458cd1ef8c8503643b23d7d35ee7b7a -e WEFT_REPO_WEFTCODEC_GO=023147c20d81b6b981cb2f76194797ea002d6245 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c $'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; \n  set -Eeuo pipefail\n  cd /work\n  cargo test --test artifact_template --quiet 2>&1 | tail -3\n  cargo run --release --quiet --example artifact_template_court --     --out .docker-cache/artifact-template-court     --json .docker-cache/artifact-template-court/result.json\n  cat .docker-cache/artifact-template-court/result.json\n'
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 warning: unused import: `Class`
   --> src/artifact_template.rs:37:20
@@ -190,62 +190,65 @@ warning: method `head_key` is never used
 1821 |     fn head_key(&self) -> Key {
      |        ^^^^^^^^
 
+warning: variable does not need to be mutable
+  --> examples/artifact_template_court.rs:61:9
+   |
+61 |     let mut make = |store: &mut Store, name: &str, bytes: &[u8]| {
+   |         ----^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `synth_content`
+  --> examples/artifact_template_court.rs:87:9
+   |
+87 |     let synth_content = store.object_meta(synth_object).unwrap().content;
+   |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_synth_content`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
 {
   "checks": [
     {
-      "detail": "status=closed tainted=3 artifacts=2",
-      "name": "closure is closed and precise",
+      "detail": "inputs=3 metric_bits=3fb999999999999a outputs=1",
+      "name": "an evaluation template records its three declared inputs and metric bits",
       "pass": true
     },
     {
-      "detail": "2 artifacts",
-      "name": "both branches are tainted with a witness to the root",
+      "detail": "eval=8b93d624fcff3a2500014eb9cbfa5e42be6b61b681b1d6e8e9454c7e2c4e22c5 synth=454fc0571ea935d0b400f1e499c6795e58a049bbf4ea54b11e991bc5ac883798",
+      "name": "both templates replay exactly",
       "pass": true
     },
     {
-      "detail": "class=NotFound message_equal=true",
-      "name": "non-disclosing refusal is byte-identical to an absent object",
+      "detail": "seed_len=4",
+      "name": "a synthetic-data template records its seed and generator",
       "pass": true
     },
     {
-      "detail": "8272 bytes, sha256 unchanged=true",
-      "name": "the unquarantined branch restores the same bytes",
+      "detail": "dataset -> eval output is tainted and closed",
+      "name": "the template feeds the taint graph",
       "pass": true
     },
     {
-      "detail": "class=NotFound",
-      "name": "the quarantined branch cannot be materialized",
+      "detail": "class=NotFound templates=2",
+      "name": "a declared input root that is not in the store is refused",
       "pass": true
     },
     {
-      "detail": "status=unproven verdict=unproven",
-      "name": "an artifact with no receipt is unproven, never clear",
-      "pass": true
-    },
-    {
-      "detail": "8272 bytes",
-      "name": "a signed release restores exact service",
-      "pass": true
-    },
-    {
-      "detail": "class=Quarantined",
-      "name": "the decision is durable and enforced after reopen",
+      "detail": "both replay exact after reopen",
+      "name": "templates survive a read-only reopen",
       "pass": true
     }
   ],
+  "eval_record_ns": 38674270,
+  "eval_replay_ns": 1252089,
+  "eval_template_bytes": 496,
   "failed": 0,
-  "gate_overhead_ns": 2896,
-  "passed": 8,
-  "quarantine_record": "fa969a4829923136efe31721cc40b3bc0eec965658e62a149bcbd2b4a8ed870f",
-  "read_ns": {
-    "gate_miss_p50": 9508,
-    "no_quarantine_p50": 6612,
-    "refused_p50": 45746
-  },
-  "reads": 2000,
-  "refusal_overhead_ns": 39134,
-  "schema": "weft.taint-court/v1",
-  "signer_public_key": "48075a597e721a156e2e0799de5cc0c5324dc6e7eaf1cdd46250868ec53215dd",
-  "trace_us": 55,
-  "unrelated_quarantine": "bf8ae5c491e8f7c0080c6f62b54a32fdfa2d3bde3afae9242bec97632b3e3d58"
+  "output_bytes": 4194304,
+  "passed": 6,
+  "schema": "weft.artifact-template-court/v1",
+  "synth_record_ns": 36890750,
+  "synth_replay_ns": 18374,
+  "synth_template_bytes": 375
 }

@@ -11999,7 +11999,7 @@ specifications are mirrored byte-identically into the three codec/Go repos
 (`WeftCodec db57e6c`, `WeftCodec-Go 501cc0f`, `WeftFS-Go b680432`).
 
 **T073 — portable authenticated range proofs.** Receipt
-`bench/receipts/range-proof-20261115T114737Z.json` (57/57 checks at revision
+`bench/receipts/range-proof-20261115T124611Z.json` (57/57 checks at revision
 `63ad66c`), analysis [`bench/RESULTS-range-proof.md`](../bench/RESULTS-range-proof.md),
 normative [`spec/WEFT-RANGE-PROOF.md`](../spec/WEFT-RANGE-PROOF.md). A
 `weft.range-proof.v1` record carries the authentication path over the frozen
@@ -12022,7 +12022,7 @@ The independent Python verifier is a correctness oracle, not a fast path
 (pure-Python Ed25519 and BLAKE3).
 
 **T075 — taint and quarantine.** Receipt
-`bench/receipts/taint-20261115T112434Z.json` (9/9 checks),
+`bench/receipts/taint-20261115T124905Z.json` (9/9 checks),
 [`bench/RESULTS-taint.md`](../bench/RESULTS-taint.md),
 [`spec/WEFT-TAINT.md`](../spec/WEFT-TAINT.md). `taint_trace` returns
 `tainted|clear|unproven` per artifact with an explicit witness or the exact
@@ -12040,7 +12040,7 @@ that this is traceability plus refusal to serve and cannot remove information
 already learned into weights.
 
 **T077 — evaluation and synthetic-data templates.** Receipt
-`bench/receipts/artifact-templates-20261115T112223Z.json` (7/7 checks),
+`bench/receipts/artifact-templates-20261115T124915Z.json` (7/7 checks),
 [`bench/RESULTS-artifact-templates.md`](../bench/RESULTS-artifact-templates.md),
 [`spec/WEFT-ARTIFACT-TEMPLATES.md`](../spec/WEFT-ARTIFACT-TEMPLATES.md).
 `weft.eval-run.v1` records config/dataset/model roots, metric values as exact
@@ -12053,7 +12053,7 @@ establishes no numerical or behavioural determinism. Negative case covered: a
 declared input root that is not in the store is `NotFound` and writes nothing.
 
 **T080 — bounded background maintenance.** Receipt
-`bench/receipts/maintenance-20261115T112447Z.json` (7/7 checks),
+`bench/receipts/maintenance-20261115T124918Z.json` (7/7 checks),
 [`bench/RESULTS-maintenance.md`](../bench/RESULTS-maintenance.md),
 [`spec/WEFT-MAINTENANCE.md`](../spec/WEFT-MAINTENANCE.md). A declared rate and
 duty cycle pace byte-bounded batches; the plan key and cursor are persisted and
