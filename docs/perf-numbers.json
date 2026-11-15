@@ -157,6 +157,22 @@
   {
    "id": "revocation-epoch",
    "title": "T078 revocation epochs and deny-before-decode"
+  },
+  {
+   "id": "juicefs",
+   "title": "JuiceFS (T035): deployed volume, two clients, six arms"
+  },
+  {
+   "id": "glusterfs",
+   "title": "GlusterFS (T036): deployed single-brick volume, two clients, six arms"
+  },
+  {
+   "id": "lifecycle",
+   "title": "Stitched lifecycle (T082): measured quantities from four existing receipts"
+  },
+  {
+   "id": "sensitivity",
+   "title": "Price sensitivity (T089): cited list prices over measured resource quantities"
   }
  ],
  "numbers": [
@@ -23403,6 +23419,975 @@
    "stamp": "20261114T234309Z",
    "revision_path": "environment.revisions.WeftFS",
    "revision": "9bd63a51657d777d597714a5ae713a56dc5857e5"
+  },
+  {
+   "key": "juicefs.A.ms_min",
+   "label": "JuiceFS arm A write wall, least-contended",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.A.stats.write_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.A.ms_p50",
+   "label": "JuiceFS arm A write wall, median of 7",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.A.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.A.span_max_ms",
+   "label": "JuiceFS arm A write wall, slowest of 7",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.A.stats.write_wall_ms.max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.A.foot_b",
+   "label": "JuiceFS arm A physical footprint",
+   "unit": "B",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.A.stats.physical_footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.A.restore_ms",
+   "label": "JuiceFS arm A cold restore, median of 7",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.A.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.ms_min",
+   "label": "JuiceFS arm C write wall, least-contended",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.C.stats.write_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.ms_p50",
+   "label": "JuiceFS arm C write wall, median of 7",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.C.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.span_max_ms",
+   "label": "JuiceFS arm C write wall, slowest of 7",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.C.stats.write_wall_ms.max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.foot_b",
+   "label": "JuiceFS arm C physical footprint",
+   "unit": "B",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.C.stats.physical_footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.restore_ms",
+   "label": "JuiceFS arm C cold restore, median of 7",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "configurations.C.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.storage_pct",
+   "label": "JuiceFS storage reduction of C vs A",
+   "unit": "%",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "deltas_vs_A.C.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.overhead_pct",
+   "label": "JuiceFS end-to-end overhead of C vs A",
+   "unit": "%",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "deltas_vs_A.C.augmentation_overhead_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.C.latency_pct",
+   "label": "JuiceFS contract latency change of C vs A",
+   "unit": "%",
+   "group": "juicefs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+   "path": "deltas_vs_A.C.latency_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010018Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "juicefs.cross.a_to_b_ms",
+   "label": "JuiceFS close-to-open, A write then B read",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.close_to_open.a_write_then_b_read_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.b_to_a_ms",
+   "label": "JuiceFS close-to-open, B write then A read",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.close_to_open.b_write_then_a_read_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.rewrite_ms",
+   "label": "JuiceFS in-place rewrite visible to the peer",
+   "unit": "ms",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.in_place_rewrite.peer_observed_new_content_after_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.ack",
+   "label": "JuiceFS n-client failure: acknowledged chunks",
+   "unit": "chunks",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.n_client_failure.acknowledged_chunks",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.peer_ok",
+   "label": "JuiceFS n-client failure: peer read-back ok",
+   "unit": "chunks",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.n_client_failure.peer_read_chunks_ok",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.peer_bad",
+   "label": "JuiceFS n-client failure: peer read-back bad",
+   "unit": "chunks",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.n_client_failure.peer_read_chunks_bad",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.recovered_ok",
+   "label": "JuiceFS n-client failure: restarted client read-back ok",
+   "unit": "chunks",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.n_client_failure.recovered_read_chunks_ok",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "juicefs.cross.file_b",
+   "label": "JuiceFS n-client failure: file length on the peer",
+   "unit": "B",
+   "group": "juicefs",
+   "format": "int",
+   "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+   "path": "cross_client.n_client_failure.peer_file_length_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T005509Z"
+  },
+  {
+   "key": "glusterfs.A.ms_min",
+   "label": "GlusterFS arm A write wall, least-contended",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.A.stats.write_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.A.ms_p50",
+   "label": "GlusterFS arm A write wall, median of 7",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.A.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.A.span_max_ms",
+   "label": "GlusterFS arm A write wall, slowest of 7",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.A.stats.write_wall_ms.max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.A.foot_b",
+   "label": "GlusterFS arm A physical footprint",
+   "unit": "B",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.A.stats.physical_footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.A.restore_ms",
+   "label": "GlusterFS arm A cold restore, median of 7",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.A.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.ms_min",
+   "label": "GlusterFS arm C write wall, least-contended",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.C.stats.write_wall_ms.min",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.ms_p50",
+   "label": "GlusterFS arm C write wall, median of 7",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.C.stats.write_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.span_max_ms",
+   "label": "GlusterFS arm C write wall, slowest of 7",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.C.stats.write_wall_ms.max",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.foot_b",
+   "label": "GlusterFS arm C physical footprint",
+   "unit": "B",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.C.stats.physical_footprint_bytes.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.restore_ms",
+   "label": "GlusterFS arm C cold restore, median of 7",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "configurations.C.stats.cold_restore_wall_ms.median",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.storage_pct",
+   "label": "GlusterFS storage reduction of C vs A",
+   "unit": "%",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "deltas_vs_A.C.storage_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.overhead_pct",
+   "label": "GlusterFS end-to-end overhead of C vs A",
+   "unit": "%",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "deltas_vs_A.C.augmentation_overhead_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.C.latency_pct",
+   "label": "GlusterFS contract latency change of C vs A",
+   "unit": "%",
+   "group": "glusterfs",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+   "path": "deltas_vs_A.C.latency_reduction_pct",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010546Z",
+   "revision_path": "environment.revisions.WeftFS",
+   "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+  },
+  {
+   "key": "glusterfs.cross.a_to_b_ms",
+   "label": "GlusterFS close-to-open, A write then B read",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.close_to_open.a_write_then_b_read_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.b_to_a_ms",
+   "label": "GlusterFS close-to-open, B write then A read",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.close_to_open.b_write_then_a_read_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.rewrite_ms",
+   "label": "GlusterFS in-place rewrite visible to the peer",
+   "unit": "ms",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.in_place_rewrite.peer_observed_new_content_after_ms",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.ack",
+   "label": "GlusterFS n-client failure: acknowledged chunks",
+   "unit": "chunks",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.n_client_failure.acknowledged_chunks",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.peer_ok",
+   "label": "GlusterFS n-client failure: peer read-back ok",
+   "unit": "chunks",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.n_client_failure.peer_read_chunks_ok",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.peer_bad",
+   "label": "GlusterFS n-client failure: peer read-back bad",
+   "unit": "chunks",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.n_client_failure.peer_read_chunks_bad",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.recovered_ok",
+   "label": "GlusterFS n-client failure: restarted client read-back ok",
+   "unit": "chunks",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.n_client_failure.recovered_read_chunks_ok",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "glusterfs.cross.file_b",
+   "label": "GlusterFS n-client failure: file length on the peer",
+   "unit": "B",
+   "group": "glusterfs",
+   "format": "int",
+   "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+   "path": "cross_client.n_client_failure.peer_file_length_bytes",
+   "stamp_path": "generated_utc",
+   "stamp": "20261115T010035Z"
+  },
+  {
+   "key": "lifecycle.rows",
+   "label": "T082 stitched lifecycle rows",
+   "unit": "rows",
+   "group": "lifecycle",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "row_count",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.reps",
+   "label": "T089 base court repetitions",
+   "unit": "reps",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.repetitions",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.base_logical_b",
+   "label": "T089 base court logical bytes",
+   "unit": "B",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.logical_bytes_per_checkpoint",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.saved_b",
+   "label": "T089 bytes saved per checkpoint",
+   "unit": "B",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.measured_delta.footprint_bytes_saved_per_checkpoint",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.footprint_pct",
+   "label": "T089 footprint reduction of C vs A",
+   "unit": "%",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.measured_delta.footprint_reduction_pct",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.extra_write_cpu_ms",
+   "label": "T089 extra write CPU of C vs A",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.measured_delta.extra_write_cpu_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.extra_restore_cpu_ms",
+   "label": "T089 extra restore CPU of C vs A",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.measured_delta.extra_restore_cpu_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.extra_write_wall_ms",
+   "label": "T089 extra write wall of C vs A",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.measured_delta.extra_write_wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.extra_restore_wall_ms",
+   "label": "T089 extra cold restore wall of C vs A",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.measured_delta.extra_cold_restore_wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.A.foot_b",
+   "label": "T089 arm A footprint",
+   "unit": "B",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.A.footprint_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.C.foot_b",
+   "label": "T089 arm C footprint",
+   "unit": "B",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.C.footprint_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.A.write_cpu_ms",
+   "label": "T089 arm A write CPU",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.A.write_cpu_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.C.write_cpu_ms",
+   "label": "T089 arm C write CPU",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.C.write_cpu_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.A.restore_cpu_ms",
+   "label": "T089 arm A restore CPU",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.A.restore_cpu_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.C.restore_cpu_ms",
+   "label": "T089 arm C restore CPU",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.C.restore_cpu_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.A.write_wall_ms",
+   "label": "T089 arm A write wall",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.A.write_wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.C.write_wall_ms",
+   "label": "T089 arm C write wall",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.C.write_wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.A.restore_wall_ms",
+   "label": "T089 arm A cold restore wall",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.A.cold_restore_wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.C.restore_wall_ms",
+   "label": "T089 arm C cold restore wall",
+   "unit": "ms",
+   "group": "sensitivity",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.arms.C.cold_restore_wall_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.price_store",
+   "label": "T089 cited storage price",
+   "unit": "USD/GiB-month",
+   "group": "sensitivity",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "price_table.storage.value",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.price_compute",
+   "label": "T089 cited compute price",
+   "unit": "USD/vCPU-hour",
+   "group": "sensitivity",
+   "format": "fixed:4",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "price_table.compute.value",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.surface_cells",
+   "label": "T089 lifecycle surface cells",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.surface_summary.cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.surface_c_cells",
+   "label": "T089 lifecycle cells where C is cheaper",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.surface_summary.c_cheaper_cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.surface_a_cells",
+   "label": "T089 lifecycle cells where A is cheaper",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.surface_summary.a_cheaper_cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.plane_cells",
+   "label": "T089 price-plane cells per billing model",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.plane_summary.cpu_seconds.cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.plane_c_cpu",
+   "label": "T089 price-plane cells favouring C, cpu_seconds",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.plane_summary.cpu_seconds.c_cheaper_cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.plane_a_cpu",
+   "label": "T089 price-plane cells favouring A, cpu_seconds",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.plane_summary.cpu_seconds.a_cheaper_cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.plane_c_alloc",
+   "label": "T089 price-plane cells favouring C, allocated_vcpu_seconds",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.plane_summary.allocated_vcpu_seconds.c_cheaper_cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.plane_a_alloc",
+   "label": "T089 price-plane cells favouring A, allocated_vcpu_seconds",
+   "unit": "cells",
+   "group": "sensitivity",
+   "format": "int",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "sensitivity.plane_summary.allocated_vcpu_seconds.a_cheaper_cells",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.be_cpu_1d_10r",
+   "label": "T089 break-even compute price, 1 day, 10 restores, cpu_seconds",
+   "unit": "USD/vCPU-hour",
+   "group": "sensitivity",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "surface_table.cpu_seconds_1d_10r.be_compute",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.be_cpu_7d_10r",
+   "label": "T089 break-even compute price, 7 days, 10 restores, cpu_seconds",
+   "unit": "USD/vCPU-hour",
+   "group": "sensitivity",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "surface_table.cpu_seconds_7d_10r.be_compute",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.be_cpu_30d_10r",
+   "label": "T089 break-even compute price, 30 days, 10 restores, cpu_seconds",
+   "unit": "USD/vCPU-hour",
+   "group": "sensitivity",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "surface_table.cpu_seconds_30d_10r.be_compute",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.be_cpu_7d_0r",
+   "label": "T089 break-even compute price, 7 days, no restore, cpu_seconds",
+   "unit": "USD/vCPU-hour",
+   "group": "sensitivity",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "surface_table.cpu_seconds_7d_0r.be_compute",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.be_store_7d_1r",
+   "label": "T089 break-even storage price, 7 days, 1 restore, cpu_seconds",
+   "unit": "USD/GiB-month",
+   "group": "sensitivity",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "surface_table.cpu_seconds_7d_1r.be_storage",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+  },
+  {
+   "key": "lifecycle.delta_7d_1r",
+   "label": "T089 C-minus-A cost at the cited prices, 7 days, 1 restore, cpu_seconds",
+   "unit": "USD",
+   "group": "sensitivity",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+   "path": "surface_table.cpu_seconds_7d_1r.delta_usd",
+   "stamp_path": "stamp",
+   "stamp": "20261115T011645Z",
+   "revision_path": "revision.weftfs",
+   "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
   }
  ],
  "blocks": [
@@ -29461,6 +30446,841 @@
      "template": "`tests/revocation_epoch.rs` run in the same court."
     }
    ]
+  },
+  {
+   "id": "juicefs-table",
+   "file": "bench/RESULTS-juicefs.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+    "array": "configurations",
+    "order": [
+     "A",
+     "N",
+     "B",
+     "C",
+     "D",
+     "E"
+    ],
+    "columns": [
+     {
+      "header": "row",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "write min ms",
+      "path": "stats.write_wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p50 ms",
+      "path": "stats.write_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p95 ms",
+      "path": "stats.write_wall_ms.p95",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "cold p50 ms",
+      "path": "stats.cold_restore_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "stats.physical_footprint_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "written B",
+      "path": "stats.physical_bytes_written.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write req",
+      "path": "stats.write_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "cold req",
+      "path": "stats.cold_read_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write RSS KiB",
+      "path": "stats.write_peak_rss_kib.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write CPU ms",
+      "path": "stats.write_cpu_ms.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "restore CPU ms",
+      "path": "stats.cold_restore_cpu_ms.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261115T010018Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+   }
+  },
+  {
+   "id": "glusterfs-table",
+   "file": "bench/RESULTS-glusterfs.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+    "array": "configurations",
+    "order": [
+     "A",
+     "N",
+     "B",
+     "C",
+     "D",
+     "E"
+    ],
+    "columns": [
+     {
+      "header": "row",
+      "text": "`{name}`",
+      "align": "---"
+     },
+     {
+      "header": "write min ms",
+      "path": "stats.write_wall_ms.min",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p50 ms",
+      "path": "stats.write_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "write p95 ms",
+      "path": "stats.write_wall_ms.p95",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "cold p50 ms",
+      "path": "stats.cold_restore_wall_ms.median",
+      "format": "fixed:1",
+      "align": "---:"
+     },
+     {
+      "header": "footprint B",
+      "path": "stats.physical_footprint_bytes.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "written B",
+      "path": "stats.physical_bytes_written.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write req",
+      "path": "stats.write_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "cold req",
+      "path": "stats.cold_read_requests.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write RSS KiB",
+      "path": "stats.write_peak_rss_kib.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "write CPU ms",
+      "path": "stats.write_cpu_ms.median",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "restore CPU ms",
+      "path": "stats.cold_restore_cpu_ms.median",
+      "format": "int",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "generated_utc",
+    "stamp": "20261115T010546Z",
+    "revision_path": "environment.revisions.WeftFS",
+    "revision": "0e2871484941483339a340b39bf503859fbf8dab"
+   }
+  },
+  {
+   "id": "juicefs-headline",
+   "file": "bench/RESULTS-juicefs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**The codec wins on bytes on JuiceFS and loses on time.** C stores **{{juicefs.C.storage_pct}} %** fewer physical bytes than A"
+    },
+    {
+     "template": "(**{{juicefs.C.foot_b}} B** against **{{juicefs.A.foot_b}} B**) and its durable write p50 is"
+    },
+    {
+     "template": "**{{juicefs.C.ms_p50}} ms** against A's **{{juicefs.A.ms_p50}} ms** (least-contended"
+    },
+    {
+     "template": "**{{juicefs.C.ms_min}} ms** against **{{juicefs.A.ms_min}} ms**); cold restore is"
+    },
+    {
+     "template": "**{{juicefs.C.restore_ms}} ms** against **{{juicefs.A.restore_ms}} ms**. The contract's"
+    },
+    {
+     "template": "end-to-end overhead for C is **{{juicefs.C.overhead_pct}} %** and its latency change is"
+    },
+    {
+     "template": "**{{juicefs.C.latency_pct}} %** (negative is a loss). Seven interleaved randomised"
+    },
+    {
+     "template": "repetitions; `min` is the least-contended repetition and is used for phase attribution"
+    },
+    {
+     "template": "only, never in place of the median."
+    }
+   ]
+  },
+  {
+   "id": "juicefs-losses",
+   "file": "bench/RESULTS-juicefs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Writes are slower than native.** C's p50 is **{{juicefs.C.ms_p50}} ms** against A's"
+    },
+    {
+     "template": "  **{{juicefs.A.ms_p50}} ms**; its least-contended repetition is **{{juicefs.C.ms_min}} ms**"
+    },
+    {
+     "template": "  against **{{juicefs.A.ms_min}} ms**, so the gap is real and not only contention."
+    },
+    {
+     "template": "* **The host was contended and the spread is large.** C's slowest repetition is"
+    },
+    {
+     "template": "  **{{juicefs.C.span_max_ms}} ms** against a median of **{{juicefs.C.ms_p50}} ms**, and A's is"
+    },
+    {
+     "template": "  **{{juicefs.A.span_max_ms}} ms** against **{{juicefs.A.ms_p50}} ms**. Both the median and the"
+    },
+    {
+     "template": "  least-contended repetition are published; neither replaces the other."
+    },
+    {
+     "template": "* **Restore is slower with the codec:** **{{juicefs.C.restore_ms}} ms** against"
+    },
+    {
+     "template": "  **{{juicefs.A.restore_ms}} ms**. Fewer bytes do not pay for decode on this client."
+    },
+    {
+     "template": "* **The footprint columns are the mount tree, not the object store.** JuiceFS's own"
+    },
+    {
+     "template": "  16 MiB block granularity, its SQLite metadata and its object-store layout are not in"
+    },
+    {
+     "template": "  them; the arm-vs-arm comparison is like-for-like, the absolute storage number is not a"
+    },
+    {
+     "template": "  JuiceFS storage claim."
+    },
+    {
+     "template": "* **No FUSE-on-FUSE:** every arm writes through the JuiceFS mount and no WeftFS FUSE is"
+    },
+    {
+     "template": "  mounted, so no row here prices the filesystem's own frontend."
+    },
+    {
+     "template": "* No comparison of any kind is made against another filesystem (rule 13)."
+    }
+   ]
+  },
+  {
+   "id": "juicefs-cross",
+   "file": "bench/RESULTS-juicefs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Close-to-open, A\u2192B:** **{{juicefs.cross.a_to_b_ms}} ms**; **B\u2192A:**"
+    },
+    {
+     "template": "  **{{juicefs.cross.b_to_a_ms}} ms**. Both are ceilings: the peer polls a fresh open+read"
+    },
+    {
+     "template": "  at 10 ms resolution and the recorded number is when the bytes were observed, so the"
+    },
+    {
+     "template": "  real visibility latency is at most that."
+    },
+    {
+     "template": "* **In-place rewrite:** the peer observed the replaced content after"
+    },
+    {
+     "template": "  **{{juicefs.cross.rewrite_ms}} ms**. JuiceFS guarantees close-to-open, not"
+    },
+    {
+     "template": "  read-after-write, and its attribute/entry caches are 1 s by default, so this is a"
+    },
+    {
+     "template": "  measurement of the documented model rather than a surprise."
+    },
+    {
+     "template": "* **n-client failure:** the writer and client A were killed together; **{{juicefs.cross.ack}}**"
+    },
+    {
+     "template": "  chunks had been acknowledged, the other client read **{{juicefs.cross.peer_ok}}** of them"
+    },
+    {
+     "template": "  back intact (**{{juicefs.cross.peer_bad}}** bad), and after A remounted it read"
+    },
+    {
+     "template": "  **{{juicefs.cross.recovered_ok}}** of them back intact. The file on the peer was"
+    },
+    {
+     "template": "  **{{juicefs.cross.file_b}} B** \u2014 larger than the acknowledged prefix, because the write"
+    },
+    {
+     "template": "  that was in flight is unacknowledged by construction."
+    }
+   ]
+  },
+  {
+   "id": "glusterfs-headline",
+   "file": "bench/RESULTS-glusterfs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**The codec wins on bytes on GlusterFS and loses on time.** C stores"
+    },
+    {
+     "template": "**{{glusterfs.C.storage_pct}} %** fewer physical bytes than A (**{{glusterfs.C.foot_b}} B**"
+    },
+    {
+     "template": "against **{{glusterfs.A.foot_b}} B**) and its durable write p50 is"
+    },
+    {
+     "template": "**{{glusterfs.C.ms_p50}} ms** against A's **{{glusterfs.A.ms_p50}} ms**"
+    },
+    {
+     "template": "(least-contended **{{glusterfs.C.ms_min}} ms** against **{{glusterfs.A.ms_min}} ms**); cold"
+    },
+    {
+     "template": "restore is **{{glusterfs.C.restore_ms}} ms** against **{{glusterfs.A.restore_ms}} ms**."
+    },
+    {
+     "template": "End-to-end overhead for C is **{{glusterfs.C.overhead_pct}} %**; the contract's latency"
+    },
+    {
+     "template": "change is **{{glusterfs.C.latency_pct}} %** (negative is a loss). Seven interleaved"
+    },
+    {
+     "template": "randomised repetitions."
+    }
+   ]
+  },
+  {
+   "id": "glusterfs-losses",
+   "file": "bench/RESULTS-glusterfs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Writes are much slower than native.** C's p50 is **{{glusterfs.C.ms_p50}} ms** against"
+    },
+    {
+     "template": "  A's **{{glusterfs.A.ms_p50}} ms**; its least-contended repetition is"
+    },
+    {
+     "template": "  **{{glusterfs.C.ms_min}} ms** against **{{glusterfs.A.ms_min}} ms**. The single brick's"
+    },
+    {
+     "template": "  fsync path, not the codec, dominates this backend."
+    },
+    {
+     "template": "* **The write distribution is bimodal on this host.** C's slowest repetition is"
+    },
+    {
+     "template": "  **{{glusterfs.C.span_max_ms}} ms** against a median of **{{glusterfs.C.ms_p50}} ms**; A's"
+    },
+    {
+     "template": "  slowest is **{{glusterfs.A.span_max_ms}} ms** against **{{glusterfs.A.ms_p50}} ms**. The"
+    },
+    {
+     "template": "  host was shared with another project's courts. Medians and least-contended values are"
+    },
+    {
+     "template": "  both published and neither is substituted for the other."
+    },
+    {
+     "template": "* **Restore is slower with the codec:** **{{glusterfs.C.restore_ms}} ms** against"
+    },
+    {
+     "template": "  **{{glusterfs.A.restore_ms}} ms**."
+    },
+    {
+     "template": "* **The footprint columns are the mount tree.** Brick filesystem allocation and Gluster's"
+    },
+    {
+     "template": "  `trusted.*` metadata are not separately instrumented."
+    },
+    {
+     "template": "* **No FUSE-on-FUSE:** no WeftFS FUSE is mounted in any arm."
+    },
+    {
+     "template": "* No comparison of any kind is made against another filesystem (rule 13)."
+    }
+   ]
+  },
+  {
+   "id": "glusterfs-cross",
+   "file": "bench/RESULTS-glusterfs.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* **Close-to-open, A\u2192B:** **{{glusterfs.cross.a_to_b_ms}} ms**; **B\u2192A:**"
+    },
+    {
+     "template": "  **{{glusterfs.cross.b_to_a_ms}} ms**. Both are ceilings from a 10 ms polling loop."
+    },
+    {
+     "template": "* **In-place rewrite:** the peer observed the replaced content after"
+    },
+    {
+     "template": "  **{{glusterfs.cross.rewrite_ms}} ms**. Close-to-open is the documented model;"
+    },
+    {
+     "template": "  attribute caching sits behind the client's md-cache/stat-prefetch timeouts."
+    },
+    {
+     "template": "* **n-client failure:** the writer and its FUSE client were killed together;"
+    },
+    {
+     "template": "  **{{glusterfs.cross.ack}}** acknowledged chunks, **{{glusterfs.cross.peer_ok}}** read back"
+    },
+    {
+     "template": "  intact on the other client (**{{glusterfs.cross.peer_bad}}** bad), and"
+    },
+    {
+     "template": "  **{{glusterfs.cross.recovered_ok}}** read back intact after the killed client remounted."
+    },
+    {
+     "template": "  The peer's file was **{{glusterfs.cross.file_b}} B**, i.e. one chunk longer than the"
+    },
+    {
+     "template": "  acknowledged prefix: that chunk was in flight when the client died and is unacknowledged."
+    }
+   ]
+  },
+  {
+   "id": "lifecycle-notes",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{lifecycle.rows}}** rows, each read from a committed receipt by an explicit JSON path."
+    },
+    {
+     "template": "Five stages, four source courts, three fixtures. The stamps are in the table because a"
+    },
+    {
+     "template": "reader must be able to tell a stage measured at the same revision from one measured"
+    },
+    {
+     "template": "before it."
+    }
+   ]
+  },
+  {
+   "id": "sensitivity-base",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "A's physical footprint is **{{lifecycle.A.foot_b}} B** and C's is"
+    },
+    {
+     "template": "**{{lifecycle.C.foot_b}} B**: **{{lifecycle.footprint_pct}} %** fewer bytes, i.e."
+    },
+    {
+     "template": "**{{lifecycle.saved_b}} B** saved out of a **{{lifecycle.base_logical_b}} B** logical"
+    },
+    {
+     "template": "checkpoint. C costs **{{lifecycle.extra_write_cpu_ms}} ms** more write CPU and"
+    },
+    {
+     "template": "**{{lifecycle.extra_restore_cpu_ms}} ms** more restore CPU per checkpoint, and in wall"
+    },
+    {
+     "template": "time **{{lifecycle.extra_write_wall_ms}} ms** more to write and"
+    },
+    {
+     "template": "**{{lifecycle.extra_restore_wall_ms}} ms** more to restore, because it is CPU-bound where"
+    },
+    {
+     "template": "A waits on storage."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "The measured totals behind those deltas: A write CPU **{{lifecycle.A.write_cpu_ms}} ms**,"
+    },
+    {
+     "template": "restore CPU **{{lifecycle.A.restore_cpu_ms}} ms**, write wall"
+    },
+    {
+     "template": "**{{lifecycle.A.write_wall_ms}} ms**, cold restore **{{lifecycle.A.restore_wall_ms}} ms**;"
+    },
+    {
+     "template": "C write CPU **{{lifecycle.C.write_cpu_ms}} ms**, restore CPU"
+    },
+    {
+     "template": "**{{lifecycle.C.restore_cpu_ms}} ms**, write wall **{{lifecycle.C.write_wall_ms}} ms**,"
+    },
+    {
+     "template": "cold restore **{{lifecycle.C.restore_wall_ms}} ms**. **{{lifecycle.reps}}** repetitions"
+    },
+    {
+     "template": "each, interleaved."
+    }
+   ]
+  },
+  {
+   "id": "surface-notes",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "At the cited prices \u2014 **{{lifecycle.price_store}}** USD/GiB-month of storage and"
+    },
+    {
+     "template": "**{{lifecycle.price_compute}}** USD per vCPU-hour \u2014 C is cheaper in"
+    },
+    {
+     "template": "**{{lifecycle.surface_c_cells}}** of **{{lifecycle.surface_cells}}** lifecycle cells and A"
+    },
+    {
+     "template": "wins **{{lifecycle.surface_a_cells}}**."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "The compute axis is the one that can flip it. At seven days' retention with no restore in"
+    },
+    {
+     "template": "the window, the break-even compute price is **{{lifecycle.be_cpu_7d_0r}}** USD/vCPU-hour;"
+    },
+    {
+     "template": "with ten restores inside the window it falls to **{{lifecycle.be_cpu_7d_10r}}**. That is"
+    },
+    {
+     "template": "the price at which the extra decode work would exactly consume the byte saving. At one"
+    },
+    {
+     "template": "day and ten restores it is **{{lifecycle.be_cpu_1d_10r}}**; at thirty days and ten restores"
+    },
+    {
+     "template": "**{{lifecycle.be_cpu_30d_10r}}**."
+    },
+    {
+     "template": ""
+    },
+    {
+     "template": "The storage axis barely bites in the other direction: at seven days and one restore the"
+    },
+    {
+     "template": "storage price would have to fall to **{{lifecycle.be_store_7d_1r}}** USD/GiB-month before"
+    },
+    {
+     "template": "the native arm wins. The C-minus-A difference in that cell is"
+    },
+    {
+     "template": "**{{lifecycle.delta_7d_1r}}** USD per checkpoint lifecycle under `cpu_seconds`."
+    }
+   ]
+  },
+  {
+   "id": "plane-notes",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "Under `cpu_seconds`, C is cheaper in **{{lifecycle.plane_c_cpu}}** of"
+    },
+    {
+     "template": "**{{lifecycle.plane_cells}}** cells and A in **{{lifecycle.plane_a_cpu}}**; under"
+    },
+    {
+     "template": "`allocated_vcpu_seconds`, **{{lifecycle.plane_c_alloc}}** of **{{lifecycle.plane_cells}}**"
+    },
+    {
+     "template": "for C and **{{lifecycle.plane_a_alloc}}** for A. The grid spans a 100x price ratio in each"
+    },
+    {
+     "template": "direction, so an empty native-arm region is a statement about this measured delta at these"
+    },
+    {
+     "template": "quantities \u2014 not a claim that storage economics never favour the native path."
+    }
+   ]
+  },
+  {
+   "id": "lifecycle-table",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+    "array": "lifecycle_table",
+    "order": [
+     "row01",
+     "row02",
+     "row03",
+     "row04",
+     "row05",
+     "row06",
+     "row07",
+     "row08",
+     "row09",
+     "row10",
+     "row11",
+     "row12",
+     "row13",
+     "row14",
+     "row15",
+     "row16",
+     "row17",
+     "row18",
+     "row19",
+     "row20",
+     "row21",
+     "row22",
+     "row23",
+     "row24",
+     "row25",
+     "row26"
+    ],
+    "columns": [
+     {
+      "header": "stage",
+      "path": "stage",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "measured quantity",
+      "path": "quantity",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "value",
+      "path": "value_text",
+      "format": "text",
+      "align": "---:"
+     },
+     {
+      "header": "unit",
+      "path": "unit",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "evidence",
+      "path": "receipt",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "stamp",
+      "path": "stamp",
+      "format": "text",
+      "align": "---"
+     }
+    ],
+    "stamp_path": "stamp",
+    "stamp": "20261115T011645Z",
+    "revision_path": "revision.weftfs",
+    "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+   }
+  },
+  {
+   "id": "price-table",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+    "array": "price_table",
+    "order": [
+     "storage",
+     "compute"
+    ],
+    "columns": [
+     {
+      "header": "quantity",
+      "path": "label",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "price",
+      "path": "value",
+      "format": "fixed:6",
+      "align": "---:"
+     },
+     {
+      "header": "unit",
+      "path": "unit",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "verbatim source string",
+      "path": "verbatim",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "conversion",
+      "path": "conversion",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "page, retrieved",
+      "path": "source",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "retrieved UTC",
+      "path": "retrieved",
+      "format": "text",
+      "align": "---"
+     }
+    ],
+    "stamp_path": "stamp",
+    "stamp": "20261115T011645Z",
+    "revision_path": "revision.weftfs",
+    "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+   }
+  },
+  {
+   "id": "surface-table",
+   "file": "docs/LIFECYCLE-TCO.md",
+   "kind": "matrix",
+   "matrix": {
+    "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+    "array": "surface_table",
+    "order": [
+     "cpu_seconds_1d_0r",
+     "cpu_seconds_1d_1r",
+     "cpu_seconds_1d_10r",
+     "cpu_seconds_7d_0r",
+     "cpu_seconds_7d_1r",
+     "cpu_seconds_7d_10r",
+     "cpu_seconds_30d_0r",
+     "cpu_seconds_30d_1r",
+     "cpu_seconds_30d_10r",
+     "allocated_vcpu_seconds_1d_0r",
+     "allocated_vcpu_seconds_1d_1r",
+     "allocated_vcpu_seconds_1d_10r",
+     "allocated_vcpu_seconds_7d_0r",
+     "allocated_vcpu_seconds_7d_1r",
+     "allocated_vcpu_seconds_7d_10r",
+     "allocated_vcpu_seconds_30d_0r",
+     "allocated_vcpu_seconds_30d_1r",
+     "allocated_vcpu_seconds_30d_10r"
+    ],
+    "columns": [
+     {
+      "header": "billing",
+      "path": "billing",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "retention d",
+      "path": "retention_days",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "restores",
+      "path": "restores",
+      "format": "int",
+      "align": "---:"
+     },
+     {
+      "header": "A USD",
+      "path": "a_usd",
+      "format": "fixed:6",
+      "align": "---:"
+     },
+     {
+      "header": "C USD",
+      "path": "c_usd",
+      "format": "fixed:6",
+      "align": "---:"
+     },
+     {
+      "header": "C-A USD",
+      "path": "delta_usd",
+      "format": "fixed:6",
+      "align": "---:"
+     },
+     {
+      "header": "cheaper",
+      "path": "cheaper",
+      "format": "text",
+      "align": "---"
+     },
+     {
+      "header": "break-even storage USD/GiB-mo",
+      "path": "be_storage",
+      "format": "fixed:6",
+      "align": "---:"
+     },
+     {
+      "header": "break-even compute USD/vCPU-h",
+      "path": "be_compute",
+      "format": "fixed:3",
+      "align": "---:"
+     }
+    ],
+    "stamp_path": "stamp",
+    "stamp": "20261115T011645Z",
+    "revision_path": "revision.weftfs",
+    "revision": "031b0557f79ad829f175f5e380d4118bb0992920"
+   }
   }
  ]
 }

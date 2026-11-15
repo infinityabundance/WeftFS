@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,330** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,345** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11805,3 +11805,83 @@ remains scheduler-dependent, so the integration test cannot by itself reproduce
 by the in-crate test. A pass that waits more than 3 s for the epoch still
 receives `Busy` by contract. `WeftFS-Go` has no epoch GC, so none of this is
 cross-language. No power-loss, media or fleet claim.
+
+## T035 / T036 / T082 / T089 (2026-11-15, staging)
+
+**T035 — JuiceFS, the second deployed backend, with two clients.**
+`scripts/juicefs_court.sh` runs the frozen six-arm court on a real JuiceFS
+volume: the official 1.4.2 linux-amd64 release binary (tarball digest checked
+against the release's own `checksums.txt`), SQLite metadata engine, local file
+object store, 16 MiB blocks, trash disabled, write-back off, mounted by **two
+independent JuiceFS client processes**. 101 tensors, 424,439,296 logical bytes,
+seven interleaved *randomised* repetitions (`--order-seed`), a crash proxy per
+WeftFS arm, and a cross-client section after the matrix: close-to-open in both
+directions, in-place rewrite visibility, and an n-client failure test where the
+writer and client A's daemon are killed mid-write and client B must read every
+acknowledged chunk back intact. Evidence, the deployment record and every loss:
+[`bench/RESULTS-juicefs.md`](../bench/RESULTS-juicefs.md).
+
+**T036 — GlusterFS.** `docker/gluster.Dockerfile` bakes the Debian bookworm
+10.3 server and client packages into `weft/gluster-court:1` because `apt-get`
+cannot run inside a `cap-drop=ALL` court; `scripts/glusterfs_court.sh` runs one
+`glusterd` with one single-brick volume and two independent FUSE clients, the
+same six arms, and the same cross-client section. Two capabilities were found to
+be the measured minimum and are recorded with the exact errors that prove it:
+`SYS_ADMIN` for `trusted.glusterfs.*` xattrs and `DAC_OVERRIDE` because the posix
+translator creates `.glusterfs` with mode 0600. Debian ships no Gluster NFS
+xlator, so the volume is started with `nfs.disable on`. Evidence:
+[`bench/RESULTS-glusterfs.md`](../bench/RESULTS-glusterfs.md).
+
+**T036 — BeeGFS, blocked.** The 7.4.6 packages install and the management,
+metadata and storage services start and register with each other inside a
+`cap-drop=ALL` container (both targets `Online`/`Good`). The client is a kernel
+module, and the receipt records every attempt with exact text: `modprobe` finds
+no module for the host kernel, `mount -t beegfs` fails with `permission denied`
+without `SYS_ADMIN` (which does not isolate the cause) and with `unknown
+filesystem type 'beegfs'` when a dedicated probe container is given that
+capability, and the package's own autobuild stops at "Linux kernel build
+directory not found". **Nothing was measured on BeeGFS**, the row stays
+`blocked`, and the court is deliberately not registered in `verify-all.sh`.
+Evidence: [`bench/RESULTS-beegfs.md`](../bench/RESULTS-beegfs.md).
+
+**T082 — one lifecycle, stitched.** `scripts/lifecycle_tco.py` reads 26 measured
+quantities out of four existing receipts (checkpoint write planned/fast-raw/
+fast-zstd-1, async save overlap, kill-and-resume, partial restore to the first
+useful step, retention/GC) into one table where every row names its receipt,
+stamp, revision and JSON path, and fails closed on a missing value, a
+stamp/filename mismatch or an untracked receipt. The document states what the
+stitch cannot prove: different fixtures, different runs, three different
+courts, and rows that must not be summed. Evidence:
+[`docs/LIFECYCLE-TCO.md`](LIFECYCLE-TCO.md).
+
+**T089 — sensitivity, not economics.** The same receipt multiplies the measured
+resource quantities from one interleaved A/C court by published list prices that
+carry their verbatim source string, page and retrieval time (a standard-class
+object-storage rate read from the vendor pricing page's per-GiB-hour figure and
+converted to a month, and a serverless vCPU rate read from its per-vCPU-second
+figure and converted to an hour; the exact strings and conversions are in the
+generated table, not retyped here). Two billing interpretations (measured
+CPU seconds, and allocated vCPU-seconds including `fsync` waits), three
+retention windows, three restore counts, explicit break-evens and a 5×5 price
+plane per billing model are in the receipt. Request counts, wall seconds,
+network bytes, memory and labour are declared **unpriced** with reasons. The
+result is a surface, not a forecast: no fleet, no utilisation, no discount, no
+commitment.
+
+**Cross-client results.** On both backends close-to-open was observed in both
+directions on the first peer open (polling ceilings in the receipts), the
+in-place rewrite became visible to the peer within the documented
+attribute-cache window, and the n-client failure test read back every
+acknowledged chunk intact on the surviving client and, after a remount, on the
+killed client. Both tests are process faults on a two-client, one-host
+deployment; neither is a node-, media- or fleet-failure claim.
+
+**Not claimed.** Single host, one volume, one writer at a time on both
+backends; the JuiceFS footprint is the mount tree and not the object store; the
+GlusterFS footprint is the mount tree and not brick allocation; the host was
+shared with another project's courts during these runs, so the write
+distributions are bimodal and both the median and the least-contended repetition
+are published. `verify-all.sh` was **not** re-run; the two new courts are
+registered with their own skip-78 paths and their registered invocation
+(`--reduced`) was executed once for each, but the cited aggregate receipt is
+still the last full run.

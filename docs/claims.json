@@ -14102,5 +14102,157 @@
    "scripts/verify-all.sh"
   ],
   "kind": "present"
+ },
+ {
+  "id": "t035_juicefs_court_registered",
+  "claim": "The JuiceFS court is registered in the aggregate verifier with its own skip path.",
+  "value": "run_orchestrated_court juicefs juicefs",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/juicefs-20261115T005509Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t036_glusterfs_court_registered",
+  "claim": "The GlusterFS court is registered in the aggregate verifier with its own skip path.",
+  "value": "run_orchestrated_court glusterfs glusterfs",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": "bench/receipts/glusterfs-20261115T010035Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t035_juicefs_doc",
+  "claim": "The JuiceFS results document names the deployment and the two-client topology.",
+  "value": "JuiceFS \u2014 the augmentation on a deployed volume",
+  "locations": [
+   "bench/RESULTS-juicefs.md"
+  ],
+  "receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t036_glusterfs_doc",
+  "claim": "The GlusterFS results document names the deployment and why the image is purpose-built.",
+  "value": "GlusterFS \u2014 the augmentation on a deployed single-brick volume",
+  "locations": [
+   "bench/RESULTS-glusterfs.md"
+  ],
+  "receipt": "bench/receipts/augmentation-glusterfs-20261115T010035Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t035_cross_client_recorded",
+  "claim": "Both deployed-backend documents record the cross-client n-client failure test.",
+  "value": "n-client failure",
+  "locations": [
+   "bench/RESULTS-juicefs.md",
+   "bench/RESULTS-glusterfs.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t035_two_clients",
+  "claim": "Both courts run two independent client processes on one volume.",
+  "value": "two client processes",
+  "locations": [
+   "bench/RESULTS-juicefs.md",
+   "bench/RESULTS-glusterfs.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t036_beegfs_blocked",
+  "claim": "The BeeGFS receipt records the exact mount error once the mount capability is present.",
+  "value": "unknown filesystem type 'beegfs'.",
+  "locations": [
+   "bench/RESULTS-beegfs.md"
+  ],
+  "receipt": "bench/receipts/beegfs-20261115T010922Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t036_beegfs_no_measurement",
+  "claim": "No BeeGFS filesystem was mounted and nothing was measured on it.",
+  "value": "No BeeGFS filesystem was mounted",
+  "locations": [
+   "bench/RESULTS-beegfs.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t036_beegfs_receipt_blocked",
+  "claim": "The BeeGFS court receipt says blocked and not mounted.",
+  "value": "\"blocked\": true",
+  "locations": [
+   "bench/receipts/beegfs-20261115T010922Z.json"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t036_beegfs_not_registered",
+  "claim": "BeeGFS is deliberately absent from the aggregate verifier.",
+  "value": "BeeGFS is NOT registered",
+  "locations": [
+   "scripts/verify-all.sh"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t082_lifecycle_doc",
+  "claim": "The lifecycle stitch document states what the stitch cannot prove.",
+  "value": "What the stitch cannot prove",
+  "locations": [
+   "docs/LIFECYCLE-TCO.md"
+  ],
+  "receipt": "bench/receipts/lifecycle-tco-20261115T011645Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t089_unpriced_declared",
+  "claim": "The sensitivity document declares which quantities are deliberately not priced.",
+  "value": "What is deliberately not priced",
+  "locations": [
+   "docs/LIFECYCLE-TCO.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t089_not_a_forecast",
+  "claim": "The sensitivity document states it is not a forecast and not an economic claim.",
+  "value": "Not a forecast",
+  "locations": [
+   "docs/LIFECYCLE-TCO.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t089_prices_cited",
+  "claim": "Each price carries its verbatim source string, page and retrieval time.",
+  "value": "verbatim source string",
+  "locations": [
+   "docs/LIFECYCLE-TCO.md"
+  ],
+  "receipt": null,
+  "kind": "present"
+ },
+ {
+  "id": "t082_receipt_schema",
+  "claim": "The stitched lifecycle receipt has its own schema.",
+  "value": "weft.lifecycle-tco.v1",
+  "locations": [
+   "bench/receipts/lifecycle-tco-20261115T011645Z.json"
+  ],
+  "receipt": null,
+  "kind": "present"
  }
 ]

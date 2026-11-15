@@ -190,5 +190,17 @@
   "superseded_by": "bench/receipts/encryption-20261114T234710Z.json",
   "reason": "Same bench at the same method; the superseding run is the one whose court also drives the CLI smoke.",
   "declared_in": "bench/RESULTS-encryption.md"
+ },
+ {
+  "receipt": "bench/receipts/augmentation-juicefs-20261115T001844Z.json",
+  "superseded_by": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+  "reason": "Same court, same fixture and same six arms, measured before the cross-client writer was bounded to 64 MiB with a per-chunk timeout. The measurement itself is valid; the receipt is retained so the change to the script is auditable.",
+  "declared_in": "bench/RESULTS-juicefs.md"
+ },
+ {
+  "receipt": "bench/receipts/juicefs-20261115T001844Z.json",
+  "superseded_by": "bench/receipts/juicefs-20261115T005509Z.json",
+  "reason": "Backend and cross-client receipt of the same run as augmentation-juicefs-20261115T001844Z.json, superseded for the same reason (bounded cross-client writer).",
+  "declared_in": "bench/RESULTS-juicefs.md"
  }
 ]

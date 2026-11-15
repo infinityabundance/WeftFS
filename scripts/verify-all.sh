@@ -339,6 +339,32 @@ run_orchestrated_court object_pipeline object_pipeline_court \
 run_orchestrated_court cephfs cephfs_court \
   env WEFT_CEPHFS_STAMP="$stamp" bash scripts/cephfs_court.sh --reduced
 
+# T035: a real JuiceFS 1.4.2 volume (official release binary, SQLite metadata
+# engine, local file object store) mounted by two independent JuiceFS client
+# processes, with the same A/N/B/C/D/E court rooted on that mount and the
+# close-to-open / n-client-failure section. The aggregate uses the reduced
+# subset with seven repetitions; the full published court is
+# `augmentation-juicefs-20261115T005509Z.json`, cited in
+# `bench/RESULTS-juicefs.md`. A court that cannot run prints
+# `juicefs_court: skip <reason>` and exits 78; the aggregate records a skip,
+# never a pass.
+run_orchestrated_court juicefs juicefs_court \
+  env WEFT_JUICEFS_STAMP="$stamp" bash scripts/juicefs_court.sh --reduced
+
+# T036: a real GlusterFS 10.3 single-brick volume (packages baked into
+# `weft/gluster-court:1` because apt cannot run under the court's cap-drop=ALL)
+# mounted by two independent FUSE clients, same six arms and the same
+# cross-client section. SYS_ADMIN and DAC_OVERRIDE on the server are the
+# measured minimum and are recorded in the receipt. Full published court:
+# `augmentation-glusterfs-20261115T010035Z.json`, cited in
+# `bench/RESULTS-glusterfs.md`. A court that cannot run prints
+# `glusterfs_court: skip <reason>` and exits 78.
+# (BeeGFS is NOT registered: its client is a kernel module, the attempt is a
+# documented blocker in `bench/RESULTS-beegfs.md`, and a court that can only
+# produce a blocker must not inflate an aggregate pass count.)
+run_orchestrated_court glusterfs glusterfs_court \
+  env WEFT_GLUSTER_STAMP="$stamp" bash scripts/glusterfs_court.sh --reduced
+
 # T020/T021/T027: MW3 conflict domains, the T021 rebase and the T027 writer
 # envelope. Reduced configuration: N=1/4/32 disjoint (400 commits each),
 # same-domain N=8/32, compact 8/32/256/1024, and the T021 after arm only (a
@@ -700,6 +726,12 @@ skipped="$(grep -c '=skip$' "$results" || true)"
   fi
   if [[ -f "bench/receipts/cephfs-${stamp}.json" ]]; then
     emit_receipt cephfs "bench/receipts/cephfs-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/juicefs-${stamp}.json" ]]; then
+    emit_receipt juicefs "bench/receipts/juicefs-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/glusterfs-${stamp}.json" ]]; then
+    emit_receipt glusterfs "bench/receipts/glusterfs-${stamp}.json"
   fi
   if [[ -f "bench/receipts/conformance-bundle-${stamp}.json" ]]; then
     emit_receipt conformance_bundle "bench/receipts/conformance-bundle-${stamp}.json"
