@@ -225,6 +225,10 @@
     {
       "id": "t093",
       "title": "T093 residual-fingerprint selector, held-out Qwen2.5-3B-Instruct"
+    },
+    {
+      "id": "t096",
+      "title": "T096 four-strategy decision planner"
     }
   ],
   "numbers": [
@@ -28119,6 +28123,214 @@
       "group": "t093",
       "format": "fixed:2",
       "expr": "{t093.tree_saving} - {t093.fingerprint_cost_units}"
+    },
+    {
+      "key": "t096.requests",
+      "label": "held-out requests",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.requests",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.observations",
+      "label": "strategy executions measured",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.observations",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.oracle_ns",
+      "label": "oracle total wall",
+      "unit": "ns",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.oracle_ns",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.fixed_ns",
+      "label": "best fixed priority total wall",
+      "unit": "ns",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.0.cost_ns",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.fixed_regret_frac",
+      "label": "best fixed priority regret as a fraction of the oracle",
+      "unit": "",
+      "group": "t096",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.0.regret_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.mean_ns",
+      "label": "mean-utility policy total wall",
+      "unit": "ns",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.1.cost_ns",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.mean_regret_frac",
+      "label": "mean-utility regret as a fraction of the oracle",
+      "unit": "",
+      "group": "t096",
+      "format": "fixed:6",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.1.regret_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.declared_ns",
+      "label": "declared-cost policy total wall",
+      "unit": "ns",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.2.cost_ns",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.shipped_ns",
+      "label": "shipped-planner total wall",
+      "unit": "ns",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.3.cost_ns",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.shipped_regret_frac",
+      "label": "shipped-planner regret as a fraction of the oracle",
+      "unit": "",
+      "group": "t096",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.heldout.policies.3.regret_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.exact_requests",
+      "label": "exact requests",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.contract.exact_requests",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.recompute_chosen",
+      "label": "requests where a policy chose recompute",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.contract.recompute_chosen",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.recompute_correct",
+      "label": "of those, recompute produced the exact bytes",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.contract.recompute_correct",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.recompute_correct_frac",
+      "label": "fraction of recompute choices that were exact",
+      "unit": "",
+      "group": "t096",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.contract.recompute_correct_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.approx_refusals",
+      "label": "approximate candidates refused",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.contract.approximate_refusals_checked",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
+    },
+    {
+      "key": "t096.approx_selected",
+      "label": "approximate candidates selected",
+      "unit": "",
+      "group": "t096",
+      "format": "int",
+      "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+      "path": "measurement.contract.approximate_selected",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T170152Z",
+      "revision_path": "revision",
+      "revision": "ce7b3fb67a34ce22f2b4d0a3e7a94ed146adc5a5"
     }
   ],
   "blocks": [
@@ -35937,6 +36149,50 @@
         },
         {
           "template": "medians, and the feature pass is four orders of magnitude more expensive than the saving."
+        }
+      ]
+    },
+    {
+      "id": "t096-policies",
+      "file": "bench/RESULTS-recompute-planner.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "**{{t096.requests}}** held-out requests, **{{t096.observations}}** measured strategy executions."
+        },
+        {
+          "template": "Oracle **{{t096.oracle_ns}} ns**. Best fixed priority **{{t096.fixed_ns}} ns** (regret"
+        },
+        {
+          "template": "**{{t096.fixed_regret_frac}}\u00d7**); mean-utility **{{t096.mean_ns}} ns** (regret"
+        },
+        {
+          "template": "**{{t096.mean_regret_frac}}\u00d7**); declared costs **{{t096.declared_ns}} ns**; shipped planner"
+        },
+        {
+          "template": "**{{t096.shipped_ns}} ns** (regret **{{t096.shipped_regret_frac}}\u00d7**)."
+        }
+      ]
+    },
+    {
+      "id": "t096-contract",
+      "file": "bench/RESULTS-recompute-planner.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "**{{t096.exact_requests}}** exact requests; recompute was chosen on"
+        },
+        {
+          "template": "**{{t096.recompute_chosen}}** requests and produced the exact bytes on"
+        },
+        {
+          "template": "**{{t096.recompute_correct}}** of them (**{{t096.recompute_correct_frac}}**)."
+        },
+        {
+          "template": "The approximate candidate was refused **{{t096.approx_refusals}}** times and selected"
+        },
+        {
+          "template": "**{{t096.approx_selected}}** times."
         }
       ]
     }

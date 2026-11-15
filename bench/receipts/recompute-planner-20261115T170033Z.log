@@ -1,0 +1,233 @@
+== T096 recompute planner, measure stage ==
+kernel: Linux f156a9a2e8cd 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/rust-court:1 (sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb)
+limits: memory=3g cpus=4 pids=1024
+warning: unused import: `Class`
+  --> src/artifact_template.rs:37:20
+   |
+37 | use crate::error::{Class, Error, Result};
+   |                    ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeSet`
+  --> src/revocation_epoch.rs:31:5
+   |
+31 | use std::collections::BTreeSet;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::State`
+  --> src/revocation_epoch.rs:39:5
+   |
+39 | use crate::state::State;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ProvenanceRecord`
+  --> src/taint.rs:36:25
+   |
+36 | use crate::provenance::{ProvenanceRecord, PROVENANCE_PREDICATE};
+   |                         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1722:9
+     |
+1722 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1723:9
+     |
+1723 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1724:9
+     |
+1724 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1798:9
+     |
+1798 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3352:13
+     |
+3352 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: unused variable: `record`
+    --> src/training_artifact.rs:1089:21
+     |
+1089 |                 let record = state
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_record`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1821:8
+     |
+1288 | impl Store {
+     | ---------- method in this implementation
+...
+1821 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: field `gaps` is never read
+   --> src/taint.rs:411:5
+    |
+405 | struct Consumer {
+    |        -------- field in this struct
+...
+411 |     gaps: Vec<String>,
+    |     ^^^^
+
+warning: function `resolve_dir_path` is never used
+    --> src/training_artifact.rs:2135:15
+     |
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+     |               ^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> examples/recompute_planner_court.rs:445:9
+    |
+445 |     let mut train_total = [0.0f64; 6];
+    |         ----^^^^^^^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `train_total`
+   --> examples/recompute_planner_court.rs:445:9
+    |
+445 |     let mut train_total = [0.0f64; 6];
+    |         ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_train_total`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `fixture`
+   --> examples/recompute_planner_court.rs:513:29
+    |
+513 |         for (fixture_index, fixture) in court.fixtures.iter().enumerate() {
+    |                             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_fixture`
+
+7dbd6997ad4ea3e8d89e6abd33ae5b95db8489089363f5cb4fde4f253198574f  .docker-cache/target-rust/debug/examples/recompute_planner_court
+6c5d1620cb7425c561d945180788073dc0d1d5506a00677f39a49ce98be7c61e  examples/recompute_planner_court.rs
+T096: 12 fixtures in /tmp/weft-t096.a9m9eg
+{"best_fixed":173637155.0,"declared_cost":49877102.0,"fixtures":12,"mean_utility":49877102.0,"oracle_ns":49877102.0,"out":"bench/receipts/recompute-planner-20261115T170033Z-raw.json","recompute_correct_fraction":1.0,"requests":48,"shipped_planner":93582485.0}
+PASS fixtures_present: 12

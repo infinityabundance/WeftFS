@@ -12198,3 +12198,55 @@ the aggregate was **not** re-run, so the cited verification receipt is still
     receipts. `verify-all` was **not** re-run (the P0x courts are registered with
     skip paths; a skip was verified to exit 78 with one line); the cited
     aggregate is unchanged.
+
+- 2026-11-15 (T100/T091/T093/T096, four research gates): `staging`, not pushed.
+  * **T100 bounded refinement link** (`verification/REFINEMENT.md`,
+    `verifier/refinement_check.py`, `verifier/refinement_crosscheck.py`,
+    `scripts/refinement_court.sh`, fixture family `tests/history/refinement/`).
+    The model could not describe a committer that publishes twice (nothing
+    returned `phase` to idle after `Ack`), so `Release(c)` was added to the
+    corrected module and both negative controls, and the enumerator includes it.
+    Receipt `refinement-20261115T153201Z` 23/23: four real store histories
+    accepted (54 transactions, 39 commits, 7 fully checked and 7 bounded-checked
+    retry commits), five mutants of a real history and eight fixtures rejected
+    with their named invariant, 144 availability refusals, and the replay's
+    transition relation matches TLC exactly on two configurations
+    (28,713 / 246,445 and 176,427 / 1,772,785 distinct / generated states) plus
+    the two flaw controls. Not established: full refinement, unbounded
+    verification, liveness, cross-domain (MW3) properties, values below the
+    history channel, or blind overwrites of pre-trace keys.
+  * **T091 multi-parent reconstruction** (`examples/multi_parent_court.rs`,
+    `bench/scripts/multi_parent_court.sh`, `bench/RESULTS-multi-parent.md`).
+    WMP1 container over the shipped mode-3 matcher, fan-out 1-4 over all subsets,
+    72 real pythia-70m tensors across six checkpoints. Receipt
+    `multi-parent-20261115T162813Z` 10/10: 252 decodes all byte-exact, 144/144
+    typed refusals. Payload win 19,396 B of 42,071,901 B (0.038%) on 17 of 72
+    tensors, largest 2,738 B; charging the container metadata the on-disk
+    aggregate is 0.019% larger than the best single-parent mode 3 frame and
+    3.15x the mode 11 frame; fan-out 1 is best on 65 of 72. **Null result.**
+    Two earlier receipts are retained: 153633Z sampled only 2 KiB bias tensors
+    (alphabetical bias), 153851Z was confounded by the per-COPY parent byte.
+  * **T093 residual-fingerprint selector** (`examples/residual_selector.rs`,
+    `bench/scripts/residual_selector_court.sh`,
+    `bench/RESULTS-residual-selector.md`, contract committed before measurement).
+    Receipt `residual-selector-20261115T164613Z` 6/6, held-out measured once:
+    always-best-of-two is 38 units above the oracle on 28,099,256; the fitted
+    entropy threshold degenerates to always-zstd (12.35% above); the size
+    threshold reproduces best-of-two; the depth-2 tree beats the best trivial
+    selector by 21.73 units (7.7e-7) and its own fingerprint pass costs 620,265
+    units (28,539x the saving). **Null result**: a size rule, not a learned
+    model; the only real finding (raw wins below 1 KiB) is free.
+  * **T096 four-strategy decision planner** (`examples/recompute_planner_court.rs`,
+    `bench/scripts/recompute_planner_court.sh`,
+    `bench/RESULTS-recompute-planner.md`). The exactness gate is the shipped
+    `choose_recovery`; every fixture carries a declared-approximate candidate.
+    Receipt `recompute-planner-20261115T170152Z` 6/6: 60 requests, 312 measured
+    executions, all exact; recompute chosen 48 times and exact 48 times;
+    approximate refused 60/60 and selected 0. Mean-utility regret 0.0023% of the
+    oracle, best fixed priority 236.8% above, shipped declared costs 82.6% above.
+    Limitation: the traces are separable by one mean per strategy, so no
+    context-dependent policy advantage is shown.
+  * Courts `refinement`, `multi_parent`, `residual_selector`, `recompute_planner`
+    registered in `verify-all.sh` (each with an explicit exit-78 skip line).
+    `verify-all` was NOT rerun for these four gates; the cited aggregate remains
+    the last committed one.

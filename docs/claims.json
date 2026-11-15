@@ -14814,5 +14814,75 @@
     ],
     "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
+  },
+  {
+    "id": "t100_refinement_link_present",
+    "claim": "A bounded history produced by the store replays as a valid behaviour of WeftMultiWriter.tla under the documented mapping, and the replay's transition relation matches TLC exactly (28,713 and 176,427 distinct states) on two tiny configurations.",
+    "value": "bounded refinement link",
+    "locations": [
+      "verification/REFINEMENT.md"
+    ],
+    "receipt": "bench/receipts/refinement-20261115T153201Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t100_rejects_named_invariants",
+    "claim": "The bounded refinement checker rejects violating histories with the specific model invariant they break (NoBlindOverwrite, NoLostAck, NoPartial, HeadWellFormed, GcNeverReclaimsReachable, LivePreparedDurable), on five mutants of a real history and eight committed fixtures.",
+    "value": "NoBlindOverwrite",
+    "locations": [
+      "verification/REFINEMENT.md"
+    ],
+    "receipt": "bench/receipts/refinement-20261115T153201Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t091_multiparent_null",
+    "claim": "An exact multi-parent container using the shipped mode-3 matcher never beats the best single-parent mode 3 frame on disk: the payload win is 19,396 B of 42,071,901 B on 17 of 72 tensors and the container's own metadata makes the aggregate 0.019% larger.",
+    "value": "null result",
+    "locations": [
+      "bench/RESULTS-multi-parent.md"
+    ],
+    "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t091_multiparent_exact_and_refuses",
+    "claim": "Every multi-parent decode reproduced the source tensor byte-for-byte (252 decodes) and a missing or corrupt parent is a typed refusal returning no bytes (144 of 144 checks).",
+    "value": "typed refusal",
+    "locations": [
+      "bench/RESULTS-multi-parent.md"
+    ],
+    "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t093_selector_null",
+    "claim": "A cost-sensitive tree over residual fingerprints does not materially beat the trivial selectors: its held-out advantage over always-best-of-two is 21.73 objective units on 28,099,256 (0.0000008x) and its own fingerprint pass costs 620,265 units.",
+    "value": "null result",
+    "locations": [
+      "bench/RESULTS-residual-selector.md"
+    ],
+    "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t096_planner_exact_recompute",
+    "claim": "Recompute was chosen 48 times in the held-out traces and produced the exact bytes every time, while a declared-approximate candidate was refused 60 times and never selected.",
+    "value": "approximate candidate",
+    "locations": [
+      "bench/RESULTS-recompute-planner.md"
+    ],
+    "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "t096_planner_regret_boundary",
+    "claim": "A mean-cost utility policy is within 0.0023% of the oracle while the best fixed priority order is 236.8% above it and the shipped static declared-cost ordering is 82.6% above it.",
+    "value": "mean-utility",
+    "locations": [
+      "bench/RESULTS-recompute-planner.md"
+    ],
+    "receipt": "bench/receipts/recompute-planner-20261115T170152Z.json",
+    "kind": "present"
   }
 ]

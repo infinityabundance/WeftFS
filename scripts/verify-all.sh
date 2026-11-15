@@ -304,6 +304,11 @@ run_orchestrated_court multi_parent multi_parent_court \
 run_orchestrated_court residual_selector residual_selector_court \
   bash bench/scripts/residual_selector_court.sh
 
+# T096 four-strategy decision planner: rust court measures, fuse court assembles.
+# The exactness gate is the shipped provenance planner; a skip is explicit.
+run_orchestrated_court recompute_planner recompute_planner_court \
+  bash bench/scripts/recompute_planner_court.sh
+
 run_orchestrated_court context_plane_verifier context_plane_verifier \
   bash scripts/context-plane-verifier_court.sh
 
