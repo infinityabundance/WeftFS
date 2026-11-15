@@ -6,8 +6,9 @@ Go). **Receipt:** `bench/receipts/training-artifact-20261115T153500Z.json` and
 `.log`, at WeftFS `10fde89`, WeftFS-Go `21c41b1`, WeftCodec `98019d8`,
 WeftCodec-Go `d45fcb4`. **Normative:** `spec/WEFT-TRAINING-ARTIFACT.md`.
 **Retained failures:** `training-artifact-20261115T132004Z.json` (empty
-`record_bytes`), `…144500Z.json` (Go refused the certifier's canonical-roots
-rule), `…152000Z.json` (Go refusal bundle carried no records).
+`record_bytes`), `…144500Z.json` (the clean-room verifier refused the Go
+bundle's canonical-roots rule), `…152000Z.json` (the Go refusal bundle carried
+no records).
 
 ## 1. What was proved
 
