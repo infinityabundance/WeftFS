@@ -45,9 +45,19 @@ masks.
 ## 4. Result
 
 <!-- BEGIN GENERATED:t096-policies (scripts/perf_numbers.py) -->
+**60** held-out requests, **312** measured strategy executions.
+Oracle **52,229,224 ns**. Best fixed priority **175,908,611 ns** (regret
+**2.3680×**); mean-utility **52,230,436 ns** (regret
+**0.000023×**); declared costs **52,230,436 ns**; shipped planner
+**95,351,512 ns** (regret **0.8256×**).
 <!-- END GENERATED:t096-policies -->
 
 <!-- BEGIN GENERATED:t096-contract (scripts/perf_numbers.py) -->
+**12** exact requests; recompute was chosen on
+**48** requests and produced the exact bytes on
+**48** of them (**1.0000**).
+The approximate candidate was refused **60** times and selected
+**0** times.
 <!-- END GENERATED:t096-contract -->
 
 ## 5. What the numbers say
