@@ -11885,3 +11885,44 @@ are published. `verify-all.sh` was **not** re-run; the two new courts are
 registered with their own skip-78 paths and their registered invocation
 (`--reduced`) was executed once for each, but the cited aggregate receipt is
 still the last full run.
+
+## 2026-11-15 — T046 / P1-12 / T047: GPU-resident exact reconstruction, measured on real hardware
+
+**Result: a published loss.** The mechanism is correct and every byte matches;
+the GPU does not win at these sizes. Receipt
+`bench/receipts/gpu-mode9-20261115T013050Z.json`; analysis
+`bench/RESULTS-gpu-mode9.md`; court `scripts/gpu_mode9_court.sh`; harness
+`bench/gpu/`.
+
+This is the documented exception to the Docker-only build rule (directive 1,
+guardrail 7): CUDA needs the device. Everything else still runs in a court.
+
+**What ran.** A real `mode 9` BF16 frame from the shipped encoder, at three
+tensor sizes, on an RTX 4080 SUPER (sm_89, CUDA 13.4, driver 620.70.06), seven
+repetitions per arm. Arms: single-threaded CPU plane join; GPU join with
+pageable staging; GPU join with pinned staging; and a fused device-resident
+consumer whose device-side fingerprint is recomputed on the CPU. The exponent
+plane's Huffman decode stays serial on the CPU in every arm, because that is
+what the format is.
+
+**Findings, without numbers (they are in the receipt).** The serial Huffman
+decode dominates mode-9 decode and the GPU cannot touch it. The parallel join is
+much faster as a kernel, but the copies in and out cost more than the join
+saves, so the GPU join end to end is slower than the CPU join. Pinned staging is
+decisively better than pageable staging and is the only host-buffer mode worth
+using. The fused device-resident arm does not rescue the result at these sizes.
+
+**Exactness.** Every arm is compared byte-for-byte against the plaintext and
+against the shipped decoder, and the fused arm's fingerprint is recomputed on
+the CPU. All comparisons pass at all three sizes; the digests are in the
+receipt. The loss is Amdahl and transfer, not arithmetic.
+
+**Not measured, and why.** nvCOMP is not installed on this host, so the
+GDeflate/LZ4/zstd GPU comparators for P1-12 remain unmeasured rather than
+substituted — a host with nvCOMP is the next step for that item. GPUDirect
+Storage remains unmeasured: there is no compatible physical storage here.
+
+**Not claimed.** One device, one host, a desktop GPU that was also driving a
+display; single-threaded CPU comparison; no multi-GPU, fleet, cloud, power or
+thermal claim. No claim that GPU decode is impossible elsewhere — only that it
+did not win here, for these sizes, with the copies counted.

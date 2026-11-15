@@ -1,0 +1,134 @@
+{
+  "claims": {
+    "exact_reconstruction": true,
+    "fused_consumer_exact": true
+  },
+  "court": "gpu_mode9",
+  "device": {
+    "compute_capability": "8.9",
+    "driver": "620.70.06",
+    "memory": "16376 MiB",
+    "name": "NVIDIA GeForce RTX 4080 SUPER",
+    "nvcc": "Build cuda_13.4.r13.4/compiler.38855100_0"
+  },
+  "limits": {
+    "gpu_memory_total": "16376 MiB",
+    "note": "host device, not the Docker court: CUDA needs the GPU (AGENTS.md directive 1, guardrail 7)"
+  },
+  "method": {
+    "exponent_plane": "Huffman-coded; decoded serially on the CPU in both arms",
+    "frame": "mode 9 FLOAT_TENSOR, BF16, encoded by the shipped encoder",
+    "gpu_work": "sign/mantissa plane join (vec4), plus a fused device-resident consumer",
+    "host_buffers": [
+      "pageable",
+      "pinned"
+    ],
+    "reps": 7
+  },
+  "not_claimed": [
+    "a full GPU Huffman decode (the symbol stream is serial; not implemented here)",
+    "any fleet, cloud or multi-GPU claim",
+    "any claim that GPU decode wins overall: see the rows, copies dominate at these sizes"
+  ],
+  "result": "pass",
+  "revisions": {
+    "weftcodec": "c5cae0d",
+    "weftcodec_go": "0db8016",
+    "weftfs": "1d9ff70",
+    "weftfs_go": "71a9338"
+  },
+  "rows": [
+    {
+      "cpu_huffman_decode_ms": 16.94,
+      "cpu_join_ms": 0.382,
+      "elements": 4194304,
+      "exact_plaintext": true,
+      "exp_plane_bytes": 2097408,
+      "fused_device_only_total_ms": 4.655,
+      "fused_exact": true,
+      "gpu_pageable_copy_ms": 5.211,
+      "gpu_pageable_kernel_ms": 0.583,
+      "gpu_pageable_total_ms": 5.795,
+      "gpu_pinned_kernel_ms": 0.604,
+      "gpu_pinned_total_ms": 5.647,
+      "logical_bytes": 8388608,
+      "mant_plane_bytes": 4194304,
+      "output_bytes": 8388608,
+      "plaintext_fnv1a": "275a28e92435c518",
+      "prep": {
+        "body_len": 6291981,
+        "cpu_decode_ms": 9.259,
+        "desc_len": 265,
+        "elements": 4194304,
+        "encode_ms": 8.467,
+        "exp_len": 2097408,
+        "frame_len": 6292081,
+        "mant_len": 4194304
+      },
+      "reconstructed_fnv1a": "275a28e92435c518",
+      "reps": 7
+    },
+    {
+      "cpu_huffman_decode_ms": 67.378,
+      "cpu_join_ms": 1.553,
+      "elements": 16777216,
+      "exact_plaintext": true,
+      "exp_plane_bytes": 8388864,
+      "fused_device_only_total_ms": 3.351,
+      "fused_exact": true,
+      "gpu_pageable_copy_ms": 20.853,
+      "gpu_pageable_kernel_ms": 6.375,
+      "gpu_pageable_total_ms": 27.228,
+      "gpu_pinned_kernel_ms": 0.138,
+      "gpu_pinned_total_ms": 2.72,
+      "logical_bytes": 33554432,
+      "mant_plane_bytes": 16777216,
+      "output_bytes": 33554432,
+      "plaintext_fnv1a": "fcb6b936fae2c649",
+      "prep": {
+        "body_len": 25166349,
+        "cpu_decode_ms": 35.306,
+        "desc_len": 265,
+        "elements": 16777216,
+        "encode_ms": 35.004,
+        "exp_len": 8388864,
+        "frame_len": 25166449,
+        "mant_len": 16777216
+      },
+      "reconstructed_fnv1a": "fcb6b936fae2c649",
+      "reps": 7
+    },
+    {
+      "cpu_huffman_decode_ms": 272.78,
+      "cpu_join_ms": 9.34,
+      "elements": 67108864,
+      "exact_plaintext": true,
+      "exp_plane_bytes": 33554688,
+      "fused_device_only_total_ms": 12.899,
+      "fused_exact": true,
+      "gpu_pageable_copy_ms": 18.128,
+      "gpu_pageable_kernel_ms": 0.448,
+      "gpu_pageable_total_ms": 18.573,
+      "gpu_pinned_kernel_ms": 0.465,
+      "gpu_pinned_total_ms": 10.626,
+      "logical_bytes": 134217728,
+      "mant_plane_bytes": 67108864,
+      "output_bytes": 134217728,
+      "plaintext_fnv1a": "75e65b3db02f21d6",
+      "prep": {
+        "body_len": 100663821,
+        "cpu_decode_ms": 135.795,
+        "desc_len": 265,
+        "elements": 67108864,
+        "encode_ms": 139.498,
+        "exp_len": 33554688,
+        "frame_len": 100663921,
+        "mant_len": 67108864
+      },
+      "reconstructed_fnv1a": "75e65b3db02f21d6",
+      "reps": 7
+    }
+  ],
+  "schema": "weft.gpu.mode9.court.v1",
+  "stamp": "20261115T013050Z"
+}
