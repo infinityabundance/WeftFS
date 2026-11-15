@@ -11,9 +11,9 @@ use std::path::Path;
 
 use tempfile::tempdir;
 use weftcodec::context::ContextRoot;
+use weftcodec::context::DEFAULT_RESOLVER;
 use weftcodec::selector;
 use weftcodec::wcb::Value;
-use weftcodec::context::DEFAULT_RESOLVER;
 use weftcodec::Limits;
 
 use weftfs::causal_closure::{CausalGraph, ClosureBounds, ClosureMode};
@@ -388,6 +388,75 @@ fn artifact_record_tamper_is_refused() {
         "unexpected class {}",
         err.class()
     );
+}
+
+#[test]
+fn refusal_bundle_carries_a_record_for_every_request_root() {
+    // The clean-room verifier recomputes the walk from the bundle's roots, so a
+    // refusal bundle that omits a root's record would make the verifier fail on
+    // the root instead of on the identity the producer named.
+    let dir = tempdir().unwrap();
+    let mut fixture = fixture(dir.path());
+    let missing = Hash32::from_bytes([0x5a; 32]);
+    let mut tampered = fixture.artifact.clone();
+    tampered.causal =
+        Some(weftcodec::context::CausalClosure::new(vec![missing], vec![missing]).unwrap());
+    let root = tampered.root().unwrap();
+    fixture.store.write_training_artifact(&tampered).unwrap();
+    let head = fixture.store.head();
+    let evidence = fixture
+        .store
+        .training_artifact_closure(head, root, ClosureMode::Complete, ClosureBounds::default())
+        .unwrap();
+    let err = evidence.outcome.as_ref().unwrap_err();
+    assert_eq!(err.class(), Class::DependencyMismatch);
+    assert!(err.to_string().contains(&missing.to_hex()));
+    let bundle = evidence.to_json();
+    let refusal = &bundle["refusal"];
+    assert_eq!(refusal["class"], "DependencyMismatch");
+    assert!(refusal["message"]
+        .as_str()
+        .unwrap()
+        .contains(&missing.to_hex()));
+    let records: Vec<&str> = bundle["records"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["identity"].as_str().unwrap())
+        .collect();
+    let roots = bundle["roots"].as_array().unwrap();
+    assert!(roots.len() >= 2, "the fixture must declare two roots");
+    // Every root that resolves must carry a record (the verifier walks from
+    // the roots); the unresolvable one must stay absent so the walk hits it.
+    let state = fixture.store.state_at(head).unwrap();
+    let mut resolvable = 0;
+    for root in roots {
+        let identity = root.as_str().unwrap();
+        let version = Hash32::from_hex(identity).unwrap();
+        let resolves = state
+            .objects
+            .values()
+            .any(|record| record.version == version);
+        if resolves {
+            resolvable += 1;
+            assert!(
+                records.contains(&identity),
+                "the refusal bundle omits the record for root {identity}"
+            );
+        } else {
+            assert!(
+                !records.contains(&identity),
+                "the unresolvable root {identity} must stay absent from the bundle"
+            );
+            assert_eq!(identity, missing.to_hex());
+        }
+    }
+    assert!(resolvable >= 1, "at least one root must resolve");
+    // Ascending, duplicate-free: the request set is canonical.
+    let mut sorted = roots.clone();
+    sorted.sort_by(|a, b| a.as_str().cmp(&b.as_str()));
+    sorted.dedup();
+    assert_eq!(sorted.len(), roots.len());
 }
 
 #[test]

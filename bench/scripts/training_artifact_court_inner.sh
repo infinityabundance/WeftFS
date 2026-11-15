@@ -110,6 +110,10 @@ missing_root="$(python3 -c "import json;print(json.load(open('$work/missing.json
   > "$work/closure-refusal-run.json" 2>>"$log" || true
 python3 verifier/closure_check.py --bundle "$work/closure-refusal.json" \
   > "$work/verify-refusal.json" 2>>"$log" || true
+"$work/go-ta" closure --store "$work/missing/store" --root "$missing_root" --mode complete \
+  --bundle-out "$work/go-closure-refusal.json" > /dev/null 2>>"$log" || true
+python3 verifier/closure_check.py --bundle "$work/go-closure-refusal.json" \
+  > "$work/verify-go-refusal.json" 2>>"$log" || true
 
 say "== bounded closure bundles (complete and minimal) =="
 "$fixture" closure "$work/rust" "$root" complete "$work/closure-complete.json" > /dev/null 2>>"$log"
@@ -236,6 +240,14 @@ check("verifier_go_closure",
       go_closure.get("nodes") == rust_closure_nodes,
       go_closure.get("error") or "Go bundle: %s records, %s nodes" % (
           go_closure.get("records"), go_closure.get("nodes")))
+
+go_refusal = read("verify-go-refusal.json")
+check("verifier_go_refusal_bundle",
+      go_refusal.get("ok") is True and
+      (go_refusal.get("refusal") or {}).get("class") == "DependencyMismatch" and
+      (go_refusal.get("refusal") or {}).get("identity") ==
+          read("missing.json").get("missing"),
+      go_refusal.get("error") or go_refusal.get("refusal"))
 
 closure = {}
 for mode in ["complete", "minimal"]:

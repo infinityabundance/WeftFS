@@ -1521,7 +1521,10 @@ impl Store {
                 return Err(Error::corrupt("artifact context_root is the zero hash"));
             }
             let stored = self.list_context_roots_at(&state)?;
-            if !stored.iter().any(|root| root.context_root_id == *context_root) {
+            if !stored
+                .iter()
+                .any(|root| root.context_root_id == *context_root)
+            {
                 return Err(Error::dependency_mismatch(format!(
                     "artifact context root {} is not present at the snapshot",
                     context_root.to_hex()
@@ -1808,44 +1811,52 @@ impl ClosureEvidence {
                 }));
             }
         } else {
-            // A refusal must still be checkable from canonical records. Emit
-            // every causal record in the snapshot; the verifier recomputes the
-            // walk and must run into the same unresolvable identity.
+            // A refusal must still be checkable from canonical records. Emit a
+            // record for every request root (the canonical empty record when
+            // the node declares no ancestry) plus every causal record in the
+            // snapshot; the verifier recomputes the walk from the roots and
+            // must run into the same unresolvable identity, not into a root it
+            // cannot resolve.
+            let mut emitted: BTreeSet<Hash32> = BTreeSet::new();
+            for root in &self.roots {
+                let Some(object) = self
+                    .state
+                    .objects
+                    .values()
+                    .find(|record| record.version == *root)
+                else {
+                    // A root that does not resolve stays absent on purpose: the
+                    // verifier must run into it, not into a synthetic record.
+                    continue;
+                };
+                let record_bytes = causal_record_bytes(&object.attrs).unwrap_or_default();
+                let (parents, declared) = causal_arrays(&object.attrs);
+                records.push(bundle_record(
+                    *root,
+                    Some(object.id),
+                    &parents,
+                    &declared,
+                    &record_bytes,
+                    0,
+                ));
+                emitted.insert(*root);
+            }
             for record in self.state.objects.values() {
+                if !emitted.insert(record.version) {
+                    continue;
+                }
                 let Some(record_bytes) = causal_record_bytes(&record.attrs) else {
                     continue;
                 };
-                let (parent_values, closure_values) = match (
-                    record.attrs.get(causal_closure::ATTR_PARENTS),
-                    record.attrs.get(causal_closure::ATTR_CLOSURE),
-                ) {
-                    (Some(Value::Array(p)), Some(Value::Array(c))) => (p, c),
-                    _ => continue,
-                };
-                let parents: Vec<Hash32> = parent_values
-                    .iter()
-                    .filter_map(|item| match item {
-                        Value::Bytes(bytes) => Hash32::from_slice(bytes).ok(),
-                        _ => None,
-                    })
-                    .collect();
-                let declared: Vec<Hash32> = closure_values
-                    .iter()
-                    .filter_map(|item| match item {
-                        Value::Bytes(bytes) => Hash32::from_slice(bytes).ok(),
-                        _ => None,
-                    })
-                    .collect();
-                records.push(json!({
-                    "identity": record.version.to_hex(),
-                    "object": record.id.to_hex(),
-                    "parents": parents.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
-                    "closure": declared.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
-                    "record_bytes": hex_encode(&record_bytes),
-                    "causal_id": causal_closure::causal_id(&parents, &declared)
-                        .map(|id| id.to_hex()).ok(),
-                    "depth": 0,
-                }));
+                let (parents, declared) = causal_arrays(&record.attrs);
+                records.push(bundle_record(
+                    record.version,
+                    Some(record.id),
+                    &parents,
+                    &declared,
+                    &record_bytes,
+                    0,
+                ));
             }
         }
         let (nodes, refusal) = match &self.outcome {
@@ -1920,6 +1931,48 @@ fn causal_record_bytes(attrs: &BTreeMap<String, Value>) -> Option<Vec<u8>> {
         ("closure", Value::Array(closure.clone())),
     ]);
     wu::encode(&value).ok()
+}
+
+/// One `weft.closure.bundle.v1` record entry.
+fn bundle_record(
+    identity: Hash32,
+    object: Option<Hash32>,
+    parents: &[Hash32],
+    declared: &[Hash32],
+    record_bytes: &[u8],
+    depth: u32,
+) -> serde_json::Value {
+    serde_json::json!({
+        "identity": identity.to_hex(),
+        "object": object.map(|id| id.to_hex()),
+        "parents": parents.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+        "closure": declared.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+        "record_bytes": hex_encode(record_bytes),
+        "causal_id": causal_closure::causal_id(parents, declared)
+            .map(|id| id.to_hex()).ok(),
+        "depth": depth,
+    })
+}
+
+/// The canonical `parents`/`closure` arrays an object declares, if it declares
+/// either. A node with no declared ancestry is a node with two empty arrays.
+fn causal_arrays(attrs: &BTreeMap<String, Value>) -> (Vec<Hash32>, Vec<Hash32>) {
+    let collect = |key: &str| -> Vec<Hash32> {
+        match attrs.get(key) {
+            Some(Value::Array(items)) => items
+                .iter()
+                .filter_map(|item| match item {
+                    Value::Bytes(bytes) => Hash32::from_slice(bytes).ok(),
+                    _ => None,
+                })
+                .collect(),
+            _ => Vec::new(),
+        }
+    };
+    (
+        collect(causal_closure::ATTR_PARENTS),
+        collect(causal_closure::ATTR_CLOSURE),
+    )
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
