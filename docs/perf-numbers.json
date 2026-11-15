@@ -173,6 +173,22 @@
   {
    "id": "sensitivity",
    "title": "Price sensitivity (T089): cited list prices over measured resource quantities"
+  },
+  {
+   "id": "t048",
+   "title": "T048 typed adapters, merged views and the family cost"
+  },
+  {
+   "id": "t049",
+   "title": "T049 optimizer state, gradients and attention masks"
+  },
+  {
+   "id": "t051",
+   "title": "T051 cross-model lossless structural delta"
+  },
+  {
+   "id": "t052",
+   "title": "T052 exact versus approximate view identity"
   }
  ],
  "numbers": [
@@ -24388,6 +24404,1780 @@
    "stamp": "20261115T012250Z",
    "revision_path": "revision.weftfs",
    "revision": "e15f4e7aa786a1a0d1dc7981150ed022e72797ee"
+  },
+  {
+   "key": "t048.adapters",
+   "label": "Adapters ingested",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "corpus.adapter_count",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.merges",
+   "label": "Adapters merged into views",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "corpus.merge_eligible",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.adapter_logical_b",
+   "label": "Adapter logical payload",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "families.adapter_logical_total",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.adapter_physical_b",
+   "label": "Adapters stored (all metadata)",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "families.adapter_physical_total",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.adapter_zstd_b",
+   "label": "`zstd -19` of the adapter files",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "families.adapter_zstd19_total",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.base_physical_b",
+   "label": "Base checkpoint stored",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "base.physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.base_zstd_b",
+   "label": "`zstd -19` of the base container",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "base.zstd19_container_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.family_physical_b",
+   "label": "Base plus all adapters stored",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "families.base_plus_all_adapters_physical",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.native_bytes",
+   "label": "Base plus adapter files as plain bytes",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "native.bytes_read",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.views_family_b",
+   "label": "Base plus every merged view stored",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "families.base_plus_all_merged_views_physical",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.views_logical_b",
+   "label": "Merged-view logical bytes",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "families.merged_logical_total",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.full_standalone_b",
+   "label": "One full merged model in a fresh store",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_full_checkpoint.standalone_store_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.full_shared_b",
+   "label": "Same full merged model beside the view",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_full_checkpoint.shared_store_incremental_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.base_write_ms",
+   "label": "Base checkpoint write",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "base.write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.base_restore_ms",
+   "label": "Base restore (whole container)",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "base.restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.view_merge_ms",
+   "label": "Merged view: merge",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_views.0.merge_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.view_apply_ms",
+   "label": "Apply the adapter to a restored base",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_views.0.apply_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.view_restore_ms",
+   "label": "Merged view: restore",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:0",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_views.0.restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.view_targets",
+   "label": "Targets in the first merged view",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_views.0.merged_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.aneesa_restore_ms",
+   "label": "A 48-target merged view: restore",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_views.1.restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.full_write_ms",
+   "label": "Full merged model: write (fresh store)",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_full_checkpoint.standalone_store_write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.full_restore_ms",
+   "label": "Full merged model: restore",
+   "unit": "ms",
+   "group": "t048",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_full_checkpoint.standalone_store_restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.small_physical_b",
+   "label": "Smallest merged adapter stored",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA"
+   },
+   "select_path": "stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.small_zstd_b",
+   "label": "Smallest merged adapter under `zstd -19`",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA"
+   },
+   "select_path": "zstd19_file_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.small_ratio",
+   "label": "Smallest adapter, stored / `zstd -19`",
+   "unit": "x",
+   "group": "t048",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA"
+   },
+   "select_path": "physical_vs_zstd19",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.small_source_b",
+   "label": "Smallest adapter source file",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA"
+   },
+   "select_path": "source_file_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.big_physical_b",
+   "label": "Largest adapter stored",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora"
+   },
+   "select_path": "stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.big_zstd_b",
+   "label": "Largest adapter under `zstd -19`",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora"
+   },
+   "select_path": "zstd19_file_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.big_ratio",
+   "label": "Largest adapter, stored / `zstd -19`",
+   "unit": "x",
+   "group": "t048",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora"
+   },
+   "select_path": "physical_vs_zstd19",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.big_source_b",
+   "label": "Largest adapter source file",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "list": "adapters",
+   "where": {
+    "repo": "SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora"
+   },
+   "select_path": "source_file_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.ref_elements",
+   "label": "Reference tensor elements",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "reference_merge.tensors.0.elements",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.ref_mismatch_f32",
+   "label": "NumPy float32 matmul vs Rust after bf16 rounding",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "reference_merge.tensors.0.f32_matmul_mismatches",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.ref_mismatch_f64",
+   "label": "NumPy float64 accumulation vs Rust after bf16 rounding",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "reference_merge.tensors.0.f64_accumulation_mismatches",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.ref_max_abs",
+   "label": "Largest reference difference",
+   "unit": "",
+   "group": "t048",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "reference_merge.tensors.0.max_abs_difference_vs_f32_matmul",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t048.adapter_vs_zstd_pct",
+   "label": "Adapters stored below `zstd -19`",
+   "unit": "%",
+   "group": "t048",
+   "format": "pct:2",
+   "expr": "(1 - {t048.adapter_physical_b} / {t048.adapter_zstd_b}) * 100"
+  },
+  {
+   "key": "t048.base_vs_zstd_pct",
+   "label": "Base stored below `zstd -19`",
+   "unit": "%",
+   "group": "t048",
+   "format": "pct:2",
+   "expr": "(1 - {t048.base_physical_b} / {t048.base_zstd_b}) * 100"
+  },
+  {
+   "key": "t048.family_vs_native_pct",
+   "label": "Family stored below the plain files",
+   "unit": "%",
+   "group": "t048",
+   "format": "pct:2",
+   "expr": "(1 - {t048.family_physical_b} / {t048.native_bytes}) * 100"
+  },
+  {
+   "key": "t048.views_incremental_b",
+   "label": "Merged views incremental bytes",
+   "unit": "B",
+   "group": "t048",
+   "format": "int",
+   "expr": "{t048.views_family_b} - {t048.base_physical_b}"
+  },
+  {
+   "key": "t048.views_vs_base_plus_full",
+   "label": "Merged-view family / (base + one full merged model)",
+   "unit": "x",
+   "group": "t048",
+   "format": "ratio:3",
+   "expr": "{t048.views_family_b} / ({t048.base_physical_b} + {t048.full_standalone_b})"
+  },
+  {
+   "key": "t048.full_shared_ratio",
+   "label": "Standalone / shared-store full-model increment",
+   "unit": "x",
+   "group": "t048",
+   "format": "ratio:0",
+   "expr": "{t048.full_standalone_b} / {t048.full_shared_b}"
+  },
+  {
+   "key": "t048.view_vs_apply",
+   "label": "View restore / (base restore + apply)",
+   "unit": "x",
+   "group": "t048",
+   "format": "ratio:3",
+   "expr": "{t048.view_restore_ms} / ({t048.base_restore_ms} + {t048.view_apply_ms})"
+  },
+  {
+   "key": "t049.model_tensors",
+   "label": "Model parameters",
+   "unit": "",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "model.tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.model_physical_b",
+   "label": "Model checkpoint stored",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "model.physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.step",
+   "label": "AdamW step recorded",
+   "unit": "",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.adamw.step",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.loss",
+   "label": "Cross-entropy loss",
+   "unit": "",
+   "group": "t049",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.loss",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.global_norm",
+   "label": "Gradient global norm",
+   "unit": "",
+   "group": "t049",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.global_norm",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_logical_b",
+   "label": "Optimizer moments logical",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_physical_b",
+   "label": "Optimizer state stored (all metadata)",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_zstd_b",
+   "label": "Optimizer moments under `zstd -19`",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.zstd19_raw_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_manifest_b",
+   "label": "Optimizer-state manifest",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.manifest_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_write_ms",
+   "label": "Optimizer-state write",
+   "unit": "ms",
+   "group": "t049",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_restore_ms",
+   "label": "Optimizer-state restore",
+   "unit": "ms",
+   "group": "t049",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_mode9",
+   "label": "Optimizer tensors stored as mode 9",
+   "unit": "",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.strategy_counts.float-tensor",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_raw",
+   "label": "Optimizer tensors stored raw",
+   "unit": "",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.strategy_counts.raw",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_zstd_count",
+   "label": "Optimizer tensors stored as zstd",
+   "unit": "",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "optimizer_state.strategy_counts.zstd",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.grad_logical_b",
+   "label": "Gradients logical",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.grad_physical_b",
+   "label": "Gradients stored",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.grad_zstd_b",
+   "label": "Gradients under `zstd -19`",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.zstd19_raw_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.grad_write_ms",
+   "label": "Gradient write",
+   "unit": "ms",
+   "group": "t049",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.grad_restore_ms",
+   "label": "Gradient restore",
+   "unit": "ms",
+   "group": "t049",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "gradients.restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.mask_logical_b",
+   "label": "Mask logical",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "attention_mask.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.mask_physical_b",
+   "label": "Mask stored",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "attention_mask.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.mask_zstd_b",
+   "label": "Mask under `zstd -19`",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "attention_mask.zstd19_raw_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.mask_manifest_b",
+   "label": "Attention-mask manifest",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "attention_mask.manifest_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.mask_write_ms",
+   "label": "Attention-mask write",
+   "unit": "ms",
+   "group": "t049",
+   "format": "fixed:1",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "attention_mask.write_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.mask_restore_ms",
+   "label": "Attention-mask restore",
+   "unit": "ms",
+   "group": "t049",
+   "format": "fixed:3",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "attention_mask.restore_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.total_logical_b",
+   "label": "Three artifacts logical",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "training_state_total.logical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.total_physical_b",
+   "label": "Three artifacts stored",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "training_state_total.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.total_zstd_b",
+   "label": "Three artifacts under `zstd -19`",
+   "unit": "B",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "training_state_total.zstd19_total_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.go_representations",
+   "label": "WeftFS-Go `verify --full` representations",
+   "unit": "",
+   "group": "t049",
+   "format": "int",
+   "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+   "path": "go_verify.report.CheckedRepresentations",
+   "stamp_path": "stamp",
+   "stamp": "20261115T054734Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t049.opt_vs_zstd_pct",
+   "label": "Optimizer state below `zstd -19`",
+   "unit": "%",
+   "group": "t049",
+   "format": "pct:2",
+   "expr": "(1 - {t049.opt_physical_b} / {t049.opt_zstd_b}) * 100"
+  },
+  {
+   "key": "t049.opt_vs_raw_pct",
+   "label": "Optimizer state below its raw bytes",
+   "unit": "%",
+   "group": "t049",
+   "format": "pct:2",
+   "expr": "(1 - {t049.opt_physical_b} / {t049.opt_logical_b}) * 100"
+  },
+  {
+   "key": "t049.grad_vs_zstd_pct",
+   "label": "Gradients below `zstd -19`",
+   "unit": "%",
+   "group": "t049",
+   "format": "pct:2",
+   "expr": "(1 - {t049.grad_physical_b} / {t049.grad_zstd_b}) * 100"
+  },
+  {
+   "key": "t049.mask_vs_zstd_ratio",
+   "label": "Mask stored / `zstd -19`",
+   "unit": "x",
+   "group": "t049",
+   "format": "ratio:1",
+   "expr": "{t049.mask_physical_b} / {t049.mask_zstd_b}"
+  },
+  {
+   "key": "t049.total_vs_zstd_pct",
+   "label": "All three artifacts below `zstd -19`",
+   "unit": "%",
+   "group": "t049",
+   "format": "pct:2",
+   "expr": "(1 - {t049.total_physical_b} / {t049.total_zstd_b}) * 100"
+  },
+  {
+   "key": "t051.accepts",
+   "label": "Accept decisions",
+   "unit": "",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "summary.accepted",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.declines",
+   "label": "Decline decisions",
+   "unit": "",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "summary.declined",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_target_b",
+   "label": "pythia step0->step1 target bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_base_b",
+   "label": "pythia step0->step1 base bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.base_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_frame_b",
+   "label": "pythia step0->step1 DELTA frame",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.frame_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_matched_frac",
+   "label": "pythia step0->step1 byte-identical fraction",
+   "unit": "",
+   "group": "t051",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.matched_fraction",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_patch_b",
+   "label": "pythia step0->step1 `zstd --patch-from -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.patch_from.bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_store_b",
+   "label": "pythia step0->step1 planner marginal",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.store.target_marginal_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_zstd_b",
+   "label": "pythia step0->step1 independent `zstd -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.0.zstd19_target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p08_base_b",
+   "label": "pythia step0->step8 base bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.1.base_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p08_target_b",
+   "label": "pythia step0->step8 target bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.1.target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_slice_b",
+   "label": "Qwen fine-tune slice length",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.2.slice_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.cross_matched_pct",
+   "label": "Cross-size/dtype byte-identical fraction",
+   "unit": "%",
+   "group": "t051",
+   "format": "pct:6",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.4.matched_fraction",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.same_shape_matched_pct",
+   "label": "Same-dtype/different-shape byte-identical fraction",
+   "unit": "%",
+   "group": "t051",
+   "format": "pct:6",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.5.matched_fraction",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.synthetic_matched_pct",
+   "label": "Synthetic pair byte-identical fraction",
+   "unit": "%",
+   "group": "t051",
+   "format": "pct:6",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.6.matched_fraction",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p08_matched_frac",
+   "label": "pythia step0->step8 byte-identical fraction",
+   "unit": "",
+   "group": "t051",
+   "format": "fixed:6",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.1.matched_fraction",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p08_patch_b",
+   "label": "pythia step0->step8 `zstd --patch-from -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.1.patch_from.bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p08_zstd_b",
+   "label": "pythia step0->step8 independent `zstd -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.1.zstd19_target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p08_wd_b",
+   "label": "pythia step0->step8 forced weight-delta marginal",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.1.forced_arms.0.target_marginal_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_slice_matched",
+   "label": "Qwen fine-tune slice byte-identical fraction",
+   "unit": "",
+   "group": "t051",
+   "format": "fixed:12",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.2.matched_fraction",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_slice_patch_b",
+   "label": "Qwen fine-tune slice `zstd --patch-from -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.2.patch_from.bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_slice_zstd_b",
+   "label": "Qwen fine-tune slice independent `zstd -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.2.zstd19_target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_base_b",
+   "label": "Qwen store arm base physical",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.3.store.base_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_store_b",
+   "label": "Qwen store arm target marginal",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.3.store.target_marginal_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_zstd_b",
+   "label": "Qwen instruct independent `zstd -19`",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.3.zstd19_target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.qwen_wd_tensors",
+   "label": "Qwen weight-delta tensors",
+   "unit": "",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.3.store.strategy_counts.weight-delta",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.cross_base_b",
+   "label": "Cross-size/dtype base tensor bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.4.base_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.cross_target_b",
+   "label": "Cross-size/dtype target tensor bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.4.target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.same_shape_base_b",
+   "label": "Same-dtype/different-shape base bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.5.base_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.same_shape_target_b",
+   "label": "Same-dtype/different-shape target bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.5.target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.synthetic_b",
+   "label": "Synthetic nothing-in-common pair bytes",
+   "unit": "B",
+   "group": "t051",
+   "format": "int",
+   "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+   "path": "cells.6.target_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T064249Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t051.p01_matched_pct",
+   "label": "pythia step0->step1 byte-identical fraction",
+   "unit": "%",
+   "group": "t051",
+   "format": "pct:3",
+   "expr": "{t051.p01_matched_frac} * 100"
+  },
+  {
+   "key": "t051.p08_matched_pct",
+   "label": "pythia step0->step8 byte-identical fraction",
+   "unit": "%",
+   "group": "t051",
+   "format": "pct:3",
+   "expr": "{t051.p08_matched_frac} * 100"
+  },
+  {
+   "key": "t051.qwen_slice_matched_pct",
+   "label": "Qwen fine-tune slice byte-identical fraction",
+   "unit": "%",
+   "group": "t051",
+   "format": "pct:6",
+   "expr": "{t051.qwen_slice_matched} * 100"
+  },
+  {
+   "key": "t051.p01_frame_vs_patch",
+   "label": "`zstd --patch-from` / byte delta frame",
+   "unit": "x",
+   "group": "t051",
+   "format": "ratio:2",
+   "expr": "{t051.p01_patch_b} / {t051.p01_frame_b}"
+  },
+  {
+   "key": "t051.p01_store_vs_frame",
+   "label": "Planner marginal / byte delta frame",
+   "unit": "x",
+   "group": "t051",
+   "format": "ratio:2",
+   "expr": "{t051.p01_store_b} / {t051.p01_frame_b}"
+  },
+  {
+   "key": "t051.p08_patch_vs_wd",
+   "label": "`zstd --patch-from` / forced weight-delta",
+   "unit": "x",
+   "group": "t051",
+   "format": "ratio:2",
+   "expr": "{t051.p08_patch_b} / {t051.p08_wd_b}"
+  },
+  {
+   "key": "t051.qwen_store_vs_zstd",
+   "label": "Independent `zstd -19` / planner marginal",
+   "unit": "x",
+   "group": "t051",
+   "format": "ratio:2",
+   "expr": "{t051.qwen_zstd_b} / {t051.qwen_store_b}"
+  },
+  {
+   "key": "t052.down_exact_b",
+   "label": "down_proj exact stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.exact_stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_exact_read_ms",
+   "label": "down_proj exact read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.exact_read_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_b32_b",
+   "label": "down_proj view (block 32) stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.0.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_b32_ratio",
+   "label": "down_proj view (block 32) / exact",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.0.physical_vs_exact",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_b128_b",
+   "label": "down_proj view (block 128) stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_b128_ratio",
+   "label": "down_proj view (block 128) / exact",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.physical_vs_exact",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_b128_id_ms",
+   "label": "down_proj view identity-only read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.view_read_identity_only_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_b128_strict_ms",
+   "label": "down_proj view strict read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.view_read_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_err",
+   "label": "down_proj measured max error",
+   "unit": "",
+   "group": "t052",
+   "format": "fixed:9",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.max_abs_error",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_bound",
+   "label": "down_proj declared bound",
+   "unit": "",
+   "group": "t052",
+   "format": "fixed:9",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.max_bound",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_exact_b",
+   "label": "embedding exact stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.exact_stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_exact_read_ms",
+   "label": "embedding exact read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.exact_read_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_b128_b",
+   "label": "embedding view (block 128) stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.views.2.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_b128_ratio",
+   "label": "embedding view (block 128) / exact",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.views.2.physical_vs_exact",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_b128_id_ms",
+   "label": "embedding view identity-only read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.views.2.view_read_identity_only_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_err",
+   "label": "embedding measured max error",
+   "unit": "",
+   "group": "t052",
+   "format": "fixed:9",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.views.2.max_abs_error",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.embed_bound",
+   "label": "embedding declared bound",
+   "unit": "",
+   "group": "t052",
+   "format": "fixed:9",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.1.views.2.max_bound",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_exact_b",
+   "label": "pythia tensor exact stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.exact_stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_exact_read_ms",
+   "label": "pythia tensor exact read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.exact_read_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_b128_b",
+   "label": "pythia tensor view (block 128) stored",
+   "unit": "B",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.views.2.stored_physical_bytes",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_b128_ratio",
+   "label": "pythia tensor view (block 128) / exact",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:3",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.views.2.physical_vs_exact",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_b128_id_ms",
+   "label": "pythia tensor view identity-only read",
+   "unit": "ms",
+   "group": "t052",
+   "format": "fixed:2",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.views.2.view_read_identity_only_ms",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_err",
+   "label": "pythia measured max error",
+   "unit": "",
+   "group": "t052",
+   "format": "fixed:9",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.views.2.max_abs_error",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.pythia_bound",
+   "label": "pythia declared bound",
+   "unit": "",
+   "group": "t052",
+   "format": "fixed:9",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "pythia_cells.0.views.2.max_bound",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.down_saved_pct",
+   "label": "down_proj bytes saved (block 128)",
+   "unit": "%",
+   "group": "t052",
+   "format": "pct:2",
+   "expr": "(1 - {t052.down_b128_ratio}) * 100"
+  },
+  {
+   "key": "t052.embed_saved_pct",
+   "label": "embedding bytes saved (block 128)",
+   "unit": "%",
+   "group": "t052",
+   "format": "pct:2",
+   "expr": "(1 - {t052.embed_b128_ratio}) * 100"
+  },
+  {
+   "key": "t052.pythia_saved_pct",
+   "label": "pythia tensor bytes saved (block 128)",
+   "unit": "%",
+   "group": "t052",
+   "format": "pct:2",
+   "expr": "(1 - {t052.pythia_b128_ratio}) * 100"
+  },
+  {
+   "key": "t052.down_id_vs_exact",
+   "label": "down_proj identity-only read / exact read",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:2",
+   "expr": "{t052.down_b128_id_ms} / {t052.down_exact_read_ms}"
+  },
+  {
+   "key": "t052.down_strict_vs_exact",
+   "label": "down_proj strict read / exact read",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:2",
+   "expr": "{t052.down_b128_strict_ms} / {t052.down_exact_read_ms}"
+  },
+  {
+   "key": "t052.embed_id_vs_exact",
+   "label": "embedding identity-only read / exact read",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:2",
+   "expr": "{t052.embed_b128_id_ms} / {t052.embed_exact_read_ms}"
+  },
+  {
+   "key": "t052.pythia_id_vs_exact",
+   "label": "pythia identity-only read / exact read",
+   "unit": "x",
+   "group": "t052",
+   "format": "ratio:2",
+   "expr": "{t052.pythia_b128_id_ms} / {t052.pythia_exact_read_ms}"
   }
  ],
  "blocks": [
@@ -31369,6 +33159,387 @@
     "revision_path": "environment.revisions.WeftFS",
     "revision": "0e2871484941483339a340b39bf503859fbf8dab"
    }
+  },
+  {
+   "id": "t048-corpus-counts",
+   "file": "bench/RESULTS-adapters.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The court ingested **{{t048.adapters}}** adapters and merged **{{t048.merges}}** of them."
+    }
+   ]
+  },
+  {
+   "id": "t048-results",
+   "file": "bench/RESULTS-adapters.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Arm | Stored bytes | Comparator | Note |"
+    },
+    {
+     "template": "|---|---:|---:|---|"
+    },
+    {
+     "template": "| Adapters only | {{t048.adapter_physical_b}} | {{t048.adapter_zstd_b}} (`zstd -19`) | {{t048.adapter_vs_zstd_pct}} % fewer; logical payload {{t048.adapter_logical_b}} B |"
+    },
+    {
+     "template": "| Base checkpoint | {{t048.base_physical_b}} | {{t048.base_zstd_b}} (`zstd -19`) | {{t048.base_vs_zstd_pct}} % fewer |"
+    },
+    {
+     "template": "| Base plus all adapters | {{t048.family_physical_b}} | {{t048.native_bytes}} (plain files) | {{t048.family_vs_native_pct}} % fewer than the files |"
+    },
+    {
+     "template": "| Merged views (incremental) | {{t048.views_incremental_b}} | \u2014 | {{t048.views_logical_b}} B of merged logical bytes in {{t048.merges}} views |"
+    },
+    {
+     "template": "| One full merged model, fresh store | {{t048.full_standalone_b}} | \u2014 | the no-graph alternative |"
+    },
+    {
+     "template": "| Same full merged model, same store | {{t048.full_shared_b}} | \u2014 | content-addressed dedup, {{t048.full_shared_ratio}}\u00d7 smaller increment |"
+    }
+   ]
+  },
+  {
+   "id": "t048-time",
+   "file": "bench/RESULTS-adapters.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Timing | Value |"
+    },
+    {
+     "template": "|---|---:|"
+    },
+    {
+     "template": "| Base write | {{t048.base_write_ms}} ms |"
+    },
+    {
+     "template": "| Base restore (whole container, SHA sink) | {{t048.base_restore_ms}} ms |"
+    },
+    {
+     "template": "| Merged view ({{t048.view_targets}} targets): merge | {{t048.view_merge_ms}} ms |"
+    },
+    {
+     "template": "| \u2026 apply to the restored base in memory | {{t048.view_apply_ms}} ms |"
+    },
+    {
+     "template": "| \u2026 restore the view | {{t048.view_restore_ms}} ms |"
+    },
+    {
+     "template": "| A 48-target view: restore | {{t048.aneesa_restore_ms}} ms |"
+    },
+    {
+     "template": "| Full merged model: write (fresh store) | {{t048.full_write_ms}} ms |"
+    },
+    {
+     "template": "| Full merged model: restore | {{t048.full_restore_ms}} ms |"
+    }
+   ]
+  },
+  {
+   "id": "t048-reference",
+   "file": "bench/RESULTS-adapters.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "On `model.layers.0.mlp.down_proj.weight` (**{{t048.ref_elements}}** elements), NumPy's"
+    },
+    {
+     "template": "float32 matmul differs from the pinned Rust arithmetic in **{{t048.ref_mismatch_f32}}**"
+    },
+    {
+     "template": "element after bf16 rounding; a float64 accumulation differs in"
+    },
+    {
+     "template": "**{{t048.ref_mismatch_f64}}** elements. The largest difference is"
+    },
+    {
+     "template": "**{{t048.ref_max_abs}}** in absolute value. Both implementations compute the same"
+    },
+    {
+     "template": "real-valued expression; neither output is the other's bytes."
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "t048-losses",
+   "file": "bench/RESULTS-adapters.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* Small adapters lose to `zstd -19`: the `Hazde/careerbot\u2026` adapter stores **{{t048.small_physical_b}}** B against **{{t048.small_zstd_b}}** B (**{{t048.small_ratio}}\u00d7**), because manifest and frame overhead dominate a {{t048.small_source_b}}-byte file."
+    },
+    {
+     "template": "* The merged-view family costs **{{t048.views_incremental_b}}** B incremental; its total (**{{t048.views_family_b}}** B) is **{{t048.views_vs_base_plus_full}}\u00d7** the base plus one standalone merged model."
+    },
+    {
+     "template": "* A merged-view restore is not automatically faster: the first view restores in **{{t048.view_restore_ms}}** ms versus **{{t048.base_restore_ms}}** ms for the base plus **{{t048.view_apply_ms}}** ms to apply the adapter in memory (**{{t048.view_vs_apply}}\u00d7**), so the view wins only when a loader would otherwise do both. A 48-target view restored in **{{t048.aneesa_restore_ms}}** ms under page-cache pressure."
+    },
+    {
+     "template": "* The largest adapter stores **{{t048.big_physical_b}}** B versus **{{t048.big_zstd_b}}** B for `zstd -19` (**{{t048.big_ratio}}\u00d7**) on a {{t048.big_source_b}}-byte file."
+    }
+   ]
+  },
+  {
+   "id": "t049-shape",
+   "file": "bench/RESULTS-training-state.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "The fixture has **{{t049.model_tensors}}** parameters, an AdamW step of **{{t049.step}}**,"
+    },
+    {
+     "template": "a cross-entropy loss of **{{t049.loss}}** and a global gradient norm of"
+    },
+    {
+     "template": "**{{t049.global_norm}}**."
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "t049-results",
+   "file": "bench/RESULTS-training-state.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Artifact | Logical bytes | Stored bytes | `zstd -19` | Stored vs zstd | Write ms | Restore ms |"
+    },
+    {
+     "template": "|---|---:|---:|---:|---:|---:|---:|"
+    },
+    {
+     "template": "| Optimizer state (f32 moments, explicit dtype) | {{t049.opt_logical_b}} | {{t049.opt_physical_b}} | {{t049.opt_zstd_b}} | {{t049.opt_vs_zstd_pct}} % smaller | {{t049.opt_write_ms}} | {{t049.opt_restore_ms}} |"
+    },
+    {
+     "template": "| Gradients (bf16, explicit dtype) | {{t049.grad_logical_b}} | {{t049.grad_physical_b}} | {{t049.grad_zstd_b}} | {{t049.grad_vs_zstd_pct}} % smaller | {{t049.grad_write_ms}} | {{t049.grad_restore_ms}} |"
+    },
+    {
+     "template": "| Attention mask (u8, causal + padding) | {{t049.mask_logical_b}} | {{t049.mask_physical_b}} | {{t049.mask_zstd_b}} | {{t049.mask_vs_zstd_ratio}}\u00d7 larger | {{t049.mask_write_ms}} | {{t049.mask_restore_ms}} |"
+    },
+    {
+     "template": "| Total | {{t049.total_logical_b}} | {{t049.total_physical_b}} | {{t049.total_zstd_b}} | {{t049.total_vs_zstd_pct}} % smaller | \u2014 | \u2014 |"
+    }
+   ]
+  },
+  {
+   "id": "t049-go",
+   "file": "bench/RESULTS-training-state.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "WeftFS-Go `verify --full` over the same store decoded"
+    },
+    {
+     "template": "**{{t049.go_representations}}** representations with no problems, which is the"
+    },
+    {
+     "template": "cross-language check for the frames these artifacts use."
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "t049-losses",
+   "file": "bench/RESULTS-training-state.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* The attention mask loses badly to plain `zstd -19`: **{{t049.mask_physical_b}}** B stored versus **{{t049.mask_zstd_b}}** B \u2014 **{{t049.mask_vs_zstd_ratio}}\u00d7** \u2014 because a {{t049.mask_manifest_b}}-byte manifest and a fixed frame header dominate an {{t049.mask_logical_b}}-byte, almost-all-zero tensor. The planner never offers level 19 below 1 MiB by default."
+    },
+    {
+     "template": "* Optimizer state is only mildly compressible: **{{t049.opt_physical_b}}** B for {{t049.opt_logical_b}} B of moments (**{{t049.opt_vs_raw_pct}}** % saved) and **{{t049.opt_vs_zstd_pct}}** % below `zstd -19`. The planner chose mode 9 for {{t049.opt_mode9}} of the moment tensors, raw for {{t049.opt_raw}}, zstd for {{t049.opt_zstd_count}}. This is not a dramatic win and is not presented as one."
+    },
+    {
+     "template": "* Fixed costs are visible at this size: a {{t049.grad_logical_b}}-byte gradient artifact takes {{t049.grad_write_ms}} ms to write and {{t049.opt_manifest_b}}-byte manifests are part of every stored total."
+    }
+   ]
+  },
+  {
+   "id": "t051-summary",
+   "file": "bench/RESULTS-cross-model-delta.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "**{{t051.accepts}}** pair is accepted and **{{t051.declines}}** are declined with a"
+    },
+    {
+     "template": "typed reason. The declines are the result, not a gap."
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "t051-table",
+   "file": "bench/RESULTS-cross-model-delta.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Pair | Base / target bytes | Byte-identical | DELTA frame | `--patch-from` | Planner or forced | Independent `zstd -19` |"
+    },
+    {
+     "template": "|---|---:|---:|---:|---:|---:|---:|"
+    },
+    {
+     "template": "| pythia step0 \u2192 step1 (F32, same shape) | {{t051.p01_base_b}} / {{t051.p01_target_b}} | {{t051.p01_matched_pct}} % | {{t051.p01_frame_b}} | {{t051.p01_patch_b}} | {{t051.p01_store_b}} | {{t051.p01_zstd_b}} |"
+    },
+    {
+     "template": "| pythia step0 \u2192 step8 (F32, same shape) | {{t051.p08_base_b}} / {{t051.p08_target_b}} | {{t051.p08_matched_pct}} % | declined | {{t051.p08_patch_b}} | {{t051.p08_wd_b}} | {{t051.p08_zstd_b}} |"
+    },
+    {
+     "template": "| Qwen base \u2192 Instruct, {{t051.qwen_slice_b}}-byte slice | {{t051.qwen_slice_b}} / {{t051.qwen_slice_b}} | {{t051.qwen_slice_matched_pct}} % | declined | {{t051.qwen_slice_patch_b}} | \u2014 | {{t051.qwen_slice_zstd_b}} |"
+    },
+    {
+     "template": "| Qwen base \u2192 Instruct, whole model (store arm) | {{t051.qwen_base_b}} / \u2014 | not buildable in 3 GiB | declined | \u2014 | {{t051.qwen_store_b}} | {{t051.qwen_zstd_b}} |"
+    },
+    {
+     "template": "| Qwen 0.5B BF16 vs pythia-70m F32 embedding | {{t051.cross_base_b}} / {{t051.cross_target_b}} | {{t051.cross_matched_pct}} % | declined | \u2014 | ineligible (dtype) | \u2014 |"
+    },
+    {
+     "template": "| Two Qwen BF16 tensors, different shapes | {{t051.same_shape_base_b}} / {{t051.same_shape_target_b}} | {{t051.same_shape_matched_pct}} % | declined | \u2014 | ineligible (shape) | \u2014 |"
+    },
+    {
+     "template": "| SYNTHETIC nothing-in-common pair | {{t051.synthetic_b}} / {{t051.synthetic_b}} | {{t051.synthetic_matched_pct}} % | declined | \u2014 | \u2014 | \u2014 |"
+    }
+   ]
+  },
+  {
+   "id": "t051-reading",
+   "file": "bench/RESULTS-cross-model-delta.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "On the one pair with byte-identical regions the frame is"
+    },
+    {
+     "template": "**{{t051.p01_frame_vs_patch}}\u00d7** smaller than `zstd --patch-from` and"
+    },
+    {
+     "template": "**{{t051.p01_store_vs_frame}}\u00d7** smaller than the shipped planner's marginal bytes."
+    },
+    {
+     "template": "On the distant pair the planner's forced weight-delta arm is"
+    },
+    {
+     "template": "**{{t051.p08_patch_vs_wd}}\u00d7** smaller than `zstd --patch-from`, and the whole"
+    },
+    {
+     "template": "Qwen fine-tune stores **{{t051.qwen_store_vs_zstd}}\u00d7** below independent `zstd -19`"
+    },
+    {
+     "template": "with **{{t051.qwen_wd_tensors}}** weight-delta tensors. Those are value-level"
+    },
+    {
+     "template": "deltas; the byte-level delta correctly refuses to pretend it can do the same."
+    }
+   ],
+   "inline": true
+  },
+  {
+   "id": "t051-losses",
+   "file": "bench/RESULTS-cross-model-delta.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* Byte-identical structural reuse is essentially absent between independent fine-tunes: the Qwen slice matched **{{t051.qwen_slice_matched_pct}}** % of bytes, so the mode declines rather than emitting a nearly-full INSERT stream."
+    },
+    {
+     "template": "* Even consecutive checkpoints only help the byte delta when almost nothing changed: step0 \u2192 step1 matched **{{t051.p01_matched_pct}}** %, while step0 \u2192 step8 matched **{{t051.p08_matched_pct}}** % and declined."
+    },
+    {
+     "template": "* The forced sparse-delta arm is refused on `embed_out` (`LimitExceeded`, 22,339,018 non-zero runs against a 16,777,216 bound); that is a recorded refusal, not a fallback."
+    },
+    {
+     "template": "* The whole-model Qwen byte delta cannot be built inside the 3 GiB court (two 988 MB inputs plus a frame), so that pair is a slice plus a whole-model store arm, stated in every cell."
+    }
+   ]
+  },
+  {
+   "id": "t052-table",
+   "file": "bench/RESULTS-view-identity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Tensor | Exact stored | View b32 | View b128 | Exact read / view identity-only / view strict (ms, b128) |"
+    },
+    {
+     "template": "|---|---:|---:|---:|---:|"
+    },
+    {
+     "template": "| Qwen `down_proj` (bf16) | {{t052.down_exact_b}} | {{t052.down_b32_b}} ({{t052.down_b32_ratio}}\u00d7) | {{t052.down_b128_b}} ({{t052.down_b128_ratio}}\u00d7) | {{t052.down_exact_read_ms}} / {{t052.down_b128_id_ms}} / {{t052.down_b128_strict_ms}} |"
+    },
+    {
+     "template": "| Qwen embedding (bf16) | {{t052.embed_exact_b}} | \u2014 | {{t052.embed_b128_b}} ({{t052.embed_b128_ratio}}\u00d7) | {{t052.embed_exact_read_ms}} / {{t052.embed_b128_id_ms}} / \u2014 |"
+    },
+    {
+     "template": "| pythia QKV (f32) | {{t052.pythia_exact_b}} | \u2014 | {{t052.pythia_b128_b}} ({{t052.pythia_b128_ratio}}\u00d7) | {{t052.pythia_exact_read_ms}} / {{t052.pythia_b128_id_ms}} / \u2014 |"
+    }
+   ]
+  },
+  {
+   "id": "t052-error",
+   "file": "bench/RESULTS-view-identity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "| Tensor | Measured max abs error | Declared bound |"
+    },
+    {
+     "template": "|---|---:|---:|"
+    },
+    {
+     "template": "| Qwen `down_proj` | {{t052.down_err}} | {{t052.down_bound}} |"
+    },
+    {
+     "template": "| Qwen embedding | {{t052.embed_err}} | {{t052.embed_bound}} |"
+    },
+    {
+     "template": "| pythia QKV | {{t052.pythia_err}} | {{t052.pythia_bound}} |"
+    }
+   ]
+  },
+  {
+   "id": "t052-verdict",
+   "file": "bench/RESULTS-view-identity.md",
+   "kind": "lines",
+   "rows": [
+    {
+     "template": "* Bytes: the view wins \u2014 **{{t052.down_saved_pct}}** % fewer stored bytes on the"
+    },
+    {
+     "template": "  Qwen MLP matrix, **{{t052.embed_saved_pct}}** % on the embedding and"
+    },
+    {
+     "template": "  **{{t052.pythia_saved_pct}}** % on the f32 pythia matrix (block 128)."
+    },
+    {
+     "template": "* Read time: the view loses \u2014 **{{t052.down_id_vs_exact}}\u00d7** the exact read with"
+    },
+    {
+     "template": "  identity checking only, and **{{t052.down_strict_vs_exact}}\u00d7** when the strict door"
+    },
+    {
+     "template": "  re-reads the source and re-measures the bound. The embedding shows the same"
+    },
+    {
+     "template": "  shape (**{{t052.embed_id_vs_exact}}\u00d7**) and so does the f32 tensor"
+    },
+    {
+     "template": "  (**{{t052.pythia_id_vs_exact}}\u00d7**)."
+    },
+    {
+     "template": "* Verdict: a q8_0 view is a **bandwidth and capacity** representation, not a"
+    },
+    {
+     "template": "  latency representation. Larger blocks trade a little more error for fewer"
+    },
+    {
+     "template": "  bytes; the error stays inside the declared bound in every cell."
+    }
+   ]
   }
  ]
 }
