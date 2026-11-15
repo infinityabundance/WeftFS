@@ -45,15 +45,33 @@ all three candidates.
 ## 3. Result
 
 <!-- BEGIN GENERATED:t093-fit (scripts/perf_numbers.py) -->
+FIT **160** tensors, VALIDATION **24**, HELD-OUT
+**24** tensors measured once. The tree depth chosen on VALIDATION is
+**2**.
 <!-- END GENERATED:t093-fit -->
 
 <!-- BEGIN GENERATED:t093-policies (scripts/perf_numbers.py) -->
+Held-out total cost (objective units) and regret over the oracle (**28,099,256.52**,
+**26,636,085 B**): always-zstd **31,570,290.89** (regret
+**3,471,034.37**, **0.12353**); always-best-of-two regret
+**38.19**; entropy threshold regret **3,471,034.37**; size
+threshold regret **38.19**; fingerprint tree **28,099,272.97** (regret
+**16.45**, **0.0000006** of the oracle).
 <!-- END GENERATED:t093-policies -->
 
 <!-- BEGIN GENERATED:t093-planning (scripts/perf_numbers.py) -->
+The fingerprint pass over the held-out bytes takes **620,265,151 ns**
+(**16,308,098 ns/MiB**); the decision itself takes
+**33.4 ns** per tensor. At the declared exchange rate the pass costs
+**620,265.15** objective units.
 <!-- END GENERATED:t093-planning -->
 
 <!-- BEGIN GENERATED:t093-verdict (scripts/perf_numbers.py) -->
+The tree beats the best trivial selector by **21.73** units, i.e. it is
+**0.9999992×** its cost, while its own fingerprint pass costs
+**620,265.15** units: a net **-620,243.42** units. The
+advantage is **not** claimed: it is below the resolution of two-repetition encode/decode
+medians, and the feature pass is four orders of magnitude more expensive than the saving.
 <!-- END GENERATED:t093-verdict -->
 
 ## 4. What the numbers say

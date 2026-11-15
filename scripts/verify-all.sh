@@ -290,6 +290,20 @@ run_orchestrated_court kv_go_parity kv_go_parity_court \
 run_orchestrated_court refinement refinement_court \
   bash scripts/refinement_court.sh
 
+# T091 multi-parent reconstruction: bench court measures, fuse court assembles.
+# A host without Docker or the pythia corpus prints
+# `multi_parent_court: skip <reason>` and exits 78. Reduced in the aggregate.
+run_orchestrated_court multi_parent multi_parent_court \
+  env WEFT_MP_TENSORS=8 WEFT_MP_REPS=2 WEFT_MP_FANOUTS=1,2,3 \
+  bash bench/scripts/multi_parent_court.sh
+
+# T093 residual-fingerprint selector: bench court measures, fuse court assembles.
+# The contract is committed before the run; the held-out split is measured once
+# per receipt. A host without Docker or the corpus prints
+# `residual_selector_court: skip <reason>` and exits 78.
+run_orchestrated_court residual_selector residual_selector_court \
+  bash bench/scripts/residual_selector_court.sh
+
 run_orchestrated_court context_plane_verifier context_plane_verifier \
   bash scripts/context-plane-verifier_court.sh
 
