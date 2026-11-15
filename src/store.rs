@@ -1243,6 +1243,48 @@ pub(crate) struct QuotaPlan {
     pub usage_after: BTreeMap<QuotaPrincipal, QuotaCounters>,
 }
 
+/// One candidate for a bounded maintenance sweep.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MaintenanceCandidate {
+    /// `object` or `manifest`.
+    pub kind: String,
+    pub hash: Hash32,
+    pub bytes: u64,
+}
+
+/// A dry-run reachability scan: what is reachable, what is not, and the
+/// orphan-record count. Read-only; no epoch is acquired and nothing is
+/// deleted.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct MaintenancePlan {
+    /// Unreachable blobs, sorted by `(kind, hash)`.
+    pub candidates: Vec<MaintenanceCandidate>,
+    pub reachable_manifests: u64,
+    pub reachable_chunks: u64,
+    /// Live object records with no entry, no relation target and no pin.
+    pub orphan_records: u64,
+    pub problems: Vec<String>,
+}
+
+/// The outcome of one bounded sweep.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct MaintenanceSweep {
+    pub applied: bool,
+    pub deleted: u64,
+    pub deleted_bytes: u64,
+    /// Candidates the caller named that this sweep refused to delete
+    /// because they became reachable again, or that had already gone.
+    pub skipped: Vec<String>,
+    pub gc_epoch: u64,
+    pub gc_run_id: String,
+    /// Reachable counts observed by this sweep's own scan.
+    pub reachable_manifests: u64,
+    pub reachable_chunks: u64,
+    /// True when a stored quarantine is in force (maintenance is allowed to
+    /// delete bytes a quarantine still names, but the report says so).
+    pub problems: Vec<String>,
+}
+
 impl Store {
     /// Initialize a new store with the normative local backend. The directory
     /// must be absent or empty.
@@ -10628,6 +10670,221 @@ impl Store {
             );
         }
         Ok(reach)
+    }
+
+    /// Reachability scan used by the maintenance driver. Read-only.
+    pub fn maintenance_plan(&self) -> Result<MaintenancePlan> {
+        let mut problems = Vec::new();
+        let mut expired_tx = Vec::new();
+        let reach = self.compute_reachability(self.now_ns(), &mut expired_tx, &mut problems)?;
+        let now = SystemTime::now();
+        let grace = self.options.gc_grace_secs;
+        let mut report = GcReport::default();
+        // The cut is a wall-clock instant compared with a blob's modification
+        // time, so it must be the wall clock, not the (possibly fixed) logical
+        // store clock.
+        let cut = CollectUnmarkedCut {
+            acquired_ns: self.wall_ns(),
+            floor_ns: crate::gc_epoch::ReservationView::NO_FLOOR,
+        };
+        let mut candidates = Vec::new();
+        candidates.extend(collect_unmarked(
+            self,
+            KeyKind::Manifest,
+            &reach.manifests,
+            now,
+            grace,
+            Some(&cut),
+            &mut report,
+        )?);
+        candidates.extend(collect_unmarked(
+            self,
+            KeyKind::Object,
+            &reach.chunks,
+            now,
+            grace,
+            Some(&cut),
+            &mut report,
+        )?);
+        candidates.sort_by(|a, b| a.0.cmp(&b.0));
+        let mut out = Vec::with_capacity(candidates.len());
+        for (key, bytes) in candidates {
+            match key {
+                Key::Object { hash } => out.push(MaintenanceCandidate {
+                    kind: "object".to_owned(),
+                    hash,
+                    bytes,
+                }),
+                Key::Manifest { hash } => out.push(MaintenanceCandidate {
+                    kind: "manifest".to_owned(),
+                    hash,
+                    bytes,
+                }),
+                _ => {}
+            }
+        }
+        let orphan_records = self
+            .state
+            .objects
+            .keys()
+            .copied()
+            .filter(|id| *id != State::ROOT_ID)
+            .filter(|id| !self.is_object_pinned(*id))
+            .filter(|id| !self.state.entries.values().any(|entry| entry.target == *id))
+            .filter(|id| !self.state.entries.values().any(|entry| entry.parent == *id))
+            .filter(|id| {
+                !self.state.relations.values().any(|relation| {
+                    matches!(relation.target, RelationTarget::Object(target) if target == *id)
+                })
+            })
+            .count() as u64;
+        problems.extend(report.problems);
+        Ok(MaintenancePlan {
+            candidates: out,
+            reachable_manifests: reach.manifests.len() as u64,
+            reachable_chunks: reach.chunks.len() as u64,
+            orphan_records,
+            problems,
+        })
+    }
+
+    /// Delete a caller-named set of candidates, **re-verifying** that each is
+    /// still unreachable in this pass.
+    ///
+    /// This is what makes a persisted plan safe across restarts: the plan can
+    /// be stale, so every candidate is re-checked against a reachability scan
+    /// performed under this pass's GC epoch. A blob that became reachable again
+    /// is skipped and reported, never deleted. A second concurrent pass is
+    /// refused by the epoch CAS (`Busy`).
+    pub fn maintenance_reclaim(
+        &mut self,
+        candidates: &[MaintenanceCandidate],
+    ) -> Result<MaintenanceSweep> {
+        self.require_writable()?;
+        if self.group_depth != 0 {
+            return Err(Error::invalid_argument(
+                "maintenance cannot run inside a group commit",
+            ));
+        }
+        if self.domain.is_some() {
+            return Err(Error::unsupported_version(
+                "a domain-bound handle cannot run a coordinated multi-domain maintenance pass",
+            ));
+        }
+        let mut sweep = MaintenanceSweep {
+            applied: true,
+            ..MaintenanceSweep::default()
+        };
+        let acquired = self.acquire_gc_epoch()?;
+        sweep.gc_epoch = acquired.epoch;
+        sweep.gc_run_id = acquired.run_id.clone();
+        if self.options.writer_mode == crate::mw2::WriterMode::Optimistic {
+            self.refresh_to_head()?;
+        }
+        // Unlinked-but-recorded objects: a crash with an open handle can leave
+        // an object record that no entry, relation or pin names. `gc --apply`
+        // removes those records in a commit; a maintenance sweep must do the
+        // same, otherwise it could delete a blob an orphan record still names
+        // and leave the store in a state `verify` reports as corrupt.
+        let orphan_ids: Vec<Hash32> = self
+            .state
+            .objects
+            .keys()
+            .copied()
+            .filter(|id| *id != State::ROOT_ID)
+            .filter(|id| !self.is_object_pinned(*id))
+            .filter(|id| !self.state.entries.values().any(|entry| entry.target == *id))
+            .filter(|id| !self.state.entries.values().any(|entry| entry.parent == *id))
+            .filter(|id| {
+                !self.state.relations.values().any(|relation| {
+                    matches!(relation.target, RelationTarget::Object(target) if target == *id)
+                })
+            })
+            .collect();
+        if !orphan_ids.is_empty() {
+            let mut ops: Vec<Op> = Vec::new();
+            for id in &orphan_ids {
+                ops.extend(self.delete_object_ops(*id));
+            }
+            self.commit_ops(ops, false)?;
+            sweep.problems.push(format!(
+                "removed {} orphan object record(s) before the sweep",
+                orphan_ids.len()
+            ));
+        }
+        let mut expired_tx = Vec::new();
+        let reach =
+            self.compute_reachability(self.now_ns(), &mut expired_tx, &mut sweep.problems)?;
+        sweep.reachable_manifests = reach.manifests.len() as u64;
+        sweep.reachable_chunks = reach.chunks.len() as u64;
+        let mut keys = Vec::new();
+        for candidate in candidates {
+            let (key, reachable) = match candidate.kind.as_str() {
+                "object" => (
+                    Key::object(candidate.hash),
+                    reach.chunks.contains(&candidate.hash),
+                ),
+                "manifest" => (
+                    Key::manifest(candidate.hash),
+                    reach.manifests.contains(&candidate.hash),
+                ),
+                other => {
+                    sweep
+                        .problems
+                        .push(format!("unknown maintenance candidate kind `{other}`"));
+                    continue;
+                }
+            };
+            if reachable {
+                sweep
+                    .skipped
+                    .push(format!("{} is reachable again", key.display_path()));
+                continue;
+            }
+            // The grace gate still applies: a blob younger than the configured
+            // grace is retained even when the caller named it.
+            if let Some(modified) = self.with_backend(|backend| backend.modified(&key))? {
+                let grace = u64::from(self.options.gc_grace_secs);
+                if grace > 0 {
+                    let age = SystemTime::now()
+                        .duration_since(modified)
+                        .unwrap_or(std::time::Duration::ZERO);
+                    if age < std::time::Duration::from_secs(grace) {
+                        sweep
+                            .skipped
+                            .push(format!("{} is younger than the grace", key.display_path()));
+                        continue;
+                    }
+                }
+            }
+            keys.push((key, candidate.bytes));
+        }
+        for (key, bytes) in &keys {
+            if self.delete_if_present(key)? {
+                sweep.deleted += 1;
+                sweep.deleted_bytes = sweep.deleted_bytes.saturating_add(*bytes);
+            } else {
+                sweep
+                    .skipped
+                    .push(format!("{} was already gone", key.display_path()));
+            }
+        }
+        if !keys.is_empty() {
+            let reclaim =
+                self.with_backend_mut(|backend| backend.reclaim_unreferenced_packs())?;
+            if reclaim.deleted_packs > 0 {
+                sweep.problems.push(format!(
+                    "reclaimed {} unreferenced pack(s) and {} catalog segment(s)",
+                    reclaim.deleted_packs, reclaim.deleted_catalog_segments
+                ));
+            }
+        }
+        let finished = crate::gc_epoch::GcEpoch {
+            finished_ns: self.wall_ns(),
+            ..acquired.clone()
+        };
+        let _ = self.close_gc_epoch(&acquired, &finished)?;
+        Ok(sweep)
     }
 
     /// Mark-and-sweep GC over unreachable chunks and manifests.

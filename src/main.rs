@@ -1191,6 +1191,28 @@ enum Command {
         #[command(subcommand)]
         command: TemplateCommand,
     },
+    /// Ops surface: maintenance counters, reachability plan, bounded reclaim
+    /// (`docs/MAINTENANCE.md`). Read-only unless `--apply`.
+    Ops {
+        /// Delete what the plan names, within the budget.
+        #[arg(long)]
+        apply: bool,
+        /// Declared reclaim rate, bytes per second.
+        #[arg(long = "bytes-per-second", default_value_t = 8 * 1024 * 1024)]
+        bytes_per_second: u64,
+        /// Maximum share of wall time maintenance may consume, percent.
+        #[arg(long = "cpu-share", default_value_t = 25)]
+        cpu_share: u8,
+        #[arg(long = "max-batch-bytes", default_value_t = 64 * 1024 * 1024)]
+        max_batch_bytes: u64,
+        #[arg(long = "max-pass-bytes", default_value_t = 1024 * 1024 * 1024)]
+        max_pass_bytes: u64,
+        #[arg(long = "min-batch-bytes", default_value_t = 64 * 1024)]
+        min_batch_bytes: u64,
+        /// Batches to run in this invocation.
+        #[arg(long = "max-passes", default_value_t = 1)]
+        max_passes: u64,
+    },
 }
 
 #[derive(Subcommand)]
@@ -3763,6 +3785,144 @@ fn run(cli: Cli) -> Result<()> {
                     println!("problem={}: {}", problem.class, problem.detail);
                 }
                 Ok(())
+            }
+        }
+        Command::Ops {
+            apply,
+            bytes_per_second,
+            cpu_share,
+            max_batch_bytes,
+            max_pass_bytes,
+            min_batch_bytes,
+            max_passes,
+        } => {
+            if apply {
+                let mut store = open_store(&store, OpenMode::ReadWrite, policy)?;
+                let budget = weftfs::maintenance::MaintenanceBudget {
+                    bytes_per_second,
+                    cpu_share_percent: cpu_share,
+                    max_batch_bytes,
+                    max_pass_bytes,
+                    min_batch_bytes,
+                };
+                let run = weftfs::maintenance::maintenance_run(&mut store, &budget, max_passes, true)?;
+                if json {
+                    print_json(&json!({
+                        "applied": true,
+                        "status": run.status,
+                        "passes": run.passes,
+                        "batches": run.batches,
+                        "candidates": run.candidates,
+                        "cursor": run.cursor,
+                        "resumed": run.resumed,
+                        "reclaimed_blobs": run.reclaimed_blobs,
+                        "reclaimed_bytes": run.reclaimed_bytes,
+                        "deferred": run.deferred,
+                        "wall_ms": run.wall_ms,
+                        "measured_bytes_per_second": run.measured_bytes_per_second,
+                        "plan_root": run.plan_root.to_hex(),
+                        "problems": run.problems,
+                    }))
+                } else {
+                    println!("applied=true");
+                    println!("status={}", run.status);
+                    println!("passes={}", run.passes);
+                    println!("batches={}", run.batches);
+                    println!("candidates={}", run.candidates);
+                    println!("cursor={}", run.cursor);
+                    println!("resumed={}", run.resumed);
+                    println!("reclaimed_blobs={}", run.reclaimed_blobs);
+                    println!("reclaimed_bytes={}", run.reclaimed_bytes);
+                    println!("deferred={}", run.deferred);
+                    println!("wall_ms={}", run.wall_ms);
+                    println!(
+                        "measured_bytes_per_second={}",
+                        run.measured_bytes_per_second
+                    );
+                    for problem in &run.problems {
+                        println!("problem={problem}");
+                    }
+                    Ok(())
+                }
+            } else {
+                let store = open_store(&store, OpenMode::ReadOnly, policy)?;
+                let report = store.ops_report()?;
+                let plan = report.plan.clone().unwrap_or_default();
+                if json {
+                    print_json(&json!({
+                        "generation": report.generation,
+                        "head": report.head.to_hex(),
+                        "index_bytes": report.index_bytes,
+                        "quarantine_entries": report.quarantine_entries,
+                        "reachability": {
+                            "reachable_manifests": plan.reachable_manifests,
+                            "reachable_chunks": plan.reachable_chunks,
+                            "orphan_records": plan.orphan_records,
+                            "unreachable_candidates": plan.candidates.len(),
+                            "candidate_bytes": plan.candidates.iter().map(|c| c.bytes).sum::<u64>(),
+                        },
+                        "plan": plan.candidates.iter().take(64).map(|candidate| json!({
+                            "kind": candidate.kind,
+                            "hash": candidate.hash.to_hex(),
+                            "bytes": candidate.bytes,
+                        })).collect::<Vec<_>>(),
+                        "plan_truncated": plan.candidates.len() > 64,
+                        "state": report.state.as_ref().map(|state| json!({
+                            "plan_root": state.plan_root.to_hex(),
+                            "candidates": state.candidates,
+                            "cursor": state.cursor,
+                            "status": state.status,
+                            "passes": state.passes,
+                            "reclaimed_blobs": state.reclaimed_blobs,
+                            "reclaimed_bytes": state.reclaimed_bytes,
+                            "deferred": state.deferred,
+                            "last_rate_bytes_per_second": state.last_rate_bytes_per_second,
+                            "last_duty_percent": state.last_duty_percent,
+                            "updated_at_ns": state.updated_at_ns,
+                        })),
+                        "problems": plan.problems,
+                    }))
+                } else {
+                    println!("generation={}", report.generation);
+                    println!("head={}", report.head);
+                    println!("index_bytes={}", report.index_bytes);
+                    println!("quarantine_entries={}", report.quarantine_entries);
+                    println!("reachable_manifests={}", plan.reachable_manifests);
+                    println!("reachable_chunks={}", plan.reachable_chunks);
+                    println!("orphan_records={}", plan.orphan_records);
+                    println!("unreachable_candidates={}", plan.candidates.len());
+                    println!(
+                        "candidate_bytes={}",
+                        plan.candidates.iter().map(|c| c.bytes).sum::<u64>()
+                    );
+                    for candidate in plan.candidates.iter().take(64) {
+                        println!(
+                            "candidate kind={} hash={} bytes={}",
+                            candidate.kind, candidate.hash, candidate.bytes
+                        );
+                    }
+                    match &report.state {
+                        Some(state) => {
+                            println!("state_status={}", state.status);
+                            println!("state_candidates={}", state.candidates);
+                            println!("state_cursor={}", state.cursor);
+                            println!("state_passes={}", state.passes);
+                            println!("state_reclaimed_blobs={}", state.reclaimed_blobs);
+                            println!("state_reclaimed_bytes={}", state.reclaimed_bytes);
+                            println!("state_deferred={}", state.deferred);
+                            println!(
+                                "state_last_rate_bytes_per_second={}",
+                                state.last_rate_bytes_per_second
+                            );
+                            println!("state_last_duty_percent={}", state.last_duty_percent);
+                        }
+                        None => println!("state=none"),
+                    }
+                    for problem in &plan.problems {
+                        println!("problem={problem}");
+                    }
+                    Ok(())
+                }
             }
         }
         Command::Gc { apply, grace_secs } => {

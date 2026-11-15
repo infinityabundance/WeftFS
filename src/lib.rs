@@ -64,6 +64,7 @@ pub mod kv_prefix;
 pub mod load_attestation;
 pub mod load_receipt;
 pub mod lock_probe;
+pub mod maintenance;
 pub mod materialization;
 pub mod mw2;
 pub mod mw3;
