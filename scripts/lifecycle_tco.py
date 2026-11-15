@@ -711,8 +711,11 @@ def main() -> int:
         },
         "lifecycle_rows": rows,
         "lifecycle_table": lifecycle_table,
+        "row_count": len(rows),
         "sensitivity": sensitivity_block,
         "surface_table": surface_table,
+        "surface_cells": len(surface_table),
+        "plane_cells": len(sensitivity_block["price_plane"]),
         "price_table": price_table,
         "cannot_prove": [
             "the rows come from four different courts and three different fixtures (Qwen2.5-0.5B with 8 shards, a small CPU-only Python transformer, a synthetic reuse trace); they are not one end-to-end run and their sum is not a measured end-to-end cost",
