@@ -577,6 +577,20 @@ def sensitivity() -> dict:
                     }
                 )
 
+    plane_summary = {}
+    for billing in ("cpu_seconds", "allocated_vcpu_seconds"):
+        cells = [c for c in plane if c["billing"] == billing]
+        plane_summary[billing] = {
+            "cells": len(cells),
+            "c_cheaper_cells": sum(1 for c in cells if c["cheaper_arm"] == "C"),
+            "a_cheaper_cells": sum(1 for c in cells if c["cheaper_arm"] == "A"),
+            "a_wins_at": [
+                [c["storage_multiplier"], c["compute_multiplier"]]
+                for c in cells
+                if c["cheaper_arm"] == "A"
+            ],
+        }
+
     return {
         "base_receipt": receipt,
         "base_stamp": doc.get("generated_utc"),
@@ -613,6 +627,7 @@ def sensitivity() -> dict:
         "unpriced": UNPRICED,
         "surface": surface,
         "price_plane": plane,
+        "plane_summary": plane_summary,
     }
 
 
