@@ -26178,6 +26178,45 @@
    "group": "t052",
    "format": "ratio:2",
    "expr": "{t052.pythia_b128_id_ms} / {t052.pythia_exact_read_ms}"
+  },
+  {
+   "key": "t048.aneesa_targets",
+   "label": "Targets in the 48-target view",
+   "unit": "",
+   "group": "t048",
+   "format": "int",
+   "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+   "path": "merged_views.1.merged_tensors",
+   "stamp_path": "stamp",
+   "stamp": "20261115T052218Z",
+   "revision_path": "revision.weftfs",
+   "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+  },
+  {
+   "key": "t052.block32",
+   "label": "Smaller block size",
+   "unit": "",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.0.block",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+  },
+  {
+   "key": "t052.block128",
+   "label": "Larger block size",
+   "unit": "",
+   "group": "t052",
+   "format": "int",
+   "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+   "path": "tensors.0.views.2.block",
+   "stamp_path": "stamp",
+   "stamp": "20261115T070334Z",
+   "revision_path": "revision.weftfs",
+   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
   }
  ],
  "blocks": [
@@ -33228,7 +33267,7 @@
      "template": "| \u2026 restore the view | {{t048.view_restore_ms}} ms |"
     },
     {
-     "template": "| A 48-target view: restore | {{t048.aneesa_restore_ms}} ms |"
+     "template": "| A {{t048.aneesa_targets}}-target view: restore | {{t048.aneesa_restore_ms}} ms |"
     },
     {
      "template": "| Full merged model: write (fresh store) | {{t048.full_write_ms}} ms |"
@@ -33276,7 +33315,7 @@
      "template": "* The merged-view family costs **{{t048.views_incremental_b}}** B incremental; its total (**{{t048.views_family_b}}** B) is **{{t048.views_vs_base_plus_full}}\u00d7** the base plus one standalone merged model."
     },
     {
-     "template": "* A merged-view restore is not automatically faster: the first view restores in **{{t048.view_restore_ms}}** ms versus **{{t048.base_restore_ms}}** ms for the base plus **{{t048.view_apply_ms}}** ms to apply the adapter in memory (**{{t048.view_vs_apply}}\u00d7**), so the view wins only when a loader would otherwise do both. A 48-target view restored in **{{t048.aneesa_restore_ms}}** ms under page-cache pressure."
+     "template": "* A merged-view restore is not automatically faster: the first view restores in **{{t048.view_restore_ms}}** ms versus **{{t048.base_restore_ms}}** ms for the base plus **{{t048.view_apply_ms}}** ms to apply the adapter in memory (**{{t048.view_vs_apply}}\u00d7**), so the view wins only when a loader would otherwise do both. A {{t048.aneesa_targets}}-target view restored in **{{t048.aneesa_restore_ms}}** ms under page-cache pressure."
     },
     {
      "template": "* The largest adapter stores **{{t048.big_physical_b}}** B versus **{{t048.big_zstd_b}}** B for `zstd -19` (**{{t048.big_ratio}}\u00d7**) on a {{t048.big_source_b}}-byte file."
@@ -33296,6 +33335,9 @@
     },
     {
      "template": "**{{t049.global_norm}}**."
+    },
+    {
+     "template": "The model checkpoint itself stores **{{t049.model_physical_b}}** B."
     }
    ],
    "inline": true
@@ -33348,13 +33390,13 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "* The attention mask loses badly to plain `zstd -19`: **{{t049.mask_physical_b}}** B stored versus **{{t049.mask_zstd_b}}** B \u2014 **{{t049.mask_vs_zstd_ratio}}\u00d7** \u2014 because a {{t049.mask_manifest_b}}-byte manifest and a fixed frame header dominate an {{t049.mask_logical_b}}-byte, almost-all-zero tensor. The planner never offers level 19 below 1 MiB by default."
+     "template": "* The attention mask loses badly to plain `zstd -19`: **{{t049.mask_physical_b}}** B stored versus **{{t049.mask_zstd_b}}** B \u2014 **{{t049.mask_vs_zstd_ratio}}\u00d7** \u2014 because a {{t049.mask_manifest_b}}-byte manifest and a fixed frame header dominate an {{t049.mask_logical_b}}-byte, almost-all-zero tensor. The planner does not offer its level-19 candidate below the default size gate."
     },
     {
      "template": "* Optimizer state is only mildly compressible: **{{t049.opt_physical_b}}** B for {{t049.opt_logical_b}} B of moments (**{{t049.opt_vs_raw_pct}}** % saved) and **{{t049.opt_vs_zstd_pct}}** % below `zstd -19`. The planner chose mode 9 for {{t049.opt_mode9}} of the moment tensors, raw for {{t049.opt_raw}}, zstd for {{t049.opt_zstd_count}}. This is not a dramatic win and is not presented as one."
     },
     {
-     "template": "* Fixed costs are visible at this size: a {{t049.grad_logical_b}}-byte gradient artifact takes {{t049.grad_write_ms}} ms to write and {{t049.opt_manifest_b}}-byte manifests are part of every stored total."
+     "template": "* Fixed costs are visible at this size: a {{t049.grad_logical_b}}-byte gradient artifact takes {{t049.grad_write_ms}} ms to write, and {{t049.opt_manifest_b}}-byte manifests are part of every stored total."
     }
    ]
   },
@@ -33364,10 +33406,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "**{{t051.accepts}}** pair is accepted and **{{t051.declines}}** are declined with a"
-    },
-    {
-     "template": "typed reason. The declines are the result, not a gap."
+     "template": "Accepted: **{{t051.accepts}}**. Declined with a typed reason: **{{t051.declines}}**. The declines are the result, not a gap."
     }
    ],
    "inline": true
@@ -33384,16 +33423,16 @@
      "template": "|---|---:|---:|---:|---:|---:|---:|"
     },
     {
-     "template": "| pythia step0 \u2192 step1 (F32, same shape) | {{t051.p01_base_b}} / {{t051.p01_target_b}} | {{t051.p01_matched_pct}} % | {{t051.p01_frame_b}} | {{t051.p01_patch_b}} | {{t051.p01_store_b}} | {{t051.p01_zstd_b}} |"
+     "template": "| pythia step0 \u2192 step1 (F32, same shape) | {{t051.p01_base_b}} / {{t051.p01_target_b}} | {{t051.p01_matched_pct}} % ({{t051.p01_matched_frac}}) | {{t051.p01_frame_b}} | {{t051.p01_patch_b}} | {{t051.p01_store_b}} | {{t051.p01_zstd_b}} |"
     },
     {
-     "template": "| pythia step0 \u2192 step8 (F32, same shape) | {{t051.p08_base_b}} / {{t051.p08_target_b}} | {{t051.p08_matched_pct}} % | declined | {{t051.p08_patch_b}} | {{t051.p08_wd_b}} | {{t051.p08_zstd_b}} |"
+     "template": "| pythia step0 \u2192 step8 (F32, same shape) | {{t051.p08_base_b}} / {{t051.p08_target_b}} | {{t051.p08_matched_pct}} % ({{t051.p08_matched_frac}}) | declined | {{t051.p08_patch_b}} | {{t051.p08_wd_b}} | {{t051.p08_zstd_b}} |"
     },
     {
-     "template": "| Qwen base \u2192 Instruct, {{t051.qwen_slice_b}}-byte slice | {{t051.qwen_slice_b}} / {{t051.qwen_slice_b}} | {{t051.qwen_slice_matched_pct}} % | declined | {{t051.qwen_slice_patch_b}} | \u2014 | {{t051.qwen_slice_zstd_b}} |"
+     "template": "| Qwen base \u2192 Instruct, {{t051.qwen_slice_b}}-byte slice | {{t051.qwen_slice_b}} / {{t051.qwen_slice_b}} | {{t051.qwen_slice_matched_pct}} % ({{t051.qwen_slice_matched}}) | declined | {{t051.qwen_slice_patch_b}} | \u2014 | {{t051.qwen_slice_zstd_b}} |"
     },
     {
-     "template": "| Qwen base \u2192 Instruct, whole model (store arm) | {{t051.qwen_base_b}} / \u2014 | not buildable in 3 GiB | declined | \u2014 | {{t051.qwen_store_b}} | {{t051.qwen_zstd_b}} |"
+     "template": "| Qwen base \u2192 Instruct, whole model (store arm) | {{t051.qwen_base_b}} / \u2014 | not buildable in 3 GiB | not measured | \u2014 | {{t051.qwen_store_b}} | {{t051.qwen_zstd_b}} |"
     },
     {
      "template": "| Qwen 0.5B BF16 vs pythia-70m F32 embedding | {{t051.cross_base_b}} / {{t051.cross_target_b}} | {{t051.cross_matched_pct}} % | declined | \u2014 | ineligible (dtype) | \u2014 |"
@@ -33463,7 +33502,7 @@
    "kind": "lines",
    "rows": [
     {
-     "template": "| Tensor | Exact stored | View b32 | View b128 | Exact read / view identity-only / view strict (ms, b128) |"
+     "template": "| Tensor | Exact stored | View block {{t052.block32}} | View block {{t052.block128}} | Exact read / identity-only / strict (ms) |"
     },
     {
      "template": "|---|---:|---:|---:|---:|"
@@ -33513,7 +33552,7 @@
      "template": "  Qwen MLP matrix, **{{t052.embed_saved_pct}}** % on the embedding and"
     },
     {
-     "template": "  **{{t052.pythia_saved_pct}}** % on the f32 pythia matrix (block 128)."
+     "template": "  **{{t052.pythia_saved_pct}}** % on the f32 pythia matrix (block {{t052.block128}})."
     },
     {
      "template": "* Read time: the view loses \u2014 **{{t052.down_id_vs_exact}}\u00d7** the exact read with"

@@ -3,6 +3,9 @@
 Status: implemented with fixtures, replay tests and a real backward pass. RL
 trajectories remain **specified only** (see below).
 
+The canonical key sets and identity domains are in
+[`docs/CONTEXT-ARTIFACTS.md`](../docs/CONTEXT-ARTIFACTS.md).
+
 ## What is implemented
 
 * `weft.optimizer-state.v1` — AdamW `exp_avg`, `exp_avg_sq` and `step` per
@@ -40,20 +43,27 @@ Reproduce:
 bash bench/scripts/training_state_court.sh
 ```
 
-<!-- BEGIN GENERATED:t049-shape (scripts/perf_numbers.py) -->
-<!-- END GENERATED:t049-shape -->
+<!-- BEGIN GENERATED:t049-shape (scripts/perf_numbers.py) --> The fixture has **42** parameters, an AdamW step of **1**, a cross-entropy loss of **6.094621** and a global gradient norm of **0.671185**. The model checkpoint itself stores **577,591** B. <!-- END GENERATED:t049-shape -->
 
 ## Results
 
 <!-- BEGIN GENERATED:t049-results (scripts/perf_numbers.py) -->
+| Artifact | Logical bytes | Stored bytes | `zstd -19` | Stored vs zstd | Write ms | Restore ms |
+|---|---:|---:|---:|---:|---:|---:|
+| Optimizer state (f32 moments, explicit dtype) | 3,315,456 | 2,816,796 | 3,003,495 | 6.22 % smaller | 1,188.0 | 13.5 |
+| Gradients (bf16, explicit dtype) | 828,864 | 578,320 | 630,391 | 8.26 % smaller | 581.4 | 3.7 |
+| Attention mask (u8, causal + padding) | 18,432 | 1,160 | 67 | 17.3× larger | 43.8 | 0.070 |
+| Total | 4,162,752 | 3,396,276 | 3,633,953 | 6.54 % smaller | — | — |
 <!-- END GENERATED:t049-results -->
 
-<!-- BEGIN GENERATED:t049-go (scripts/perf_numbers.py) -->
-<!-- END GENERATED:t049-go -->
+<!-- BEGIN GENERATED:t049-go (scripts/perf_numbers.py) --> WeftFS-Go `verify --full` over the same store decoded **61** representations with no problems, which is the cross-language check for the frames these artifacts use. <!-- END GENERATED:t049-go -->
 
 ## Losses
 
 <!-- BEGIN GENERATED:t049-losses (scripts/perf_numbers.py) -->
+* The attention mask loses badly to plain `zstd -19`: **1,160** B stored versus **67** B — **17.3×** — because a 466-byte manifest and a fixed frame header dominate an 18,432-byte, almost-all-zero tensor. The planner does not offer its level-19 candidate below the default size gate.
+* Optimizer state is only mildly compressible: **2,816,796** B for 3,315,456 B of moments (**15.04** % saved) and **6.22** % below `zstd -19`. The planner chose mode 9 for 28 of the moment tensors, raw for 54, zstd for 2. This is not a dramatic win and is not presented as one.
+* Fixed costs are visible at this size: a 828,864-byte gradient artifact takes 581.4 ms to write, and 14,127-byte manifests are part of every stored total.
 <!-- END GENERATED:t049-losses -->
 
 The optimizer-state result is deliberately unglamorous: AdamW moments are
@@ -75,7 +85,7 @@ compressible, slightly better than `zstd -19` on the same bytes, and exact".
 
 No `weft.rl-trajectory.v1` descriptor was invented. There is no consumer in
 this repository yet, and a format without a replay test and a real producer
-would be noise. That remains true; `spec/WEFT-TRAINING.md` describes the
+would be noise. That remains true; `docs/CONTEXT-ARTIFACTS.md` describes the
 intended shape but nothing is advertised as implemented.
 
 ## Non-claims

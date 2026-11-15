@@ -202,5 +202,29 @@
   "superseded_by": "bench/receipts/juicefs-20261115T005509Z.json",
   "reason": "Backend and cross-client receipt of the same run as augmentation-juicefs-20261115T001844Z.json, superseded for the same reason (bounded cross-client writer).",
   "declared_in": "bench/RESULTS-juicefs.md"
+ },
+ {
+  "receipt": "bench/receipts/adapters-20261115T050026Z.json",
+  "superseded_by": "bench/receipts/adapters-20261115T052218Z.json",
+  "reason": "Eligibility matched `qwen2.5-0.5b-instruct` as a substring, so an adapter trained on a 4-bit unsloth base was merged into the bf16 base. The measured bytes are real; the merge set is wrong. Eligibility now compares the trailing model-name segment exactly.",
+  "declared_in": "bench/RESULTS-adapters.md"
+ },
+ {
+  "receipt": "bench/receipts/cross-model-delta-20261115T054914Z.json",
+  "superseded_by": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+  "reason": "The court required two accepts; the measurement showed that only consecutive checkpoints have byte-identical regions. The gate was wrong, not the data; the corrected receipt also records the decline matched fractions and the committed revision.",
+  "declared_in": "bench/RESULTS-cross-model-delta.md"
+ },
+ {
+  "receipt": "bench/receipts/cross-model-delta-20261115T061111Z.json",
+  "superseded_by": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+  "reason": "Same court one field earlier: decline cells did not carry the numeric matched fraction, and the receipt records a pre-commit revision. Superseded by the run that adds the fractions at the committed revision.",
+  "declared_in": "bench/RESULTS-cross-model-delta.md"
+ },
+ {
+  "receipt": "bench/receipts/view-identity-20261115T063737Z.json",
+  "superseded_by": "bench/receipts/view-identity-20261115T070334Z.json",
+  "reason": "Measured in a working tree that already contained `resolve_view_bytes` while the receipt recorded the preceding revision. The bytes, error and exactness fields are valid; the revision attribution is not, so the current receipt is the run at the committed revision.",
+  "declared_in": "bench/RESULTS-view-identity.md"
  }
 ]

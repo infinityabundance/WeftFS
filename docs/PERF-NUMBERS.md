@@ -477,7 +477,7 @@ seven interleaved repetitions. Source:
 | `verify.revision` | 517703200d4837d63233e3ef02c4102f454f9c05 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261114T162327Z.json` | 20261114T162327Z | 517703200d48 |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,345 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,365 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 933 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261114T162327Z.tests.json` | 4535601d84f280033d4c053a1f1bd161857277ee356432354702382deb34f501 | bench/receip |

@@ -3,6 +3,9 @@
 Status: implemented with one working view (`q8_0-block`), a canonical
 descriptor, an explicit error contract, and measured storage/time trade-offs.
 
+The canonical key set, identity domains and refusal rules are in
+[`docs/CONTEXT-ARTIFACTS.md`](../docs/CONTEXT-ARTIFACTS.md).
+
 ## What is implemented
 
 * `weft.view.v1` — a view descriptor with its own identity
@@ -52,12 +55,33 @@ page cache, not percentiles.
 ## Results
 
 <!-- BEGIN GENERATED:t052-table (scripts/perf_numbers.py) -->
+| Tensor | Exact stored | View block 32 | View block 128 | Exact read / identity-only / strict (ms) |
+|---|---:|---:|---:|---:|
+| Qwen `down_proj` (bf16) | 5,798,764 | 4,463,546 (0.770×) | 4,152,976 (0.716×) | 21.41 / 44.19 / 149.11 |
+| Qwen embedding (bf16) | 180,547,947 | — | 127,794,475 (0.708×) | 700.60 / 1,374.21 / — |
+| pythia QKV (f32) | 1,829,113 | — | 762,020 (0.417×) | 4.78 / 8.11 / — |
 <!-- END GENERATED:t052-table -->
 
 <!-- BEGIN GENERATED:t052-error (scripts/perf_numbers.py) -->
+| Tensor | Measured max abs error | Declared bound |
+|---|---:|---:|
+| Qwen `down_proj` | 0.001953125 | 0.002176120 |
+| Qwen embedding | 0.000751495 | 0.001280296 |
+| pythia QKV | 0.000571424 | 0.000571904 |
 <!-- END GENERATED:t052-error -->
 
 <!-- BEGIN GENERATED:t052-verdict (scripts/perf_numbers.py) -->
+* Bytes: the view wins — **28.38** % fewer stored bytes on the
+  Qwen MLP matrix, **29.22** % on the embedding and
+  **58.34** % on the f32 pythia matrix (block 128).
+* Read time: the view loses — **2.06×** the exact read with
+  identity checking only, and **6.96×** when the strict door
+  re-reads the source and re-measures the bound. The embedding shows the same
+  shape (**1.96×**) and so does the f32 tensor
+  (**1.70×**).
+* Verdict: a q8_0 view is a **bandwidth and capacity** representation, not a
+  latency representation. Larger blocks trade a little more error for fewer
+  bytes; the error stays inside the declared bound in every cell.
 <!-- END GENERATED:t052-verdict -->
 
 ## Refusal proof

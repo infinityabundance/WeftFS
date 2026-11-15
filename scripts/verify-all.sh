@@ -123,6 +123,20 @@ run_court rust "threefs" \
 # ran in their own receipts. Their full-size standalone receipts remain the
 # full evidence and are cited in docs/STATUS.md.
 
+# T048/T051/T052 artifact courts. Each wrapper prints one `<name>: skip <reason>`
+# line and exits 78 when Docker, the fuse image or the pinned corpus is absent.
+# The aggregate uses reduced configurations; the full-size standalone receipts
+# are `bench/receipts/adapters-*.json`, `cross-model-delta-*.json` and
+# `view-identity-*.json` from the default runs.
+run_orchestrated_court adapters adapter_court env WEFT_STAMP="$stamp" bash bench/scripts/artifact_court.sh adapter
+run_orchestrated_court cross_model_delta cross_model_delta_court env WEFT_STAMP="$stamp" bash bench/scripts/artifact_court.sh cross_model
+run_orchestrated_court view_identity view_identity_court env WEFT_STAMP="$stamp" bash bench/scripts/artifact_court.sh view
+
+# T049 training state: orchestrated because it builds a Rust harness, an
+# independent Go binary and then runs the Python court. The script itself
+# prints `training_state_court: skip <reason>` and exits 78 when unavailable.
+run_orchestrated_court training_state training_state_court env WEFT_STAMP="$stamp" bash bench/scripts/training_state_court.sh
+
 # Checkpoint-family lifecycle (reduced for the aggregate: one family, one
 # configuration, one repetition each). The full-size standalone receipt is
 # `bench/receipts/family-lifecycle-*.json` from the default run.
@@ -735,6 +749,18 @@ skipped="$(grep -c '=skip$' "$results" || true)"
   fi
   if [[ -f "bench/receipts/conformance-bundle-${stamp}.json" ]]; then
     emit_receipt conformance_bundle "bench/receipts/conformance-bundle-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/adapters-${stamp}.json" ]]; then
+    emit_receipt adapters "bench/receipts/adapters-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/cross-model-delta-${stamp}.json" ]]; then
+    emit_receipt cross_model_delta "bench/receipts/cross-model-delta-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/view-identity-${stamp}.json" ]]; then
+    emit_receipt view_identity "bench/receipts/view-identity-${stamp}.json"
+  fi
+  if [[ -f "bench/receipts/training-state-${stamp}.json" ]]; then
+    emit_receipt training_state "bench/receipts/training-state-${stamp}.json"
   fi
   echo ""
   echo "  },"

@@ -9,12 +9,73 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,345** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,365** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
+
+## 2026-11-15 (T048/T049/T051/T052: adapters, training state, cross-model delta, view identity)
+
+**Scope.** Four context-artifact surfaces were audited, finished, measured and
+published, with new canonical WCB schemas described in
+[`docs/CONTEXT-ARTIFACTS.md`](CONTEXT-ARTIFACTS.md). No frozen wire byte, mode
+number or root changed. Rust-only; the Go store does not read the new
+manifests.
+
+* **T048 adapters.** `weft.adapter.v1` makes an adapter its own artifact bound
+to the base checkpoint by content root; `weft.merged-view.v1` +
+`weft.merge-contract.v1` give a precomputed merge its own identity and pin the
+arithmetic. `restore_adapter` now reproduces the fetched container byte for
+byte (the manifest records the source header verbatim and each tensor's
+`data_offsets`; gaps, overlaps or a hash mismatch fail closed). Evidence: real
+public Qwen2.5-0.5B LoRA/DoRA adapters, `bench/receipts/adapters-20261115T052218Z.json`,
+[`bench/RESULTS-adapters.md`](../bench/RESULTS-adapters.md). A NumPy reference
+recomputes the merge from the original files and shows that equal-real-value
+arithmetic is **not** byte-equal (a handful of elements out of millions), which
+is why `merge_equivalence: not_claimed` is in every manifest.
+* **T049 training state.** `weft.optimizer-state.v1`, `weft.gradient.v1` and
+`weft.attention-mask.v1`, with explicit moment/gradient dtypes (f32 moments for
+a bf16 model). Payloads come from a real torch backward pass and one AdamW
+step; every restored byte is compared with the torch tensor, and WeftFS-Go
+`verify --full` reads the same store. Evidence:
+`bench/receipts/training-state-20261115T054734Z.json`,
+[`bench/RESULTS-training-state.md`](../bench/RESULTS-training-state.md).
+Optimizer state is only mildly compressible; the tiny attention mask loses
+badly to `zstd -19` because fixed frame and manifest overhead dominate it.
+* **T051 cross-model delta.** A policy layer over the frozen mode-3 DELTA with
+typed declines. Measured result: byte-identical reuse exists between
+consecutive checkpoints and is essentially absent between independent
+fine-tunes, so the mode declines them instead of emitting a bloated delta;
+value-level `WEIGHT_DELTA` is what helps there. Evidence:
+`bench/receipts/cross-model-delta-20261115T064249Z.json`,
+[`bench/RESULTS-cross-model-delta.md`](../bench/RESULTS-cross-model-delta.md).
+* **T052 view identity.** `weft.view.v1` with one working method
+(`q8_0-block`), an exact per-element error contract, the exact source root kept
+authoritative, and a typed refusal from the exact door. `resolve_view_bytes`
+was split from `resolve_view` after the court showed the strict door re-read
+the exact source on every read. Verdict: the view wins on stored bytes and
+loses on read latency (measured for bf16 and f32 tensors). Evidence:
+`bench/receipts/view-identity-20261115T070334Z.json`,
+[`bench/RESULTS-view-identity.md`](../bench/RESULTS-view-identity.md).
+
+**Defects found by the audit and fixed.** `f16_to_f32` under-scaled every f16
+subnormal by 2× and `f32_to_f16_bits` rounded everything between the subnormal
+midpoint and the smallest subnormal to zero; `half_ulp("bf16")` understated the
+view's own error bound by 2×. The adapter court's eligibility also merged an
+adapter trained on a 4-bit base because it matched the model name as a
+substring; it now compares the trailing model-name segment.
+
+**Courts.** `adapters`, `cross_model_delta`, `view_identity` and
+`training_state` are registered in `scripts/verify-all.sh` with one-line skip
+paths (exit 78). Their reduced aggregate receipts are recorded under the
+aggregate stamp; the full-size receipts above are the cited evidence.
+`verify-all` was **not** re-run for this subphase.
+
+**Not done.** No Go parity for the new manifests; the schemas are not exported
+to `spec/` or the subprojects; no RL-trajectory descriptor (specified only);
+no physical power-loss, fleet, GPU or serving claim.
 
 ## 2026-11-14 (T072/T074/T078/T079/T071: artifact API, producer auth, revocation epochs, encryption, RFC gaps)
 

@@ -25,7 +25,9 @@ use std::process::Command;
 use serde_json::{json, Value as Json};
 
 use weftfs::checkpoint::{CheckpointWriteOptions, ShardStrategy};
-use weftfs::cross_model::{plan_cross_model_delta, tensor_mode_eligibility, CrossModelDecision};
+use weftfs::cross_model::{
+    plan_cross_model_delta, tensor_mode_eligibility, CrossModelDecision, DeclineReason,
+};
 use weftfs::safetensors::SafetensorsFile;
 use weftfs::store::{Options, Store};
 use weftfs::tensor_store::TensorStrategy;
@@ -249,15 +251,24 @@ fn delta_cell(name: &str, base: &[u8], target: &[u8], note: &str) -> Json {
             "replay_exact": replay == target,
         })
         }
-        CrossModelDecision::Decline(reason) => json!({
-            "pair": name,
-            "note": note,
-            "decision": "decline",
-            "reason": reason.as_str(),
-            "reason_detail": format!("{reason:?}"),
-            "base_bytes": base.len(),
-            "target_bytes": target.len(),
-        }),
+        CrossModelDecision::Decline(reason) => {
+            let matched = match &reason {
+                DeclineReason::NothingInCommon {
+                    matched_fraction, ..
+                } => Json::from(*matched_fraction),
+                _ => Json::Null,
+            };
+            json!({
+                "pair": name,
+                "note": note,
+                "decision": "decline",
+                "reason": reason.as_str(),
+                "reason_detail": format!("{reason:?}"),
+                "matched_fraction": matched,
+                "base_bytes": base.len(),
+                "target_bytes": target.len(),
+            })
+        }
     }
 }
 

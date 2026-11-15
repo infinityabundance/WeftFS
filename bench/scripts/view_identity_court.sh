@@ -35,26 +35,28 @@ cargo build --release --example view_court 2>&1 | tail -2
 rm -rf "$work/scratch"; mkdir -p "$work/scratch"
 
 tensors="${WEFT_VIEW_TENSORS:-model.layers.0.mlp.down_proj.weight,model.embed_tokens.weight}"
+blocks="${WEFT_VIEW_BLOCKS:-32,64,128}"
 ".docker-cache/target-rust/release/examples/view_court" \
-  --model "$qwen" --tensors "$tensors" --scratch "$work/scratch" --out "$work/qwen.json"
+  --model "$qwen" --tensors "$tensors" --blocks "$blocks" \
+  --scratch "$work/scratch" --out "$work/qwen.json"
 ".docker-cache/target-rust/release/examples/view_court" \
   --model "$pythia" --tensors "gpt_neox.layers.0.attention.query_key_value.weight" \
-  --scratch "$work/scratch-pythia" --out "$work/pythia.json"
+  --blocks "$blocks" --scratch "$work/scratch-pythia" --out "$work/pythia.json"
 
-python3 - "$work/qwen.json" "$work/pythia.json" "$receipt" "$stamp" "$log" "$tensors" <<'PY'
+python3 - "$work/qwen.json" "$work/pythia.json" "$receipt" "$stamp" "$log" "$tensors" "$blocks" <<'PY'
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-qwen_path, pythia_path, out, stamp, log, tensors = sys.argv[1:7]
+qwen_path, pythia_path, out, stamp, log, tensors, blocks = sys.argv[1:8]
 qwen = json.load(open(qwen_path))
 pythia = json.load(open(pythia_path))
 qwen["pythia_cells"] = pythia["tensors"]
 qwen["stamp"] = stamp
 qwen["generated_utc"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 qwen["raw_log"] = log
-qwen["configuration"] = {"qwen_tensors": tensors.split(","), "pythia_tensor": "gpt_neox.layers.0.attention.query_key_value.weight", "blocks": [32, 64, 128]}
+qwen["configuration"] = {"qwen_tensors": tensors.split(","), "pythia_tensor": "gpt_neox.layers.0.attention.query_key_value.weight", "blocks": [int(b) for b in blocks.split(",")]}
 
 views = []
 for cell in qwen["tensors"] + pythia["tensors"]:

@@ -53,14 +53,21 @@ shipped planner writing the target checkpoint with the base as a causal parent
 (marginal retained bytes, every manifest and index included). For the distant
 pair the planner arm is forced to `WeightDelta` and, separately, `SparseDelta`.
 
-<!-- BEGIN GENERATED:t051-summary (scripts/perf_numbers.py) -->
-<!-- END GENERATED:t051-summary -->
+<!-- BEGIN GENERATED:t051-summary (scripts/perf_numbers.py) --> Accepted: **1**. Declined with a typed reason: **5**. The declines are the result, not a gap. <!-- END GENERATED:t051-summary -->
 
 <!-- BEGIN GENERATED:t051-table (scripts/perf_numbers.py) -->
+| Pair | Base / target bytes | Byte-identical | DELTA frame | `--patch-from` | Planner or forced | Independent `zstd -19` |
+|---|---:|---:|---:|---:|---:|---:|
+| pythia step0 → step1 (F32, same shape) | 281,715,176 / 281,715,176 | 99.983 % (0.999834) | 47,403 | 275,660 | 62,142 | 142,240,032 |
+| pythia step0 → step8 (F32, same shape) | 281,715,176 / 281,715,176 | 0.563 % (0.005628) | declined | 141,228,760 | 50,564,149 | 142,277,741 |
+| Qwen base → Instruct, 268,435,456-byte slice | 268,435,456 / 268,435,456 | 0.000209 % (0.000002086163) | declined | 203,304,551 | — | 204,624,205 |
+| Qwen base → Instruct, whole model (store arm) | 658,187,349 / — | not buildable in 3 GiB | not measured | — | 541,430,656 | 764,093,099 |
+| Qwen 0.5B BF16 vs pythia-70m F32 embedding | 103,022,592 / 272,269,312 | 0.000000 % | declined | — | ineligible (dtype) | — |
+| Two Qwen BF16 tensors, different shapes | 8,716,288 / 272,269,312 | 0.000003 % | declined | — | ineligible (shape) | — |
+| SYNTHETIC nothing-in-common pair | 4,194,304 / 4,194,304 | 0.000000 % | declined | — | — | — |
 <!-- END GENERATED:t051-table -->
 
-<!-- BEGIN GENERATED:t051-reading (scripts/perf_numbers.py) -->
-<!-- END GENERATED:t051-reading -->
+<!-- BEGIN GENERATED:t051-reading (scripts/perf_numbers.py) --> On the one pair with byte-identical regions the frame is **5.82×** smaller than `zstd --patch-from` and **1.31×** smaller than the shipped planner's marginal bytes. On the distant pair the planner's forced weight-delta arm is **2.79×** smaller than `zstd --patch-from`, and the whole Qwen fine-tune stores **1.41×** below independent `zstd -19` with **241** weight-delta tensors. Those are value-level deltas; the byte-level delta correctly refuses to pretend it can do the same. <!-- END GENERATED:t051-reading -->
 
 ## Why the byte delta declines on fine-tunes
 
@@ -79,6 +86,10 @@ eligibility, not competing claims.
 ## Losses and refusals
 
 <!-- BEGIN GENERATED:t051-losses (scripts/perf_numbers.py) -->
+* Byte-identical structural reuse is essentially absent between independent fine-tunes: the Qwen slice matched **0.000209** % of bytes, so the mode declines rather than emitting a nearly-full INSERT stream.
+* Even consecutive checkpoints only help the byte delta when almost nothing changed: step0 → step1 matched **99.983** %, while step0 → step8 matched **0.563** % and declined.
+* The forced sparse-delta arm is refused on `embed_out` (`LimitExceeded`, 22,339,018 non-zero runs against a 16,777,216 bound); that is a recorded refusal, not a fallback.
+* The whole-model Qwen byte delta cannot be built inside the 3 GiB court (two 988 MB inputs plus a frame), so that pair is a slice plus a whole-model store arm, stated in every cell.
 <!-- END GENERATED:t051-losses -->
 
 ## Non-claims

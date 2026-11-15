@@ -14254,5 +14254,245 @@
   ],
   "receipt": null,
   "kind": "present"
+ },
+ {
+  "id": "t048_adapter_schema",
+  "claim": "Adapters are their own artifact with a canonical manifest.",
+  "value": "weft.adapter.v1",
+  "locations": [
+   "bench/RESULTS-adapters.md"
+  ],
+  "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+  "kind": "present",
+  "stamp": "20261115T052218Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t048_merged_view_schema",
+  "claim": "A precomputed merge is a distinct artifact with its own identity.",
+  "value": "weft.merged-view.v1",
+  "locations": [
+   "bench/RESULTS-adapters.md"
+  ],
+  "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+  "kind": "present",
+  "stamp": "20261115T052218Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t048_merge_equivalence",
+  "claim": "No merged artifact claims byte equality with any other producer.",
+  "value": "not_claimed",
+  "locations": [
+   "bench/RESULTS-adapters.md"
+  ],
+  "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+  "kind": "present",
+  "stamp": "20261115T052218Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t048_adapter_bytes",
+  "claim": "Adapters plus every manifest and frame.",
+  "value": "265,951,556",
+  "locations": [
+   "bench/RESULTS-adapters.md"
+  ],
+  "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+  "kind": "present",
+  "stamp": "20261115T052218Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t048_reference_gap",
+  "claim": "The NumPy reference differs from the pinned Rust merge after bf16 rounding.",
+  "value": "**1** element after bf16 rounding",
+  "locations": [
+   "bench/RESULTS-adapters.md"
+  ],
+  "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+  "kind": "present",
+  "stamp": "20261115T052218Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t048_small_adapter_loss",
+  "claim": "A small adapter stores more than zstd -19 on the same file.",
+  "value": "**1.106\u00d7**",
+  "locations": [
+   "bench/RESULTS-adapters.md"
+  ],
+  "receipt": "bench/receipts/adapters-20261115T052218Z.json",
+  "kind": "present",
+  "stamp": "20261115T052218Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t049_optimizer_schema",
+  "claim": "AdamW state is a canonical artifact bound to the model.",
+  "value": "weft.optimizer-state.v1",
+  "locations": [
+   "bench/RESULTS-training-state.md"
+  ],
+  "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+  "kind": "present",
+  "stamp": "20261115T054734Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t049_gradient_schema",
+  "claim": "Gradients are a canonical artifact bound to the model and step.",
+  "value": "weft.gradient.v1",
+  "locations": [
+   "bench/RESULTS-training-state.md"
+  ],
+  "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+  "kind": "present",
+  "stamp": "20261115T054734Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t049_mask_schema",
+  "claim": "Attention masks are a canonical artifact with an encoding statement.",
+  "value": "weft.attention-mask.v1",
+  "locations": [
+   "bench/RESULTS-training-state.md"
+  ],
+  "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+  "kind": "present",
+  "stamp": "20261115T054734Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t049_optimizer_bytes",
+  "claim": "Optimizer moments stored, all metadata included.",
+  "value": "2,816,796",
+  "locations": [
+   "bench/RESULTS-training-state.md"
+  ],
+  "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+  "kind": "present",
+  "stamp": "20261115T054734Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t049_mask_loss",
+  "claim": "A tiny highly regular mask costs far more than zstd -19 on the same bytes.",
+  "value": "17.3\u00d7",
+  "locations": [
+   "bench/RESULTS-training-state.md"
+  ],
+  "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+  "kind": "present",
+  "stamp": "20261115T054734Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t049_go_parity",
+  "claim": "The independent Go store decodes the same frames.",
+  "value": "**61** representations",
+  "locations": [
+   "bench/RESULTS-training-state.md"
+  ],
+  "receipt": "bench/receipts/training-state-20261115T054734Z.json",
+  "kind": "present",
+  "stamp": "20261115T054734Z",
+  "revision": "3a02e561a4d193e67554be882e52244d450d39c9"
+ },
+ {
+  "id": "t051_typed_decline",
+  "claim": "A pair with no byte-identical regions is declined with a typed reason.",
+  "value": "nothing-in-common",
+  "locations": [
+   "bench/RESULTS-cross-model-delta.md"
+  ],
+  "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+  "kind": "present",
+  "stamp": "20261115T064249Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t051_consecutive_frame",
+  "claim": "The byte delta is excellent on consecutive checkpoints.",
+  "value": "47,403",
+  "locations": [
+   "bench/RESULTS-cross-model-delta.md"
+  ],
+  "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+  "kind": "present",
+  "stamp": "20261115T064249Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t051_finetune_fraction",
+  "claim": "An independent fine-tune has essentially no byte-identical regions.",
+  "value": "0.000002086163",
+  "locations": [
+   "bench/RESULTS-cross-model-delta.md"
+  ],
+  "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+  "kind": "present",
+  "stamp": "20261115T064249Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t051_store_arm",
+  "claim": "The whole-model fine-tune planner marginal bytes.",
+  "value": "541,430,656",
+  "locations": [
+   "bench/RESULTS-cross-model-delta.md"
+  ],
+  "receipt": "bench/receipts/cross-model-delta-20261115T064249Z.json",
+  "kind": "present",
+  "stamp": "20261115T064249Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t052_view_schema",
+  "claim": "An approximate view is a canonical descriptor with its own identity.",
+  "value": "weft.view.v1",
+  "locations": [
+   "bench/RESULTS-view-identity.md"
+  ],
+  "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+  "kind": "present",
+  "stamp": "20261115T070334Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t052_exact_door",
+  "claim": "The exact resolution door refuses a view descriptor.",
+  "value": "UnsupportedRepresentation",
+  "locations": [
+   "bench/RESULTS-view-identity.md"
+  ],
+  "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+  "kind": "present",
+  "stamp": "20261115T070334Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t052_bytes_saved",
+  "claim": "The view saves stored bytes on the measured tensors.",
+  "value": "28.38",
+  "locations": [
+   "bench/RESULTS-view-identity.md"
+  ],
+  "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+  "kind": "present",
+  "stamp": "20261115T070334Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t052_read_penalty",
+  "claim": "Identity-only view resolution is slower than the exact read.",
+  "value": "2.06\u00d7",
+  "locations": [
+   "bench/RESULTS-view-identity.md"
+  ],
+  "receipt": "bench/receipts/view-identity-20261115T070334Z.json",
+  "kind": "present",
+  "stamp": "20261115T070334Z",
+  "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
  }
 ]
