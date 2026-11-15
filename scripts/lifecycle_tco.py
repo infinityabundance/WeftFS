@@ -664,10 +664,24 @@ def main() -> int:
     # field is copied from a row or a surface cell above.
     lifecycle_table = {}
     for index, row in enumerate(rows, start=1):
+        value = row["value"]
+        unit = row["unit"]
+        # Presentation only: the numeric value stays in lifecycle_rows above.
+        if isinstance(value, bool):
+            value_text = "yes" if value else "no"
+        elif unit == "B":
+            value_text = f"{int(value):,}"
+        elif unit == "count":
+            value_text = f"{int(value):,}"
+        elif unit == "ratio":
+            value_text = f"{float(value):.4f}"
+        else:
+            value_text = f"{float(value):,.1f}"
         lifecycle_table[f"row{index:02d}"] = {
             "stage": row["stage"],
             "quantity": row["quantity"],
-            "value": row["value"],
+            "value": value,
+            "value_text": value_text,
             "unit": row["unit"],
             "receipt": row["evidence"]["receipt"],
             "stamp": row["evidence"]["stamp"],
