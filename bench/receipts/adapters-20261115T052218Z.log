@@ -1,0 +1,18 @@
+adapter_court: stamp=20261115T052218Z
+adapter_court: court=Linux 7.3.3-1-cachyos x86_64 image=weft/fuse-court:1 id=sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e
+adapter_court: limits memory=3g cpus=4 pids=1024
+adapter_court: revisions weftfs=3a02e561a4d193e67554be882e52244d450d39c9 weftcodec=c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297
+adapter_court: configuration adapters=999 merge=999 merged_full=1 merged_zstd=2 dumps=3
+adapter_court: verified base sha256=fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe
+adapter_court: corpus names 12 adapters
+adapter_court: building release example
+warning: `weftfs` (example "adapter_court") generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.02s
+adapter_court: running harness
+adapter_court: wrote bench/receipts/adapters-20261115T052218Z.raw.json
+adapter_court: running the NumPy reference merge
+adapter_reference_merge: wrote bench/receipts/adapters-reference-20261115T052218Z.json
+adapter_court: assembling receipt
+adapter_court: checks {"every_adapter_restore_is_byte_exact": true, "every_adapter_verified": true, "base_restore_is_byte_exact": true, "every_merged_view_restored_exactly": true, "store_verify_full_clean": true, "reference_merge_present": true, "reference_merge_differs_from_base": true}
+adapter_court: reference mismatches [('model.layers.0.mlp.down_proj.weight', 1, 3), ('model.layers.0.mlp.gate_proj.weight', 2, 6), ('model.layers.0.mlp.up_proj.weight', 2, 3)]
+adapter_court: wrote bench/receipts/adapters-20261115T052218Z.json
