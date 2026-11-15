@@ -1,0 +1,2035 @@
+{
+ "schema": "weft.lifecycle-tco.v1",
+ "stamp": "20261115T011432Z",
+ "revision": {
+  "weftfs": "8293124ce99fedceea09ddec603bb9da43e2cce2",
+  "weftcodec": "c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297"
+ },
+ "purpose": {
+  "T082": "one controlled lifecycle stitched from existing receipts; no value here was re-measured by this generator",
+  "T089": "a sensitivity surface over published list prices applied to measured resource quantities, not a forecast"
+ },
+ "lifecycle_rows": [
+  {
+   "stage": "checkpoint write (planned)",
+   "quantity": "durable write pause (writer stall)",
+   "unit": "ms",
+   "value": 61056.057878,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.base-planned-save.pause_ms",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "Qwen2.5-0.5B base, 290 tensors, 8 shards, 988,065,536 element bytes, shipped planned policy"
+  },
+  {
+   "stage": "checkpoint write (planned)",
+   "quantity": "encode CPU",
+   "unit": "ms",
+   "value": 17320.0,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.base-planned-save.cpu_user_ms",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same cell as the planned pause; the receipt also reports cpu_sys_ms"
+  },
+  {
+   "stage": "checkpoint write (planned)",
+   "quantity": "stored bytes",
+   "unit": "B",
+   "value": 824052654,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.base-planned-save.store_bytes",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same cell; store_bytes is the reachable tree after the write"
+  },
+  {
+   "stage": "checkpoint write (fast, zstd-1)",
+   "quantity": "durable write pause (writer stall)",
+   "unit": "ms",
+   "value": 57090.733842,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.base-fast-zstd1-save.pause_ms",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same container and fixture as the planned row, Fast policy with FastCodec::Zstd level 1"
+  },
+  {
+   "stage": "checkpoint write (fast, zstd-1)",
+   "quantity": "encode CPU",
+   "unit": "ms",
+   "value": 2080.0,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.base-fast-zstd1-save.cpu_user_ms",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same cell"
+  },
+  {
+   "stage": "checkpoint write (fast, zstd-1)",
+   "quantity": "stored bytes",
+   "unit": "B",
+   "value": 775695846,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.base-fast-zstd1-save.store_bytes",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same cell"
+  },
+  {
+   "stage": "checkpoint write (fast, raw)",
+   "quantity": "durable write pause (writer stall)",
+   "unit": "ms",
+   "value": 72609.028349,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.crash-save.pause_ms",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "the crash-arm write, which uses Fast policy with FastCodec::Raw on the same fixture"
+  },
+  {
+   "stage": "checkpoint write (fast, raw)",
+   "quantity": "stored bytes",
+   "unit": "B",
+   "value": 992494850,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.crash-save.store_bytes",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same cell: raw storage of the same tensors"
+  },
+  {
+   "stage": "async save overlap",
+   "quantity": "training step p50 with no save in flight",
+   "unit": "ms",
+   "value": 10.013,
+   "evidence": {
+    "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+    "path": "arms.none.step_p50_ms",
+    "stamp": "20261114T114340Z",
+    "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "Python court, CPU only, small transformer, 160 steps, checkpoint every 16, 3 reps"
+  },
+  {
+   "stage": "async save overlap",
+   "quantity": "training step p50 with an async save budget",
+   "unit": "ms",
+   "value": 10.099,
+   "evidence": {
+    "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+    "path": "arms.async.step_p50_ms",
+    "stamp": "20261114T114340Z",
+    "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same court; the measured step inflation is the async arm's own field"
+  },
+  {
+   "stage": "async save overlap",
+   "quantity": "step inflation versus no save",
+   "unit": "ratio",
+   "value": 1.0086,
+   "evidence": {
+    "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+    "path": "arms.async.step_inflation_p50",
+    "stamp": "20261114T114340Z",
+    "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same court; queue arm inflates further and is in the receipt"
+  },
+  {
+   "stage": "async save overlap",
+   "quantity": "saves submitted",
+   "unit": "count",
+   "value": 30,
+   "evidence": {
+    "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+    "path": "arms.async.submitted",
+    "stamp": "20261114T114340Z",
+    "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same court; every submitted checkpoint verified"
+  },
+  {
+   "stage": "async save overlap",
+   "quantity": "drain time after the last step",
+   "unit": "ms",
+   "value": 54337.828,
+   "evidence": {
+    "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+    "path": "arms.async.drain_ms",
+    "stamp": "20261114T114340Z",
+    "revision": "e622e017ac23c1a5a367fdbcd9f7a9fe170ce1f8",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "the deferred work is not free: it is paid at the end of the run"
+  },
+  {
+   "stage": "crash and resume",
+   "quantity": "steps lost between the last visible checkpoint and the kill",
+   "unit": "count",
+   "value": 8,
+   "evidence": {
+    "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+    "path": "kills.0.steps_lost",
+    "stamp": "20261114T115016Z",
+    "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "Python court, kill at step 16, last visible checkpoint tip-step-000008"
+  },
+  {
+   "stage": "crash and resume",
+   "quantity": "kill to first resumed training step",
+   "unit": "ms",
+   "value": 1400.021,
+   "evidence": {
+    "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+    "path": "kills.0.kill_to_first_step_ms",
+    "stamp": "20261114T115016Z",
+    "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same kill; the resumed state was compared bit for bit against the reference run"
+  },
+  {
+   "stage": "crash and resume",
+   "quantity": "resume wall (reopen + restore + 16 steps)",
+   "unit": "ms",
+   "value": 2741.015,
+   "evidence": {
+    "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+    "path": "kills.0.resume_wall_ms",
+    "stamp": "20261114T115016Z",
+    "revision": "3a1ed383704025b57039fc9593e7b5ff9fcc30e0",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same kill; resumed_checkpoint_valid is true in the receipt"
+  },
+  {
+   "stage": "crash and resume (store-level)",
+   "quantity": "reopen + verify after a process kill during publication",
+   "unit": "ms",
+   "value": 13069.12433,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.crash-recover-verify.wall_ms",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "same checkpoint fixture; the kill is a process fault, not media loss"
+  },
+  {
+   "stage": "crash and resume (store-level)",
+   "quantity": "tensors verified after recovery",
+   "unit": "count",
+   "value": 290,
+   "evidence": {
+    "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+    "path": "phases.crash-recover-verify.tensors_verified",
+    "stamp": "20261114T104804Z",
+    "revision": "5f3131c1cb09c2d8f894e5610b00b1c7bf70cb37",
+    "revision_path": "revisions.weftfs"
+   },
+   "scope_note": "verify --full reports zero problems in the same cell"
+  },
+  {
+   "stage": "partial restore",
+   "quantity": "restore wall for the layers the next step needs",
+   "unit": "ms",
+   "value": 10.225,
+   "evidence": {
+    "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+    "path": "summary.partial_restore_ms",
+    "stamp": "20261114T115500Z",
+    "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "Python court; embedding + blocks.0 forward/loss/backward only, 14 of 42 tensors"
+  },
+  {
+   "stage": "partial restore",
+   "quantity": "restore wall for the whole checkpoint",
+   "unit": "ms",
+   "value": 28.114,
+   "evidence": {
+    "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+    "path": "summary.full_restore_ms",
+    "stamp": "20261114T115500Z",
+    "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same court, same checkpoint, all 42 tensors"
+  },
+  {
+   "stage": "partial restore",
+   "quantity": "time to first useful step (partial)",
+   "unit": "ms",
+   "value": 30.904,
+   "evidence": {
+    "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+    "path": "summary.partial_time_to_first_useful_step_ms",
+    "stamp": "20261114T115500Z",
+    "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "measured, not derived: the court runs the step and records the wall"
+  },
+  {
+   "stage": "partial restore",
+   "quantity": "time to first useful step (full)",
+   "unit": "ms",
+   "value": 47.813,
+   "evidence": {
+    "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+    "path": "summary.full_time_to_first_useful_step_ms",
+    "stamp": "20261114T115500Z",
+    "revision": "2aff22099fd0f95ca0234ab1025bcd2429521024",
+    "revision_path": "revision.weftfs"
+   },
+   "scope_note": "same court"
+  },
+  {
+   "stage": "retention / GC",
+   "quantity": "safe hit rate, fixed TTL + LRU",
+   "unit": "ratio",
+   "value": 0.35305555555555557,
+   "evidence": {
+    "receipt": "bench/receipts/retention-20261109T220237Z.json",
+    "path": "policies.0.safe_hit_rate",
+    "stamp": "20261109T220237Z",
+    "revision": "weft.retention-court.v1",
+    "revision_path": "schema"
+   },
+   "scope_note": "synthetic deterministic reuse trace, 3.0 MB capacity, 3,600 requests, fast rate"
+  },
+  {
+   "stage": "retention / GC",
+   "quantity": "safe hit rate, class-aware ordering",
+   "unit": "ratio",
+   "value": 0.7494444444444445,
+   "evidence": {
+    "receipt": "bench/receipts/retention-20261109T220237Z.json",
+    "path": "policies.2.safe_hit_rate",
+    "stamp": "20261109T220237Z",
+    "revision": "weft.retention-court.v1",
+    "revision_path": "schema"
+   },
+   "scope_note": "same trace and capacity; unsafe_reclaims is 0 for this policy and 45 for fixed TTL"
+  },
+  {
+   "stage": "retention / GC",
+   "quantity": "physical bytes retained, fixed TTL + LRU",
+   "unit": "B",
+   "value": 6457356,
+   "evidence": {
+    "receipt": "bench/receipts/retention-20261109T220237Z.json",
+    "path": "policies.0.physical_bytes",
+    "stamp": "20261109T220237Z",
+    "revision": "weft.retention-court.v1",
+    "revision_path": "schema"
+   },
+   "scope_note": "same trace"
+  },
+  {
+   "stage": "retention / GC",
+   "quantity": "physical bytes retained, class-aware ordering",
+   "unit": "B",
+   "value": 4340836,
+   "evidence": {
+    "receipt": "bench/receipts/retention-20261109T220237Z.json",
+    "path": "policies.2.physical_bytes",
+    "stamp": "20261109T220237Z",
+    "revision": "weft.retention-court.v1",
+    "revision_path": "schema"
+   },
+   "scope_note": "same trace"
+  }
+ ],
+ "lifecycle_table": {
+  "row01": {
+   "stage": "checkpoint write (planned)",
+   "quantity": "durable write pause (writer stall)",
+   "value": 61056.057878,
+   "unit": "ms",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row02": {
+   "stage": "checkpoint write (planned)",
+   "quantity": "encode CPU",
+   "value": 17320.0,
+   "unit": "ms",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row03": {
+   "stage": "checkpoint write (planned)",
+   "quantity": "stored bytes",
+   "value": 824052654,
+   "unit": "B",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row04": {
+   "stage": "checkpoint write (fast, zstd-1)",
+   "quantity": "durable write pause (writer stall)",
+   "value": 57090.733842,
+   "unit": "ms",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row05": {
+   "stage": "checkpoint write (fast, zstd-1)",
+   "quantity": "encode CPU",
+   "value": 2080.0,
+   "unit": "ms",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row06": {
+   "stage": "checkpoint write (fast, zstd-1)",
+   "quantity": "stored bytes",
+   "value": 775695846,
+   "unit": "B",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row07": {
+   "stage": "checkpoint write (fast, raw)",
+   "quantity": "durable write pause (writer stall)",
+   "value": 72609.028349,
+   "unit": "ms",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row08": {
+   "stage": "checkpoint write (fast, raw)",
+   "quantity": "stored bytes",
+   "value": 992494850,
+   "unit": "B",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row09": {
+   "stage": "async save overlap",
+   "quantity": "training step p50 with no save in flight",
+   "value": 10.013,
+   "unit": "ms",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "stamp": "20261114T114340Z"
+  },
+  "row10": {
+   "stage": "async save overlap",
+   "quantity": "training step p50 with an async save budget",
+   "value": 10.099,
+   "unit": "ms",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "stamp": "20261114T114340Z"
+  },
+  "row11": {
+   "stage": "async save overlap",
+   "quantity": "step inflation versus no save",
+   "value": 1.0086,
+   "unit": "ratio",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "stamp": "20261114T114340Z"
+  },
+  "row12": {
+   "stage": "async save overlap",
+   "quantity": "saves submitted",
+   "value": 30,
+   "unit": "count",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "stamp": "20261114T114340Z"
+  },
+  "row13": {
+   "stage": "async save overlap",
+   "quantity": "drain time after the last step",
+   "value": 54337.828,
+   "unit": "ms",
+   "receipt": "bench/receipts/async-save-20261114T114340Z.json",
+   "stamp": "20261114T114340Z"
+  },
+  "row14": {
+   "stage": "crash and resume",
+   "quantity": "steps lost between the last visible checkpoint and the kill",
+   "value": 8,
+   "unit": "count",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "stamp": "20261114T115016Z"
+  },
+  "row15": {
+   "stage": "crash and resume",
+   "quantity": "kill to first resumed training step",
+   "value": 1400.021,
+   "unit": "ms",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "stamp": "20261114T115016Z"
+  },
+  "row16": {
+   "stage": "crash and resume",
+   "quantity": "resume wall (reopen + restore + 16 steps)",
+   "value": 2741.015,
+   "unit": "ms",
+   "receipt": "bench/receipts/training-resume-20261114T115016Z.json",
+   "stamp": "20261114T115016Z"
+  },
+  "row17": {
+   "stage": "crash and resume (store-level)",
+   "quantity": "reopen + verify after a process kill during publication",
+   "value": 13069.12433,
+   "unit": "ms",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row18": {
+   "stage": "crash and resume (store-level)",
+   "quantity": "tensors verified after recovery",
+   "value": 290,
+   "unit": "count",
+   "receipt": "bench/receipts/write-policy-20261114T104804Z.json",
+   "stamp": "20261114T104804Z"
+  },
+  "row19": {
+   "stage": "partial restore",
+   "quantity": "restore wall for the layers the next step needs",
+   "value": 10.225,
+   "unit": "ms",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "stamp": "20261114T115500Z"
+  },
+  "row20": {
+   "stage": "partial restore",
+   "quantity": "restore wall for the whole checkpoint",
+   "value": 28.114,
+   "unit": "ms",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "stamp": "20261114T115500Z"
+  },
+  "row21": {
+   "stage": "partial restore",
+   "quantity": "time to first useful step (partial)",
+   "value": 30.904,
+   "unit": "ms",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "stamp": "20261114T115500Z"
+  },
+  "row22": {
+   "stage": "partial restore",
+   "quantity": "time to first useful step (full)",
+   "value": 47.813,
+   "unit": "ms",
+   "receipt": "bench/receipts/useful-step-20261114T115500Z.json",
+   "stamp": "20261114T115500Z"
+  },
+  "row23": {
+   "stage": "retention / GC",
+   "quantity": "safe hit rate, fixed TTL + LRU",
+   "value": 0.35305555555555557,
+   "unit": "ratio",
+   "receipt": "bench/receipts/retention-20261109T220237Z.json",
+   "stamp": "20261109T220237Z"
+  },
+  "row24": {
+   "stage": "retention / GC",
+   "quantity": "safe hit rate, class-aware ordering",
+   "value": 0.7494444444444445,
+   "unit": "ratio",
+   "receipt": "bench/receipts/retention-20261109T220237Z.json",
+   "stamp": "20261109T220237Z"
+  },
+  "row25": {
+   "stage": "retention / GC",
+   "quantity": "physical bytes retained, fixed TTL + LRU",
+   "value": 6457356,
+   "unit": "B",
+   "receipt": "bench/receipts/retention-20261109T220237Z.json",
+   "stamp": "20261109T220237Z"
+  },
+  "row26": {
+   "stage": "retention / GC",
+   "quantity": "physical bytes retained, class-aware ordering",
+   "value": 4340836,
+   "unit": "B",
+   "receipt": "bench/receipts/retention-20261109T220237Z.json",
+   "stamp": "20261109T220237Z"
+  }
+ },
+ "sensitivity": {
+  "base_receipt": "bench/receipts/augmentation-local-20261114T195000Z.json",
+  "base_stamp": "20261114T194452Z",
+  "base_revision": "581f364582811ba488323ed618c88cb8716c49ff",
+  "repetitions": 7,
+  "logical_bytes_per_checkpoint": 424439296,
+  "arms": {
+   "A": {
+    "footprint_bytes": 424439296,
+    "write_cpu_ms": 110.0,
+    "restore_cpu_ms": 190.0,
+    "write_wall_ms": 339.286193,
+    "cold_restore_wall_ms": 626.528513,
+    "write_requests": 101,
+    "cold_read_requests": 101,
+    "write_peak_rss_kib": 270296,
+    "restore_peak_rss_kib": 268956
+   },
+   "C": {
+    "footprint_bytes": 282106049,
+    "write_cpu_ms": 1080.0,
+    "restore_cpu_ms": 1280.0,
+    "write_wall_ms": 1171.727503,
+    "cold_restore_wall_ms": 1394.73574,
+    "write_requests": 216,
+    "cold_read_requests": 613,
+    "write_peak_rss_kib": 690828,
+    "restore_peak_rss_kib": 583812
+   }
+  },
+  "measured_delta": {
+   "footprint_bytes_saved_per_checkpoint": 142333247,
+   "footprint_reduction_pct": 33.53441784051965,
+   "extra_write_cpu_ms": 970.0,
+   "extra_restore_cpu_ms": 1090.0,
+   "extra_write_wall_ms": 832.44131,
+   "extra_cold_restore_wall_ms": 768.2072270000001
+  },
+  "model": {
+   "checkpoints_per_day": 1,
+   "retention_days": [
+    1,
+    7,
+    30
+   ],
+   "restores_per_checkpoint": [
+    0,
+    1,
+    10
+   ],
+   "steady_state_copies": "retention_days (one per day, deleted after the window)",
+   "gib": 1073741824,
+   "hours_per_month": 730.0,
+   "cpu_priced": "measured write CPU once per checkpoint plus measured restore CPU once per restore",
+   "billing_models": {
+    "cpu_seconds": "only the CPU the process consumed (user+sys) is billed",
+    "allocated_vcpu_seconds": "the wall time the process occupies its vCPU is billed, including fsync waits; this is what a provider that reserves a vCPU charges, and it is the less favourable model for the arm that waits"
+   },
+   "excluded": "fixture hashing, fixture verification and process start-up are outside the priced CPU, exactly as the contract excludes them from the measured phases",
+   "what_this_is_not": "not a forecast, not an economic claim, no fleet, no utilisation, no discount, no reserved-instance, no egress and no request price"
+  },
+  "prices": [
+   {
+    "id": "storage",
+    "label": "object storage, Standard class",
+    "unit": "USD per GiB-month",
+    "value": 0.02,
+    "source": "Google Cloud Storage pricing page",
+    "url": "https://cloud.google.com/storage/pricing",
+    "retrieved_utc": "2026-11-15T01:20Z",
+    "verbatim": "$0.000027397 / 1 gibibyte hour",
+    "unit_conversion": "0.000027397 USD/GiB-hour x 730 h/month = 0.0200 USD/GiB-month",
+    "status": "extracted from the page's rendered price table (column header 'Standard storage'); the conversion is shown",
+    "band": [
+     0.5,
+     1.0,
+     2.0
+    ]
+   },
+   {
+    "id": "compute",
+    "label": "serverless vCPU time (x86, on-demand)",
+    "unit": "USD per vCPU-hour",
+    "value": 0.0404784,
+    "source": "AWS Fargate pricing page",
+    "url": "https://aws.amazon.com/fargate/pricing/",
+    "retrieved_utc": "2026-11-15T01:20Z",
+    "verbatim": "$0.000011244 per vCPU second",
+    "unit_conversion": "0.000011244 USD/vCPU-second x 3600 s/h = 0.0404784 USD/vCPU-hour",
+    "status": "extracted verbatim from the page text; the page also lists a lower rate (0.0000089944/vCPU-second) for another configuration, which is not used",
+    "band": [
+     0.5,
+     1.0,
+     2.0
+    ]
+   }
+  ],
+  "unpriced": [
+   {
+    "quantity": "request count",
+    "why": "the with/without measurement is a POSIX court, so its 'requests' are file operations, not billable HTTP requests; pricing them at a per-1,000-request object-store rate would compare different units"
+   },
+   {
+    "quantity": "wall-clock seconds",
+    "why": "the measured wall time is a single process on 4 shared vCPUs; a wall second is not a billable unit and no $/second is claimed. CPU seconds are the priced proxy, and they are measured separately in the same receipt."
+   },
+   {
+    "quantity": "bytes transferred over a network",
+    "why": "the with/without measurement is local; no egress or transfer quantity was measured, so none is priced"
+   },
+   {
+    "quantity": "peak RSS",
+    "why": "no memory-reservation price is cited; the difference is reported as a resource quantity only"
+   }
+  ],
+  "surface": [
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 1,
+    "restores_per_checkpoint": 0,
+    "arm": {
+     "A": {
+      "retained_gib_months": 0.39528989791870117,
+      "cpu_hours": 3.0555555555555554e-05,
+      "storage_usd": 0.007905797958374023,
+      "compute_usd": 1.2368399999999998e-06,
+      "total_usd": 0.007907034798374023
+     },
+     "C": {
+      "retained_gib_months": 0.26273173186928034,
+      "cpu_hours": 0.00030000000000000003,
+      "storage_usd": 0.005254634637385607,
+      "compute_usd": 1.2143520000000001e-05,
+      "total_usd": 0.005266778157385607
+     }
+    },
+    "delta": {
+     "storage_usd": -0.002651163320988416,
+     "compute_usd": 1.0906680000000002e-05,
+     "total_usd": -0.0026402566409884165,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.13255816604942083,
+     "extra_cpu_hours": 0.0002694444444444445,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 8.227844670039968e-05,
+     "compute_usd_per_vcpu_hour": 9.839369026348761,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 1,
+    "restores_per_checkpoint": 1,
+    "arm": {
+     "A": {
+      "retained_gib_months": 0.39528989791870117,
+      "cpu_hours": 8.333333333333333e-05,
+      "storage_usd": 0.007905797958374023,
+      "compute_usd": 3.3731999999999997e-06,
+      "total_usd": 0.007909171158374024
+     },
+     "C": {
+      "retained_gib_months": 0.26273173186928034,
+      "cpu_hours": 0.0006555555555555555,
+      "storage_usd": 0.005254634637385607,
+      "compute_usd": 2.6535839999999997e-05,
+      "total_usd": 0.005281170477385608
+     }
+    },
+    "delta": {
+     "storage_usd": -0.002651163320988416,
+     "compute_usd": 2.3162639999999997e-05,
+     "total_usd": -0.002628000680988416,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.13255816604942083,
+     "extra_cpu_hours": 0.0005722222222222221,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 0.00017473567031218892,
+     "compute_usd_per_vcpu_hour": 4.633100949300147,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 1,
+    "restores_per_checkpoint": 10,
+    "arm": {
+     "A": {
+      "retained_gib_months": 0.39528989791870117,
+      "cpu_hours": 0.0005583333333333333,
+      "storage_usd": 0.007905797958374023,
+      "compute_usd": 2.2600439999999997e-05,
+      "total_usd": 0.007928398398374023
+     },
+     "C": {
+      "retained_gib_months": 0.26273173186928034,
+      "cpu_hours": 0.0038555555555555556,
+      "storage_usd": 0.005254634637385607,
+      "compute_usd": 0.00015606672,
+      "total_usd": 0.005410701357385608
+     }
+    },
+    "delta": {
+     "storage_usd": -0.002651163320988416,
+     "compute_usd": 0.00013346628000000002,
+     "total_usd": -0.002517697040988415,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.13255816604942083,
+     "extra_cpu_hours": 0.0032972222222222222,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 0.0010068506828182927,
+     "compute_usd_per_vcpu_hour": 0.8040596424227717,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 7,
+    "restores_per_checkpoint": 0,
+    "arm": {
+     "A": {
+      "retained_gib_months": 2.767029285430908,
+      "cpu_hours": 3.0555555555555554e-05,
+      "storage_usd": 0.05534058570861816,
+      "compute_usd": 1.2368399999999998e-06,
+      "total_usd": 0.055341822548618164
+     },
+     "C": {
+      "retained_gib_months": 1.8391221230849624,
+      "cpu_hours": 0.00030000000000000003,
+      "storage_usd": 0.03678244246169925,
+      "compute_usd": 1.2143520000000001e-05,
+      "total_usd": 0.03679458598169925
+     }
+    },
+    "delta": {
+     "storage_usd": -0.018558143246918915,
+     "compute_usd": 1.0906680000000002e-05,
+     "total_usd": -0.018547236566918916,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.9279071623459458,
+     "extra_cpu_hours": 0.0002694444444444445,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 1.175406381434281e-05,
+     "compute_usd_per_vcpu_hour": 68.87558318444134,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 7,
+    "restores_per_checkpoint": 1,
+    "arm": {
+     "A": {
+      "retained_gib_months": 2.767029285430908,
+      "cpu_hours": 8.333333333333333e-05,
+      "storage_usd": 0.05534058570861816,
+      "compute_usd": 3.3731999999999997e-06,
+      "total_usd": 0.05534395890861816
+     },
+     "C": {
+      "retained_gib_months": 1.8391221230849624,
+      "cpu_hours": 0.0006555555555555555,
+      "storage_usd": 0.03678244246169925,
+      "compute_usd": 2.6535839999999997e-05,
+      "total_usd": 0.03680897830169925
+     }
+    },
+    "delta": {
+     "storage_usd": -0.018558143246918915,
+     "compute_usd": 2.3162639999999997e-05,
+     "total_usd": -0.01853498060691891,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.9279071623459458,
+     "extra_cpu_hours": 0.0005722222222222221,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 2.4962238616026988e-05,
+     "compute_usd_per_vcpu_hour": 32.43170664510103,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 7,
+    "restores_per_checkpoint": 10,
+    "arm": {
+     "A": {
+      "retained_gib_months": 2.767029285430908,
+      "cpu_hours": 0.0005583333333333333,
+      "storage_usd": 0.05534058570861816,
+      "compute_usd": 2.2600439999999997e-05,
+      "total_usd": 0.05536318614861816
+     },
+     "C": {
+      "retained_gib_months": 1.8391221230849624,
+      "cpu_hours": 0.0038555555555555556,
+      "storage_usd": 0.03678244246169925,
+      "compute_usd": 0.00015606672,
+      "total_usd": 0.03693850918169925
+     }
+    },
+    "delta": {
+     "storage_usd": -0.018558143246918915,
+     "compute_usd": 0.00013346628000000002,
+     "total_usd": -0.018424676966918914,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.9279071623459458,
+     "extra_cpu_hours": 0.0032972222222222222,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 0.00014383581183118467,
+     "compute_usd_per_vcpu_hour": 5.628417496959402,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 30,
+    "restores_per_checkpoint": 0,
+    "arm": {
+     "A": {
+      "retained_gib_months": 11.858696937561035,
+      "cpu_hours": 3.0555555555555554e-05,
+      "storage_usd": 0.2371739387512207,
+      "compute_usd": 1.2368399999999998e-06,
+      "total_usd": 0.2371751755912207
+     },
+     "C": {
+      "retained_gib_months": 7.88195195607841,
+      "cpu_hours": 0.00030000000000000003,
+      "storage_usd": 0.1576390391215682,
+      "compute_usd": 1.2143520000000001e-05,
+      "total_usd": 0.15765118264156822
+     }
+    },
+    "delta": {
+     "storage_usd": -0.07953489962965249,
+     "compute_usd": 1.0906680000000002e-05,
+     "total_usd": -0.07952399294965248,
+     "cheaper_arm": "C",
+     "saved_gib_months": 3.976744981482625,
+     "extra_cpu_hours": 0.0002694444444444445,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 2.7426148900133224e-06,
+     "compute_usd_per_vcpu_hour": 295.18107079046285,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 30,
+    "restores_per_checkpoint": 1,
+    "arm": {
+     "A": {
+      "retained_gib_months": 11.858696937561035,
+      "cpu_hours": 8.333333333333333e-05,
+      "storage_usd": 0.2371739387512207,
+      "compute_usd": 3.3731999999999997e-06,
+      "total_usd": 0.2371773119512207
+     },
+     "C": {
+      "retained_gib_months": 7.88195195607841,
+      "cpu_hours": 0.0006555555555555555,
+      "storage_usd": 0.1576390391215682,
+      "compute_usd": 2.6535839999999997e-05,
+      "total_usd": 0.15766557496156822
+     }
+    },
+    "delta": {
+     "storage_usd": -0.07953489962965249,
+     "compute_usd": 2.3162639999999997e-05,
+     "total_usd": -0.07951173698965247,
+     "cheaper_arm": "C",
+     "saved_gib_months": 3.976744981482625,
+     "extra_cpu_hours": 0.0005722222222222221,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 5.824522343739631e-06,
+     "compute_usd_per_vcpu_hour": 138.9930284790044,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "cpu_seconds",
+    "retention_days": 30,
+    "restores_per_checkpoint": 10,
+    "arm": {
+     "A": {
+      "retained_gib_months": 11.858696937561035,
+      "cpu_hours": 0.0005583333333333333,
+      "storage_usd": 0.2371739387512207,
+      "compute_usd": 2.2600439999999997e-05,
+      "total_usd": 0.2371965391912207
+     },
+     "C": {
+      "retained_gib_months": 7.88195195607841,
+      "cpu_hours": 0.0038555555555555556,
+      "storage_usd": 0.1576390391215682,
+      "compute_usd": 0.00015606672,
+      "total_usd": 0.1577951058415682
+     }
+    },
+    "delta": {
+     "storage_usd": -0.07953489962965249,
+     "compute_usd": 0.00013346628000000002,
+     "total_usd": -0.0794014333496525,
+     "cheaper_arm": "C",
+     "saved_gib_months": 3.976744981482625,
+     "extra_cpu_hours": 0.0032972222222222222,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 3.356168942727642e-05,
+     "compute_usd_per_vcpu_hour": 24.121789272683152,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 1,
+    "restores_per_checkpoint": 0,
+    "arm": {
+     "A": {
+      "retained_gib_months": 0.39528989791870117,
+      "cpu_hours": 9.424616472222222e-05,
+      "storage_usd": 0.007905797958374023,
+      "compute_usd": 3.8149339540919994e-06,
+      "total_usd": 0.007909612892328116
+     },
+     "C": {
+      "retained_gib_months": 0.26273173186928034,
+      "cpu_hours": 0.00032547986194444447,
+      "storage_usd": 0.005254634637385607,
+      "compute_usd": 1.3174904043732e-05,
+      "total_usd": 0.005267809541429339
+     }
+    },
+    "delta": {
+     "storage_usd": -0.002651163320988416,
+     "compute_usd": 9.35997008964e-06,
+     "total_usd": -0.002641803350898777,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.13255816604942083,
+     "extra_cpu_hours": 0.00023123369722222224,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 7.061028655262461e-05,
+     "compute_usd_per_vcpu_hour": 11.465298323023276,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 1,
+    "restores_per_checkpoint": 1,
+    "arm": {
+     "A": {
+      "retained_gib_months": 0.39528989791870117,
+      "cpu_hours": 0.00026828186277777776,
+      "storage_usd": 0.007905797958374023,
+      "compute_usd": 1.0859620554263998e-05,
+      "total_usd": 0.007916657578928288
+     },
+     "C": {
+      "retained_gib_months": 0.26273173186928034,
+      "cpu_hours": 0.0007129064563888889,
+      "storage_usd": 0.005254634637385607,
+      "compute_usd": 2.8857312704292e-05,
+      "total_usd": 0.0052834919500898995
+     }
+    },
+    "delta": {
+     "storage_usd": -0.002651163320988416,
+     "compute_usd": 1.7997692150028004e-05,
+     "total_usd": -0.0026331656288383883,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.13255816604942083,
+     "extra_cpu_hours": 0.0004446245936111112,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 0.0001357720364305435,
+     "compute_usd_per_vcpu_hour": 5.962700577258765,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 1,
+    "restores_per_checkpoint": 10,
+    "arm": {
+     "A": {
+      "retained_gib_months": 0.39528989791870117,
+      "cpu_hours": 0.0018346031452777778,
+      "storage_usd": 0.007905797958374023,
+      "compute_usd": 7.4261799955812e-05,
+      "total_usd": 0.007980059758329836
+     },
+     "C": {
+      "retained_gib_months": 0.26273173186928034,
+      "cpu_hours": 0.004199745806388889,
+      "storage_usd": 0.005254634637385607,
+      "compute_usd": 0.000169998990649332,
+      "total_usd": 0.005424633628034939
+     }
+    },
+    "delta": {
+     "storage_usd": -0.002651163320988416,
+     "compute_usd": 9.573719069352e-05,
+     "total_usd": -0.002555426130294897,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.13255816604942083,
+     "extra_cpu_hours": 0.0023651426611111114,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 0.0007222277853318136,
+     "compute_usd_per_vcpu_hour": 1.1209316734166626,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 7,
+    "restores_per_checkpoint": 0,
+    "arm": {
+     "A": {
+      "retained_gib_months": 2.767029285430908,
+      "cpu_hours": 9.424616472222222e-05,
+      "storage_usd": 0.05534058570861816,
+      "compute_usd": 3.8149339540919994e-06,
+      "total_usd": 0.055344400642572254
+     },
+     "C": {
+      "retained_gib_months": 1.8391221230849624,
+      "cpu_hours": 0.00032547986194444447,
+      "storage_usd": 0.03678244246169925,
+      "compute_usd": 1.3174904043732e-05,
+      "total_usd": 0.03679561736574298
+     }
+    },
+    "delta": {
+     "storage_usd": -0.018558143246918915,
+     "compute_usd": 9.35997008964e-06,
+     "total_usd": -0.018548783276829274,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.9279071623459458,
+     "extra_cpu_hours": 0.00023123369722222224,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 1.0087183793232088e-05,
+     "compute_usd_per_vcpu_hour": 80.25708826116293,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 7,
+    "restores_per_checkpoint": 1,
+    "arm": {
+     "A": {
+      "retained_gib_months": 2.767029285430908,
+      "cpu_hours": 0.00026828186277777776,
+      "storage_usd": 0.05534058570861816,
+      "compute_usd": 1.0859620554263998e-05,
+      "total_usd": 0.055351445329172425
+     },
+     "C": {
+      "retained_gib_months": 1.8391221230849624,
+      "cpu_hours": 0.0007129064563888889,
+      "storage_usd": 0.03678244246169925,
+      "compute_usd": 2.8857312704292e-05,
+      "total_usd": 0.03681129977440354
+     }
+    },
+    "delta": {
+     "storage_usd": -0.018558143246918915,
+     "compute_usd": 1.7997692150028004e-05,
+     "total_usd": -0.018540145554768885,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.9279071623459458,
+     "extra_cpu_hours": 0.0004446245936111112,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 1.9396005204363357e-05,
+     "compute_usd_per_vcpu_hour": 41.73890404081136,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 7,
+    "restores_per_checkpoint": 10,
+    "arm": {
+     "A": {
+      "retained_gib_months": 2.767029285430908,
+      "cpu_hours": 0.0018346031452777778,
+      "storage_usd": 0.05534058570861816,
+      "compute_usd": 7.4261799955812e-05,
+      "total_usd": 0.05541484750857397
+     },
+     "C": {
+      "retained_gib_months": 1.8391221230849624,
+      "cpu_hours": 0.004199745806388889,
+      "storage_usd": 0.03678244246169925,
+      "compute_usd": 0.000169998990649332,
+      "total_usd": 0.03695244145234858
+     }
+    },
+    "delta": {
+     "storage_usd": -0.018558143246918915,
+     "compute_usd": 9.573719069352e-05,
+     "total_usd": -0.018462406056225393,
+     "cheaper_arm": "C",
+     "saved_gib_months": 0.9279071623459458,
+     "extra_cpu_hours": 0.0023651426611111114,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 0.0001031753979045448,
+     "compute_usd_per_vcpu_hour": 7.846521713916639,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 30,
+    "restores_per_checkpoint": 0,
+    "arm": {
+     "A": {
+      "retained_gib_months": 11.858696937561035,
+      "cpu_hours": 9.424616472222222e-05,
+      "storage_usd": 0.2371739387512207,
+      "compute_usd": 3.8149339540919994e-06,
+      "total_usd": 0.2371777536851748
+     },
+     "C": {
+      "retained_gib_months": 7.88195195607841,
+      "cpu_hours": 0.00032547986194444447,
+      "storage_usd": 0.1576390391215682,
+      "compute_usd": 1.3174904043732e-05,
+      "total_usd": 0.15765221402561194
+     }
+    },
+    "delta": {
+     "storage_usd": -0.07953489962965249,
+     "compute_usd": 9.35997008964e-06,
+     "total_usd": -0.07952553965956285,
+     "cheaper_arm": "C",
+     "saved_gib_months": 3.976744981482625,
+     "extra_cpu_hours": 0.00023123369722222224,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 2.3536762184208207e-06,
+     "compute_usd_per_vcpu_hour": 343.9589496906983,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 30,
+    "restores_per_checkpoint": 1,
+    "arm": {
+     "A": {
+      "retained_gib_months": 11.858696937561035,
+      "cpu_hours": 0.00026828186277777776,
+      "storage_usd": 0.2371739387512207,
+      "compute_usd": 1.0859620554263998e-05,
+      "total_usd": 0.23718479837177497
+     },
+     "C": {
+      "retained_gib_months": 7.88195195607841,
+      "cpu_hours": 0.0007129064563888889,
+      "storage_usd": 0.1576390391215682,
+      "compute_usd": 2.8857312704292e-05,
+      "total_usd": 0.1576678964342725
+     }
+    },
+    "delta": {
+     "storage_usd": -0.07953489962965249,
+     "compute_usd": 1.7997692150028004e-05,
+     "total_usd": -0.07951690193750247,
+     "cheaper_arm": "C",
+     "saved_gib_months": 3.976744981482625,
+     "extra_cpu_hours": 0.0004446245936111112,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 4.5257345476847836e-06,
+     "compute_usd_per_vcpu_hour": 178.88101731776297,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "retention_days": 30,
+    "restores_per_checkpoint": 10,
+    "arm": {
+     "A": {
+      "retained_gib_months": 11.858696937561035,
+      "cpu_hours": 0.0018346031452777778,
+      "storage_usd": 0.2371739387512207,
+      "compute_usd": 7.4261799955812e-05,
+      "total_usd": 0.2372482005511765
+     },
+     "C": {
+      "retained_gib_months": 7.88195195607841,
+      "cpu_hours": 0.004199745806388889,
+      "storage_usd": 0.1576390391215682,
+      "compute_usd": 0.000169998990649332,
+      "total_usd": 0.15780903811221755
+     }
+    },
+    "delta": {
+     "storage_usd": -0.07953489962965249,
+     "compute_usd": 9.573719069352e-05,
+     "total_usd": -0.07943916243895896,
+     "cheaper_arm": "C",
+     "saved_gib_months": 3.976744981482625,
+     "extra_cpu_hours": 0.0023651426611111114,
+     "extra_write_wall_ms": 832.44131,
+     "extra_cold_restore_wall_ms": 768.2072270000001
+    },
+    "break_even": {
+     "storage_usd_per_gib_month": 2.4074259511060455e-05,
+     "compute_usd_per_vcpu_hour": 33.62795020249988,
+     "reading": "C is cheaper than A when the storage price is above the first value (compute held at the cited price) and when the compute price is below the second value (storage held at the cited price); the cited prices are the reference point, and the whole surface is in price_plane"
+    }
+   }
+  ],
+  "price_plane": [
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.009267490303459455,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.009255908983459456,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.009232746343459459,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.009163258423459459,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.00904744522345946,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.01854656192691892,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.01853498060691891,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.018511817966918913,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.018442330046918913,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.018326516846918918,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.03710470517383782,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.03709312385383784,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.03706996121383782,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.037000473293837835,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.036884660093837826,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.09277913491459455,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.09276755359459454,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.09274439095459455,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.09267490303459455,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.09255908983459457,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.1855698511491891,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.1855582698291891,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.18553510718918909,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.18546561926918909,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "cpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.1853498060691891,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.009270072777384442,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.009261073931309427,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.009243076239159403,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.009189083162709319,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 0.5,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.01,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.009099094701959177,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.018549144400843903,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.018540145554768885,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.018522147862618854,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.018468154786168776,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 1.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.02,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.018378166325418638,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.03710728764776282,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.037098288801687807,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.03708029110953777,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.037026298033087685,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 2.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.04,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.03693630957233755,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.09278171738851954,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.09277271854244451,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.09275472085029454,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.09270072777384439,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 5.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.1,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.0926107393130943,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 0.5,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.0202392,
+    "delta_usd": -0.18557243362311415,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 1.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.0404784,
+    "delta_usd": -0.18556343477703907,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 2.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.0809568,
+    "delta_usd": -0.18554543708488902,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 5.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.202392,
+    "delta_usd": -0.18549144400843903,
+    "cheaper_arm": "C"
+   },
+   {
+    "billing": "allocated_vcpu_seconds",
+    "storage_multiplier": 10.0,
+    "compute_multiplier": 10.0,
+    "storage_usd_per_gib_month": 0.2,
+    "compute_usd_per_vcpu_hour": 0.404784,
+    "delta_usd": -0.18540145554768878,
+    "cheaper_arm": "C"
+   }
+  ]
+ },
+ "surface_table": {
+  "cpu_seconds_1d_0r": {
+   "billing": "cpu_seconds",
+   "retention_days": 1,
+   "restores": 0,
+   "a_usd": 0.007907034798374023,
+   "c_usd": 0.005266778157385607,
+   "delta_usd": -0.0026402566409884165,
+   "cheaper": "C",
+   "be_storage": 8.227844670039968e-05,
+   "be_compute": 9.839369026348761
+  },
+  "cpu_seconds_1d_1r": {
+   "billing": "cpu_seconds",
+   "retention_days": 1,
+   "restores": 1,
+   "a_usd": 0.007909171158374024,
+   "c_usd": 0.005281170477385608,
+   "delta_usd": -0.002628000680988416,
+   "cheaper": "C",
+   "be_storage": 0.00017473567031218892,
+   "be_compute": 4.633100949300147
+  },
+  "cpu_seconds_1d_10r": {
+   "billing": "cpu_seconds",
+   "retention_days": 1,
+   "restores": 10,
+   "a_usd": 0.007928398398374023,
+   "c_usd": 0.005410701357385608,
+   "delta_usd": -0.002517697040988415,
+   "cheaper": "C",
+   "be_storage": 0.0010068506828182927,
+   "be_compute": 0.8040596424227717
+  },
+  "cpu_seconds_7d_0r": {
+   "billing": "cpu_seconds",
+   "retention_days": 7,
+   "restores": 0,
+   "a_usd": 0.055341822548618164,
+   "c_usd": 0.03679458598169925,
+   "delta_usd": -0.018547236566918916,
+   "cheaper": "C",
+   "be_storage": 1.175406381434281e-05,
+   "be_compute": 68.87558318444134
+  },
+  "cpu_seconds_7d_1r": {
+   "billing": "cpu_seconds",
+   "retention_days": 7,
+   "restores": 1,
+   "a_usd": 0.05534395890861816,
+   "c_usd": 0.03680897830169925,
+   "delta_usd": -0.01853498060691891,
+   "cheaper": "C",
+   "be_storage": 2.4962238616026988e-05,
+   "be_compute": 32.43170664510103
+  },
+  "cpu_seconds_7d_10r": {
+   "billing": "cpu_seconds",
+   "retention_days": 7,
+   "restores": 10,
+   "a_usd": 0.05536318614861816,
+   "c_usd": 0.03693850918169925,
+   "delta_usd": -0.018424676966918914,
+   "cheaper": "C",
+   "be_storage": 0.00014383581183118467,
+   "be_compute": 5.628417496959402
+  },
+  "cpu_seconds_30d_0r": {
+   "billing": "cpu_seconds",
+   "retention_days": 30,
+   "restores": 0,
+   "a_usd": 0.2371751755912207,
+   "c_usd": 0.15765118264156822,
+   "delta_usd": -0.07952399294965248,
+   "cheaper": "C",
+   "be_storage": 2.7426148900133224e-06,
+   "be_compute": 295.18107079046285
+  },
+  "cpu_seconds_30d_1r": {
+   "billing": "cpu_seconds",
+   "retention_days": 30,
+   "restores": 1,
+   "a_usd": 0.2371773119512207,
+   "c_usd": 0.15766557496156822,
+   "delta_usd": -0.07951173698965247,
+   "cheaper": "C",
+   "be_storage": 5.824522343739631e-06,
+   "be_compute": 138.9930284790044
+  },
+  "cpu_seconds_30d_10r": {
+   "billing": "cpu_seconds",
+   "retention_days": 30,
+   "restores": 10,
+   "a_usd": 0.2371965391912207,
+   "c_usd": 0.1577951058415682,
+   "delta_usd": -0.0794014333496525,
+   "cheaper": "C",
+   "be_storage": 3.356168942727642e-05,
+   "be_compute": 24.121789272683152
+  },
+  "allocated_vcpu_seconds_1d_0r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 1,
+   "restores": 0,
+   "a_usd": 0.007909612892328116,
+   "c_usd": 0.005267809541429339,
+   "delta_usd": -0.002641803350898777,
+   "cheaper": "C",
+   "be_storage": 7.061028655262461e-05,
+   "be_compute": 11.465298323023276
+  },
+  "allocated_vcpu_seconds_1d_1r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 1,
+   "restores": 1,
+   "a_usd": 0.007916657578928288,
+   "c_usd": 0.0052834919500898995,
+   "delta_usd": -0.0026331656288383883,
+   "cheaper": "C",
+   "be_storage": 0.0001357720364305435,
+   "be_compute": 5.962700577258765
+  },
+  "allocated_vcpu_seconds_1d_10r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 1,
+   "restores": 10,
+   "a_usd": 0.007980059758329836,
+   "c_usd": 0.005424633628034939,
+   "delta_usd": -0.002555426130294897,
+   "cheaper": "C",
+   "be_storage": 0.0007222277853318136,
+   "be_compute": 1.1209316734166626
+  },
+  "allocated_vcpu_seconds_7d_0r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 7,
+   "restores": 0,
+   "a_usd": 0.055344400642572254,
+   "c_usd": 0.03679561736574298,
+   "delta_usd": -0.018548783276829274,
+   "cheaper": "C",
+   "be_storage": 1.0087183793232088e-05,
+   "be_compute": 80.25708826116293
+  },
+  "allocated_vcpu_seconds_7d_1r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 7,
+   "restores": 1,
+   "a_usd": 0.055351445329172425,
+   "c_usd": 0.03681129977440354,
+   "delta_usd": -0.018540145554768885,
+   "cheaper": "C",
+   "be_storage": 1.9396005204363357e-05,
+   "be_compute": 41.73890404081136
+  },
+  "allocated_vcpu_seconds_7d_10r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 7,
+   "restores": 10,
+   "a_usd": 0.05541484750857397,
+   "c_usd": 0.03695244145234858,
+   "delta_usd": -0.018462406056225393,
+   "cheaper": "C",
+   "be_storage": 0.0001031753979045448,
+   "be_compute": 7.846521713916639
+  },
+  "allocated_vcpu_seconds_30d_0r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 30,
+   "restores": 0,
+   "a_usd": 0.2371777536851748,
+   "c_usd": 0.15765221402561194,
+   "delta_usd": -0.07952553965956285,
+   "cheaper": "C",
+   "be_storage": 2.3536762184208207e-06,
+   "be_compute": 343.9589496906983
+  },
+  "allocated_vcpu_seconds_30d_1r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 30,
+   "restores": 1,
+   "a_usd": 0.23718479837177497,
+   "c_usd": 0.1576678964342725,
+   "delta_usd": -0.07951690193750247,
+   "cheaper": "C",
+   "be_storage": 4.5257345476847836e-06,
+   "be_compute": 178.88101731776297
+  },
+  "allocated_vcpu_seconds_30d_10r": {
+   "billing": "allocated_vcpu_seconds",
+   "retention_days": 30,
+   "restores": 10,
+   "a_usd": 0.2372482005511765,
+   "c_usd": 0.15780903811221755,
+   "delta_usd": -0.07943916243895896,
+   "cheaper": "C",
+   "be_storage": 2.4074259511060455e-05,
+   "be_compute": 33.62795020249988
+  }
+ },
+ "price_table": {
+  "storage": {
+   "label": "object storage, Standard class",
+   "unit": "USD per GiB-month",
+   "value": 0.02,
+   "source": "Google Cloud Storage pricing page",
+   "verbatim": "$0.000027397 / 1 gibibyte hour",
+   "conversion": "0.000027397 USD/GiB-hour x 730 h/month = 0.0200 USD/GiB-month",
+   "retrieved": "2026-11-15T01:20Z"
+  },
+  "compute": {
+   "label": "serverless vCPU time (x86, on-demand)",
+   "unit": "USD per vCPU-hour",
+   "value": 0.0404784,
+   "source": "AWS Fargate pricing page",
+   "verbatim": "$0.000011244 per vCPU second",
+   "conversion": "0.000011244 USD/vCPU-second x 3600 s/h = 0.0404784 USD/vCPU-hour",
+   "retrieved": "2026-11-15T01:20Z"
+  }
+ },
+ "cannot_prove": [
+  "the rows come from four different courts and three different fixtures (Qwen2.5-0.5B with 8 shards, a small CPU-only Python transformer, a synthetic reuse trace); they are not one end-to-end run and their sum is not a measured end-to-end cost",
+  "the write rows measure a single checkpoint, not a training schedule; the async and resume rows measure a different, much smaller model",
+  "the retention rows are a synthetic deterministic reuse trace, not a serving workload; they order the same reachability-safe set and say nothing about a real hit-rate",
+  "no row measures a GPU, a fleet, a network, or media failure",
+  "the partial-restore rows are layers of one transformer block on CPU; the receipt itself says a whole-model next step needs every tensor",
+  "the break-even surface assumes one checkpoint per day, steady-state retention, one restore per checkpoint by default, and prices that do not change with volume or commitment"
+ ],
+ "result": "pass"
+}

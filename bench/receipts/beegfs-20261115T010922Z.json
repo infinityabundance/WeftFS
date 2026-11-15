@@ -1,0 +1,109 @@
+{
+ "schema": "weft.beegfs_court.v1",
+ "generated_utc": "20261115T010922Z",
+ "result": "blocked",
+ "blocked": true,
+ "backend": {
+  "product": "BeeGFS",
+  "release": "7.4.6",
+  "repository": "https://www.beegfs.io/release/beegfs_7.4.6 (suite bookworm, component non-free)",
+  "repository_release_sha256": "eb8cf96a15824768b73c230fb94e6916417ea651ff01a8efccd0a61a9b910327",
+  "image": "weft/beegfs-court:1",
+  "image_id": "sha256:c8d289e08573266324db535aaee009ea6b99f55c0725c076139d9e3292e4ba74",
+  "packages": "beegfs-client=20:7.4.6;beegfs-common=20:7.4.6;beegfs-meta=20:7.4.6;beegfs-mgmtd=20:7.4.6;beegfs-storage=20:7.4.6;beegfs-utils=20:7.4.6;",
+  "topology": "one container running management, metadata and storage services; single metadata target 1 and single storage target 101; clients would be kernel mounts",
+  "mount_method": "kernel module `beegfs` (mount -t beegfs); BeeGFS ships no FUSE client",
+  "label": "SINGLE HOST, SINGLE NODE, SERVERS ONLY. No client was mounted and no BeeGFS filesystem was measured. This receipt is a blocker record, not a performance result."
+ },
+ "server_side": {
+  "started": true,
+  "nodes": "== mgmtd\nInvalid or missing node type.\n== meta\nweft-beegfs [ID: 1]\n== storage\nweft-beegfs [ID: 1]",
+  "targets": "== meta\nTargetID     Reachability  Consistency   NodeID\n========     ============  ===========   ======\n       1           Online         Good        1\n== storage\nTargetID     Reachability  Consistency   NodeID\n========     ============  ===========   ======\n     101           Online         Good        1",
+  "processes": "beegfs-mgmtd/Ma /opt/beegfs/sbin/beegfs-mgmtd cfgFile=/etc/beegfs/beegfs-mgmtd.conf pidFile=/var/run/beegfs-mgmtd.pid\nbeegfs-meta/Mai [beegfs-meta/Mai] <defunct>\nbeegfs-storage/ [beegfs-storage/] <defunct>\nbeegfs-storage/ /opt/beegfs/sbin/beegfs-storage cfgFile=/etc/beegfs/beegfs-storage.conf pidFile=/var/run/beegfs-storage.pid\nbeegfs-meta/Mai /opt/beegfs/sbin/beegfs-meta cfgFile=/etc/beegfs/beegfs-meta.conf pidFile=/var/run/beegfs-meta.pid",
+  "note": "the management, metadata and storage daemons start and register with each other inside a cap-drop=ALL container; this part is real and repeatable"
+ },
+ "client_side": {
+  "mounted": false,
+  "host_kernel": "7.3.3-1-cachyos",
+  "attempts": [
+   {
+    "name": "beegfs-version",
+    "command": "/opt/beegfs/sbin/beegfs-ctl --version",
+    "exit_status": 0,
+    "output": "BeeGFS Command-Line Control Tool (http://www.beegfs.com)\nVersion: 7.4.6"
+   },
+   {
+    "name": "server-nodes",
+    "command": "beegfs-ctl --listnodes --nodetype=mgmtd|meta|storage",
+    "exit_status": 0,
+    "output": "== mgmtd\nInvalid or missing node type.\n== meta\nweft-beegfs [ID: 1]\n== storage\nweft-beegfs [ID: 1]"
+   },
+   {
+    "name": "server-targets",
+    "command": "beegfs-ctl --listtargets --nodetype=meta|storage --state",
+    "exit_status": 0,
+    "output": "== meta\nTargetID     Reachability  Consistency   NodeID\n========     ============  ===========   ======\n       1           Online         Good        1\n== storage\nTargetID     Reachability  Consistency   NodeID\n========     ============  ===========   ======\n     101           Online         Good        1"
+   },
+   {
+    "name": "server-processes",
+    "command": "ps -eo comm,args | grep [b]eegfs",
+    "exit_status": 0,
+    "output": "beegfs-mgmtd/Ma /opt/beegfs/sbin/beegfs-mgmtd cfgFile=/etc/beegfs/beegfs-mgmtd.conf pidFile=/var/run/beegfs-mgmtd.pid\nbeegfs-meta/Mai [beegfs-meta/Mai] <defunct>\nbeegfs-storage/ [beegfs-storage/] <defunct>\nbeegfs-storage/ /opt/beegfs/sbin/beegfs-storage cfgFile=/etc/beegfs/beegfs-storage.conf pidFile=/var/run/beegfs-storage.pid\nbeegfs-meta/Mai /opt/beegfs/sbin/beegfs-meta cfgFile=/etc/beegfs/beegfs-meta.conf pidFile=/var/run/beegfs-meta.pid"
+   },
+   {
+    "name": "kernel-info",
+    "command": "uname -r; ls /lib/modules; ls /usr/src; grep beegfs /proc/filesystems",
+    "exit_status": 0,
+    "output": "kernel=7.3.3-1-cachyos\n--- /lib/modules\nls: cannot access '/lib/modules': No such file or directory\n--- /usr/src\n--- beegfs in /proc/filesystems\n0"
+   },
+   {
+    "name": "modprobe",
+    "command": "modprobe beegfs",
+    "exit_status": 0,
+    "output": "modprobe: FATAL: Module beegfs not found in directory /lib/modules/7.3.3-1-cachyos\nrc=1"
+   },
+   {
+    "name": "client-init-script",
+    "command": "/etc/init.d/beegfs-client start",
+    "exit_status": 0,
+    "output": "Starting BeeGFS Client: \n- Loading BeeGFS modules\n- BeeGFS module autobuild\n$OFED_INCLUDE_PATH = []\n$OFED_INCLUDE_PATH = []\n$OFED_INCLUDE_PATH = []\nMakefile:188: *** Linux kernel build directory not found. Please check if the kernel module development packages are installed for the current kernel version. (RHEL: kernel-devel; SLES: kernel-default-devel; Debian: linux-headers).  Stop.\nmake: *** [AutoRebuild.mk:34: auto_rebuild] Error 2\nrc=0"
+   },
+   {
+    "name": "client-binaries",
+    "command": "ls /opt/beegfs/sbin",
+    "exit_status": 0,
+    "output": "beegfs-ctl\nbeegfs-event-listener\nbeegfs-fsck\nbeegfs-meta\nbeegfs-mgmtd\nbeegfs-setup-client\nbeegfs-setup-meta\nbeegfs-setup-mgmtd\nbeegfs-setup-storage\nbeegfs-storage\n--- fuse-capable binaries\n(nothing listed above means BeeGFS ships no FUSE client)"
+   },
+   {
+    "name": "mount-attempt-no-cap",
+    "command": "mount -t beegfs none /mnt/beegfs -o cfgFile=/etc/beegfs/beegfs-client.conf (cap-drop=ALL)",
+    "exit_status": 0,
+    "output": "mount: /mnt/beegfs: permission denied.\n       dmesg(1) may have more information after failed mount system call.\nrc=32"
+   },
+   {
+    "name": "mount-attempt-with-cap",
+    "command": "mount -t beegfs none /mnt/beegfs -o sysMgmtdHost=...,connDisableAuthentication=true (cap-drop=ALL + SYS_ADMIN, dedicated probe container, no measured work)",
+    "exit_status": 0,
+    "output": "mount: /mnt/beegfs: unknown filesystem type 'beegfs'.\n       dmesg(1) may have more information after failed mount system call.\nrc=32\n0"
+   }
+  ],
+  "blocker": "BeeGFS's client is a kernel module. The container has no /lib/modules for the running host kernel (7.3.3-1-cachyos), Debian bookworm carries no headers for that kernel, and the package's own autobuild stops with 'Linux kernel build directory not found'. Even if the module could be built it would have to be inserted into the host kernel with CAP_SYS_MODULE, which the court forbids and which is not a container-local act.",
+  "not_a_packaging_gap": "beegfs-client 7.4.6 installs and runs its autobuild; the failure is the absent kernel build tree and the impossibility of loading a module, not a missing binary"
+ },
+ "container": {
+  "memory": "3g",
+  "memory_swap": "3g",
+  "pids": "1024",
+  "cpus": "4",
+  "cap_drop": "ALL",
+  "cap_add": [],
+  "no_new_privileges": true,
+  "why_no_capabilities": "every BeeGFS service here is userspace; no capability was needed to start management, metadata and storage"
+ },
+ "consequence": "No A/N/B/C/D/E arm was run on BeeGFS and no number in any programme document may cite BeeGFS. The row remains 'blocked' with this receipt as its evidence.",
+ "non_claims": [
+  "no BeeGFS filesystem was mounted, so nothing was measured on BeeGFS",
+  "server-side registration is not a filesystem result",
+  "no comparison against another filesystem (rule 13)"
+ ]
+}
