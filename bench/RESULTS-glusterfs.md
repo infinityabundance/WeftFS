@@ -98,6 +98,26 @@ randomised repetitions.
 * No comparison of any kind is made against another filesystem (rule 13).
 <!-- END GENERATED:glusterfs-losses -->
 
+## Crash and acknowledgement
+
+1. **Store-level process-fault proxy**, once per WeftFS arm on the first
+   repetition: killed after the objects, after the commit record and after the
+   superblock write, then reopened and verified. Old-whole or new-whole, never
+   partial. The native arms have no store to crash.
+
+<!-- BEGIN GENERATED:glusterfs-crash (scripts/perf_numbers.py) -->
+| arm | old | new | partial |
+|---|---:|---:|---:|
+| `B` | 2 | 1 | 0 |
+| `C` | 2 | 1 | 0 |
+| `D` | 2 | 1 | 0 |
+| `E` | 2 | 1 | 0 |
+<!-- END GENERATED:glusterfs-crash -->
+
+2. **File-level kill after acknowledgement** in the cross-client section below.
+
+Per-tensor restore percentiles and the raw sample lists are in the receipt.
+
 ## Cross-client behaviour
 
 <!-- BEGIN GENERATED:glusterfs-cross (scripts/perf_numbers.py) -->

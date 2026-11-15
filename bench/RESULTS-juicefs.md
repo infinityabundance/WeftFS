@@ -101,6 +101,34 @@ only, never in place of the median.
 * No comparison of any kind is made against another filesystem (rule 13).
 <!-- END GENERATED:juicefs-losses -->
 
+## Crash and acknowledgement
+
+Two different tests, both required, and neither is a media claim:
+
+1. **Store-level process-fault proxy**, run once per WeftFS arm on the first
+   repetition: the child is killed after the objects are published, after the
+   commit record, and after the superblock write, and the store is reopened and
+   verified. The reopened state must be the whole old generation or the whole
+   new one, never partial. The native arms have no store to crash.
+
+<!-- BEGIN GENERATED:juicefs-crash (scripts/perf_numbers.py) -->
+| arm | old | new | partial |
+|---|---:|---:|---:|
+| `B` | 2 | 1 | 0 |
+| `C` | 2 | 1 | 0 |
+| `D` | 2 | 1 | 0 |
+| `E` | 2 | 1 | 0 |
+<!-- END GENERATED:juicefs-crash -->
+
+2. **File-level kill after acknowledgement**, in the cross-client section below:
+   the writer's own `dd … conv=fsync` return is the acknowledgement, the client
+   is killed while writing, and the other client must read every acknowledged
+   chunk back intact.
+
+Per-tensor restore percentiles (p50/p95/p99 over the 101 tensors) and the full
+raw sample lists for every column above are in the receipt; the table shows the
+aggregate phase numbers.
+
 ## Cross-client behaviour
 
 JuiceFS is a client-side filesystem: every client caches attributes, entries and
