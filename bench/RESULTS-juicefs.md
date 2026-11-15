@@ -50,7 +50,11 @@ Receipts (all committed):
 **Label:** one host, one volume, two client processes, one writer at a time.
 Not a fleet, not multi-node, not clustered performance, not a cloud result. The
 object store and the SQLite database are host directories, so no media or
-power-loss claim is made.
+power-loss claim is made. The six-arm matrix runs on **client A alone**; client
+B is started only after the matrix has finished, so it cannot influence it, and
+is used for the cross-client section. `requests` in the table are
+application-level file operations on the mount, not JuiceFS object-store
+PUT/GET counts, which this court does not instrument.
 
 ## The six-arm table
 

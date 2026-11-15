@@ -50,7 +50,10 @@ Receipts (all committed):
 
 **Label:** one host, one brick, one volume, two client processes, one writer at
 a time. Not a fleet, not multi-node, not replicated, not a cloud result, and not
-a media or power-loss claim.
+a media or power-loss claim. The six-arm matrix runs on **client A alone**;
+client B is started afterwards for the cross-client section only. `requests` in
+the table are application-level file operations on the mount, not Gluster RPC
+counts, which this court does not instrument.
 
 ## The six-arm table
 
