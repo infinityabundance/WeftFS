@@ -31,6 +31,56 @@ run_court() {
   fi
 }
 
+# Courts that orchestrate their own sidecar containers are invoked directly
+# instead of through run_court. Exit 78 is an explicit environment skip (for
+# example no Docker daemon or an unobtainable pinned image) and is recorded as
+# `skip`, never as a pass. A skip without a printed reason is a failure.
+#
+# This definition must stay above every call: bash resolves a function name when
+# the calling line executes, not when the file is parsed. A call to
+# `run_orchestrated_court` placed above this block aborts the whole aggregate
+# with "command not found" (exit 127) under `set -e`.
+run_orchestrated_court() {
+  local label="$1" prefix="$2"
+  shift 2
+  echo "=== $label ===" | tee -a "$log"
+  local rc=0
+  "$@" >>"$log" 2>&1 || rc=$?
+  if [[ "$rc" -eq 0 ]]; then
+    echo "$label=pass" >> "$results"
+    echo "PASS $label"
+    return 0
+  fi
+  if [[ "$rc" -eq 78 ]]; then
+    local reason
+    reason="$(grep -h "^${prefix}: skip " "$log" | tail -1 | sed "s/^${prefix}: skip //" || true)"
+    [[ -z "$reason" ]] && reason="${prefix} exited 78 without a printed reason"
+    # Reasons may quote Docker errors; keep the receipt valid JSON.
+    reason="$(printf '%s' "$reason" | tr -d '"\\' | tr '\n\t' ' ')"
+    echo "$label=skip" >> "$results"
+    printf '%s\t%s\n' "$label" "$reason" >> "$skips"
+    echo "SKIP $label: $reason"
+    return 0
+  fi
+  echo "$label=fail" >> "$results"
+  echo "FAIL $label (exit $rc)"
+  status=1
+}
+
+# Structural guard on this file (host-only, fast): every top-level call must sit
+# below the definition of the function it names. Inserting a court above a
+# function definition used to abort the whole aggregate with exit 127 after the
+# courts above it had already run. The check reads this script by path.
+echo "=== court_order ===" | tee -a "$log"
+if bash scripts/check-verify-all-order.sh >>"$log" 2>&1; then
+  echo "court_order=pass" >> "$results"
+  echo "PASS court_order"
+else
+  echo "court_order=fail" >> "$results"
+  echo "FAIL court_order"
+  status=1
+fi
+
 run_court rust "rust_codec" \
   "cd WeftCodec && cargo test --all-targets --quiet"
 run_court rust "rust_store" \
@@ -231,37 +281,6 @@ run_court rust "index_trust" \
 # D2 agent long-term memory with simulated timestamps and a months-later replay.
 run_court fuse "agent_memory" \
   "bash scripts/demo-agent-memory.sh"
-
-# Courts that orchestrate their own sidecar containers are invoked directly
-# instead of through run_court. Exit 78 is an explicit environment skip (for
-# example no Docker daemon or an unobtainable pinned image) and is recorded as
-# `skip`, never as a pass. A skip without a printed reason is a failure.
-run_orchestrated_court() {
-  local label="$1" prefix="$2"
-  shift 2
-  echo "=== $label ===" | tee -a "$log"
-  local rc=0
-  "$@" >>"$log" 2>&1 || rc=$?
-  if [[ "$rc" -eq 0 ]]; then
-    echo "$label=pass" >> "$results"
-    echo "PASS $label"
-    return 0
-  fi
-  if [[ "$rc" -eq 78 ]]; then
-    local reason
-    reason="$(grep -h "^${prefix}: skip " "$log" | tail -1 | sed "s/^${prefix}: skip //" || true)"
-    [[ -z "$reason" ]] && reason="${prefix} exited 78 without a printed reason"
-    # Reasons may quote Docker errors; keep the receipt valid JSON.
-    reason="$(printf '%s' "$reason" | tr -d '"\\' | tr '\n\t' ' ')"
-    echo "$label=skip" >> "$results"
-    printf '%s\t%s\n' "$label" "$reason" >> "$skips"
-    echo "SKIP $label: $reason"
-    return 0
-  fi
-  echo "$label=fail" >> "$results"
-  echo "FAIL $label (exit $rc)"
-  status=1
-}
 
 # Performance numbers: every generated region in the documentation must match
 # its receipt, the declared stamp and revision must still be the ones the
