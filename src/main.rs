@@ -1176,6 +1176,64 @@ enum Command {
         #[command(subcommand)]
         command: RetentionCommand,
     },
+    /// Portable authenticated range proofs (`spec/WEFT-RANGE-PROOF.md`).
+    RangeProof {
+        #[command(subcommand)]
+        command: RangeProofCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum RangeProofCommand {
+    /// Write one anchor per chunk-table-backed shard of a checkpoint.
+    Anchor {
+        /// Checkpoint name.
+        #[arg(long = "checkpoint")]
+        checkpoint: String,
+        /// Restrict to one tensor name.
+        #[arg(long)]
+        tensor: Option<String>,
+        /// Sign every anchor with this 32-byte Ed25519 seed (64 hex).
+        #[arg(long = "sign-seed-hex")]
+        sign_seed_hex: Option<String>,
+        /// Root of a signed load attestation to bind (64 hex).
+        #[arg(long = "load-attestation")]
+        load_attestation: Option<String>,
+    },
+    /// List the anchors written for a checkpoint.
+    Anchors {
+        #[arg(long = "checkpoint")]
+        checkpoint: String,
+    },
+    /// Prove a canonical region of a checkpoint tensor shard.
+    Prove {
+        #[arg(long = "checkpoint")]
+        checkpoint: String,
+        #[arg(long)]
+        tensor: String,
+        #[arg(long, default_value_t = 0)]
+        shard: u64,
+        #[arg(long, default_value_t = 0)]
+        offset: u64,
+        #[arg(long)]
+        length: u64,
+        /// Anchor id (64 hex), or `latest` for the only anchor of this shard.
+        #[arg(long, default_value = "latest")]
+        anchor: String,
+        /// Bundle directory to write (`proof.wcb`, `anchor.wcb`,
+        /// `checkpoint.wcb`, `chunks/`).
+        #[arg(long = "out")]
+        out: PathBuf,
+    },
+    /// Verify a proof bundle against this store and its anchor.
+    Verify {
+        /// Bundle directory written by `range-proof prove`.
+        bundle: PathBuf,
+        /// Accepted anchor signer keys (repeatable, 64 hex). Empty accepts an
+        /// unsigned anchor and reports that nothing was trusted.
+        #[arg(long = "trust-key-hex")]
+        trust_keys_hex: Vec<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -3814,6 +3872,7 @@ fn run(cli: Cli) -> Result<()> {
         Command::Capability { command } => run_capability(&store, json, policy, command),
         Command::Kv { command } => run_kv(&store, json, policy, command),
         Command::Retention { command } => run_retention(&store, json, policy, command),
+        Command::RangeProof { command } => run_range_proof(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
@@ -8862,6 +8921,286 @@ fn cli_now_ns() -> i64 {
         .ok()
         .and_then(|duration| i64::try_from(duration.as_nanos()).ok())
         .unwrap_or(0)
+}
+
+fn run_range_proof(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: RangeProofCommand,
+) -> Result<()> {
+    use weftfs::range_proof::{RangeAnchor, RangeProof};
+    match command {
+        RangeProofCommand::Anchor {
+            checkpoint,
+            tensor,
+            sign_seed_hex,
+            load_attestation,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let seed = match sign_seed_hex {
+                Some(text) => {
+                    let bytes = hex::decode(&text)
+                        .map_err(|_| Error::invalid_argument("--sign-seed-hex must be 64 hex"))?;
+                    let seed: [u8; 32] = bytes
+                        .try_into()
+                        .map_err(|_| Error::invalid_argument("--sign-seed-hex must be 32 bytes"))?;
+                    Some(seed)
+                }
+                None => None,
+            };
+            let attestation = match load_attestation {
+                Some(text) => Some(Hash32::from_hex(&text).map_err(|_| {
+                    Error::invalid_argument("--load-attestation must be 64 hex chars")
+                })?),
+                None => None,
+            };
+            let (written, refused) = store.write_range_anchors(
+                &checkpoint,
+                tensor.as_deref(),
+                seed.as_ref(),
+                attestation,
+            )?;
+            if json {
+                print_json(&json!({
+                    "checkpoint": checkpoint,
+                    "written": written.iter().map(|anchor| json!({
+                        "anchor": anchor.anchor_id.to_hex(),
+                        "object": anchor.object_id.to_hex(),
+                        "tensor": anchor.tensor,
+                        "shard": anchor.shard_index,
+                        "chunk_table_root": anchor.chunk_table_root.to_hex(),
+                        "chunk_count": anchor.chunk_count,
+                    })).collect::<Vec<_>>(),
+                    "refused": refused.iter().map(|refusal| json!({
+                        "tensor": refusal.tensor,
+                        "shard": refusal.shard_index,
+                        "reason": refusal.reason,
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                for anchor in &written {
+                    println!(
+                        "anchor={} tensor={} shard={} root={} chunks={}",
+                        anchor.anchor_id,
+                        anchor.tensor,
+                        anchor.shard_index,
+                        anchor.chunk_table_root,
+                        anchor.chunk_count
+                    );
+                }
+                for refusal in &refused {
+                    println!(
+                        "refused tensor={} shard={} reason={}",
+                        refusal.tensor, refusal.shard_index, refusal.reason
+                    );
+                }
+                println!("written={} refused={}", written.len(), refused.len());
+                Ok(())
+            }
+        }
+        RangeProofCommand::Anchors { checkpoint } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let anchors = store.range_anchors(&checkpoint)?;
+            if json {
+                print_json(&json!({
+                    "checkpoint": checkpoint,
+                    "count": anchors.len(),
+                    "anchors": anchors.iter().map(|(id, object, anchor)| json!({
+                        "anchor": id.to_hex(),
+                        "object": object.to_hex(),
+                        "tensor": anchor.tensor,
+                        "shard": anchor.shards[0].index,
+                        "checkpoint_root": anchor.checkpoint_root.to_hex(),
+                        "chunk_table_root": anchor.chunk_table_root.to_hex(),
+                        "chunk_count": anchor.chunk_count,
+                        "bytes": anchor.bytes,
+                        "signed": anchor.signature.is_some(),
+                        "load_attestation": anchor.load_attestation.map(|h| h.to_hex()),
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                for (id, object, anchor) in &anchors {
+                    println!(
+                        "anchor={} tensor={} shard={} chunks={} bytes={} object={} signed={}",
+                        id,
+                        anchor.tensor,
+                        anchor.shards[0].index,
+                        anchor.chunk_count,
+                        anchor.bytes,
+                        object,
+                        anchor.signature.is_some()
+                    );
+                }
+                println!("count={}", anchors.len());
+                Ok(())
+            }
+        }
+        RangeProofCommand::Prove {
+            checkpoint,
+            tensor,
+            shard,
+            offset,
+            length,
+            anchor,
+            out,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let anchor_id = if anchor == "latest" {
+                let list = store.range_anchors(&checkpoint)?;
+                let matching: Vec<_> = list
+                    .iter()
+                    .filter(|(_, _, candidate)| {
+                        candidate.tensor == tensor && candidate.shards[0].index == shard
+                    })
+                    .map(|(id, _, _)| *id)
+                    .collect();
+                match matching.len() {
+                    1 => matching[0],
+                    0 => {
+                        return Err(Error::not_found(format!(
+                            "checkpoint `{checkpoint}` tensor `{tensor}` shard {shard} has no \
+                             range anchor; run `range-proof anchor` first"
+                        )))
+                    }
+                    _ => {
+                        return Err(Error::ambiguous(format!(
+                            "checkpoint `{checkpoint}` tensor `{tensor}` shard {shard} has {} \
+                             anchors; name one with --anchor",
+                            matching.len()
+                        )))
+                    }
+                }
+            } else {
+                Hash32::from_hex(&anchor)
+                    .map_err(|_| Error::invalid_argument("--anchor must be 64 hex or `latest`"))?
+            };
+            let bundle =
+                store.prove_range(&checkpoint, &tensor, shard, offset, length, anchor_id)?;
+            std::fs::create_dir_all(&out)
+                .map_err(|err| Error::io(format!("{}: {err}", out.display())))?;
+            let chunks_dir = out.join("chunks");
+            std::fs::create_dir_all(&chunks_dir)
+                .map_err(|err| Error::io(format!("{}: {err}", chunks_dir.display())))?;
+            std::fs::write(out.join("proof.wcb"), bundle.proof.encode()?)
+                .map_err(|err| Error::io(format!("{}: {err}", out.display())))?;
+            std::fs::write(out.join("anchor.wcb"), &bundle.anchor_bytes)
+                .map_err(|err| Error::io(format!("{}: {err}", out.display())))?;
+            std::fs::write(out.join("checkpoint.wcb"), &bundle.checkpoint_bytes)
+                .map_err(|err| Error::io(format!("{}: {err}", out.display())))?;
+            for (index, bytes) in bundle.chunks.iter().enumerate() {
+                let path = chunks_dir.join(format!("{index:06}.bin"));
+                std::fs::write(&path, bytes)
+                    .map_err(|err| Error::io(format!("{}: {err}", path.display())))?;
+            }
+            let proof_bytes = std::fs::metadata(out.join("proof.wcb"))
+                .map(|meta| meta.len())
+                .unwrap_or(0);
+            if json {
+                print_json(&json!({
+                    "anchor": bundle.proof.anchor.to_hex(),
+                    "tensor": bundle.proof.tensor,
+                    "shard": bundle.proof.shard_index,
+                    "offset": bundle.proof.offset,
+                    "length": bundle.proof.length,
+                    "region_root": bundle.proof.region_root.to_hex(),
+                    "leaves": bundle.proof.leaves.len(),
+                    "chunk_bytes": bundle.chunks.iter().map(|c| c.len() as u64).sum::<u64>(),
+                    "proof_bytes": proof_bytes,
+                    "out": out.display().to_string(),
+                }))
+            } else {
+                println!("anchor={}", bundle.proof.anchor);
+                println!("tensor={}", bundle.proof.tensor);
+                println!("shard={}", bundle.proof.shard_index);
+                println!("offset={}", bundle.proof.offset);
+                println!("length={}", bundle.proof.length);
+                println!("region_root={}", bundle.proof.region_root);
+                println!("leaves={}", bundle.proof.leaves.len());
+                println!("proof_bytes={proof_bytes}");
+                println!("out={}", out.display());
+                Ok(())
+            }
+        }
+        RangeProofCommand::Verify {
+            bundle,
+            trust_keys_hex,
+        } => {
+            let mut trust = Vec::new();
+            for text in &trust_keys_hex {
+                let bytes = hex::decode(text)
+                    .map_err(|_| Error::invalid_argument("--trust-key-hex must be 64 hex"))?;
+                let key: [u8; 32] = bytes
+                    .try_into()
+                    .map_err(|_| Error::invalid_argument("--trust-key-hex must be 32 bytes"))?;
+                trust.push(key);
+            }
+            let proof_bytes = std::fs::read(bundle.join("proof.wcb"))
+                .map_err(|err| Error::io(format!("{}: {err}", bundle.display())))?;
+            let anchor_bytes = std::fs::read(bundle.join("anchor.wcb"))
+                .map_err(|err| Error::io(format!("{}: {err}", bundle.display())))?;
+            let proof = RangeProof::decode(&proof_bytes)?;
+            let anchor = RangeAnchor::decode(&anchor_bytes)?;
+            let mut chunks = Vec::new();
+            let chunks_dir = bundle.join("chunks");
+            if chunks_dir.is_dir() {
+                let mut names: Vec<PathBuf> = std::fs::read_dir(&chunks_dir)
+                    .map_err(|err| Error::io(format!("{}: {err}", chunks_dir.display())))?
+                    .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+                    .collect();
+                names.sort();
+                for path in names {
+                    chunks.push(
+                        std::fs::read(&path)
+                            .map_err(|err| Error::io(format!("{}: {err}", path.display())))?,
+                    );
+                }
+            }
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let report = store.verify_range_proof(
+                &proof,
+                &anchor,
+                if chunks.is_empty() {
+                    None
+                } else {
+                    Some(&chunks)
+                },
+                &trust,
+            )?;
+            if json {
+                print_json(&json!({
+                    "verified": true,
+                    "anchor": report.anchor.to_hex(),
+                    "chunk_table_root": report.chunk_table_root.to_hex(),
+                    "leaves_verified": report.leaves_verified,
+                    "path_nodes_verified": report.path_nodes_verified,
+                    "chunk_bytes": report.chunk_bytes,
+                    "region_bytes": report.region_bytes,
+                    "manifest_rechecked": report.manifest_rechecked,
+                    "anchor_signature_verified": report.anchor_signature_verified,
+                    "load_attestation_verified": report.load_attestation_verified,
+                }))
+            } else {
+                println!("verified=true");
+                println!("anchor={}", report.anchor);
+                println!("chunk_table_root={}", report.chunk_table_root);
+                println!("leaves_verified={}", report.leaves_verified);
+                println!("path_nodes_verified={}", report.path_nodes_verified);
+                println!("chunk_bytes={}", report.chunk_bytes);
+                println!("region_bytes={}", report.region_bytes);
+                println!("manifest_rechecked={}", report.manifest_rechecked);
+                println!(
+                    "anchor_signature_verified={}",
+                    report.anchor_signature_verified
+                );
+                println!(
+                    "load_attestation_verified={}",
+                    report.load_attestation_verified
+                );
+                Ok(())
+            }
+        }
+    }
 }
 
 fn resolve_descriptor_root(

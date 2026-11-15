@@ -75,6 +75,7 @@ pub mod planes;
 pub mod producer_auth;
 pub mod provenance;
 pub mod quota;
+pub mod range_proof;
 pub mod read_pool;
 pub mod rebase;
 pub mod receipt_bundle;
