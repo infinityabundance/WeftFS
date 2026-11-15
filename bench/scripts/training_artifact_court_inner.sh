@@ -230,9 +230,10 @@ check("verifier_refusal_bundle",
       refusal_report.get("error") or refusal_report.get("refusal"))
 
 go_closure = read("verify-go-closure.json")
+rust_closure_nodes = len(read("closure-complete.json")["result"]["nodes"])
 check("verifier_go_closure",
       go_closure.get("ok") is True and
-      go_closure.get("nodes") == read("go-validate.json").get("causal_nodes"),
+      go_closure.get("nodes") == rust_closure_nodes,
       go_closure.get("error") or "Go bundle: %s records, %s nodes" % (
           go_closure.get("records"), go_closure.get("nodes")))
 
