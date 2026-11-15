@@ -65,3 +65,14 @@ the Go implementation. They are recorded as findings, not silently assumed.
     The producer emits every causal record in the snapshot on a refusal; the
     verifier then hits the same missing identity. This is an evidence rule that
     no specification states.
+
+11. **The request set in a bundle must be the canonical set actually queried.**
+    Found by running the clean-room verifier against the independent Go
+    consumer: both stores sort and dedupe the root list internally, but the Go
+    bundle echoed the caller's unnormalised list, so its `roots` were not
+    ascending and the verifier refused the whole bundle (`NonCanonical: roots is
+    not strictly ascending`) before recomputing anything. `complete` and
+    `minimal` also differed in the emitted start set: `complete` must include the
+    artifact's declared transitive `closure` entries as roots, `minimal` must
+    not. Both rules are now stated in `WEFT-TRAINING-ARTIFACT.md` §5 and the
+    root derivation is one store function in each language.
