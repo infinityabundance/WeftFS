@@ -114,6 +114,10 @@ python3 verifier/closure_check.py --bundle "$work/closure-refusal.json" \
 say "== bounded closure bundles (complete and minimal) =="
 "$fixture" closure "$work/rust" "$root" complete "$work/closure-complete.json" > /dev/null 2>>"$log"
 "$fixture" closure "$work/rust" "$root" minimal "$work/closure-minimal.json" > /dev/null 2>>"$log"
+"$work/go-ta" closure --store "$work/rust/store" --root "$root" --mode complete \
+  --bundle-out "$work/go-closure.json" > /dev/null 2>>"$log"
+python3 verifier/closure_check.py --bundle "$work/go-closure.json" \
+  > "$work/verify-go-closure.json" 2>>"$log"
 
 say "== assemble receipt =="
 python3 - "$stamp" "$work" <<'PY'
@@ -224,6 +228,13 @@ check("verifier_refusal_bundle",
       (refusal_report.get("refusal") or {}).get("identity") ==
           read("missing.json").get("missing"),
       refusal_report.get("error") or refusal_report.get("refusal"))
+
+go_closure = read("verify-go-closure.json")
+check("verifier_go_closure",
+      go_closure.get("ok") is True and
+      go_closure.get("nodes") == read("go-validate.json").get("causal_nodes"),
+      go_closure.get("error") or "Go bundle: %s records, %s nodes" % (
+          go_closure.get("records"), go_closure.get("nodes")))
 
 closure = {}
 for mode in ["complete", "minimal"]:
