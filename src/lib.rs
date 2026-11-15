@@ -30,6 +30,7 @@
 #![deny(unsafe_code)]
 
 pub mod access;
+pub mod adapter;
 pub mod artifact_api;
 pub mod auth;
 pub mod azure;
@@ -41,6 +42,7 @@ pub mod checkpoint_service;
 pub mod conformance;
 pub mod context;
 pub mod cost_model;
+pub mod cross_model;
 pub mod encryption;
 pub mod error;
 pub mod evaluate;
@@ -94,8 +96,10 @@ pub mod tensor_store;
 pub mod threefs;
 pub mod timeparse;
 pub mod training_ready;
+pub mod training_state;
 pub mod transcode;
 pub mod two_stage;
+pub mod view_identity;
 pub mod wcb_util;
 pub mod writer_fence;
 pub mod writer_lock;
