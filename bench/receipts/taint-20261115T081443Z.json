@@ -1,0 +1,83 @@
+{
+ "schema": "weft.taint-court/v1",
+ "stamp": "20261115T081443Z",
+ "generated_utc": "20261115T081443Z",
+ "environment": {
+  "image": "weft/rust-court:1",
+  "image_id": null,
+  "kernel": null,
+  "memory": null,
+  "cpus": null,
+  "pids": null,
+  "revisions": {
+   "WeftFS": "db306f8016788c1664e8d4e70aeadfcb98ecfe19",
+   "WeftCodec": "c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297",
+   "WeftCodec-Go": "0db8016132bcfda3e86907724743abd2555efa7b",
+   "WeftFS-Go": "71a9338d78d69ca87ec48e5f2bc9e9305406162b"
+  }
+ },
+ "checks": [
+  {
+   "name": "tests/taint.rs",
+   "pass": true,
+   "detail": "12 passed, 0 failed"
+  },
+  {
+   "detail": "status=closed tainted=3 artifacts=2",
+   "name": "closure is closed and precise",
+   "pass": true
+  },
+  {
+   "detail": "2 artifacts",
+   "name": "both branches are tainted with a witness to the root",
+   "pass": true
+  },
+  {
+   "detail": "class=NotFound message_equal=true",
+   "name": "non-disclosing refusal is byte-identical to an absent object",
+   "pass": true
+  },
+  {
+   "detail": "8272 bytes, sha256 unchanged=true",
+   "name": "the unquarantined branch restores the same bytes",
+   "pass": true
+  },
+  {
+   "detail": "class=NotFound",
+   "name": "the quarantined branch cannot be materialized",
+   "pass": true
+  },
+  {
+   "detail": "status=unproven verdict=unproven",
+   "name": "an artifact with no receipt is unproven, never clear",
+   "pass": true
+  },
+  {
+   "detail": "8272 bytes",
+   "name": "a signed release restores exact service",
+   "pass": true
+  },
+  {
+   "detail": "class=Quarantined",
+   "name": "the decision is durable and enforced after reopen",
+   "pass": true
+  }
+ ],
+ "passed": 9,
+ "failed": 0,
+ "result": "pass",
+ "trace_us": 49,
+ "reads": 2000,
+ "read_ns": {
+  "gate_miss_p50": 9428,
+  "no_quarantine_p50": 6592,
+  "refused_p50": 45665
+ },
+ "gate_overhead_ns": 2836,
+ "refusal_overhead_ns": 39073,
+ "signer_public_key": "48075a597e721a156e2e0799de5cc0c5324dc6e7eaf1cdd46250868ec53215dd",
+ "quarantine_record": "9db5735daaf7703dd59dad52e9d58fe78ce6f3e69be597f653ec2dd0dbec9a54",
+ "method": "One dataset member, one model declaration, two raw checkpoints, one provenance receipt per checkpoint. Reads are 2,000 warm whole-object reads of one checkpoint manifest object in three states: no quarantine state at all, one unrelated quarantine present (gate lookup miss), and the branch quarantined (gate hit and refusal). Traces are the forward+backward walk over exactly these records.",
+ "log": "bench/receipts/taint-20261115T081443Z.log",
+ "log_sha256": "3f48dd5053774fb5cd5899c945eb9cfffa1bd75a78a51dd3156bed67fb37313c"
+}
