@@ -216,7 +216,26 @@ try:
 except Exception as err:  # reported, never silently dropped
     components = {'error': str(err)}
 
+# A dict-keyed view of the measured rows, so the results document can render a
+# table from this receipt with `scripts/perf_numbers.py` (kind: matrix).
+table = {}
+for row in python['rows']:
+    table['%s-%d' % (row['case'], row['length'])] = {
+        'case': row['case'],
+        'chunk_size': row['chunk_size'],
+        'length': row['length'],
+        'leaves': row['leaves'],
+        'proof_bytes': row['proof_bytes'],
+        'chunk_bytes': row['chunk_bytes'],
+        'verify_ns': row['verify_ns'],
+        'verify_store_ns': row['verify_store_ns'],
+        'full_tensor_ns': row['full_tensor_ns'],
+        'advantage': round(row['advantage'], 4),
+        'independent_verify_ns': row['independent_verify_ns'],
+    }
+
 document = {
+    'table': table,
     'schema': 'weft.range-proof-court/v1',
     'verifier_components_ns': components,
     'stamp': stamp,
