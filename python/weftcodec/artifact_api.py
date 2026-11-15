@@ -216,15 +216,27 @@ class ArtifactTensorBuffer:
         return bytes(self.view)
 
     def close(self):
-        try:
-            self._mm.close()
-        finally:
-            if self._fd is not None:
-                try:
-                    os.close(self._fd)
-                except OSError:
-                    pass
-                self._fd = None
+        # A consumer may legitimately keep an exported pointer into this
+        # mapping: `_to_target` hands a numpy/JAX array built with
+        # `frombuffer`/`asarray` straight to the caller and documents that no
+        # extra host copy is made. Unmapping here would be a use-after-free
+        # hazard, and `mmap.close()` refuses with BufferError while such a
+        # pointer is alive -- which is the guard, not an error to report. Keep
+        # the mapping referenced so it is released when the last exporter is
+        # collected, exactly as `service.TensorBuffer.close` already does.
+        if self._mm is not None:
+            mapping = self._mm
+            try:
+                mapping.close()
+                self._mm = None
+            except (BufferError, ValueError):
+                self._mm = mapping
+        if self._fd is not None:
+            try:
+                os.close(self._fd)
+            except OSError:
+                pass
+            self._fd = None
 
     def __enter__(self):
         return self
