@@ -221,6 +221,10 @@
     {
       "id": "t091",
       "title": "T091 multi-parent reconstruction, pythia-70m checkpoints"
+    },
+    {
+      "id": "t093",
+      "title": "T093 residual-fingerprint selector, held-out Qwen2.5-3B-Instruct"
     }
   ],
   "numbers": [
@@ -27844,6 +27848,277 @@
       "stamp": "20261115T162813Z",
       "revision_path": "revision",
       "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t093.fit_tensors",
+      "label": "FIT tensors",
+      "unit": "",
+      "group": "t093",
+      "format": "int",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.fit.tensors",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.validation_tensors",
+      "label": "VALIDATION tensors",
+      "unit": "",
+      "group": "t093",
+      "format": "int",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.validation.tensors",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.heldout_tensors",
+      "label": "HELD-OUT tensors",
+      "unit": "",
+      "group": "t093",
+      "format": "int",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.tensors",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.chosen_depth",
+      "label": "tree depth chosen on VALIDATION",
+      "unit": "",
+      "group": "t093",
+      "format": "int",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.fit.chosen_depth",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.oracle_cost",
+      "label": "oracle total cost (objective units)",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.oracle_cost",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.oracle_bytes",
+      "label": "oracle total bytes",
+      "unit": "B",
+      "group": "t093",
+      "format": "int",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.oracle_cost_bytes_only",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.always_zstd_cost",
+      "label": "always-zstd cost",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.0.cost",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.always_zstd_regret",
+      "label": "always-zstd regret over the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.0.regret",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.always_zstd_regret_frac",
+      "label": "always-zstd regret as a fraction of the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:5",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.0.regret_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.best_of_two_regret",
+      "label": "always-best-of-two regret over the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.1.regret",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.entropy_regret",
+      "label": "entropy-threshold regret over the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.2.regret",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.size_regret",
+      "label": "size-threshold regret over the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.3.regret",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.tree_cost",
+      "label": "fingerprint-tree cost",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.4.cost",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.tree_regret",
+      "label": "fingerprint-tree regret over the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.4.regret",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.tree_regret_frac",
+      "label": "fingerprint-tree regret as a fraction of the oracle",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:7",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.heldout.policies.4.regret_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.tree_over_best_trivial",
+      "label": "tree cost over the best trivial selector",
+      "unit": "x",
+      "group": "t093",
+      "format": "fixed:7",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "checks.1.detail.tree_over_best_trivial",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.tree_saving",
+      "label": "tree saving over the best trivial selector",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "expr": "{t093.best_of_two_regret} - {t093.tree_regret}"
+    },
+    {
+      "key": "t093.fingerprint_ns",
+      "label": "fingerprint pass wall over the held-out bytes",
+      "unit": "ns",
+      "group": "t093",
+      "format": "int",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.planning.fingerprint_pass_ns_sum",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.fingerprint_ns_per_mib",
+      "label": "fingerprint pass wall per MiB",
+      "unit": "ns/MiB",
+      "group": "t093",
+      "format": "trunc:0",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.planning.fingerprint_ns_per_mib",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.decision_ns",
+      "label": "per-tensor decision wall",
+      "unit": "ns",
+      "group": "t093",
+      "format": "fixed:1",
+      "receipt": "bench/receipts/residual-selector-20261115T164613Z.json",
+      "path": "measurement.planning.per_tensor_decision_ns",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T164613Z",
+      "revision_path": "revision",
+      "revision": "ca346b429471587494feb804d5b2aa85799a86ce"
+    },
+    {
+      "key": "t093.fingerprint_cost_units",
+      "label": "fingerprint pass cost in objective units",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "expr": "{t093.fingerprint_ns} / 1000"
+    },
+    {
+      "key": "t093.net_saving",
+      "label": "tree saving minus the fingerprint pass cost",
+      "unit": "",
+      "group": "t093",
+      "format": "fixed:2",
+      "expr": "{t093.tree_saving} - {t093.fingerprint_cost_units}"
     }
   ],
   "blocks": [
@@ -35580,6 +35855,88 @@
         },
         {
           "template": "typed refusals out of **{{t091.refusal_checks}}** checks, no bytes returned."
+        }
+      ]
+    },
+    {
+      "id": "t093-fit",
+      "file": "bench/RESULTS-residual-selector.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "FIT **{{t093.fit_tensors}}** tensors, VALIDATION **{{t093.validation_tensors}}**, HELD-OUT"
+        },
+        {
+          "template": "**{{t093.heldout_tensors}}** tensors measured once. The tree depth chosen on VALIDATION is"
+        },
+        {
+          "template": "**{{t093.chosen_depth}}**."
+        }
+      ]
+    },
+    {
+      "id": "t093-policies",
+      "file": "bench/RESULTS-residual-selector.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "Held-out total cost (objective units) and regret over the oracle (**{{t093.oracle_cost}}**,"
+        },
+        {
+          "template": "**{{t093.oracle_bytes}} B**): always-zstd **{{t093.always_zstd_cost}}** (regret"
+        },
+        {
+          "template": "**{{t093.always_zstd_regret}}**, **{{t093.always_zstd_regret_frac}}**); always-best-of-two regret"
+        },
+        {
+          "template": "**{{t093.best_of_two_regret}}**; entropy threshold regret **{{t093.entropy_regret}}**; size"
+        },
+        {
+          "template": "threshold regret **{{t093.size_regret}}**; fingerprint tree **{{t093.tree_cost}}** (regret"
+        },
+        {
+          "template": "**{{t093.tree_regret}}**, **{{t093.tree_regret_frac}}** of the oracle)."
+        }
+      ]
+    },
+    {
+      "id": "t093-planning",
+      "file": "bench/RESULTS-residual-selector.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "The fingerprint pass over the held-out bytes takes **{{t093.fingerprint_ns}} ns**"
+        },
+        {
+          "template": "(**{{t093.fingerprint_ns_per_mib}} ns/MiB**); the decision itself takes"
+        },
+        {
+          "template": "**{{t093.decision_ns}} ns** per tensor. At the declared exchange rate the pass costs"
+        },
+        {
+          "template": "**{{t093.fingerprint_cost_units}}** objective units."
+        }
+      ]
+    },
+    {
+      "id": "t093-verdict",
+      "file": "bench/RESULTS-residual-selector.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "The tree beats the best trivial selector by **{{t093.tree_saving}}** units, i.e. it is"
+        },
+        {
+          "template": "**{{t093.tree_over_best_trivial}}\u00d7** its cost, while its own fingerprint pass costs"
+        },
+        {
+          "template": "**{{t093.fingerprint_cost_units}}** units: a net **{{t093.net_saving}}** units. The"
+        },
+        {
+          "template": "advantage is **not** claimed: it is below the resolution of two-repetition encode/decode"
+        },
+        {
+          "template": "medians, and the feature pass is four orders of magnitude more expensive than the saving."
         }
       ]
     }

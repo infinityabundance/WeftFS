@@ -1,0 +1,2250 @@
+{
+  "checks": [
+    {
+      "check": "G4_candidates_exact",
+      "detail": {
+        "measurements": 72
+      },
+      "ok": true
+    },
+    {
+      "check": "G1_tree_not_worse_than_best_trivial",
+      "detail": {
+        "best_trivial": 28099294.707000002,
+        "best_trivial_policy": "always_best_of_two",
+        "tree": 28099272.972999997,
+        "tree_over_best_trivial": 0.9999992265286288
+      },
+      "ok": true
+    },
+    {
+      "check": "G2_tree_regret_within_5pct",
+      "detail": {
+        "regret_fraction": 5.855493003437231e-07
+      },
+      "ok": true
+    },
+    {
+      "check": "G3_planning_within_50ms",
+      "detail": {
+        "decision_ns": 33.375,
+        "fingerprint_ns_per_mib": 16308098.560197191
+      },
+      "ok": true
+    },
+    {
+      "check": "fit_split_declared",
+      "detail": {
+        "fit": [
+          "qwen0.5b-base:.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+          "qwen0.5b-instruct:.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors:.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+          "pythia-step0:.docker-cache/real-corpus/pythia-70m-step0.safetensors",
+          "pythia-step8:.docker-cache/real-corpus/pythia-70m-step8.safetensors:.docker-cache/real-corpus/pythia-70m-step0.safetensors"
+        ],
+        "heldout": [
+          "qwen3b-instruct:.docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors:.docker-cache/real-corpus/Qwen2.5-3B.safetensors"
+        ],
+        "validation": [
+          "qwen3b-base:.docker-cache/real-corpus/Qwen2.5-3B.safetensors"
+        ]
+      },
+      "ok": true
+    },
+    {
+      "check": "decision_diversity_reported",
+      "detail": {
+        "tensors_where_tree_differs_from_best_trivial": 6
+      },
+      "ok": true
+    }
+  ],
+  "checks_passed": 6,
+  "checks_total": 6,
+  "contract": "bench/CONTRACTS-selector.md",
+  "gates": {
+    "G1_tree_not_worse_than_best_trivial": true,
+    "G2_tree_regret_within_5pct": true,
+    "G3_planning_within_50ms": true,
+    "G4_candidates_exact": true
+  },
+  "generated_at": "20261115T164613Z",
+  "measurement": {
+    "candidates": [
+      "raw",
+      "zstd-3",
+      "float-tensor"
+    ],
+    "declared_split": {
+      "fit": [
+        "qwen0.5b-base:.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+        "qwen0.5b-instruct:.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors:.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors",
+        "pythia-step0:.docker-cache/real-corpus/pythia-70m-step0.safetensors",
+        "pythia-step8:.docker-cache/real-corpus/pythia-70m-step8.safetensors:.docker-cache/real-corpus/pythia-70m-step0.safetensors"
+      ],
+      "heldout": [
+        "qwen3b-instruct:.docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors:.docker-cache/real-corpus/Qwen2.5-3B.safetensors"
+      ],
+      "validation": [
+        "qwen3b-base:.docker-cache/real-corpus/Qwen2.5-3B.safetensors"
+      ]
+    },
+    "environment": {
+      "court": "weft/bench-court:1",
+      "kernel": "7.3.3-1-cachyos"
+    },
+    "features": [
+      "log2_bytes",
+      "residual_entropy",
+      "residual_zero_words",
+      "high_plane_entropy",
+      "has_parent"
+    ],
+    "fit": {
+      "chosen_depth": 2,
+      "depth_sweep": [
+        {
+          "depth": 1,
+          "tree": {
+            "feature": "log2_bytes",
+            "left": {
+              "leaf": "zstd-3"
+            },
+            "right": {
+              "leaf": "float-tensor"
+            },
+            "threshold": 15.19615871138938
+          },
+          "validation_cost": 28094925.327499997
+        },
+        {
+          "depth": 2,
+          "tree": {
+            "feature": "log2_bytes",
+            "left": {
+              "feature": "log2_bytes",
+              "left": {
+                "leaf": "raw"
+              },
+              "right": {
+                "leaf": "zstd-3"
+              },
+              "threshold": 9.403677461028803
+            },
+            "right": {
+              "feature": "residual_entropy",
+              "left": {
+                "leaf": "float-tensor"
+              },
+              "right": {
+                "leaf": "float-tensor"
+              },
+              "threshold": 4.568325100499576
+            },
+            "threshold": 15.19615871138938
+          },
+          "validation_cost": 28094916.5305
+        },
+        {
+          "depth": 3,
+          "tree": {
+            "feature": "log2_bytes",
+            "left": {
+              "feature": "log2_bytes",
+              "left": {
+                "feature": "residual_entropy",
+                "left": {
+                  "leaf": "raw"
+                },
+                "right": {
+                  "leaf": "raw"
+                },
+                "threshold": 2.2526302816947665
+              },
+              "right": {
+                "feature": "high_plane_entropy",
+                "left": {
+                  "leaf": "zstd-3"
+                },
+                "right": {
+                  "leaf": "zstd-3"
+                },
+                "threshold": 0.8934443694420481
+              },
+              "threshold": 9.403677461028803
+            },
+            "right": {
+              "feature": "residual_entropy",
+              "left": {
+                "leaf": "float-tensor"
+              },
+              "right": {
+                "feature": "residual_entropy",
+                "left": {
+                  "leaf": "float-tensor"
+                },
+                "right": {
+                  "leaf": "float-tensor"
+                },
+                "threshold": 4.789080092879699
+              },
+              "threshold": 4.568325100499576
+            },
+            "threshold": 15.19615871138938
+          },
+          "validation_cost": 28094916.5305
+        }
+      ],
+      "entropy_rule": {
+        "above": "zstd-3",
+        "below": "zstd-3",
+        "threshold": 5.2454945579387315
+      },
+      "objects": 52,
+      "size_rule": {
+        "above": "float-tensor",
+        "below": "zstd-3",
+        "feature": "log2_bytes",
+        "threshold": 15.19615871138938
+      },
+      "tensors": 160,
+      "tree": {
+        "feature": "log2_bytes",
+        "left": {
+          "feature": "log2_bytes",
+          "left": {
+            "leaf": "raw"
+          },
+          "right": {
+            "leaf": "zstd-3"
+          },
+          "threshold": 9.403677461028803
+        },
+        "right": {
+          "feature": "residual_entropy",
+          "left": {
+            "leaf": "float-tensor"
+          },
+          "right": {
+            "leaf": "float-tensor"
+          },
+          "threshold": 4.568325100499576
+        },
+        "threshold": 15.19615871138938
+      }
+    },
+    "generated_at": "20261115T165311097Z",
+    "heldout": {
+      "oracle_cost": 28099256.519500002,
+      "oracle_cost_bytes_only": 26636085.0,
+      "policies": [
+        {
+          "cost": 31570290.8865,
+          "cost_bytes_only": 31262368.0,
+          "policy": "always_zstd",
+          "regret": 3471034.3669999987,
+          "regret_fraction": 0.1235276230383964
+        },
+        {
+          "cost": 28099294.707000002,
+          "cost_bytes_only": 26635934.0,
+          "policy": "always_best_of_two",
+          "regret": 38.1875,
+          "regret_fraction": 1.3590217226387849e-06
+        },
+        {
+          "cost": 31570290.8865,
+          "cost_bytes_only": 31262368.0,
+          "policy": "entropy_threshold",
+          "regret": 3471034.3669999987,
+          "regret_fraction": 0.1235276230383964
+        },
+        {
+          "cost": 28099294.707000002,
+          "cost_bytes_only": 26635934.0,
+          "policy": "size_threshold",
+          "regret": 38.1875,
+          "regret_fraction": 1.3590217226387849e-06
+        },
+        {
+          "cost": 28099272.972999997,
+          "cost_bytes_only": 26636153.0,
+          "policy": "fingerprint_tree",
+          "regret": 16.453499995172024,
+          "regret_fraction": 5.855493003437231e-07
+        },
+        {
+          "cost": 28099256.519500002,
+          "cost_bytes_only": 26636085.0,
+          "policy": "oracle",
+          "regret": 0.0,
+          "regret_fraction": 0.0
+        }
+      ],
+      "rows": [
+        {
+          "bytes": 512,
+          "choices": [
+            {
+              "cost": 520.984,
+              "policy": "always_zstd",
+              "regret": 8.81350000000009,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 520.984,
+              "policy": "always_best_of_two",
+              "regret": 8.81350000000009,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 520.984,
+              "policy": "entropy_threshold",
+              "regret": 8.81350000000009,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 520.984,
+              "policy": "size_threshold",
+              "regret": 8.81350000000009,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 512.1705,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "raw"
+            },
+            {
+              "cost": 512.1705,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "raw"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.21484375,
+            "entropy": 6.192268361392825,
+            "has_parent": true,
+            "high_plane_entropy": 3.454453238148904,
+            "residual_entropy": 0.808606232134557,
+            "residual_zero_words": 0.78515625,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 512,
+              "decode_ms": 0.00017050000000000002,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 495,
+              "decode_ms": 0.0055049999999999995,
+              "encode_ms": 0.020479,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 984,
+              "decode_ms": 0.020463000000000002,
+              "encode_ms": 0.054672,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.0.self_attn.k_proj.bias",
+          "oracle": "raw",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "bytes": 512,
+          "choices": [
+            {
+              "cost": 524.287,
+              "policy": "always_zstd",
+              "regret": 11.690500000000043,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 524.287,
+              "policy": "always_best_of_two",
+              "regret": 11.690500000000043,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 524.287,
+              "policy": "entropy_threshold",
+              "regret": 11.690500000000043,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 524.287,
+              "policy": "size_threshold",
+              "regret": 11.690500000000043,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 512.5965,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "raw"
+            },
+            {
+              "cost": 512.5965,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "raw"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.546875,
+            "entropy": 5.845518452814469,
+            "has_parent": true,
+            "high_plane_entropy": 2.6914358756494927,
+            "residual_entropy": 1.8615914227486265,
+            "residual_zero_words": 0.453125,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 512,
+              "decode_ms": 0.0005965,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 467,
+              "decode_ms": 0.012123000000000002,
+              "encode_ms": 0.045164,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 957,
+              "decode_ms": 0.0273915,
+              "encode_ms": 0.112611,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.14.self_attn.v_proj.bias",
+          "oracle": "raw",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "bytes": 512,
+          "choices": [
+            {
+              "cost": 504.4945,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 504.4945,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 504.4945,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 504.4945,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 512.2205,
+              "policy": "fingerprint_tree",
+              "regret": 7.725999999999999,
+              "strategy": "raw"
+            },
+            {
+              "cost": 504.4945,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.26171875,
+            "entropy": 6.00463971031038,
+            "has_parent": true,
+            "high_plane_entropy": 3.037040201758834,
+            "residual_entropy": 0.9823337604345335,
+            "residual_zero_words": 0.73828125,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 512,
+              "decode_ms": 0.0002205,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 478,
+              "decode_ms": 0.0055055,
+              "encode_ms": 0.020988999999999997,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 972,
+              "decode_ms": 0.018269,
+              "encode_ms": 0.049653,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.20.self_attn.k_proj.bias",
+          "oracle": "zstd-3",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "bytes": 512,
+          "choices": [
+            {
+              "cost": 520.1320000000001,
+              "policy": "always_zstd",
+              "regret": 7.510500000000093,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 520.1320000000001,
+              "policy": "always_best_of_two",
+              "regret": 7.510500000000093,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 520.1320000000001,
+              "policy": "entropy_threshold",
+              "regret": 7.510500000000093,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 520.1320000000001,
+              "policy": "size_threshold",
+              "regret": 7.510500000000093,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 512.6215,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "raw"
+            },
+            {
+              "cost": 512.6215,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "raw"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.66796875,
+            "entropy": 5.901541713960131,
+            "has_parent": true,
+            "high_plane_entropy": 2.848838946726528,
+            "residual_entropy": 2.3098290531755916,
+            "residual_zero_words": 0.33203125,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 512,
+              "decode_ms": 0.0006215,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 468,
+              "decode_ms": 0.011276,
+              "encode_ms": 0.040856,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 962,
+              "decode_ms": 0.024550999999999996,
+              "encode_ms": 0.0906,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.26.self_attn.v_proj.bias",
+          "oracle": "raw",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "bytes": 512,
+          "choices": [
+            {
+              "cost": 503.508,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 503.508,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 503.508,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 503.508,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 512.2355,
+              "policy": "fingerprint_tree",
+              "regret": 8.72750000000002,
+              "strategy": "raw"
+            },
+            {
+              "cost": 503.508,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.1484375,
+            "entropy": 5.920226394529929,
+            "has_parent": true,
+            "high_plane_entropy": 2.990543160013845,
+            "residual_entropy": 0.6559079087615509,
+            "residual_zero_words": 0.8515625,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 512,
+              "decode_ms": 0.0002355,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 478,
+              "decode_ms": 0.00526,
+              "encode_ms": 0.020248,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 966,
+              "decode_ms": 0.0179385,
+              "encode_ms": 0.048861,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.32.self_attn.k_proj.bias",
+          "oracle": "zstd-3",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "bytes": 512,
+          "choices": [
+            {
+              "cost": 522.7845,
+              "policy": "always_zstd",
+              "regret": 10.173000000000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 522.7845,
+              "policy": "always_best_of_two",
+              "regret": 10.173000000000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 522.7845,
+              "policy": "entropy_threshold",
+              "regret": 10.173000000000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 522.7845,
+              "policy": "size_threshold",
+              "regret": 10.173000000000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 512.6115,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "raw"
+            },
+            {
+              "cost": 512.6115,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "raw"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.76171875,
+            "entropy": 5.783134949496202,
+            "has_parent": true,
+            "high_plane_entropy": 2.6927138875723458,
+            "residual_entropy": 2.680451438101298,
+            "residual_zero_words": 0.23828125,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 512,
+              "decode_ms": 0.0006115000000000001,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 467,
+              "decode_ms": 0.0118925,
+              "encode_ms": 0.043892,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 959,
+              "decode_ms": 0.024801499999999997,
+              "encode_ms": 0.10215,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.6.self_attn.v_proj.bias",
+          "oracle": "raw",
+          "shape": [
+            256
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 2662.773,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2662.773,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2662.773,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2662.773,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2662.773,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2662.773,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.00146484375,
+            "entropy": 4.616063726349282,
+            "has_parent": true,
+            "high_plane_entropy": 0.47588784001629136,
+            "residual_entropy": 0.013126943721219527,
+            "residual_zero_words": 0.99853515625,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.000491,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 2525,
+              "decode_ms": 0.019902,
+              "encode_ms": 0.117871,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 2962,
+              "decode_ms": 0.049858,
+              "encode_ms": 0.173003,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.10.input_layernorm.weight",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 2743.8015,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2743.8015,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2743.8015,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2743.8015,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2743.8015,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2743.8015,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.0107421875,
+            "entropy": 4.731946564629038,
+            "has_parent": true,
+            "high_plane_entropy": 0.569070974676265,
+            "residual_entropy": 0.0618957827025767,
+            "residual_zero_words": 0.9892578125,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.00011549999999999999,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 2628,
+              "decode_ms": 0.014512500000000001,
+              "encode_ms": 0.101289,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 2974,
+              "decode_ms": 0.045540000000000004,
+              "encode_ms": 0.15185400000000002,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.14.post_attention_layernorm.weight",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 3451.634,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3451.634,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3451.634,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3451.634,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3451.634,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3451.634,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.177734375,
+            "entropy": 6.372553613342748,
+            "has_parent": true,
+            "high_plane_entropy": 3.1223928309816027,
+            "residual_entropy": 0.7790425964979119,
+            "residual_zero_words": 0.822265625,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.0007265,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 3364,
+              "decode_ms": 0.013465000000000001,
+              "encode_ms": 0.074169,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 3461,
+              "decode_ms": 0.0629275,
+              "encode_ms": 0.222636,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.18.self_attn.q_proj.bias",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 2911.965,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2911.965,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2911.965,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2911.965,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2911.965,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2911.965,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.00244140625,
+            "entropy": 5.093018630838409,
+            "has_parent": true,
+            "high_plane_entropy": 0.4892592150008396,
+            "residual_entropy": 0.018529038007024375,
+            "residual_zero_words": 0.99755859375,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.0006904999999999999,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 2727,
+              "decode_ms": 0.09859399999999999,
+              "encode_ms": 0.086371,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 3067,
+              "decode_ms": 0.053559999999999997,
+              "encode_ms": 0.214912,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.22.input_layernorm.weight",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 2752.7195,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2752.7195,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2752.7195,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2752.7195,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2752.7195,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2752.7195,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.00048828125,
+            "entropy": 4.8343108530279215,
+            "has_parent": true,
+            "high_plane_entropy": 0.44358577638184,
+            "residual_entropy": 0.0032818649698048933,
+            "residual_zero_words": 0.99951171875,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.00013000000000000002,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 2646,
+              "decode_ms": 0.0115715,
+              "encode_ms": 0.09514800000000001,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 3034,
+              "decode_ms": 0.0452945,
+              "encode_ms": 0.153447,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.26.post_attention_layernorm.weight",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 3466.4445,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3466.4445,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3466.4445,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3466.4445,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3466.4445,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 3466.4445,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.20458984375,
+            "entropy": 6.4049159874043164,
+            "has_parent": true,
+            "high_plane_entropy": 3.210845149573211,
+            "residual_entropy": 0.8636471093975373,
+            "residual_zero_words": 0.79541015625,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.0008315,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 3378,
+              "decode_ms": 0.0137055,
+              "encode_ms": 0.074739,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 3489,
+              "decode_ms": 0.059897,
+              "encode_ms": 0.221774,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.3.self_attn.q_proj.bias",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 2389.261,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2389.261,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2389.261,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2389.261,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2389.261,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2389.261,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.0,
+            "entropy": 4.0719028781967515,
+            "has_parent": true,
+            "high_plane_entropy": 0.13083639634678013,
+            "residual_entropy": 0.0,
+            "residual_zero_words": 1.0,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.000446,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 2252,
+              "decode_ms": 0.023689,
+              "encode_ms": 0.113572,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 2934,
+              "decode_ms": 0.0469425,
+              "encode_ms": 0.164848,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.34.input_layernorm.weight",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 4096,
+          "choices": [
+            {
+              "cost": 2368.6745,
+              "policy": "always_zstd",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2368.6745,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2368.6745,
+              "policy": "entropy_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2368.6745,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2368.6745,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 2368.6745,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "zstd-3"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.001953125,
+            "entropy": 4.058522631620494,
+            "has_parent": true,
+            "high_plane_entropy": 0.09667162881055902,
+            "residual_entropy": 0.026252510236084953,
+            "residual_zero_words": 0.998046875,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 4096,
+              "decode_ms": 0.00018549999999999998,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 2246,
+              "decode_ms": 0.0205935,
+              "encode_ms": 0.102081,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 2980,
+              "decode_ms": 0.0459855,
+              "encode_ms": 0.153677,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.6.post_attention_layernorm.weight",
+          "oracle": "zstd-3",
+          "shape": [
+            2048
+          ]
+        },
+        {
+          "bytes": 1048576,
+          "choices": [
+            {
+              "cost": 825475.1585,
+              "policy": "always_zstd",
+              "regret": 89889.73349999997,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 735585.425,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 825475.1585,
+              "policy": "entropy_threshold",
+              "regret": 89889.73349999997,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 735585.425,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 735585.425,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 735585.425,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8930320739746094,
+            "entropy": 6.210710670872884,
+            "has_parent": true,
+            "high_plane_entropy": 2.675166391918861,
+            "residual_entropy": 3.6465973684812605,
+            "residual_zero_words": 0.10696792602539062,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 1048576,
+              "decode_ms": 0.13158550000000002,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 817839,
+              "decode_ms": 0.5581775,
+              "encode_ms": 7.077980999999999,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 697074,
+              "decode_ms": 7.996226,
+              "encode_ms": 30.515199,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.0.self_attn.v_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            256,
+            2048
+          ]
+        },
+        {
+          "bytes": 1048576,
+          "choices": [
+            {
+              "cost": 830236.298,
+              "policy": "always_zstd",
+              "regret": 89283.6555,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 740952.6425,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 830236.298,
+              "policy": "entropy_threshold",
+              "regret": 89283.6555,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 740952.6425,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 740952.6425,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 740952.6425,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8320579528808594,
+            "entropy": 6.263781742612828,
+            "has_parent": true,
+            "high_plane_entropy": 2.781555079067973,
+            "residual_entropy": 3.240578914356671,
+            "residual_zero_words": 0.16794204711914062,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 1048576,
+              "decode_ms": 0.017247,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 822370,
+              "decode_ms": 0.54362,
+              "encode_ms": 7.322678,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 702513,
+              "decode_ms": 8.0305805,
+              "encode_ms": 30.409062000000002,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.15.self_attn.k_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            256,
+            2048
+          ]
+        },
+        {
+          "bytes": 1048576,
+          "choices": [
+            {
+              "cost": 831999.048,
+              "policy": "always_zstd",
+              "regret": 89590.83999999997,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 742408.208,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 831999.048,
+              "policy": "entropy_threshold",
+              "regret": 89590.83999999997,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 742408.208,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 742408.208,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 742408.208,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.871429443359375,
+            "entropy": 6.273738376195685,
+            "has_parent": true,
+            "high_plane_entropy": 2.804480614874283,
+            "residual_entropy": 3.5171283283177686,
+            "residual_zero_words": 0.128570556640625,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 1048576,
+              "decode_ms": 0.12317,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 824358,
+              "decode_ms": 0.567305,
+              "encode_ms": 7.073743,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 703969,
+              "decode_ms": 8.01642,
+              "encode_ms": 30.422788,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.20.self_attn.v_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            256,
+            2048
+          ]
+        },
+        {
+          "bytes": 1048576,
+          "choices": [
+            {
+              "cost": 829336.889,
+              "policy": "always_zstd",
+              "regret": 85415.7635,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 743921.1255,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 829336.889,
+              "policy": "entropy_threshold",
+              "regret": 85415.7635,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 743921.1255,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 743921.1255,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 743921.1255,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8911418914794922,
+            "entropy": 6.28231088186909,
+            "has_parent": true,
+            "high_plane_entropy": 2.826444206668835,
+            "residual_entropy": 3.702226251530471,
+            "residual_zero_words": 0.10885810852050781,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 1048576,
+              "decode_ms": 0.013294,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 821508,
+              "decode_ms": 0.541837,
+              "encode_ms": 7.287051999999999,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 705668,
+              "decode_ms": 7.9905365,
+              "encode_ms": 30.262589,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.27.self_attn.k_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            256,
+            2048
+          ]
+        },
+        {
+          "bytes": 1048576,
+          "choices": [
+            {
+              "cost": 832029.2095,
+              "policy": "always_zstd",
+              "regret": 90772.36800000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 741256.8415,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 832029.2095,
+              "policy": "entropy_threshold",
+              "regret": 90772.36800000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 741256.8415,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 741256.8415,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 741256.8415,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8568038940429688,
+            "entropy": 6.267223922338629,
+            "has_parent": true,
+            "high_plane_entropy": 2.799165853269248,
+            "residual_entropy": 3.408664737318628,
+            "residual_zero_words": 0.14319610595703125,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 1048576,
+              "decode_ms": 0.017211499999999998,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 824519,
+              "decode_ms": 0.5055545,
+              "encode_ms": 7.0046550000000005,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 702730,
+              "decode_ms": 7.9995975,
+              "encode_ms": 30.527244,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.32.self_attn.v_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            256,
+            2048
+          ]
+        },
+        {
+          "bytes": 1048576,
+          "choices": [
+            {
+              "cost": 830174.472,
+              "policy": "always_zstd",
+              "regret": 90134.73249999993,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 740039.7395,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 830174.472,
+              "policy": "entropy_threshold",
+              "regret": 90134.73249999993,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 740039.7395,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 740039.7395,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 740039.7395,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8494453430175781,
+            "entropy": 6.258628430728285,
+            "has_parent": true,
+            "high_plane_entropy": 2.7724503888985956,
+            "residual_entropy": 3.34554725146359,
+            "residual_zero_words": 0.15055465698242188,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 1048576,
+              "decode_ms": 0.017523,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 822550,
+              "decode_ms": 0.5204719999999999,
+              "encode_ms": 7.104,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 700684,
+              "decode_ms": 8.2880465,
+              "encode_ms": 31.067693000000002,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.7.self_attn.k_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            256,
+            2048
+          ]
+        },
+        {
+          "bytes": 8388608,
+          "choices": [
+            {
+              "cost": 6639106.8555,
+              "policy": "always_zstd",
+              "regret": 734952.3944999995,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5904154.461,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 6639106.8555,
+              "policy": "entropy_threshold",
+              "regret": 734952.3944999995,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5904154.461,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5904154.461,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5904154.461,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8544762134552002,
+            "entropy": 6.258018406418919,
+            "has_parent": true,
+            "high_plane_entropy": 2.7669881221213313,
+            "residual_entropy": 3.378193814942042,
+            "residual_zero_words": 0.1455237865447998,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 8388608,
+              "decode_ms": 0.5638130000000001,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 6574230,
+              "decode_ms": 4.6414905,
+              "encode_ms": 60.235365,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 5597281,
+              "decode_ms": 63.989596,
+              "encode_ms": 242.88386500000001,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.11.self_attn.q_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "bytes": 8388608,
+          "choices": [
+            {
+              "cost": 6650358.9425,
+              "policy": "always_zstd",
+              "regret": 747332.2230000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5903026.7195,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 6650358.9425,
+              "policy": "entropy_threshold",
+              "regret": 747332.2230000002,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5903026.7195,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5903026.7195,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5903026.7195,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.861436128616333,
+            "entropy": 6.253823509549867,
+            "has_parent": true,
+            "high_plane_entropy": 2.760614153872496,
+            "residual_entropy": 3.4200380786097573,
+            "residual_zero_words": 0.138563871383667,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 8388608,
+              "decode_ms": 0.7205014999999999,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 6584678,
+              "decode_ms": 4.6156765,
+              "encode_ms": 61.065266,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 5592988,
+              "decode_ms": 64.86642549999999,
+              "encode_ms": 245.17229400000002,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.18.self_attn.o_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "bytes": 8388608,
+          "choices": [
+            {
+              "cost": 6642292.554,
+              "policy": "always_zstd",
+              "regret": 702031.8669999996,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5940260.687,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 6642292.554,
+              "policy": "entropy_threshold",
+              "regret": 702031.8669999996,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5940260.687,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5940260.687,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5940260.687,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.8663561344146729,
+            "entropy": 6.272435456767227,
+            "has_parent": true,
+            "high_plane_entropy": 2.8022809957116004,
+            "residual_entropy": 3.483912027450729,
+            "residual_zero_words": 0.13364386558532715,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 8388608,
+              "decode_ms": 0.555257,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 6577455,
+              "decode_ms": 4.6205110000000005,
+              "encode_ms": 60.217043,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 5632627,
+              "decode_ms": 64.727889,
+              "encode_ms": 242.905798,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.23.self_attn.q_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            2048,
+            2048
+          ]
+        },
+        {
+          "bytes": 8388608,
+          "choices": [
+            {
+              "cost": 6633437.9965,
+              "policy": "always_zstd",
+              "regret": 751592.602,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5881845.3945,
+              "policy": "always_best_of_two",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 6633437.9965,
+              "policy": "entropy_threshold",
+              "regret": 751592.602,
+              "strategy": "zstd-3"
+            },
+            {
+              "cost": 5881845.3945,
+              "policy": "size_threshold",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5881845.3945,
+              "policy": "fingerprint_tree",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            },
+            {
+              "cost": 5881845.3945,
+              "policy": "oracle",
+              "regret": 0.0,
+              "strategy": "float-tensor"
+            }
+          ],
+          "dtype": "bf16",
+          "family": "qwen3b-instruct",
+          "fingerprint": {
+            "changed_words": 0.872978687286377,
+            "entropy": 6.236819804771425,
+            "has_parent": true,
+            "high_plane_entropy": 2.7258643780958285,
+            "residual_entropy": 3.4865815021738173,
+            "residual_zero_words": 0.12702131271362305,
+            "zero_words": 0.0
+          },
+          "measurements": [
+            {
+              "bytes": 8388608,
+              "decode_ms": 0.5716479999999999,
+              "encode_ms": 0.0,
+              "exact": true,
+              "strategy": "raw"
+            },
+            {
+              "bytes": 6568242,
+              "decode_ms": 4.3655895,
+              "encode_ms": 60.830407,
+              "exact": true,
+              "strategy": "zstd-3"
+            },
+            {
+              "bytes": 5575781,
+              "decode_ms": 64.0977955,
+              "encode_ms": 241.966599,
+              "exact": true,
+              "strategy": "float-tensor"
+            }
+          ],
+          "name": "model.layers.3.self_attn.o_proj.weight",
+          "oracle": "float-tensor",
+          "shape": [
+            2048,
+            2048
+          ]
+        }
+      ],
+      "tensors": 24
+    },
+    "objective": {
+      "bytes_only_reported": true,
+      "formula": "bytes + (encode_ns + decode_ns) * 1e-6 * 1000 * lambda",
+      "lambda_bytes_per_ns": 0.001
+    },
+    "planning": {
+      "fingerprint_ns_per_mib": 16308098.560197191,
+      "fingerprint_pass_bytes": 39881728,
+      "fingerprint_pass_ns_sum": 620265151.0,
+      "headroom_ns": 49999966.625,
+      "per_tensor_decision_ns": 33.375
+    },
+    "revision": "ca346b429471587494feb804d5b2aa85799a86ce",
+    "schema": "weftfs.residual-selector/1",
+    "validation": {
+      "cost": 28094916.5305,
+      "tensors": 24
+    }
+  },
+  "result": "pass",
+  "revision": "ca346b429471587494feb804d5b2aa85799a86ce",
+  "role": "T093 residual-fingerprint selector measured once on a held-out family",
+  "schema": "weftfs.residual-selector.receipt/1",
+  "scope": {
+    "held_out_readings": 1,
+    "not_claimed": [
+      "a shipped planner policy (research only; no default path changed)",
+      "any lossy representation comparison",
+      "zstd-19 or mode 15 in the candidate set",
+      "cold media, fleet or cloud behaviour",
+      "that the exchange rate 0.001 bytes per ns is the right business trade"
+    ]
+  }
+}

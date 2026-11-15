@@ -1,0 +1,263 @@
+== T093 residual-fingerprint selector, measure stage ==
+kernel: Linux 4dd7c00f4cb1 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/bench-court:1 (sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559)
+limits: memory=3g cpus=4 pids=1024
+warning: unused import: `Class`
+  --> src/artifact_template.rs:37:20
+   |
+37 | use crate::error::{Class, Error, Result};
+   |                    ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeSet`
+  --> src/revocation_epoch.rs:31:5
+   |
+31 | use std::collections::BTreeSet;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::State`
+  --> src/revocation_epoch.rs:39:5
+   |
+39 | use crate::state::State;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ProvenanceRecord`
+  --> src/taint.rs:36:25
+   |
+36 | use crate::provenance::{ProvenanceRecord, PROVENANCE_PREDICATE};
+   |                         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1722:9
+     |
+1722 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1723:9
+     |
+1723 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1724:9
+     |
+1724 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1798:9
+     |
+1798 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3352:13
+     |
+3352 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: unused variable: `record`
+    --> src/training_artifact.rs:1089:21
+     |
+1089 |                 let record = state
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_record`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1821:8
+     |
+1288 | impl Store {
+     | ---------- method in this implementation
+...
+1821 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: field `gaps` is never read
+   --> src/taint.rs:411:5
+    |
+405 | struct Consumer {
+    |        -------- field in this struct
+...
+411 |     gaps: Vec<String>,
+    |     ^^^^
+
+warning: function `resolve_dir_path` is never used
+    --> src/training_artifact.rs:2135:15
+     |
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+     |               ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeMap`
+  --> examples/residual_selector.rs:42:5
+   |
+42 | use std::collections::BTreeMap;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `parent_label` is never read
+   --> examples/residual_selector.rs:490:5
+    |
+486 | struct Family {
+    |        ------ field in this struct
+...
+490 |     parent_label: Option<String>,
+    |     ^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+304e4136c950c79231606295e89d2bda293b4a9efc8eedfa8c8f08ba2fe432f5  .docker-cache/target-rust/debug/examples/residual_selector
+4c852c7679a8cbfbdb9f6a37d50015476e854fb22c1fa20608f01cff2f0ac02b  examples/residual_selector.rs
+aedf1bbf5c85fd5d0e8ad22610fd5bb5083640d33b8e687d159abbfc08866253  bench/CONTRACTS-selector.md
+T093 fit: 40 tensors from qwen0.5b-base
+T093 fit: 40 tensors from qwen0.5b-instruct
+T093 fit: 40 tensors from pythia-step0
+T093 fit: 40 tensors from pythia-step8
+T093 validation: 24 tensors from qwen3b-base
+T093 held-out: 24 tensors from qwen3b-instruct
+{"fit_tensors":160,"heldout_tensors":24,"oracle_cost":28099256.519500002,"out":"bench/receipts/residual-selector-20261115T164613Z-raw.json","tree_regret_fraction":5.855493003437231e-7}
+	Command being timed: ".docker-cache/target-rust/debug/examples/residual_selector --out bench/receipts/residual-selector-20261115T164613Z-raw.json --reps 2 --max-fit-tensors 40 --max-eval-tensors 24 --max-fit-bytes 8388608 --max-eval-bytes 16777216"
+	User time (seconds): 391.84
+	System time (seconds): 2.39
+	Percent of CPU this job got: 94%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 6:55.97
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 47088
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1086987
+	Voluntary context switches: 39333
+	Involuntary context switches: 53602
+	Swaps: 0
+	File system inputs: 27227128
+	File system outputs: 120
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+PASS G4_candidates_exact: {'measurements': 72}
+PASS G1_tree_not_worse_than_best_trivial: {'tree': 28099272.972999997, 'best_trivial': 28099294.707000002, 'best_trivial_policy': 'always_best_of_two', 'tree_over_best_trivial': 0.9999992265286288}
+PASS G2_tree_regret_within_5pct: {'regret_fraction': 5.855493003437231e-07}
+PASS G3_planning_within_50ms: {'decision_ns': 33.375, 'fingerprint_ns_per_mib': 16308098.560197191}
+PASS fit_split_declared: {'fit': ['qwen0.5b-base:.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors', 'qwen0.5b-instruct:.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors:.docker-cache/real-corpus/Qwen2.5-0.5B.safetensors', 'pythia-step0:.docker-cache/real-corpus/pythia-70m-step0.safetensors', 'pythia-step8:.docker-cache/real-corpus/pythia-70m-step8.safetensors:.docker-cache/real-corpus/pythia-70m-step0.safetensors'], 'heldout': ['qwen3b-instruct:.docker-cache/real-corpus/Qwen2.5-3B-Instruct.safetensors:.docker-cache/real-corpus/Qwen2.5-3B.safetensors'], 'validation': ['qwen3b-base:.docker-cache/real-corpus/Qwen2.5-3B.safetensors']}
+PASS decision_diversity_reported: {'tensors_where_tree_differs_from_best_trivial': 6}
+{"receipt": "bench/receipts/residual-selector-20261115T164613Z.json", "result": "pass", "checks": "6/6"}
