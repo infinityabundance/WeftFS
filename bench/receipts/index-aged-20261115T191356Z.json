@@ -1,0 +1,307 @@
+{
+  "cell_label": "state: 10k live objects, 300 measured commits (crosses a checkpoint)",
+  "control_variables": {
+    "WEFT_AGED_GENS": "300",
+    "WEFT_AGED_LIVE": "10000",
+    "WEFT_AGED_MODE": "live",
+    "WEFT_AGED_OPENS": "unknown",
+    "WEFT_AGED_SEED_BATCH": "unknown",
+    "WEFT_AGED_SKIP_FORGE": "unknown",
+    "WEFT_AGED_TARGET": "10000"
+  },
+  "environment": {
+    "court_image": "weft/bench-court:1",
+    "court_image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "cpus": "4",
+    "kernel": "7.3.3-1-cachyos",
+    "memory_limit": "3g",
+    "pids": "1024",
+    "storage": "tmpfs",
+    "tmpfs": "unknown"
+  },
+  "generated_unix_secs": 1794770043,
+  "generated_utc": "20261115T191356Z",
+  "label": "synthetic fixture, one store per cell, one process, single host; `gens` grows history with a constant live set, `live` grows state. A scratch root is declared in the cell, never assumed to be tmpfs.",
+  "method": {
+    "bytes_per_update": "head index segment file + commit file, from fs metadata after each commit",
+    "cold_persisted": "a fresh read-only handle per sample; first indexed resolve per selector, compared with resolve_scan",
+    "cold_rebuilt": "the same, with `indexes/` renamed away so every answer must be rebuilt from replayed state",
+    "forged_segment": "one valid full segment with the tag row removed replaces the head; the commit attestation must refute it",
+    "gc": "snapshot pin taken at the target, then gc(apply=true); retained roots come from the store's own traversal",
+    "publish": "each measured step is one `set_xattr` commit; statistics are the last WEFT_AGED_WINDOW commits"
+  },
+  "package_version": "1.4.2",
+  "profile": "release",
+  "reduced_from": "",
+  "reduced_reason": "",
+  "revision": "3c9ed69330d0e2927a676a9cfd216688f13b5283",
+  "run": {
+    "bytes_per_update": {
+      "mean": 68920.655,
+      "p50": 1132.0,
+      "p95": 1133.0
+    },
+    "cell": {
+      "live_objects": 10000,
+      "measured_generations": 300,
+      "target": 10000
+    },
+    "cold_persisted": {
+      "first_query": {
+        "attr_eq": {
+          "p50": 2.5583950000000004,
+          "p95": 2.7201370000000002,
+          "samples_ms": [
+            2.540812,
+            2.717363,
+            2.7201370000000002,
+            2.547876,
+            2.5583950000000004
+          ]
+        },
+        "has_attr": {
+          "p50": 4.9466019999999995,
+          "p95": 5.131889,
+          "samples_ms": [
+            4.7922340000000005,
+            4.741629,
+            5.003048000000001,
+            5.131889,
+            4.9466019999999995
+          ]
+        },
+        "relation": {
+          "p50": 12.789781999999999,
+          "p95": 13.742544,
+          "samples_ms": [
+            12.331585,
+            13.044547999999999,
+            13.742544,
+            12.75646,
+            12.789781999999999
+          ]
+        },
+        "tag": {
+          "p50": 13.430861,
+          "p95": 15.484392,
+          "samples_ms": [
+            12.776858,
+            15.484392,
+            13.430861,
+            15.400615,
+            12.912351000000001
+          ]
+        }
+      },
+      "index_stats": {
+        "builds": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "loads": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "rejects": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "open": {
+        "p50": 109.308279,
+        "p95": 110.67453400000001,
+        "samples_ms": [
+          106.724867,
+          107.290405,
+          109.308279,
+          110.67453400000001,
+          110.22621600000001
+        ]
+      },
+      "oracle_match": true
+    },
+    "cold_rebuilt": {
+      "first_query": {
+        "attr_eq": {
+          "p50": 2.734946,
+          "p95": 2.919,
+          "samples_ms": [
+            2.919,
+            2.811629,
+            2.638565,
+            2.734946,
+            2.561331
+          ]
+        },
+        "has_attr": {
+          "p50": 5.09502,
+          "p95": 5.4222410000000005,
+          "samples_ms": [
+            5.09502,
+            4.954747,
+            5.4222410000000005,
+            5.211918000000001,
+            4.979333
+          ]
+        },
+        "relation": {
+          "p50": 15.721534999999998,
+          "p95": 16.581303,
+          "samples_ms": [
+            16.16227,
+            16.581303,
+            15.721534999999998,
+            15.444808,
+            15.506904
+          ]
+        },
+        "tag": {
+          "p50": 14.603895,
+          "p95": 15.2003,
+          "samples_ms": [
+            14.603895,
+            14.630745000000001,
+            15.2003,
+            12.509768,
+            14.231168
+          ]
+        }
+      },
+      "index_stats": {
+        "builds": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "loads": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "rejects": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "open": {
+        "p50": 109.418635,
+        "p95": 115.01230799999999,
+        "samples_ms": [
+          108.520475,
+          115.01230799999999,
+          109.418635,
+          109.88033899999999,
+          107.38433
+        ]
+      },
+      "oracle_match": true
+    },
+    "commit_wall_ms": 1358.07708,
+    "declared_scratch_bytes": 0,
+    "failed": false,
+    "failure": null,
+    "footprint": {
+      "commit_bytes": 9353040,
+      "commit_files": 309,
+      "data_bytes": 7049428,
+      "index_allocated_bytes": 6844416,
+      "index_bytes": 22665633,
+      "index_bytes_per_live_object": 2266,
+      "index_files": 35,
+      "index_ppm_of_data": 3215244,
+      "total_allocated_bytes": 104534016
+    },
+    "forged_segment": {
+      "compact_ms": 16.203807,
+      "compact_probe": {
+        "builds": 0,
+        "loads": 1,
+        "notes": [],
+        "rejects": 0
+      },
+      "forged_len": 2184401,
+      "forged_magic": [
+        87,
+        70,
+        88,
+        51
+      ],
+      "head": "514aae33fe8a303c3b457b10f29b90a6e3744eca9fd4ddc756e1a4e4e5587c54",
+      "index_stats": {
+        "builds": 1,
+        "loads": 0,
+        "maintenance_fallbacks": 0,
+        "notes": [
+          "ignoring index indexes/51/514aae33fe8a303c3b457b10f29b90a6e3744eca9fd4ddc756e1a4e4e5587c54.idx: candidate root disagrees with the commit attestation (forged or incomplete index); rebuild-only"
+        ],
+        "rejects": 1
+      },
+      "open_ms": 110.27761199999999,
+      "oracle_match": true,
+      "post_first_section_count": 3,
+      "pre_first_section_count": 3,
+      "pre_len": 2264415,
+      "tag_matched": 2500
+    },
+    "gc": {
+      "checkpoint_manifests": 1,
+      "deleted_index_bytes": 18130684,
+      "deleted_indexes": 274,
+      "index_files_after": 34,
+      "ms": 923.6977370000001,
+      "problems": [],
+      "retained_after": 34,
+      "retained_before": 34,
+      "retained_missing_after": 0,
+      "retained_present_before": 34,
+      "snapshot": "ea81baa5cb548cbb5b72819afbdb3a2759eccc26bcd1420ce19f385eebc34a16",
+      "snapshot_ms": 5.483506
+    },
+    "generation_after_measure": 307,
+    "head_chain_depth": 8,
+    "head_segment": "delta",
+    "index_stats": {
+      "builds": 1,
+      "loads": 0,
+      "maintenance_fallbacks": 0,
+      "maintenance_updates": 306,
+      "notes": [],
+      "rejects": 0,
+      "write_errors": 0,
+      "writes": 307
+    },
+    "mode": "live",
+    "named_checkpoints": 0,
+    "oracle": {
+      "maintained_sections_equal_rebuild": true
+    },
+    "peak_rss_kib": 168384,
+    "publish": {
+      "mean": 4.5336414299999985,
+      "p50": 4.2525695,
+      "p95": 5.278271999999999,
+      "p99": 6.937755999999999,
+      "window": 200
+    },
+    "root": "/tmp/aged-live-10k",
+    "seed_ms": 581.225352,
+    "seeded_generation": 4
+  },
+  "schema": "weftfs.aged-index-court.v1"
+}

@@ -1,0 +1,100 @@
+{
+  "checks": [
+    {
+      "name": "complete_is_superset_of_minimal",
+      "ok": true
+    },
+    {
+      "name": "modes_differ",
+      "ok": true
+    },
+    {
+      "name": "same_result_index_and_naive",
+      "ok": true
+    }
+  ],
+  "environment": {
+    "cache": "warm, single host",
+    "court": "bench (3 GiB / 4 cpus / 1024 pids)",
+    "revisions": {
+      "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+      "WeftFS": "3c9ed69330d0e2927a676a9cfd216688f13b5283",
+      "WeftFS-Go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+    }
+  },
+  "fixture": {
+    "branches": 4,
+    "build_ms": 14.1906,
+    "depth": 60,
+    "extra_declared_edges": 16,
+    "objects": 281,
+    "roots": 1,
+    "side_chain": 40,
+    "snapshot": "8c6f34451292e251a1af81391ecd2a8f3b601b47f31b8190b0055e2b9d82d845"
+  },
+  "index": {
+    "build_ns": 236092,
+    "graph_nodes": 282,
+    "modes": {
+      "complete": {
+        "max_ns": 246501,
+        "mean_ns": 45274.64,
+        "min_ns": 39564,
+        "p50_ns": 40014,
+        "p95_ns": 58129,
+        "reps": 50
+      },
+      "minimal": {
+        "max_ns": 47730,
+        "mean_ns": 30231.98,
+        "min_ns": 28383,
+        "p50_ns": 29235,
+        "p95_ns": 34194,
+        "reps": 50
+      }
+    },
+    "node_counts": {
+      "complete": {
+        "edges_considered": 267,
+        "max_depth": 60,
+        "nodes": 253
+      },
+      "minimal": {
+        "edges_considered": 240,
+        "max_depth": 60,
+        "nodes": 241
+      }
+    }
+  },
+  "kind": "causal-closure-cost",
+  "naive_full_scan": {
+    "modes": {
+      "complete": {
+        "max_ns": 306423,
+        "mean_ns": 286706.3,
+        "min_ns": 270135,
+        "p50_ns": 287518,
+        "p95_ns": 306423,
+        "reps": 10
+      },
+      "minimal": {
+        "max_ns": 292256,
+        "mean_ns": 274645.6,
+        "min_ns": 263873,
+        "p50_ns": 276637,
+        "p95_ns": 292256,
+        "reps": 10
+      }
+    },
+    "note": "re-scans every object once per query, then walks"
+  },
+  "result": "pass",
+  "single_query": {
+    "index_complete_ns": 276106,
+    "index_minimal_ns": 265327,
+    "naive_complete_ns": 287518,
+    "naive_minimal_ns": 276637,
+    "note": "index total includes one graph build; the naive total rebuilds the whole graph inside the query"
+  },
+  "timestamp_utc": "20261115T170940Z"
+}

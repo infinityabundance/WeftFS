@@ -1,0 +1,32 @@
+{
+ "adapter_file_sha256": "543e33e13b2b3f84344a703ed947faf9b33420dc3f4387568431c73b84cc6477",
+ "adapter_repo": "taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot",
+ "adapter_revision": "6060d5f819c4d0c75729975f308562149c7e2d01",
+ "all_match_f32_matmul": false,
+ "all_match_f64_accumulation": false,
+ "none_equal_base": true,
+ "reference": "NumPy float32 matmul (BLAS order) and float64 accumulation, both narrowed to bf16 with round-half-to-even",
+ "schema": "weft.adapter-reference.v1",
+ "tensors": [
+  {
+   "dora": false,
+   "elements": 4358144,
+   "elements_differing_from_base": 2194824,
+   "f32_matmul_mismatches": 1,
+   "f64_accumulation_mismatches": 3,
+   "max_abs_difference_vs_f32_matmul": 0.00024375319480895996,
+   "max_f32_ulp_vs_f32_matmul": 32768.0,
+   "num_dtype": "f32",
+   "rank": 4,
+   "rust_equals_base": false,
+   "rust_matches_f32_matmul": false,
+   "rust_matches_f64_accumulation": false,
+   "scale": 8.0,
+   "shape": [
+    896,
+    4864
+   ],
+   "tensor": "model.layers.0.mlp.down_proj.weight"
+  }
+ ]
+}

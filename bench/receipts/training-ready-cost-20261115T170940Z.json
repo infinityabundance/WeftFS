@@ -1,0 +1,179 @@
+{
+  "cache": {
+    "cold": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": true,
+      "generation": 297,
+      "head": "b1916ce512f8460ac0449f74cee8f21179bc2929f593c8d9ce6cd45bfc468bff",
+      "hit": false,
+      "key": "5905a1ad28ba51e647f3674ef9617417399bce44ae66f7b898751aac93aacf5d",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.294912,
+      "rejected": null,
+      "state_digest": "0e162d4977a63810a60079766027e9af9befa499c2e33c203a439bcea5b69d97",
+      "verify_ms": 44883.453201000004,
+      "write_note": null
+    },
+    "grant_invalidated": {
+      "authority_digest": "2322dfe1586d32c8a86c6c2028c112e07c392a23530d8934e3fd353db0a2bf41",
+      "entry_written": true,
+      "generation": 302,
+      "head": "748d1556fa1557d0193d7deda28e642a5463d5939f551b1469aacf912a46353f",
+      "hit": false,
+      "key": "bebe0efa6c5c8ebabbd3dddf8563f85502964059759c505b13f8dda5d2be0b1f",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.1723020000000002,
+      "rejected": null,
+      "state_digest": "49a1d046c9318ac0f58840e19d98f14639ab9ba3ce744a5095957d8a0eab508f",
+      "verify_ms": 43308.78139,
+      "write_note": null
+    },
+    "policy_invalidated": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": true,
+      "generation": 297,
+      "head": "b1916ce512f8460ac0449f74cee8f21179bc2929f593c8d9ce6cd45bfc468bff",
+      "hit": false,
+      "key": "b73282351023c14de4c3f32adb44d21d2c75397f0d36c742935a01a8d7b12500",
+      "options_digest": "9ca2839807eda5bf720b2f61cdd646d4132c572eb2737bbff3a3bea63cf4a5ca",
+      "plan_ms": 1.136606,
+      "rejected": null,
+      "state_digest": "0e162d4977a63810a60079766027e9af9befa499c2e33c203a439bcea5b69d97",
+      "verify_ms": 42917.959252,
+      "write_note": null
+    },
+    "warm_first": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": false,
+      "generation": 297,
+      "head": "b1916ce512f8460ac0449f74cee8f21179bc2929f593c8d9ce6cd45bfc468bff",
+      "hit": true,
+      "key": "5905a1ad28ba51e647f3674ef9617417399bce44ae66f7b898751aac93aacf5d",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.157865,
+      "rejected": null,
+      "state_digest": "0e162d4977a63810a60079766027e9af9befa499c2e33c203a439bcea5b69d97",
+      "verify_ms": 0.0,
+      "write_note": null
+    }
+  },
+  "checks": [
+    {
+      "detail": "cold cache hit=False",
+      "name": "cold_check_missed",
+      "ok": true
+    },
+    {
+      "detail": "warm hit=True",
+      "name": "warm_check_hit",
+      "ok": true
+    },
+    {
+      "detail": "5/5 hits",
+      "name": "repeated_checks_hit",
+      "ok": true
+    },
+    {
+      "detail": "hit=False",
+      "name": "policy_change_invalidates",
+      "ok": true
+    },
+    {
+      "detail": "hit=False",
+      "name": "grant_edit_invalidates",
+      "ok": true
+    },
+    {
+      "detail": "same root, snapshot and bytes",
+      "name": "cold_and_warm_report_identical",
+      "ok": true
+    },
+    {
+      "detail": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "name": "source_digest_matches",
+      "ok": true
+    },
+    {
+      "detail": "checkpoint tensors verified",
+      "name": "materialize_exact",
+      "ok": true
+    },
+    {
+      "detail": "second load exact",
+      "name": "warm_materialize_exact",
+      "ok": true
+    },
+    {
+      "detail": "third load exact",
+      "name": "third_materialize_exact",
+      "ok": true
+    }
+  ],
+  "corpus": {
+    "element_bytes": 988065536,
+    "label": "Qwen/Qwen2.5-0.5B BF16, 2 raw shards, cached store copy",
+    "materialized_bytes": 988649840,
+    "not_committed": "weights are referenced from the local cache, never committed",
+    "shard_objects": 580,
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "tensors": 290
+  },
+  "environment": {
+    "cache": "warm, single host",
+    "court": "fuse",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": "4",
+      "memory": "3g",
+      "pids": "1024"
+    },
+    "revisions": {
+      "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+      "WeftCodec-Go": "d45fcb4c92f3302b1dfcab66e98ef63394040fe0",
+      "WeftFS": "3c9ed69330d0e2927a676a9cfd216688f13b5283",
+      "WeftFS-Go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+    }
+  },
+  "generated_utc": "20261115T170940Z",
+  "ids": {
+    "artifact_root_used_for_grant": "df22f0d586cd4ca6a5ecaeec7b743cf9b948b274aacb8748adc230d31eb20224",
+    "context_root_id": "df22f0d586cd4ca6a5ecaeec7b743cf9b948b274aacb8748adc230d31eb20224",
+    "selector_id": "ec33241ce98898e2b49304b2b336cd689e0bac3758839dfb1f48b5a0a3bcdf08",
+    "snapshot_id": "983def56cb73a261280a0608f777385215213f9a6c86d6d33a5110dbb66ac15a"
+  },
+  "kind": "training-ready-cost",
+  "result": "pass",
+  "split": {
+    "cold_check_reported_ms": 44963.733296,
+    "cold_check_validation_and_decode_ms": 44788,
+    "materialize_cold_reported_decode_ms": 43303,
+    "materialize_cold_write_ms": 11901.088172999996,
+    "time_to_ready_cold_ms": 100167.82146899999,
+    "time_to_ready_warm_ms": 56095.898038,
+    "warm_check_plan_ms": 1.157865,
+    "warm_check_verify_ms": 0.0
+  },
+  "timings": {
+    "check_cold_ms": 44963.733296,
+    "check_grant_invalidated_ms": 43361.003145,
+    "check_policy_invalidated_ms": 42970.427691,
+    "check_warm_first_ms": 50.61299,
+    "check_warm_max_ms": 50.978123,
+    "check_warm_min_ms": 49.507222,
+    "check_warm_p50_ms": 50.109018,
+    "checkpoint_write_ms": 51449.057783,
+    "context_ms": 243.395755,
+    "materialize_all_ms": [
+      55204.088173,
+      56045.285048,
+      56424.273804
+    ],
+    "materialize_cold_ms": 55204.088173,
+    "materialize_warm2_ms": 56424.273804,
+    "materialize_warm_ms": 56045.285048,
+    "snapshot_ms": 344.272409,
+    "verify_out_ms": 884.342345
+  }
+}

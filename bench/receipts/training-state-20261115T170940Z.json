@@ -1,0 +1,203 @@
+{
+ "attention_mask": {
+  "artifact": "c8304ccd99ebda0840729d8b54e672a38f3482c7b1e6613e6635d70d679d75b1",
+  "kind": "hybrid",
+  "logical_bytes": 18432,
+  "manifest_bytes": 466,
+  "pad_positions": 3,
+  "physical_minus_manifest_bytes": 694,
+  "physical_vs_raw": 0.06293402777777778,
+  "physical_vs_zstd19": 17.313432835820894,
+  "restore_exact": true,
+  "restore_ms": 0.066444,
+  "seq_len": 48,
+  "shape": [
+   8,
+   48,
+   48
+  ],
+  "stored_physical_bytes": 1160,
+  "strategy_counts": {
+   "zstd": 1
+  },
+  "write_ms": 39.80604,
+  "zstd19_raw_bytes": 67
+ },
+ "court": {
+  "cpus": "4",
+  "image": "weft/python-court:1",
+  "kernel": "7.3.3-1-cachyos",
+  "memory": "3g",
+  "note": "CPU only, one host, warm page cache; the fixture model is 0.414 M parameters and the payloads come from a real torch backward pass",
+  "peak_rss_kib": 17644,
+  "pids": "1024",
+  "single_host": true,
+  "warm_cache": true
+ },
+ "generated_utc": "2026-11-15T17:43:42Z",
+ "gradients": {
+  "artifact": "da5c2368cdb8f49a3b920abf3221f042d853c4fa217f6f2dc131e06b9850f8d5",
+  "global_norm": 0.6714297533035278,
+  "grad_dtype": "bf16 (explicit)",
+  "logical_bytes": 828864,
+  "loss": 6.1386027336120605,
+  "loss_bits": 1086615407,
+  "manifest_bytes": 8494,
+  "params": 42,
+  "physical_minus_manifest_bytes": 569706,
+  "physical_vs_raw": 0.697581267855764,
+  "physical_vs_zstd19": 0.9161011672288653,
+  "restore_exact": true,
+  "restore_ms": 3.788742,
+  "seq_len": 48,
+  "stored_physical_bytes": 578200,
+  "strategy_counts": {
+   "float-tensor": 14,
+   "raw": 27,
+   "zstd": 1
+  },
+  "tokens": 384,
+  "write_ms": 591.550567,
+  "zstd19_raw_bytes": 631153
+ },
+ "labels": {
+  "real_backward_pass": true,
+  "synthetic_fixture_model": true
+ },
+ "model": {
+  "checkpoint": "tiny-transformer",
+  "container_bytes": 832356,
+  "manifest_root": "6fc9b23eebc26c9f3cf468d47c542acfaeac3bbad776d3059a08cf4bd93ec998",
+  "physical_bytes": 577651,
+  "tensors": 42,
+  "write_ms": 221.89429099999998
+ },
+ "optimizer_state": {
+  "adamw": {
+   "beta1": 0.9,
+   "beta2": 0.95,
+   "eps": 1e-08,
+   "lr": 0.003,
+   "step": 1,
+   "weight_decay": 0.01
+  },
+  "artifact": "47b3eb89708c6a0068c22b16214d3674a43c7346e41bceb8af85153ac5756e84",
+  "logical_bytes": 3315456,
+  "manifest_bytes": 14127,
+  "moment_dtype": "f32 (explicit; the model parameters are bf16)",
+  "params": 42,
+  "physical_minus_manifest_bytes": 2802389,
+  "physical_vs_raw": 0.8495108968419427,
+  "physical_vs_zstd19": 0.9401511176268738,
+  "restore_exact": true,
+  "restore_ms": 13.096207,
+  "stored_physical_bytes": 2816516,
+  "strategy_counts": {
+   "float-tensor": 28,
+   "raw": 54,
+   "zstd": 2
+  },
+  "write_ms": 1211.39229,
+  "zstd19_raw_bytes": 2995812
+ },
+ "restore_dir": ".docker-cache/training-state-20261115T170940Z/restored",
+ "revision": {
+  "weftcodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+  "weftfs": "3c9ed69330d0e2927a676a9cfd216688f13b5283"
+ },
+ "schema": "weft.training-state-court.v1",
+ "store_dir": ".docker-cache/training-state-20261115T170940Z/store",
+ "training_state_total": {
+  "logical_bytes": 4162752,
+  "stored_physical_bytes": 3395876,
+  "zstd19_total_bytes": 3627032
+ },
+ "verify": {
+  "checked_chunks": 112,
+  "checked_manifests": 173,
+  "checked_objects": 173,
+  "checked_representations": 61,
+  "full": true,
+  "problems": 0
+ },
+ "zstd_baseline": {
+  "implementation": "python-zstandard level 19 (libzstd), one shot per payload",
+  "bytes": {
+   "moments": 2995812,
+   "gradients": 631153,
+   "mask": 67
+  }
+ },
+ "oracle": {
+  "optimizer_payloads_compared": 84,
+  "mask_compared": 1,
+  "mismatches": [],
+  "all_equal": true,
+  "source": "torch tensors from the real backward pass and AdamW step"
+ },
+ "go_verify": {
+  "binary": ".docker-cache/weftfs-go-20261115T170940Z",
+  "exit_code": 0,
+  "report": {
+   "OK": true,
+   "Full": true,
+   "Generation": 141,
+   "Commit": [
+    146,
+    252,
+    205,
+    191,
+    110,
+    85,
+    86,
+    51,
+    236,
+    209,
+    199,
+    239,
+    172,
+    189,
+    145,
+    104,
+    95,
+    80,
+    207,
+    12,
+    24,
+    206,
+    104,
+    0,
+    17,
+    47,
+    205,
+    253,
+    146,
+    205,
+    60,
+    239
+   ],
+   "CheckedCommits": 141,
+   "CheckedObjects": 173,
+   "CheckedManifests": 173,
+   "CheckedChunks": 112,
+   "CheckedContextRoots": 0,
+   "CheckedCausal": 0,
+   "CheckedRepresentations": 61,
+   "CheckedCapabilities": 0,
+   "CheckedQuotaCommits": 0,
+   "RejectedGenerations": null,
+   "Problems": null
+  },
+  "stderr": ""
+ },
+ "checks": {
+  "optimizer_restore_exact": true,
+  "gradients_restore_exact": true,
+  "attention_mask_restore_exact": true,
+  "torch_oracle_all_equal": true,
+  "store_verify_full_clean": true,
+  "go_verify_full_clean": true
+ },
+ "result": "pass",
+ "stamp": "20261115T170940Z"
+}

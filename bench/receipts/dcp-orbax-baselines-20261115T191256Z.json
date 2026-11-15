@@ -1,0 +1,512 @@
+{
+  "schema": "weft.dcp-orbax-baselines.v1",
+  "stamp": "20261115T191256Z",
+  "generated_at": "2026-11-15T19:13:17Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cpu_only": true,
+    "single_host": true,
+    "note": "CPU only, single host; no GPU or multi-host claim"
+  },
+  "revision": {
+    "weftfs": "3c9ed69330d0e2927a676a9cfd216688f13b5283",
+    "weftcodec": "98019d82c32365bc01d411aba93ea9f951ae6de6"
+  },
+  "state": {
+    "entries": 58,
+    "bytes": 1667391,
+    "content": "model + optimizer + scheduler + scaler + RNGs + data cursor + step"
+  },
+  "targets_stated_previously": {
+    "weft_dcp_save_p50_ms": 20.0,
+    "ocdbt_parity": true
+  },
+  "cells": {
+    "weft-planned": {
+      "save_p50_ms": 55.082,
+      "save_p95_ms": 233.378,
+      "sweep_p50_ms": [
+        55.082,
+        55.641,
+        54.407
+      ],
+      "store_write_p50_ms": 21.647,
+      "staging_plus_transport_p50_ms": 33.832,
+      "retained_bytes": 2019224,
+      "verified": true,
+      "unavailable": false
+    },
+    "weft-session": {
+      "save_p50_ms": 31.01,
+      "save_p95_ms": 225.662,
+      "sweep_p50_ms": [
+        31.393,
+        30.004,
+        31.01
+      ],
+      "store_write_p50_ms": 11.676,
+      "staging_plus_transport_p50_ms": 19.414,
+      "retained_bytes": 2019048,
+      "verified": true,
+      "unavailable": false
+    },
+    "weft-fast": {
+      "save_p50_ms": 31.922,
+      "save_p95_ms": 229.965,
+      "sweep_p50_ms": [
+        31.922,
+        30.703,
+        32.333
+      ],
+      "store_write_p50_ms": 11.761,
+      "staging_plus_transport_p50_ms": 20.498,
+      "retained_bytes": 2018976,
+      "verified": true,
+      "unavailable": false
+    },
+    "dcp-fs": {
+      "save_p50_ms": 9.967,
+      "save_p95_ms": 12.72,
+      "sweep_p50_ms": [
+        11.065,
+        9.967,
+        9.525
+      ],
+      "store_write_p50_ms": null,
+      "staging_plus_transport_p50_ms": null,
+      "retained_bytes": 7085720,
+      "verified": true,
+      "unavailable": false
+    },
+    "orbax-ocdbt": {
+      "save_p50_ms": 29.773,
+      "save_p95_ms": 49.478,
+      "sweep_p50_ms": [
+        31.616,
+        29.773,
+        29.736
+      ],
+      "store_write_p50_ms": null,
+      "staging_plus_transport_p50_ms": null,
+      "retained_bytes": 6154851,
+      "verified": true,
+      "unavailable": false
+    }
+  },
+  "sweeps": [
+    [
+      {
+        "arm": "weft-planned",
+        "save_ms": [
+          233.3781289635226,
+          51.9950280431658,
+          57.07872798666358,
+          53.08468593284488
+        ],
+        "save_p50_ms": 55.082,
+        "save_p95_ms": 233.378,
+        "store_write_p50_ms": 21.327,
+        "staging_plus_transport_p50_ms": 33.832,
+        "retained_bytes": 2019224,
+        "checkpoint": "weft-planned-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": null,
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "weft-session",
+        "save_ms": [
+          221.3603489799425,
+          29.887775890529156,
+          32.882036990486085,
+          29.904267052188516
+        ],
+        "save_p50_ms": 31.393,
+        "save_p95_ms": 221.36,
+        "store_write_p50_ms": 11.676,
+        "staging_plus_transport_p50_ms": 20.696,
+        "retained_bytes": 2019048,
+        "checkpoint": "weft-session-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": {
+          "saves": 4,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 4,
+          "admitted": 4,
+          "completed": 4,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 4,
+          "admission_wait_ms_total": 0.021869782358407974,
+          "admission_wait_ms_max": 0.008094939403235912,
+          "queue_high_water": 1,
+          "staged_bytes_high_water": 1667391,
+          "largest_admission_bytes": 1667391,
+          "unpriced_admissions": 0
+        },
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "weft-fast",
+        "save_ms": [
+          227.7512919390574,
+          30.719410977326334,
+          33.12489006202668,
+          30.451631057076156
+        ],
+        "save_p50_ms": 31.922,
+        "save_p95_ms": 227.751,
+        "store_write_p50_ms": 11.761,
+        "staging_plus_transport_p50_ms": 20.498,
+        "retained_bytes": 2018976,
+        "checkpoint": "weft-fast-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": {
+          "saves": 4,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 4,
+          "admitted": 4,
+          "completed": 4,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 4,
+          "admission_wait_ms_total": 0.01847418025135994,
+          "admission_wait_ms_max": 0.005649984814226627,
+          "queue_high_water": 1,
+          "staged_bytes_high_water": 1667391,
+          "largest_admission_bytes": 1667391,
+          "unpriced_admissions": 0
+        },
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "dcp-fs",
+        "save_ms": [
+          11.226198985241354,
+          10.90352504979819,
+          9.847460081800818,
+          12.719781952910125
+        ],
+        "save_p50_ms": 11.065,
+        "save_p95_ms": 12.72,
+        "retained_bytes": 7085720,
+        "checkpoint": "/work/.docker-cache/baselines-20261115T191256Z/dcp-fs/dcp-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "durability": "FileSystemWriter (no directory fsync/atomic publish)"
+      },
+      {
+        "arm": "orbax-ocdbt",
+        "save_ms": [
+          49.47753809392452,
+          33.748036017641425,
+          29.116443009115756,
+          29.483499005436897
+        ],
+        "save_p50_ms": 31.616,
+        "save_p95_ms": 49.478,
+        "retained_bytes": 6154914,
+        "verified": true,
+        "tensors_restored": 58,
+        "durability": "OCDBT directory (Orbax's own commit)"
+      }
+    ],
+    [
+      {
+        "arm": "weft-session",
+        "save_ms": [
+          225.1029380131513,
+          29.697268968448043,
+          29.73292605020106,
+          30.27594101149589
+        ],
+        "save_p50_ms": 30.004,
+        "save_p95_ms": 225.103,
+        "store_write_p50_ms": 11.637,
+        "staging_plus_transport_p50_ms": 18.671,
+        "retained_bytes": 2019048,
+        "checkpoint": "weft-session-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": {
+          "saves": 4,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 4,
+          "admitted": 4,
+          "completed": 4,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 4,
+          "admission_wait_ms_total": 0.016240868717432022,
+          "admission_wait_ms_max": 0.0053299590945243835,
+          "queue_high_water": 1,
+          "staged_bytes_high_water": 1667391,
+          "largest_admission_bytes": 1667391,
+          "unpriced_admissions": 0
+        },
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "weft-fast",
+        "save_ms": [
+          229.96490099467337,
+          30.759315006434917,
+          30.23841104004532,
+          30.646053957752883
+        ],
+        "save_p50_ms": 30.703,
+        "save_p95_ms": 229.965,
+        "store_write_p50_ms": 11.331,
+        "staging_plus_transport_p50_ms": 19.636,
+        "retained_bytes": 2018976,
+        "checkpoint": "weft-fast-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": {
+          "saves": 4,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 4,
+          "admitted": 4,
+          "completed": 4,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 4,
+          "admission_wait_ms_total": 0.020758016034960747,
+          "admission_wait_ms_max": 0.0066820066422224045,
+          "queue_high_water": 1,
+          "staged_bytes_high_water": 1667391,
+          "largest_admission_bytes": 1667391,
+          "unpriced_admissions": 0
+        },
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "dcp-fs",
+        "save_ms": [
+          11.30301202647388,
+          10.168479988351464,
+          9.354718029499054,
+          9.76572697982192
+        ],
+        "save_p50_ms": 9.967,
+        "save_p95_ms": 11.303,
+        "retained_bytes": 7085720,
+        "checkpoint": "/work/.docker-cache/baselines-20261115T191256Z/dcp-fs/dcp-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "durability": "FileSystemWriter (no directory fsync/atomic publish)"
+      },
+      {
+        "arm": "orbax-ocdbt",
+        "save_ms": [
+          29.121291008777916,
+          29.5035969465971,
+          30.707808095030487,
+          30.04287602379918
+        ],
+        "save_p50_ms": 29.773,
+        "save_p95_ms": 30.708,
+        "retained_bytes": 6154864,
+        "verified": true,
+        "tensors_restored": 58,
+        "durability": "OCDBT directory (Orbax's own commit)"
+      },
+      {
+        "arm": "weft-planned",
+        "save_ms": [
+          227.56444907281548,
+          50.64158502500504,
+          52.228403044864535,
+          59.05404104851186
+        ],
+        "save_p50_ms": 55.641,
+        "save_p95_ms": 227.564,
+        "store_write_p50_ms": 21.697,
+        "staging_plus_transport_p50_ms": 33.945,
+        "retained_bytes": 2019224,
+        "checkpoint": "weft-planned-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": null,
+        "durability": "store commit (fsync commit file + superblock)"
+      }
+    ],
+    [
+      {
+        "arm": "weft-fast",
+        "save_ms": [
+          224.56301399506629,
+          29.835246969014406,
+          32.336164033040404,
+          32.33046398963779
+        ],
+        "save_p50_ms": 32.333,
+        "save_p95_ms": 224.563,
+        "store_write_p50_ms": 12.142,
+        "staging_plus_transport_p50_ms": 20.911,
+        "retained_bytes": 2018976,
+        "checkpoint": "weft-fast-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": {
+          "saves": 4,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 4,
+          "admitted": 4,
+          "completed": 4,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 4,
+          "admission_wait_ms_total": 0.01717975828796625,
+          "admission_wait_ms_max": 0.00526895746588707,
+          "queue_high_water": 1,
+          "staged_bytes_high_water": 1667391,
+          "largest_admission_bytes": 1667391,
+          "unpriced_admissions": 0
+        },
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "dcp-fs",
+        "save_ms": [
+          10.167027008719742,
+          9.553318959660828,
+          9.497134014964104,
+          9.37668897677213
+        ],
+        "save_p50_ms": 9.525,
+        "save_p95_ms": 10.167,
+        "retained_bytes": 7085720,
+        "checkpoint": "/work/.docker-cache/baselines-20261115T191256Z/dcp-fs/dcp-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "durability": "FileSystemWriter (no directory fsync/atomic publish)"
+      },
+      {
+        "arm": "orbax-ocdbt",
+        "save_ms": [
+          30.516740982420743,
+          30.38531495258212,
+          28.94792694132775,
+          29.08716700039804
+        ],
+        "save_p50_ms": 29.736,
+        "save_p95_ms": 30.517,
+        "retained_bytes": 6154851,
+        "verified": true,
+        "tensors_restored": 58,
+        "durability": "OCDBT directory (Orbax's own commit)"
+      },
+      {
+        "arm": "weft-planned",
+        "save_ms": [
+          231.86711501330137,
+          50.44718098361045,
+          53.84634900838137,
+          54.968588054180145
+        ],
+        "save_p50_ms": 54.407,
+        "save_p95_ms": 231.867,
+        "store_write_p50_ms": 21.647,
+        "staging_plus_transport_p50_ms": 32.76,
+        "retained_bytes": 2019224,
+        "checkpoint": "weft-planned-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": null,
+        "durability": "store commit (fsync commit file + superblock)"
+      },
+      {
+        "arm": "weft-session",
+        "save_ms": [
+          225.66155705135316,
+          30.799589934758842,
+          31.219455995596945,
+          30.609093024395406
+        ],
+        "save_p50_ms": 31.01,
+        "save_p95_ms": 225.662,
+        "store_write_p50_ms": 11.727,
+        "staging_plus_transport_p50_ms": 19.414,
+        "retained_bytes": 2019048,
+        "checkpoint": "weft-session-003",
+        "verified": true,
+        "tensors_restored": 58,
+        "session_stats": {
+          "saves": 4,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 4,
+          "admitted": 4,
+          "completed": 4,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 4,
+          "admission_wait_ms_total": 0.01781410537660122,
+          "admission_wait_ms_max": 0.005599926225841045,
+          "queue_high_water": 1,
+          "staged_bytes_high_water": 1667391,
+          "largest_admission_bytes": 1667391,
+          "unpriced_admissions": 0
+        },
+        "durability": "store commit (fsync commit file + superblock)"
+      }
+    ]
+  ],
+  "durability": {
+    "ok": true,
+    "child_returncode": -9,
+    "verified_after_sigkill": true,
+    "verify_stdout": "{\n  \"checkpoint\": \"acked\",\n  \"tensors_verified\": 1\n}"
+  },
+  "targets": {
+    "weft_dcp_save_p50_below_20ms": false,
+    "weft_matched_ocdbt": false
+  },
+  "claim_holds": false,
+  "weft_best_p50_ms": 31.01,
+  "native_dcp_p50_ms": 9.967,
+  "ocdbt_p50_ms": 29.773,
+  "remaining_term": "weft-session's store write is 11.68 ms; the remaining 19.41 ms is the Python container staging, one service prepare round trip and the adapter's metadata path. The native writer writes one local directory with no content-addressed identity or commit protocol.",
+  "checks": {
+    "all_saves_exact": true,
+    "durable_after_ack_and_sigkill": true,
+    "state_bytes_measured": true,
+    "ocdbt_available": true,
+    "interleaved_sweeps": true
+  },
+  "losses": [
+    "The 20 ms target is NOT met; the achieved p50 and the gap to OCDBT are in `targets` and `cells`.",
+    "The native DCP FileSystemWriter is faster than every WeftFS arm on this fixture; the ratio is in `cells`.",
+    "The native DCP and Orbax arms write a local directory tree; they do not share the store's content-addressed identity or its commit protocol.",
+    "Orbax OCDBT is a directory checkpoint, not a single file; its retained bytes are its own layout.",
+    "All latencies are on one 1.66 MB state in one court; larger states change both sides.",
+    "The service round trip and the Python staging copy are inside the WeftFS latency; only the store's own publish time is in `store_write_p50_ms`.",
+    "The WeftFS/OCDBT comparison lands within a fraction of a millisecond, which is inside host noise; it is not a robust win."
+  ],
+  "result": "pass"
+}

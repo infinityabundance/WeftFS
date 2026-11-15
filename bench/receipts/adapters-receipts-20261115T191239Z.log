@@ -1,0 +1,25 @@
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to load in a single process.
+  return func(*args, **kwargs)
+Traceback (most recent call last):
+  File "/work/python/courts/adapters_receipts.py", line 369, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/work/python/courts/adapters_receipts.py", line 364, in main
+    return run(args)
+           ^^^^^^^^^
+  File "/work/python/courts/adapters_receipts.py", line 298, in run
+    orbax = orbax_cell(cli, work, args.stamp)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/courts/adapters_receipts.py", line 221, in orbax_cell
+    restored = handler.restore(directory, wo.WeftRestoreArgs(item=target))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/orbax.py", line 903, in restore
+    return self._restore_sync(Path(os.fspath(directory)), restore_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/python/weftcodec/orbax.py", line 1262, in _restore_sync
+    buffer.close()
+  File "/work/python/weftcodec/artifact_api.py", line 220, in close
+    self._mm.close()
+BufferError: cannot close exported pointers exist

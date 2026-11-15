@@ -1,0 +1,632 @@
+== producer_auth rust tests ==
++ exec docker run --rm --init --name weft-rust-court-4029380 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo test --test producer_auth -- --test-threads=1'
+warning: unused import: `Class`
+  --> src/artifact_template.rs:37:20
+   |
+37 | use crate::error::{Class, Error, Result};
+   |                    ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeSet`
+  --> src/revocation_epoch.rs:31:5
+   |
+31 | use std::collections::BTreeSet;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::State`
+  --> src/revocation_epoch.rs:39:5
+   |
+39 | use crate::state::State;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ProvenanceRecord`
+  --> src/taint.rs:36:25
+   |
+36 | use crate::provenance::{ProvenanceRecord, PROVENANCE_PREDICATE};
+   |                         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1722:9
+     |
+1722 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1723:9
+     |
+1723 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1724:9
+     |
+1724 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1798:9
+     |
+1798 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3352:13
+     |
+3352 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: unused variable: `record`
+    --> src/training_artifact.rs:1089:21
+     |
+1089 |                 let record = state
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_record`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1821:8
+     |
+1288 | impl Store {
+     | ---------- method in this implementation
+...
+1821 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: field `gaps` is never read
+   --> src/taint.rs:411:5
+    |
+405 | struct Consumer {
+    |        -------- field in this struct
+...
+411 |     gaps: Vec<String>,
+    |     ^^^^
+
+warning: function `resolve_dir_path` is never used
+    --> src/training_artifact.rs:2135:15
+     |
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+     |               ^^^^^^^^^^^^^^^^
+
+warning: `weftfs` (lib) generated 26 warnings (run `cargo fix --lib -p weftfs` to apply 21 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:7237:8
+     |
+7237 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:7244:8
+     |
+7244 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:7261:7
+     |
+7261 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:7263:4
+     |
+7263 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:7296:4
+     |
+7296 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: unused `Result` that must be used
+    --> src/main.rs:5557:25
+     |
+5557 | /                         print_json(&json!({
+5558 | |                             "checkpoint": plan.checkpoint,
+5559 | |                             "manifest_root": plan.manifest_root.to_hex(),
+5560 | |                             "axis": plan.axis,
+...    |
+5576 | |                             "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+5577 | |                         }));
+     | |___________________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+     = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+     |
+5557 |                         let _ = print_json(&json!({
+     |                         +++++++
+
+warning: unused `Result` that must be used
+    --> src/main.rs:5616:21
+     |
+5616 | /                     print_json(&json!({
+5617 | |                         "checkpoint": report.checkpoint,
+5618 | |                         "manifest_root": report.manifest_root.to_hex(),
+5619 | |                         "axis": report.axis,
+...    |
+5649 | |                         "peak_rss_kib": peak_rss_kib(),
+5650 | |                     }));
+     | |_______________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+     |
+5616 |                     let _ = print_json(&json!({
+     |                     +++++++
+
+warning: `weftfs` (bin "weftfs") generated 7 warnings
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.03s
+     Running tests/producer_auth.rs (.docker-cache/target-rust/debug/deps/producer_auth-1160fe19dd674a4f)
+
+running 10 tests
+test a_bad_signature_is_refused ... ok
+test a_current_key_authenticates_a_declaration ... ok
+test a_key_rotated_after_signing_is_refused_currently_and_audited_historically ... ok
+test a_key_set_root_mismatch_is_refused ... ok
+test a_key_that_was_not_yet_valid_at_signing_is_refused ... ok
+test a_revoked_key_refuses_in_every_mode ... ok
+test an_unknown_signer_is_refused ... ok
+test records_roundtrip_through_canonical_wcb ... ok
+test rotation_records_the_previous_root_and_advances_the_epoch ... ok
+test the_store_cross_check_names_a_corrupted_input_and_a_wrong_output ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+== producer_auth rust binaries ==
++ exec docker run --rm --init --name weft-rust-court-4029630 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cargo build --release --example producer_attest --bin weftfs'
+warning: unused import: `Class`
+  --> src/artifact_template.rs:37:20
+   |
+37 | use crate::error::{Class, Error, Result};
+   |                    ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeSet`
+  --> src/revocation_epoch.rs:31:5
+   |
+31 | use std::collections::BTreeSet;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::State`
+  --> src/revocation_epoch.rs:39:5
+   |
+39 | use crate::state::State;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ProvenanceRecord`
+  --> src/taint.rs:36:25
+   |
+36 | use crate::provenance::{ProvenanceRecord, PROVENANCE_PREDICATE};
+   |                         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1722:9
+     |
+1722 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1723:9
+     |
+1723 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1724:9
+     |
+1724 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1798:9
+     |
+1798 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3352:13
+     |
+3352 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: unused variable: `record`
+    --> src/training_artifact.rs:1089:21
+     |
+1089 |                 let record = state
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_record`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1821:8
+     |
+1288 | impl Store {
+     | ---------- method in this implementation
+...
+1821 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: field `gaps` is never read
+   --> src/taint.rs:411:5
+    |
+405 | struct Consumer {
+    |        -------- field in this struct
+...
+411 |     gaps: Vec<String>,
+    |     ^^^^
+
+warning: function `resolve_dir_path` is never used
+    --> src/training_artifact.rs:2135:15
+     |
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+     |               ^^^^^^^^^^^^^^^^
+
+warning: `weftfs` (lib) generated 26 warnings (run `cargo fix --lib -p weftfs` to apply 21 suggestions)
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:7237:8
+     |
+7237 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:7244:8
+     |
+7244 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:7261:7
+     |
+7261 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:7263:4
+     |
+7263 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:7296:4
+     |
+7296 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: unused `Result` that must be used
+    --> src/main.rs:5557:25
+     |
+5557 | /                         print_json(&json!({
+5558 | |                             "checkpoint": plan.checkpoint,
+5559 | |                             "manifest_root": plan.manifest_root.to_hex(),
+5560 | |                             "axis": plan.axis,
+...    |
+5576 | |                             "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+5577 | |                         }));
+     | |___________________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+     = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+     |
+5557 |                         let _ = print_json(&json!({
+     |                         +++++++
+
+warning: unused `Result` that must be used
+    --> src/main.rs:5616:21
+     |
+5616 | /                     print_json(&json!({
+5617 | |                         "checkpoint": report.checkpoint,
+5618 | |                         "manifest_root": report.manifest_root.to_hex(),
+5619 | |                         "axis": report.axis,
+...    |
+5649 | |                         "peak_rss_kib": peak_rss_kib(),
+5650 | |                     }));
+     | |_______________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+     |
+5616 |                     let _ = print_json(&json!({
+     |                     +++++++
+
+warning: `weftfs` (bin "weftfs") generated 7 warnings
+   Compiling weftfs v1.4.2 (/work)
+    Finished `release` profile [optimized] target(s) in 1.67s
+== producer_auth go binaries ==
++ exec docker run --rm --init --name weft-go-court-4029937 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work/WeftFS-Go && go build -o /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-sign ./cmd/producer-attest-sign && go build -o /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-verify ./cmd/producer-attest-verify && go vet ./cmd/producer-attest-sign ./cmd/producer-attest-verify'
++ exec docker run --rm --init --name weft-rust-court-4030303 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest keygen --key .docker-cache/producer-auth-20261115T170940Z/seed-a --seed-hex 1111111111111111111111111111111111111111111111111111111111111111 --json'
+{"key_file":".docker-cache/producer-auth-20261115T170940Z/seed-a","ok":true,"public_key":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"}
++ exec docker run --rm --init --name weft-rust-court-4030532 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest keygen --key .docker-cache/producer-auth-20261115T170940Z/seed-c --seed-hex 3333333333333333333333333333333333333333333333333333333333333333 --json'
+{"key_file":".docker-cache/producer-auth-20261115T170940Z/seed-c","ok":true,"public_key":"17cb79fb2b4120f2b1ec65e4198d6e08b28e813feb01e4a400839b85e18080ce"}
++ exec docker run --rm --init --name weft-rust-court-4030733 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest keygen --key .docker-cache/producer-auth-20261115T170940Z/seed-a --seed-hex 1111111111111111111111111111111111111111111111111111111111111111 --json'
++ exec docker run --rm --init --name weft-rust-court-4030961 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest keygen --key .docker-cache/producer-auth-20261115T170940Z/seed-c --seed-hex 3333333333333333333333333333333333333333333333333333333333333333 --json'
++ exec docker run --rm --init --name weft-rust-court-4031161 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest keyset --spec .docker-cache/producer-auth-20261115T170940Z/keyset-current.json --out .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --json'
+{"epoch":2,"keys":1,"ok":true,"out":".docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb","root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb"}
++ exec docker run --rm --init --name weft-rust-court-4031358 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest keyset --spec .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.json --out .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --json'
+{"epoch":5,"keys":2,"ok":true,"out":".docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb","root":"9cbc232a756f846ae6fc970676ea22c290f03f0d759eb7805c50ec3035bc35b3"}
++ exec docker run --rm --init --name weft-rust-court-4031555 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store init'
+generation=1
+snapshot_root=07e7902ad467767a6e16ddc056084559a43abe9cc259a8ba53f9ea733174b5d3
++ exec docker run --rm --init --name weft-rust-court-4031760 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store create /dataset.bin --text '\''dataset bytes'\'''
+0d0e8c54876ceb6bfc701eb01e140dd628f54b19a84fa73371979c0741427a0b
++ exec docker run --rm --init --name weft-rust-court-4031960 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store create /output.bin --text '\''output bytes'\'''
+ed4bdecf8dc510acedcecce7693aaed3511415a7e88cc8df166279cd483f0ed0
++ exec docker run --rm --init --name weft-rust-court-4032196 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store --json stat /dataset.bin'
++ exec docker run --rm --init --name weft-rust-court-4032429 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store --json stat /output.bin'
++ exec docker run --rm --init --name weft-rust-court-4032603 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store --json artifact resolve --object-id 0d0e8c54876ceb6bfc701eb01e140dd628f54b19a84fa73371979c0741427a0b'
++ exec docker run --rm --init --name weft-rust-court-4032836 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/weftfs --store .docker-cache/producer-auth-20261115T170940Z/store --json artifact resolve --object-id ed4bdecf8dc510acedcecce7693aaed3511415a7e88cc8df166279cd483f0ed0'
+dataset_root=4735fc47bac929c97629778142adcb4019051743c19400656ea4dd0efdb79fb7 output_root=e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2
++ exec docker run --rm --init --name weft-rust-court-4033012 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest sign --key .docker-cache/producer-auth-20261115T170940Z/seed-a --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --producer trainer-1 --run-id run-001 --tool weftfs --tool-version 1.4.2 --determinism exact --signing-epoch 1 --input dataset=4735fc47bac929c97629778142adcb4019051743c19400656ea4dd0efdb79fb7 --output e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2 --out .docker-cache/producer-auth-20261115T170940Z/attest-current.wcb --json'
+{"attestation_id":"7bbbd1e87127efb68b0f8044a76df43d8aaa25a9742fcf4d18ea560f7a1fe9aa","bytes":461,"key_set_root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb","ok":true,"out":".docker-cache/producer-auth-20261115T170940Z/attest-current.wcb","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"}
++ exec docker run --rm --init --name weft-rust-court-4033249 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-current.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --mode current --json'
+{"attestation_id":"7bbbd1e87127efb68b0f8044a76df43d8aaa25a9742fcf4d18ea560f7a1fe9aa","currently_trusted":true,"determinism":"exact","key_set_epoch":2,"key_set_root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb","key_status":"current","ok":true,"output":"e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2","producer":"trainer-1","run_id":"run-001","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737","signing_epoch":1,"tool":"weftfs","tool_version":"1.4.2","valid_at_signing":true}
++ exec docker run --rm --init --name weft-go-court-4033443 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-verify /work/.docker-cache/producer-auth-20261115T170940Z/attest-current.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --mode current --json'
+{"currently_trusted":true,"determinism":"exact","key_set_epoch":2,"key_set_root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb","key_status":"current","limits":"authenticates a declaration; does not prove the computation ran","mode":"current","ok":true,"output":"e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2","producer":"trainer-1","run_id":"run-001","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737","signing_epoch":1,"tool":"weftfs","tool_version":"1.4.2","valid_at_signing":true,"verified_by":"WeftFS-Go producer-attest-verify"}
++ exec docker run --rm --init --name weft-python-court-4033679 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/python-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/python-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && python3 verifier/producer_attest.py /work/.docker-cache/producer-auth-20261115T170940Z/attest-current.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --mode current --json'
+{"currently_trusted": true, "determinism": "exact", "key_set_epoch": 2, "key_set_root": "18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb", "key_status": "current", "limits": "authenticates a declaration; does not prove the computation ran", "mode": "current", "ok": true, "output": "e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2", "producer": "trainer-1", "run_id": "run-001", "signer": "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737", "signing_epoch": 1, "tool": "weftfs", "tool_version": "1.4.2", "valid_at_signing": true, "verified_by": "clean-room verifier/producer_attest.py (independent WCB + Ed25519)"}
++ exec docker run --rm --init --name weft-rust-court-4033878 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest sign --key .docker-cache/producer-auth-20261115T170940Z/seed-a --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --producer trainer-1 --run-id run-002 --tool weftfs --tool-version 1.4.2 --determinism exact --signing-epoch 2 --input dataset=4735fc47bac929c97629778142adcb4019051743c19400656ea4dd0efdb79fb7 --output e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2 --out .docker-cache/producer-auth-20261115T170940Z/attest-old.wcb --json'
+{"attestation_id":"206f2be44b76014f7c3fc9b902ffefe079cf0d738801a9663a4658d7dd3cf68c","bytes":461,"key_set_root":"9cbc232a756f846ae6fc970676ea22c290f03f0d759eb7805c50ec3035bc35b3","ok":true,"out":".docker-cache/producer-auth-20261115T170940Z/attest-old.wcb","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"}
++ exec docker run --rm --init --name weft-rust-court-4034078 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest sign --key .docker-cache/producer-auth-20261115T170940Z/seed-c --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --producer trainer-1 --run-id run-003 --tool weftfs --tool-version 1.4.2 --determinism exact --signing-epoch 3 --input dataset=4735fc47bac929c97629778142adcb4019051743c19400656ea4dd0efdb79fb7 --output e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2 --out .docker-cache/producer-auth-20261115T170940Z/attest-revoked.wcb --json'
+{"attestation_id":"c2face5902d0c07b51d3c1d76024bf9d4cb88c65283f4ed64f45058d82ebb518","bytes":461,"key_set_root":"9cbc232a756f846ae6fc970676ea22c290f03f0d759eb7805c50ec3035bc35b3","ok":true,"out":".docker-cache/producer-auth-20261115T170940Z/attest-revoked.wcb","signer":"17cb79fb2b4120f2b1ec65e4198d6e08b28e813feb01e4a400839b85e18080ce"}
++ exec docker run --rm --init --name weft-rust-court-4034280 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-old.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode current --json'
+Error: "KeyRotated: KeyRotated: signing key d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737 was rotated at epoch 3 and is no longer trusted for verification; use historical mode to audit the record"
++ exec docker run --rm --init --name weft-rust-court-4034476 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-old.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode historical --json'
+{"attestation_id":"206f2be44b76014f7c3fc9b902ffefe079cf0d738801a9663a4658d7dd3cf68c","currently_trusted":false,"determinism":"exact","key_set_epoch":5,"key_set_root":"9cbc232a756f846ae6fc970676ea22c290f03f0d759eb7805c50ec3035bc35b3","key_status":"retired","ok":true,"output":"e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2","producer":"trainer-1","run_id":"run-002","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737","signing_epoch":2,"tool":"weftfs","tool_version":"1.4.2","valid_at_signing":true}
++ exec docker run --rm --init --name weft-go-court-4034676 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-verify /work/.docker-cache/producer-auth-20261115T170940Z/attest-old.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode current --json'
+producer-attest-verify: signing key d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737 is retired; use historical mode to audit the record
++ exec docker run --rm --init --name weft-python-court-4034881 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/python-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/python-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && python3 verifier/producer_attest.py /work/.docker-cache/producer-auth-20261115T170940Z/attest-old.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode current --json'
+{"ok": false, "error": "KeyRotated", "message": "signing key is retired"}
++ exec docker run --rm --init --name weft-rust-court-4035080 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-revoked.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode historical --json'
+Error: "RevokedKey: RevokedKey: signing key 17cb79fb2b4120f2b1ec65e4198d6e08b28e813feb01e4a400839b85e18080ce was revoked at epoch 4"
++ exec docker run --rm --init --name weft-go-court-4035313 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-verify /work/.docker-cache/producer-auth-20261115T170940Z/attest-revoked.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode historical --json'
+producer-attest-verify: signing key 17cb79fb2b4120f2b1ec65e4198d6e08b28e813feb01e4a400839b85e18080ce was revoked at epoch 4
++ exec docker run --rm --init --name weft-python-court-4035523 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/python-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/python-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && python3 verifier/producer_attest.py /work/.docker-cache/producer-auth-20261115T170940Z/attest-revoked.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-rotated.wcb --mode historical --json'
+{"ok": false, "error": "RevokedKey", "message": "signing key is revoked"}
++ exec docker run --rm --init --name weft-rust-court-4035726 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-tampered.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --json'
+Error: "BadSignature: BadSignature: signature does not verify under signer d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"
++ exec docker run --rm --init --name weft-go-court-4035984 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-verify /work/.docker-cache/producer-auth-20261115T170940Z/attest-tampered.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --json'
+producer-attest-verify: signature does not verify under signer d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737
++ exec docker run --rm --init --name weft-python-court-4036187 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/python-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/python-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && python3 verifier/producer_attest.py /work/.docker-cache/producer-auth-20261115T170940Z/attest-tampered.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --json'
+{"ok": false, "error": "BadSignature", "message": "signature does not verify under the named signer"}
++ exec docker run --rm --init --name weft-go-court-4036387 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/go-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:da549900a556fe64cccb4783c9fc3b33c060b011cb6e4441d74e50323fc0ab59 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/go-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/producer-auth-20261115T170940Z/bin/producer-attest-sign --key 1111111111111111111111111111111111111111111111111111111111111111 --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --producer trainer-1 --run-id run-go --tool weftfs-go --tool-version 1.4.2 --determinism exact --signing-epoch 1 --input dataset=4735fc47bac929c97629778142adcb4019051743c19400656ea4dd0efdb79fb7 --output e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2 --out /work/.docker-cache/producer-auth-20261115T170940Z/attest-go.wcb --json'
+{"bytes":463,"ok":true,"out":"/work/.docker-cache/producer-auth-20261115T170940Z/attest-go.wcb","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737","signer_by":"WeftFS-Go producer-attest-sign"}
++ exec docker run --rm --init --name weft-rust-court-4036593 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-go.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --json'
+{"attestation_id":"4d8fda04962fb02b24c6e60fbf6d31f4d6f50644af3978186ea253c8d9d61bba","currently_trusted":true,"determinism":"exact","key_set_epoch":2,"key_set_root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb","key_status":"current","ok":true,"output":"e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2","producer":"trainer-1","run_id":"run-go","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737","signing_epoch":1,"tool":"weftfs-go","tool_version":"1.4.2","valid_at_signing":true}
++ exec docker run --rm --init --name weft-python-court-4036796 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/python-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:aec5deb084693cdbe465b2bfc0b1c897d497db84282a131d31750cde48576152 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/python-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; cd /work && python3 verifier/producer_attest.py /work/.docker-cache/producer-auth-20261115T170940Z/attest-go.wcb --keyset /work/.docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --json'
+{"currently_trusted": true, "determinism": "exact", "key_set_epoch": 2, "key_set_root": "18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb", "key_status": "current", "limits": "authenticates a declaration; does not prove the computation ran", "mode": "current", "ok": true, "output": "e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2", "producer": "trainer-1", "run_id": "run-go", "signer": "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737", "signing_epoch": 1, "tool": "weftfs-go", "tool_version": "1.4.2", "valid_at_signing": true, "verified_by": "clean-room verifier/producer_attest.py (independent WCB + Ed25519)"}
++ exec docker run --rm --init --name weft-rust-court-4036999 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-current.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --store .docker-cache/producer-auth-20261115T170940Z/store --json'
+{"attestation_id":"7bbbd1e87127efb68b0f8044a76df43d8aaa25a9742fcf4d18ea560f7a1fe9aa","currently_trusted":true,"determinism":"exact","key_set_epoch":2,"key_set_root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb","key_status":"current","ok":true,"output":"e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2","producer":"trainer-1","run_id":"run-001","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737","signing_epoch":1,"tool":"weftfs","tool_version":"1.4.2","valid_at_signing":true}
++ exec docker run --rm --init --name weft-rust-court-4037199 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T170940Z weft/rust-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; /work/.docker-cache/target-rust/release/examples/producer_attest sign --key .docker-cache/producer-auth-20261115T170940Z/seed-a --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --producer trainer-1 --run-id run-004 --tool weftfs --tool-version 1.4.2 --determinism exact --signing-epoch 1 --input dataset=9999999999999999999999999999999999999999999999999999999999999999 --output e7eda6cd6d64d7e112c2b3035541bf996db0acd73a12127bd84c4f494ef443a2 --out .docker-cache/producer-auth-20261115T170940Z/attest-bad-input.wcb --json && /work/.docker-cache/target-rust/release/examples/producer_attest verify --attestation .docker-cache/producer-auth-20261115T170940Z/attest-bad-input.wcb --keyset .docker-cache/producer-auth-20261115T170940Z/keyset-current.wcb --store .docker-cache/producer-auth-20261115T170940Z/store --json'
+{"attestation_id":"caa9701b43e90cba600d82ac16e1fd292d9595f79a400f63fc854cc1ed100602","bytes":461,"key_set_root":"18950ba06931c770816f1eb361e93c403d10c4a9df29ea59c36211b65185b3bb","ok":true,"out":".docker-cache/producer-auth-20261115T170940Z/attest-bad-input.wcb","signer":"d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737"}
+Error: "InputMismatch: InputMismatch: declared input `dataset` root 9999999999999999999999999999999999999999999999999999999999999999 is not content in this store at the pinned snapshot"

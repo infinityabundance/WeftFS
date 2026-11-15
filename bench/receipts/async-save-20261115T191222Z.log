@@ -1,0 +1,76 @@
+/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoint/utils.py:488: UserWarning: torch.distributed is disabled, unavailable or uninitialized, assuming the intent is to save in a single process.
+  return func(*args, **kwargs)
+{
+  "result": "pass",
+  "checks": {
+    "same_trajectory_all_arms": true,
+    "checkpoints_verify": true,
+    "queue_bound_respected": true,
+    "staging_bound_respected": true,
+    "no_unbounded_rss_growth": true,
+    "single_writer_collision_observed": true
+  },
+  "arms": {
+    "none": {
+      "step_p50_ms": 10.194,
+      "step_p95_ms": 10.575,
+      "step_inflation_p50": 1.0,
+      "step_inflation_p95": 1.0,
+      "peak_rss_kib": 308140,
+      "rss_high_water_kib": 309508,
+      "cpu_ms": 2169.745,
+      "drain_ms": 0.0,
+      "max_outstanding_sampled": 0,
+      "submitted": 0,
+      "submit_errors": 0,
+      "checkpoints_verified": true,
+      "final_model_sha256": [
+        "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad"
+      ]
+    },
+    "async": {
+      "step_p50_ms": 10.267,
+      "step_p95_ms": 11.8,
+      "step_inflation_p50": 1.0072,
+      "step_inflation_p95": 1.1158,
+      "peak_rss_kib": 338216,
+      "rss_high_water_kib": 338812,
+      "cpu_ms": 3347.915,
+      "drain_ms": 1918.567,
+      "max_outstanding_sampled": 5,
+      "submitted": 6,
+      "submit_errors": 0,
+      "checkpoints_verified": true,
+      "final_model_sha256": [
+        "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad"
+      ]
+    },
+    "queue": {
+      "step_p50_ms": 10.287,
+      "step_p95_ms": 12.87,
+      "step_inflation_p50": 1.0091,
+      "step_inflation_p95": 1.217,
+      "peak_rss_kib": 340460,
+      "rss_high_water_kib": 340904,
+      "cpu_ms": 4443.891,
+      "drain_ms": 735.122,
+      "max_outstanding_sampled": 2,
+      "submitted": 6,
+      "submit_errors": 0,
+      "checkpoints_verified": true,
+      "final_model_sha256": [
+        "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad"
+      ],
+      "queue": {
+        "queue_high_water": 2,
+        "staged_bytes_high_water": 9946720,
+        "admission_refusals": 0,
+        "admission_waits": 6,
+        "largest_admission_bytes": 4973360,
+        "admission_wait_ms_max": 267.06827501766384,
+        "max_outstanding_bound": 2,
+        "staged_bytes_bound": 1073741824
+      }
+    }
+  }
+}

@@ -1,0 +1,266 @@
++ exec docker run --rm --init --name weft-rust-court-3906900 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/rust-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=3c9ed69330d0e2927a676a9cfd216688f13b5283 -e WEFT_REPO_WEFTFS_GO=21c41b1adb5ac1b206bfd626c35dfee285e73f41 -e WEFT_REPO_WEFTCODEC=98019d82c32365bc01d411aba93ea9f951ae6de6 -e WEFT_REPO_WEFTCODEC_GO=d45fcb4c92f3302b1dfcab66e98ef63394040fe0 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work weft/rust-court:1 bash -c $'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; \n  set -Eeuo pipefail\n  cd /work\n  cargo test --test artifact_template --quiet 2>&1 | tail -3\n  cargo run --release --quiet --example artifact_template_court --     --out .docker-cache/artifact-template-court     --json .docker-cache/artifact-template-court/result.json\n  cat .docker-cache/artifact-template-court/result.json\n'
+...........
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+warning: unused import: `Class`
+  --> src/artifact_template.rs:37:20
+   |
+37 | use crate::error::{Class, Error, Result};
+   |                    ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeSet`
+  --> src/revocation_epoch.rs:31:5
+   |
+31 | use std::collections::BTreeSet;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::State`
+  --> src/revocation_epoch.rs:39:5
+   |
+39 | use crate::state::State;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ProvenanceRecord`
+  --> src/taint.rs:36:25
+   |
+36 | use crate::provenance::{ProvenanceRecord, PROVENANCE_PREDICATE};
+   |                         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1722:9
+     |
+1722 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1723:9
+     |
+1723 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1724:9
+     |
+1724 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1798:9
+     |
+1798 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3352:13
+     |
+3352 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: unused variable: `record`
+    --> src/training_artifact.rs:1089:21
+     |
+1089 |                 let record = state
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_record`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1821:8
+     |
+1288 | impl Store {
+     | ---------- method in this implementation
+...
+1821 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: field `gaps` is never read
+   --> src/taint.rs:411:5
+    |
+405 | struct Consumer {
+    |        -------- field in this struct
+...
+411 |     gaps: Vec<String>,
+    |     ^^^^
+
+warning: function `resolve_dir_path` is never used
+    --> src/training_artifact.rs:2135:15
+     |
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+     |               ^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+  --> examples/artifact_template_court.rs:61:9
+   |
+61 |     let mut make = |store: &mut Store, name: &str, bytes: &[u8]| {
+   |         ----^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `synth_content`
+  --> examples/artifact_template_court.rs:87:9
+   |
+87 |     let synth_content = store.object_meta(synth_object).unwrap().content;
+   |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_synth_content`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+{
+  "checks": [
+    {
+      "detail": "inputs=3 metric_bits=3fb999999999999a outputs=1",
+      "name": "an evaluation template records its three declared inputs and metric bits",
+      "pass": true
+    },
+    {
+      "detail": "eval=8b93d624fcff3a2500014eb9cbfa5e42be6b61b681b1d6e8e9454c7e2c4e22c5 synth=454fc0571ea935d0b400f1e499c6795e58a049bbf4ea54b11e991bc5ac883798",
+      "name": "both templates replay exactly",
+      "pass": true
+    },
+    {
+      "detail": "seed_len=4",
+      "name": "a synthetic-data template records its seed and generator",
+      "pass": true
+    },
+    {
+      "detail": "dataset -> eval output is tainted and closed",
+      "name": "the template feeds the taint graph",
+      "pass": true
+    },
+    {
+      "detail": "class=NotFound templates=2",
+      "name": "a declared input root that is not in the store is refused",
+      "pass": true
+    },
+    {
+      "detail": "both replay exact after reopen",
+      "name": "templates survive a read-only reopen",
+      "pass": true
+    }
+  ],
+  "eval_record_ns": 20418072,
+  "eval_replay_ns": 1253252,
+  "eval_template_bytes": 496,
+  "failed": 0,
+  "output_bytes": 4194304,
+  "passed": 6,
+  "schema": "weft.artifact-template-court/v1",
+  "synth_record_ns": 20746988,
+  "synth_replay_ns": 17964,
+  "synth_template_bytes": 375
+}

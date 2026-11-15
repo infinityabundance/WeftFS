@@ -1,0 +1,75 @@
+{
+  "schema": "weftfs.refinement.tla-stage/1",
+  "runs": [
+    {
+      "run": "correct_a",
+      "expect": "no-error",
+      "distinct_states": 28713,
+      "states_generated": 246445,
+      "violated_invariant": null,
+      "exit_code": 0,
+      "completed": true,
+      "last_line": "Finished in 01s at (2026-11-15 18:35:56)"
+    },
+    {
+      "run": "correct_b",
+      "expect": "no-error",
+      "distinct_states": 176427,
+      "states_generated": 1772785,
+      "violated_invariant": null,
+      "exit_code": 0,
+      "completed": true,
+      "last_line": "Finished in 05s at (2026-11-15 18:36:02)"
+    },
+    {
+      "run": "blind",
+      "expect": "NoBlindOverwrite",
+      "distinct_states": 234,
+      "states_generated": 590,
+      "violated_invariant": "NoBlindOverwrite",
+      "exit_code": 12,
+      "completed": true,
+      "last_line": "Finished in 00s at (2026-11-15 18:36:02)"
+    },
+    {
+      "run": "gc-LivePreparedDurable",
+      "expect": "LivePreparedDurable",
+      "distinct_states": 9,
+      "states_generated": 14,
+      "violated_invariant": "LivePreparedDurable",
+      "exit_code": 12,
+      "completed": true,
+      "last_line": "Finished in 00s at (2026-11-15 18:36:03)"
+    },
+    {
+      "run": "gc-CommittedBlobsDurable",
+      "expect": "CommittedBlobsDurable",
+      "distinct_states": 38,
+      "states_generated": 65,
+      "violated_invariant": "CommittedBlobsDurable",
+      "exit_code": 12,
+      "completed": true,
+      "last_line": "Finished in 00s at (2026-11-15 18:36:04)"
+    },
+    {
+      "run": "gc-GcNeverReclaimsReachable",
+      "expect": "GcNeverReclaimsReachable",
+      "distinct_states": 9,
+      "states_generated": 14,
+      "violated_invariant": "GcNeverReclaimsReachable",
+      "exit_code": 12,
+      "completed": true,
+      "last_line": "Finished in 00s at (2026-11-15 18:36:04)"
+    }
+  ],
+  "environment": {
+    "court": "weft/tla-court:1",
+    "kernel": "7.3.3-1-cachyos"
+  },
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "3c9ed69330d0e2927a676a9cfd216688f13b5283"
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "binary_sha256": "bae986b7731d692c4fc9ff92c5f0f7e4dbc8fb4367d0b0cd30fa9a4b8b11054a",
+  "environment": {
+    "court": "weft/fuse-court:1",
+    "gc_grace_secs": 0,
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "evidence": {
+    "log": "bench/receipts/mw-gc-20261115T190459Z.log",
+    "log_sha256": "29926755c64fcefde466544ed4421a60ed7d7eb692e842548d84634bd2b00ca7"
+  },
+  "failures": 0,
+  "generated_at": "2026-11-15T19:05:05Z",
+  "mechanism": {
+    "epoch": "one compare-and-swap on gc/epoch; the acquisition instant is the reclaim cut",
+    "evidence": "bench/receipts/mw-gc-*.json; docs/MULTI-WRITER-GC.md",
+    "floor": "earliest live reservation start minus one second of timestamp slack",
+    "reservation": "gc/reservations/<digest> written before the first blob, with a deadline"
+  },
+  "notes": [],
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "3c9ed69330d0e2927a676a9cfd216688f13b5283"
+    }
+  ],
+  "result": "pass",
+  "role": "T024 adversarial court: multi-writer GC and concurrent retention",
+  "run": {
+    "duration_ms": 6000,
+    "finished_at": "2026-11-15T19:05:05Z",
+    "started_at": "2026-11-15T19:04:59Z"
+  },
+  "scenario_a_reservation_window": {
+    "read_exact": true,
+    "retained_by_cut_or_floor": 2,
+    "verify_full": true
+  },
+  "scenario_b_kill_matrix": {
+    "crashes": 8,
+    "reachable_objects_lost": 0,
+    "rows": [
+      {
+        "exit": 134,
+        "iteration": 1,
+        "outcome_before_retry": "unknown",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_prepared"
+      },
+      {
+        "exit": 134,
+        "iteration": 2,
+        "outcome_before_retry": "unknown",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_prepared"
+      },
+      {
+        "exit": 134,
+        "iteration": 1,
+        "outcome_before_retry": "unknown",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_before_head"
+      },
+      {
+        "exit": 134,
+        "iteration": 2,
+        "outcome_before_retry": "unknown",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_before_head"
+      },
+      {
+        "exit": 134,
+        "iteration": 1,
+        "outcome_before_retry": "unknown",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_after_head"
+      },
+      {
+        "exit": 134,
+        "iteration": 2,
+        "outcome_before_retry": "unknown",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_after_head"
+      },
+      {
+        "exit": 134,
+        "iteration": 1,
+        "outcome_before_retry": "absent",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_after_ack"
+      },
+      {
+        "exit": 134,
+        "iteration": 2,
+        "outcome_before_retry": "absent",
+        "read_exact": true,
+        "retry_committed": true,
+        "stage": "mw2_after_ack"
+      }
+    ],
+    "surviving_names_exact": true,
+    "verify_full": true
+  },
+  "scenario_c_reclaim_control": {
+    "first_pass_deleted_blobs": 16,
+    "first_pass_deleted_bytes": 1392,
+    "note": "proves the retention assertions above are not vacuous",
+    "second_pass_deleted_blobs": 0,
+    "verify_full": true
+  },
+  "scenario_d_mw3": {
+    "domain_heads_marked": 2,
+    "note": "unlinked object records are not removed by a coordinated pass; only blobs unreachable from every domain head are swept",
+    "verify_full_each_domain": true
+  },
+  "scenario_e_concurrent_writer_exact": true,
+  "scenario_e_readers": {
+    "absent": 0,
+    "mismatches": [],
+    "ok": true,
+    "readers": 3,
+    "reads": 600
+  },
+  "scenario_e_verify_full": true,
+  "scenario_f_concurrent_passes": {
+    "closed_total": 12,
+    "deleted_total": 24,
+    "disjoint_across_loops": true,
+    "epochs_contiguous_from_one": true,
+    "epochs_distinct": 24,
+    "loops": [
+      {
+        "closed": 4,
+        "deleted": 24,
+        "epochs": [
+          1,
+          3,
+          5,
+          7,
+          9,
+          11,
+          13,
+          15,
+          18,
+          20,
+          22,
+          24
+        ],
+        "errors": [],
+        "exit": 0,
+        "ok": true,
+        "passes": 12
+      },
+      {
+        "closed": 8,
+        "deleted": 0,
+        "epochs": [
+          2,
+          4,
+          6,
+          8,
+          10,
+          12,
+          14,
+          16,
+          17,
+          19,
+          21,
+          23
+        ],
+        "errors": [],
+        "exit": 0,
+        "ok": true,
+        "passes": 12
+      }
+    ],
+    "note": "two independent processes; every pass acquired its own epoch and none was refused, and the epoch never went backwards",
+    "passes_total": 24,
+    "verify_full": true
+  },
+  "schema": "weftfs.mw_gc/1",
+  "scope": {
+    "checked": "cross-handle prepared-transaction pins, the blob-publication reservation window, an epoch cut with the age gate disabled, process kills at four publication stages with a concurrent sweep, MW3 domain-head marking, readers under sweep, two independent concurrent passes with a shared epoch record",
+    "label": "one host, one local POSIX namespace, process-fault proxies",
+    "not_checked": "physical power loss or host cache loss; a fleet or multi-node store; a writer that stalls past its reservation deadline (treated as abandoned by design); Go parity for the epoch protocol"
+  }
+}
