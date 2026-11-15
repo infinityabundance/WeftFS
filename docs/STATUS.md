@@ -47,15 +47,17 @@ FUSE all-targets **1,143** passed / 0 failed / 2 pre-existing ignored, WeftCodec
 **299** passed.
 
 **Inventory.** 102 entries: 37 `run_court` container courts, 59
-`run_orchestrated_court` courts and 6 inline host-only courts, plus the new
-`court_order`. The 26 registrations added since the 75-court run are
-`adapters`, `cross_model_delta`, `view_identity`, `range_proof`, `taint`,
+`run_orchestrated_court` courts and 6 inline entries (four host-only guards --
+`claims`, `conformance_manifest`, `conformance_coverage`, `court_order` -- plus
+`parallel_checkpoint` and `fuzz_diff`, which orchestrate their own containers).
+The 26 courts registered since the 75-court run are `adapters`,
+`cross_model_delta`, `view_identity`, `range_proof`, `taint`,
 `artifact_templates`, `maintenance`, `training_state`, `refinement`,
-`multi_parent`, `residual_selector`, `recompute_planner`, `artifact_api`,
-`producer_auth`, `revocation_epoch`, `encryption`, `two_stage_oracle`,
-`n01_write_rung`, `n02_durability_tail`, `n05_go_parity`, `n07_pareto`,
-`training_artifact`, `causal_closure`, `training_ready_cost` (and
-`juicefs`/`glusterfs` were already registered). All 59 orchestrated courts print
+`multi_parent`, `residual_selector`, `recompute_planner`, `juicefs`,
+`glusterfs`, `artifact_api`, `producer_auth`, `revocation_epoch`, `encryption`,
+`two_stage_oracle`, `n01_write_rung`, `n02_durability_tail`, `n05_go_parity`,
+`n07_pareto`, `training_artifact`, `causal_closure`, `training_ready_cost`; the
+27th new entry is `court_order` itself. All 59 orchestrated courts print
 exactly one `<prefix>: skip <reason>` line and exit 78 on an unobtainable
 environment; that path is exercised by moving one corpus file aside (see
 below). Three `run_court` courts (`tla`, `multiwriter`, `multiwriter_failure`)
