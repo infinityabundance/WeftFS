@@ -1910,7 +1910,7 @@ impl Store {
                     ("b", Some(&target.b), Some(offsets.b)),
                     ("magnitude", target.magnitude.as_ref(), offsets.magnitude),
                 ];
-                for (label, reference, range) in rows {
+                for (_label, reference, range) in rows {
                     let (Some(reference), Some((begin, _end))) = (reference, range) else {
                         continue;
                     };

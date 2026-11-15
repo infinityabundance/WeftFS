@@ -446,6 +446,14 @@ pub struct ResolvedView {
     pub error: ViewErrorReport,
 }
 
+/// A view resolved with identity checks only (no error re-measurement).
+#[derive(Clone, Debug)]
+pub struct ResolvedViewBytes {
+    pub view_id: Hash32,
+    pub descriptor: ViewDescriptor,
+    pub bytes: Vec<u8>,
+}
+
 impl ViewDescriptor {
     /// The exact artifact a caller must ask for instead of the view.
     pub fn exact_reference(&self) -> String {
@@ -671,8 +679,47 @@ impl Store {
     /// Reconstruct a view's approximate bytes and re-measure its error contract.
     ///
     /// The exact source is read only to measure the error; it is not returned.
+    /// This is the strict door: it re-reads the exact source and re-asserts the
+    /// bound on every call. A reader that only needs the approximate bytes with
+    /// the view's own identity verified can use [`Store::resolve_view_bytes`].
     pub fn resolve_view(&self, name: &str) -> Result<ResolvedView> {
         let descriptor = self.load_view(name)?;
+        let bytes = self.decode_view_members(name, &descriptor)?;
+        let error = measure_error(self, &descriptor, &bytes)?;
+        if !error.holds {
+            return Err(Error::corrupt(format!(
+                "view `{name}` violates its error contract: max |error| {} > bound {}",
+                error.max_abs_error, error.max_bound
+            )));
+        }
+        Ok(ResolvedView {
+            view_id: descriptor.id()?,
+            descriptor,
+            bytes,
+            error,
+        })
+    }
+
+    /// Reconstruct a view and verify its own identity **without** re-reading the
+    /// exact source to re-measure the bound.
+    ///
+    /// The member content roots and `approximate_root` are checked, so the bytes
+    /// are exactly the bytes the descriptor commits to. The error bound is not
+    /// re-measured here; it was measured when the view was written and is
+    /// re-asserted by [`Store::verify_view`]. This is an explicit, documented
+    /// separation, not a silent fallback: the exact artifact's own roots remain
+    /// authoritative and are never replaced by a view.
+    pub fn resolve_view_bytes(&self, name: &str) -> Result<ResolvedViewBytes> {
+        let descriptor = self.load_view(name)?;
+        let bytes = self.decode_view_members(name, &descriptor)?;
+        Ok(ResolvedViewBytes {
+            view_id: descriptor.id()?,
+            descriptor,
+            bytes,
+        })
+    }
+
+    fn decode_view_members(&self, name: &str, descriptor: &ViewDescriptor) -> Result<Vec<u8>> {
         if self.object_meta(descriptor.codes)?.content != descriptor.codes_content {
             return Err(Error::corrupt(format!(
                 "view `{name}` codes object failed its content check"
@@ -703,19 +750,7 @@ impl Store {
                 "view `{name}` reconstruction does not match its recorded approximate_root"
             )));
         }
-        let error = measure_error(self, &descriptor, &bytes)?;
-        if !error.holds {
-            return Err(Error::corrupt(format!(
-                "view `{name}` violates its error contract: max |error| {} > bound {}",
-                error.max_abs_error, error.max_bound
-            )));
-        }
-        Ok(ResolvedView {
-            view_id: descriptor.id()?,
-            descriptor,
-            bytes,
-            error,
-        })
+        Ok(bytes)
     }
 
     /// Verify a view's identity, stored member roots and error contract without

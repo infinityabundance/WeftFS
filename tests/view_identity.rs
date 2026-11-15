@@ -301,6 +301,31 @@ fn the_bound_function_covers_the_measured_narrowing_error() {
 }
 
 #[test]
+fn identity_only_resolution_matches_the_strict_door() {
+    let dir = tempdir().unwrap();
+    let (mut store, exact) = setup(dir.path());
+    store
+        .write_quantized_view("q8", exact, Q8_0_BLOCK, &ViewWriteOptions::default())
+        .unwrap();
+    let strict = store.resolve_view("q8").unwrap();
+    let quick = store.resolve_view_bytes("q8").unwrap();
+    assert_eq!(quick.bytes, strict.bytes);
+    assert_eq!(quick.view_id, strict.view_id);
+    assert_eq!(quick.descriptor, strict.descriptor);
+    // Identity is still enforced: a changed code byte changes the
+    // reconstruction root and both doors refuse it.
+    let descriptor = store.load_view("q8").unwrap();
+    let mut codes = store.read_object(descriptor.codes).unwrap();
+    codes[0] ^= 0x01;
+    store.write_file(descriptor.codes, 0, &codes).unwrap();
+    assert_eq!(
+        store.resolve_view_bytes("q8").unwrap_err().class(),
+        Class::Corrupt
+    );
+    assert!(store.resolve_view("q8").is_err());
+}
+
+#[test]
 fn views_survive_reopen() {
     let dir = tempdir().unwrap();
     let (mut store, exact) = setup(dir.path());
