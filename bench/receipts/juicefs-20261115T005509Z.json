@@ -1,0 +1,114 @@
+{
+ "schema": "weft.juicefs_court.v1",
+ "generated_utc": "20261115T005509Z",
+ "backend": {
+  "product": "JuiceFS",
+  "version": "juicefs version 1.4.2+2026-10-22.46af7af",
+  "release": "v1.4.2",
+  "release_url": "https://github.com/juicedata/juicefs/releases/download/v1.4.2/juicefs-1.4.2-linux-amd64.tar.gz",
+  "release_tarball_sha256": "79648a0a67145bf42ca4e8336578c13a5bbc9a0bd34df340b3b93dac1e975247",
+  "release_binary_sha256": "6d450d3c151b6affede364d9a198d2505111b0612a5fb4d31613444c635174cc",
+  "image": "debian:bookworm-slim",
+  "image_digest": "debian@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc",
+  "image_id": "sha256:43f84a0b210f98845ef003912981774c95efe439eaa4b1cb62cf803fd46fc82a",
+  "topology": "one JuiceFS volume: SQLite metadata engine + local file object store; two independent client processes in two containers, each mounting through JuiceFS's own FUSE client",
+  "metadata_engine": "sqlite3:///jfs/meta.db",
+  "object_store": "file:///jfs/obj (key/value object layout on a host bind mount)",
+  "volume_settings": {
+   "Name": "weftvol",
+   "Storage": "file",
+   "Bucket": "/jfs/obj/",
+   "BlockSize": 16384,
+   "Compression": "none",
+   "TrashDays": 0,
+   "MetaVersion": 1
+  },
+  "client_sessions_seen_by_status": 3,
+  "format_options": "--storage file --bucket /jfs/obj --block-size 16384 (KiB; JuiceFS maximum, its default is 4096 KiB) --trash-days 0 --compress none",
+  "mount_options": {
+   "client_a": "--no-usage-report --no-syslog --cache-dir /jfs/cache-a --cache-size 1 --open-cache 0 --attr-cache 1.0s --entry-cache 1.0s",
+   "client_b": "--no-usage-report --no-syslog --cache-dir /jfs/cache-b --cache-size 1 --open-cache 0 --attr-cache 1.0s --entry-cache 1.0s",
+   "mountinfo_client_a": "754 1210 0:288 / /mnt/jfs rw,nosuid,nodev,relatime - fuse.juicefs JuiceFS:weftvol rw,user_id=0,group_id=0,default_permissions,allow_other,max_read=131072",
+   "mountinfo_client_b": "1865 2110 0:299 / /mnt/jfs rw,nosuid,nodev,relatime - fuse.juicefs JuiceFS:weftvol rw,user_id=0,group_id=0,default_permissions,allow_other,max_read=131072",
+   "why": "--cache-size 1 MiB makes the client data cache negligible so the cold-restore column is not served by a JuiceFS client cache; --open-cache 0 keeps the documented close-to-open default; attribute and entry caches stay at their 1 s defaults"
+  },
+  "df": "1865 2110 0:299 / /mnt/jfs rw,nosuid,nodev,relatime - fuse.juicefs JuiceFS:weftvol rw,user_id=0,group_id=0,default_permissions,allow_other,max_read=131072\n---\nFilesystem       Size  Used Avail Use% Mounted on\nJuiceFS:weftvol  1.0P  131M  1.0P   1% /mnt/jfs\n---\nFilesystem        Inodes IUsed    IFree IUse% Mounted on\nJuiceFS:weftvol 10485766     6 10485760    1% /mnt/jfs",
+  "juicefs_status_file": "bench/receipts/juicefs-20261115T005509Z.status.json",
+  "juicefs_stats_file": "bench/receipts/juicefs-20261115T005509Z.stats.txt",
+  "label": "SINGLE HOST, one volume, TWO client processes, one writer at a time. Not a fleet, not multi-node, not clustered performance, not a cloud result. The object store and the SQLite database are host directories, so no media or power-loss claim is made."
+ },
+ "container": {
+  "clients": 2,
+  "memory": "3g",
+  "memory_swap": "3g",
+  "pids": "1024",
+  "cpus": "4",
+  "cap_drop": "ALL",
+  "cap_add": [
+   "SYS_ADMIN"
+  ],
+  "device": "/dev/fuse",
+  "why_capabilities": "the JuiceFS client mounts through /dev/fuse; SYS_ADMIN is the minimum mount capability",
+  "no_new_privileges": true,
+  "lost_capabilities_observed": [
+   "CAP_SYS_RESOURCE absent: JuiceFS logs 'CAP_SYS_RESOURCE is needed for PR_SET_IO_FLUSHER'; the client runs without IO-flusher priority protection",
+   "setpriority denied: JuiceFS logs 'setpriority: permission denied'; no in-client priority tuning"
+  ]
+ },
+ "arms": {
+  "contract": [
+   "A",
+   "N",
+   "B",
+   "C",
+   "D",
+   "E"
+  ],
+  "repetitions": 7,
+  "label": "full",
+  "augmentation_receipt": "bench/receipts/augmentation-juicefs-20261115T005509Z.json",
+  "raw_log": "bench/receipts/juicefs-20261115T005509Z.log",
+  "durability": "JuiceFS write-back mode is off (the default): a completed write has its data uploaded to the file object store and its metadata committed in SQLite, after an fsync of the file (A-E) or of the atomic metadata file (N).",
+  "weftfs_fuse_in_data_path": false
+ },
+ "cross_client": {
+  "client_processes": 2,
+  "volume": "weftvol",
+  "close_to_open": {
+   "a_write_then_b_read_ms": 143,
+   "b_write_then_a_read_ms": 142,
+   "a_to_b_result": "ok",
+   "b_to_a_result": "ok",
+   "method": "writer does dd conv=fsync (data + metadata durable), the peer polls a fresh open+read for a matching SHA-256 at 10 ms resolution; the recorded value is a ceiling on visibility latency"
+  },
+  "in_place_rewrite": {
+   "peer_saw_before": "first-generation",
+   "peer_result": "ok",
+   "peer_observed_new_content_after_ms": 24,
+   "method": "A replaces the file atomically; B polls head -c 17 until it sees the new prefix",
+   "why": "JuiceFS guarantees close-to-open consistency, not read-after-write; the attribute/entry cache is 1 s by default and is recorded in the mount options"
+  },
+  "n_client_failure": {
+   "method": "client A writes 1 MiB chunks, each sync(2)-ed and its SHA-256 acknowledged to a container-local log, until the write fails; client A's JuiceFS processes are SIGKILLed mid-write; client B then reads every acknowledged chunk; a fresh client A mounts the same volume and reads them again",
+   "kill": "SIGKILL of every JuiceFS process in client A while the writer was still running; acknowledged-before-kill=8 acknowledged-final=9 write-failed-at-chunk=10",
+   "acknowledged_chunks": 9,
+   "peer_read_chunks_ok": 9,
+   "peer_read_chunks_bad": 0,
+   "peer_file_length_bytes": "9437184",
+   "recovered_client": "remounted_at_/mnt/jfs2",
+   "recovered_read_chunks_ok": 9,
+   "recovered_read_chunks_bad": 0,
+   "rule": "every acknowledged (fsynced) chunk must read back intact on the peer; bytes beyond the last acknowledgement are unacknowledged and are reported, not counted as a loss",
+   "write_failure_marker": "write-failed-at-chunk=10",
+   "is_media_loss": false
+  }
+ },
+ "non_claims": [
+  "one host, one volume, two client processes, one writer at a time; not a fleet, cluster or multi-node result",
+  "SQLite metadata engine; not the Redis/PostgreSQL/MariaDB/TiKV engines, and not the JuiceFS cloud service",
+  "local file object store; not S3/GCS/Azure object storage over a network",
+  "no media, power-loss or host-cache-loss claim; the failure test kills client processes, not a machine or a disk",
+  "no claim about JuiceFS versions other than the pinned release recorded here",
+  "no comparison against another filesystem (rule 13)"
+ ]
+}

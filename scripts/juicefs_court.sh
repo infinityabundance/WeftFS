@@ -371,15 +371,18 @@ rewrite_visible_ms=$(( ($(date -u +%s%N) - rewrite_start) / 1000000 ))
 # Client A's JuiceFS daemon is SIGKILLed while the writer is still going, then
 # client B reads every acknowledged chunk back.
 echo "juicefs_court: n-client failure test: write on A, kill A mid-write, read on B" >&2
-timeout --signal=KILL 600 docker exec "$client_a" bash -c '
+# The writer is bounded to 64 MiB and each chunk to its own timeout: the test
+# needs a handful of acknowledged chunks, and an unbounded writer on a mount
+# whose client has been killed must never be able to run the host out of space.
+timeout --signal=KILL 240 docker exec "$client_a" bash -c '
 set -uo pipefail
 mkdir -p /mnt/jfs/cross
 : > /tmp/ack.log
 writer() {
-  for i in $(seq 1 100000); do
+  for i in $(seq 1 64); do
     dd if=/dev/urandom of=/tmp/chunk.bin bs=1M count=1 status=none
     h=$(sha256sum /tmp/chunk.bin | cut -d" " -f1)
-    if ! dd if=/tmp/chunk.bin of=/mnt/jfs/cross/inflight.bin bs=1M count=1 \
+    if ! timeout -s KILL 20 dd if=/tmp/chunk.bin of=/mnt/jfs/cross/inflight.bin bs=1M count=1 \
          oflag=append conv=notrunc,fsync status=none 2>/dev/null; then
       printf "write-failed-at-chunk=%s\n" "$i" >> /tmp/writer.state
       break
@@ -389,9 +392,9 @@ writer() {
 }
 writer &
 wp=$!
-for _ in $(seq 1 4000); do
+for _ in $(seq 1 2000); do
   n=$(grep -cE "^[0-9]+ [0-9a-f]{64}$" /tmp/ack.log 2>/dev/null || true)
-  if [ "${n:-0}" -ge 16 ]; then break; fi
+  if [ "${n:-0}" -ge 8 ]; then break; fi
   sleep 0.01
 done
 n_before=$(grep -cE "^[0-9]+ [0-9a-f]{64}$" /tmp/ack.log 2>/dev/null || true)
@@ -401,6 +404,7 @@ for p in /proc/[0-9]*; do
     kill -9 "$pid" 2>/dev/null || true
   fi
 done
+for _ in $(seq 1 200); do kill -0 "$wp" 2>/dev/null || break; sleep 0.05; done
 wait "$wp" 2>/dev/null || true
 n_final=$(grep -cE "^[0-9]+ [0-9a-f]{64}$" /tmp/ack.log 2>/dev/null || true)
 state=$(cat /tmp/writer.state 2>/dev/null | head -1 || true)
