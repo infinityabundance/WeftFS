@@ -1,0 +1,42 @@
+{
+ "schema": "weft.suite-receipt.v1",
+ "stamp": "20261115T074110Z",
+ "generated_utc": "2026-11-15T07:41:10Z",
+ "revision": {
+  "weftfs": "4c94894015c289484cf361029af04283463795a8",
+  "weftcodec": "c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297",
+  "weftfs_go": "71a9338d78d69ca87ec48e5f2bc9e9305406162b",
+  "weftcodec_go": "0db8016132bcfda3e86907724743abd2555efa7b"
+ },
+ "courts": {
+  "rust": {
+   "image": "weft/rust-court:1",
+   "image_id": "sha256:68d1152b7067322d138e373d61f03816750a2abf2fa93e09d2530d92c6bc5beb",
+   "command": "cargo test --all-targets",
+   "groups": 215,
+   "passed": 1022,
+   "failed": 0,
+   "ignored": 0,
+   "log": "bench/receipts/t048-t052-suites-20261115T074110Z.rust.log"
+  },
+  "fuse": {
+   "image": "weft/fuse-court:1",
+   "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+   "command": "cargo test --features fuse --all-targets",
+   "groups": 215,
+   "passed": 1073,
+   "failed": 0,
+   "ignored": 2,
+   "ignored_tests_are_pre_existing": true,
+   "log": "bench/receipts/t048-t052-suites-20261115T074110Z.fuse.log"
+  }
+ },
+ "limits": {
+  "memory": "3g",
+  "memory_swap": "3g",
+  "pids": 1024,
+  "cpus": 4
+ },
+ "note": "Both suites ran to completion with exit 0 at the recorded revision. Counts are summed from the `test result:` lines in the attached logs, not from a harness summary. No test was skipped or filtered.",
+ "result": "pass"
+}
