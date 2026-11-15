@@ -217,6 +217,10 @@
     {
       "id": "trc",
       "title": "P03 training-ready cost and cache"
+    },
+    {
+      "id": "t091",
+      "title": "T091 multi-parent reconstruction, pythia-70m checkpoints"
     }
   ],
   "numbers": [
@@ -27424,6 +27428,422 @@
       "receipt": "bench/receipts/training-ready-cost-20261115T170000Z.json",
       "stamp": "20261115T170000Z",
       "revision": "dff79826a138d0cde046c39f4b3ed8f5147d56aa"
+    },
+    {
+      "key": "t091.tensors",
+      "label": "tensors measured",
+      "unit": "",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.tensors",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.logical_mib",
+      "label": "logical tensor bytes measured",
+      "unit": "MiB",
+      "group": "t091",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf",
+      "expr": "{t091.logical_bytes} / 1048576"
+    },
+    {
+      "key": "t091.changed_frac",
+      "label": "fraction of 16-bit words differing from the nearest parent",
+      "unit": "",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.changed_fraction",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.mode3_bytes",
+      "label": "best single-parent mode 3 (DELTA) frame bytes",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.best_single_delta_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.mode11_bytes",
+      "label": "best single-parent mode 11 (WEIGHT_DELTA) frame bytes",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.best_single_weight_delta_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.mode16_bytes",
+      "label": "best single-parent mode 16 (SPARSE_DELTA) frame bytes",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.best_single_sparse_delta_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.mode9_bytes",
+      "label": "mode 9 (FLOAT_TENSOR) bytes on the target",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.float_tensor_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.multi_bytes",
+      "label": "best multi-parent container bytes",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.best_multiparent_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.multi_over_mode3",
+      "label": "multi-parent over best single-parent mode 3 (on disk)",
+      "unit": "x",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.multiparent_over_single_delta",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.multi_over_mode11",
+      "label": "multi-parent over best single-parent mode 11 (on disk)",
+      "unit": "x",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.multiparent_over_single_weight_delta",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.payload_multi",
+      "label": "payload-normalised multi-parent op-stream bytes",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "payload_analysis.total_multiparent",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.payload_single",
+      "label": "payload-normalised best single-parent mode 3 body bytes",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "payload_analysis.total_single",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.payload_win",
+      "label": "payload-normalised bytes saved in aggregate",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "payload_analysis.total_win",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.payload_win_frac",
+      "label": "payload win as a fraction of the aggregate mode-3 body",
+      "unit": "%",
+      "group": "t091",
+      "format": "fixed:3",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf",
+      "expr": "100 * {t091.payload_win} / {t091.payload_single}"
+    },
+    {
+      "key": "t091.payload_winners",
+      "label": "tensors where the payload-normalised multi-parent body wins",
+      "unit": "",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "payload_analysis.tensors_with_a_payload_win",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.decode_mode3",
+      "label": "mode 3 decode wall summed over the measured tensors",
+      "unit": "ms",
+      "group": "t091",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.baseline_decode_ms_sum.mode3",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.decode_mode11",
+      "label": "mode 11 decode wall summed over the measured tensors",
+      "unit": "ms",
+      "group": "t091",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.baseline_decode_ms_sum.mode11",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.refusals",
+      "label": "typed availability refusals (missing parent, corrupt parent)",
+      "unit": "",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.availability_refusals",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.refusal_checks",
+      "label": "availability checks performed",
+      "unit": "",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.availability_checks",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout1_bytes",
+      "label": "best multi-parent bytes at fan-out 1",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout1_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout1_ratio",
+      "label": "fan-out 1 over best single-parent mode 3",
+      "unit": "x",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout1_ratio",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout2_bytes",
+      "label": "best multi-parent bytes at fan-out 2",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout2_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout2_ratio",
+      "label": "fan-out 2 over best single-parent mode 3",
+      "unit": "x",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout2_ratio",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout3_bytes",
+      "label": "best multi-parent bytes at fan-out 3",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout3_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout3_ratio",
+      "label": "fan-out 3 over best single-parent mode 3",
+      "unit": "x",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout3_ratio",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout4_bytes",
+      "label": "best multi-parent bytes at fan-out 4",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout4_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout4_ratio",
+      "label": "fan-out 4 over best single-parent mode 3",
+      "unit": "x",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout4_ratio",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.fanout1_chosen",
+      "label": "tensors whose best configuration is fan-out 1",
+      "unit": "",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.fanout1_chosen",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.largest_payload_win",
+      "label": "largest single-tensor payload win",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.largest_payload_win",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.largest_payload_win_frac",
+      "label": "largest single-tensor payload win as a fraction of that tensor",
+      "unit": "",
+      "group": "t091",
+      "format": "fixed:4",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf",
+      "path": "analysis.largest_payload_win_fraction"
+    },
+    {
+      "key": "t091.multi_decode",
+      "label": "multi-parent decode wall summed over the measured tensors",
+      "unit": "ms",
+      "group": "t091",
+      "format": "fixed:2",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "analysis.multi_decode_ms_sum",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
+    },
+    {
+      "key": "t091.logical_bytes",
+      "label": "logical tensor bytes measured",
+      "unit": "B",
+      "group": "t091",
+      "format": "int",
+      "receipt": "bench/receipts/multi-parent-20261115T162813Z.json",
+      "path": "measurement.totals.logical_bytes",
+      "stamp_path": "generated_at",
+      "stamp": "20261115T162813Z",
+      "revision_path": "revision",
+      "revision": "31f47f4177b2826c1898d6540da938c2ee7fcbcf"
     }
   ],
   "blocks": [
@@ -35069,6 +35489,97 @@
       "rows": [
         {
           "template": "Corpus: {{trc.tensors}} tensors, {{trc.element}} element bytes; materialized {{trc.materialized}} bytes."
+        }
+      ]
+    },
+    {
+      "id": "t091-result",
+      "file": "bench/RESULTS-multi-parent.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "Measured on **{{t091.tensors}} tensors** (**{{t091.logical_bytes}} B**, **{{t091.logical_mib}} MiB**, of real pythia-70m weights);"
+        },
+        {
+          "template": "the sampled tensors differ from their nearest parent in **{{t091.changed_frac}}** of 16-bit words."
+        },
+        {
+          "template": "Best single-parent bytes: mode 3 **{{t091.mode3_bytes}} B**, mode 11 **{{t091.mode11_bytes}} B**,"
+        },
+        {
+          "template": "mode 16 **{{t091.mode16_bytes}} B**; mode 9 on the target itself **{{t091.mode9_bytes}} B**."
+        },
+        {
+          "template": "Best multi-parent container: **{{t091.multi_bytes}} B**, i.e. **{{t091.multi_over_mode3}}\u00d7** the best"
+        },
+        {
+          "template": "single-parent mode 3 frame and **{{t091.multi_over_mode11}}\u00d7** the best single-parent mode 11 frame."
+        }
+      ]
+    },
+    {
+      "id": "t091-fanout",
+      "file": "bench/RESULTS-multi-parent.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "Aggregate bytes by fan-out:"
+        },
+        {
+          "template": "fan-out 1 **{{t091.fanout1_bytes}} B** ({{t091.fanout1_ratio}}\u00d7 mode 3),"
+        },
+        {
+          "template": "fan-out 2 **{{t091.fanout2_bytes}} B** ({{t091.fanout2_ratio}}\u00d7),"
+        },
+        {
+          "template": "fan-out 3 **{{t091.fanout3_bytes}} B** ({{t091.fanout3_ratio}}\u00d7),"
+        },
+        {
+          "template": "fan-out 4 **{{t091.fanout4_bytes}} B** ({{t091.fanout4_ratio}}\u00d7)."
+        },
+        {
+          "template": "The best configuration is fan-out 1 on **{{t091.fanout1_chosen}}** of {{t091.tensors}} tensors."
+        }
+      ]
+    },
+    {
+      "id": "t091-payload",
+      "file": "bench/RESULTS-multi-parent.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "Payload-normalised (op-stream only) multi-parent **{{t091.payload_multi}} B** against"
+        },
+        {
+          "template": "**{{t091.payload_single}} B** for the best single-parent mode 3 body: a win of"
+        },
+        {
+          "template": "**{{t091.payload_win}} B**, **{{t091.payload_win_frac}}%** of the single-parent body, on"
+        },
+        {
+          "template": "**{{t091.payload_winners}}** tensors. The largest single-tensor payload win is"
+        },
+        {
+          "template": "**{{t091.largest_payload_win}} B** (a fraction **{{t091.largest_payload_win_frac}}** of that tensor)."
+        }
+      ]
+    },
+    {
+      "id": "t091-decode",
+      "file": "bench/RESULTS-multi-parent.md",
+      "kind": "lines",
+      "rows": [
+        {
+          "template": "Decode wall summed over the measured tensors: multi-parent **{{t091.multi_decode}} ms**,"
+        },
+        {
+          "template": "mode 3 **{{t091.decode_mode3}} ms**, mode 11 **{{t091.decode_mode11}} ms** (single-threaded,"
+        },
+        {
+          "template": "in-memory, including every format's own hash verification). Availability: **{{t091.refusals}}**"
+        },
+        {
+          "template": "typed refusals out of **{{t091.refusal_checks}}** checks, no bytes returned."
         }
       ]
     }

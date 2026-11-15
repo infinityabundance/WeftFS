@@ -52,15 +52,36 @@ mode 9 on the target itself.
 ## 3. Result
 
 <!-- BEGIN GENERATED:t091-result (scripts/perf_numbers.py) -->
+Measured on **72 tensors** (**50,503,680 B**, **48.16 MiB**, of real pythia-70m weights);
+the sampled tensors differ from their nearest parent in **0.6952** of 16-bit words.
+Best single-parent bytes: mode 3 **42,082,557 B**, mode 11 **13,360,077 B**,
+mode 16 **51,940,819 B**; mode 9 on the target itself **41,983,061 B**.
+Best multi-parent container: **42,090,550 B**, i.e. **1.0002×** the best
+single-parent mode 3 frame and **3.1505×** the best single-parent mode 11 frame.
 <!-- END GENERATED:t091-result -->
 
 <!-- BEGIN GENERATED:t091-fanout (scripts/perf_numbers.py) -->
+Aggregate bytes by fan-out:
+fan-out 1 **42,092,229 B** (1.0002× mode 3),
+fan-out 2 **42,093,300 B** (1.0003×),
+fan-out 3 **42,096,402 B** (1.0003×),
+fan-out 4 **42,099,436 B** (1.0004×).
+The best configuration is fan-out 1 on **65** of 72 tensors.
 <!-- END GENERATED:t091-fanout -->
 
 <!-- BEGIN GENERATED:t091-payload (scripts/perf_numbers.py) -->
+Payload-normalised (op-stream only) multi-parent **42,052,505 B** against
+**42,071,901 B** for the best single-parent mode 3 body: a win of
+**19,396 B**, **0.046%** of the single-parent body, on
+**17** tensors. The largest single-tensor payload win is
+**2,738 B** (a fraction **0.0176** of that tensor).
 <!-- END GENERATED:t091-payload -->
 
 <!-- BEGIN GENERATED:t091-decode (scripts/perf_numbers.py) -->
+Decode wall summed over the measured tensors: multi-parent **29.27 ms**,
+mode 3 **41.97 ms**, mode 11 **1,938.70 ms** (single-threaded,
+in-memory, including every format's own hash verification). Availability: **144**
+typed refusals out of **144** checks, no bytes returned.
 <!-- END GENERATED:t091-decode -->
 
 ## 4. What the numbers say
