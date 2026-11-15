@@ -12191,6 +12191,10 @@ the aggregate was **not** re-run, so the cited verification receipt is still
     2037 numbers / 265 blocks OK, `check-spec-drift` (81 comparisons),
     conformance manifest and coverage, `context-plane-verifier_court` and
     `check-context-plane-header` — see the commit log. Full Rust
-    `cargo test --all-targets` and Go `go test -race ./...` were run after the
-    last code change. `verify-all` was **not** re-run (the four P0x courts are
-    registered with skip paths); the cited aggregate is unchanged.
+    `cargo test --all-targets`, the FUSE `--features fuse --all-targets` suite
+    and Go `go test -race ./...` (plus gofmt/vet/CGO=0 build) were run at the
+    final code revision and passed; their counts are not repeated here because
+    tracked documents take counts from receipts (rule 12) and those runs are not
+    receipts. `verify-all` was **not** re-run (the P0x courts are registered with
+    skip paths; a skip was verified to exit 78 with one line); the cited
+    aggregate is unchanged.
