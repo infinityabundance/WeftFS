@@ -677,6 +677,25 @@ run_orchestrated_court multiwriter multiwriter_court bash scripts/multiwriter_co
 run_orchestrated_court multiwriter_failure multiwriter_failure_court \
   bash scripts/multiwriter_failure_court.sh
 
+# P01 composable Training Artifact: Rust writes, an independent Go consumer
+# validates the same store (and the reverse), plus the negative cases and the
+# separate mutable grant record. A court that cannot run prints
+# `training_artifact: skip <reason>` and exits 78; the aggregate records a skip.
+run_orchestrated_court training_artifact training_artifact \
+  env WEFT_STAMP="$stamp" bash scripts/training_artifact_court.sh
+
+# P02 matched causal-closure costs (complete/minimal/naive) and the clean-room
+# verifier over canonical records. `causal_closure: skip <reason>` + exit 78
+# when the bench court or Docker is unavailable.
+run_orchestrated_court causal_closure causal_closure \
+  env WEFT_STAMP="$stamp" bash bench/scripts/causal_closure_court.sh
+
+# P03 incremental ready-state cache and time-to-ready on the real Qwen2.5-0.5B
+# checkpoint. `training_ready_cost: skip <reason>` + exit 78 when the pinned
+# corpus or Docker is unavailable.
+run_orchestrated_court training_ready_cost training_ready_cost \
+  env WEFT_STAMP="$stamp" bash bench/scripts/training_ready_cost_court.sh
+
 # Aggregate counts. Recounted from the results file so the receipt can never
 # disagree with the per-court entries it prints below.
 total="$(grep -c . "$results" || true)"

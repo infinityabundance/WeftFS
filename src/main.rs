@@ -882,6 +882,13 @@ enum Command {
         #[command(subcommand)]
         command: ArtifactCommand,
     },
+    /// The composable Training Artifact: build, show, validate, bounded causal
+    /// closure, and the separate mutable grant record (P01/P02).
+    #[command(name = "training-artifact")]
+    TrainingArtifact {
+        #[command(subcommand)]
+        command: TrainingArtifactCommand,
+    },
     /// Revocation epochs: the monotonic record a client must observe before
     /// serving, not a caller-supplied revocation set (T078).
     Revocation {
@@ -935,6 +942,15 @@ enum Command {
         /// Verify an existing materialized directory against its manifest.
         #[arg(long = "verify-out", value_name = "DIR")]
         verify_out: Option<PathBuf>,
+        /// Generation-scoped ready-state cache directory (P03).
+        #[arg(long = "cache-dir", value_name = "DIR")]
+        cache_dir: Option<PathBuf>,
+        /// Ignore an existing cache entry and re-verify (then overwrite it).
+        #[arg(long)]
+        refresh: bool,
+        /// Never read or write the ready-state cache, even with --cache-dir.
+        #[arg(long = "no-cache")]
+        no_cache: bool,
         #[arg(long = "max-bytes")]
         max_bytes: Option<u64>,
         #[arg(long = "max-objects")]
@@ -1828,6 +1844,131 @@ enum ArtifactCommand {
         /// `{"ops":[{"op":"pin"|"release", "artifact":{...}, ...}]}`.
         #[arg(long)]
         ops: PathBuf,
+        #[arg(long)]
+        snapshot: Option<String>,
+    },
+}
+
+/// `weftfs training-artifact ...` (P01/P02).
+#[derive(Subcommand)]
+enum TrainingArtifactCommand {
+    /// Build, publish and print one artifact from a checkpoint.
+    Build {
+        #[arg(long)]
+        name: String,
+        #[arg(long)]
+        checkpoint: String,
+        /// Stored Context Root name or `weft://` URI.
+        #[arg(long = "context-root")]
+        context_root: Option<String>,
+        /// Provenance receipt id (64 hex digits); repeatable.
+        #[arg(long = "provenance")]
+        provenance: Vec<String>,
+        /// Direct causal parent identity (64 hex digits, comma-separated).
+        #[arg(long)]
+        causal: Option<String>,
+        /// `none`, `declared` or `complete` (default `declared`).
+        #[arg(long, default_value = "declared")]
+        lineage: String,
+        /// Allowed dtype; repeatable. Empty permits any.
+        #[arg(long = "allowed-dtype")]
+        allowed_dtypes: Vec<String>,
+        #[arg(long = "minimum-tensors", default_value_t = 1u64)]
+        minimum_tensors: u64,
+        /// Do not require a complete source checkpoint.
+        #[arg(long = "allow-incomplete-checkpoint")]
+        allow_incomplete_checkpoint: bool,
+        #[arg(long)]
+        snapshot: Option<String>,
+    },
+    /// Build, publish and print one tensor-set artifact (no checkpoint).
+    #[command(name = "build-tensor-set")]
+    BuildTensorSet {
+        #[arg(long)]
+        name: String,
+        /// `TENSOR_NAME=OBJECT_ID`; repeatable.
+        #[arg(long = "tensor", required = true)]
+        tensors: Vec<String>,
+        #[arg(long = "context-root")]
+        context_root: Option<String>,
+        #[arg(long = "provenance")]
+        provenance: Vec<String>,
+        #[arg(long)]
+        causal: Option<String>,
+        #[arg(long, default_value = "declared")]
+        lineage: String,
+        #[arg(long = "allowed-dtype")]
+        allowed_dtypes: Vec<String>,
+        #[arg(long = "minimum-tensors", default_value_t = 1u64)]
+        minimum_tensors: u64,
+        #[arg(long)]
+        snapshot: Option<String>,
+    },
+    /// Show a stored artifact record.
+    Show {
+        #[arg(long)]
+        root: String,
+        #[arg(long)]
+        snapshot: Option<String>,
+    },
+    /// Validate exact values, lineage and policy, and report.
+    Validate {
+        #[arg(long)]
+        root: String,
+        #[arg(long)]
+        snapshot: Option<String>,
+        #[arg(long = "closure-mode", default_value = "complete")]
+        closure_mode: String,
+        #[arg(long = "max-depth", default_value_t = 64u32)]
+        max_depth: u32,
+        #[arg(long = "max-nodes", default_value_t = 65536usize)]
+        max_nodes: usize,
+        #[arg(long = "check-grants")]
+        check_grants: bool,
+        #[arg(long = "now-ns", default_value_t = 0i64)]
+        now_ns: i64,
+    },
+    /// Compute a bounded causal closure and write the verifier bundle.
+    Closure {
+        #[arg(long)]
+        root: String,
+        #[arg(long, default_value = "complete")]
+        mode: String,
+        #[arg(long)]
+        snapshot: Option<String>,
+        #[arg(long = "max-depth", default_value_t = 64u32)]
+        max_depth: u32,
+        #[arg(long = "max-nodes", default_value_t = 65536usize)]
+        max_nodes: usize,
+        /// Write the `weft.closure.bundle.v1` JSON here (always written,
+        /// including a refusal).
+        #[arg(long = "bundle-out")]
+        bundle_out: Option<PathBuf>,
+    },
+    /// Publish a mutable grant for an artifact (never changes its root).
+    Grant {
+        #[arg(long)]
+        root: String,
+        #[arg(long)]
+        uid: u64,
+        #[arg(long)]
+        gid: u64,
+        /// `train`, `evaluate`, `materialize` or `replicate`; repeatable.
+        #[arg(long = "action", required = true)]
+        actions: Vec<String>,
+        #[arg(long = "policy-epoch", default_value_t = 0u64)]
+        policy_epoch: u64,
+        #[arg(long = "issued-ns", default_value_t = 0i64)]
+        issued_ns: i64,
+        #[arg(long = "expires-in-ms")]
+        expires_in_ms: Option<u64>,
+        #[arg(long)]
+        supersedes: Option<String>,
+    },
+    /// List grants and the current grant epoch.
+    Grants {
+        #[arg(long)]
+        root: String,
         #[arg(long)]
         snapshot: Option<String>,
     },
@@ -3805,7 +3946,8 @@ fn run(cli: Cli) -> Result<()> {
                     max_pass_bytes,
                     min_batch_bytes,
                 };
-                let run = weftfs::maintenance::maintenance_run(&mut store, &budget, max_passes, true)?;
+                let run =
+                    weftfs::maintenance::maintenance_run(&mut store, &budget, max_passes, true)?;
                 if json {
                     print_json(&json!({
                         "applied": true,
@@ -4101,6 +4243,9 @@ fn run(cli: Cli) -> Result<()> {
         }
         Command::Context { command } => run_context(&store, json, policy, command),
         Command::Artifact { command } => run_artifact(&store, json, policy, command),
+        Command::TrainingArtifact { command } => {
+            run_training_artifact(&store, json, policy, command)
+        }
         Command::Revocation { command } => run_revocation(&store, json, policy, command),
         Command::Materialize {
             root,
@@ -4138,6 +4283,9 @@ fn run(cli: Cli) -> Result<()> {
             root,
             check,
             verify_out,
+            cache_dir,
+            refresh,
+            no_cache,
             max_bytes,
             max_objects,
             max_decode_ms,
@@ -4155,6 +4303,9 @@ fn run(cli: Cli) -> Result<()> {
             root,
             check,
             verify_out,
+            cache_dir,
+            refresh,
+            no_cache,
             max_bytes,
             max_objects,
             max_decode_ms,
@@ -7826,6 +7977,412 @@ fn run_artifact(
     }
 }
 
+/// `weftfs training-artifact ...`: the composable Training Artifact (P01/P02).
+fn run_training_artifact(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: TrainingArtifactCommand,
+) -> Result<()> {
+    use weftfs::training_artifact::{
+        TrainingArtifactSpec, TrainingGrant, TrainingPolicy, ValidationOptions,
+    };
+
+    let read_store =
+        || -> Result<Store> { open_store(store_path, OpenMode::ReadOnly, policy.clone()) };
+    let write_store =
+        || -> Result<Store> { open_store(store_path, OpenMode::ReadWrite, policy.clone()) };
+    let snapshot_of = |store: &Store, text: Option<&str>| -> Result<Hash32> {
+        match text {
+            Some(text) => store.resolve_snapshot_ref(text),
+            None => Ok(store.head()),
+        }
+    };
+    let policy_from = |lineage: &str,
+                       dtypes: &[String],
+                       minimum: u64,
+                       checkpoint_complete: bool|
+     -> Result<TrainingPolicy> {
+        let mut allowed = dtypes.to_vec();
+        allowed.sort();
+        allowed.dedup();
+        let policy = TrainingPolicy {
+            lineage: weftfs::training_artifact::LineageMode::parse(lineage)?,
+            allowed_dtypes: allowed,
+            minimum_tensors: minimum,
+            checkpoint_complete,
+        };
+        policy.validate()?;
+        Ok(policy)
+    };
+    let causal_entries = |text: Option<&str>| -> Result<Vec<Hash32>> {
+        let Some(text) = text else {
+            return Ok(Vec::new());
+        };
+        let mut out = Vec::new();
+        for part in text.split(',').filter(|part| !part.is_empty()) {
+            out.push(
+                Hash32::from_hex(part.trim())
+                    .map_err(|_| Error::invalid_argument(format!("bad causal id `{part}`")))?,
+            );
+        }
+        Ok(out)
+    };
+    let provenance_ids = |items: &[String]| -> Result<Vec<Hash32>> {
+        let mut out = Vec::new();
+        for item in items {
+            out.push(
+                Hash32::from_hex(item.trim())
+                    .map_err(|_| Error::invalid_argument(format!("bad provenance id `{item}`")))?,
+            );
+        }
+        out.sort_unstable();
+        out.dedup();
+        Ok(out)
+    };
+
+    match command {
+        TrainingArtifactCommand::Build { .. } | TrainingArtifactCommand::BuildTensorSet { .. } => {
+            let mut store = write_store()?;
+            let mut spec;
+            let snapshot;
+            match command {
+                TrainingArtifactCommand::Build {
+                    name,
+                    checkpoint,
+                    context_root,
+                    provenance,
+                    causal,
+                    lineage,
+                    allowed_dtypes,
+                    minimum_tensors,
+                    allow_incomplete_checkpoint,
+                    snapshot: snapshot_text,
+                } => {
+                    snapshot = snapshot_of(&store, snapshot_text.as_deref())?;
+                    spec = TrainingArtifactSpec::checkpoint(name);
+                    spec.checkpoint = Some(checkpoint);
+                    spec.context_root = context_root;
+                    spec.provenance = provenance_ids(&provenance)?;
+                    spec.causal_entries = causal_entries(causal.as_deref())?;
+                    spec.policy = policy_from(
+                        &lineage,
+                        &allowed_dtypes,
+                        minimum_tensors,
+                        !allow_incomplete_checkpoint,
+                    )?;
+                }
+                TrainingArtifactCommand::BuildTensorSet {
+                    name,
+                    tensors,
+                    context_root,
+                    provenance,
+                    causal,
+                    lineage,
+                    allowed_dtypes,
+                    minimum_tensors,
+                    snapshot: snapshot_text,
+                } => {
+                    snapshot = snapshot_of(&store, snapshot_text.as_deref())?;
+                    spec = TrainingArtifactSpec::checkpoint(name);
+                    spec.checkpoint = None;
+                    for item in &tensors {
+                        let (tensor, id) = item.split_once('=').ok_or_else(|| {
+                            Error::invalid_argument("--tensor must be TENSOR_NAME=OBJECT_ID")
+                        })?;
+                        spec.tensors.push((
+                            tensor.to_owned(),
+                            Hash32::from_hex(id.trim()).map_err(|_| {
+                                Error::invalid_argument(format!("bad object id in `{item}`"))
+                            })?,
+                        ));
+                    }
+                    spec.context_root = context_root;
+                    spec.provenance = provenance_ids(&provenance)?;
+                    spec.causal_entries = causal_entries(causal.as_deref())?;
+                    spec.policy = policy_from(&lineage, &allowed_dtypes, minimum_tensors, false)?;
+                }
+                _ => unreachable!(),
+            }
+            let (artifact, root) = store.build_training_artifact(snapshot, &spec)?;
+            store.write_training_artifact(&artifact)?;
+            let provisional = snapshot == store.head();
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "artifact_root": root.to_hex(),
+                    "name": artifact.name,
+                    "snapshot": snapshot.to_hex(),
+                    "provisional": provisional,
+                    "tensor_count": artifact.tensors.len(),
+                    "shard_count": artifact.shard_count(),
+                    "total_element_bytes": artifact.total_element_bytes(),
+                    "context_root": artifact.context_root.map(|id| id.to_hex()),
+                    "lineage": artifact.policy.lineage.as_str(),
+                    "store_path": weftfs::training_artifact::artifact_store_path(root),
+                }))
+            } else {
+                println!("artifact_root={}", root.to_hex());
+                println!("tensor_count={}", artifact.tensors.len());
+                println!("shard_count={}", artifact.shard_count());
+                Ok(())
+            }
+        }
+        TrainingArtifactCommand::Show { root, snapshot } => {
+            let store = read_store()?;
+            let snapshot = snapshot_of(&store, snapshot.as_deref())?;
+            let state = store.state_at(snapshot)?;
+            let root = Hash32::from_hex(&root)
+                .map_err(|_| Error::invalid_argument("artifact root hex is invalid"))?;
+            let (artifact, bytes) =
+                store.load_training_artifact_at(&state, Some(snapshot), root)?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "artifact_root": root.to_hex(),
+                    "snapshot": snapshot.to_hex(),
+                    "record_bytes": bytes,
+                    "name": artifact.name,
+                    "context_root": artifact.context_root.map(|id| id.to_hex()),
+                    "checkpoint": artifact.checkpoint.as_ref().map(|anchor| json!({
+                        "name": anchor.name,
+                        "manifest_object": anchor.manifest_object.to_hex(),
+                        "manifest_content": anchor.manifest_content.to_hex(),
+                        "manifest_root": anchor.manifest_root.to_hex(),
+                        "complete": anchor.complete,
+                        "source_sha256": anchor.source_sha256.map(|id| id.to_hex()),
+                        "tensor_count": anchor.tensor_count,
+                        "element_bytes": anchor.element_bytes,
+                    })),
+                    "tensors": artifact.tensors.iter().map(|tensor| json!({
+                        "name": tensor.name,
+                        "dtype": tensor.dtype,
+                        "shape": tensor.shape,
+                        "logical_root": tensor.logical_root.to_hex(),
+                        "content_root": tensor.content_root.to_hex(),
+                        "element_bytes": tensor.element_bytes,
+                        "shards": tensor.shards.len(),
+                    })).collect::<Vec<_>>(),
+                    "causal": artifact.causal.as_ref().map(|causal| json!({
+                        "parents": causal.parents.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                        "closure": causal.closure.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                    })),
+                    "provenance": artifact.provenance.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                    "policy": {
+                        "lineage": artifact.policy.lineage.as_str(),
+                        "allowed_dtypes": artifact.policy.allowed_dtypes,
+                        "minimum_tensors": artifact.policy.minimum_tensors,
+                        "checkpoint_complete": artifact.policy.checkpoint_complete,
+                    },
+                }))
+            } else {
+                println!("artifact_root={}", root.to_hex());
+                println!("name={}", artifact.name);
+                println!("tensors={}", artifact.tensors.len());
+                Ok(())
+            }
+        }
+        TrainingArtifactCommand::Validate {
+            root,
+            snapshot,
+            closure_mode,
+            max_depth,
+            max_nodes,
+            check_grants,
+            now_ns,
+        } => {
+            let store = read_store()?;
+            let snapshot = snapshot_of(&store, snapshot.as_deref())?;
+            let root = Hash32::from_hex(&root)
+                .map_err(|_| Error::invalid_argument("artifact root hex is invalid"))?;
+            let options = ValidationOptions {
+                closure_mode: weftfs::causal_closure::ClosureMode::parse(&closure_mode)?,
+                closure_bounds: weftfs::causal_closure::ClosureBounds {
+                    max_depth,
+                    max_nodes,
+                },
+                check_grants,
+                now_ns,
+            };
+            let report = store.validate_training_artifact_at(snapshot, root, &options)?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "artifact_root": report.artifact_root.to_hex(),
+                    "snapshot": report.snapshot.to_hex(),
+                    "name": report.name,
+                    "tensor_count": report.tensor_count,
+                    "shard_count": report.shard_count,
+                    "total_element_bytes": report.total_element_bytes,
+                    "tensors_exact": report.tensors_exact,
+                    "checkpoint_verified": report.checkpoint_verified,
+                    "context_root_verified": report.context_root_verified,
+                    "manifest_root": report.manifest_root.map(|id| id.to_hex()),
+                    "manifest_content": report.manifest_content.map(|id| id.to_hex()),
+                    "lineage_mode": report.lineage_mode,
+                    "causal_nodes": report.causal_nodes,
+                    "causal_max_depth": report.causal_max_depth,
+                    "causal_closure": report.causal_closure.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                    "provenance_verified": report.provenance_verified,
+                    "policy_ok": report.policy_ok,
+                    "grant_epoch": report.grant_epoch,
+                    "grants": report.grants,
+                    "artifact_bytes": report.artifact_bytes,
+                }))
+            } else {
+                println!("ok artifact_root={}", report.artifact_root.to_hex());
+                println!("tensors_exact={}", report.tensors_exact);
+                println!("checkpoint_verified={}", report.checkpoint_verified);
+                println!("causal_nodes={}", report.causal_nodes);
+                println!("provenance_verified={}", report.provenance_verified);
+                Ok(())
+            }
+        }
+        TrainingArtifactCommand::Closure {
+            root,
+            mode,
+            snapshot,
+            max_depth,
+            max_nodes,
+            bundle_out,
+        } => {
+            let store = read_store()?;
+            let snapshot = snapshot_of(&store, snapshot.as_deref())?;
+            let root = Hash32::from_hex(&root)
+                .map_err(|_| Error::invalid_argument("artifact root hex is invalid"))?;
+            let mode = weftfs::causal_closure::ClosureMode::parse(&mode)?;
+            let evidence = store.training_artifact_closure(
+                snapshot,
+                root,
+                mode,
+                weftfs::causal_closure::ClosureBounds {
+                    max_depth,
+                    max_nodes,
+                },
+            )?;
+            let bundle = evidence.to_json();
+            if let Some(path) = bundle_out {
+                let bytes = serde_json::to_vec_pretty(&bundle)
+                    .map_err(|err| Error::invalid_argument(format!("bundle JSON: {err}")))?;
+                std::fs::write(&path, bytes)?;
+            }
+            if json {
+                print_json(&bundle)?;
+            } else if let Ok(result) = &evidence.outcome {
+                println!("mode={}", result.mode.as_str());
+                println!("nodes={}", result.nodes.len());
+                println!("max_depth={}", result.max_depth_seen);
+            }
+            // A refusal is still printed (and written) and then surfaced.
+            match evidence.outcome {
+                Ok(_) => Ok(()),
+                Err(err) => Err(err),
+            }
+        }
+        TrainingArtifactCommand::Grant {
+            root,
+            uid,
+            gid,
+            actions,
+            policy_epoch,
+            issued_ns,
+            expires_in_ms,
+            supersedes,
+        } => {
+            let mut store = write_store()?;
+            let root = Hash32::from_hex(&root)
+                .map_err(|_| Error::invalid_argument("artifact root hex is invalid"))?;
+            let mut actions = actions;
+            actions.sort();
+            actions.dedup();
+            let issued_at_ns = if issued_ns == 0 {
+                store.clock_now_ns()
+            } else {
+                issued_ns
+            };
+            let expires_at_ns = match expires_in_ms {
+                Some(ms) => Some(
+                    issued_at_ns
+                        .checked_add(
+                            i64::try_from(ms)
+                                .map_err(|_| Error::invalid_argument("expiry is too large"))?
+                                .checked_mul(1_000_000)
+                                .ok_or_else(|| Error::invalid_argument("expiry overflows"))?,
+                        )
+                        .ok_or_else(|| Error::invalid_argument("expiry overflows"))?,
+                ),
+                None => None,
+            };
+            let grant = TrainingGrant {
+                artifact_root: root,
+                uid,
+                gid,
+                actions,
+                policy_epoch,
+                issued_at_ns,
+                expires_at_ns,
+                supersedes: match supersedes {
+                    Some(text) => Some(
+                        Hash32::from_hex(&text)
+                            .map_err(|_| Error::invalid_argument("bad supersedes id"))?,
+                    ),
+                    None => None,
+                },
+                signature: None,
+            };
+            let grant_id = store.set_training_grant(&grant)?;
+            let epoch = store.training_grant_epoch(root)?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "artifact_root": root.to_hex(),
+                    "grant_id": grant_id.to_hex(),
+                    "grant_epoch": epoch,
+                }))
+            } else {
+                println!("grant_id={}", grant_id.to_hex());
+                println!("grant_epoch={epoch}");
+                Ok(())
+            }
+        }
+        TrainingArtifactCommand::Grants { root, snapshot } => {
+            let store = read_store()?;
+            let snapshot = snapshot_of(&store, snapshot.as_deref())?;
+            let state = store.state_at(snapshot)?;
+            let root = Hash32::from_hex(&root)
+                .map_err(|_| Error::invalid_argument("artifact root hex is invalid"))?;
+            let (epoch, grants) = store.training_grants_at(&state, root)?;
+            if json {
+                print_json(&json!({
+                    "ok": true,
+                    "artifact_root": root.to_hex(),
+                    "snapshot": snapshot.to_hex(),
+                    "grant_epoch": epoch,
+                    "grants": grants.iter().map(|grant| json!({
+                        "id": grant.id().ok().map(|id| id.to_hex()),
+                        "uid": grant.uid,
+                        "gid": grant.gid,
+                        "actions": grant.actions,
+                        "policy_epoch": grant.policy_epoch,
+                        "issued_at_ns": grant.issued_at_ns,
+                        "expires_at_ns": grant.expires_at_ns,
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                println!("grant_epoch={epoch}");
+                for grant in grants {
+                    println!(
+                        "grant={} actions={}",
+                        grant.id()?.to_hex(),
+                        grant.actions.join(",")
+                    );
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
 fn parse_snapshot_ref(text: &str) -> Result<SnapshotRef> {
     if text.len() == 64 && text.chars().all(|c| c.is_ascii_hexdigit()) {
         return Ok(SnapshotRef::Id(Hash32::from_hex(text).map_err(|_| {
@@ -8286,6 +8843,9 @@ fn run_training_ready(
     root: Option<String>,
     check: bool,
     verify_out: Option<PathBuf>,
+    cache_dir: Option<PathBuf>,
+    refresh: bool,
+    no_cache: bool,
     max_bytes: Option<u64>,
     max_objects: Option<u64>,
     max_decode_ms: Option<u64>,
@@ -8348,18 +8908,30 @@ fn run_training_ready(
             max_decode_ms,
             require_tensors,
         };
-        let report = store.check_training_ready(
+        let cache_options = match (&cache_dir, no_cache) {
+            (Some(dir), false) => Some(weftfs::ready_cache::ReadyCacheOptions {
+                dir: dir.clone(),
+                refresh,
+            }),
+            _ => None,
+        };
+        let (report, cache_outcome) = store.check_training_ready_cached(
             &root,
             capability.as_ref(),
             &principal,
             &weftcodec::Limits::default(),
             store.clock_now_ns(),
             &options,
+            cache_options.as_ref(),
         )?;
         if json {
             let mut output = report.to_json();
             output["elapsed_ms"] = json!(started.elapsed().as_secs_f64() * 1000.0);
             output["peak_rss_kib"] = json!(peak_rss_kib());
+            output["cache"] = match &cache_outcome {
+                Some(outcome) => outcome.to_json(),
+                None => serde_json::Value::Null,
+            };
             print_json(&output)
         } else {
             println!("context_root_id={}", report.context_root_id);
@@ -9327,8 +9899,8 @@ fn run_template(
             issued_at_ns,
         } => {
             let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
-            let seed_bytes = hex::decode(&seed)
-                .map_err(|_| Error::invalid_argument("--seed must be hex"))?;
+            let seed_bytes =
+                hex::decode(&seed).map_err(|_| Error::invalid_argument("--seed must be hex"))?;
             let mut output_objects = Vec::new();
             for text in &outputs {
                 output_objects.push(parse_hash(text, "--output")?);
@@ -9372,15 +9944,11 @@ fn run_template(
                     ))
                 }
                 (None, None) => {
-                    return Err(Error::invalid_argument(
-                        "replay needs --id or --output",
-                    ))
+                    return Err(Error::invalid_argument("replay needs --id or --output"))
                 }
             };
             if ids.is_empty() {
-                return Err(Error::not_found(
-                    "no template is attached to that object",
-                ));
+                return Err(Error::not_found("no template is attached to that object"));
             }
             let mut rows = Vec::new();
             for id in ids {
@@ -9662,9 +10230,10 @@ fn run_taint(
             let seed = decode_seed(&sign_seed_hex)?;
             let authority = decode_authority(&authority_hex)?;
             let release_of = match release_of {
-                Some(text) => Some(Hash32::from_hex(&text).map_err(|_| {
-                    Error::invalid_argument("--release-of must be 64 hex")
-                })?),
+                Some(text) => Some(
+                    Hash32::from_hex(&text)
+                        .map_err(|_| Error::invalid_argument("--release-of must be 64 hex"))?,
+                ),
                 None => None,
             };
             let request = QuarantineRequest {
