@@ -981,7 +981,7 @@ impl Store {
     }
 
     fn range_anchor_base(&self) -> Result<Option<Hash32>> {
-        match self.lookup(self.resolve_path("/")?, RANGE_ANCHOR_DIR.as_bytes()) {
+        match self.lookup_inner(self.resolve_path("/")?, RANGE_ANCHOR_DIR.as_bytes()) {
             Ok(id) => Ok(Some(id)),
             Err(err) if err.class() == crate::error::Class::NotFound => Ok(None),
             Err(err) => Err(err),
@@ -992,7 +992,7 @@ impl Store {
         let Some(base) = self.range_anchor_base()? else {
             return Ok(None);
         };
-        match self.lookup(base, checkpoint.as_bytes()) {
+        match self.lookup_inner(base, checkpoint.as_bytes()) {
             Ok(id) => Ok(Some(id)),
             Err(err) if err.class() == crate::error::Class::NotFound => Ok(None),
             Err(err) => Err(err),
@@ -1000,7 +1000,7 @@ impl Store {
     }
 
     fn ensure_anchor_dir(&mut self, parent: Hash32, name: &str) -> Result<Hash32> {
-        match self.lookup(parent, name.as_bytes()) {
+        match self.lookup_inner(parent, name.as_bytes()) {
             Ok(id) => {
                 if self.object_meta(id)?.kind != crate::state::ObjectKind::Dir {
                     return Err(Error::not_dir(format!(

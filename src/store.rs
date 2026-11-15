@@ -4162,7 +4162,7 @@ impl Store {
         result
     }
 
-    fn lookup_inner(&self, parent: Hash32, name: &[u8]) -> Result<Hash32> {
+    pub(crate) fn lookup_inner(&self, parent: Hash32, name: &[u8]) -> Result<Hash32> {
         self.state.lookup(parent, name)
     }
 
@@ -4453,12 +4453,16 @@ impl Store {
         match snapshot {
             None => self.read_object(id),
             Some(commit) => {
-                self.quarantine_gate(id)?;
                 let state = self.state_at(commit)?;
                 let record = state
                     .objects
                     .get(&id)
                     .ok_or_else(|| Error::not_found("no such object at this snapshot"))?;
+                // Gate on the snapshot's content: the live object may already
+                // be unlinked while the snapshot still reaches it.
+                if let Some(err) = self.quarantine_denial(record.content)? {
+                    return Err(err);
+                }
                 let bytes = match record.kind {
                     ObjectKind::Dir => return Err(Error::is_dir("object is a directory")),
                     ObjectKind::Symlink => record

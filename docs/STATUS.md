@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,365** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,379** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -11987,3 +11987,92 @@ Storage remains unmeasured: there is no compatible physical storage here.
 display; single-threaded CPU comparison; no multi-GPU, fleet, cloud, power or
 thermal claim. No claim that GPU decode is impossible elsewhere — only that it
 did not win here, for these sizes, with the copies counted.
+
+## 2026-11-15 — T073 / T075 / T077 / T080: range proofs, quarantine, templates, bounded maintenance
+
+Four gates closed on `staging`. Nothing is pushed. `main` is untouched.
+All builds and tests ran in Docker courts (rust 3 GiB / 4 CPUs / 1024 pids;
+the range-proof court also uses the FUSE court because its independent
+verifier is Python). No frozen byte, mode number, root or fixture changed:
+every record below is a new, additive, content-addressed schema, and the four
+specifications are mirrored byte-identically into the three codec/Go repos
+(`WeftCodec db57e6c`, `WeftCodec-Go 501cc0f`, `WeftFS-Go b680432`).
+
+**T073 — portable authenticated range proofs.** Receipt
+`bench/receipts/range-proof-20261115T114737Z.json` (57/57 checks at revision
+`63ad66c`), analysis [`bench/RESULTS-range-proof.md`](../bench/RESULTS-range-proof.md),
+normative [`spec/WEFT-RANGE-PROOF.md`](../spec/WEFT-RANGE-PROOF.md). A
+`weft.range-proof.v1` record carries the authentication path over the frozen
+Merkle leaf/node domains for exactly the chunks a canonical region intersects —
+no parallel tree and no new leaf or node domain. `weft.range-anchor.v1` binds a
+checkpoint tensor/shard entry to its chunk-table Merkle root and is signed,
+because a checkpoint shard entry records a *whole-file* digest and therefore
+does not authenticate a chunk-table root on its own; that is stated as the
+smallest additive change. The verifier is a separate stdlib-Python program
+(`verifier/range_proof_check.py`, no WeftFS import) that re-reads the store or
+verifies from the proof plus chunk bytes. It rejects a different range, a
+substituted leaf, a root that is not the checkpoint's, a truncated path, a
+region that crosses a chunk boundary with the wrong leaf set, chunk bytes that
+do not hash to the leaf, an untrusted signer, and a non-canonical record.
+Frame-backed shards and regions that span shards are refused, not approximated.
+Measured: the Rust verifier beats whole-object verification by up to two orders
+of magnitude for small regions of large objects, and **loses** when the region
+covers the whole covered object and on a 16 KiB object at every region size.
+The independent Python verifier is a correctness oracle, not a fast path
+(pure-Python Ed25519 and BLAKE3).
+
+**T075 — taint and quarantine.** Receipt
+`bench/receipts/taint-20261115T112434Z.json` (9/9 checks),
+[`bench/RESULTS-taint.md`](../bench/RESULTS-taint.md),
+[`spec/WEFT-TAINT.md`](../spec/WEFT-TAINT.md). `taint_trace` returns
+`tainted|clear|unproven` per artifact with an explicit witness or the exact
+gaps; an incomplete graph is never reported `clear`, and a provenance walk is
+never truncated (`LimitExceeded`). `quarantine` publishes a signed,
+append-only, epoch-fenced `weft.quarantine.v1` record per content root;
+enforcement is on the content root, so a copy under a new name and a rewrite
+producing the same bytes are both refused. Non-disclosing mode returns
+`NotFound: no such object`, byte-identical to an absent object; explicit mode
+returns a typed `Quarantined`. The court proves one branch refuses while the
+other restores byte-identical output, the closure is precise, the record is
+tamper-evident, and the decision survives a read-only reopen. **Quarantining is
+not unlearning**: the module, the spec and the results document state plainly
+that this is traceability plus refusal to serve and cannot remove information
+already learned into weights.
+
+**T077 — evaluation and synthetic-data templates.** Receipt
+`bench/receipts/artifact-templates-20261115T112223Z.json` (7/7 checks),
+[`bench/RESULTS-artifact-templates.md`](../bench/RESULTS-artifact-templates.md),
+[`spec/WEFT-ARTIFACT-TEMPLATES.md`](../spec/WEFT-ARTIFACT-TEMPLATES.md).
+`weft.eval-run.v1` records config/dataset/model roots, metric values as exact
+IEEE-754 bit patterns and declared outputs; `weft.synth-data-run.v1` records
+config/generator roots, the seed verbatim and the produced dataset roots.
+Recording also publishes a matching provenance receipt, so the taint tracer
+walks through the run. Replay re-verifies declared inputs and recorded outputs
+by content root and states on the record that it does not re-run anything and
+establishes no numerical or behavioural determinism. Negative case covered: a
+declared input root that is not in the store is `NotFound` and writes nothing.
+
+**T080 — bounded background maintenance.** Receipt
+`bench/receipts/maintenance-20261115T112447Z.json` (7/7 checks),
+[`bench/RESULTS-maintenance.md`](../bench/RESULTS-maintenance.md),
+[`spec/WEFT-MAINTENANCE.md`](../spec/WEFT-MAINTENANCE.md). A declared rate and
+duty cycle pace byte-bounded batches; the plan key and cursor are persisted and
+the state is written after every batch, so a restart resumes. Safety is not in
+the plan: every candidate is re-verified under a fresh GC epoch, so a stale plan
+can waste work but never reclaim live data; a candidate larger than
+`max_pass_bytes` is a typed `BudgetExceeded` refusal. `weftfs ops` is read-only
+without `--apply`. Measured on one host: 12,000-read arms with and without
+maintenance, ratios 1.02/0.93/0.98 at p50/p95/p99 (a single run did not resolve
+a tail penalty larger than noise, which the results document says). The SIGKILL
+arm found a real defect — a shorter state record written with a range write left
+the previous record's tail and produced an undecodable record; the writer now
+truncates. Both loss sets are published: self-churn, a reachability scan per
+batch, an unachieved declared rate, sleep-based duty enforcement, data-only
+scope, and no Go parity.
+
+**Gates.** `check-claims`, `perf_numbers --check`, `check-spec-drift`,
+conformance manifest and coverage, the context-plane verifier court and the
+header check were run after the final edits (results in the commit log). The four
+new courts are registered in `scripts/verify-all.sh` with explicit skip paths;
+the aggregate was **not** re-run, so the cited verification receipt is still
+`verify-20261114T162327Z.json`.

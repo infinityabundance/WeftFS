@@ -132,6 +132,14 @@ run_orchestrated_court adapters adapter_court env WEFT_STAMP="$stamp" bash bench
 run_orchestrated_court cross_model_delta cross_model_delta_court env WEFT_STAMP="$stamp" bash bench/scripts/artifact_court.sh cross_model
 run_orchestrated_court view_identity view_identity_court env WEFT_STAMP="$stamp" bash bench/scripts/artifact_court.sh view
 
+# T073/T075/T077/T080: each wrapper runs its own court container(s) and prints
+# exactly one `<name>: skip <reason>` line with exit 78 when it cannot run.
+run_orchestrated_court range_proof range_proof_court bash scripts/range_proof_court.sh
+run_orchestrated_court taint taint_court bash scripts/taint_court.sh
+run_orchestrated_court artifact_templates artifact_template_court \
+  bash scripts/artifact_template_court.sh
+run_orchestrated_court maintenance maintenance_court bash scripts/maintenance_court.sh
+
 # T049 training state: orchestrated because it builds a Rust harness, an
 # independent Go binary and then runs the Python court. The script itself
 # prints `training_state_court: skip <reason>` and exits 78 when unavailable.
@@ -762,6 +770,17 @@ skipped="$(grep -c '=skip$' "$results" || true)"
   if [[ -f "bench/receipts/training-state-${stamp}.json" ]]; then
     emit_receipt training_state "bench/receipts/training-state-${stamp}.json"
   fi
+  for pair in \
+    "range_proof:range-proof" \
+    "taint:taint" \
+    "artifact_templates:artifact-templates" \
+    "maintenance:maintenance"; do
+    label="${pair%%:*}"
+    prefix="${pair##*:}"
+    if [[ -f "bench/receipts/${prefix}-${stamp}.json" ]]; then
+      emit_receipt "$label" "bench/receipts/${prefix}-${stamp}.json"
+    fi
+  done
   echo ""
   echo "  },"
   echo "  \"result\": \"$([ "$status" -eq 0 ] && echo pass || echo fail)\","

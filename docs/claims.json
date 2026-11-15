@@ -14494,5 +14494,160 @@
   "kind": "present",
   "stamp": "20261115T070334Z",
   "revision": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ {
+  "id": "t073_range_proof_current",
+  "claim": "A portable authenticated range proof over the existing Merkle chunk table exists and is checked by an independent stdlib-Python verifier.",
+  "value": "range-proof-20261115T114737Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-range-proof.md"
+  ],
+  "receipt": "bench/receipts/range-proof-20261115T114737Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t073_range_proof_spec",
+  "claim": "The range-proof and range-anchor record schemas are normative in the program home and mirrored byte-identically.",
+  "value": "WEFT-RANGE-PROOF",
+  "locations": [
+   "spec/WEFT-RANGE-PROOF.md",
+   "README.md"
+  ],
+  "receipt": "bench/receipts/range-proof-20261115T114737Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t073_frame_shards_refused",
+  "claim": "A frame-backed checkpoint shard is refused by the range-proof writer rather than approximated.",
+  "value": "UnsupportedRepresentation",
+  "locations": [
+   "bench/RESULTS-range-proof.md",
+   "spec/WEFT-RANGE-PROOF.md"
+  ],
+  "receipt": "bench/receipts/range-proof-20261115T114737Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t075_taint_current",
+  "claim": "Taint tracing returns tainted|clear|unproven with explicit gaps, and an incomplete graph is never reported clear.",
+  "value": "taint-20261115T112434Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-taint.md"
+  ],
+  "receipt": "bench/receipts/taint-20261115T112434Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t075_quarantine_not_unlearning",
+  "claim": "Quarantining is documented as traceability plus refusal to serve, explicitly not unlearning and with no retroactive training removal claimed.",
+  "value": "not unlearning",
+  "locations": [
+   "spec/WEFT-TAINT.md",
+   "bench/RESULTS-taint.md",
+   "src/taint.rs"
+  ],
+  "receipt": "bench/receipts/taint-20261115T112434Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t075_nondisclosing_refusal",
+  "claim": "A non-disclosing quarantine refusal is byte-identical to an absent object; explicit mode returns Quarantined.",
+  "value": "NotFound",
+  "locations": [
+   "spec/WEFT-TAINT.md",
+   "bench/RESULTS-taint.md"
+  ],
+  "receipt": "bench/receipts/taint-20261115T112434Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t077_templates_current",
+  "claim": "Evaluation and synthetic-data artifact templates exist with canonical schemas, replay and a declared-input refusal.",
+  "value": "artifact-templates-20261115T112223Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-artifact-templates.md"
+  ],
+  "receipt": "bench/receipts/artifact-templates-20261115T112223Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t077_no_determinism_claim",
+  "claim": "The template documents state exactly what replay establishes and do not claim numerical or behavioural determinism.",
+  "value": "determinism",
+  "locations": [
+   "spec/WEFT-ARTIFACT-TEMPLATES.md",
+   "bench/RESULTS-artifact-templates.md"
+  ],
+  "receipt": "bench/receipts/artifact-templates-20261115T112223Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t077_declared_input_refused",
+  "claim": "A template whose declared input root is not in the store is refused with NotFound and writes nothing.",
+  "value": "NotFound",
+  "locations": [
+   "bench/RESULTS-artifact-templates.md",
+   "spec/WEFT-ARTIFACT-TEMPLATES.md"
+  ],
+  "receipt": "bench/receipts/artifact-templates-20261115T112223Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t080_maintenance_current",
+  "claim": "Bounded maintenance exists with a declared interference budget, durable progress, structured counters and a read-only ops surface.",
+  "value": "maintenance-20261115T112447Z.json",
+  "locations": [
+   "docs/STATUS.md",
+   "bench/RESULTS-maintenance.md"
+  ],
+  "receipt": "bench/receipts/maintenance-20261115T112447Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t080_maintenance_refusal",
+  "claim": "A candidate larger than the declared max_pass_bytes is a typed BudgetExceeded refusal with nothing deleted.",
+  "value": "BudgetExceeded",
+  "locations": [
+   "spec/WEFT-MAINTENANCE.md",
+   "bench/RESULTS-maintenance.md"
+  ],
+  "receipt": "bench/receipts/maintenance-20261115T112447Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t080_maintenance_stale_plan_safe",
+  "claim": "A stale maintenance plan can never delete a blob that became reachable: every candidate is re-verified under a fresh GC epoch.",
+  "value": "reachable now",
+  "locations": [
+   "spec/WEFT-MAINTENANCE.md",
+   "bench/RESULTS-maintenance.md"
+  ],
+  "receipt": "bench/receipts/maintenance-20261115T112447Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t080_maintenance_resume",
+  "claim": "A SIGKILLed maintenance pass loses no reachable artifact and resumes from its persisted cursor.",
+  "value": "resume",
+  "locations": [
+   "bench/RESULTS-maintenance.md",
+   "spec/WEFT-MAINTENANCE.md"
+  ],
+  "receipt": "bench/receipts/maintenance-20261115T112447Z.json",
+  "kind": "present"
+ },
+ {
+  "id": "t080_ops_read_only",
+  "claim": "The ops surface is read-only without --apply and creates and deletes nothing.",
+  "value": "--apply",
+  "locations": [
+   "spec/WEFT-MAINTENANCE.md",
+   "README.md"
+  ],
+  "receipt": "bench/receipts/maintenance-20261115T112447Z.json",
+  "kind": "present"
  }
 ]

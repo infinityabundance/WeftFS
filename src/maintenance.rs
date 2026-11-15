@@ -450,7 +450,7 @@ impl Default for OpsReport {
 impl Store {
     fn maintenance_dir(&mut self, create: bool) -> Result<Option<Hash32>> {
         let root = self.resolve_path("/")?;
-        match self.lookup(root, MAINTENANCE_DIR.as_bytes()) {
+        match self.lookup_inner(root, MAINTENANCE_DIR.as_bytes()) {
             Ok(id) => Ok(Some(id)),
             Err(err) if err.class() == Class::NotFound => {
                 if !create {
@@ -472,7 +472,7 @@ impl Store {
 
     fn maintenance_dir_read(&self) -> Result<Option<Hash32>> {
         let root = self.resolve_path("/")?;
-        match self.lookup(root, MAINTENANCE_DIR.as_bytes()) {
+        match self.lookup_inner(root, MAINTENANCE_DIR.as_bytes()) {
             Ok(id) => Ok(Some(id)),
             Err(err) if err.class() == Class::NotFound => Ok(None),
             Err(err) => Err(err),
@@ -484,7 +484,7 @@ impl Store {
         let Some(dir) = self.maintenance_dir_read()? else {
             return Ok(None);
         };
-        let id = match self.lookup(dir, b"state") {
+        let id = match self.lookup_inner(dir, b"state") {
             Ok(id) => id,
             Err(err) if err.class() == Class::NotFound => return Ok(None),
             Err(err) => return Err(err),
@@ -498,7 +498,7 @@ impl Store {
         let Some(dir) = self.maintenance_dir_read()? else {
             return Ok(None);
         };
-        let id = match self.lookup(dir, b"plan") {
+        let id = match self.lookup_inner(dir, b"plan") {
             Ok(id) => id,
             Err(err) if err.class() == Class::NotFound => return Ok(None),
             Err(err) => return Err(err),
@@ -510,7 +510,7 @@ impl Store {
     fn write_maintenance_file(&mut self, dir: Hash32, name: &str, bytes: &[u8]) -> Result<()> {
         let uid = self.options().owner_uid;
         let gid = self.options().owner_gid;
-        match self.lookup(dir, name.as_bytes()) {
+        match self.lookup_inner(dir, name.as_bytes()) {
             Ok(object) => {
                 // A range write does not shrink a file: writing a shorter
                 // record would leave the previous record's tail in place and

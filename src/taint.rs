@@ -1002,7 +1002,7 @@ impl QuarantinePointer {
 
 impl Store {
     fn ensure_quarantine_dir(&mut self, parent: Hash32, name: &str) -> Result<Hash32> {
-        match self.lookup(parent, name.as_bytes()) {
+        match self.lookup_inner(parent, name.as_bytes()) {
             Ok(id) => {
                 if self.object_meta(id)?.kind != ObjectKind::Dir {
                     return Err(Error::not_dir(format!(
@@ -1030,12 +1030,12 @@ impl Store {
 
     fn quarantine_current_dir(&self) -> Result<Option<Hash32>> {
         let root = self.resolve_path("/")?;
-        let quarantine = match self.lookup(root, QUARANTINE_DIR.as_bytes()) {
+        let quarantine = match self.lookup_inner(root, QUARANTINE_DIR.as_bytes()) {
             Ok(id) => id,
             Err(err) if err.class() == Class::NotFound => return Ok(None),
             Err(err) => return Err(err),
         };
-        match self.lookup(quarantine, QUARANTINE_CURRENT_DIR.as_bytes()) {
+        match self.lookup_inner(quarantine, QUARANTINE_CURRENT_DIR.as_bytes()) {
             Ok(id) => Ok(Some(id)),
             Err(err) if err.class() == Class::NotFound => Ok(None),
             Err(err) => Err(err),
@@ -1045,7 +1045,7 @@ impl Store {
     /// Read one quarantine record by id.
     pub fn quarantine_record(&self, id: Hash32) -> Result<QuarantineRecord> {
         let root = self.resolve_path("/")?;
-        let quarantine = match self.lookup(root, QUARANTINE_DIR.as_bytes()) {
+        let quarantine = match self.lookup_inner(root, QUARANTINE_DIR.as_bytes()) {
             Ok(id) => id,
             Err(err) if err.class() == Class::NotFound => {
                 return Err(Error::not_found(format!(
@@ -1054,7 +1054,7 @@ impl Store {
             }
             Err(err) => return Err(err),
         };
-        let records = match self.lookup(quarantine, QUARANTINE_RECORDS_DIR.as_bytes()) {
+        let records = match self.lookup_inner(quarantine, QUARANTINE_RECORDS_DIR.as_bytes()) {
             Ok(id) => id,
             Err(err) if err.class() == Class::NotFound => {
                 return Err(Error::not_found(format!(
@@ -1064,7 +1064,7 @@ impl Store {
             Err(err) => return Err(err),
         };
         let name = id.to_hex();
-        let object = self.lookup(records, name.as_bytes())?;
+        let object = self.lookup_inner(records, name.as_bytes())?;
         let bytes = self.read_object_exempt(object)?;
         let record = QuarantineRecord::decode(&bytes)?;
         if record.id()? != id {
@@ -1081,7 +1081,7 @@ impl Store {
             return Ok(None);
         };
         let name = content.to_hex();
-        let object = match self.lookup(dir, name.as_bytes()) {
+        let object = match self.lookup_inner(dir, name.as_bytes()) {
             Ok(id) => id,
             Err(err) if err.class() == Class::NotFound => return Ok(None),
             Err(err) => return Err(err),
@@ -1276,7 +1276,7 @@ impl Store {
         uid: u64,
         gid: u64,
     ) -> Result<()> {
-        match self.lookup(dir, name.as_bytes()) {
+        match self.lookup_inner(dir, name.as_bytes()) {
             Ok(object) => {
                 self.write_file(object, 0, pointer)?;
                 Ok(())

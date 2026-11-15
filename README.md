@@ -226,6 +226,25 @@ MinIO and Ceph RGW are real S3-compatible servers, but neither is AWS. The
 contract, the writer-capability levels (MW0–MW3), and the complete list of
 non-claims are in [`docs/AI-STORAGE-AUGMENTATION.md`](docs/AI-STORAGE-AUGMENTATION.md).
 
+## Context-plane records added after v1.4.2
+
+Four additive, content-addressed record families, each with a normative
+specification, a court and published losses:
+
+| Record | Spec | Court |
+|---|---|---|
+| `weft.range-proof.v1` / `weft.range-anchor.v1` | [`spec/WEFT-RANGE-PROOF`](spec/WEFT-RANGE-PROOF.md) | [`bench/RESULTS-range-proof`](bench/RESULTS-range-proof.md) |
+| `weft.taint-trace.v1` / `weft.quarantine.v1` | [`spec/WEFT-TAINT`](spec/WEFT-TAINT.md) | [`bench/RESULTS-taint`](bench/RESULTS-taint.md) |
+| `weft.eval-run.v1` / `weft.synth-data-run.v1` | [`spec/WEFT-ARTIFACT-TEMPLATES`](spec/WEFT-ARTIFACT-TEMPLATES.md) | [`bench/RESULTS-artifact-templates`](bench/RESULTS-artifact-templates.md) |
+| `weft.maintenance-plan.v1` / `weft.maintenance-state.v1` | [`spec/WEFT-MAINTENANCE`](spec/WEFT-MAINTENANCE.md) | [`bench/RESULTS-maintenance`](bench/RESULTS-maintenance.md) |
+
+None of them changes a frozen byte, mode number or root. Quarantining is
+traceability plus refusal to serve and is **not** unlearning; artifact
+templates record declarations and identities and make **no** determinism
+claim; range proofs exist only for chunk-table shards. The four courts are
+registered in `scripts/verify-all.sh`; the aggregate receipt cited elsewhere
+predates them and was not re-run.
+
 ## What is measured
 
 <!-- BEGIN GENERATED:readme-what-is-measured (scripts/perf_numbers.py) -->
