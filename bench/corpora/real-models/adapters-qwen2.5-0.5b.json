@@ -1,0 +1,427 @@
+{
+ "schema": "weft.real-adapter.corpus.v1",
+ "label": "Public LoRA/DoRA adapters for the pinned Qwen2.5-0.5B-Instruct family",
+ "note": "Every file was downloaded from Hugging Face, hashed locally, and compared with the LFS pointer the API reports. `declared_base_model` is the PEFT config's own field, copied verbatim; adapters whose field is not exactly Qwen/Qwen2.5-0.5B-Instruct are still ingested as real LoRA matrices but are not merged into the bf16 base unless the court says so. No weights are committed to this repository.",
+ "base_model": {
+  "repo": "Qwen/Qwen2.5-0.5B-Instruct",
+  "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+  "file": "model.safetensors",
+  "sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+  "local_path": ".docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors"
+ },
+ "adapters": [
+  {
+   "repo": "taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot",
+   "revision": "6060d5f819c4d0c75729975f308562149c7e2d01",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 4,
+   "lora_alpha": 32,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot/resolve/6060d5f819c4d0c75729975f308562149c7e2d01/adapter_model.safetensors",
+     "size": 8841592,
+     "sha256": "543e33e13b2b3f84344a703ed947faf9b33420dc3f4387568431c73b84cc6477",
+     "lfs_sha256": "543e33e13b2b3f84344a703ed947faf9b33420dc3f4387568431c73b84cc6477"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot/resolve/6060d5f819c4d0c75729975f308562149c7e2d01/adapter_config.json",
+     "size": 761,
+     "sha256": "979c500c84b6346800e40ea54e0508d54837786db8a45ed7d7152fa769edb481",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/taronklm__Qwen2.5-0.5B-Instruct-lora-chatbot/adapter_model.safetensors"
+  },
+  {
+   "repo": "aneesa3131/Qwen2.5-0.5B-Instruct-lora-text-generation",
+   "revision": "fb13685aeefd3c6dc7c5cad18659440e0faf0977",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 8,
+   "lora_alpha": 32,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/aneesa3131/Qwen2.5-0.5B-Instruct-lora-text-generation/resolve/fb13685aeefd3c6dc7c5cad18659440e0faf0977/adapter_model.safetensors",
+     "size": 2175168,
+     "sha256": "af498d68d981e0948d4db2d2687d1d7cae39f07b5b609d4587d3e8c8cc4dc08a",
+     "lfs_sha256": "af498d68d981e0948d4db2d2687d1d7cae39f07b5b609d4587d3e8c8cc4dc08a"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/aneesa3131/Qwen2.5-0.5B-Instruct-lora-text-generation/resolve/fb13685aeefd3c6dc7c5cad18659440e0faf0977/adapter_config.json",
+     "size": 979,
+     "sha256": "11ae4203934d7f6d0444a67054f2055c9c497660bc7575abf9c4527d0eb5d044",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/aneesa3131__Qwen2.5-0.5B-Instruct-lora-text-generation/adapter_model.safetensors"
+  },
+  {
+   "repo": "ShahzebKhoso/qwen2.5-instruct-0.5B-pubmedqa-lora",
+   "revision": "8dca0cc1f399204e0a93bb48fa39aba6add79be7",
+   "declared_base_model": "unsloth/qwen2.5-0.5b-instruct-unsloth-bnb-4bit",
+   "peft_type": "LORA",
+   "rank": 16,
+   "lora_alpha": 16,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/ShahzebKhoso/qwen2.5-instruct-0.5B-pubmedqa-lora/resolve/8dca0cc1f399204e0a93bb48fa39aba6add79be7/adapter_model.safetensors",
+     "size": 4338000,
+     "sha256": "c1481a333fad80f8dfa2c027d51492ac2f4c5d9039a95d10a616865a369dad82",
+     "lfs_sha256": "c1481a333fad80f8dfa2c027d51492ac2f4c5d9039a95d10a616865a369dad82"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/ShahzebKhoso/qwen2.5-instruct-0.5B-pubmedqa-lora/resolve/8dca0cc1f399204e0a93bb48fa39aba6add79be7/adapter_config.json",
+     "size": 881,
+     "sha256": "289f3e3eab223f31273c955686e2a4d09fa1077f2cf6054a899c00a147a051ba",
+     "lfs_sha256": "289f3e3eab223f31273c955686e2a4d09fa1077f2cf6054a899c00a147a051ba"
+    }
+   ],
+   "local_path": ".docker-cache/t048/ShahzebKhoso__qwen2.5-instruct-0.5B-pubmedqa-lora/adapter_model.safetensors"
+  },
+  {
+   "repo": "Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA",
+   "revision": "622f5f05293833bd76ff4749fc9a375c10b2aa43",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 2,
+   "lora_alpha": 1,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA/resolve/622f5f05293833bd76ff4749fc9a375c10b2aa43/adapter_model.safetensors",
+     "size": 553016,
+     "sha256": "8eda29d1d450fee3a9d2924813dd5c1a929e43ffef38dcee6d1ab687e4ca383a",
+     "lfs_sha256": "8eda29d1d450fee3a9d2924813dd5c1a929e43ffef38dcee6d1ab687e4ca383a"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA/resolve/622f5f05293833bd76ff4749fc9a375c10b2aa43/adapter_config.json",
+     "size": 709,
+     "sha256": "f4f266241a2e658a9c7147d6fabde69f9fc76d98a71b3026da2d8371121a7fd9",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/Hazde__careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA/adapter_model.safetensors"
+  },
+  {
+   "repo": "Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA_2",
+   "revision": "6af65af1eca84c2f4bb95ebe2b20de4ff396c5da",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 2,
+   "lora_alpha": 1,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA_2/resolve/6af65af1eca84c2f4bb95ebe2b20de4ff396c5da/adapter_model.safetensors",
+     "size": 553016,
+     "sha256": "3b0f1cb59fab418bf614c0ce18d16dc733d995758519ac9cf16540ceb20f4494",
+     "lfs_sha256": "3b0f1cb59fab418bf614c0ce18d16dc733d995758519ac9cf16540ceb20f4494"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/Hazde/careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA_2/resolve/6af65af1eca84c2f4bb95ebe2b20de4ff396c5da/adapter_config.json",
+     "size": 709,
+     "sha256": "f4f266241a2e658a9c7147d6fabde69f9fc76d98a71b3026da2d8371121a7fd9",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/Hazde__careerbot_PG6_Qwen_Qwen2.5-0.5B-Instruct_model_LoRA_2/adapter_model.safetensors"
+  },
+  {
+   "repo": "MuQianyu/qwen2.5-0.5B_lora16_spin0",
+   "revision": "e50f73af059d2516c4fbeac58af58df8ceffa7a7",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 16,
+   "lora_alpha": 32,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/MuQianyu/qwen2.5-0.5B_lora16_spin0/resolve/e50f73af059d2516c4fbeac58af58df8ceffa7a7/adapter_model.safetensors",
+     "size": 8676008,
+     "sha256": "caef4b01eff1f70be86b8cd1b1c7c6a435bf107d68d18366511d348d840bbfa5",
+     "lfs_sha256": "caef4b01eff1f70be86b8cd1b1c7c6a435bf107d68d18366511d348d840bbfa5"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/MuQianyu/qwen2.5-0.5B_lora16_spin0/resolve/e50f73af059d2516c4fbeac58af58df8ceffa7a7/adapter_config.json",
+     "size": 810,
+     "sha256": "c25e3eaa6b76d581549b496eff6e8b32c698cb57dfa3ffc3c437776af51101cb",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/MuQianyu__qwen2.5-0.5B_lora16_spin0/adapter_model.safetensors"
+  },
+  {
+   "repo": "MuQianyu/qwen2.5-0.5B_lora16_spin1",
+   "revision": "945017b1ac42b2e052ccdfc9336c9c872f2fde70",
+   "declared_base_model": "./model",
+   "peft_type": "LORA",
+   "rank": 16,
+   "lora_alpha": 32,
+   "use_dora": null,
+   "use_rslora": null,
+   "bias": "none",
+   "target_modules": [
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/MuQianyu/qwen2.5-0.5B_lora16_spin1/resolve/945017b1ac42b2e052ccdfc9336c9c872f2fde70/adapter_model.safetensors",
+     "size": 8676008,
+     "sha256": "753d8b0769dafb728569ac5d080c7534e02a68a392bc9eb58cc3f943e8f5026b",
+     "lfs_sha256": "753d8b0769dafb728569ac5d080c7534e02a68a392bc9eb58cc3f943e8f5026b"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/MuQianyu/qwen2.5-0.5B_lora16_spin1/resolve/945017b1ac42b2e052ccdfc9336c9c872f2fde70/adapter_config.json",
+     "size": 503,
+     "sha256": "4edb21aacfbfccd0de344d4f2f395081c2d176fbdb0f0dadb589ae4cd56165e2",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/MuQianyu__qwen2.5-0.5B_lora16_spin1/adapter_model.safetensors"
+  },
+  {
+   "repo": "yeok/qwen-2.5-0.5B-instruct-sft-lora-countdown-deepseek-5k",
+   "revision": "049da22b546039b0d775de553c4252d19a1fd8cf",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 16,
+   "lora_alpha": 16,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/yeok/qwen-2.5-0.5B-instruct-sft-lora-countdown-deepseek-5k/resolve/049da22b546039b0d775de553c4252d19a1fd8cf/adapter_model.safetensors",
+     "size": 35237104,
+     "sha256": "ababa450c546a4b1b2e36ba00ad922d36709926ad29a08246da0d061f3d15f17",
+     "lfs_sha256": "ababa450c546a4b1b2e36ba00ad922d36709926ad29a08246da0d061f3d15f17"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/yeok/qwen-2.5-0.5B-instruct-sft-lora-countdown-deepseek-5k/resolve/049da22b546039b0d775de553c4252d19a1fd8cf/adapter_config.json",
+     "size": 859,
+     "sha256": "2cac889db440581576347dde5e43f032b50cab67d41e34e6405d6f28490e17af",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/yeok__qwen-2.5-0.5B-instruct-sft-lora-countdown-deepseek-5k/adapter_model.safetensors"
+  },
+  {
+   "repo": "zqiu/lora_Qwen2.5-0.5B-Instruct",
+   "revision": "8a3657b3d2b0b07128221dbb6231869a95514615",
+   "declared_base_model": "/lustre/fast/fast/zqiu/hf_models/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 8,
+   "lora_alpha": 32,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/zqiu/lora_Qwen2.5-0.5B-Instruct/resolve/8a3657b3d2b0b07128221dbb6231869a95514615/adapter_model.safetensors",
+     "size": 2175168,
+     "sha256": "c5e28beb7642fdb01f5ce17e8bcfb99b305470859c38548fc952a82071a8d6be",
+     "lfs_sha256": "c5e28beb7642fdb01f5ce17e8bcfb99b305470859c38548fc952a82071a8d6be"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/zqiu/lora_Qwen2.5-0.5B-Instruct/resolve/8a3657b3d2b0b07128221dbb6231869a95514615/adapter_config.json",
+     "size": 858,
+     "sha256": "c6ebdd0585cbaa0e7d879dcf1eda8154b499e28d09317f24037094d11b558eb3",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/zqiu__lora_Qwen2.5-0.5B-Instruct/adapter_model.safetensors"
+  },
+  {
+   "repo": "TienAnh/finetune-Qwen2.5-0.5B-Instruct-lora",
+   "revision": "d1f76b8583be79627541af83fb3f82389df6526c",
+   "declared_base_model": "unsloth/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 16,
+   "lora_alpha": 16,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/TienAnh/finetune-Qwen2.5-0.5B-Instruct-lora/resolve/d1f76b8583be79627541af83fb3f82389df6526c/adapter_model.safetensors",
+     "size": 35237104,
+     "sha256": "af7194a82cc5f91cd682326c8abb78f83cb0825b78c8e9b0812eac5d5fa95814",
+     "lfs_sha256": "af7194a82cc5f91cd682326c8abb78f83cb0825b78c8e9b0812eac5d5fa95814"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/TienAnh/finetune-Qwen2.5-0.5B-Instruct-lora/resolve/d1f76b8583be79627541af83fb3f82389df6526c/adapter_config.json",
+     "size": 800,
+     "sha256": "60bd44fca261a944fc14f9b215bd426e75ea8068cede15932396f0bead90e3a0",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/TienAnh__finetune-Qwen2.5-0.5B-Instruct-lora/adapter_model.safetensors"
+  },
+  {
+   "repo": "SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora",
+   "revision": "c06200b40e855e279977a499552f787256fae08f",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 64,
+   "lora_alpha": 16,
+   "use_dora": false,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora/resolve/c06200b40e855e279977a499552f787256fae08f/adapter_model.safetensors",
+     "size": 140815952,
+     "sha256": "c2fea3e1e7f2d93d128fcd7a3260eae26fc2a633c8c2a528ce47142b2e903f87",
+     "lfs_sha256": "c2fea3e1e7f2d93d128fcd7a3260eae26fc2a633c8c2a528ce47142b2e903f87"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/SykoSLM/qwen2.5-0.5b-instruct-turkish-finetuned-lora/resolve/c06200b40e855e279977a499552f787256fae08f/adapter_config.json",
+     "size": 1056,
+     "sha256": "9b365e7a5d595aa8d3a608e1b217f0cd27b30f1dbc01b2fa948dfe238e7368bb",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/SykoSLM__qwen2.5-0.5b-instruct-turkish-finetuned-lora/adapter_model.safetensors"
+  },
+  {
+   "repo": "dilkushsingh/qwen2.5-0.5b-nlp2bash-DoRA",
+   "revision": "1da7f66f361c065854a2e0d2d646027798602e20",
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "peft_type": "LORA",
+   "rank": 32,
+   "lora_alpha": 64,
+   "use_dora": true,
+   "use_rslora": false,
+   "bias": "none",
+   "target_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+   ],
+   "files": [
+    {
+     "path": "adapter_model.safetensors",
+     "url": "https://huggingface.co/dilkushsingh/qwen2.5-0.5b-nlp2bash-DoRA/resolve/1da7f66f361c065854a2e0d2d646027798602e20/adapter_model.safetensors",
+     "size": 71669568,
+     "sha256": "2ae2a306ea892a0e1bfbba5e2c63afc4583ce80ca7953c2cda25f0852d281998",
+     "lfs_sha256": "2ae2a306ea892a0e1bfbba5e2c63afc4583ce80ca7953c2cda25f0852d281998"
+    },
+    {
+     "path": "adapter_config.json",
+     "url": "https://huggingface.co/dilkushsingh/qwen2.5-0.5b-nlp2bash-DoRA/resolve/1da7f66f361c065854a2e0d2d646027798602e20/adapter_config.json",
+     "size": 1103,
+     "sha256": "46575d3fbe02c801c02ede86da61719d259141ab095f52f9b6b52bd419dd5805",
+     "lfs_sha256": null
+    }
+   ],
+   "local_path": ".docker-cache/t048/dilkushsingh__qwen2.5-0.5b-nlp2bash-DoRA/adapter_model.safetensors"
+  }
+ ]
+}
