@@ -86,6 +86,10 @@ say "== warm materialize (a second full load) =="
 timed materialize_warm "$weft" --store "$work/store" $fixed --json materialize \
   --root qwen-training --training-ready --require-tensors --out "$materialized-2"
 
+say "== warm materialize (a third full load, to size the run-to-run spread) =="
+timed materialize_warm2 "$weft" --store "$work/store" $fixed --json materialize \
+  --root qwen-training --training-ready --require-tensors --out "$materialized-3"
+
 say "== assemble receipt =="
 src_sha="$(sha256sum "$weights" | awk '{print $1}')"
 du_bytes="$(du -sb "$materialized" | awk '{print $1}')"
@@ -117,6 +121,7 @@ policy = out("check_policy")
 grant = out("check_grant")
 materialize_cold = out("materialize_cold")
 materialize_warm = out("materialize_warm")
+materialize_warm2 = out("materialize_warm2")
 verify_out = out("verify_out")
 
 warm_walls = sorted(ms("check_warm_%d" % i) for i in range(1, 6))
@@ -152,12 +157,16 @@ checks = [
     {"name": "warm_materialize_exact",
      "ok": materialize_warm.get("checkpoint_tensors_verified") == len(checkpoint.get("tensors", [])),
      "detail": "second load exact"},
+    {"name": "third_materialize_exact",
+     "ok": materialize_warm2.get("checkpoint_tensors_verified") == len(checkpoint.get("tensors", [])),
+     "detail": "third load exact"},
 ]
 
 cold_check_ms = ms("check_cold")
 warm_first_ms = ms("check_warm_first")
 materialize_cold_ms = ms("materialize_cold")
 materialize_warm_ms = ms("materialize_warm")
+materialize_warm2_ms = ms("materialize_warm2")
 verify_ms = ms("verify_out")
 policy_ms = ms("check_policy")
 grant_ms = ms("check_grant")
@@ -212,6 +221,8 @@ receipt = {
         "check_grant_invalidated_ms": grant_ms,
         "materialize_cold_ms": materialize_cold_ms,
         "materialize_warm_ms": materialize_warm_ms,
+        "materialize_warm2_ms": materialize_warm2_ms,
+        "materialize_all_ms": [materialize_cold_ms, materialize_warm_ms, materialize_warm2_ms],
         "verify_out_ms": verify_ms,
     },
     "split": {
@@ -242,4 +253,4 @@ if receipt["result"] != "pass":
     sys.exit(1)
 PY
 
-rm -rf "$work/materialized" "$work/materialized-2"
+rm -rf "$work/materialized" "$work/materialized-2" "$work/materialized-3"
