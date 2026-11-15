@@ -32,6 +32,7 @@
 pub mod access;
 pub mod adapter;
 pub mod artifact_api;
+pub mod artifact_template;
 pub mod auth;
 pub mod azure;
 pub mod b64;

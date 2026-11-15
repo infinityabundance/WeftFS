@@ -1186,6 +1186,75 @@ enum Command {
         #[command(subcommand)]
         command: TaintCommand,
     },
+    /// Evaluation / synthetic-data artifact templates (`spec/WEFT-ARTIFACT-TEMPLATES.md`).
+    Template {
+        #[command(subcommand)]
+        command: TemplateCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum TemplateCommand {
+    /// Record an evaluation run (dataset + model + config roots, metrics, outputs).
+    EvalRecord {
+        #[arg(long)]
+        run: String,
+        #[arg(long)]
+        dataset: String,
+        #[arg(long)]
+        model: String,
+        #[arg(long)]
+        config: String,
+        /// NAME=VALUE[:kind] (repeatable). VALUE is parsed as f64 and stored as
+        /// its exact IEEE-754 bits.
+        #[arg(long = "metric")]
+        metrics: Vec<String>,
+        /// Output object id (repeatable, 64 hex).
+        #[arg(long = "output")]
+        outputs: Vec<String>,
+        #[arg(long, default_value = "weftfs")]
+        tool: String,
+        #[arg(long)]
+        version: Option<String>,
+        #[arg(long = "issued-at-ns")]
+        issued_at_ns: Option<i64>,
+    },
+    /// Record a synthetic-data generation run (config + generator + seed, outputs).
+    SynthRecord {
+        #[arg(long)]
+        run: String,
+        #[arg(long)]
+        config: String,
+        #[arg(long)]
+        generator: String,
+        /// Seed bytes (hex).
+        #[arg(long)]
+        seed: String,
+        #[arg(long = "output")]
+        outputs: Vec<String>,
+        #[arg(long, default_value = "weftfs")]
+        tool: String,
+        #[arg(long)]
+        version: Option<String>,
+        #[arg(long = "issued-at-ns")]
+        issued_at_ns: Option<i64>,
+    },
+    /// Replay a template: re-verify declared inputs and recorded outputs.
+    Replay {
+        /// Template id (64 hex).
+        #[arg(long)]
+        id: Option<String>,
+        /// Instead of an id, find the templates attached to this output object.
+        #[arg(long = "output")]
+        output: Option<String>,
+    },
+    /// Show one template.
+    Show {
+        #[arg(long)]
+        id: String,
+    },
+    /// List every template reachable from live state.
+    List,
 }
 
 #[derive(Subcommand)]
@@ -3942,6 +4011,7 @@ fn run(cli: Cli) -> Result<()> {
         Command::Retention { command } => run_retention(&store, json, policy, command),
         Command::RangeProof { command } => run_range_proof(&store, json, policy, command),
         Command::Taint { command } => run_taint(&store, json, policy, command),
+        Command::Template { command } => run_template(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
@@ -9012,6 +9082,280 @@ fn decode_authority(values: &[String]) -> Result<Vec<[u8; 32]>> {
         );
     }
     Ok(out)
+}
+
+fn parse_metric(text: &str) -> Result<weftfs::artifact_template::RecordedMetric> {
+    use weftfs::artifact_template::RecordedMetric;
+    let (name, rest) = text
+        .split_once('=')
+        .ok_or_else(|| Error::invalid_argument("--metric must be NAME=VALUE[:kind]"))?;
+    let (value_text, kind) = match rest.split_once(':') {
+        Some((value, kind)) => (value, kind),
+        None => (rest, "scalar"),
+    };
+    let value: f64 = value_text
+        .parse()
+        .map_err(|_| Error::invalid_argument("--metric value must parse as f64"))?;
+    RecordedMetric::new(name, value, kind)
+}
+
+fn run_template(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: TemplateCommand,
+) -> Result<()> {
+    use weftfs::artifact_template::{EvalRunRequest, SynthRunRequest};
+    use weftfs::provenance::{Determinism, ProvenanceEnvironment};
+
+    let parse_hash = |text: &str, flag: &str| -> Result<Hash32> {
+        Hash32::from_hex(text)
+            .map_err(|_| Error::invalid_argument(format!("{flag} must be 64 hex characters")))
+    };
+
+    match command {
+        TemplateCommand::EvalRecord {
+            run,
+            dataset,
+            model,
+            config,
+            metrics,
+            outputs,
+            tool,
+            version,
+            issued_at_ns,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let mut parsed_metrics = Vec::new();
+            for text in &metrics {
+                parsed_metrics.push(parse_metric(text)?);
+            }
+            let mut output_objects = Vec::new();
+            for text in &outputs {
+                output_objects.push(parse_hash(text, "--output")?);
+            }
+            let request = EvalRunRequest {
+                run,
+                dataset: parse_hash(&dataset, "--dataset")?,
+                model: parse_hash(&model, "--model")?,
+                config: parse_hash(&config, "--config")?,
+                metrics: parsed_metrics,
+                outputs: output_objects,
+                environment: ProvenanceEnvironment::new(
+                    tool,
+                    version.unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_owned()),
+                ),
+                issued_at_ns,
+                determinism: Determinism::Unknown,
+            };
+            let id = store.record_eval_run(request)?;
+            if json {
+                print_json(&serde_json::json!({ "template": id.to_hex() }))
+            } else {
+                println!("template={id}");
+                Ok(())
+            }
+        }
+        TemplateCommand::SynthRecord {
+            run,
+            config,
+            generator,
+            seed,
+            outputs,
+            tool,
+            version,
+            issued_at_ns,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let seed_bytes = hex::decode(&seed)
+                .map_err(|_| Error::invalid_argument("--seed must be hex"))?;
+            let mut output_objects = Vec::new();
+            for text in &outputs {
+                output_objects.push(parse_hash(text, "--output")?);
+            }
+            let request = SynthRunRequest {
+                run,
+                config: parse_hash(&config, "--config")?,
+                generator: parse_hash(&generator, "--generator")?,
+                seed: seed_bytes,
+                outputs: output_objects,
+                environment: ProvenanceEnvironment::new(
+                    tool,
+                    version.unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_owned()),
+                ),
+                issued_at_ns,
+                determinism: Determinism::Unknown,
+            };
+            let id = store.record_synth_run(request)?;
+            if json {
+                print_json(&serde_json::json!({ "template": id.to_hex() }))
+            } else {
+                println!("template={id}");
+                Ok(())
+            }
+        }
+        TemplateCommand::Replay { id, output } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let ids = match (id, output) {
+                (Some(text), None) => vec![parse_hash(&text, "--id")?],
+                (None, Some(text)) => {
+                    let object = parse_hash(&text, "--output")?;
+                    store
+                        .templates_of(object)?
+                        .into_iter()
+                        .map(|(id, _)| id)
+                        .collect::<Vec<_>>()
+                }
+                (Some(_), Some(_)) => {
+                    return Err(Error::invalid_argument(
+                        "pass either --id or --output, not both",
+                    ))
+                }
+                (None, None) => {
+                    return Err(Error::invalid_argument(
+                        "replay needs --id or --output",
+                    ))
+                }
+            };
+            if ids.is_empty() {
+                return Err(Error::not_found(
+                    "no template is attached to that object",
+                ));
+            }
+            let mut rows = Vec::new();
+            for id in ids {
+                let replay = store.replay_template(id)?;
+                if json {
+                    rows.push(serde_json::json!({
+                        "template": replay.template.to_hex(),
+                        "schema": replay.schema,
+                        "exact": replay.exact,
+                        "inputs": replay.inputs.iter().map(|input| serde_json::json!({
+                            "role": input.role,
+                            "content": input.content.to_hex(),
+                            "objects": input.objects.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                            "bytes": input.bytes,
+                            "exact": input.exact,
+                        })).collect::<Vec<_>>(),
+                        "outputs": replay.outputs.iter().map(|output| serde_json::json!({
+                            "content": output.content.to_hex(),
+                            "objects": output.objects.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                            "bytes": output.bytes,
+                            "exact": output.exact,
+                        })).collect::<Vec<_>>(),
+                        "note": replay.note,
+                    }));
+                } else {
+                    println!("template={}", replay.template);
+                    println!("schema={}", replay.schema);
+                    println!("exact={}", replay.exact);
+                    for input in &replay.inputs {
+                        println!(
+                            "input role={} content={} objects={} bytes={} exact={}",
+                            input.role,
+                            input.content,
+                            input.objects.len(),
+                            input.bytes,
+                            input.exact
+                        );
+                    }
+                    for output in &replay.outputs {
+                        println!(
+                            "output content={} objects={} bytes={} exact={}",
+                            output.content,
+                            output.objects.len(),
+                            output.bytes,
+                            output.exact
+                        );
+                    }
+                    println!("note={}", replay.note);
+                }
+            }
+            if json {
+                print_json(&serde_json::json!({ "replays": rows }))
+            } else {
+                Ok(())
+            }
+        }
+        TemplateCommand::Show { id } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let template = store.read_template(parse_hash(&id, "--id")?)?;
+            if json {
+                print_json(&serde_json::json!({
+                    "template": template.id()?.to_hex(),
+                    "schema": template.schema,
+                    "run": template.run,
+                    "inputs": template.inputs.iter().map(|input| serde_json::json!({
+                        "role": input.role,
+                        "content": input.content.to_hex(),
+                    })).collect::<Vec<_>>(),
+                    "outputs": template.outputs.iter().map(|c| c.to_hex()).collect::<Vec<_>>(),
+                    "metrics": template.metrics.iter().map(|metric| serde_json::json!({
+                        "name": metric.name,
+                        "value_bits": metric.value_bits,
+                        "value": metric.value(),
+                        "kind": metric.kind,
+                    })).collect::<Vec<_>>(),
+                    "seed_hex": hex::encode(&template.seed),
+                    "generator": template.generator.map(|h| h.to_hex()),
+                    "tool": template.environment.tool,
+                    "version": template.environment.version,
+                }))
+            } else {
+                println!("template={}", template.id()?);
+                println!("schema={}", template.schema);
+                println!("run={}", template.run);
+                for input in &template.inputs {
+                    println!("input role={} content={}", input.role, input.content);
+                }
+                for output in &template.outputs {
+                    println!("output content={output}");
+                }
+                for metric in &template.metrics {
+                    println!(
+                        "metric name={} value_bits={} value={} kind={}",
+                        metric.name,
+                        metric.value_bits,
+                        metric.value(),
+                        metric.kind
+                    );
+                }
+                if let Some(generator) = template.generator {
+                    println!("generator={generator}");
+                }
+                if !template.seed.is_empty() {
+                    println!("seed={}", hex::encode(&template.seed));
+                }
+                Ok(())
+            }
+        }
+        TemplateCommand::List => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let ids = store.template_ids()?;
+            let mut rows = Vec::new();
+            for id in &ids {
+                let template = store.read_template(*id)?;
+                if json {
+                    rows.push(serde_json::json!({
+                        "template": id.to_hex(),
+                        "schema": template.schema,
+                        "run": template.run,
+                    }));
+                } else {
+                    println!(
+                        "template={} schema={} run={}",
+                        id, template.schema, template.run
+                    );
+                }
+            }
+            if json {
+                print_json(&serde_json::json!({ "count": rows.len(), "templates": rows }))
+            } else {
+                println!("count={}", ids.len());
+                Ok(())
+            }
+        }
+    }
 }
 
 fn run_taint(
