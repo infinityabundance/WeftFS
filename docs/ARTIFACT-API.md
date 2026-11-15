@@ -243,3 +243,25 @@ weftfs --store /s --json artifact release --root 'by:task=summarize' \
 * `bench/scripts/artifact_api_proof.py` + `scripts/artifact_api_court.sh` — the
   three-consumer proof and byte-equivalence receipt.
 * `bench/RESULTS-artifact-api.md` — the measured facts and every caveat.
+
+## 11. Composition: the Training Artifact (P01)
+
+The `ContextPlane` verbs operate on a selection. The **Training Artifact**
+(`spec/WEFT-TRAINING-ARTIFACT.md`, CLI `weft training-artifact …`) is the
+canonical composition of a selection's immutable identities: exact tensor
+roots, one checkpoint anchor, the Context Root id, the causal closure and
+provenance receipts. It is a sibling surface, not a replacement:
+
+* `weft training-artifact build|show|validate|closure` resolve and check the
+  composed record at a pinned snapshot;
+* `weft training-artifact grant|grants` edit and read the **separate mutable**
+  grant record. A grant edit moves the grant epoch and never changes
+  `TrainingArtifactRoot`;
+* `pin`/`release` remain `artifact` verbs. Retention and quarantine are shared
+  with the rest of the store and are likewise not inputs to the artifact root.
+
+`validate` recomputes every member tensor, the checkpoint manifest, the
+Context Root, the closure and the declared policy; `--closure-mode minimal`
+selects the parent-edge closure. The Go consumer
+(`WeftFS-Go/cmd/training-artifact`) performs the same validation independently;
+`bench/RESULTS-training-artifact.md` records what it cannot check.

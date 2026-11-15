@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,379** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,393** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -12082,3 +12082,56 @@ header check were run after the final edits (results in the commit log). The fou
 new courts are registered in `scripts/verify-all.sh` with explicit skip paths;
 the aggregate was **not** re-run, so the cited verification receipt is still
 `verify-20261114T162327Z.json`.
+
+- 2026-11-15 (P01/P02/P03, Training Artifact, causal closure, ready cache):
+  parent `staging` (code+tests+spec+scripts), WeftFS-Go (independent consumer),
+  spec mirrors in WeftCodec/WeftCodec-Go; not pushed. New normative
+  `spec/WEFT-TRAINING-ARTIFACT.md`; new `src/training_artifact.rs`,
+  `src/causal_closure.rs`, `src/ready_cache.rs`; Go
+  `WeftFS-Go/store/training_artifact.go` + `cmd/training-artifact`; verifier
+  `verifier/closure_check.py`; results in
+  `bench/RESULTS-training-artifact.md`, `RESULTS-causal-closure.md`,
+  `RESULTS-training-ready-cost.md` and findings in
+  `docs/CAUSAL-CLOSURE-FINDINGS.md`.
+  * P01: `TrainingArtifactRoot = H("weft/training-artifact/v1", WCB(record))`
+    over exact tensor roots, a checkpoint anchor, a Context Root id, a causal
+    closure and provenance receipts. Grants (`weft.training-grant.v1`),
+    retention and quarantine are separate mutable records and never enter the
+    root. Rust builds/validates/grant/closure; an independent Go consumer
+    parses the same record, the `weft.checkpoint.v1` manifest, the tensors, the
+    Context Root, the closure and the policy. Court 22/22: Rust writes → Go
+    validates; Go writes a tensor set → Rust validates; mutated value,
+    removed lineage, contradicted policy and missing ancestor refuse with the
+    same classes in both languages; grant edits move the epoch and leave the
+    root unchanged. Go cannot fully check provenance record fields, grant
+    signatures, historical versions, container headers or a selector
+    re-evaluation; all five are reported.
+  * P02: complete (parents ∪ declared closure) and minimal (parent edges from
+    the requested roots) modes, bounded by depth and node count, ascending
+    identity order, typed refusal naming the missing identity with
+    absent/denied indistinguishable. The clean-room verifier recomputes the
+    closure and a refusal from canonical `weft.causal.v1` bytes. Matched court
+    (receipt `causal-closure-20261115T140739Z.json`, revision `463457e`): a
+    3,881-object graph, complete 3,853 nodes p50 1,308,112 ns, minimal 3,841
+    p50 1,201,252 ns, naive full scan 4,637,758 ns; small graph indexed
+    44,704 ns vs naive 287,196 ns; one-shot indexed 4,586,751 ns (index build
+    3,292,636 ns) vs naive 4,656,771 ns. Minimal is only slightly smaller and
+    faster because the trunk dominates; the index only pays on repeated
+    queries; the default depth bound refuses very deep chains.
+  * P03: `ready_cache` keys on head, generation, a whole-state digest (objects,
+    attrs, entries, relations, snapshots, tips), the Context Root/selector/
+    snapshot, the training-ready policy, capability expiry, and a mutable
+    authority digest over the grants and quarantine subtrees. Tests 5/5:
+    generation, manifest, dependency, policy, grant epoch and quarantine each
+    invalidate; a quarantine invalidated entry re-verifies and refuses; a
+    tampered entry and an entry copied from another state are rejected and
+    rebuilt. Court (receipt `training-ready-cost-20261115T140742Z.json`,
+    revision `463457e`): Qwen2.5-0.5B 2-shard raw checkpoint, cold check
+    42,612.6 ms → warm p50 47.7 ms, policy-change check 42,789.3 ms, grant-edit
+    check 43,090.6 ms; materialize cold 54,945.7 ms / warm 54,467.9 ms;
+    time-to-ready cold 97,558.3 ms, warm 54,517.2 ms. The dominant term is
+    materialization, not validation.
+  * Guards: see the commit log for `check-claims`, `perf_numbers --check`,
+    `check-spec-drift`, conformance manifest/coverage and the verifier/header
+    courts. The three new courts are registered in `verify-all.sh` with
+    explicit exit-78 skip paths; the aggregate was not re-run.

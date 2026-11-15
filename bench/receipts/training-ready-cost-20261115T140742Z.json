@@ -1,0 +1,168 @@
+{
+  "cache": {
+    "cold": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": true,
+      "generation": 297,
+      "head": "91d2bd9ff33c38151aa3676c4d68b150216396e530a15e112c2f365db9a1df40",
+      "hit": false,
+      "key": "7b36c1f3e833d979ddb902571214f3f9407a7857c2b7a7b11bfe551b3602f888",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.148373,
+      "rejected": null,
+      "state_digest": "8a8e6ddb4cc179b49c144d7e7ae637b7367280fa4d1b4902faa4ce1f96c810ba",
+      "verify_ms": 42557.136694,
+      "write_note": null
+    },
+    "grant_invalidated": {
+      "authority_digest": "87e7324b067bb00d5cd596f31e6ec06d92f1d59db40e678034ac7aaf439e34b8",
+      "entry_written": true,
+      "generation": 302,
+      "head": "d8b51a770e4f2e4c037dac3a683d05bf1e561dd981b8487aabf60e56ed4df532",
+      "hit": false,
+      "key": "6495d64a08da22545aeae97bfc5e087104358dd2ec6f51fd77d4725d5a11ed26",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.2429400000000002,
+      "rejected": null,
+      "state_digest": "539f3d06cf80caedecc026629811d9b203243fbca037b4f55dd6b73db2e017ba",
+      "verify_ms": 43037.811237,
+      "write_note": null
+    },
+    "policy_invalidated": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": true,
+      "generation": 297,
+      "head": "91d2bd9ff33c38151aa3676c4d68b150216396e530a15e112c2f365db9a1df40",
+      "hit": false,
+      "key": "5e4d9c059d16fe9ffc66fd1c40e0c0679bb8157cc9ef1e2e2f5b915b5ad827e1",
+      "options_digest": "9ca2839807eda5bf720b2f61cdd646d4132c572eb2737bbff3a3bea63cf4a5ca",
+      "plan_ms": 1.11934,
+      "rejected": null,
+      "state_digest": "8a8e6ddb4cc179b49c144d7e7ae637b7367280fa4d1b4902faa4ce1f96c810ba",
+      "verify_ms": 42739.543325,
+      "write_note": null
+    },
+    "warm_first": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": false,
+      "generation": 297,
+      "head": "91d2bd9ff33c38151aa3676c4d68b150216396e530a15e112c2f365db9a1df40",
+      "hit": true,
+      "key": "7b36c1f3e833d979ddb902571214f3f9407a7857c2b7a7b11bfe551b3602f888",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.152231,
+      "rejected": null,
+      "state_digest": "8a8e6ddb4cc179b49c144d7e7ae637b7367280fa4d1b4902faa4ce1f96c810ba",
+      "verify_ms": 0.0,
+      "write_note": null
+    }
+  },
+  "checks": [
+    {
+      "detail": "cold cache hit=False",
+      "name": "cold_check_missed",
+      "ok": true
+    },
+    {
+      "detail": "warm hit=True",
+      "name": "warm_check_hit",
+      "ok": true
+    },
+    {
+      "detail": "5/5 hits",
+      "name": "repeated_checks_hit",
+      "ok": true
+    },
+    {
+      "detail": "hit=False",
+      "name": "policy_change_invalidates",
+      "ok": true
+    },
+    {
+      "detail": "hit=False",
+      "name": "grant_edit_invalidates",
+      "ok": true
+    },
+    {
+      "detail": "same root, snapshot and bytes",
+      "name": "cold_and_warm_report_identical",
+      "ok": true
+    },
+    {
+      "detail": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "name": "source_digest_matches",
+      "ok": true
+    },
+    {
+      "detail": "checkpoint tensors verified",
+      "name": "materialize_exact",
+      "ok": true
+    },
+    {
+      "detail": "second load exact",
+      "name": "warm_materialize_exact",
+      "ok": true
+    }
+  ],
+  "corpus": {
+    "element_bytes": 988065536,
+    "label": "Qwen/Qwen2.5-0.5B BF16, 2 raw shards, cached store copy",
+    "materialized_bytes": 988649840,
+    "not_committed": "weights are referenced from the local cache, never committed",
+    "shard_objects": 580,
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "tensors": 290
+  },
+  "environment": {
+    "cache": "warm, single host",
+    "court": "fuse",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": "4",
+      "memory": "3g",
+      "pids": "1024"
+    },
+    "revisions": {
+      "WeftCodec": "6d7a98f8eb3eaf75b1285b08bc43cead821a0f21",
+      "WeftCodec-Go": "3909b6a4981835e94172bf244fea665a34956323",
+      "WeftFS": "463457e533ec970a1b7e8f0034622fb1ccee43f6",
+      "WeftFS-Go": "82eb5c8f771d178f1997b4f2237dac916326adba"
+    }
+  },
+  "generated_utc": "20261115T140742Z",
+  "ids": {
+    "artifact_root_used_for_grant": "813e6421d32bda3fa3ff4faa371b92e5e0871eaec8a09a0cead707b151eb57a8",
+    "context_root_id": "813e6421d32bda3fa3ff4faa371b92e5e0871eaec8a09a0cead707b151eb57a8",
+    "selector_id": "ec33241ce98898e2b49304b2b336cd689e0bac3758839dfb1f48b5a0a3bcdf08",
+    "snapshot_id": "9007a3cfd0b8b350ea6c7da32fb7c340e7390e9183bf879511b49033630970d4"
+  },
+  "kind": "training-ready-cost",
+  "result": "pass",
+  "split": {
+    "cold_check_reported_ms": 42612.563505,
+    "cold_check_validation_and_decode_ms": 42493,
+    "materialize_cold_reported_decode_ms": 43008,
+    "materialize_cold_write_ms": 11937.733571999997,
+    "time_to_ready_cold_ms": 97558.297077,
+    "time_to_ready_warm_ms": 54517.241412,
+    "warm_check_plan_ms": 1.152231,
+    "warm_check_verify_ms": 0.0
+  },
+  "timings": {
+    "check_cold_ms": 42612.563505,
+    "check_grant_invalidated_ms": 43090.560451,
+    "check_policy_invalidated_ms": 42789.251039,
+    "check_warm_first_ms": 49.372398,
+    "check_warm_max_ms": 48.803365,
+    "check_warm_min_ms": 46.777814,
+    "check_warm_p50_ms": 47.727888,
+    "checkpoint_write_ms": 68000.25151,
+    "context_ms": 68.310274,
+    "materialize_cold_ms": 54945.733572,
+    "materialize_warm_ms": 54467.869014,
+    "snapshot_ms": 83.795255,
+    "verify_out_ms": 765.816591
+  }
+}

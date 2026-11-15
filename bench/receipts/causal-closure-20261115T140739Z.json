@@ -1,0 +1,235 @@
+{
+  "checks": [
+    {
+      "name": "complete_is_superset_of_minimal",
+      "ok": true
+    },
+    {
+      "name": "modes_differ",
+      "ok": true
+    },
+    {
+      "name": "same_result_index_and_naive",
+      "ok": true
+    },
+    {
+      "detail": "3853 records, 3853 nodes",
+      "name": "verifier_main_bundle",
+      "ok": true
+    },
+    {
+      "detail": "253 records, 253 nodes",
+      "name": "verifier_small_bundle",
+      "ok": true
+    },
+    {
+      "detail": "3853 / 253",
+      "name": "verifier_counts_match",
+      "ok": true
+    }
+  ],
+  "environment": {
+    "cache": "warm, single host",
+    "court": "bench (3 GiB / 4 cpus / 1024 pids)",
+    "revisions": {
+      "WeftCodec": "6d7a98f8eb3eaf75b1285b08bc43cead821a0f21",
+      "WeftFS": "463457e533ec970a1b7e8f0034622fb1ccee43f6",
+      "WeftFS-Go": "82eb5c8f771d178f1997b4f2237dac916326adba"
+    }
+  },
+  "fixture": {
+    "branches": 64,
+    "build_ms": 189.657043,
+    "depth": 60,
+    "extra_declared_edges": 256,
+    "objects": 3881,
+    "roots": 1,
+    "side_chain": 40,
+    "snapshot": "462b3ab58d1f9d8dc05dd77d98c7d6125072fbdc4a5f1fab55cfbd0af5d1957a"
+  },
+  "index": {
+    "build_ns": 3227827,
+    "graph_nodes": 3882,
+    "modes": {
+      "complete": {
+        "max_ns": 1343529,
+        "mean_ns": 1310214.3,
+        "min_ns": 1302902,
+        "p50_ns": 1308112,
+        "p95_ns": 1327428,
+        "reps": 50
+      },
+      "minimal": {
+        "max_ns": 1230127,
+        "mean_ns": 1203779.82,
+        "min_ns": 1191955,
+        "p50_ns": 1201252,
+        "p95_ns": 1219647,
+        "reps": 50
+      }
+    },
+    "node_counts": {
+      "complete": {
+        "edges_considered": 4107,
+        "max_depth": 60,
+        "nodes": 3853
+      },
+      "minimal": {
+        "edges_considered": 3840,
+        "max_depth": 60,
+        "nodes": 3841
+      }
+    }
+  },
+  "kind": "causal-closure-cost",
+  "naive_full_scan": {
+    "modes": {
+      "complete": {
+        "max_ns": 5495820,
+        "mean_ns": 4730812.1,
+        "min_ns": 4603946,
+        "p50_ns": 4637758,
+        "p95_ns": 5495820,
+        "reps": 10
+      },
+      "minimal": {
+        "max_ns": 5267364,
+        "mean_ns": 4582335.2,
+        "min_ns": 4455178,
+        "p50_ns": 4499951,
+        "p95_ns": 5267364,
+        "reps": 10
+      }
+    },
+    "note": "re-scans every object once per query, then walks"
+  },
+  "result": "pass",
+  "single_query": {
+    "index_complete_ns": 4535939,
+    "index_minimal_ns": 4429079,
+    "naive_complete_ns": 4637758,
+    "naive_minimal_ns": 4499951,
+    "note": "index total includes one graph build; the naive total rebuilds the whole graph inside the query"
+  },
+  "small_graph": {
+    "checks": [
+      {
+        "name": "complete_is_superset_of_minimal",
+        "ok": true
+      },
+      {
+        "name": "modes_differ",
+        "ok": true
+      },
+      {
+        "name": "same_result_index_and_naive",
+        "ok": true
+      }
+    ],
+    "environment": {
+      "cache": "warm, single host",
+      "court": "bench (3 GiB / 4 cpus / 1024 pids)",
+      "revisions": {
+        "WeftCodec": "6d7a98f8eb3eaf75b1285b08bc43cead821a0f21",
+        "WeftFS": "463457e533ec970a1b7e8f0034622fb1ccee43f6",
+        "WeftFS-Go": "82eb5c8f771d178f1997b4f2237dac916326adba"
+      }
+    },
+    "fixture": {
+      "branches": 4,
+      "build_ms": 12.795900000000001,
+      "depth": 60,
+      "extra_declared_edges": 16,
+      "objects": 281,
+      "roots": 1,
+      "side_chain": 40,
+      "snapshot": "b1501f69d59016dee274bfd8f9e7495db37d8be9a331bbbb243893622fe08dce"
+    },
+    "index": {
+      "build_ns": 416537,
+      "graph_nodes": 282,
+      "modes": {
+        "complete": {
+          "max_ns": 64000,
+          "mean_ns": 43222.7,
+          "min_ns": 41447,
+          "p50_ns": 42028,
+          "p95_ns": 55183,
+          "reps": 50
+        },
+        "minimal": {
+          "max_ns": 47228,
+          "mean_ns": 30386.3,
+          "min_ns": 28863,
+          "p50_ns": 29435,
+          "p95_ns": 35236,
+          "reps": 50
+        }
+      },
+      "node_counts": {
+        "complete": {
+          "edges_considered": 267,
+          "max_depth": 60,
+          "nodes": 253
+        },
+        "minimal": {
+          "edges_considered": 240,
+          "max_depth": 60,
+          "nodes": 241
+        }
+      }
+    },
+    "kind": "causal-closure-cost",
+    "naive_full_scan": {
+      "modes": {
+        "complete": {
+          "max_ns": 485396,
+          "mean_ns": 305194.8,
+          "min_ns": 270325,
+          "p50_ns": 288118,
+          "p95_ns": 485396,
+          "reps": 10
+        },
+        "minimal": {
+          "max_ns": 313585,
+          "mean_ns": 274291.0,
+          "min_ns": 256970,
+          "p50_ns": 272018,
+          "p95_ns": 313585,
+          "reps": 10
+        }
+      },
+      "note": "re-scans every object once per query, then walks"
+    },
+    "result": "pass",
+    "single_query": {
+      "index_complete_ns": 458565,
+      "index_minimal_ns": 445972,
+      "naive_complete_ns": 288118,
+      "naive_minimal_ns": 272018,
+      "note": "index total includes one graph build; the naive total rebuilds the whole graph inside the query"
+    },
+    "timestamp_utc": "20261115T140739Z"
+  },
+  "timestamp_utc": "20261115T140739Z",
+  "verifier": {
+    "main": {
+      "max_depth_seen": 60,
+      "mode": "complete",
+      "nodes": 3853,
+      "ok": true,
+      "records": 3853,
+      "refusal": null,
+      "roots": 1
+    },
+    "small": {
+      "max_depth_seen": 60,
+      "mode": "complete",
+      "nodes": 253,
+      "ok": true,
+      "records": 253,
+      "refusal": null,
+      "roots": 1
+    }
+  }
+}
