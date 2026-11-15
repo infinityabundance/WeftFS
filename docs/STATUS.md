@@ -12070,6 +12070,12 @@ truncates. Both loss sets are published: self-churn, a reachability scan per
 batch, an unachieved declared rate, sleep-based duty enforcement, data-only
 scope, and no Go parity.
 
+One harness correction after the receipts were taken: the four court wrappers
+originally treated a failed run as exit 78 (skip) instead of a failure, which the
+aggregate would have recorded as "explicitly skipped". A preflight condition is
+still 78 with one skip line; a failed run now exits 1. The success path those
+receipts executed is unchanged.
+
 **Gates.** `check-claims`, `perf_numbers --check`, `check-spec-drift`,
 conformance manifest and coverage, the context-plane verifier court and the
 header check were run after the final edits (results in the commit log). The four
