@@ -326,7 +326,7 @@ provenance record's unstated unknown-key rule.
 
 <!-- BEGIN GENERATED:context-plane-status (scripts/perf_numbers.py) -->
 Vector run (built in the rust/go courts, run by the host-only reference runner): Rust 420 total, 288 pass, 0 fail, 132 skip (`bench/receipts/conformance-rust-20261114T062338Z.json`); Go 420, 288, 0, 132 (`bench/receipts/conformance-go-20261114T062338Z.json`); independent Python reader 420, 229, 0, 191 (`bench/receipts/conformance-python-20261114T062338Z.json`). All three name manifest aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8` over 420 vectors.
-Independent verifier: 136 cases, 131 pass, 0 fail, 5 skip; negative suite 7/7; provenance self-test 7/7. Receipt `bench/receipts/context-plane-verifier-20261114T063213Z.json`.
+Independent verifier: 136 cases, 131 pass, 0 fail, 5 skip; negative suite 7/7; provenance self-test 7/7. Receipt `bench/receipts/context-plane-verifier-20261115T150713Z.json`.
 Freeze matrix: 24 identity rows.
 <!-- END GENERATED:context-plane-status -->
 

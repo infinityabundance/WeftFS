@@ -5,7 +5,7 @@ This document accompanies `verifier/` and
 number below is emitted by `scripts/perf_numbers.py` from that receipt.
 
 <!-- BEGIN GENERATED:context-plane-verifier (scripts/perf_numbers.py) -->
-At stamp 20261114T063213Z (revision f8f352ba9db3), the clean-room verifier ran **136** cases against the frozen corpus: **131** passed, **0** failed, **5** explicitly skipped. The negative suite passed **7/7**. The freeze matrix has **24** identity rows; the verifier is **2,675** lines of Python. Source: `bench/receipts/context-plane-verifier-20261114T063213Z.json`.
+At stamp 20261115T150713Z (revision feee47883477), the clean-room verifier ran **136** cases against the frozen corpus: **131** passed, **0** failed, **5** explicitly skipped. The negative suite passed **7/7**. The freeze matrix has **24** identity rows; the verifier is **4,360** lines of Python. Source: `bench/receipts/context-plane-verifier-20261115T150713Z.json`.
 <!-- END GENERATED:context-plane-verifier -->
 
 ## What was run
