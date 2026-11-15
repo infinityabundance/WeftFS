@@ -1,0 +1,204 @@
+{
+ "cells": [
+  {
+   "base_bytes": 281715176,
+   "copy_bytes": 281668347,
+   "copy_ops": 42,
+   "decision": "accept",
+   "frame_bytes": 47403,
+   "frame_ratio": 0.00016826569541997268,
+   "insert_bytes": 46829,
+   "insert_ops": 41,
+   "matched_fraction": 0.999833771823496,
+   "note": "consecutive training checkpoints of one model, F32, identical shapes",
+   "pair": "pythia-step0-step1",
+   "patch_from": {
+    "bytes": 275660,
+    "error": null,
+    "level": 19,
+    "level_19_failed": false
+   },
+   "replay_exact": true,
+   "store": {
+    "base_physical_bytes": 163913245,
+    "note": "marginal retained bytes include every manifest, frame, index segment and commit",
+    "roots": "b90ec5429b8c8ee4f4bcf87ba0df56386dc3c1bc9f8cfef76edd9f2265690051 -> 979b97f86bdefa507adfbf290820d899180a6fb61096e6f3ba45080200346db2 (76 tensors)",
+    "strategy_counts": {
+     "sparse-delta": 20,
+     "zstd": 50,
+     "zstd-patch": 6
+    },
+    "target_marginal_bytes": 62142
+   },
+   "target_bytes": 281715176,
+   "zstd19_target_bytes": 142240032
+  },
+  {
+   "base_bytes": 281715176,
+   "decision": "decline",
+   "forced_arms": [
+    {
+     "arm": "weight_delta",
+     "base_physical_bytes": 163913245,
+     "roots": "8a6e6fcd95b97627ecd082562e9536f97f97fd72f12a27f125a0480291a81e55 -> c2c6d50588cac727d5ffaf44105b2a3f788c2c372c12bc4a71c5fc06724ebfa1 (76 tensors)",
+     "strategy_counts": {
+      "weight-delta": 76
+     },
+     "target_marginal_bytes": 50564149
+    },
+    {
+     "arm": "sparse_delta",
+     "error": "target checkpoint: InvalidArgument: checkpoint tensor `embed_out.weight` shard 0/1: tensor strategy `sparse-delta` is not applicable: LimitExceeded: LimitExceeded: SPARSE_DELTA non-zero run count length 22339018 exceeds limit 16777216"
+    }
+   ],
+   "matched_fraction": 0.005627953816730129,
+   "note": "distant training checkpoints of one model, F32, identical shapes",
+   "pair": "pythia-step0-step8",
+   "patch_from": {
+    "bytes": 141228760,
+    "error": null,
+    "level": 19,
+    "level_19_failed": false
+   },
+   "reason": "nothing-in-common",
+   "reason_detail": "NothingInCommon { matched_fraction: 0.005627953816730129, required: 0.2 }",
+   "target_bytes": 281715176,
+   "zstd19_target_bytes": 142277741
+  },
+  {
+   "base_bytes": 268435456,
+   "decision": "decline",
+   "matched_fraction": 2.086162567138672e-06,
+   "note": "independent fine-tune (base vs Instruct), BF16, identical shapes; the first 256 MiB of each container after its header",
+   "pair": "qwen-finetune-slice",
+   "patch_from": {
+    "bytes": 203304551,
+    "error": null,
+    "level": 19,
+    "level_19_failed": false
+   },
+   "reason": "nothing-in-common",
+   "reason_detail": "NothingInCommon { matched_fraction: 2.086162567138672e-6, required: 0.2 }",
+   "slice_bytes": 268435456,
+   "target_bytes": 268435456,
+   "zstd19_target_bytes": 204624205
+  },
+  {
+   "decision": "store-arm-only",
+   "note": "whole Qwen 0.5B base vs Instruct through the shipped planner; the whole-file byte delta cannot be built in 3 GiB, so only the store arm is measured",
+   "pair": "qwen-finetune-store",
+   "store": {
+    "base_physical_bytes": 658187349,
+    "roots": "f10a1a7697394d159d552318f54ca7ec6387b91545e70780c95b9b53f8682ed2 -> f3305b25f2a91b70578310b1c265397b7599edcc69738a9dbafa410330c80794 (290 tensors)",
+    "strategy_counts": {
+     "raw": 48,
+     "weight-delta": 241,
+     "zstd": 1
+    },
+    "target_marginal_bytes": 541430656
+   },
+   "zstd19_target_bytes": 764093099
+  },
+  {
+   "base_bytes": 103022592,
+   "base_tensor": {
+    "dtype": "f32",
+    "shape": [
+     50304,
+     512
+    ]
+   },
+   "decision": "decline",
+   "matched_fraction": 0.0,
+   "note": "Qwen2.5-0.5B BF16 embedding (151936x896) against pythia-70m F32 embedding (50304x512); different size, dtype and shape",
+   "pair": "cross-size-dtype-embedding",
+   "reason": "nothing-in-common",
+   "reason_detail": "NothingInCommon { matched_fraction: 0.0, required: 0.2 }",
+   "target_bytes": 272269312,
+   "target_tensor": {
+    "dtype": "bf16",
+    "shape": [
+     151936,
+     896
+    ]
+   },
+   "tensor_mode_eligibility": {
+    "class": "InvalidArgument",
+    "message": "weight-delta/sparse-delta need one dtype: base is `f32`, target is `bf16`"
+   }
+  },
+  {
+   "base_bytes": 8716288,
+   "decision": "decline",
+   "matched_fraction": 3.0300880916024794e-06,
+   "note": "two Qwen BF16 tensors of different shapes; the shape-exact modes must refuse and the byte delta must decline",
+   "pair": "same-dtype-different-shape",
+   "reason": "nothing-in-common",
+   "reason_detail": "NothingInCommon { matched_fraction: 3.0300880916024794e-6, required: 0.2 }",
+   "target_bytes": 272269312,
+   "tensor_mode_eligibility": {
+    "class": "InvalidArgument",
+    "message": "weight-delta/sparse-delta need one shape: base is [151936, 896], target is [896, 4864]"
+   }
+  },
+  {
+   "base_bytes": 4194304,
+   "decision": "decline",
+   "matched_fraction": 0.0,
+   "note": "SYNTHETIC: two deterministic random 4 MiB buffers with nothing in common; not model data",
+   "pair": "synthetic-nothing-in-common",
+   "reason": "nothing-in-common",
+   "reason_detail": "NothingInCommon { matched_fraction: 0.0, required: 0.2 }",
+   "synthetic": true,
+   "target_bytes": 4194304
+  }
+ ],
+ "court": {
+  "cpus": "4",
+  "image": "weft/fuse-court:1",
+  "kernel": "7.3.3-1-cachyos",
+  "memory": "3g",
+  "note": "one host, warm page cache; whole-file Qwen payloads do not fit 3 GiB, so that pair is a slice plus a whole-model store arm",
+  "pids": "1024",
+  "single_host": true,
+  "warm_cache": true
+ },
+ "generated_utc": "2026-11-15T07:03:17Z",
+ "labels": {
+  "real_cells": [
+   "pythia-step0-step1",
+   "pythia-step0-step8",
+   "qwen-finetune-slice",
+   "qwen-finetune-store",
+   "cross-size-dtype-embedding",
+   "same-dtype-different-shape"
+  ],
+  "synthetic_cells": [
+   "synthetic-nothing-in-common"
+  ]
+ },
+ "policy": {
+  "max_frame_ratio": 0.95,
+  "min_matched_fraction": 0.2
+ },
+ "revision": {
+  "weftcodec": "c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297",
+  "weftfs": "cad2f730bd16d0b8695fce89cc0132cff90f0188"
+ },
+ "schema": "weft.cross-model-court.v1",
+ "summary": {
+  "accepted": 1,
+  "all_declines_have_a_typed_reason": true,
+  "declined": 5
+ },
+ "stamp": "20261115T064249Z",
+ "raw_log": "bench/receipts/cross-model-delta-20261115T064249Z.log",
+ "checks": {
+  "at_least_one_accept": true,
+  "every_accept_replays_exactly": true,
+  "at_least_three_declines": true,
+  "every_decline_is_typed": true,
+  "synthetic_cell_is_labelled": true
+ },
+ "result": "pass"
+}
