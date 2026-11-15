@@ -12178,11 +12178,15 @@ the aggregate was **not** re-run, so the cited verification receipt is still
   * P03 measured, unchanged conclusion, new numbers: the cold ready-check is
     below the earlier P7 check of 77,247.5 ms (receipt
     `training-ready-20261105T171104Z`, revision `807d2ee`); time-to-ready adds
-    materialization (97,106.3 ms cold / 63,406.8 ms warm at `10fde89`), which is
+    materialization (96,839.7 ms cold / 54,588.8 ms warm at `dff7982`), which is
     close to that same P7 court's `materialize` of 98,136.3 ms, so the total is
-    not a regression against the one earlier end-to-end number. On this stamp the
-    **warm** materialize was 16.1 % slower than the cold one and writes a second
-    output directory — published as a loss, not a cache effect.
+    not a regression against the one earlier end-to-end number. The court now
+    performs three consecutive full loads: 54,483.4 / 54,539.8 / 54,704.4 ms
+    (0.4 % spread), so warm materialization is not systematically slower. An
+    earlier retained pass (`…155500Z`) recorded +16.1 % for the warm load with a
+    7,599.2 ms checkpoint write against this run's 37,183.8 ms; that "warm is
+    slower" reading was an interpretation of one run and is **withdrawn** here.
+    Setup-phase host variance is the real loss.
   * Gates at the final tree: `check-claims` 1395 OK, `perf_numbers --check`
     2037 numbers / 265 blocks OK, `check-spec-drift` (81 comparisons),
     conformance manifest and coverage, `context-plane-verifier_court` and

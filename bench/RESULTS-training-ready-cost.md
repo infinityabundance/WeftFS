@@ -1,11 +1,14 @@
 # P03 — training-ready cost at scale, cached plans, no silent freshness loss
 
-**Date:** 2026-11-15 (refreshed 2026-11-15T155500Z). **Court:**
+**Date:** 2026-11-15 (refreshed 2026-11-15T170000Z; an earlier pass at
+2026-11-15T155500Z is retained). **Court:**
 `bench/scripts/training_ready_cost_court.sh` (fuse court, default limits).
-**Receipt:** `bench/receipts/training-ready-cost-20261115T155500Z.json` and
-`.log`, at WeftFS `10fde89`, WeftFS-Go `21c41b1`, WeftCodec `98019d8`,
-WeftCodec-Go `d45fcb4`. **Corpus:** Qwen/Qwen2.5-0.5B BF16, two raw shards, in
-a copy of the cached P3 store (weights never committed).
+**Receipt:** `bench/receipts/training-ready-cost-20261115T170000Z.json` and
+`.log`, at WeftFS `dff7982`, WeftFS-Go `21c41b1`, WeftCodec `98019d8`,
+WeftCodec-Go `d45fcb4`; the retained earlier pass is
+`training-ready-cost-20261115T155500Z.json` (revision `10fde89`).
+**Corpus:** Qwen/Qwen2.5-0.5B BF16, two raw shards, in a copy of the cached P3
+store (weights never committed).
 
 <!-- BEGIN GENERATED:trc-corpus (scripts/perf_numbers.py) -->
 Corpus: 290 tensors, 988,065,536 element bytes; materialized 988,649,840 bytes.
@@ -56,19 +59,20 @@ court.
 | Phase | ms |
 |---|---:|
 <!-- BEGIN GENERATED:trc-table (scripts/perf_numbers.py) -->
-| Cold ready-check (cache miss) | 42,530.2 |
-| Warm-first ready-check (cache hit) | 50.9 |
-| Warm ready-check p50 / min / max | 49.0 / 47.9 / 50.4 |
-| Check after a policy change | 42,711.2 |
-| Check after a grant edit | 43,068.7 |
-| Cold materialize | 54,576.2 |
-| Warm materialize | 63,355.9 |
-| Cold check validation+decode | 42,415.0 |
-| Materialize write after decode | 11,745.2 |
-| Time-to-ready cold | 97,106.3 |
-| Time-to-ready warm | 63,406.8 |
-| Warm plan time | 1.111 |
-| Savings from a warm check | 42,481.1 (867.3×) |
+| Cold ready-check (cache miss) | 42,356.4 |
+| Warm-first ready-check (cache hit) | 49.0 |
+| Warm ready-check p50 / min / max | 47.8 / 46.4 / 49.7 |
+| Check after a policy change | 42,507.8 |
+| Check after a grant edit | 42,885.0 |
+| Cold materialize | 54,483.4 |
+| Warm materialize (2nd load) | 54,539.8 |
+| Warm materialize (3rd load) | 54,704.4 |
+| Cold check validation+decode | 42,240.0 |
+| Materialize write after decode | 11,661.4 |
+| Time-to-ready cold | 96,839.7 |
+| Time-to-ready warm | 54,588.8 |
+| Warm plan time | 1.097 |
+| Savings from a warm check | 42,308.6 (886.1×) |
 <!-- END GENERATED:trc-table -->
 
 The cold check in the table is below the 77,247.5 ms check of the earlier P7
@@ -77,8 +81,8 @@ court (receipt `bench/receipts/training-ready-20261105T171104Z.json`, stamp
 shard layout and a warm cache differ. The cache removes that validation, and
 the warm/cold ratio is in the table.
 
-The achieved **time-to-ready** is in the table: 97,106.3 ms cold and
-63,406.8 ms warm. The cold total is close to that same P7 court's
+The achieved **time-to-ready** is in the table: 96,839.7 ms cold and
+54,588.8 ms warm. The cold total is close to that same P7 court's
 `materialize` (98,136.3 ms, same receipt) — the quantity that writes a ready
 directory — while the P7 *check* was 77,247.5 ms. So the total is not a
 regression against the one earlier end-to-end number; it is the same work, and
@@ -88,22 +92,29 @@ cold and warm, in the table. The cache does **not** skip materialization:
 `materialize --training-ready` always re-verifies and writes, so a warm load
 still pays the decode + write cost.
 
-The time-to-ready numbers are published as measured and are not re-framed. In
-this run the **warm** materialize (63,355.9 ms) is 16.1 % **slower** than the
-cold one (54,576.2 ms) on the same host. The two passes write to separate output
-directories (`materialized`, then `materialized-2`), so the second pass writes
-988 MB of fresh files beside the first on the same filesystem rather than
-re-materializing in place; that is a loss, not a cache effect, and the runs are
-not interleaved. The earlier stamp showed the warm pass marginally faster.
-Treat the direction as host writeback noise and the magnitude as real work.
+Three consecutive full loads measure 54,483.4 / 54,539.8 / 54,704.4 ms — a
+0.4 % spread — so on this stamp the warm pass is **not** systematically slower
+than the cold one. The earlier retained pass (`…155500Z`) recorded a warm
+materialize of 63,355.9 ms against a cold 54,576.2 ms, i.e. +16.1 %; against
+this cluster that pass is an unexplained per-run outlier (its checkpoint write
+was also 7,599.2 ms, while this run's was 37,183.8 ms — the host was
+asymmetrically loaded across passes). Both are published. The stable finding is
+that each full load costs about 54.5 s of decode plus write and that the cache
+changes none of it; the earlier claim that "warm is slower" was an
+interpretation of one run and is withdrawn.
 
 ## 3. What each cache actually saves
 
 * Saves: the entire cold validation pass (cold/warm ratio in the table),
   including re-hashing every member and re-decoding every tensor.
-* Does not save: materialization decode or the output write; warm and cold
-  materialize differ by run-to-run writeback variance (table, and §2: warm was
-  16.1 % slower on this stamp), and the cache does not change that path.
+* Does not save: materialization decode or the output write. Three consecutive
+  loads are within 0.4 % of each other (table), and the cache does not change
+  that path.
+* **Host variance is large and asymmetric.** On the retained earlier pass the
+  checkpoint write was 7,599.2 ms and this run's was 37,183.8 ms for the same
+  bytes; the materialize cluster is stable, the setup phases are not. Numbers
+  from different stamps are not directly comparable except where an interleaved
+  design says so.
 * Does not save: the plan/state digest, which is O(state); the warm plan time
   is in the table.
 
@@ -120,8 +131,9 @@ time is in the table; it grows with state, not with the requested closure.
   separate metric; it is bounded by the member count, not the tensor bytes.
 * **Warm materialize is not faster.** The cache is not wired into the
   materialization copy path; a production consumer that wants to skip the
-  second decode needs a different (and riskier) contract. On this stamp the warm
-  pass was slower than the cold one (§2).
+  second decode needs a different (and riskier) contract. Each load writes a
+  fresh output directory, so the second and third loads also pay for files the
+  first left behind on the same filesystem.
 * **No repeated-load measurement at a larger scale.** The gate asks for repeated
   loads; the court measures one cold, five warm checks and one warm materialize
   on one public checkpoint. A long training-load loop (hundreds of resumes) was
