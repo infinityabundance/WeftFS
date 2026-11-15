@@ -88,11 +88,12 @@ re-verifies and writes, so a warm load still pays the decode + write cost.
 
 The time-to-ready numbers are published as measured and are not re-framed. In
 this run the **warm** materialize (63,355.9 ms) is 16.1 % **slower** than the
-cold one (54,576.2 ms) on the same host; that is a loss, not a cache effect —
-the second pass writes 988 MB again into a filesystem whose writeback state has
-changed, and the two runs are not interleaved. The earlier stamp showed the
-warm pass marginally faster. Treat the direction as host noise and the
-magnitude as real work.
+cold one (54,576.2 ms) on the same host. The two passes write to separate output
+directories (`materialized`, then `materialized-2`), so the second pass writes
+988 MB of fresh files beside the first on the same filesystem rather than
+re-materializing in place; that is a loss, not a cache effect, and the runs are
+not interleaved. The earlier stamp showed the warm pass marginally faster.
+Treat the direction as host writeback noise and the magnitude as real work.
 
 ## 3. What each cache actually saves
 
