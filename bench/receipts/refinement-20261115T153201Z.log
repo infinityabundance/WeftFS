@@ -1,0 +1,596 @@
+== T100 refinement court, stage fuse ==
+kernel: Linux c227d5f28e95 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+bae986b7731d692c4fc9ff92c5f0f7e4dbc8fb4367d0b0cd30fa9a4b8b11054a  .docker-cache/target-rust/debug/examples/mw2_writer
+7f0e432427edec9d1db6a17ee8ed255b843f87a015a17bfe7ccea05c55922a9d  verifier/refinement_check.py
+d4fc37f0d4b96d4389741e74f799efc0943bbdc4ebb83675010f267dcdc97a4e  verifier/refinement_crosscheck.py
+{"accepted": true, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {"abstracted_retries": 20, "acks": 24, "bounded_checked": 6, "fully_checked": 18, "publishes": 24, "reads": 8, "releases": 24, "starts": 24}, "domains": [{"abstracted": [], "checks": {"abstracted_retries": 20, "acks": 24, "bounded_checked": 6, "fully_checked": 18, "publishes": 24, "reads": 8, "releases": 24, "starts": 24}, "committed": 24, "domain": "(global)", "gc_observations": 0, "head": 25, "keys": 72, "reads": 8, "rejected": 0, "silent": 0, "transactions": 24}], "history": "bench/receipts/refinement-20261115T153201Z-h1.jsonl", "invariants": [], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 64, "rejections": []}
+{"accepted": "mw2_disjoint", "counts": {"abstracted_retries": 20, "acks": 24, "bounded_checked": 6, "fully_checked": 18, "publishes": 24, "reads": 8, "releases": 24, "starts": 24}, "domains": [{"abstracted": 0, "checks": {"abstracted_retries": 20, "acks": 24, "bounded_checked": 6, "fully_checked": 18, "publishes": 24, "reads": 8, "releases": 24, "starts": 24}, "committed": 24, "domain": "(global)", "head": 25, "rejected": 0, "transactions": 24}], "ok": true}
+{"accepted": true, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {"acks": 1, "conflict_aborts": 3, "fully_checked": 1, "precondition_aborts": 12, "publishes": 1, "reads": 2, "releases": 1, "starts": 16}, "domains": [{"abstracted": [{"action": "Start", "class": "precondition", "tx": "503ffb9e4f3628ddcae1634f0f9b9b69"}, {"action": "Revalidate", "class": "Conflict", "tx": "5f1957afa9250ae9fdca52f71fa20cec"}, {"action": "Revalidate", "class": "Conflict", "tx": "cbf027488d641d62695b4c9eddc5ca8f"}, {"action": "Revalidate", "class": "Conflict", "tx": "7f55b8aece634408caa1c7339b3cf808"}, {"action": "Start", "class": "precondition", "tx": "e66a2377701b5bc50857668e9b9fcec4"}, {"action": "Start", "class": "precondition", "tx": "a03090a58746c912ddf8be4b42a1a0ec"}, {"action": "Start", "class": "precondition", "tx": "65edce9e843a293169be93c0842ae454"}, {"action": "Start", "class": "precondition", "tx": "d58f1932da8538f159861cbfe09c43fe"}, {"action": "Start", "class": "precondition", "tx": "658ef9881b5f505b5ff1277199e0b98d"}, {"action": "Start", "class": "precondition", "tx": "925e701ca384ca053ab95844b0c206ed"}, {"action": "Start", "class": "precondition", "tx": "1d99d0a8aaf0b9cdbaa0a89538c94c86"}, {"action": "Start", "class": "precondition", "tx": "05eed1f492e35cbd72677c1c134f8d48"}, {"action": "Start", "class": "precondition", "tx": "e03941f37ff415ed6dd36332a528d11a"}, {"action": "Start", "class": "precondition", "tx": "12fa5c49465b38bf6e6174c79f3898d0"}, {"action": "Start", "class": "precondition", "tx": "8e6031c4c867ea2f3238cfd3ce29b710"}], "checks": {"acks": 1, "conflict_aborts": 3, "fully_checked": 1, "precondition_aborts": 12, "publishes": 1, "reads": 2, "releases": 1, "starts": 16}, "committed": 1, "domain": "(global)", "gc_observations": 0, "head": 2, "keys": 33, "reads": 2, "rejected": 15, "silent": 0, "transactions": 16}], "history": "bench/receipts/refinement-20261115T153201Z-h2.jsonl", "invariants": [], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 36, "rejections": []}
+{"accepted": "mw2_conflict", "counts": {"acks": 1, "conflict_aborts": 3, "fully_checked": 1, "precondition_aborts": 12, "publishes": 1, "reads": 2, "releases": 1, "starts": 16}, "domains": [{"abstracted": 15, "checks": {"acks": 1, "conflict_aborts": 3, "fully_checked": 1, "precondition_aborts": 12, "publishes": 1, "reads": 2, "releases": 1, "starts": 16}, "committed": 1, "domain": "(global)", "head": 2, "rejected": 15, "transactions": 16}], "ok": true}
+{"accepted": true, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {"acks": 2, "fully_checked": 2, "publishes": 2, "releases": 2, "starts": 2}, "domains": [{"abstracted": [], "checks": {"acks": 2, "fully_checked": 2, "publishes": 2, "releases": 2, "starts": 2}, "committed": 2, "domain": "(global)", "gc_observations": 0, "head": 3, "keys": 3, "reads": 0, "rejected": 0, "silent": 0, "transactions": 2}], "history": "bench/receipts/refinement-20261115T153201Z-h3.jsonl", "invariants": [], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 6, "rejections": []}
+{"accepted": "mw2_faults", "counts": {"acks": 2, "fully_checked": 2, "publishes": 2, "releases": 2, "starts": 2}, "domains": [{"abstracted": 0, "checks": {"acks": 2, "fully_checked": 2, "publishes": 2, "releases": 2, "starts": 2}, "committed": 2, "domain": "(global)", "head": 3, "rejected": 0, "transactions": 2}], "ok": true}
+{"accepted": true, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {"abstracted_retries": 3, "acks": 12, "bounded_checked": 1, "fully_checked": 11, "publishes": 12, "reads": 4, "releases": 12, "starts": 12}, "domains": [{"abstracted": [], "checks": {"acks": 4, "fully_checked": 4, "publishes": 4, "releases": 4, "starts": 4}, "committed": 4, "domain": "c999c0071b5c9ef92afcbcd45f90177fac17882745f660f2f394c56285547c6a", "gc_observations": 0, "head": 5, "keys": 12, "reads": 0, "rejected": 0, "silent": 0, "transactions": 4}, {"abstracted": [], "checks": {"abstracted_retries": 3, "acks": 8, "bounded_checked": 1, "fully_checked": 7, "publishes": 8, "reads": 4, "releases": 8, "starts": 8}, "committed": 8, "domain": "e475e07ecb20753ca1e1aee90cc1cf711757d7a69024b93bc2e86668c946d997", "gc_observations": 0, "head": 9, "keys": 24, "reads": 4, "rejected": 0, "silent": 0, "transactions": 8}], "history": "bench/receipts/refinement-20261115T153201Z-h4.jsonl", "invariants": [], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 32, "rejections": []}
+{"accepted": "mw3_domains", "counts": {"abstracted_retries": 3, "acks": 12, "bounded_checked": 1, "fully_checked": 11, "publishes": 12, "reads": 4, "releases": 12, "starts": 12}, "domains": [{"abstracted": 0, "checks": {"acks": 4, "fully_checked": 4, "publishes": 4, "releases": 4, "starts": 4}, "committed": 4, "domain": "c999c0071b5c9ef92afcbcd45f90177fac17882745f660f2f394c56285547c6a", "head": 5, "rejected": 0, "transactions": 4}, {"abstracted": 0, "checks": {"abstracted_retries": 3, "acks": 8, "bounded_checked": 1, "fully_checked": 7, "publishes": 8, "reads": 4, "releases": 8, "starts": 8}, "committed": 8, "domain": "e475e07ecb20753ca1e1aee90cc1cf711757d7a69024b93bc2e86668c946d997", "head": 9, "rejected": 0, "transactions": 8}], "ok": true}
+{"mutant": "blind_overwrite", "records": 64, "construction": "tx at generation 23 (base 4) also writes a key written at generation 22"}
+{"mutant": "lost_ack", "records": 65, "construction": "append one ack whose transaction has no invoke"}
+{"mutant": "dropped_commit", "records": 63, "construction": "remove the response for generation 14"}
+{"mutant": "gc_reclaims_reachable", "records": 65, "construction": "a gc-observe claims key entry:0000000000000000000000000000000000000000000000000000000000000000:77332d303030303035 was reclaimed"}
+{"mutant": "read_above_head", "records": 65, "construction": "a read claims generation 28"}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "/tmp/weft-refinement.JNYa3k/mutants/blind_overwrite.jsonl", "invariants": ["NoBlindOverwrite"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 64, "rejections": [{"action": "Publish", "detail": "tx 4d71796cd4772daa5f2e3810ac7528be published generation 23 overwriting key entry:0000000000000000000000000000000000000000000000000000000000000000:77332d303030303035 at version 22 while observing version 0 at generation 4", "domain": "", "invariant": "NoBlindOverwrite"}]}
+{"accepted": false, "counts": {}, "history": "/tmp/weft-refinement.JNYa3k/mutants/lost_ack.jsonl", "invariants": ["NoLostAck"], "rejections": [{"action": "Ack", "detail": "line 65: tx-response for 'ghost-052e3164' without tx-invoke", "domain": null, "invariant": "NoLostAck"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "/tmp/weft-refinement.JNYa3k/mutants/dropped_commit.jsonl", "invariants": ["HeadWellFormed"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 63, "rejections": [{"action": null, "detail": "generation 14 is at or below the head 14 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 15 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 16 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 17 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 18 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 19 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 20 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 21 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 22 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 23 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 24 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 25 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 has no complete commit", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 14 is at or below the head 25 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "/tmp/weft-refinement.JNYa3k/mutants/gc_reclaims_reachable.jsonl", "invariants": ["CommittedBlobsDurable", "GcNeverReclaimsReachable"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 65, "rejections": [{"action": "GcReclaim", "detail": "key entry:0000000000000000000000000000000000000000000000000000000000000000:77332d303030303035 was reclaimed but is reachable from the head 25", "domain": "", "invariant": "GcNeverReclaimsReachable"}, {"action": "GcReclaim", "detail": "key entry:0000000000000000000000000000000000000000000000000000000000000000:77332d303030303035 was reclaimed but a published commit names it", "domain": "", "invariant": "CommittedBlobsDurable"}, {"action": "GcReclaim", "detail": "key entry:0000000000000000000000000000000000000000000000000000000000000000:77332d303030303035 was reclaimed but is reachable from the head 25", "domain": "", "invariant": "GcNeverReclaimsReachable"}, {"action": "GcReclaim", "detail": "key entry:0000000000000000000000000000000000000000000000000000000000000000:77332d303030303035 was reclaimed but a published commit names it", "domain": "", "invariant": "CommittedBlobsDurable"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "/tmp/weft-refinement.JNYa3k/mutants/read_above_head.jsonl", "invariants": ["NoPartial", "ReaderIsAPrefix"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 65, "rejections": [{"action": "Read", "detail": "reader t100-reader selected generation 28 above the head 25", "domain": "", "invariant": "NoPartial"}, {"action": "Read", "detail": "reader t100-reader selected generation 28 above the head 25", "domain": "", "invariant": "ReaderIsAPrefix"}, {"action": "Read", "detail": "reader t100-reader selected generation 28 above the head 25", "domain": "", "invariant": "NoPartial"}, {"action": "Read", "detail": "reader t100-reader selected generation 28 above the head 25", "domain": "", "invariant": "ReaderIsAPrefix"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/conflict_without_write.jsonl", "invariants": ["NoBlindOverwrite"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 2, "rejections": [{"action": "Revalidate", "detail": "tx t1 aborted with a Conflict but no modelled write touched its keys in (1, 1]", "domain": "", "invariant": "NoBlindOverwrite"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/gc_reclaims_reachable.jsonl", "invariants": ["CommittedBlobsDurable", "GcNeverReclaimsReachable"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 3, "rejections": [{"action": "GcReclaim", "detail": "key k1 was reclaimed but is reachable from the head 2", "domain": "", "invariant": "GcNeverReclaimsReachable"}, {"action": "GcReclaim", "detail": "key k1 was reclaimed but a published commit names it", "domain": "", "invariant": "CommittedBlobsDurable"}, {"action": "GcReclaim", "detail": "key k1 was reclaimed but is reachable from the head 2", "domain": "", "invariant": "GcNeverReclaimsReachable"}, {"action": "GcReclaim", "detail": "key k1 was reclaimed but a published commit names it", "domain": "", "invariant": "CommittedBlobsDurable"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/head_well_formed.jsonl", "invariants": ["HeadWellFormed"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 4, "rejections": [{"action": null, "detail": "generation 3 is at or below the head 3 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 3 is at or below the head 4 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 3 has no complete commit", "domain": "", "invariant": "HeadWellFormed"}, {"action": null, "detail": "generation 3 is at or below the head 4 but no complete commit names it", "domain": "", "invariant": "HeadWellFormed"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/live_prepared_durable.jsonl", "invariants": ["LivePreparedDurable"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 4, "rejections": [{"action": "GcReclaim", "detail": "key k1 was reclaimed while a prepared transaction needs it", "domain": "", "invariant": "LivePreparedDurable"}, {"action": "GcReclaim", "detail": "key k1 was reclaimed while a prepared transaction needs it", "domain": "", "invariant": "LivePreparedDurable"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/no_blind_overwrite.jsonl", "invariants": ["NoBlindOverwrite"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 4, "rejections": [{"action": "Publish", "detail": "tx t2 published generation 3 overwriting key k1 at version 2 while observing version 0 at generation 1", "domain": "", "invariant": "NoBlindOverwrite"}]}
+{"accepted": false, "counts": {}, "history": "tests/history/refinement/no_lost_ack.jsonl", "invariants": ["NoLostAck"], "rejections": [{"action": "Ack", "detail": "line 3: tx-response for 'ghost' without tx-invoke", "domain": null, "invariant": "NoLostAck"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/no_partial.jsonl", "invariants": ["NoPartial", "ReaderIsAPrefix"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 3, "rejections": [{"action": "Read", "detail": "reader h1 selected generation 5 above the head 2", "domain": "", "invariant": "NoPartial"}, {"action": "Read", "detail": "reader h1 selected generation 5 above the head 2", "domain": "", "invariant": "ReaderIsAPrefix"}, {"action": "Read", "detail": "reader h1 selected generation 5 above the head 2", "domain": "", "invariant": "NoPartial"}, {"action": "Read", "detail": "reader h1 selected generation 5 above the head 2", "domain": "", "invariant": "ReaderIsAPrefix"}]}
+{"accepted": false, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {}, "domains": [], "history": "tests/history/refinement/retry_bound_overrun.jsonl", "invariants": ["NoBlindOverwrite"], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 6, "rejections": [{"action": "Publish", "detail": "tx t2 published generation 3 overwriting key k1 at version 2 while observing version 0 at generation 1", "domain": "", "invariant": "NoBlindOverwrite"}]}
+{"accepted": true, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {"acks": 2, "fully_checked": 2, "publishes": 2, "reads": 2, "releases": 2, "starts": 2}, "domains": [{"abstracted": [], "checks": {"acks": 1, "fully_checked": 1, "publishes": 1, "reads": 1, "releases": 1, "starts": 1}, "committed": 1, "domain": "d1", "gc_observations": 0, "head": 2, "keys": 1, "reads": 1, "rejected": 0, "silent": 0, "transactions": 1}, {"abstracted": [], "checks": {"acks": 1, "fully_checked": 1, "publishes": 1, "reads": 1, "releases": 1, "starts": 1}, "committed": 1, "domain": "d2", "gc_observations": 0, "head": 1, "keys": 1, "reads": 1, "rejected": 0, "silent": 0, "transactions": 1}], "history": "tests/history/valid/cross_domain_allowed.jsonl", "invariants": [], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 8, "rejections": []}
+control accepted: cross_domain_allowed.jsonl
+{"accepted": true, "checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable"], "counts": {"acks": 2, "fully_checked": 2, "publishes": 2, "reads": 2, "releases": 2, "starts": 2}, "domains": [{"abstracted": [], "checks": {"acks": 2, "fully_checked": 2, "publishes": 2, "reads": 2, "releases": 2, "starts": 2}, "committed": 2, "domain": "(global)", "gc_observations": 0, "head": 3, "keys": 2, "reads": 2, "rejected": 0, "silent": 0, "transactions": 2}], "history": "tests/history/valid/mw2_ok.jsonl", "invariants": [], "not_checked": ["TypeOK (holds by construction of the replay)", "CommitOrderIsStable (chain indices are generations)", "liveness, starvation, fairness, retry-count liveness", "any cross-domain (MW3) property", "value-level read consistency (verifier/history_check.py owns it)", "blind overwrite of keys that existed before the trace (unmodelled prefix)", "the retry action subset: an exactly-observed refresh point for attempts > 1"], "records": 8, "rejections": []}
+control accepted: mw2_ok.jsonl
+{"config": {"committers": ["c1", "c2"], "keys": ["k1"], "max_attempts": 1, "max_gen": 2}, "distinct_states": 28713, "flaw": "none", "invariants_checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable", "CommitOrderIsStable"], "module": "WeftMultiWriter", "states_generated": 246445, "transitions": 246444, "violations": []}
+{"config": {"committers": ["c1", "c2"], "keys": ["k1", "k2"], "max_attempts": 0, "max_gen": 2}, "distinct_states": 176427, "flaw": "none", "invariants_checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable", "CommitOrderIsStable"], "module": "WeftMultiWriter", "states_generated": 1772785, "transitions": 1772784, "violations": []}
+{"config": {"committers": ["c1", "c2"], "keys": ["k1"], "max_attempts": 1, "max_gen": 2}, "distinct_states": 49625, "flaw": "blind", "invariants_checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable", "CommitOrderIsStable"], "module": "WeftMultiWriterBuggy", "states_generated": 433905, "transitions": 433904, "violations": ["NoBlindOverwrite"]}
+{"config": {"committers": ["c1", "c2"], "keys": ["k1"], "max_attempts": 1, "max_gen": 2}, "distinct_states": 29617, "flaw": "gc", "invariants_checked": ["HeadWellFormed", "NoPartial", "NoLostAck", "NoBlindOverwrite", "CommittedBlobsDurable", "LivePreparedDurable", "ReaderIsAPrefix", "GcNeverReclaimsReachable", "CommitOrderIsStable"], "module": "WeftMultiWriterGcBuggy", "states_generated": 252765, "transitions": 252764, "violations": ["CommittedBlobsDurable", "GcNeverReclaimsReachable", "LivePreparedDurable"]}
+== T100 refinement court, stage tla ==
+kernel: Linux 375764f88e5f 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 x86_64 x86_64 GNU/Linux
+image: weft/tla-court:1 (sha256:de042d3c478deec6579b3182ff8dc49e450e4119b20245938c8f8d6c3d6f7916)
+limits: memory=3g cpus=4 pids=1024
+tla2tools sha256: 936a262061c914694dfd669a543be24573c45d5aa0ff20a8b96b23d01e050e88
+java: Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+--- tlc correct_a ---
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 11 and seed 7092052925464227749 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 54] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-refinement-tla.ymXP02/WeftMultiWriter.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriter
+Starting... (2026-11-15 15:32:13)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-15 15:32:13.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.4E-10
+  based on the actual fingerprints:  val = 1.3E-11
+246445 states generated, 28713 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 19.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 5).
+Finished in 01s at (2026-11-15 15:32:14)
+--- tlc correct_b ---
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 74 and seed -3057326535839835594 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 102] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-refinement-tla.ymXP02/WeftMultiWriter.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriter
+Starting... (2026-11-15 15:32:14)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-15 15:32:15.
+Progress(13) at 2026-11-15 15:32:18: 807,411 states generated (807,411 s/min), 116,930 distinct states found (116,930 ds/min), 35,357 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.5E-8
+  based on the actual fingerprints:  val = 7.8E-10
+1772785 states generated, 176427 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 18.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 9 and the 95th percentile is 5).
+Finished in 05s at (2026-11-15 15:32:20)
+--- tlc blind ---
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 69 and seed -6905230846039852308 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 150] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-refinement-tla.ymXP02/WeftMultiWriterBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterBuggy
+Starting... (2026-11-15 15:32:21)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-15 15:32:21.
+Error: Invariant NoBlindOverwrite is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = [c1 |-> "idle", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 2: <Start line 96, col 3 to line 108, col 65 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 3: <Start line 96, col 3 to line 108, col 65 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "prepared"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 4: <Publish line 147, col 3 to line 160, col 37 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "prepared"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 1, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 1
+
+State 5: <Revalidate line 116, col 3 to line 123, col 53 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "prepared"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 1, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 1]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 1
+
+State 6: <Publish line 147, col 3 to line 160, col 37 of module WeftMultiWriterBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "publishing"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "txn",
+        owner |-> "c2",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 1, c2 |-> 2]
+/\ observedHead = [c1 |-> 0, c2 |-> 1]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [ kind |-> "txn",
+     owner |-> "c2",
+     writes |-> {"k1"},
+     observed |-> [k1 |-> 0] ] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 2
+
+590 states generated, 234 distinct states found, 152 states left on queue.
+The depth of the complete state graph search is 6.
+The average outdegree of the complete state graph is 3 (minimum is 0, the maximum 9 and the 95th percentile is 8).
+Finished in 00s at (2026-11-15 15:32:21)
+--- tlc gc-LivePreparedDurable ---
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 31 and seed 5051400344148805659 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 197] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-refinement-tla.ymXP02/WeftMultiWriterGcBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterGcBuggy
+Starting... (2026-11-15 15:32:21)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-15 15:32:21.
+Error: Invariant LivePreparedDurable is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = [c1 |-> "idle", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 2: <Start line 95, col 3 to line 107, col 65 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 3: <GcReclaim line 256, col 3 to line 262, col 46 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {"k1"}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+14 states generated, 9 distinct states found, 6 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-15 15:32:21)
+--- tlc gc-CommittedBlobsDurable ---
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 108 and seed -364163560032421600 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 244] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-refinement-tla.ymXP02/WeftMultiWriterGcBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterGcBuggy
+Starting... (2026-11-15 15:32:22)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-15 15:32:22.
+Error: Invariant CommittedBlobsDurable is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = [c1 |-> "idle", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 2: <Start line 95, col 3 to line 107, col 65 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 3: <GcReclaim line 256, col 3 to line 262, col 46 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {"k1"}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 4: <Publish line 153, col 3 to line 166, col 37 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "publishing", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {"k1"}
+/\ pending = [c1 |-> 1, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "txn", owner |-> "c1", writes |-> {"k1"}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 1
+
+65 states generated, 38 distinct states found, 28 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 5 (minimum is 2, the maximum 8 and the 95th percentile is 8).
+Finished in 00s at (2026-11-15 15:32:22)
+--- tlc gc-GcNeverReclaimsReachable ---
+Picked up JAVA_TOOL_OPTIONS: -Xmx1536m -XX:MaxMetaspaceSize=256m -XX:+UseParallelGC
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 12 and seed -8868322473238652571 with 1 worker on 4 cores with 1365MB heap and 64MB offheap memory [pid: 291] (Linux 7.3.3-1-cachyos amd64, Eclipse Adoptium 17.0.21 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /tmp/weft-refinement-tla.ymXP02/WeftMultiWriterGcBuggy.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module WeftMultiWriterGcBuggy
+Starting... (2026-11-15 15:32:22)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-15 15:32:22.
+Error: Invariant GcNeverReclaimsReachable is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ phase = [c1 |-> "idle", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 2: <Start line 95, col 3 to line 107, col 65 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {"k1"}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+State 3: <GcReclaim line 256, col 3 to line 262, col 46 of module WeftMultiWriterGcBuggy>
+/\ phase = [c1 |-> "prepared", c2 |-> "idle"]
+/\ txn = [ c1 |->
+      [ kind |-> "txn",
+        owner |-> "c1",
+        writes |-> {"k1"},
+        observed |-> [k1 |-> 0] ],
+  c2 |->
+      [ kind |-> "none",
+        owner |-> "c1",
+        writes |-> {},
+        observed |-> [k1 |-> 0] ] ]
+/\ readHead = [r1 |-> 0, r2 |-> 0]
+/\ durableBlob = {}
+/\ attempts = [c1 |-> 0, c2 |-> 0]
+/\ deletedBlob = {"k1"}
+/\ pending = [c1 |-> 0, c2 |-> 0]
+/\ observedHead = [c1 |-> 0, c2 |-> 0]
+/\ chain = << [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]],
+   [kind |-> "none", owner |-> "c1", writes |-> {}, observed |-> [k1 |-> 0]] >>
+/\ crashed = [c1 |-> FALSE, c2 |-> FALSE]
+/\ acked = [c1 |-> 0, c2 |-> 0]
+/\ head = 0
+
+14 states generated, 9 distinct states found, 6 states left on queue.
+The depth of the complete state graph search is 3.
+The average outdegree of the complete state graph is 2 (minimum is 2, the maximum 2 and the 95th percentile is 2).
+Finished in 00s at (2026-11-15 15:32:22)
+tla evidence: bench/receipts/refinement-20261115T153201Z-tla.json
+== T100 refinement court, stage assemble ==
+kernel: Linux 22b5792d7a8a 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/fuse-court:1 (sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e)
+limits: memory=3g cpus=4 pids=1024
+PASS correct_a_tlc_completed: Finished in 01s at (2026-11-15 15:32:14)
+PASS correct_a_tlc_no_error: {'exit': 0, 'violated': None}
+PASS correct_a_distinct_states_match: {'enumerator': 28713, 'tlc': 28713}
+PASS correct_a_generated_states_match: {'enumerator': 246445, 'tlc': 246445}
+PASS correct_a_enumerator_finds_no_violation
+PASS correct_b_tlc_completed: Finished in 05s at (2026-11-15 15:32:20)
+PASS correct_b_tlc_no_error: {'exit': 0, 'violated': None}
+PASS correct_b_distinct_states_match: {'enumerator': 176427, 'tlc': 176427}
+PASS correct_b_generated_states_match: {'enumerator': 1772785, 'tlc': 1772785}
+PASS correct_b_enumerator_finds_no_violation
+PASS blind_tlc_reports_no_blind_overwrite: {'exit': 12, 'violated': 'NoBlindOverwrite'}
+PASS blind_enumerator_reports_no_blind_overwrite: ['NoBlindOverwrite']
+PASS gc_tlc_reports_LivePreparedDurable: {'exit': 12, 'violated': 'LivePreparedDurable'}
+PASS gc_enumerator_reports_LivePreparedDurable: ['CommittedBlobsDurable', 'GcNeverReclaimsReachable', 'LivePreparedDurable']
+PASS gc_tlc_reports_CommittedBlobsDurable: {'exit': 12, 'violated': 'CommittedBlobsDurable'}
+PASS gc_enumerator_reports_CommittedBlobsDurable: ['CommittedBlobsDurable', 'GcNeverReclaimsReachable', 'LivePreparedDurable']
+PASS gc_tlc_reports_GcNeverReclaimsReachable: {'exit': 12, 'violated': 'GcNeverReclaimsReachable'}
+PASS gc_enumerator_reports_GcNeverReclaimsReachable: ['CommittedBlobsDurable', 'GcNeverReclaimsReachable', 'LivePreparedDurable']
+PASS real_histories_accepted: ['bench/receipts/refinement-20261115T153201Z-h2.jsonl', 'bench/receipts/refinement-20261115T153201Z-h1.jsonl', 'bench/receipts/refinement-20261115T153201Z-h3.jsonl', 'bench/receipts/refinement-20261115T153201Z-h4.jsonl']
+PASS real_history_mutants_all_rejected: [{'detected': ['NoBlindOverwrite'], 'expected_invariant': 'NoBlindOverwrite', 'mutant': 'blind_overwrite', 'ok': True}, {'detected': ['NoLostAck'], 'expected_invariant': 'NoLostAck', 'mutant': 'lost_ack', 'ok': True}, {'detected': ['HeadWellFormed'], 'expected_invariant': 'HeadWellFormed', 'mutant': 'dropped_commit', 'ok': True}, {'detected': ['CommittedBlobsDurable', 'GcNeverReclaimsReachable'], 'expected_invariant': 'GcNeverReclaimsReachable', 'mutant': 'gc_reclaims_reachable', 'ok': True}, {'detected': ['NoPartial', 'ReaderIsAPrefix'], 'expected_invariant': 'NoPartial', 'mutant': 'read_above_head', 'ok': True}]
+PASS invariant_fixtures_all_rejected: ['conflict_without_write', 'gc_reclaims_reachable', 'head_well_formed', 'live_prepared_durable', 'no_blind_overwrite', 'no_lost_ack', 'no_partial', 'retry_bound_overrun']
+PASS invariant_coverage: ['GcNeverReclaimsReachable', 'HeadWellFormed', 'LivePreparedDurable', 'NoBlindOverwrite', 'NoLostAck', 'NoPartial']
+PASS blind_overwrite_fully_checked: {'acks': 39, 'conflict_aborts': 3, 'fully_checked': 32, 'precondition_aborts': 12, 'publishes': 39, 'reads': 14, 'releases': 39, 'starts': 54, 'abstracted_retries': 23, 'bounded_checked': 7}
+{"receipt": "bench/receipts/refinement-20261115T153201Z.json", "result": "pass", "checks": "23/23"}

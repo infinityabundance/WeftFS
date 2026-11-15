@@ -177,6 +177,17 @@ Ack(c) ==
   /\ UNCHANGED <<head, chain, durableBlob, deletedBlob, observedHead, attempts,
                   pending, crashed, readHead>>
 
+\* T100: the acknowledgement returns the publication slot to idle so one
+\* committer can publish more than one transaction. Identical in the corrected
+\* module and both negative controls (the flaw is elsewhere).
+Release(c) ==
+  /\ c \in Committers
+  /\ phase[c] = "done"
+  /\ ~crashed[c]
+  /\ phase' = [phase EXCEPT ![c] = "idle"]
+  /\ UNCHANGED <<head, chain, durableBlob, deletedBlob, txn, observedHead,
+                  attempts, acked, pending, crashed, readHead>>
+
 \* ---------------------------------------------------------------------------
 \* Faults
 \* ---------------------------------------------------------------------------
@@ -252,8 +263,8 @@ GcReclaim(k) ==
 
 Next ==
   \/ \E c \in Committers : Start(c) \/ Revalidate(c) \/ Retry(c) \/ Publish(c)
-  \/ \E c \in Committers : Ack(c) \/ CrashTornCommit(c) \/ CrashAfterHead(c)
-                          \/ CrashPrepared(c) \/ Recover(c)
+  \/ \E c \in Committers : Ack(c) \/ Release(c) \/ CrashTornCommit(c)
+                          \/ CrashAfterHead(c) \/ CrashPrepared(c) \/ Recover(c)
   \/ \E r \in Readers : Read(r)
   \/ \E k \in Keys : GcReclaim(k)
 

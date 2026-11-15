@@ -282,6 +282,14 @@ run_orchestrated_court kv_go_parity kv_go_parity_court \
 # script prints exactly one `context_plane_verifier: skip <reason>` line and
 # exits 78 when python3 is unavailable, which the aggregate records as a skip.
 # It writes `bench/receipts/context-plane-verifier-<stamp>.json` + `.log`.
+# T100 bounded refinement link: real store histories replayed against
+# WeftMultiWriter.tla, mutants rejected with named invariants, and a
+# transition-relation tie against TLC. The script orchestrates a fuse court, a
+# TLA court and a second fuse court; a host without Docker or the images prints
+# `refinement_court: skip <reason>` and exits 78.
+run_orchestrated_court refinement refinement_court \
+  bash scripts/refinement_court.sh
+
 run_orchestrated_court context_plane_verifier context_plane_verifier \
   bash scripts/context-plane-verifier_court.sh
 

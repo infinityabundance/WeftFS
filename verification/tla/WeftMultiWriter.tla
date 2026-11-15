@@ -198,6 +198,20 @@ Ack(c) ==
   /\ UNCHANGED <<head, chain, durableBlob, deletedBlob, observedHead, attempts,
                   pending, crashed, readHead>>
 
+\* T100: the acknowledgement returns the publication slot to idle so one
+\* committer can publish more than one transaction. The model as originally
+\* written was single-shot per committer (nothing returned phase to "idle"
+\* after Ack), which no multi-transaction history can satisfy. Release is the
+\* smallest extension that makes the mapping faithful; it does not touch any
+\* safety property (it only forgets an already-acknowledged slot).
+Release(c) ==
+  /\ c \in Committers
+  /\ phase[c] = "done"
+  /\ ~crashed[c]
+  /\ phase' = [phase EXCEPT ![c] = "idle"]
+  /\ UNCHANGED <<head, chain, durableBlob, deletedBlob, txn, observedHead,
+                  attempts, acked, pending, crashed, readHead>>
+
 \* ---------------------------------------------------------------------------
 \* Faults
 \* ---------------------------------------------------------------------------
@@ -272,8 +286,8 @@ GcReclaim(k) ==
 
 Next ==
   \/ \E c \in Committers : Start(c) \/ Revalidate(c) \/ Retry(c) \/ Publish(c)
-  \/ \E c \in Committers : Ack(c) \/ CrashTornCommit(c) \/ CrashAfterHead(c)
-                          \/ CrashPrepared(c) \/ Recover(c)
+  \/ \E c \in Committers : Ack(c) \/ Release(c) \/ CrashTornCommit(c)
+                          \/ CrashAfterHead(c) \/ CrashPrepared(c) \/ Recover(c)
   \/ \E r \in Readers : Read(r)
   \/ \E k \in Keys : GcReclaim(k)
 
