@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-15. **Court:** `scripts/training_artifact_court.sh` (one
 hard-limited fuse container, Rust and Go). **Receipt:**
-`bench/receipts/training-artifact-20261115T140728Z.json` and `.log`.
+`bench/receipts/training-artifact-20261115T141554Z.json` and `.log`.
 **Normative:** `spec/WEFT-TRAINING-ARTIFACT.md`.
 
 ## 1. What was proved
@@ -29,7 +29,7 @@ contains no snapshot, path, principal, grant, retention or quarantine field.
 | Exact tensors recomputed by Go | 1 |
 | Artifact record | 1,071 B |
 | Go wrote (tensor set), Rust validated | 2 tensors, 48 logical bytes |
-| Court checks | 22 / 22 pass |
+| Court checks | 23 / 23 pass |
 <!-- END GENERATED:ta-proof -->
 
 The negative cases are produced by the Rust fixture harness (a real store

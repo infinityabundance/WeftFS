@@ -12099,7 +12099,7 @@ the aggregate was **not** re-run, so the cited verification receipt is still
     retention and quarantine are separate mutable records and never enter the
     root. Rust builds/validates/grant/closure; an independent Go consumer
     parses the same record, the `weft.checkpoint.v1` manifest, the tensors, the
-    Context Root, the closure and the policy. Court 22/22: Rust writes → Go
+    Context Root, the closure and the policy. Court 23/23: Rust writes → Go
     validates; Go writes a tensor set → Rust validates; mutated value,
     removed lineage, contradicted policy and missing ancestor refuse with the
     same classes in both languages; grant edits move the epoch and leave the
