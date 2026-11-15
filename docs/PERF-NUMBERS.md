@@ -1095,6 +1095,181 @@ time. They are not current claims.
 | `pareto.pythia.restore_ratio` | 2.42 | ratio | pythia cold-restore ratio (C/A) | `bench/receipts/heldout-pareto-summary-20261114T191458Z.json` | 20261114T191458Z | 523c51d20c4e |
 <!-- END GENERATED:perf-catalog-pareto -->
 
+## T048 typed adapters and merged views
+
+<!-- BEGIN GENERATED:perf-catalog-t048 (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `t048.adapters` | 12 | — | Adapters ingested | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.merges` | 10 | — | Adapters merged into views | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.adapter_logical_b` | 318,590,976 | B | Adapter logical payload | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.adapter_physical_b` | 265,951,556 | B | Adapters stored (all metadata) | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.adapter_zstd_b` | 294,456,047 | B | `zstd -19` of the adapter files | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.base_physical_b` | 658,103,614 | B | Base checkpoint stored | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.base_zstd_b` | 764,093,099 | B | `zstd -19` of the base container | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.family_physical_b` | 924,055,170 | B | Base plus all adapters stored | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.native_bytes` | 1,307,045,528 | B | Base plus adapter files as plain bytes | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.views_family_b` | 3,223,241,023 | B | Base plus every merged view stored | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.views_logical_b` | 3,842,506,752 | B | Merged-view logical bytes | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.full_standalone_b` | 658,099,726 | B | One full merged model in a fresh store | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.full_shared_b` | 157,445 | B | Same full merged model beside the view | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.base_write_ms` | 3,508.1 | ms | Base checkpoint write | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.base_restore_ms` | 6,380.9 | ms | Base restore (whole container) | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.view_merge_ms` | 12,615 | ms | Merged view: merge | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.view_apply_ms` | 6,556 | ms | Apply the adapter to a restored base | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.view_restore_ms` | 4,205 | ms | Merged view: restore | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.view_targets` | 168 | — | Targets in the first merged view | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.aneesa_restore_ms` | 11,270.9 | ms | A 48-target merged view: restore | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.full_write_ms` | 3,963.8 | ms | Full merged model: write (fresh store) | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.full_restore_ms` | 4,306.8 | ms | Full merged model: restore | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.small_physical_b` | 562,629 | B | Smallest merged adapter stored | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.small_zstd_b` | 508,789 | B | Smallest merged adapter under `zstd -19` | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.small_ratio` | 1.106 | x | Smallest adapter, stored / `zstd -19` | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.small_source_b` | 553,016 | B | Smallest adapter source file | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.big_physical_b` | 115,802,613 | B | Largest adapter stored | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.big_zstd_b` | 129,032,224 | B | Largest adapter under `zstd -19` | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.big_ratio` | 0.897 | x | Largest adapter, stored / `zstd -19` | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.big_source_b` | 140,815,952 | B | Largest adapter source file | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.ref_elements` | 4,358,144 | — | Reference tensor elements | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.ref_mismatch_f32` | 1 | — | NumPy float32 matmul vs Rust after bf16 rounding | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.ref_mismatch_f64` | 3 | — | NumPy float64 accumulation vs Rust after bf16 rounding | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.ref_max_abs` | 0.000244 | — | Largest reference difference | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.adapter_vs_zstd_pct` | 9.68 | % | Adapters stored below `zstd -19` | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.base_vs_zstd_pct` | 13.87 | % | Base stored below `zstd -19` | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.family_vs_native_pct` | 29.30 | % | Family stored below the plain files | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.views_incremental_b` | 2,565,137,409 | B | Merged views incremental bytes | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.views_vs_base_plus_full` | 2.449 | x | Merged-view family / (base + one full merged model) | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.full_shared_ratio` | 4,180 | x | Standalone / shared-store full-model increment | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.view_vs_apply` | 0.325 | x | View restore / (base restore + apply) | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+| `t048.aneesa_targets` | 48 | — | Targets in the 48-target view | `bench/receipts/adapters-20261115T052218Z.json` | 20261115T052218Z | 3a02e561a4d1 |
+<!-- END GENERATED:perf-catalog-t048 -->
+
+## T049 optimizer state, gradients and attention masks
+
+<!-- BEGIN GENERATED:perf-catalog-t049 (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `t049.model_tensors` | 42 | — | Model parameters | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.model_physical_b` | 577,591 | B | Model checkpoint stored | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.step` | 1 | — | AdamW step recorded | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.loss` | 6.094621 | — | Cross-entropy loss | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.global_norm` | 0.671185 | — | Gradient global norm | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_logical_b` | 3,315,456 | B | Optimizer moments logical | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_physical_b` | 2,816,796 | B | Optimizer state stored (all metadata) | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_zstd_b` | 3,003,495 | B | Optimizer moments under `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_manifest_b` | 14,127 | B | Optimizer-state manifest | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_write_ms` | 1,188.0 | ms | Optimizer-state write | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_restore_ms` | 13.5 | ms | Optimizer-state restore | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_mode9` | 28 | — | Optimizer tensors stored as mode 9 | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_raw` | 54 | — | Optimizer tensors stored raw | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_zstd_count` | 2 | — | Optimizer tensors stored as zstd | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.grad_logical_b` | 828,864 | B | Gradients logical | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.grad_physical_b` | 578,320 | B | Gradients stored | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.grad_zstd_b` | 630,391 | B | Gradients under `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.grad_write_ms` | 581.4 | ms | Gradient write | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.grad_restore_ms` | 3.7 | ms | Gradient restore | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_logical_b` | 18,432 | B | Mask logical | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_physical_b` | 1,160 | B | Mask stored | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_zstd_b` | 67 | B | Mask under `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_manifest_b` | 466 | B | Attention-mask manifest | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_write_ms` | 43.8 | ms | Attention-mask write | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_restore_ms` | 0.070 | ms | Attention-mask restore | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.total_logical_b` | 4,162,752 | B | Three artifacts logical | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.total_physical_b` | 3,396,276 | B | Three artifacts stored | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.total_zstd_b` | 3,633,953 | B | Three artifacts under `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.go_representations` | 61 | — | WeftFS-Go `verify --full` representations | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_vs_zstd_pct` | 6.22 | % | Optimizer state below `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.opt_vs_raw_pct` | 15.04 | % | Optimizer state below its raw bytes | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.grad_vs_zstd_pct` | 8.26 | % | Gradients below `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.mask_vs_zstd_ratio` | 17.3 | x | Mask stored / `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+| `t049.total_vs_zstd_pct` | 6.54 | % | All three artifacts below `zstd -19` | `bench/receipts/training-state-20261115T054734Z.json` | 20261115T054734Z | 3a02e561a4d1 |
+<!-- END GENERATED:perf-catalog-t049 -->
+
+## T051 cross-model lossless structural delta
+
+<!-- BEGIN GENERATED:perf-catalog-t051 (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `t051.accepts` | 1 | — | Accept decisions | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.declines` | 5 | — | Decline decisions | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_target_b` | 281,715,176 | B | pythia step0->step1 target bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_base_b` | 281,715,176 | B | pythia step0->step1 base bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_frame_b` | 47,403 | B | pythia step0->step1 DELTA frame | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_matched_frac` | 0.999834 | — | pythia step0->step1 byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_patch_b` | 275,660 | B | pythia step0->step1 `zstd --patch-from -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_store_b` | 62,142 | B | pythia step0->step1 planner marginal | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_zstd_b` | 142,240,032 | B | pythia step0->step1 independent `zstd -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_base_b` | 281,715,176 | B | pythia step0->step8 base bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_target_b` | 281,715,176 | B | pythia step0->step8 target bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_slice_b` | 268,435,456 | B | Qwen fine-tune slice length | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.cross_matched_pct` | 0.000000 | % | Cross-size/dtype byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.same_shape_matched_pct` | 0.000003 | % | Same-dtype/different-shape byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.synthetic_matched_pct` | 0.000000 | % | Synthetic pair byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_matched_frac` | 0.005628 | — | pythia step0->step8 byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_patch_b` | 141,228,760 | B | pythia step0->step8 `zstd --patch-from -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_zstd_b` | 142,277,741 | B | pythia step0->step8 independent `zstd -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_wd_b` | 50,564,149 | B | pythia step0->step8 forced weight-delta marginal | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_slice_matched` | 0.000002086163 | — | Qwen fine-tune slice byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_slice_patch_b` | 203,304,551 | B | Qwen fine-tune slice `zstd --patch-from -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_slice_zstd_b` | 204,624,205 | B | Qwen fine-tune slice independent `zstd -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_base_b` | 658,187,349 | B | Qwen store arm base physical | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_store_b` | 541,430,656 | B | Qwen store arm target marginal | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_zstd_b` | 764,093,099 | B | Qwen instruct independent `zstd -19` | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_wd_tensors` | 241 | — | Qwen weight-delta tensors | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.cross_base_b` | 103,022,592 | B | Cross-size/dtype base tensor bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.cross_target_b` | 272,269,312 | B | Cross-size/dtype target tensor bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.same_shape_base_b` | 8,716,288 | B | Same-dtype/different-shape base bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.same_shape_target_b` | 272,269,312 | B | Same-dtype/different-shape target bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.synthetic_b` | 4,194,304 | B | Synthetic nothing-in-common pair bytes | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_matched_pct` | 99.983 | % | pythia step0->step1 byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_matched_pct` | 0.563 | % | pythia step0->step8 byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_slice_matched_pct` | 0.000209 | % | Qwen fine-tune slice byte-identical fraction | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_frame_vs_patch` | 5.82 | x | `zstd --patch-from` / byte delta frame | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p01_store_vs_frame` | 1.31 | x | Planner marginal / byte delta frame | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.p08_patch_vs_wd` | 2.79 | x | `zstd --patch-from` / forced weight-delta | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+| `t051.qwen_store_vs_zstd` | 1.41 | x | Independent `zstd -19` / planner marginal | `bench/receipts/cross-model-delta-20261115T064249Z.json` | 20261115T064249Z | cad2f730bd16 |
+<!-- END GENERATED:perf-catalog-t051 -->
+
+## T052 exact versus approximate view identity
+
+<!-- BEGIN GENERATED:perf-catalog-t052 (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `t052.down_exact_b` | 5,798,764 | B | down_proj exact stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_exact_read_ms` | 21.41 | ms | down_proj exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_b32_b` | 4,463,546 | B | down_proj view (block 32) stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_b32_ratio` | 0.770 | x | down_proj view (block 32) / exact | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_b128_b` | 4,152,976 | B | down_proj view (block 128) stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_b128_ratio` | 0.716 | x | down_proj view (block 128) / exact | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_b128_id_ms` | 44.19 | ms | down_proj view identity-only read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_b128_strict_ms` | 149.11 | ms | down_proj view strict read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_err` | 0.001953125 | — | down_proj measured max error | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_bound` | 0.002176120 | — | down_proj declared bound | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_exact_b` | 180,547,947 | B | embedding exact stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_exact_read_ms` | 700.60 | ms | embedding exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_b128_b` | 127,794,475 | B | embedding view (block 128) stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_b128_ratio` | 0.708 | x | embedding view (block 128) / exact | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_b128_id_ms` | 1,374.21 | ms | embedding view identity-only read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_err` | 0.000751495 | — | embedding measured max error | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_bound` | 0.001280296 | — | embedding declared bound | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_exact_b` | 1,829,113 | B | pythia tensor exact stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_exact_read_ms` | 4.78 | ms | pythia tensor exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_b128_b` | 762,020 | B | pythia tensor view (block 128) stored | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_b128_ratio` | 0.417 | x | pythia tensor view (block 128) / exact | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_b128_id_ms` | 8.11 | ms | pythia tensor view identity-only read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_err` | 0.000571424 | — | pythia measured max error | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_bound` | 0.000571904 | — | pythia declared bound | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_saved_pct` | 28.38 | % | down_proj bytes saved (block 128) | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_saved_pct` | 29.22 | % | embedding bytes saved (block 128) | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_saved_pct` | 58.34 | % | pythia tensor bytes saved (block 128) | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_id_vs_exact` | 2.06 | x | down_proj identity-only read / exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.down_strict_vs_exact` | 6.96 | x | down_proj strict read / exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.embed_id_vs_exact` | 1.96 | x | embedding identity-only read / exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.pythia_id_vs_exact` | 1.70 | x | pythia identity-only read / exact read | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.block32` | 32 | — | Smaller block size | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+| `t052.block128` | 128 | — | Larger block size | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
+<!-- END GENERATED:perf-catalog-t052 -->
+
 ## Reproduce
 
 ```sh
