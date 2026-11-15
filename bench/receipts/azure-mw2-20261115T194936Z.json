@@ -1,0 +1,2953 @@
+{
+ "azurite": {
+  "api_version": "2021-12-02",
+  "auth": "SharedKey with the published Azurite development account key",
+  "data_dir": "tmpfs /data, memory-backed",
+  "distinct_from_azure": "Azurite is Microsoft's emulator. Service-version acceptance, block-blob limits, listing paging, replication, media and cloud failure modes are not exercised.",
+  "image": "mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+  "image_digest": "mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37",
+  "image_id": "sha256:03f7cb26ef2cda2c06ec6760c91975a85460e7bb63277a0df5c9f1d02071ead3",
+  "product": "Azurite Blob service (mcr.microsoft.com/azure-storage/azurite)",
+  "release": "3.35.0"
+ },
+ "cgroup": {
+  "memory_current": "25767936",
+  "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+  "memory_peak": "60243968",
+  "pids_current": "3",
+  "pids_events": "max 0",
+  "pids_max": "1024"
+ },
+ "court": {
+  "accounts": "one shared Azurite development account",
+  "base_container": "weft-azm2-20261115t194936z",
+  "endpoint": "http://weft-azm2-azurite-252163:10000/devstoreaccount1",
+  "image": "weft/fuse-court:1",
+  "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+  "kernel": "7.3.3-1-cachyos",
+  "kind": "fuse (the dual-toolchain court; FUSE itself is not used)",
+  "limits": {
+   "cpus": "4",
+   "memory": "3g",
+   "memory_swap": "3g",
+   "nproc": "2048",
+   "pids": "1024",
+   "tmpfs": "/tmp 1g"
+  }
+ },
+ "duration_seconds": 34.846,
+ "failures": [],
+ "fault_points": [
+  {
+   "inert_when": "the environment variable is unset",
+   "name": "WEFT_AZURE_AMBIGUOUS_HEAD / WEFT_AZURE_AMBIGUOUS_READY",
+   "where": "court driver (Rust examples/mw2_writer.rs, Go cmd/mw2writer): a watchdog SIGKILLs the writer when the harness proxy marks that the conditional head PUT has been applied upstream and its response is withheld"
+  },
+  {
+   "inert_when": "the environment variable is unset",
+   "name": "WEFT_FENCE_PAUSE_AFTER_FENCE / WEFT_FENCE_AFTER_FENCE_READY / _GATE",
+   "where": "shipped fencing hook (src/fence_pause.rs, WeftFS-Go/store/fence_pause.go)"
+  },
+  {
+   "inert_when": "unset (default 900 s in the library, 60 s in the court driver)",
+   "name": "WEFT_AZURE_LOCK_LEASE_SECS",
+   "where": "Azure writer lease; the court shortens it to 3 s so a takeover is reachable"
+  },
+  {
+   "inert_when": "unset (the library default stays 3600 s)",
+   "name": "WEFT_MW2_GC_GRACE_SECS",
+   "where": "court driver only; shortens the sweep age gate so unreachable data is reclaimable"
+  }
+ ],
+ "generated_utc": "20261115T194936Z",
+ "label": "Single-host Azurite Blob emulator on loopback inside the OOM-protected Docker court. Azurite is not Azure: no cloud, node, fleet, media, power-loss, or replication claim. Process-fault proxies only; no physical fault.",
+ "result": "pass",
+ "revisions": {
+  "weftcodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+  "weftcodec_go": "d45fcb4c92f3302b1dfcab66e98ef63394040fe0",
+  "weftfs": "b0638ef348cb6b416e42833aaa779435068e38f6",
+  "weftfs_go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+ },
+ "scenarios": [
+  {
+   "cgroup": {
+    "memory_current": "24739840",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "writer r0 committed 2",
+     "detail": {
+      "aborted": 0,
+      "attempts": 10,
+      "backend_reads": 80,
+      "backend_writes": 20,
+      "bytes_read": 145009,
+      "bytes_written": 20833,
+      "committed": 2,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 30,
+      "domain": null,
+      "elapsed_ms": 732,
+      "errors": [],
+      "generation": 10,
+      "head": "16a5bd17c7d0808d63548bb3b684e64b963ae7094dd8bd873f512838532aa047",
+      "logical_bytes": 8,
+      "ok": true,
+      "peak_rss_kib": 15280,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 5,
+      "rebase_max_consecutive_retries": 8,
+      "rebase_total_attempts": 10,
+      "rebase_touched_intersections": 0,
+      "writer": "r0"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer r1 committed 2",
+     "detail": {
+      "aborted": 0,
+      "attempts": 5,
+      "backend_reads": 38,
+      "backend_writes": 20,
+      "bytes_read": 73051,
+      "bytes_written": 20833,
+      "committed": 2,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 10,
+      "domain": null,
+      "elapsed_ms": 415,
+      "errors": [],
+      "generation": 6,
+      "head": "62f52426a84e6c63ec0b7fa711cc0ad5d5906798c66c8ba529cd3bc69a7ea2d1",
+      "logical_bytes": 8,
+      "ok": true,
+      "peak_rss_kib": 15316,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 2,
+      "rebase_max_consecutive_retries": 3,
+      "rebase_total_attempts": 5,
+      "rebase_touched_intersections": 0,
+      "writer": "r1"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer r2 committed 2",
+     "detail": {
+      "aborted": 0,
+      "attempts": 12,
+      "backend_reads": 98,
+      "backend_writes": 22,
+      "bytes_read": 186511,
+      "bytes_written": 22595,
+      "committed": 2,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 30,
+      "domain": null,
+      "elapsed_ms": 774,
+      "errors": [],
+      "generation": 12,
+      "head": "05e08e7d951dca2ea9cb6318b4fbc5e836ff39c07ff6b066f6d2ffa1d2e73df3",
+      "logical_bytes": 8,
+      "ok": true,
+      "peak_rss_kib": 15364,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 6,
+      "rebase_max_consecutive_retries": 7,
+      "rebase_total_attempts": 12,
+      "rebase_touched_intersections": 0,
+      "writer": "r2"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer r3 committed 2",
+     "detail": {
+      "aborted": 0,
+      "attempts": 2,
+      "backend_reads": 15,
+      "backend_writes": 20,
+      "bytes_read": 29032,
+      "bytes_written": 20045,
+      "committed": 2,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 10,
+      "domain": null,
+      "elapsed_ms": 238,
+      "errors": [],
+      "generation": 3,
+      "head": "8f1b181835e12d3b895c3f3b794d2bb219d36c1f167a1044bd452c70f5d1d62c",
+      "logical_bytes": 8,
+      "ok": true,
+      "peak_rss_kib": 15632,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 2,
+      "rebase_touched_intersections": 0,
+      "writer": "r3"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer g0 committed 2",
+     "detail": {
+      "attempts": 10,
+      "committed": 2,
+      "conflicts": 0,
+      "elapsed_ms": 993,
+      "errors": [],
+      "generation": 16,
+      "head": "488cabc896b28ced2f973c91ec16b0c7a604f2d9918e9df392ce346f87a8d289",
+      "ok": true,
+      "writer": "g0"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer g1 committed 2",
+     "detail": {
+      "attempts": 13,
+      "committed": 2,
+      "conflicts": 0,
+      "elapsed_ms": 1158,
+      "errors": [],
+      "generation": 19,
+      "head": "650c8b68762fa8fe89fe28fbc1a4fe191a9a0397620dd63adf825dca5c80e230",
+      "ok": true,
+      "writer": "g1"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer g2 committed 2",
+     "detail": {
+      "attempts": 12,
+      "committed": 2,
+      "conflicts": 0,
+      "elapsed_ms": 1087,
+      "errors": [],
+      "generation": 18,
+      "head": "477d88df07f2636f9f876fa9b56c021677bfc397bac7fb522d8320eee2f59227",
+      "ok": true,
+      "writer": "g2"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer g3 committed 2",
+     "detail": {
+      "attempts": 9,
+      "committed": 2,
+      "conflicts": 0,
+      "elapsed_ms": 856,
+      "errors": [],
+      "generation": 14,
+      "head": "08508b01bb75514f971ba6c1dde76d83b2736b8fa384cfe467c4a830983d80bd",
+      "ok": true,
+      "writer": "g3"
+     },
+     "ok": true
+    },
+    {
+     "check": "both languages report the same head",
+     "detail": {
+      "go": {
+       "generation": 19,
+       "head": "650c8b68762fa8fe89fe28fbc1a4fe191a9a0397620dd63adf825dca5c80e230",
+       "ok": true
+      },
+      "rust": {
+       "commits": 19,
+       "generation": 19,
+       "head": "650c8b68762fa8fe89fe28fbc1a4fe191a9a0397620dd63adf825dca5c80e230",
+       "indexes": 17,
+       "manifests": 16,
+       "objects": 16,
+       "ok": true,
+       "store_generation": 19,
+       "superblock_sha256": "7733e54284643e4f16c214a2e630f9c60e4da314a91e4dcb86d5b00798610882"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "the head generation accounts for every committed transaction",
+     "detail": {
+      "generation": 19,
+      "minimum": 17
+     },
+     "ok": true
+    },
+    {
+     "check": "the final head is one of the writers' observed heads",
+     "detail": {
+      "head": "650c8b68762fa8fe89fe28fbc1a4fe191a9a0397620dd63adf825dca5c80e230",
+      "observed": [
+       "05e08e7d951dca2ea9cb6318b4fbc5e836ff39c07ff6b066f6d2ffa1d2e73df3",
+       "08508b01bb75514f971ba6c1dde76d83b2736b8fa384cfe467c4a830983d80bd",
+       "16a5bd17c7d0808d63548bb3b684e64b963ae7094dd8bd873f512838532aa047",
+       "477d88df07f2636f9f876fa9b56c021677bfc397bac7fb522d8320eee2f59227",
+       "488cabc896b28ced2f973c91ec16b0c7a604f2d9918e9df392ce346f87a8d289",
+       "62f52426a84e6c63ec0b7fa711cc0ad5d5906798c66c8ba529cd3bc69a7ea2d1",
+       "650c8b68762fa8fe89fe28fbc1a4fe191a9a0397620dd63adf825dca5c80e230",
+       "8f1b181835e12d3b895c3f3b794d2bb219d36c1f167a1044bd452c70f5d1d62c"
+      ]
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads r0",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads r1",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads r2",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads r3",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads g0",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads g1",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads g2",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads g3",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust cross-reads g0",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust cross-reads g1",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust cross-reads g2",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust cross-reads g3",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go cross-reads r0",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go cross-reads r1",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go cross-reads r2",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go cross-reads r3",
+     "detail": {
+      "checked": 2,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go verify --full",
+     "detail": null,
+     "ok": true
+    }
+   ],
+   "checks_passed": 30,
+   "checks_total": 30,
+   "code": "S1",
+   "label": "disjoint mixed-language writers on one generation",
+   "observed": {
+    "commits": 19,
+    "generation": 19,
+    "head": "650c8b68762fa8fe89fe28fbc1a4fe191a9a0397620dd63adf825dca5c80e230",
+    "indexes": 17,
+    "manifests": 16,
+    "objects": 16,
+    "superblock_sha256": "7733e54284643e4f16c214a2e630f9c60e4da314a91e4dcb86d5b00798610882"
+   },
+   "pass": true
+  },
+  {
+   "cgroup": {
+    "memory_current": "24551424",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "round 0: exactly one writer committed",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 515,
+       "errors": [],
+       "generation": 2,
+       "head": "5a28b99d80ac598b203ffebbfa9485a40ea2263aa1a578b879dbd93cd61d6dd5",
+       "ok": true,
+       "writer": "g0"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 14,
+       "backend_writes": 9,
+       "bytes_read": 29481,
+       "bytes_written": 707,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 520,
+       "errors": [],
+       "generation": 2,
+       "head": "5a28b99d80ac598b203ffebbfa9485a40ea2263aa1a578b879dbd93cd61d6dd5",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15240,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r0"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 0: the loser reported a typed Conflict",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 515,
+       "errors": [],
+       "generation": 2,
+       "head": "5a28b99d80ac598b203ffebbfa9485a40ea2263aa1a578b879dbd93cd61d6dd5",
+       "ok": true,
+       "writer": "g0"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 14,
+       "backend_writes": 9,
+       "bytes_read": 29481,
+       "bytes_written": 707,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 520,
+       "errors": [],
+       "generation": 2,
+       "head": "5a28b99d80ac598b203ffebbfa9485a40ea2263aa1a578b879dbd93cd61d6dd5",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15240,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r0"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 0: the winner's bytes are exactly present",
+     "detail": {
+      "stat": {
+       "content_hash": "f4f677f1bead34800e07403f57285716bc7e25395dd5d902acafb94c0d37344c",
+       "len": 4,
+       "object_id": "ac7b95dae440287ae7358cf9efc5855ba93b1555365ba9278bd97d143eec2596",
+       "ok": true,
+       "present": true
+      },
+      "winner": "go"
+     },
+     "ok": true
+    },
+    {
+     "check": "round 0: the head advanced by exactly one generation",
+     "detail": {
+      "after": 2,
+      "before": 1
+     },
+     "ok": true
+    },
+    {
+     "check": "round 1: exactly one writer committed",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 517,
+       "errors": [],
+       "generation": 3,
+       "head": "c2434a98d2ad863eeb34e752c7f24a639664c29362ea3ce2cff437ce9da3b95e",
+       "ok": true,
+       "writer": "g1"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 20,
+       "backend_writes": 8,
+       "bytes_read": 31517,
+       "bytes_written": 614,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 517,
+       "errors": [],
+       "generation": 3,
+       "head": "c2434a98d2ad863eeb34e752c7f24a639664c29362ea3ce2cff437ce9da3b95e",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15396,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r1"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 1: the loser reported a typed Conflict",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 517,
+       "errors": [],
+       "generation": 3,
+       "head": "c2434a98d2ad863eeb34e752c7f24a639664c29362ea3ce2cff437ce9da3b95e",
+       "ok": true,
+       "writer": "g1"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 20,
+       "backend_writes": 8,
+       "bytes_read": 31517,
+       "bytes_written": 614,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 517,
+       "errors": [],
+       "generation": 3,
+       "head": "c2434a98d2ad863eeb34e752c7f24a639664c29362ea3ce2cff437ce9da3b95e",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15396,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r1"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 1: the winner's bytes are exactly present",
+     "detail": {
+      "stat": {
+       "content_hash": "fd6752183cd35bf620fdfef7895494ca99f0d7d24cec0e181e8a08b07cb9fefe",
+       "len": 4,
+       "object_id": "a39d3c097894ca6fe8b3d4aaed11c3b07bfb9c09ed6fd06d63a0539edf363edf",
+       "ok": true,
+       "present": true
+      },
+      "winner": "go"
+     },
+     "ok": true
+    },
+    {
+     "check": "round 1: the head advanced by exactly one generation",
+     "detail": {
+      "after": 3,
+      "before": 2
+     },
+     "ok": true
+    },
+    {
+     "check": "round 2: exactly one writer committed",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 519,
+       "errors": [],
+       "generation": 4,
+       "head": "e6032be54ffc34d1bca50240857c2bdbc85d89dd0110b2779a9b0556a4079e6e",
+       "ok": true,
+       "writer": "g2"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 23,
+       "backend_writes": 8,
+       "bytes_read": 32713,
+       "bytes_written": 614,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 517,
+       "errors": [],
+       "generation": 4,
+       "head": "e6032be54ffc34d1bca50240857c2bdbc85d89dd0110b2779a9b0556a4079e6e",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15548,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r2"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 2: the loser reported a typed Conflict",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 519,
+       "errors": [],
+       "generation": 4,
+       "head": "e6032be54ffc34d1bca50240857c2bdbc85d89dd0110b2779a9b0556a4079e6e",
+       "ok": true,
+       "writer": "g2"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 23,
+       "backend_writes": 8,
+       "bytes_read": 32713,
+       "bytes_written": 614,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 517,
+       "errors": [],
+       "generation": 4,
+       "head": "e6032be54ffc34d1bca50240857c2bdbc85d89dd0110b2779a9b0556a4079e6e",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15548,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r2"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 2: the winner's bytes are exactly present",
+     "detail": {
+      "stat": {
+       "content_hash": "2c710f98899c2557320da7793194920e7556a93d226e47b6809d0177da708dbc",
+       "len": 4,
+       "object_id": "97dc4c670cd777c38b2c04284ed1c97861d6ede5a5f062b6298aed5abff747fe",
+       "ok": true,
+       "present": true
+      },
+      "winner": "go"
+     },
+     "ok": true
+    },
+    {
+     "check": "round 2: the head advanced by exactly one generation",
+     "detail": {
+      "after": 4,
+      "before": 3
+     },
+     "ok": true
+    },
+    {
+     "check": "round 3: exactly one writer committed",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 518,
+       "errors": [],
+       "generation": 5,
+       "head": "e7b60350509c50719eb52ef4b1ec01acc75bf84764d0266326efc2abcce0b317",
+       "ok": true,
+       "writer": "g3"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 32,
+       "backend_writes": 9,
+       "bytes_read": 52371,
+       "bytes_written": 1492,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 521,
+       "errors": [],
+       "generation": 5,
+       "head": "e7b60350509c50719eb52ef4b1ec01acc75bf84764d0266326efc2abcce0b317",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15240,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r3"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 3: the loser reported a typed Conflict",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 518,
+       "errors": [],
+       "generation": 5,
+       "head": "e7b60350509c50719eb52ef4b1ec01acc75bf84764d0266326efc2abcce0b317",
+       "ok": true,
+       "writer": "g3"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 32,
+       "backend_writes": 9,
+       "bytes_read": 52371,
+       "bytes_written": 1492,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 521,
+       "errors": [],
+       "generation": 5,
+       "head": "e7b60350509c50719eb52ef4b1ec01acc75bf84764d0266326efc2abcce0b317",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15240,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r3"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 3: the winner's bytes are exactly present",
+     "detail": {
+      "stat": {
+       "content_hash": "9c152cbe4d34a9f3e2111d4940001c36fcf1d647117ea08c475b90b255e12868",
+       "len": 4,
+       "object_id": "c3d1aa0cb595c811083bfe4f63b707e0350ab5bfcf25d32536ecda61d5cc5b4d",
+       "ok": true,
+       "present": true
+      },
+      "winner": "go"
+     },
+     "ok": true
+    },
+    {
+     "check": "round 3: the head advanced by exactly one generation",
+     "detail": {
+      "after": 5,
+      "before": 4
+     },
+     "ok": true
+    },
+    {
+     "check": "round 4: exactly one writer committed",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 520,
+       "errors": [],
+       "generation": 6,
+       "head": "11af910baf6422268617448872aa3a4cef73889d2f3bc1bb1ea481c699345c73",
+       "ok": true,
+       "writer": "g4"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 29,
+       "backend_writes": 8,
+       "bytes_read": 35105,
+       "bytes_written": 614,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 515,
+       "errors": [],
+       "generation": 6,
+       "head": "11af910baf6422268617448872aa3a4cef73889d2f3bc1bb1ea481c699345c73",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15728,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r4"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 4: the loser reported a typed Conflict",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 520,
+       "errors": [],
+       "generation": 6,
+       "head": "11af910baf6422268617448872aa3a4cef73889d2f3bc1bb1ea481c699345c73",
+       "ok": true,
+       "writer": "g4"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 29,
+       "backend_writes": 8,
+       "bytes_read": 35105,
+       "bytes_written": 614,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 515,
+       "errors": [],
+       "generation": 6,
+       "head": "11af910baf6422268617448872aa3a4cef73889d2f3bc1bb1ea481c699345c73",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15728,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r4"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 4: the winner's bytes are exactly present",
+     "detail": {
+      "stat": {
+       "content_hash": "c2c476c0f7e8377192e72ad136eda78527d1ac88de085a3c71853bf02aa29efe",
+       "len": 4,
+       "object_id": "ec0ac7541a39aeca5513172afc048b18c86b2d9e9792a04056a38aeb925d50bf",
+       "ok": true,
+       "present": true
+      },
+      "winner": "go"
+     },
+     "ok": true
+    },
+    {
+     "check": "round 4: the head advanced by exactly one generation",
+     "detail": {
+      "after": 6,
+      "before": 5
+     },
+     "ok": true
+    },
+    {
+     "check": "round 5: exactly one writer committed",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 520,
+       "errors": [],
+       "generation": 7,
+       "head": "68d01add06394738eaca8b4db6851db3b10c3ea7abbf70a51af8e47cdf91fc6c",
+       "ok": true,
+       "writer": "g5"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 38,
+       "backend_writes": 9,
+       "bytes_read": 54763,
+       "bytes_written": 1492,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 521,
+       "errors": [],
+       "generation": 7,
+       "head": "68d01add06394738eaca8b4db6851db3b10c3ea7abbf70a51af8e47cdf91fc6c",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15884,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r5"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 5: the loser reported a typed Conflict",
+     "detail": {
+      "go": {
+       "attempts": 1,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 520,
+       "errors": [],
+       "generation": 7,
+       "head": "68d01add06394738eaca8b4db6851db3b10c3ea7abbf70a51af8e47cdf91fc6c",
+       "ok": true,
+       "writer": "g5"
+      },
+      "rust": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 38,
+       "backend_writes": 9,
+       "bytes_read": 54763,
+       "bytes_written": 1492,
+       "committed": 0,
+       "conflicts": 1,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 521,
+       "errors": [],
+       "generation": 7,
+       "head": "68d01add06394738eaca8b4db6851db3b10c3ea7abbf70a51af8e47cdf91fc6c",
+       "logical_bytes": 0,
+       "ok": true,
+       "peak_rss_kib": 15884,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 1,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 1,
+       "writer": "r5"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "round 5: the winner's bytes are exactly present",
+     "detail": {
+      "stat": {
+       "content_hash": "acde10c8ebf5b170dae53735647db1d86a26588a9b9c29e0756b1de634b85bc1",
+       "len": 4,
+       "object_id": "afbf5ca4fbd09b84aaa97c3d4435d1eeeeb175acb3e78e40607113915202bcc3",
+       "ok": true,
+       "present": true
+      },
+      "winner": "go"
+     },
+     "ok": true
+    },
+    {
+     "check": "round 5: the head advanced by exactly one generation",
+     "detail": {
+      "after": 7,
+      "before": 6
+     },
+     "ok": true
+    },
+    {
+     "check": "generation equals genesis plus every winner",
+     "detail": {
+      "expected": 7,
+      "generation": 7
+     },
+     "ok": true
+    },
+    {
+     "check": "rust verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go verify --full",
+     "detail": null,
+     "ok": true
+    }
+   ],
+   "checks_passed": 28,
+   "checks_total": 28,
+   "code": "S2",
+   "label": "conflicting mixed-language writers on one name",
+   "observed": {
+    "commits": 7,
+    "generation": 7,
+    "head": "68d01add06394738eaca8b4db6851db3b10c3ea7abbf70a51af8e47cdf91fc6c",
+    "indexes": 7,
+    "manifests": 12,
+    "objects": 12,
+    "superblock_sha256": "5ab7dac3876688d1b2b0cb23a00c446d871f6d84f261b3d505e268dd21f5c803"
+   },
+   "pass": true,
+   "rounds": [
+    {
+     "generation_after": 2,
+     "generation_before": 1,
+     "round": 0,
+     "winner": "go"
+    },
+    {
+     "generation_after": 3,
+     "generation_before": 2,
+     "round": 1,
+     "winner": "go"
+    },
+    {
+     "generation_after": 4,
+     "generation_before": 3,
+     "round": 2,
+     "winner": "go"
+    },
+    {
+     "generation_after": 5,
+     "generation_before": 4,
+     "round": 3,
+     "winner": "go"
+    },
+    {
+     "generation_after": 6,
+     "generation_before": 5,
+     "round": 4,
+     "winner": "go"
+    },
+    {
+     "generation_after": 7,
+     "generation_before": 6,
+     "round": 5,
+     "winner": "go"
+    }
+   ]
+  },
+  {
+   "cgroup": {
+    "memory_current": "25694208",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "rust-killed: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the fault point fired (marker written)",
+     "detail": {
+      "ready": "/tmp/weft-azm2-s3a.ready"
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the conditional head write was applied upstream",
+     "detail": {
+      "method": "PUT",
+      "path": "/devstoreaccount1/weft-azm2-20261115t194936z-s3a/superblock",
+      "pid": 260,
+      "response_bytes": 0,
+      "status": 201
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the writer died by SIGKILL before reading the response",
+     "detail": {
+      "exit": -9
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the outcome is unknown until it is resolved",
+     "detail": {
+      "commit": "",
+      "ok": true,
+      "state": "unknown"
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the resolver reports the transaction committed",
+     "detail": {
+      "attempts": 0,
+      "committed": 1,
+      "conflicts": 0,
+      "elapsed_ms": 3,
+      "errors": [],
+      "generation": 2,
+      "head": "c3e6ca0ee800c34c1049601c9a6fefa591a3141fd0b7940d79ca3a22c61a2b7a",
+      "ok": true,
+      "writer": "ks3a"
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: resolution did not publish a second generation",
+     "detail": {
+      "head": {
+       "commits": 2,
+       "generation": 2,
+       "head": "c3e6ca0ee800c34c1049601c9a6fefa591a3141fd0b7940d79ca3a22c61a2b7a",
+       "indexes": 1,
+       "manifests": 1,
+       "objects": 1,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "9fe56149abab666ef6f2f2404572bd439eb9da5aa26708fe41919c154b57de5d"
+      },
+      "resolved": {
+       "attempts": 0,
+       "committed": 1,
+       "conflicts": 0,
+       "elapsed_ms": 3,
+       "errors": [],
+       "generation": 2,
+       "head": "c3e6ca0ee800c34c1049601c9a6fefa591a3141fd0b7940d79ca3a22c61a2b7a",
+       "ok": true,
+       "writer": "ks3a"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the head is unchanged by resolution",
+     "detail": {
+      "after": {
+       "commits": 2,
+       "generation": 2,
+       "head": "c3e6ca0ee800c34c1049601c9a6fefa591a3141fd0b7940d79ca3a22c61a2b7a",
+       "indexes": 1,
+       "manifests": 1,
+       "objects": 1,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "9fe56149abab666ef6f2f2404572bd439eb9da5aa26708fe41919c154b57de5d"
+      },
+      "before": {
+       "commits": 2,
+       "generation": 2,
+       "head": "c3e6ca0ee800c34c1049601c9a6fefa591a3141fd0b7940d79ca3a22c61a2b7a",
+       "indexes": 1,
+       "manifests": 1,
+       "objects": 1,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "9fe56149abab666ef6f2f2404572bd439eb9da5aa26708fe41919c154b57de5d"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: the killed transaction's bytes are exactly present",
+     "detail": {
+      "content_hash": "a900c938c17455c45bbf5bb341c93b137d8b333fbc8bf2e824d86c35f2f822d2",
+      "len": 6,
+      "object_id": "a991078156d81eace44b4e34cb1fefe17bf2c009a40f131207c0b8d33bf0cfe1",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-killed: rust verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "rust-killed: go verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go-killed: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "go-killed: the fault point fired (marker written)",
+     "detail": {
+      "ready": "/tmp/weft-azm2-s3b.ready"
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: the conditional head write was applied upstream",
+     "detail": {
+      "method": "PUT",
+      "path": "/devstoreaccount1/weft-azm2-20261115t194936z-s3b/superblock",
+      "pid": 291,
+      "response_bytes": 0,
+      "status": 201
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: the writer died by SIGKILL before reading the response",
+     "detail": {
+      "exit": -9
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: the outcome is unknown until it is resolved",
+     "detail": {
+      "commit": null,
+      "ok": true,
+      "state": "unknown"
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: the resolver reports the transaction committed",
+     "detail": {
+      "aborted": 0,
+      "attempts": 0,
+      "backend_reads": 20,
+      "backend_writes": 6,
+      "bytes_read": 14031,
+      "bytes_written": 485,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "domain": null,
+      "elapsed_ms": 4,
+      "errors": [],
+      "generation": 2,
+      "head": "6d8af711b7187117b46b786f2f169470a669a8d2af5a3b1c668f80b50016dc16",
+      "logical_bytes": 6,
+      "ok": true,
+      "peak_rss_kib": 15244,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 0,
+      "rebase_touched_intersections": 0,
+      "writer": "ks3b"
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: resolution did not publish a second generation",
+     "detail": {
+      "head": {
+       "commits": 2,
+       "generation": 2,
+       "head": "6d8af711b7187117b46b786f2f169470a669a8d2af5a3b1c668f80b50016dc16",
+       "indexes": 1,
+       "manifests": 1,
+       "objects": 1,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "558286ba91fad412b87239e1af583f38a65083c80fb9365facd838c007f2d271"
+      },
+      "resolved": {
+       "aborted": 0,
+       "attempts": 0,
+       "backend_reads": 20,
+       "backend_writes": 6,
+       "bytes_read": 14031,
+       "bytes_written": 485,
+       "committed": 1,
+       "conflicts": 0,
+       "cpu_sys_ms": 0,
+       "cpu_user_ms": 0,
+       "domain": null,
+       "elapsed_ms": 4,
+       "errors": [],
+       "generation": 2,
+       "head": "6d8af711b7187117b46b786f2f169470a669a8d2af5a3b1c668f80b50016dc16",
+       "logical_bytes": 6,
+       "ok": true,
+       "peak_rss_kib": 15244,
+       "rebase_gap_commits_cached": 0,
+       "rebase_gap_commits_read": 0,
+       "rebase_max_consecutive_retries": 0,
+       "rebase_total_attempts": 0,
+       "rebase_touched_intersections": 0,
+       "writer": "ks3b"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: the head is unchanged by resolution",
+     "detail": {
+      "after": {
+       "commits": 2,
+       "generation": 2,
+       "head": "6d8af711b7187117b46b786f2f169470a669a8d2af5a3b1c668f80b50016dc16",
+       "indexes": 1,
+       "manifests": 1,
+       "objects": 1,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "558286ba91fad412b87239e1af583f38a65083c80fb9365facd838c007f2d271"
+      },
+      "before": {
+       "commits": 2,
+       "generation": 2,
+       "head": "6d8af711b7187117b46b786f2f169470a669a8d2af5a3b1c668f80b50016dc16",
+       "indexes": 1,
+       "manifests": 1,
+       "objects": 1,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "558286ba91fad412b87239e1af583f38a65083c80fb9365facd838c007f2d271"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: the killed transaction's bytes are exactly present",
+     "detail": {
+      "content_hash": "18d04c7ee49f06bb26138f4838eff3ad3daef36ab8c53325c5fa647ef3627dd5",
+      "len": 6,
+      "object_id": "49d06ab58f38ce22940355019dea43ad78315441983749b419e09c22a0b555a0",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go-killed: rust verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go-killed: go verify --full",
+     "detail": null,
+     "ok": true
+    }
+   ],
+   "checks_passed": 22,
+   "checks_total": 22,
+   "code": "S3",
+   "label": "ambiguous success on the conditional head write, Rust-killed and Go-killed",
+   "observed": {
+    "commits": 2,
+    "generation": 2,
+    "head": "6d8af711b7187117b46b786f2f169470a669a8d2af5a3b1c668f80b50016dc16",
+    "indexes": 1,
+    "manifests": 1,
+    "objects": 1,
+    "superblock_sha256": "558286ba91fad412b87239e1af583f38a65083c80fb9365facd838c007f2d271"
+   },
+   "pass": true,
+   "rounds": {
+    "go_killed_rust_resolved": {
+     "base_generation": 1,
+     "marker": {
+      "method": "PUT",
+      "path": "/devstoreaccount1/weft-azm2-20261115t194936z-s3b/superblock",
+      "pid": 291,
+      "response_bytes": 0,
+      "status": 201
+     }
+    },
+    "rust_killed_go_resolved": {
+     "base_generation": 1,
+     "marker": {
+      "method": "PUT",
+      "path": "/devstoreaccount1/weft-azm2-20261115t194936z-s3a/superblock",
+      "pid": 260,
+      "response_bytes": 0,
+      "status": 201
+     }
+    }
+   }
+  },
+  {
+   "cgroup": {
+    "memory_current": "25509888",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "rust-stale: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "rust-stale: the stale writer reached the fence",
+     "detail": "/tmp/weft-azm2-s4a.ready",
+     "ok": true
+    },
+    {
+     "check": "rust-stale: a successor took over the expired lease",
+     "detail": {
+      "attempts": 7,
+      "last": {
+       "generation": 2,
+       "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+       "name": "winner.bin",
+       "object_id": "bfa7d578bec4c5ca3e8a0ce7eede9ee8736414b006917086e0bd7da4ced53e1c",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-stale: the resumed stale writer was refused Busy",
+     "detail": {
+      "class": "Busy",
+      "error": "Busy: Azure writer lease deadline passed 141 ms ago (owner 316-1-1794778557483794442 fence 2); publication refused before the head was touched; the LOCK now names owner 354-1-1794778560581294354 fence 3",
+      "ok": false
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-stale: the refused stale writer changed nothing",
+     "detail": {
+      "after": {
+       "commits": 2,
+       "generation": 2,
+       "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+       "indexes": 2,
+       "manifests": 2,
+       "objects": 2,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "d792352c4b5f0cc3097aeb3473124640ace177e769154889f236d73039ed071c"
+      },
+      "before": {
+       "commits": 2,
+       "generation": 2,
+       "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+       "indexes": 2,
+       "manifests": 2,
+       "objects": 2,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "d792352c4b5f0cc3097aeb3473124640ace177e769154889f236d73039ed071c"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-stale: the stale writer published no file",
+     "detail": {
+      "ok": true,
+      "present": false
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-stale: the successor's file is exactly present",
+     "detail": {
+      "content_hash": "fdc22f49c1c42bdbb796a46d3039f69d88a0fc9a1c346cf44b31c11778566390",
+      "len": 6,
+      "object_id": "bfa7d578bec4c5ca3e8a0ce7eede9ee8736414b006917086e0bd7da4ced53e1c",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-stale: rust verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "rust-stale: go verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go-stale: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "go-stale: the stale writer reached the fence",
+     "detail": "/tmp/weft-azm2-s4b.ready",
+     "ok": true
+    },
+    {
+     "check": "go-stale: a successor took over the expired lease",
+     "detail": {
+      "attempts": 7,
+      "last": {
+       "generation": 2,
+       "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+       "name": "winner.bin",
+       "object_id": "bfa7d578bec4c5ca3e8a0ce7eede9ee8736414b006917086e0bd7da4ced53e1c",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "go-stale: the resumed stale writer was refused Busy",
+     "detail": {
+      "class": "Busy",
+      "error": "Busy: Azure writer lease deadline passed 203 ms ago (owner 374-1-1794778560737977229 fence 2); publication refused before the head was touched; the LOCK now names owner 386-1-1794778563899131738 fence 3",
+      "ok": false
+     },
+     "ok": true
+    },
+    {
+     "check": "go-stale: the refused stale writer changed nothing",
+     "detail": {
+      "after": {
+       "commits": 2,
+       "generation": 2,
+       "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+       "indexes": 2,
+       "manifests": 2,
+       "objects": 2,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "d792352c4b5f0cc3097aeb3473124640ace177e769154889f236d73039ed071c"
+      },
+      "before": {
+       "commits": 2,
+       "generation": 2,
+       "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+       "indexes": 2,
+       "manifests": 2,
+       "objects": 2,
+       "ok": true,
+       "store_generation": 2,
+       "superblock_sha256": "d792352c4b5f0cc3097aeb3473124640ace177e769154889f236d73039ed071c"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "go-stale: the stale writer published no file",
+     "detail": {
+      "ok": true,
+      "present": false
+     },
+     "ok": true
+    },
+    {
+     "check": "go-stale: the successor's file is exactly present",
+     "detail": {
+      "content_hash": "fdc22f49c1c42bdbb796a46d3039f69d88a0fc9a1c346cf44b31c11778566390",
+      "len": 6,
+      "object_id": "bfa7d578bec4c5ca3e8a0ce7eede9ee8736414b006917086e0bd7da4ced53e1c",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go-stale: rust verify --full",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go-stale: go verify --full",
+     "detail": null,
+     "ok": true
+    }
+   ],
+   "checks_passed": 18,
+   "checks_total": 18,
+   "code": "S4",
+   "label": "fenced takeover with a suspended stale writer",
+   "lease_secs": 3,
+   "observed": {
+    "commits": 2,
+    "generation": 2,
+    "head": "afca57c31e4bd1e2cfd50f3af7e2605f2c44cb4b2439154d3878701c5736bb12",
+    "indexes": 2,
+    "manifests": 2,
+    "objects": 2,
+    "superblock_sha256": "d792352c4b5f0cc3097aeb3473124640ace177e769154889f236d73039ed071c"
+   },
+   "pass": true,
+   "rounds": {
+    "go_stale_rust_successor": {
+     "attempts": 7,
+     "successor": "rust"
+    },
+    "rust_stale_go_successor": {
+     "attempts": 7,
+     "successor": "go"
+    }
+   }
+  },
+  {
+   "cgroup": {
+    "memory_current": "25919488",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "rust-reader: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "rust-reader: baseline commit",
+     "detail": {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 12,
+      "backend_writes": 13,
+      "bytes_read": 19746,
+      "bytes_written": 10192,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "domain": null,
+      "elapsed_ms": 11,
+      "errors": [],
+      "generation": 2,
+      "head": "6b9c285a68836c7f7b75cf8f5a09551e0383894d7375997f67050e97229efde9",
+      "logical_bytes": 6,
+      "ok": true,
+      "peak_rss_kib": 15452,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 1,
+      "rebase_touched_intersections": 0,
+      "writer": "base"
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-reader: the reader announced its held generation",
+     "detail": "/tmp/weft-azm2-s5a.ready",
+     "ok": true
+    },
+    {
+     "check": "rust-reader: a newer commit was published",
+     "detail": {
+      "attempts": 1,
+      "committed": 1,
+      "conflicts": 0,
+      "elapsed_ms": 10,
+      "errors": [],
+      "generation": 3,
+      "head": "98c274e687dc61b23d12d573c82f3f151b10e4f7d8b45a3130d12be53f86c755",
+      "ok": true,
+      "writer": "later"
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-reader: the held handle still reports its original generation",
+     "detail": {
+      "held": 2,
+      "report": {
+       "after": {
+        "present": false
+       },
+       "before": {
+        "present": false
+       },
+       "generation": 2,
+       "head": "6b9c285a68836c7f7b75cf8f5a09551e0383894d7375997f67050e97229efde9",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-reader: the held handle never observes the newer object",
+     "detail": {
+      "present": false
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-reader: a fresh rust open does observe it",
+     "detail": {
+      "content_hash": "798f6326318b6af1811e4f3e9c5962092f03226ead89e3aec341cdc8c657282e",
+      "len": 7,
+      "object_id": "11cb0f31cfd17575d58f8da2bee20b835db16be7ba32bcd8a4d058afe3d01f97",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-reader: a fresh go open does observe it",
+     "detail": {
+      "content_hash": "798f6326318b6af1811e4f3e9c5962092f03226ead89e3aec341cdc8c657282e",
+      "len": 7,
+      "object_id": "11cb0f31cfd17575d58f8da2bee20b835db16be7ba32bcd8a4d058afe3d01f97",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust-reader: the fresh read is the newer bytes",
+     "detail": {
+      "content_hash": "798f6326318b6af1811e4f3e9c5962092f03226ead89e3aec341cdc8c657282e",
+      "len": 7,
+      "object_id": "11cb0f31cfd17575d58f8da2bee20b835db16be7ba32bcd8a4d058afe3d01f97",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "go-reader: baseline commit",
+     "detail": {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 12,
+      "backend_writes": 13,
+      "bytes_read": 19746,
+      "bytes_written": 10192,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "domain": null,
+      "elapsed_ms": 9,
+      "errors": [],
+      "generation": 2,
+      "head": "6b9c285a68836c7f7b75cf8f5a09551e0383894d7375997f67050e97229efde9",
+      "logical_bytes": 6,
+      "ok": true,
+      "peak_rss_kib": 15472,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 1,
+      "rebase_touched_intersections": 0,
+      "writer": "base"
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: the reader announced its held generation",
+     "detail": "/tmp/weft-azm2-s5b.ready",
+     "ok": true
+    },
+    {
+     "check": "go-reader: a newer commit was published",
+     "detail": {
+      "attempts": 1,
+      "committed": 1,
+      "conflicts": 0,
+      "elapsed_ms": 10,
+      "errors": [],
+      "generation": 3,
+      "head": "98c274e687dc61b23d12d573c82f3f151b10e4f7d8b45a3130d12be53f86c755",
+      "ok": true,
+      "writer": "later"
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: the held handle still reports its original generation",
+     "detail": {
+      "held": 2,
+      "report": {
+       "after": {
+        "present": false
+       },
+       "before": {
+        "present": false
+       },
+       "generation": 2,
+       "head": "6b9c285a68836c7f7b75cf8f5a09551e0383894d7375997f67050e97229efde9",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: the held handle never observes the newer object",
+     "detail": {
+      "present": false
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: a fresh rust open does observe it",
+     "detail": {
+      "content_hash": "798f6326318b6af1811e4f3e9c5962092f03226ead89e3aec341cdc8c657282e",
+      "len": 7,
+      "object_id": "11cb0f31cfd17575d58f8da2bee20b835db16be7ba32bcd8a4d058afe3d01f97",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: a fresh go open does observe it",
+     "detail": {
+      "content_hash": "798f6326318b6af1811e4f3e9c5962092f03226ead89e3aec341cdc8c657282e",
+      "len": 7,
+      "object_id": "11cb0f31cfd17575d58f8da2bee20b835db16be7ba32bcd8a4d058afe3d01f97",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go-reader: the fresh read is the newer bytes",
+     "detail": {
+      "content_hash": "798f6326318b6af1811e4f3e9c5962092f03226ead89e3aec341cdc8c657282e",
+      "len": 7,
+      "object_id": "11cb0f31cfd17575d58f8da2bee20b835db16be7ba32bcd8a4d058afe3d01f97",
+      "ok": true,
+      "present": true
+     },
+     "ok": true
+    }
+   ],
+   "checks_passed": 18,
+   "checks_total": 18,
+   "code": "S5",
+   "label": "a held reader never observes a newer generation",
+   "observed": {
+    "commits": 3,
+    "generation": 3,
+    "head": "98c274e687dc61b23d12d573c82f3f151b10e4f7d8b45a3130d12be53f86c755",
+    "indexes": 3,
+    "manifests": 2,
+    "objects": 2,
+    "superblock_sha256": "6146544692c5d1312991361da685c89eb6a45b485062845707c2b4ec47668c36"
+   },
+   "pass": true,
+   "rounds": {
+    "go_reader": {
+     "after_generation": 2,
+     "held_generation": 2
+    },
+    "rust_reader": {
+     "after_generation": 2,
+     "held_generation": 2
+    }
+   }
+  },
+  {
+   "cgroup": {
+    "memory_current": "26382336",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "setup write --writer",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "setup snapshot --name",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "setup write --writer",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "setup write --writer",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "unreachable data became garbage",
+     "detail": {
+      "deleted": "trash-000000",
+      "generation": 6,
+      "head": "0725183a7f270dfdd4973e31cfa5198510170db89b261052bf54edd66f109c2a",
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "writer r0 published without a GC-caused failure",
+     "detail": {
+      "aborted": 0,
+      "attempts": 6,
+      "backend_reads": 53,
+      "backend_writes": 28,
+      "bytes_read": 94184,
+      "bytes_written": 31571,
+      "committed": 3,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 20,
+      "domain": null,
+      "elapsed_ms": 287,
+      "errors": [],
+      "generation": 12,
+      "head": "57237c2a3a2e998c0bfc2c4a7fb6944f96e36f223ad1c389ce97fcfca751ad95",
+      "logical_bytes": 12,
+      "ok": true,
+      "peak_rss_kib": 15672,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 2,
+      "rebase_max_consecutive_retries": 3,
+      "rebase_total_attempts": 6,
+      "rebase_touched_intersections": 0,
+      "writer": "r0"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer r1 published without a GC-caused failure",
+     "detail": {
+      "aborted": 0,
+      "attempts": 5,
+      "backend_reads": 68,
+      "backend_writes": 27,
+      "bytes_read": 94740,
+      "bytes_written": 30690,
+      "committed": 3,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 20,
+      "domain": null,
+      "elapsed_ms": 332,
+      "errors": [],
+      "generation": 13,
+      "head": "c36e0043c030954b9b5714a692c8931b1142f2bad88e25ed2384f0054f0ff3f4",
+      "logical_bytes": 12,
+      "ok": true,
+      "peak_rss_kib": 15376,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 2,
+      "rebase_max_consecutive_retries": 2,
+      "rebase_total_attempts": 5,
+      "rebase_touched_intersections": 0,
+      "writer": "r1"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer g0 published without a GC-caused failure",
+     "detail": {
+      "attempts": 11,
+      "committed": 3,
+      "conflicts": 0,
+      "elapsed_ms": 641,
+      "errors": [],
+      "generation": 19,
+      "head": "972c799aa7473e1ff34a2b5d97f136ff69f481146509026e31355ab5e9cf97ff",
+      "ok": true,
+      "writer": "g0"
+     },
+     "ok": true
+    },
+    {
+     "check": "writer g1 published without a GC-caused failure",
+     "detail": {
+      "attempts": 8,
+      "committed": 3,
+      "conflicts": 0,
+      "elapsed_ms": 469,
+      "errors": [],
+      "generation": 16,
+      "head": "dd2913f7302a7185eab46c8164c2e6f52fa00d16b193641cf008e0540f5fe6d1",
+      "ok": true,
+      "writer": "g1"
+     },
+     "ok": true
+    },
+    {
+     "check": "every GC pass succeeded",
+     "detail": [
+      {
+       "applied": true,
+       "candidates": 6,
+       "deleted": 2,
+       "deleted_bytes": 166,
+       "deleted_index_bytes": 644,
+       "deleted_indexes": 4,
+       "deleted_reservations": 0,
+       "domain_heads_marked": 0,
+       "gc_epoch": 1,
+       "gc_epoch_closed": true,
+       "gc_run_id": "1794778576245500397-452-0",
+       "generation": 6,
+       "marked_chunks": 2,
+       "marked_manifests": 2,
+       "ok": true,
+       "problems": [],
+       "reclaimed_pack_bytes": 0,
+       "reclaimed_packs": 0,
+       "removed_orphans": 0,
+       "reservation_floor_ns": null,
+       "reservations_live": 0,
+       "retained": 20,
+       "retained_newer_than_cut": 11,
+       "retained_reservation_floor": 0
+      },
+      {
+       "applied": true,
+       "candidates": 1,
+       "deleted": 0,
+       "deleted_bytes": 0,
+       "deleted_index_bytes": 161,
+       "deleted_indexes": 1,
+       "deleted_reservations": 0,
+       "domain_heads_marked": 0,
+       "gc_epoch": 2,
+       "gc_epoch_closed": true,
+       "gc_run_id": "1794778576622774574-465-0",
+       "generation": 13,
+       "marked_chunks": 10,
+       "marked_manifests": 10,
+       "ok": true,
+       "problems": [],
+       "reclaimed_pack_bytes": 0,
+       "reclaimed_packs": 0,
+       "removed_orphans": 0,
+       "reservation_floor_ns": null,
+       "reservations_live": 0,
+       "retained": 34,
+       "retained_newer_than_cut": 4,
+       "retained_reservation_floor": 0
+      },
+      {
+       "applied": true,
+       "candidates": 0,
+       "deleted": 0,
+       "deleted_bytes": 0,
+       "deleted_index_bytes": 0,
+       "deleted_indexes": 0,
+       "deleted_reservations": 0,
+       "domain_heads_marked": 0,
+       "gc_epoch": 3,
+       "gc_epoch_closed": true,
+       "gc_run_id": "1794778576875456877-466-0",
+       "generation": 18,
+       "marked_chunks": 13,
+       "marked_manifests": 13,
+       "ok": true,
+       "problems": [],
+       "reclaimed_pack_bytes": 0,
+       "reclaimed_packs": 0,
+       "removed_orphans": 0,
+       "reservation_floor_ns": null,
+       "reservations_live": 0,
+       "retained": 41,
+       "retained_newer_than_cut": 2,
+       "retained_reservation_floor": 0
+      }
+     ],
+     "ok": true
+    },
+    {
+     "check": "GC reclaimed the unreachable data",
+     "detail": {
+      "deleted_bytes": 166
+     },
+     "ok": true
+    },
+    {
+     "check": "rust verify --full after concurrent GC",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go verify --full after concurrent GC",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "rust reads the snapshot-protected object after GC",
+     "detail": {
+      "ok": true,
+      "read": {
+       "content_hash": "daa74e8cb29871c2c0a3d81942384a3151811732f570946c3d903eb71b37f54c",
+       "len": 5,
+       "object_id": "2d51b664082cdd057e4db3f950c6ad5f8883b452242362dd4d0fe5681434d407",
+       "present": true,
+       "snapshot_commit": "915b1b0d7000f3720d944890dae55118ba9cd8442d99178baaa6c2fe88ac63ac"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads the snapshot-protected object after GC",
+     "detail": {
+      "ok": true,
+      "read": {
+       "content_hash": "daa74e8cb29871c2c0a3d81942384a3151811732f570946c3d903eb71b37f54c",
+       "len": 5,
+       "object_id": "2d51b664082cdd057e4db3f950c6ad5f8883b452242362dd4d0fe5681434d407",
+       "present": true,
+       "snapshot_commit": "915b1b0d7000f3720d944890dae55118ba9cd8442d99178baaa6c2fe88ac63ac"
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads writer r0 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads writer r0 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads writer r1 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads writer r1 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads writer g0 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads writer g0 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "rust reads writer g1 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads writer g1 after GC",
+     "detail": {
+      "checked": 3,
+      "mismatches": [],
+      "ok": true
+     },
+     "ok": true
+    }
+   ],
+   "checks_passed": 24,
+   "checks_total": 24,
+   "code": "S6",
+   "gc_passes": [
+    {
+     "applied": true,
+     "candidates": 6,
+     "deleted": 2,
+     "deleted_bytes": 166,
+     "deleted_index_bytes": 644,
+     "deleted_indexes": 4,
+     "deleted_reservations": 0,
+     "domain_heads_marked": 0,
+     "gc_epoch": 1,
+     "gc_epoch_closed": true,
+     "gc_run_id": "1794778576245500397-452-0",
+     "generation": 6,
+     "marked_chunks": 2,
+     "marked_manifests": 2,
+     "ok": true,
+     "problems": [],
+     "reclaimed_pack_bytes": 0,
+     "reclaimed_packs": 0,
+     "removed_orphans": 0,
+     "reservation_floor_ns": null,
+     "reservations_live": 0,
+     "retained": 20,
+     "retained_newer_than_cut": 11,
+     "retained_reservation_floor": 0
+    },
+    {
+     "applied": true,
+     "candidates": 1,
+     "deleted": 0,
+     "deleted_bytes": 0,
+     "deleted_index_bytes": 161,
+     "deleted_indexes": 1,
+     "deleted_reservations": 0,
+     "domain_heads_marked": 0,
+     "gc_epoch": 2,
+     "gc_epoch_closed": true,
+     "gc_run_id": "1794778576622774574-465-0",
+     "generation": 13,
+     "marked_chunks": 10,
+     "marked_manifests": 10,
+     "ok": true,
+     "problems": [],
+     "reclaimed_pack_bytes": 0,
+     "reclaimed_packs": 0,
+     "removed_orphans": 0,
+     "reservation_floor_ns": null,
+     "reservations_live": 0,
+     "retained": 34,
+     "retained_newer_than_cut": 4,
+     "retained_reservation_floor": 0
+    },
+    {
+     "applied": true,
+     "candidates": 0,
+     "deleted": 0,
+     "deleted_bytes": 0,
+     "deleted_index_bytes": 0,
+     "deleted_indexes": 0,
+     "deleted_reservations": 0,
+     "domain_heads_marked": 0,
+     "gc_epoch": 3,
+     "gc_epoch_closed": true,
+     "gc_run_id": "1794778576875456877-466-0",
+     "generation": 18,
+     "marked_chunks": 13,
+     "marked_manifests": 13,
+     "ok": true,
+     "problems": [],
+     "reclaimed_pack_bytes": 0,
+     "reclaimed_packs": 0,
+     "removed_orphans": 0,
+     "reservation_floor_ns": null,
+     "reservations_live": 0,
+     "retained": 41,
+     "retained_newer_than_cut": 2,
+     "retained_reservation_floor": 0
+    }
+   ],
+   "grace_secs": 10,
+   "label": "concurrent GC while mixed writers publish",
+   "observed": {
+    "commits": 19,
+    "generation": 19,
+    "head": "972c799aa7473e1ff34a2b5d97f136ff69f481146509026e31355ab5e9cf97ff",
+    "indexes": 13,
+    "manifests": 14,
+    "objects": 14,
+    "superblock_sha256": "dcd49ac19ba46f772f5c2985f3c9fb377d64d35a81b416126db76a991efae4e7"
+   },
+   "pass": true
+  },
+  {
+   "cases": [
+    {
+     "mode": "single",
+     "proxy": "ignores-if-match",
+     "tag": "s7a"
+    },
+    {
+     "mode": "single",
+     "proxy": "ignores-if-none-match",
+     "tag": "s7b"
+    },
+    {
+     "mode": "optimistic",
+     "proxy": "ignores-if-match",
+     "tag": "s7c"
+    },
+    {
+     "mode": "optimistic",
+     "proxy": "ignores-if-none-match",
+     "tag": "s7d"
+    }
+   ],
+   "cgroup": {
+    "memory_current": "26398720",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "s7a: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "s7a: control open against the real endpoint succeeds",
+     "detail": {
+      "mode": "single",
+      "ok": true,
+      "open": {
+       "generation": 1,
+       "head": "a130c63e1acd1d6bee83ae026748b166c718b4bfd7e1850087a63b7f3eae375b",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "s7a: rust writable open refused the ignores-if-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "single",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint accepted a stale If-Match; refusing a writable store because head publication could lose a race silently",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7a: go writable open refused the ignores-if-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "single",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint accepted a stale If-Match; refusing a writable store because head publication could lose a race silently",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7b: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "s7b: control open against the real endpoint succeeds",
+     "detail": {
+      "mode": "single",
+      "ok": true,
+      "open": {
+       "generation": 1,
+       "head": "a130c63e1acd1d6bee83ae026748b166c718b4bfd7e1850087a63b7f3eae375b",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "s7b: rust writable open refused the ignores-if-none-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "single",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint ignored If-None-Match: *; refusing a writable store because create-once publication cannot be guaranteed",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7b: go writable open refused the ignores-if-none-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "single",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint ignored If-None-Match: *; refusing a writable store because create-once publication cannot be guaranteed",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7c: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "s7c: optimistic policy established",
+     "detail": {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 12,
+      "backend_writes": 13,
+      "bytes_read": 19746,
+      "bytes_written": 10186,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "domain": null,
+      "elapsed_ms": 9,
+      "errors": [],
+      "generation": 2,
+      "head": "cf20650bd0a11adf35e519f4a5b24fd306fef864d88a44eea97aef0e065a7209",
+      "logical_bytes": 3,
+      "ok": true,
+      "peak_rss_kib": 15808,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 1,
+      "rebase_touched_intersections": 0,
+      "writer": "p"
+     },
+     "ok": true
+    },
+    {
+     "check": "s7c: control open against the real endpoint succeeds",
+     "detail": {
+      "mode": "optimistic",
+      "ok": true,
+      "open": {
+       "generation": 2,
+       "head": "cf20650bd0a11adf35e519f4a5b24fd306fef864d88a44eea97aef0e065a7209",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "s7c: rust writable open refused the ignores-if-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "optimistic",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint accepted a stale If-Match; refusing a writable store because head publication could lose a race silently",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7c: go writable open refused the ignores-if-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "optimistic",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint accepted a stale If-Match; refusing a writable store because head publication could lose a race silently",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7d: init",
+     "detail": "",
+     "ok": true
+    },
+    {
+     "check": "s7d: optimistic policy established",
+     "detail": {
+      "aborted": 0,
+      "attempts": 1,
+      "backend_reads": 12,
+      "backend_writes": 13,
+      "bytes_read": 19746,
+      "bytes_written": 10186,
+      "committed": 1,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "domain": null,
+      "elapsed_ms": 9,
+      "errors": [],
+      "generation": 2,
+      "head": "cf20650bd0a11adf35e519f4a5b24fd306fef864d88a44eea97aef0e065a7209",
+      "logical_bytes": 3,
+      "ok": true,
+      "peak_rss_kib": 15380,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 1,
+      "rebase_touched_intersections": 0,
+      "writer": "p"
+     },
+     "ok": true
+    },
+    {
+     "check": "s7d: control open against the real endpoint succeeds",
+     "detail": {
+      "mode": "optimistic",
+      "ok": true,
+      "open": {
+       "generation": 2,
+       "head": "cf20650bd0a11adf35e519f4a5b24fd306fef864d88a44eea97aef0e065a7209",
+       "ok": true
+      }
+     },
+     "ok": true
+    },
+    {
+     "check": "s7d: rust writable open refused the ignores-if-none-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "optimistic",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint ignored If-None-Match: *; refusing a writable store because create-once publication cannot be guaranteed",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    },
+    {
+     "check": "s7d: go writable open refused the ignores-if-none-match endpoint",
+     "detail": {
+      "payload": {
+       "mode": "optimistic",
+       "ok": true,
+       "open": {
+        "class": "UnsupportedVersion",
+        "error": "UnsupportedVersion: Azure-compatible endpoint ignored If-None-Match: *; refusing a writable store because create-once publication cannot be guaranteed",
+        "ok": false
+       }
+      },
+      "stderr": ""
+     },
+     "ok": true
+    }
+   ],
+   "checks_passed": 18,
+   "checks_total": 18,
+   "code": "S7",
+   "label": "fail-closed mode detection against a permissive endpoint",
+   "observed": {
+    "commits": 2,
+    "generation": 2,
+    "head": "cf20650bd0a11adf35e519f4a5b24fd306fef864d88a44eea97aef0e065a7209",
+    "indexes": 2,
+    "manifests": 1,
+    "objects": 1,
+    "superblock_sha256": "dc59e0d5631bd23525f1bdfb62be82f1d0ca126502290f00578548c947a08f31"
+   },
+   "pass": true
+  },
+  {
+   "cgroup": {
+    "memory_current": "25767936",
+    "memory_events": "low 0 high 0 max 0 oom 0 oom_kill 0 oom_group_kill 0 sock_throttled 0",
+    "memory_peak": "60243968",
+    "pids_current": "3",
+    "pids_events": "max 0",
+    "pids_max": "1024"
+   },
+   "checks": [
+    {
+     "check": "rust parity transaction committed",
+     "detail": {
+      "content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06",
+      "generation": 2,
+      "head": "00634254ea98c25e423a1efa4134c843af614d34f0b9e3dc8bb04b649e51d3f8",
+      "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1",
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "ok": true,
+      "size": 11,
+      "tx_id": "00000000000000000000000000000001",
+      "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"
+     },
+     "ok": true
+    },
+    {
+     "check": "go parity transaction committed",
+     "detail": {
+      "content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06",
+      "generation": 2,
+      "head": "00634254ea98c25e423a1efa4134c843af614d34f0b9e3dc8bb04b649e51d3f8",
+      "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1",
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "ok": true,
+      "size": 11,
+      "tx_id": "00000000000000000000000000000001",
+      "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"
+     },
+     "ok": true
+    },
+    {
+     "check": "Rust and Go produce byte-identical parity records",
+     "detail": {},
+     "ok": true
+    },
+    {
+     "check": "rust wrote r0",
+     "detail": {
+      "aborted": 0,
+      "attempts": 2,
+      "backend_reads": 15,
+      "backend_writes": 20,
+      "bytes_read": 29032,
+      "bytes_written": 20045,
+      "committed": 2,
+      "conflicts": 0,
+      "cpu_sys_ms": 0,
+      "cpu_user_ms": 0,
+      "domain": null,
+      "elapsed_ms": 20,
+      "errors": [],
+      "generation": 3,
+      "head": "28bb2fdc1f24768c3c07beda93a0ab45d1db3a074cc2a233efdda161276448d5",
+      "logical_bytes": 8,
+      "ok": true,
+      "peak_rss_kib": 15388,
+      "rebase_gap_commits_cached": 0,
+      "rebase_gap_commits_read": 0,
+      "rebase_max_consecutive_retries": 0,
+      "rebase_total_attempts": 2,
+      "rebase_touched_intersections": 0,
+      "writer": "r0"
+     },
+     "ok": true
+    },
+    {
+     "check": "go wrote g0",
+     "detail": {
+      "attempts": 2,
+      "committed": 2,
+      "conflicts": 0,
+      "elapsed_ms": 18,
+      "errors": [],
+      "generation": 5,
+      "head": "9b38a8c7966efbefdd2388619f9c498a0d98b76b8c7fb0d18b4952dd72d75b3f",
+      "ok": true,
+      "writer": "g0"
+     },
+     "ok": true
+    },
+    {
+     "check": "rust verify --full over the mixed store",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "go verify --full over the mixed store",
+     "detail": null,
+     "ok": true
+    },
+    {
+     "check": "rust reads the store go wrote",
+     "detail": {
+      "content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "len": 11,
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "ok": true
+     },
+     "ok": true
+    },
+    {
+     "check": "go reads the store rust wrote",
+     "detail": {
+      "content_hash": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+      "len": 11,
+      "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+      "ok": true
+     },
+     "ok": true
+    }
+   ],
+   "checks_passed": 9,
+   "checks_total": 9,
+   "code": "S8",
+   "label": "cross-language verification and deterministic parity",
+   "observed": {
+    "commits": 5,
+    "generation": 5,
+    "head": "9b38a8c7966efbefdd2388619f9c498a0d98b76b8c7fb0d18b4952dd72d75b3f",
+    "indexes": 5,
+    "manifests": 4,
+    "objects": 4,
+    "superblock_sha256": "f18d14b869f96e404e93d0c5438ae16e032e4348cc9d89cb47ee4f3f3d3f6742"
+   },
+   "parity": {
+    "go": {
+     "content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+     "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06",
+     "generation": 2,
+     "head": "00634254ea98c25e423a1efa4134c843af614d34f0b9e3dc8bb04b649e51d3f8",
+     "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1",
+     "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+     "ok": true,
+     "size": 11,
+     "tx_id": "00000000000000000000000000000001",
+     "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"
+    },
+    "rust": {
+     "content_root": "65722e2a5174ec2256b62742b9898f90063149abd629f59685dd9b59b4c64ba5",
+     "entry_id": "45e93dcad026226df5907bfdc6f1e6a41b0820972d46e570e9b6493467558e06",
+     "generation": 2,
+     "head": "00634254ea98c25e423a1efa4134c843af614d34f0b9e3dc8bb04b649e51d3f8",
+     "manifest": "56daf9a2fa6c1b1c139c3d44bb6befeff0f6381740bdfae3caf9da21fb48f7c1",
+     "object_id": "fc9dd08e642f4f06a3896fac6da99ae4c93d2765505c59e63fb4a2f6d76b6708",
+     "ok": true,
+     "size": 11,
+     "tx_id": "00000000000000000000000000000001",
+     "version": "e766110e3fdd465d1f7fa73ab3a8d1724a1480674e3cd4ce26f1ccd373a4c331"
+    }
+   },
+   "pass": true
+  }
+ ],
+ "schema": "weft-azure-mw2-court-v1",
+ "stamp": "20261115T194936Z",
+ "summary": {
+  "checks": 167,
+  "checks_passed": 167,
+  "failures": 0,
+  "scenarios": 8,
+  "scenarios_passed": 8
+ }
+}

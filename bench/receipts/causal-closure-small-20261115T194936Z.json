@@ -1,0 +1,100 @@
+{
+  "checks": [
+    {
+      "name": "complete_is_superset_of_minimal",
+      "ok": true
+    },
+    {
+      "name": "modes_differ",
+      "ok": true
+    },
+    {
+      "name": "same_result_index_and_naive",
+      "ok": true
+    }
+  ],
+  "environment": {
+    "cache": "warm, single host",
+    "court": "bench (3 GiB / 4 cpus / 1024 pids)",
+    "revisions": {
+      "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+      "WeftFS": "b0638ef348cb6b416e42833aaa779435068e38f6",
+      "WeftFS-Go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+    }
+  },
+  "fixture": {
+    "branches": 4,
+    "build_ms": 13.115423,
+    "depth": 60,
+    "extra_declared_edges": 16,
+    "objects": 281,
+    "roots": 1,
+    "side_chain": 40,
+    "snapshot": "053ee83dae7fa9da6d9cfd547bb228ea3ee86fc010e2e4e8ce591894927c656a"
+  },
+  "index": {
+    "build_ns": 235151,
+    "graph_nodes": 282,
+    "modes": {
+      "complete": {
+        "max_ns": 63610,
+        "mean_ns": 43413.28,
+        "min_ns": 41037,
+        "p50_ns": 41417,
+        "p95_ns": 60283,
+        "reps": 50
+      },
+      "minimal": {
+        "max_ns": 47879,
+        "mean_ns": 31135.24,
+        "min_ns": 29896,
+        "p50_ns": 30166,
+        "p95_ns": 36068,
+        "reps": 50
+      }
+    },
+    "node_counts": {
+      "complete": {
+        "edges_considered": 267,
+        "max_depth": 60,
+        "nodes": 253
+      },
+      "minimal": {
+        "edges_considered": 240,
+        "max_depth": 60,
+        "nodes": 241
+      }
+    }
+  },
+  "kind": "causal-closure-cost",
+  "naive_full_scan": {
+    "modes": {
+      "complete": {
+        "max_ns": 426220,
+        "mean_ns": 300268.4,
+        "min_ns": 273794,
+        "p50_ns": 287309,
+        "p95_ns": 426220,
+        "reps": 10
+      },
+      "minimal": {
+        "max_ns": 300023,
+        "mean_ns": 274429.1,
+        "min_ns": 264036,
+        "p50_ns": 268234,
+        "p95_ns": 300023,
+        "reps": 10
+      }
+    },
+    "note": "re-scans every object once per query, then walks"
+  },
+  "result": "pass",
+  "single_query": {
+    "index_complete_ns": 276568,
+    "index_minimal_ns": 265317,
+    "naive_complete_ns": 287309,
+    "naive_minimal_ns": 268234,
+    "note": "index total includes one graph build; the naive total rebuilds the whole graph inside the query"
+  },
+  "timestamp_utc": "20261115T194936Z"
+}

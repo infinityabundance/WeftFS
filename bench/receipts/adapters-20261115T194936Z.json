@@ -1,0 +1,272 @@
+{
+ "adapters": [
+  {
+   "adapter_id": "6abc401ac8560a958d07f358466ce760159dfd1d34126673d36e8ff549d329af",
+   "adapter_logical_bytes": 8798208,
+   "alpha": 32.0,
+   "declared_base_is_exact_repo": true,
+   "declared_base_is_pinned": true,
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "kind": "lora",
+   "manifest_bytes": 116439,
+   "physical_vs_source": 0.8676973558607998,
+   "physical_vs_zstd19": 0.9298814459111742,
+   "rank": 4,
+   "repo": "taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot",
+   "restore_byte_exact": true,
+   "restore_container_bytes": 8841592,
+   "restore_exact": true,
+   "restore_ms": 54.179262,
+   "restore_sha256": "543e33e13b2b3f84344a703ed947faf9b33420dc3f4387568431c73b84cc6477",
+   "revision": "6060d5f819c4d0c75729975f308562149c7e2d01",
+   "source_file_bytes": 8841592,
+   "stored_physical_bytes": 7671826,
+   "strategy_counts": {
+    "float-tensor": 288,
+    "raw": 48
+   },
+   "target_modules": [
+    "down_proj",
+    "gate_proj",
+    "k_proj",
+    "o_proj",
+    "q_proj",
+    "up_proj",
+    "v_proj"
+   ],
+   "targets": 168,
+   "use_rslora": false,
+   "verify_ms": 3.90783,
+   "verify_targets": 168,
+   "write_ms": 4157.999292,
+   "zstd19_file_bytes": 8250327
+  },
+  {
+   "adapter_id": "e8350cd0b4648f4a1ee0d0aaa3b1f165c2bd872695a88bb3d47dc9717a51735c",
+   "adapter_logical_bytes": 2162688,
+   "alpha": 32.0,
+   "declared_base_is_exact_repo": true,
+   "declared_base_is_pinned": true,
+   "declared_base_model": "Qwen/Qwen2.5-0.5B-Instruct",
+   "kind": "lora",
+   "manifest_bytes": 33956,
+   "physical_vs_source": 0.8793182871392002,
+   "physical_vs_zstd19": 0.9488075076567741,
+   "rank": 8,
+   "repo": "aneesa3131/Qwen2.5-0.5B-Instruct-lora-text-generation",
+   "restore_byte_exact": true,
+   "restore_container_bytes": 2175168,
+   "restore_exact": true,
+   "restore_ms": 14.298569,
+   "restore_sha256": "af498d68d981e0948d4db2d2687d1d7cae39f07b5b609d4587d3e8c8cc4dc08a",
+   "revision": "fb13685aeefd3c6dc7c5cad18659440e0faf0977",
+   "source_file_bytes": 2175168,
+   "stored_physical_bytes": 1912665,
+   "strategy_counts": {
+    "float-tensor": 72,
+    "zstd": 24
+   },
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "targets": 48,
+   "use_rslora": false,
+   "verify_ms": 3.04643,
+   "verify_targets": 48,
+   "write_ms": 1166.750022,
+   "zstd19_file_bytes": 2015862
+  },
+  {
+   "adapter_id": "3e925600ca9e9b422c573018923c08d2c752b8c8fffb7ea8bc8c34d215a06a8c",
+   "adapter_logical_bytes": 4325376,
+   "alpha": 16.0,
+   "declared_base_is_exact_repo": false,
+   "declared_base_is_pinned": false,
+   "declared_base_model": "unsloth/qwen2.5-0.5b-instruct-unsloth-bnb-4bit",
+   "kind": "lora",
+   "manifest_bytes": 34179,
+   "physical_vs_source": 0.8597005532503458,
+   "physical_vs_zstd19": 0.927923462719277,
+   "rank": 16,
+   "repo": "ShahzebKhoso/qwen2.5-instruct-0.5B-pubmedqa-lora",
+   "restore_byte_exact": true,
+   "restore_container_bytes": 4338000,
+   "restore_exact": true,
+   "restore_ms": 25.046685,
+   "restore_sha256": "c1481a333fad80f8dfa2c027d51492ac2f4c5d9039a95d10a616865a369dad82",
+   "revision": "8dca0cc1f399204e0a93bb48fa39aba6add79be7",
+   "source_file_bytes": 4338000,
+   "stored_physical_bytes": 3729381,
+   "strategy_counts": {
+    "float-tensor": 96
+   },
+   "target_modules": [
+    "q_proj",
+    "v_proj"
+   ],
+   "targets": 48,
+   "use_rslora": false,
+   "verify_ms": 3.170823,
+   "verify_targets": 48,
+   "write_ms": 1171.998767,
+   "zstd19_file_bytes": 4019061
+  }
+ ],
+ "base": {
+  "checkpoint": "qwen-0.5b-instruct",
+  "manifest_root": "a959da227729b51321ee463499615ac88f0b9fb76d988a766aca334b8d0b3ffe",
+  "physical_bytes": 658103614,
+  "restore_bytes": 988097824,
+  "restore_exact": true,
+  "restore_ms": 4141.614559,
+  "tensors": 290,
+  "write_ms": 3989.204727,
+  "zstd19_container_bytes": 764093099
+ },
+ "configuration": {
+  "adapters_limit": 3,
+  "dump_tensors": 1,
+  "merge_limit": 1,
+  "merged_full": false,
+  "merged_zstd": 0,
+  "zstd": "/usr/bin/zstd"
+ },
+ "corpus": {
+  "adapter_count": 3,
+  "base_file_bytes": 988097824,
+  "base_sha256": "fdf756fa7fcbe7404d5c60e26bff1a0c8b8aa1f72ced49e7dd0210fe288fb7fe",
+  "manifest": "bench/corpora/real-models/adapters-qwen2.5-0.5b.json",
+  "merge_eligible": 1
+ },
+ "court": {
+  "cpus": "4",
+  "image": "weft/fuse-court:1",
+  "kernel": "7.3.3-1-cachyos",
+  "memory": "3g",
+  "note": "one host, warm page cache, real public adapter weights; no GPU, fleet or cloud claim",
+  "peak_rss_kib": 723960,
+  "pids": "1024",
+  "single_host": true,
+  "warm_cache": true
+ },
+ "families": {
+  "adapter_logical_total": 15286272,
+  "adapter_physical_total": 13313872,
+  "adapter_restore_ms_total": 93.524516,
+  "adapter_source_bytes_total": 15354760,
+  "adapter_zstd19_total": 14285250,
+  "base_plus_all_adapters_physical": 671417486,
+  "base_plus_all_merged_views_physical": 1135395636,
+  "merged_logical_total": 715653120,
+  "merged_restore_ms_total": 3564.651176,
+  "merged_zstd19_count": 0,
+  "merged_zstd19_total": 0,
+  "store_physical_bytes": 1148709508
+ },
+ "generated_utc": "2026-11-15T20:02:06Z",
+ "labels": {
+  "adapters_are_public": true,
+  "merge_equivalence": "not_claimed: merged bytes are defined by the pinned f32->bf16 contract, not by any upstream merge",
+  "synthetic": false
+ },
+ "merged_full_checkpoint": null,
+ "merged_views": [
+  {
+   "adapter": "taronklm__Qwen2-5-0-5B-Instruct-lora-chatbot",
+   "adapter_id": "6abc401ac8560a958d07f358466ce760159dfd1d34126673d36e8ff549d329af",
+   "apply_ms": 6651.742932,
+   "base_tensors": 290,
+   "contract": "f32 accumulate, bf16 round-half-to-even, delta_then_add",
+   "dumped_tensors": [
+    {
+     "content": "939446ec54264efa989563182bf2a6ccdb0740af634bde2c42ad8aaebe71b6b4",
+     "dtype": "bf16",
+     "file": "model_layers_0_mlp_down_proj_weight.bin",
+     "shape": [
+      896,
+      4864
+     ],
+     "tensor": "model.layers.0.mlp.down_proj.weight"
+    }
+   ],
+   "manifest_bytes": 45456,
+   "merge_equivalence": "not_claimed",
+   "merge_ms": 12278.403917,
+   "merged_logical_bytes": 715653120,
+   "merged_stored_physical_bytes": 477292022,
+   "merged_tensors": 168,
+   "merged_view": "5f7577679c377ccad8a75afd29cadbc93cd0e47285b6bd04d70432259a3986df",
+   "repo": "taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot",
+   "restore_container_bytes": 988097792,
+   "restore_ms": 3564.651176,
+   "restore_sha256": "4653dbddf9ef114bd1690e7db692a674deaa0a1725ce3e2c88a2b6c96647dd58",
+   "strategy_counts": {
+    "float-tensor": 168
+   },
+   "zstd19_container_bytes": null
+  }
+ ],
+ "native": {
+  "bytes_read": 1003452584,
+  "note": "plain files read through std::io from the bind mount; the base file plus every adapter file",
+  "read_ms": 424.04285000000004
+ },
+ "revision": {
+  "weftcodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+  "weftfs": "b0638ef348cb6b416e42833aaa779435068e38f6"
+ },
+ "schema": "weft.adapter-court.v1",
+ "verify": {
+  "checked_chunks": 104,
+  "checked_manifests": 993,
+  "checked_objects": 991,
+  "checked_representations": 890,
+  "full": true,
+  "problems": 0
+ },
+ "stamp": "20261115T194936Z",
+ "reference_merge": {
+  "adapter_file_sha256": "543e33e13b2b3f84344a703ed947faf9b33420dc3f4387568431c73b84cc6477",
+  "adapter_repo": "taronklm/Qwen2.5-0.5B-Instruct-lora-chatbot",
+  "adapter_revision": "6060d5f819c4d0c75729975f308562149c7e2d01",
+  "all_match_f32_matmul": false,
+  "all_match_f64_accumulation": false,
+  "none_equal_base": true,
+  "reference": "NumPy float32 matmul (BLAS order) and float64 accumulation, both narrowed to bf16 with round-half-to-even",
+  "schema": "weft.adapter-reference.v1",
+  "tensors": [
+   {
+    "dora": false,
+    "elements": 4358144,
+    "elements_differing_from_base": 2194824,
+    "f32_matmul_mismatches": 1,
+    "f64_accumulation_mismatches": 3,
+    "max_abs_difference_vs_f32_matmul": 0.00024375319480895996,
+    "max_f32_ulp_vs_f32_matmul": 32768.0,
+    "num_dtype": "f32",
+    "rank": 4,
+    "rust_equals_base": false,
+    "rust_matches_f32_matmul": false,
+    "rust_matches_f64_accumulation": false,
+    "scale": 8.0,
+    "shape": [
+     896,
+     4864
+    ],
+    "tensor": "model.layers.0.mlp.down_proj.weight"
+   }
+  ]
+ },
+ "raw_log": "bench/receipts/adapters-20261115T194936Z.log",
+ "checks": {
+  "every_adapter_restore_is_byte_exact": true,
+  "every_adapter_verified": true,
+  "base_restore_is_byte_exact": true,
+  "every_merged_view_restored_exactly": true,
+  "store_verify_full_clean": true,
+  "reference_merge_present": true,
+  "reference_merge_differs_from_base": true
+ },
+ "result": "pass"
+}

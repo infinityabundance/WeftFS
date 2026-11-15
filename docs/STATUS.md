@@ -2,12 +2,12 @@
 
 <!-- BEGIN GENERATED:status-head (scripts/perf_numbers.py) -->
 **At a glance (generated from receipts).** v1.4.2 is released. The cited aggregate is
-`bench/receipts/verify-20261114T162327Z.json` — **75/75** courts pass,
-0 failed, 0 skipped — at WeftFS `517703200d4837d63233e3ef02c4102f454f9c05`.
+`bench/receipts/verify-20261115T194936Z.json` — **102/102** courts pass,
+0 failed, 0 skipped — at WeftFS `b0638ef348cb6b416e42833aaa779435068e38f6`.
 The shipped planned write is **974.1 ms** least-contended /
 1,175.3 ms p50 at **282,106,049 B** (33.53 % below
 the native control, 2.98× its wall). Rust all-targets
-**933** tests pass; FUSE **984** passed /
+**1,092** tests pass; FUSE **1,143** passed /
 0 failed / 2 ignored; the conformance manifest holds
 **420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,402** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
@@ -15,6 +15,122 @@ audited. Every number in this block is emitted by `scripts/perf_numbers.py` betw
 court; the entries below this block are a chronological log of subphases, quoted with
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
+
+## 2026-11-15 (N06/X11: the aggregate re-run, 102/102)
+
+**Scope.** `scripts/verify-all.sh` had not completed a run since
+`verify-20261114T162327Z` (75 courts at `5177032`), while 119 commits added 26
+courts and one host-only guard. This entry is that run, what it found, and what
+it does not establish. No wire byte, mode number, root, format or court
+assertion changed.
+
+**The aggregate could not run at all, and nobody had noticed.** `a8c8645`
+registered the T048-T052 courts (line 131) *above* the `run_orchestrated_court`
+definition (line 231). Bash resolves a function name when the calling line
+executes, so under `set -e` the run aborted with `command not found` (exit 127)
+after 15 courts. Fixed by moving the definition directly below `run_court`
+(`3c9ed69`), and guarded by `scripts/check-verify-all-order.sh`, which asserts
+that every top-level call follows the definition of the function it names. It
+is registered as the host-only `court_order` court and runs *first*, so this
+class of defect fails in a second instead of an hour. Verified against the
+broken revision: it reports `run_orchestrated_court() is called at line 131 but
+defined at line 231` and exits 1.
+
+**The cited run.** `bench/receipts/verify-20261115T194936Z.json` — **102/102**
+courts pass, 0 failed, 0 skipped, result `pass`, at WeftFS
+`b0638ef348cb6b416e42833aaa779435068e38f6` (WeftCodec `98019d82`, WeftCodec-Go
+`d45fcb4c`, WeftFS-Go `21c41b1a`), stamp `20261115T194936Z`, wall
+19:49:36Z-22:10:26Z (**140 min 50 s**) under `timeout 10800`, in courts with the
+unchanged 3 GiB / 3 GiB / 1024 pids / 4 cpus limits. Per-court test counts are
+`verify-20261115T194936Z.tests.json`: Rust all-targets **1,092** passed,
+FUSE all-targets **1,143** passed / 0 failed / 2 pre-existing ignored, WeftCodec
+**299** passed.
+
+**Inventory.** 102 entries: 37 `run_court` container courts, 59
+`run_orchestrated_court` courts and 6 inline host-only courts, plus the new
+`court_order`. The 26 registrations added since the 75-court run are
+`adapters`, `cross_model_delta`, `view_identity`, `range_proof`, `taint`,
+`artifact_templates`, `maintenance`, `training_state`, `refinement`,
+`multi_parent`, `residual_selector`, `recompute_planner`, `artifact_api`,
+`producer_auth`, `revocation_epoch`, `encryption`, `two_stage_oracle`,
+`n01_write_rung`, `n02_durability_tail`, `n05_go_parity`, `n07_pareto`,
+`training_artifact`, `causal_closure`, `training_ready_cost` (and
+`juicefs`/`glusterfs` were already registered). All 59 orchestrated courts print
+exactly one `<prefix>: skip <reason>` line and exit 78 on an unobtainable
+environment; that path is exercised by moving one corpus file aside (see
+below). Three `run_court` courts (`tla`, `multiwriter`, `multiwriter_failure`)
+have no environment skip: their only precondition is Docker plus an image built
+from a committed Dockerfile, so a missing image is a build failure, not an
+unreachable environment.
+
+**A retained failing run, and the two defects it found.** Before this run the
+tree at `3c9ed69` was exercised end to end: `verify-20261115T170940Z.json`
+(**102 courts, 100 passed, 2 failed, 0 skipped**, retained and committed) found
+
+* `cephfs` (exit 1): `ceph-mon` aborted with "monitor data filesystem reached
+  concerning levels of available storage space (available: 5% 74 GiB)". Ceph
+  refuses at or below 5% free and this court keeps its OSD on the host
+  filesystem; the aggregate's own scratch had taken the disk to 5.7% free.
+  Fixed with a preflight that measures the repo filesystem and skips below 6%
+  (`3da278b`) -- an environment precondition checked before the container
+  starts, never a post-hoc relabel of a failure.
+* `adapters_receipts` (exit 1): `BufferError: cannot close exported pointers
+  exist` out of `OrbaxCheckpointHandler.restore`. Root cause is a **T072
+  (`9136b92`) regression**: `artifact_api.ArtifactTensorBuffer.close` dropped
+  the guard `service.TensorBuffer.close` already had, and an exported pointer
+  is expected there -- `orbax._to_target` hands a numpy/JAX array built with
+  `frombuffer`/`asarray` straight to the caller with no host copy, so the
+  mapping must outlive the buffer. Reproduced standalone at `3c9ed69` (rc=1,
+  `adapters-receipts-repro20261115T1930Z.log`); fixed in `3e067f3` and the
+  same court passes (`adapters-receipts-fix20261115T1940Z.json`). Regression
+  test `python/tests/test_artifact_api.py` (3 tests) pins all three cases:
+  close with a live exporter keeps the mapping, close without one unmaps, and
+  close is idempotent.
+
+**A second aborted run, disclosed.** An intermediate attempt at stamp
+`20261115T193114Z` was stopped after `adapters` failed with exit 2
+(`bench/receipts/adapters-20261115T193114Z.log`, committed): during
+scratch cleanup this session had removed `.docker-cache/t048`, the 12 public
+LoRA/DoRA adapters the court reads, and nothing in the repository could rebuild
+it (no fetcher existed, and the court only checked the *base* checkpoint). The
+aborted run produced **no aggregate receipt** and is not cited. `scripts/fetch-adapter-corpus.sh`
+now rebuilds the corpus from `bench/corpora/real-models/adapters-qwen2.5-0.5b.json`
+(exact URL at the exact revision, recorded sha256 checked; 24/24 files
+restored), and both the host wrapper and the in-court script print one
+`adapter_court: skip <reason>` line and exit 78 when a file the manifest names is
+absent (`b0638ef`). A *manifest that does not name the pinned base sha* still
+fails: that is a repository defect, not an unreachable environment.
+
+**An evidence defect in the published numbers, fixed.** `bench/RESULTS-pareto.md`
+cited the R22 gate logs while its generated rows read the **current** aggregate
+keys, so a regeneration printed today's counts under an R22 caption (933/984/299
+where the R22 logs measure 807/850/290). `docs/RELEASE-v1.4.2.md` had the same
+shape. Both are now pinned: `tests.r22.*` read the R22 logs through
+`bench/receipts/r22-*.tests.json`, and `verify.v142.*`/`tests.v142.*` read
+`verify-20261114T162327Z.json`, exactly as v1.4.0 and v1.4.1 already did. The
+R22 numbers in that document therefore change to what its own logs measured; the
+v1.4.2 release note keeps its 75/75 at `5177032`. `court_test_counts.py` gained
+a single-section fallback so a plain `cargo test` log with no `=== court ===`
+markers can be counted by the same tool (the aggregate's own counts are
+byte-identical before and after that change).
+
+**Citations moved.** `docs/STATUS.md` head, `README.md` (P4/P5/P7 and the
+what-is-measured row), `docs/PERF-NUMBERS.md` and the `verify_receipt_current`
+claim now name `verify-20261115T194936Z`. Historical receipts cited by earlier
+entries and release notes are untouched.
+
+**What this aggregate does not establish.** It is a single host with warm
+caches and one image per court; no fleet, cloud, GPU, physical power-loss or
+media claim follows from it. It does not re-run the standalone full-size
+configurations that the aggregate deliberately reduces (checkpoint family,
+trajectory, write policy, throughput, restore scaling, augmentation, CephFS,
+JuiceFS, GlusterFS, context advantage, EKBLOOM, two-stage oracle, the training
+courts); each reduced run records its knobs in its own receipt and the full
+receipts remain the evidence for those numbers. It is not a performance result
+and makes no superiority claim. `ceph_rgw`, `s3_court`, `azure_mw2`, `cephfs`,
+`juicefs` and `glusterfs` run single-node pinned sidecars; none of them is a
+multi-node or media result. The Go store still does not read every Rust-side
+schema, and the aggregate cannot show that it does.
 
 ## 2026-11-15 (T048/T049/T051/T052: adapters, training state, cross-model delta, view identity)
 

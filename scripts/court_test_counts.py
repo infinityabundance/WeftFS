@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 
@@ -74,6 +75,34 @@ def main(argv=None):
             continue
         if GO_OK_RE.match(line):
             entry["go_packages_ok"] += 1
+
+    if not courts:
+        # A plain `cargo test` log (for example the R22 gate logs) has no
+        # `=== <court> ===` markers. Treat the whole file as one section named
+        # after the log, so the same accounting applies to it.
+        current = os.path.splitext(os.path.basename(args.log))[0]
+        courts[current] = {
+            "passed": 0,
+            "failed": 0,
+            "ignored": 0,
+            "test_result_lines": 0,
+            "test_binaries": 0,
+            "go_packages_ok": 0,
+        }
+        for line in text.splitlines():
+            entry = courts[current]
+            result = RESULT_RE.search(line)
+            if result:
+                entry["test_result_lines"] += 1
+                entry["passed"] += int(result.group(2))
+                entry["failed"] += int(result.group(3))
+                entry["ignored"] += int(result.group(4))
+                continue
+            if RUNNING_RE.match(line):
+                entry["test_binaries"] += 1
+                continue
+            if GO_OK_RE.match(line):
+                entry["go_packages_ok"] += 1
 
     # drop sections that reported neither a Rust result line nor a Go package,
     # so the sidecar only names courts that actually count tests

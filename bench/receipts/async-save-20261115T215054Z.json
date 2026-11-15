@@ -1,0 +1,337 @@
+{
+  "schema": "weft.async-save-overlap.v1",
+  "stamp": "20261115T215054Z",
+  "generated_at": "2026-11-15T21:51:02Z",
+  "court": {
+    "image": "weft/python-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g",
+    "cpus": "4",
+    "pids": "1024",
+    "cpu_only": true,
+    "single_host": true,
+    "gpu_idle_unmeasured": true,
+    "note": "CPU-side stall only; GPU idle time is not measured and is not claimed"
+  },
+  "revision": {
+    "weftfs": "b0638ef348cb6b416e42833aaa779435068e38f6",
+    "weftcodec": "98019d82c32365bc01d411aba93ea9f951ae6de6"
+  },
+  "args": {
+    "steps": 96,
+    "checkpoint_every": 16,
+    "reps": 1,
+    "queue_outstanding": 2,
+    "queue_staged_bytes": 1073741824,
+    "admission_wait_ms": 30000.0
+  },
+  "arms": {
+    "none": {
+      "step_p50_ms": 10.371,
+      "step_p95_ms": 11.032,
+      "step_inflation_p50": 1.0,
+      "step_inflation_p95": 1.0,
+      "peak_rss_kib": 309300,
+      "rss_high_water_kib": 310396,
+      "cpu_ms": 2187.387,
+      "drain_ms": 0.001,
+      "max_outstanding_sampled": 0,
+      "submitted": 0,
+      "submit_errors": 0,
+      "checkpoints_verified": true,
+      "final_model_sha256": [
+        "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad"
+      ]
+    },
+    "async": {
+      "step_p50_ms": 10.372,
+      "step_p95_ms": 11.537,
+      "step_inflation_p50": 1.0001,
+      "step_inflation_p95": 1.0458,
+      "peak_rss_kib": 338840,
+      "rss_high_water_kib": 339224,
+      "cpu_ms": 3351.899,
+      "drain_ms": 1928.248,
+      "max_outstanding_sampled": 5,
+      "submitted": 6,
+      "submit_errors": 0,
+      "checkpoints_verified": true,
+      "final_model_sha256": [
+        "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad"
+      ]
+    },
+    "queue": {
+      "step_p50_ms": 10.381,
+      "step_p95_ms": 12.679,
+      "step_inflation_p50": 1.001,
+      "step_inflation_p95": 1.1493,
+      "peak_rss_kib": 338840,
+      "rss_high_water_kib": 337116,
+      "cpu_ms": 4447.779,
+      "drain_ms": 740.502,
+      "max_outstanding_sampled": 2,
+      "submitted": 6,
+      "submit_errors": 0,
+      "checkpoints_verified": true,
+      "final_model_sha256": [
+        "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad"
+      ],
+      "queue": {
+        "queue_high_water": 2,
+        "staged_bytes_high_water": 9946720,
+        "admission_refusals": 0,
+        "admission_waits": 6,
+        "largest_admission_bytes": 4973360,
+        "admission_wait_ms_max": 261.8789159459993,
+        "max_outstanding_bound": 2,
+        "staged_bytes_bound": 1073741824
+      }
+    }
+  },
+  "unsynchronized_probe": {
+    "description": "two overlapping per-call async saves on one single-writer store",
+    "outcomes": [
+      "published",
+      "CheckpointException: CheckpointException ranks:dict_keys([0])\nTraceback (most recent call last): (RANK 0)\n  File \"/usr/local/lib/python3.12/site-packages/torch/distributed/checkpoin"
+    ],
+    "at_least_one_refused": true
+  },
+  "raw_cells": [
+    {
+      "arm": "none",
+      "steps": 96,
+      "checkpoint_every": 16,
+      "submitted": 0,
+      "submit_errors": 0,
+      "step": {
+        "p50_ms": 10.371,
+        "p95_ms": 11.032,
+        "p99_ms": 12.052,
+        "max_ms": 14.558,
+        "n": 96
+      },
+      "submit_pause": null,
+      "max_outstanding_sampled": 0,
+      "async_worker_threads": 0,
+      "queue_stats": null,
+      "drain_report": null,
+      "drain_ms": 0.001,
+      "loop_wall_ms": 1009.642,
+      "peak_rss_kib": 309300,
+      "rss_high_water_kib": 310396,
+      "cpu_ms": 2187.387,
+      "checkpoints": [],
+      "checkpoints_verified": true,
+      "final_model_sha256": "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad",
+      "rep": 0
+    },
+    {
+      "arm": "async",
+      "steps": 96,
+      "checkpoint_every": 16,
+      "submitted": 6,
+      "submit_errors": 0,
+      "step": {
+        "p50_ms": 10.372,
+        "p95_ms": 11.537,
+        "p99_ms": 21.27,
+        "max_ms": 72.608,
+        "n": 96
+      },
+      "submit_pause": {
+        "p50_ms": 0.023,
+        "p95_ms": 0.258,
+        "p99_ms": 0.258,
+        "max_ms": 0.258,
+        "n": 6
+      },
+      "max_outstanding_sampled": 5,
+      "async_worker_threads": 1,
+      "queue_stats": null,
+      "drain_report": null,
+      "drain_ms": 1928.248,
+      "loop_wall_ms": 1098.624,
+      "peak_rss_kib": 338840,
+      "rss_high_water_kib": 339224,
+      "cpu_ms": 3351.899,
+      "checkpoints": [
+        "overlap-async-16",
+        "overlap-async-32",
+        "overlap-async-48",
+        "overlap-async-64",
+        "overlap-async-80",
+        "overlap-async-96"
+      ],
+      "checkpoints_verified": true,
+      "final_model_sha256": "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad",
+      "rep": 0
+    },
+    {
+      "arm": "queue",
+      "steps": 96,
+      "checkpoint_every": 16,
+      "submitted": 6,
+      "submit_errors": 0,
+      "step": {
+        "p50_ms": 10.381,
+        "p95_ms": 12.679,
+        "p99_ms": 13.652,
+        "max_ms": 15.556,
+        "n": 96
+      },
+      "submit_pause": {
+        "p50_ms": 197.918,
+        "p95_ms": 262.0,
+        "p99_ms": 262.0,
+        "max_ms": 262.0,
+        "n": 6
+      },
+      "max_outstanding_sampled": 2,
+      "async_worker_threads": 0,
+      "queue_stats": {
+        "saves": 6,
+        "services_started": 1,
+        "idempotent_recoveries": 0,
+        "writable_handle_opens": 0,
+        "submitted": 6,
+        "admitted": 6,
+        "completed": 6,
+        "failed": 0,
+        "cancelled_before_start": 0,
+        "admission_refusals": 0,
+        "admission_waits": 6,
+        "admission_wait_ms_total": 913.6451289523393,
+        "admission_wait_ms_max": 261.8789159459993,
+        "queue_high_water": 2,
+        "staged_bytes_high_water": 9946720,
+        "largest_admission_bytes": 4973360,
+        "unpriced_admissions": 0
+      },
+      "drain_report": {
+        "schema": "weft.checkpoint.queue.drain.v1",
+        "timed_out": false,
+        "admitted": 6,
+        "completed": 6,
+        "failed": 0,
+        "cancelled_before_start": 0,
+        "unfinished": 0,
+        "outstanding": 0,
+        "pending": 0,
+        "no_silent_skips": true,
+        "stats": {
+          "saves": 6,
+          "services_started": 1,
+          "idempotent_recoveries": 0,
+          "writable_handle_opens": 0,
+          "submitted": 6,
+          "admitted": 6,
+          "completed": 6,
+          "failed": 0,
+          "cancelled_before_start": 0,
+          "admission_refusals": 0,
+          "admission_waits": 6,
+          "admission_wait_ms_total": 913.6451289523393,
+          "admission_wait_ms_max": 261.8789159459993,
+          "queue_high_water": 2,
+          "staged_bytes_high_water": 9946720,
+          "largest_admission_bytes": 4973360,
+          "unpriced_admissions": 0
+        },
+        "tickets": [
+          {
+            "index": 1,
+            "checkpoint_id": "overlap-queue-16",
+            "status": "completed",
+            "estimate_bytes": 4973360,
+            "admission_wait_ms": 0.011,
+            "completion_ms": 574.832,
+            "error_class": null,
+            "error": null
+          },
+          {
+            "index": 2,
+            "checkpoint_id": "overlap-queue-32",
+            "status": "completed",
+            "estimate_bytes": 4973360,
+            "admission_wait_ms": 0.011,
+            "completion_ms": 839.937,
+            "error_class": null,
+            "error": null
+          },
+          {
+            "index": 3,
+            "checkpoint_id": "overlap-queue-48",
+            "status": "completed",
+            "estimate_bytes": 4973360,
+            "admission_wait_ms": 229.637,
+            "completion_ms": 1071.559,
+            "error_class": null,
+            "error": null
+          },
+          {
+            "index": 4,
+            "checkpoint_id": "overlap-queue-64",
+            "status": "completed",
+            "estimate_bytes": 4973360,
+            "admission_wait_ms": 261.879,
+            "completion_ms": 1042.137,
+            "error_class": null,
+            "error": null
+          },
+          {
+            "index": 5,
+            "checkpoint_id": "overlap-queue-80",
+            "status": "completed",
+            "estimate_bytes": 4973360,
+            "admission_wait_ms": 224.273,
+            "completion_ms": 971.503,
+            "error_class": null,
+            "error": null
+          },
+          {
+            "index": 6,
+            "checkpoint_id": "overlap-queue-96",
+            "status": "completed",
+            "estimate_bytes": 4973360,
+            "admission_wait_ms": 197.835,
+            "completion_ms": 936.569,
+            "error_class": null,
+            "error": null
+          }
+        ]
+      },
+      "drain_ms": 740.502,
+      "loop_wall_ms": 1970.621,
+      "peak_rss_kib": 338840,
+      "rss_high_water_kib": 337116,
+      "cpu_ms": 4447.779,
+      "checkpoints": [
+        "overlap-queue-16",
+        "overlap-queue-32",
+        "overlap-queue-48",
+        "overlap-queue-64",
+        "overlap-queue-80",
+        "overlap-queue-96"
+      ],
+      "checkpoints_verified": true,
+      "final_model_sha256": "6b6ffb8c171b82ba39b6bcbe897c6fd3f5b13ddbbffa07dde33d6dacd6fe5fad",
+      "rep": 0
+    }
+  ],
+  "checks": {
+    "same_trajectory_all_arms": true,
+    "checkpoints_verify": true,
+    "queue_bound_respected": true,
+    "staging_bound_respected": true,
+    "no_unbounded_rss_growth": true,
+    "single_writer_collision_observed": true
+  },
+  "losses": [
+    "The baseline step is CPU-bound and only ~10 ms; a shorter step would make the same save look larger.",
+    "The async arm's outstanding-save count is sampled after each step, not continuously.",
+    "RSS is the process high-water mark; the kernel may not return freed pages during a run.",
+    "Two per-call async saves on one store collide: the store is single-writer (see unsynchronized_probe).",
+    "No GPU exists in this court, so GPU idle overlap is unmeasured."
+  ],
+  "result": "pass"
+}

@@ -1,0 +1,124 @@
+{
+ "schema": "weft.maintenance-court/v1",
+ "stamp": "20261115T202056Z",
+ "generated_utc": "20261115T202056Z",
+ "environment": {
+  "image": "weft/rust-court:1",
+  "image_id": null,
+  "kernel": null,
+  "memory": null,
+  "cpus": null,
+  "pids": null,
+  "revisions": {
+   "WeftFS": "b0638ef348cb6b416e42833aaa779435068e38f6",
+   "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+   "WeftCodec-Go": "d45fcb4c92f3302b1dfcab66e98ef63394040fe0",
+   "WeftFS-Go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+  }
+ },
+ "checks": [
+  {
+   "name": "tests/maintenance.rs",
+   "pass": true,
+   "detail": "8 passed, 0 failed"
+  },
+  {
+   "detail": "status=complete reclaimed=1080806B batches=5 wall=1804ms duty=10%",
+   "name": "maintenance completed under the declared budget",
+   "pass": true
+  },
+  {
+   "detail": "verify --full on the treated store",
+   "name": "no live artifact was lost under maintenance",
+   "pass": true
+  },
+  {
+   "detail": "killed_signal=None state_before_passes=1 cursor=64 after_status=complete verify=clean",
+   "name": "a SIGKILLed pass loses no reachable artifact",
+   "pass": true
+  },
+  {
+   "detail": "resumed=true passes 1 -> 5 cursor 64 -> 502 reclaimed_total=1080806",
+   "name": "the restart resumes the persisted progress",
+   "pass": true
+  },
+  {
+   "detail": "a=1080806 b=0 sum=1080806 planned=1080806 stderr=[\"exit=Some(0) stderr=\\\"\\\"\", \"exit=Some(0) stderr=\\\"\\\"\"]",
+   "name": "two compactors reclaim each blob once",
+   "pass": true
+  },
+  {
+   "detail": "120 live artifacts, verify --full clean",
+   "name": "two compactors lose no reachable artifact",
+   "pass": true
+  }
+ ],
+ "passed": 7,
+ "failed": 0,
+ "result": "pass",
+ "metrics": {
+  "compactors": {
+   "double_free": false,
+   "planned_bytes": 1080806,
+   "reclaimed_a": 1080806,
+   "reclaimed_b": 0,
+   "sum": 1080806
+  },
+  "interference": {
+   "control": {
+    "max_ns": 29495,
+    "p50_ns": 12032,
+    "p95_ns": 13215,
+    "p99_ns": 14327,
+    "samples": 12000
+   },
+   "declared_bytes_per_second": 4194304,
+   "declared_duty_percent": 10,
+   "maintenance_wall_ms": 1804,
+   "measured_bytes_per_second": 599102,
+   "measured_duty_percent": 10,
+   "p50_ratio": 1.0133809840425532,
+   "p95_ratio": 0.9900870223231176,
+   "p99_ratio": 1.1195644587143156,
+   "reads_each": 12000,
+   "treated": {
+    "max_ns": 100497,
+    "p50_ns": 12193,
+    "p95_ns": 13084,
+    "p99_ns": 16040,
+    "samples": 12000
+   }
+  },
+  "restart": {
+   "progress_after": {
+    "candidates": 502,
+    "cursor": 502,
+    "deferred": 0,
+    "last_duty_percent": 10,
+    "last_rate_bytes_per_second": 1513305,
+    "passes": 5,
+    "plan_root": "69015b9ecd5e09a857691076c3742414fed2d3d3c234a4d72550ceccd2d53c7e",
+    "reclaimed_blobs": 502,
+    "reclaimed_bytes": 1080806,
+    "status": "complete"
+   },
+   "progress_before": {
+    "candidates": 502,
+    "cursor": 64,
+    "deferred": 0,
+    "last_duty_percent": 10,
+    "last_rate_bytes_per_second": 12283442,
+    "passes": 1,
+    "plan_root": "69015b9ecd5e09a857691076c3742414fed2d3d3c234a4d72550ceccd2d53c7e",
+    "reclaimed_blobs": 64,
+    "reclaimed_bytes": 262144,
+    "status": "running"
+   },
+   "reclaimed_after_restart": 818662,
+   "resumed": true
+  }
+ },
+ "method": "120 live 4 KiB artifacts and 600 unlinked 8 KiB files (distinct content, no automatic checkpoint, 4 KiB chunks). Interference: 12,000 whole-object reads against a control store and the same reads while a maintenance pass runs at a declared 4 MiB/s and 10% duty cycle on 4 CPUs. Restart: a child process is SIGKILLed after its first persisted batch, then the store is reopened and resumed. Compactors: two optimistic-mode child processes sweep the same plan; their deletions must sum to the plan exactly.",
+ "log": "bench/receipts/maintenance-20261115T202056Z.log",
+ "log_sha256": "650fe1321e9bd528a96881c11ace5efc93e2ee12861753c542acd21133c46d20"
+}

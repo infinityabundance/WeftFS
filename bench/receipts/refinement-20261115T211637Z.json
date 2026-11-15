@@ -1,0 +1,934 @@
+{
+  "accepted_histories": [
+    {
+      "accepted": true,
+      "checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable"
+      ],
+      "counts": {
+        "acks": 1,
+        "conflict_aborts": 3,
+        "fully_checked": 1,
+        "precondition_aborts": 12,
+        "publishes": 1,
+        "reads": 2,
+        "releases": 1,
+        "starts": 16
+      },
+      "domains": [
+        {
+          "abstracted": [
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "65edce9e843a293169be93c0842ae454"
+            },
+            {
+              "action": "Revalidate",
+              "class": "Conflict",
+              "tx": "5442103256a720f8f33f602eb08e38f0"
+            },
+            {
+              "action": "Revalidate",
+              "class": "Conflict",
+              "tx": "5f1957afa9250ae9fdca52f71fa20cec"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "1d99d0a8aaf0b9cdbaa0a89538c94c86"
+            },
+            {
+              "action": "Revalidate",
+              "class": "Conflict",
+              "tx": "7f55b8aece634408caa1c7339b3cf808"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "503ffb9e4f3628ddcae1634f0f9b9b69"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "8e6031c4c867ea2f3238cfd3ce29b710"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "a03090a58746c912ddf8be4b42a1a0ec"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "658ef9881b5f505b5ff1277199e0b98d"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "e66a2377701b5bc50857668e9b9fcec4"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "925e701ca384ca053ab95844b0c206ed"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "05eed1f492e35cbd72677c1c134f8d48"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "d58f1932da8538f159861cbfe09c43fe"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "12fa5c49465b38bf6e6174c79f3898d0"
+            },
+            {
+              "action": "Start",
+              "class": "precondition",
+              "tx": "e03941f37ff415ed6dd36332a528d11a"
+            }
+          ],
+          "checks": {
+            "acks": 1,
+            "conflict_aborts": 3,
+            "fully_checked": 1,
+            "precondition_aborts": 12,
+            "publishes": 1,
+            "reads": 2,
+            "releases": 1,
+            "starts": 16
+          },
+          "committed": 1,
+          "domain": "(global)",
+          "gc_observations": 0,
+          "head": 2,
+          "keys": 33,
+          "reads": 2,
+          "rejected": 15,
+          "silent": 0,
+          "transactions": 16
+        }
+      ],
+      "history": "bench/receipts/refinement-20261115T211637Z-h2.jsonl",
+      "invariants": [],
+      "not_checked": [
+        "TypeOK (holds by construction of the replay)",
+        "CommitOrderIsStable (chain indices are generations)",
+        "liveness, starvation, fairness, retry-count liveness",
+        "any cross-domain (MW3) property",
+        "value-level read consistency (verifier/history_check.py owns it)",
+        "blind overwrite of keys that existed before the trace (unmodelled prefix)",
+        "the retry action subset: an exactly-observed refresh point for attempts > 1"
+      ],
+      "records": 36,
+      "rejections": []
+    },
+    {
+      "accepted": true,
+      "checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable"
+      ],
+      "counts": {
+        "abstracted_retries": 14,
+        "acks": 24,
+        "bounded_checked": 3,
+        "fully_checked": 21,
+        "publishes": 24,
+        "reads": 8,
+        "releases": 24,
+        "starts": 24
+      },
+      "domains": [
+        {
+          "abstracted": [],
+          "checks": {
+            "abstracted_retries": 14,
+            "acks": 24,
+            "bounded_checked": 3,
+            "fully_checked": 21,
+            "publishes": 24,
+            "reads": 8,
+            "releases": 24,
+            "starts": 24
+          },
+          "committed": 24,
+          "domain": "(global)",
+          "gc_observations": 0,
+          "head": 25,
+          "keys": 72,
+          "reads": 8,
+          "rejected": 0,
+          "silent": 0,
+          "transactions": 24
+        }
+      ],
+      "history": "bench/receipts/refinement-20261115T211637Z-h1.jsonl",
+      "invariants": [],
+      "not_checked": [
+        "TypeOK (holds by construction of the replay)",
+        "CommitOrderIsStable (chain indices are generations)",
+        "liveness, starvation, fairness, retry-count liveness",
+        "any cross-domain (MW3) property",
+        "value-level read consistency (verifier/history_check.py owns it)",
+        "blind overwrite of keys that existed before the trace (unmodelled prefix)",
+        "the retry action subset: an exactly-observed refresh point for attempts > 1"
+      ],
+      "records": 64,
+      "rejections": []
+    },
+    {
+      "accepted": true,
+      "checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable"
+      ],
+      "counts": {
+        "acks": 2,
+        "fully_checked": 2,
+        "publishes": 2,
+        "releases": 2,
+        "starts": 2
+      },
+      "domains": [
+        {
+          "abstracted": [],
+          "checks": {
+            "acks": 2,
+            "fully_checked": 2,
+            "publishes": 2,
+            "releases": 2,
+            "starts": 2
+          },
+          "committed": 2,
+          "domain": "(global)",
+          "gc_observations": 0,
+          "head": 3,
+          "keys": 3,
+          "reads": 0,
+          "rejected": 0,
+          "silent": 0,
+          "transactions": 2
+        }
+      ],
+      "history": "bench/receipts/refinement-20261115T211637Z-h3.jsonl",
+      "invariants": [],
+      "not_checked": [
+        "TypeOK (holds by construction of the replay)",
+        "CommitOrderIsStable (chain indices are generations)",
+        "liveness, starvation, fairness, retry-count liveness",
+        "any cross-domain (MW3) property",
+        "value-level read consistency (verifier/history_check.py owns it)",
+        "blind overwrite of keys that existed before the trace (unmodelled prefix)",
+        "the retry action subset: an exactly-observed refresh point for attempts > 1"
+      ],
+      "records": 6,
+      "rejections": []
+    },
+    {
+      "accepted": true,
+      "checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable"
+      ],
+      "counts": {
+        "abstracted_retries": 4,
+        "acks": 12,
+        "bounded_checked": 2,
+        "fully_checked": 10,
+        "publishes": 12,
+        "reads": 4,
+        "releases": 12,
+        "starts": 12
+      },
+      "domains": [
+        {
+          "abstracted": [],
+          "checks": {
+            "abstracted_retries": 4,
+            "acks": 8,
+            "bounded_checked": 2,
+            "fully_checked": 6,
+            "publishes": 8,
+            "reads": 4,
+            "releases": 8,
+            "starts": 8
+          },
+          "committed": 8,
+          "domain": "e475e07ecb20753ca1e1aee90cc1cf711757d7a69024b93bc2e86668c946d997",
+          "gc_observations": 0,
+          "head": 9,
+          "keys": 24,
+          "reads": 4,
+          "rejected": 0,
+          "silent": 0,
+          "transactions": 8
+        },
+        {
+          "abstracted": [],
+          "checks": {
+            "acks": 4,
+            "fully_checked": 4,
+            "publishes": 4,
+            "releases": 4,
+            "starts": 4
+          },
+          "committed": 4,
+          "domain": "c999c0071b5c9ef92afcbcd45f90177fac17882745f660f2f394c56285547c6a",
+          "gc_observations": 0,
+          "head": 5,
+          "keys": 12,
+          "reads": 0,
+          "rejected": 0,
+          "silent": 0,
+          "transactions": 4
+        }
+      ],
+      "history": "bench/receipts/refinement-20261115T211637Z-h4.jsonl",
+      "invariants": [],
+      "not_checked": [
+        "TypeOK (holds by construction of the replay)",
+        "CommitOrderIsStable (chain indices are generations)",
+        "liveness, starvation, fairness, retry-count liveness",
+        "any cross-domain (MW3) property",
+        "value-level read consistency (verifier/history_check.py owns it)",
+        "blind overwrite of keys that existed before the trace (unmodelled prefix)",
+        "the retry action subset: an exactly-observed refresh point for attempts > 1"
+      ],
+      "records": 32,
+      "rejections": []
+    }
+  ],
+  "assumptions": [
+    "one conflict domain = one model instance; no cross-domain property is claimed",
+    "Start is placed at the publication of the generation the transaction observed",
+    "the unmodelled prefix (store init and anything before the first observed generation) wrote no modelled key",
+    "an idempotent response collapses a crashed attempt and its retry into one Start/Publish/Ack",
+    "Busy/quota/capability/id-reuse aborts are abstracted as Start+CrashPrepared (the model has no such guards)",
+    "the model's Retry action is not used by the mapping: the last refresh point of a committed transaction is not in the history, so attempts==1 is checked exactly and attempts>1 only by the counting bound",
+    "GC is not observed by the store; gc-observe records exist only to exercise the GC invariants"
+  ],
+  "checker": "verifier/refinement_check.py",
+  "checks": [
+    {
+      "check": "correct_a_tlc_completed",
+      "detail": "Finished in 01s at (2026-11-15 21:16:49)",
+      "ok": true
+    },
+    {
+      "check": "correct_a_tlc_no_error",
+      "detail": {
+        "exit": 0,
+        "violated": null
+      },
+      "ok": true
+    },
+    {
+      "check": "correct_a_distinct_states_match",
+      "detail": {
+        "enumerator": 28713,
+        "tlc": 28713
+      },
+      "ok": true
+    },
+    {
+      "check": "correct_a_generated_states_match",
+      "detail": {
+        "enumerator": 246445,
+        "tlc": 246445
+      },
+      "ok": true
+    },
+    {
+      "check": "correct_a_enumerator_finds_no_violation",
+      "detail": [],
+      "ok": true
+    },
+    {
+      "check": "correct_b_tlc_completed",
+      "detail": "Finished in 06s at (2026-11-15 21:16:55)",
+      "ok": true
+    },
+    {
+      "check": "correct_b_tlc_no_error",
+      "detail": {
+        "exit": 0,
+        "violated": null
+      },
+      "ok": true
+    },
+    {
+      "check": "correct_b_distinct_states_match",
+      "detail": {
+        "enumerator": 176427,
+        "tlc": 176427
+      },
+      "ok": true
+    },
+    {
+      "check": "correct_b_generated_states_match",
+      "detail": {
+        "enumerator": 1772785,
+        "tlc": 1772785
+      },
+      "ok": true
+    },
+    {
+      "check": "correct_b_enumerator_finds_no_violation",
+      "detail": [],
+      "ok": true
+    },
+    {
+      "check": "blind_tlc_reports_no_blind_overwrite",
+      "detail": {
+        "exit": 12,
+        "violated": "NoBlindOverwrite"
+      },
+      "ok": true
+    },
+    {
+      "check": "blind_enumerator_reports_no_blind_overwrite",
+      "detail": [
+        "NoBlindOverwrite"
+      ],
+      "ok": true
+    },
+    {
+      "check": "gc_tlc_reports_LivePreparedDurable",
+      "detail": {
+        "exit": 12,
+        "violated": "LivePreparedDurable"
+      },
+      "ok": true
+    },
+    {
+      "check": "gc_enumerator_reports_LivePreparedDurable",
+      "detail": [
+        "CommittedBlobsDurable",
+        "GcNeverReclaimsReachable",
+        "LivePreparedDurable"
+      ],
+      "ok": true
+    },
+    {
+      "check": "gc_tlc_reports_CommittedBlobsDurable",
+      "detail": {
+        "exit": 12,
+        "violated": "CommittedBlobsDurable"
+      },
+      "ok": true
+    },
+    {
+      "check": "gc_enumerator_reports_CommittedBlobsDurable",
+      "detail": [
+        "CommittedBlobsDurable",
+        "GcNeverReclaimsReachable",
+        "LivePreparedDurable"
+      ],
+      "ok": true
+    },
+    {
+      "check": "gc_tlc_reports_GcNeverReclaimsReachable",
+      "detail": {
+        "exit": 12,
+        "violated": "GcNeverReclaimsReachable"
+      },
+      "ok": true
+    },
+    {
+      "check": "gc_enumerator_reports_GcNeverReclaimsReachable",
+      "detail": [
+        "CommittedBlobsDurable",
+        "GcNeverReclaimsReachable",
+        "LivePreparedDurable"
+      ],
+      "ok": true
+    },
+    {
+      "check": "real_histories_accepted",
+      "detail": [
+        "bench/receipts/refinement-20261115T211637Z-h2.jsonl",
+        "bench/receipts/refinement-20261115T211637Z-h1.jsonl",
+        "bench/receipts/refinement-20261115T211637Z-h3.jsonl",
+        "bench/receipts/refinement-20261115T211637Z-h4.jsonl"
+      ],
+      "ok": true
+    },
+    {
+      "check": "real_history_mutants_all_rejected",
+      "detail": [
+        {
+          "detected": [
+            "NoBlindOverwrite"
+          ],
+          "expected_invariant": "NoBlindOverwrite",
+          "mutant": "blind_overwrite",
+          "ok": true
+        },
+        {
+          "detected": [
+            "NoLostAck"
+          ],
+          "expected_invariant": "NoLostAck",
+          "mutant": "lost_ack",
+          "ok": true
+        },
+        {
+          "detected": [
+            "HeadWellFormed"
+          ],
+          "expected_invariant": "HeadWellFormed",
+          "mutant": "dropped_commit",
+          "ok": true
+        },
+        {
+          "detected": [
+            "CommittedBlobsDurable",
+            "GcNeverReclaimsReachable"
+          ],
+          "expected_invariant": "GcNeverReclaimsReachable",
+          "mutant": "gc_reclaims_reachable",
+          "ok": true
+        },
+        {
+          "detected": [
+            "NoPartial",
+            "ReaderIsAPrefix"
+          ],
+          "expected_invariant": "NoPartial",
+          "mutant": "read_above_head",
+          "ok": true
+        }
+      ],
+      "ok": true
+    },
+    {
+      "check": "invariant_fixtures_all_rejected",
+      "detail": [
+        "conflict_without_write",
+        "gc_reclaims_reachable",
+        "head_well_formed",
+        "live_prepared_durable",
+        "no_blind_overwrite",
+        "no_lost_ack",
+        "no_partial",
+        "retry_bound_overrun"
+      ],
+      "ok": true
+    },
+    {
+      "check": "invariant_coverage",
+      "detail": [
+        "GcNeverReclaimsReachable",
+        "HeadWellFormed",
+        "LivePreparedDurable",
+        "NoBlindOverwrite",
+        "NoLostAck",
+        "NoPartial"
+      ],
+      "ok": true
+    },
+    {
+      "check": "blind_overwrite_fully_checked",
+      "detail": {
+        "abstracted_retries": 18,
+        "acks": 39,
+        "bounded_checked": 5,
+        "conflict_aborts": 3,
+        "fully_checked": 34,
+        "precondition_aborts": 12,
+        "publishes": 39,
+        "reads": 14,
+        "releases": 39,
+        "starts": 54
+      },
+      "ok": true
+    }
+  ],
+  "checks_passed": 23,
+  "checks_total": 23,
+  "configurations": {
+    "correct_a": {
+      "committers": 2,
+      "keys": 1,
+      "max_attempts": 1,
+      "max_gen": 2
+    },
+    "correct_b": {
+      "committers": 2,
+      "keys": 2,
+      "max_attempts": 0,
+      "max_gen": 2
+    },
+    "flaws": {
+      "committers": 2,
+      "keys": 1,
+      "max_attempts": 1,
+      "max_gen": 2
+    }
+  },
+  "enumeration": {
+    "blind": {
+      "config": {
+        "committers": [
+          "c1",
+          "c2"
+        ],
+        "keys": [
+          "k1"
+        ],
+        "max_attempts": 1,
+        "max_gen": 2
+      },
+      "distinct_states": 49625,
+      "flaw": "blind",
+      "invariants_checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable",
+        "CommitOrderIsStable"
+      ],
+      "module": "WeftMultiWriterBuggy",
+      "states_generated": 433905,
+      "transitions": 433904,
+      "violations": [
+        "NoBlindOverwrite"
+      ]
+    },
+    "correct_a": {
+      "config": {
+        "committers": [
+          "c1",
+          "c2"
+        ],
+        "keys": [
+          "k1"
+        ],
+        "max_attempts": 1,
+        "max_gen": 2
+      },
+      "distinct_states": 28713,
+      "flaw": "none",
+      "invariants_checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable",
+        "CommitOrderIsStable"
+      ],
+      "module": "WeftMultiWriter",
+      "states_generated": 246445,
+      "transitions": 246444,
+      "violations": []
+    },
+    "correct_b": {
+      "config": {
+        "committers": [
+          "c1",
+          "c2"
+        ],
+        "keys": [
+          "k1",
+          "k2"
+        ],
+        "max_attempts": 0,
+        "max_gen": 2
+      },
+      "distinct_states": 176427,
+      "flaw": "none",
+      "invariants_checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable",
+        "CommitOrderIsStable"
+      ],
+      "module": "WeftMultiWriter",
+      "states_generated": 1772785,
+      "transitions": 1772784,
+      "violations": []
+    },
+    "gc": {
+      "config": {
+        "committers": [
+          "c1",
+          "c2"
+        ],
+        "keys": [
+          "k1"
+        ],
+        "max_attempts": 1,
+        "max_gen": 2
+      },
+      "distinct_states": 29617,
+      "flaw": "gc",
+      "invariants_checked": [
+        "HeadWellFormed",
+        "NoPartial",
+        "NoLostAck",
+        "NoBlindOverwrite",
+        "CommittedBlobsDurable",
+        "LivePreparedDurable",
+        "ReaderIsAPrefix",
+        "GcNeverReclaimsReachable",
+        "CommitOrderIsStable"
+      ],
+      "module": "WeftMultiWriterGcBuggy",
+      "states_generated": 252765,
+      "transitions": 252764,
+      "violations": [
+        "CommittedBlobsDurable",
+        "GcNeverReclaimsReachable",
+        "LivePreparedDurable"
+      ]
+    }
+  },
+  "enumerator": "verifier/refinement_crosscheck.py",
+  "environment": {
+    "court": "weft/fuse-court:1",
+    "kernel": "7.3.3-1-cachyos",
+    "limit_cpus": "4",
+    "limit_memory": "3g",
+    "limit_pids": "1024"
+  },
+  "generated_at": "20261115T211637Z",
+  "invariant_fixtures": [
+    {
+      "detected": [
+        "NoBlindOverwrite"
+      ],
+      "expected_invariant": "NoBlindOverwrite",
+      "fixture": "conflict_without_write",
+      "ok": true
+    },
+    {
+      "detected": [
+        "CommittedBlobsDurable",
+        "GcNeverReclaimsReachable"
+      ],
+      "expected_invariant": "GcNeverReclaimsReachable",
+      "fixture": "gc_reclaims_reachable",
+      "ok": true
+    },
+    {
+      "detected": [
+        "HeadWellFormed"
+      ],
+      "expected_invariant": "HeadWellFormed",
+      "fixture": "head_well_formed",
+      "ok": true
+    },
+    {
+      "detected": [
+        "LivePreparedDurable"
+      ],
+      "expected_invariant": "LivePreparedDurable",
+      "fixture": "live_prepared_durable",
+      "ok": true
+    },
+    {
+      "detected": [
+        "NoBlindOverwrite"
+      ],
+      "expected_invariant": "NoBlindOverwrite",
+      "fixture": "no_blind_overwrite",
+      "ok": true
+    },
+    {
+      "detected": [
+        "NoLostAck"
+      ],
+      "expected_invariant": "NoLostAck",
+      "fixture": "no_lost_ack",
+      "ok": true
+    },
+    {
+      "detected": [
+        "NoPartial",
+        "ReaderIsAPrefix"
+      ],
+      "expected_invariant": "NoPartial",
+      "fixture": "no_partial",
+      "ok": true
+    },
+    {
+      "detected": [
+        "NoBlindOverwrite"
+      ],
+      "expected_invariant": "NoBlindOverwrite",
+      "fixture": "retry_bound_overrun",
+      "ok": true
+    }
+  ],
+  "mapping_document": "verification/REFINEMENT.md",
+  "model": "verification/tla/WeftMultiWriter.tla (+Buggy, +GcBuggy) with the T100 Release action",
+  "not_established": [
+    "full refinement (T100 is one bounded projection, not a proof)",
+    "unbounded verification",
+    "liveness, fairness, starvation freedom",
+    "any cross-domain (MW3) safety property",
+    "value-level read consistency (verifier/history_check.py owns it)",
+    "blind overwrite of keys that existed before the trace",
+    "that the Rust implementation's physical commit protocol matches the model below the history channel"
+  ],
+  "real_history_mutants": [
+    {
+      "detected": [
+        "NoBlindOverwrite"
+      ],
+      "expected_invariant": "NoBlindOverwrite",
+      "mutant": "blind_overwrite",
+      "ok": true
+    },
+    {
+      "detected": [
+        "NoLostAck"
+      ],
+      "expected_invariant": "NoLostAck",
+      "mutant": "lost_ack",
+      "ok": true
+    },
+    {
+      "detected": [
+        "HeadWellFormed"
+      ],
+      "expected_invariant": "HeadWellFormed",
+      "mutant": "dropped_commit",
+      "ok": true
+    },
+    {
+      "detected": [
+        "CommittedBlobsDurable",
+        "GcNeverReclaimsReachable"
+      ],
+      "expected_invariant": "GcNeverReclaimsReachable",
+      "mutant": "gc_reclaims_reachable",
+      "ok": true
+    },
+    {
+      "detected": [
+        "NoPartial",
+        "ReaderIsAPrefix"
+      ],
+      "expected_invariant": "NoPartial",
+      "mutant": "read_above_head",
+      "ok": true
+    }
+  ],
+  "repositories": [
+    {
+      "name": "WeftFS",
+      "revision": "b0638ef348cb6b416e42833aaa779435068e38f6"
+    }
+  ],
+  "result": "pass",
+  "revision": "b0638ef348cb6b416e42833aaa779435068e38f6",
+  "role": "T100 bounded refinement link: weft.history.v1 -> WeftMultiWriter.tla",
+  "schema": "weftfs.refinement/1",
+  "tlc": {
+    "blind": {
+      "completed": true,
+      "distinct_states": 234,
+      "exit_code": 12,
+      "expect": "NoBlindOverwrite",
+      "last_line": "Finished in 00s at (2026-11-15 21:16:56)",
+      "run": "blind",
+      "states_generated": 590,
+      "violated_invariant": "NoBlindOverwrite"
+    },
+    "correct_a": {
+      "completed": true,
+      "distinct_states": 28713,
+      "exit_code": 0,
+      "expect": "no-error",
+      "last_line": "Finished in 01s at (2026-11-15 21:16:49)",
+      "run": "correct_a",
+      "states_generated": 246445,
+      "violated_invariant": null
+    },
+    "correct_b": {
+      "completed": true,
+      "distinct_states": 176427,
+      "exit_code": 0,
+      "expect": "no-error",
+      "last_line": "Finished in 06s at (2026-11-15 21:16:55)",
+      "run": "correct_b",
+      "states_generated": 1772785,
+      "violated_invariant": null
+    },
+    "gc-CommittedBlobsDurable": {
+      "completed": true,
+      "distinct_states": 38,
+      "exit_code": 12,
+      "expect": "CommittedBlobsDurable",
+      "last_line": "Finished in 00s at (2026-11-15 21:16:57)",
+      "run": "gc-CommittedBlobsDurable",
+      "states_generated": 65,
+      "violated_invariant": "CommittedBlobsDurable"
+    },
+    "gc-GcNeverReclaimsReachable": {
+      "completed": true,
+      "distinct_states": 9,
+      "exit_code": 12,
+      "expect": "GcNeverReclaimsReachable",
+      "last_line": "Finished in 00s at (2026-11-15 21:16:58)",
+      "run": "gc-GcNeverReclaimsReachable",
+      "states_generated": 14,
+      "violated_invariant": "GcNeverReclaimsReachable"
+    },
+    "gc-LivePreparedDurable": {
+      "completed": true,
+      "distinct_states": 9,
+      "exit_code": 12,
+      "expect": "LivePreparedDurable",
+      "last_line": "Finished in 00s at (2026-11-15 21:16:57)",
+      "run": "gc-LivePreparedDurable",
+      "states_generated": 14,
+      "violated_invariant": "LivePreparedDurable"
+    }
+  }
+}

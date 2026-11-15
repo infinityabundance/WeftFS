@@ -1,0 +1,179 @@
+{
+  "cache": {
+    "cold": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": true,
+      "generation": 297,
+      "head": "c291d294c8a9bd2eb67d6aaf2846f11ae6b489afe5d70cf7dd9b38cf339d8d44",
+      "hit": false,
+      "key": "5ddaea6dae493f7dd8685e150e8f0362bb80640fa76022653f14e6893138b281",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.272207,
+      "rejected": null,
+      "state_digest": "e10716419c8a1d037314e94e6b4fbaf64a7464e63fae4513ea2fabcaa17d37ca",
+      "verify_ms": 43136.038855,
+      "write_note": null
+    },
+    "grant_invalidated": {
+      "authority_digest": "44d2051f87eb2d370b24eab58294339b72feaaed49bc50104ffb402dbebd5460",
+      "entry_written": true,
+      "generation": 302,
+      "head": "5c205852b77e1d0c3ff21bd2ad5470c0b8ef99090bb6d2ddc9397a90223b47ad",
+      "hit": false,
+      "key": "c3b016712f21382f231c31856877beee5e29457a0a709f2faef9d39b3c096141",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.328351,
+      "rejected": null,
+      "state_digest": "0c01ebdebf2825698ca02bf6d57e1e3a31c0fc388b3373dc737822a72b2e0007",
+      "verify_ms": 43336.844317999996,
+      "write_note": null
+    },
+    "policy_invalidated": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": true,
+      "generation": 297,
+      "head": "c291d294c8a9bd2eb67d6aaf2846f11ae6b489afe5d70cf7dd9b38cf339d8d44",
+      "hit": false,
+      "key": "60e071a94b3ae6ee873eedf6c0e89c49f9955819105746b386db6af7605a4cd4",
+      "options_digest": "9ca2839807eda5bf720b2f61cdd646d4132c572eb2737bbff3a3bea63cf4a5ca",
+      "plan_ms": 1.2859429999999998,
+      "rejected": null,
+      "state_digest": "e10716419c8a1d037314e94e6b4fbaf64a7464e63fae4513ea2fabcaa17d37ca",
+      "verify_ms": 43140.438035,
+      "write_note": null
+    },
+    "warm_first": {
+      "authority_digest": "64603d452cb1585189e226332b46b2d961f0370ba65fa461fa80d6e935d4a40a",
+      "entry_written": false,
+      "generation": 297,
+      "head": "c291d294c8a9bd2eb67d6aaf2846f11ae6b489afe5d70cf7dd9b38cf339d8d44",
+      "hit": true,
+      "key": "5ddaea6dae493f7dd8685e150e8f0362bb80640fa76022653f14e6893138b281",
+      "options_digest": "8dc0121c2ca625a057f9e21326ff0166395fe4f34811df40f4e5486f46ccb93e",
+      "plan_ms": 1.1460299999999999,
+      "rejected": null,
+      "state_digest": "e10716419c8a1d037314e94e6b4fbaf64a7464e63fae4513ea2fabcaa17d37ca",
+      "verify_ms": 0.0,
+      "write_note": null
+    }
+  },
+  "checks": [
+    {
+      "detail": "cold cache hit=False",
+      "name": "cold_check_missed",
+      "ok": true
+    },
+    {
+      "detail": "warm hit=True",
+      "name": "warm_check_hit",
+      "ok": true
+    },
+    {
+      "detail": "5/5 hits",
+      "name": "repeated_checks_hit",
+      "ok": true
+    },
+    {
+      "detail": "hit=False",
+      "name": "policy_change_invalidates",
+      "ok": true
+    },
+    {
+      "detail": "hit=False",
+      "name": "grant_edit_invalidates",
+      "ok": true
+    },
+    {
+      "detail": "same root, snapshot and bytes",
+      "name": "cold_and_warm_report_identical",
+      "ok": true
+    },
+    {
+      "detail": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+      "name": "source_digest_matches",
+      "ok": true
+    },
+    {
+      "detail": "checkpoint tensors verified",
+      "name": "materialize_exact",
+      "ok": true
+    },
+    {
+      "detail": "second load exact",
+      "name": "warm_materialize_exact",
+      "ok": true
+    },
+    {
+      "detail": "third load exact",
+      "name": "third_materialize_exact",
+      "ok": true
+    }
+  ],
+  "corpus": {
+    "element_bytes": 988065536,
+    "label": "Qwen/Qwen2.5-0.5B BF16, 2 raw shards, cached store copy",
+    "materialized_bytes": 988649840,
+    "not_committed": "weights are referenced from the local cache, never committed",
+    "shard_objects": 580,
+    "source_sha256": "88c142557820ccad55bb59756bfcfcf891de9cc6202816bd346445188a0ed342",
+    "tensors": 290
+  },
+  "environment": {
+    "cache": "warm, single host",
+    "court": "fuse",
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": "4",
+      "memory": "3g",
+      "pids": "1024"
+    },
+    "revisions": {
+      "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+      "WeftCodec-Go": "d45fcb4c92f3302b1dfcab66e98ef63394040fe0",
+      "WeftFS": "b0638ef348cb6b416e42833aaa779435068e38f6",
+      "WeftFS-Go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+    }
+  },
+  "generated_utc": "20261115T194936Z",
+  "ids": {
+    "artifact_root_used_for_grant": "b994ea615dda8db22691f076b9cc035a846fca44b675e47a0ac27d9bdc085870",
+    "context_root_id": "b994ea615dda8db22691f076b9cc035a846fca44b675e47a0ac27d9bdc085870",
+    "selector_id": "ec33241ce98898e2b49304b2b336cd689e0bac3758839dfb1f48b5a0a3bcdf08",
+    "snapshot_id": "88f3149c7546326ad736bacde427fa05325254492106aebef9fc512d5eb08c8d"
+  },
+  "kind": "training-ready-cost",
+  "result": "pass",
+  "split": {
+    "cold_check_reported_ms": 43190.834168,
+    "cold_check_validation_and_decode_ms": 43070,
+    "materialize_cold_reported_decode_ms": 43588,
+    "materialize_cold_write_ms": 12048.694343000003,
+    "time_to_ready_cold_ms": 98827.52851100001,
+    "time_to_ready_warm_ms": 59577.652979,
+    "warm_check_plan_ms": 1.1460299999999999,
+    "warm_check_verify_ms": 0.0
+  },
+  "timings": {
+    "check_cold_ms": 43190.834168,
+    "check_grant_invalidated_ms": 43391.075774,
+    "check_policy_invalidated_ms": 43194.876943,
+    "check_warm_first_ms": 52.581579,
+    "check_warm_max_ms": 55.927035,
+    "check_warm_min_ms": 51.150705,
+    "check_warm_p50_ms": 51.889251,
+    "checkpoint_write_ms": 13392.251726,
+    "context_ms": 59.085719,
+    "materialize_all_ms": [
+      55636.694343,
+      59525.0714,
+      74667.033438
+    ],
+    "materialize_cold_ms": 55636.694343,
+    "materialize_warm2_ms": 74667.033438,
+    "materialize_warm_ms": 59525.0714,
+    "snapshot_ms": 80.887427,
+    "verify_out_ms": 849.320397
+  }
+}

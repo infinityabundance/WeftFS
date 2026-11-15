@@ -1,0 +1,201 @@
+{
+ "court": {
+  "cpus": "4",
+  "image": "weft/fuse-court:1",
+  "kernel": "7.3.3-1-cachyos",
+  "memory": "3g",
+  "note": "one host, warm page cache, CPU only; a single read timing per cell is a point measurement, not a percentile",
+  "pids": "1024",
+  "single_host": true,
+  "warm_cache": true
+ },
+ "default_block": 32,
+ "generated_utc": "2026-11-15T20:20:17Z",
+ "model": "/work/.docker-cache/real-corpus/Qwen2.5-0.5B-Instruct.safetensors",
+ "revision": {
+  "weftcodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+  "weftfs": "b0638ef348cb6b416e42833aaa779435068e38f6"
+ },
+ "schema": "weft.view-court.v1",
+ "tensors": [
+  {
+   "content": "d66b91fa2714308e8ff9b5928dbea89a78895ca00469456b5c48186fe4d68fe2",
+   "dtype": "bf16",
+   "elements": 4358144,
+   "exact_bytes": 8716288,
+   "exact_read_ms": 22.918053,
+   "exact_stored_physical_bytes": 5798764,
+   "exact_zstd19_bytes": 6807034,
+   "logical_root": "0ea7df7abea5e3d5c93b06d79b171d79bb0e5f5a2d375117b4b398db86adeb7e",
+   "shape": [
+    896,
+    4864
+   ],
+   "tensor": "model.layers.0.mlp.down_proj.weight",
+   "views": [
+    {
+     "approximate_root": "baad63412be328e791b817ae0d937f8f67248283c0498ec2ab7b3b021609b9d9",
+     "block": 32,
+     "clipped": 0,
+     "codes_and_scales_raw_bytes": 4902912,
+     "codes_and_scales_zstd19_bytes": 4354632,
+     "codes_bytes": 4358144,
+     "descriptor_bytes": 990,
+     "elements": 4358144,
+     "error_holds": true,
+     "exact_door_class": "UnsupportedRepresentation",
+     "exact_door_message": "refusing exact resolution: object 5b8a76b6fda43fe0297dbd4f517e05de3400f40fa1f8bbd6c5cb9f549e20ca6b is approximate view `q8_32-0` (ViewId 98b5f503fb4b6ee28de7d22b5ade43d515a173755ede9fe6d19f1ae2fb1b287b), not the exact artifact; ask for exact source object:0c1e95990e179521a035738809bb53dfaea59bd1c45712d49b241721c7bbed9b content:d66b91fa2714308e8ff9b5928dbea89a78895ca00469456b5c48186fe4d68fe2 logical:0ea7df7abea5e3d5c93b06d79b171d79bb0e5f5a2d375117b4b398db86adeb7e",
+     "exact_door_refused": true,
+     "exact_object_intact": true,
+     "max_abs_error": 0.001953125,
+     "max_bound": 0.00217611959669739,
+     "overflowed": 0,
+     "physical_vs_exact": 0.769740930998399,
+     "physical_vs_exact_zstd19": 0.6557255333233241,
+     "read_identity_only_ms_vs_exact": 1.9942474607245213,
+     "read_ms_vs_exact": 6.648016871241201,
+     "resolved_bytes_equal_exact": false,
+     "scales_bytes": 544768,
+     "stored_physical_bytes": 4463546,
+     "verify_ok": true,
+     "view_id": "98b5f503fb4b6ee28de7d22b5ade43d515a173755ede9fe6d19f1ae2fb1b287b",
+     "view_read_identity_only_ms": 45.704269,
+     "view_read_ms": 152.35960300000002
+    },
+    {
+     "approximate_root": "24b4bcf9faf781623dcd55f786645e969969a74cea4314a00854565a2332c1e1",
+     "block": 128,
+     "clipped": 0,
+     "codes_and_scales_raw_bytes": 4494336,
+     "codes_and_scales_zstd19_bytes": 4125312,
+     "codes_bytes": 4358144,
+     "descriptor_bytes": 993,
+     "elements": 4358144,
+     "error_holds": true,
+     "exact_door_class": "UnsupportedRepresentation",
+     "exact_door_message": "refusing exact resolution: object 5641fb74798bb4f2651ab7f1da31d8ecbe57298d9eb1610f7de8e2d745484658 is approximate view `q8_128-0` (ViewId c38a473f7527e78222c4f57db47b44b0336ffe863fe38f9ec0e264245e0563fc), not the exact artifact; ask for exact source object:0c1e95990e179521a035738809bb53dfaea59bd1c45712d49b241721c7bbed9b content:d66b91fa2714308e8ff9b5928dbea89a78895ca00469456b5c48186fe4d68fe2 logical:0ea7df7abea5e3d5c93b06d79b171d79bb0e5f5a2d375117b4b398db86adeb7e",
+     "exact_door_refused": true,
+     "exact_object_intact": true,
+     "max_abs_error": 0.001953125,
+     "max_bound": 0.00217611959669739,
+     "overflowed": 0,
+     "physical_vs_exact": 0.7161829658872132,
+     "physical_vs_exact_zstd19": 0.6101006693958044,
+     "read_identity_only_ms_vs_exact": 1.9354647185779696,
+     "read_ms_vs_exact": 6.546424515206418,
+     "resolved_bytes_equal_exact": false,
+     "scales_bytes": 136192,
+     "stored_physical_bytes": 4152976,
+     "verify_ok": true,
+     "view_id": "c38a473f7527e78222c4f57db47b44b0336ffe863fe38f9ec0e264245e0563fc",
+     "view_read_identity_only_ms": 44.357082999999996,
+     "view_read_ms": 150.031304
+    }
+   ]
+  }
+ ],
+ "verify": {
+  "checked_manifests": 7,
+  "checked_objects": 7,
+  "checked_representations": 5,
+  "full": true,
+  "problems": 0
+ },
+ "pythia_cells": [
+  {
+   "content": "82c6a6ba051bb7a8bff5ba073b981884b7b25673be84506b279a7f8472135be7",
+   "dtype": "f32",
+   "elements": 786432,
+   "exact_bytes": 3145728,
+   "exact_read_ms": 5.072794,
+   "exact_stored_physical_bytes": 1829113,
+   "exact_zstd19_bytes": 1658125,
+   "logical_root": "ba54f9db63a3cb363b8e3be0f79442b7a5db6ea604b7e3fa07811793551e5247",
+   "shape": [
+    1536,
+    512
+   ],
+   "tensor": "gpt_neox.layers.0.attention.query_key_value.weight",
+   "views": [
+    {
+     "approximate_root": "b10ea09b311692ff8b227c398ae4e19971b46a12272702a1384ed55fae2e474e",
+     "block": 32,
+     "clipped": 0,
+     "codes_and_scales_raw_bytes": 884736,
+     "codes_and_scales_zstd19_bytes": 809129,
+     "codes_bytes": 786432,
+     "descriptor_bytes": 984,
+     "elements": 786432,
+     "error_holds": true,
+     "exact_door_class": "UnsupportedRepresentation",
+     "exact_door_message": "refusing exact resolution: object 5b8a76b6fda43fe0297dbd4f517e05de3400f40fa1f8bbd6c5cb9f549e20ca6b is approximate view `q8_32-0` (ViewId fc1e359c2b61851d3f25c15b1e093fdf25c4e196c6ed048ae547997ff104a4bc), not the exact artifact; ask for exact source object:23d763c9e13adb93b97797753ebabdc4538e69e45de796e09e389bc27ee17344 content:82c6a6ba051bb7a8bff5ba073b981884b7b25673be84506b279a7f8472135be7 logical:ba54f9db63a3cb363b8e3be0f79442b7a5db6ea604b7e3fa07811793551e5247",
+     "exact_door_refused": true,
+     "exact_object_intact": true,
+     "max_abs_error": 0.0005714241415262222,
+     "max_bound": 0.0005719042383134365,
+     "overflowed": 0,
+     "physical_vs_exact": 0.45356191771640136,
+     "physical_vs_exact_zstd19": 0.5003338107802487,
+     "read_identity_only_ms_vs_exact": 1.9699841941147225,
+     "read_ms_vs_exact": 3.9041616907763252,
+     "resolved_bytes_equal_exact": false,
+     "scales_bytes": 98304,
+     "stored_physical_bytes": 829616,
+     "verify_ok": true,
+     "view_id": "fc1e359c2b61851d3f25c15b1e093fdf25c4e196c6ed048ae547997ff104a4bc",
+     "view_read_identity_only_ms": 9.993324,
+     "view_read_ms": 19.805007999999997
+    },
+    {
+     "approximate_root": "65876d9d8a074821ae3d78e154f9a564961f7071352cd3439554cee61075f320",
+     "block": 128,
+     "clipped": 0,
+     "codes_and_scales_raw_bytes": 811008,
+     "codes_and_scales_zstd19_bytes": 755463,
+     "codes_bytes": 786432,
+     "descriptor_bytes": 986,
+     "elements": 786432,
+     "error_holds": true,
+     "exact_door_class": "UnsupportedRepresentation",
+     "exact_door_message": "refusing exact resolution: object 5641fb74798bb4f2651ab7f1da31d8ecbe57298d9eb1610f7de8e2d745484658 is approximate view `q8_128-0` (ViewId 0abec8847a0220ba50d77fca47af96570b2fa4ef5976bc92d585233746e5de5f), not the exact artifact; ask for exact source object:23d763c9e13adb93b97797753ebabdc4538e69e45de796e09e389bc27ee17344 content:82c6a6ba051bb7a8bff5ba073b981884b7b25673be84506b279a7f8472135be7 logical:ba54f9db63a3cb363b8e3be0f79442b7a5db6ea604b7e3fa07811793551e5247",
+     "exact_door_refused": true,
+     "exact_object_intact": true,
+     "max_abs_error": 0.0005714241415262222,
+     "max_bound": 0.0005719042383134365,
+     "overflowed": 0,
+     "physical_vs_exact": 0.41660630043086455,
+     "physical_vs_exact_zstd19": 0.45956728232189975,
+     "read_identity_only_ms_vs_exact": 1.5888309282813375,
+     "read_ms_vs_exact": 3.860905449738349,
+     "resolved_bytes_equal_exact": false,
+     "scales_bytes": 24576,
+     "stored_physical_bytes": 762020,
+     "verify_ok": true,
+     "view_id": "0abec8847a0220ba50d77fca47af96570b2fa4ef5976bc92d585233746e5de5f",
+     "view_read_identity_only_ms": 8.059811999999999,
+     "view_read_ms": 19.585577999999998
+    }
+   ]
+  }
+ ],
+ "stamp": "20261115T194936Z",
+ "raw_log": "bench/receipts/view-identity-20261115T194936Z.log",
+ "configuration": {
+  "qwen_tensors": [
+   "model.layers.0.mlp.down_proj.weight"
+  ],
+  "pythia_tensor": "gpt_neox.layers.0.attention.query_key_value.weight",
+  "blocks": [
+   32,
+   128
+  ]
+ },
+ "checks": {
+  "every_view_bound_holds": true,
+  "every_exact_object_intact": true,
+  "exact_door_refuses_every_view": true,
+  "every_view_is_lossy": true,
+  "store_verify_full_clean": true
+ },
+ "result": "pass"
+}

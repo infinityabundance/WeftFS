@@ -1,0 +1,1972 @@
+{
+  "checks": [
+    {
+      "check": "fixtures_present",
+      "detail": 12,
+      "ok": true
+    },
+    {
+      "check": "every_observed_strategy_exact",
+      "detail": 132,
+      "ok": true
+    },
+    {
+      "check": "recompute_chosen_only_when_exact",
+      "detail": {
+        "chosen": 48,
+        "correct": 48,
+        "fraction": 1.0
+      },
+      "ok": true
+    },
+    {
+      "check": "approximate_never_selected",
+      "detail": {
+        "refusals": 60,
+        "selected": 0
+      },
+      "ok": true
+    },
+    {
+      "check": "mean_utility_regret_within_1pct",
+      "detail": 6.509968207986028e-06,
+      "ok": true
+    },
+    {
+      "check": "fixed_priority_measurably_worse",
+      "detail": {
+        "fixed": 2.325664442408982,
+        "mean_utility": 6.509968207986028e-06
+      },
+      "ok": true
+    }
+  ],
+  "checks_passed": 6,
+  "checks_total": 6,
+  "generated_at": "20261115T213144Z",
+  "measurement": {
+    "configuration": {
+      "best_fixed_order": [
+        "fetch",
+        "recompute",
+        "reconstruct",
+        "decode"
+      ],
+      "corpus": ".docker-cache/real-corpus",
+      "declared_costs": {
+        "decode": 1000.0,
+        "fetch": 100.0,
+        "recompute": 5000.0,
+        "reconstruct": 3000.0
+      },
+      "decode_reps": 3,
+      "fixtures": 12,
+      "heldout_masks": [
+        "1001",
+        "0110",
+        "1101",
+        "1011",
+        "1000"
+      ],
+      "max_tensor_bytes": 1048576,
+      "mean_train_ns": [
+        {
+          "mean_ns": 147719.27777777778,
+          "strategy": "fetch"
+        },
+        {
+          "mean_ns": 3809423.2083333335,
+          "strategy": "decode"
+        },
+        {
+          "mean_ns": 14493022.291666666,
+          "strategy": "reconstruct"
+        },
+        {
+          "mean_ns": 174723.89583333334,
+          "strategy": "recompute"
+        }
+      ],
+      "train_masks": [
+        "1111",
+        "0011",
+        "1100",
+        "1010",
+        "0101",
+        "1110"
+      ]
+    },
+    "contract": {
+      "approximate_candidates": 1,
+      "approximate_refusals_checked": 60,
+      "approximate_selected": 0,
+      "exact_requests": 12,
+      "gate": "weftfs::provenance::choose_recovery (shipped)",
+      "recompute_chosen": 48,
+      "recompute_correct": 48,
+      "recompute_correct_fraction": 1.0
+    },
+    "environment": {
+      "court": "weft/rust-court:1",
+      "cpus": "4",
+      "kernel": "7.3.3-1-cachyos",
+      "memory": "3g"
+    },
+    "generated_at": "20261115T213215945Z",
+    "heldout": {
+      "observations": 312,
+      "oracle_ns": 53917314.0,
+      "policies": [
+        {
+          "cost_ns": 179310894.0,
+          "mean_ns": 2988514.9,
+          "policy": "best_fixed_priority",
+          "regret_fraction": 2.325664442408982,
+          "regret_ns": 125393580.0
+        },
+        {
+          "cost_ns": 53917665.0,
+          "mean_ns": 898627.75,
+          "policy": "mean_utility",
+          "regret_fraction": 6.509968207986028e-06,
+          "regret_ns": 351.0
+        },
+        {
+          "cost_ns": 53917665.0,
+          "mean_ns": 898627.75,
+          "policy": "declared_cost",
+          "regret_fraction": 6.509968207986028e-06,
+          "regret_ns": 351.0
+        },
+        {
+          "cost_ns": 99242088.0,
+          "mean_ns": 1654034.8,
+          "policy": "shipped_planner",
+          "regret_fraction": 0.8406348654534237,
+          "regret_ns": 45324774.0
+        }
+      ],
+      "requests": 60,
+      "rows": [
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 146895.0,
+          "fixed_priority_ns": 146895.0,
+          "fixture": "model.layers.0.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 146895.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 146895.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 165780.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 146895.0,
+          "shipped_planner_ns": 146895.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3876811.0,
+          "fixed_priority_ns": 14331977.0,
+          "fixture": "model.layers.0.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3876811.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3876811.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14331977.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3876811.0,
+          "shipped_planner_ns": 3876811.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 146975.0,
+          "fixed_priority_ns": 146975.0,
+          "fixture": "model.layers.0.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 146975.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 146975.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14349199.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 163626.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 146975.0,
+          "shipped_planner_ns": 146975.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 135543.0,
+          "fixed_priority_ns": 135543.0,
+          "fixture": "model.layers.0.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 135543.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 135543.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3749273.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 163966.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 135543.0,
+          "shipped_planner_ns": 3749273.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 158335.0,
+          "fixed_priority_ns": 158335.0,
+          "fixture": "model.layers.0.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 158335.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 158335.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 158335.0,
+          "shipped_planner_ns": 158335.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 138339.0,
+          "fixed_priority_ns": 138339.0,
+          "fixture": "model.layers.10.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 138339.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 138339.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 161221.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 138339.0,
+          "shipped_planner_ns": 138339.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3713756.0,
+          "fixed_priority_ns": 13891004.0,
+          "fixture": "model.layers.10.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3713756.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3713756.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 13891004.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3713756.0,
+          "shipped_planner_ns": 3713756.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 143428.0,
+          "fixed_priority_ns": 143428.0,
+          "fixture": "model.layers.10.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 143428.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 143428.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14077451.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 182310.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 143428.0,
+          "shipped_planner_ns": 143428.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 136816.0,
+          "fixed_priority_ns": 136816.0,
+          "fixture": "model.layers.10.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 136816.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 136816.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3719858.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 168815.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 136816.0,
+          "shipped_planner_ns": 3719858.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 160510.0,
+          "fixed_priority_ns": 160510.0,
+          "fixture": "model.layers.10.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 160510.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160510.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 160510.0,
+          "shipped_planner_ns": 160510.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 141865.0,
+          "fixed_priority_ns": 141865.0,
+          "fixture": "model.layers.12.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 141865.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 141865.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160579.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 141865.0,
+          "shipped_planner_ns": 141865.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3686024.0,
+          "fixed_priority_ns": 14248972.0,
+          "fixture": "model.layers.12.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3686024.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3686024.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14248972.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3686024.0,
+          "shipped_planner_ns": 3686024.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 140613.0,
+          "fixed_priority_ns": 140613.0,
+          "fixture": "model.layers.12.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 140613.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 140613.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14226560.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 167002.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 140613.0,
+          "shipped_planner_ns": 140613.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 136395.0,
+          "fixed_priority_ns": 136395.0,
+          "fixture": "model.layers.12.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 136395.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 136395.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3704428.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 161561.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 136395.0,
+          "shipped_planner_ns": 3704428.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 160660.0,
+          "fixed_priority_ns": 160660.0,
+          "fixture": "model.layers.12.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 160660.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160660.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 160660.0,
+          "shipped_planner_ns": 160660.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 233185.0,
+          "fixed_priority_ns": 233185.0,
+          "fixture": "model.layers.14.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 233185.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 233185.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 237624.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 233185.0,
+          "shipped_planner_ns": 233185.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3945518.9999999995,
+          "fixed_priority_ns": 14557338.0,
+          "fixture": "model.layers.14.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3945518.9999999995,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3945518.9999999995,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14557338.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3945518.9999999995,
+          "shipped_planner_ns": 3945518.9999999995
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 146554.0,
+          "fixed_priority_ns": 146554.0,
+          "fixture": "model.layers.14.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 146554.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 146554.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 13900863.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 164828.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 146554.0,
+          "shipped_planner_ns": 146554.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 136895.0,
+          "fixed_priority_ns": 136895.0,
+          "fixture": "model.layers.14.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 136895.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 136895.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3713616.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160610.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 136895.0,
+          "shipped_planner_ns": 3713616.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 160380.0,
+          "fixed_priority_ns": 160380.0,
+          "fixture": "model.layers.14.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 160380.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160380.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 160380.0,
+          "shipped_planner_ns": 160380.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 137466.0,
+          "fixed_priority_ns": 137466.0,
+          "fixture": "model.layers.16.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 137466.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 137466.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 161021.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 137466.0,
+          "shipped_planner_ns": 137466.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3815847.0,
+          "fixed_priority_ns": 13915590.0,
+          "fixture": "model.layers.16.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3815847.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3815847.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 13915590.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3815847.0,
+          "shipped_planner_ns": 3815847.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 153717.0,
+          "fixed_priority_ns": 153717.0,
+          "fixture": "model.layers.16.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 153717.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 153717.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14462210.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 170408.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 153717.0,
+          "shipped_planner_ns": 153717.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 138098.0,
+          "fixed_priority_ns": 138098.0,
+          "fixture": "model.layers.16.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 138098.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 138098.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 4027402.0000000005,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 164257.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 138098.0,
+          "shipped_planner_ns": 4027402.0000000005
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 161852.0,
+          "fixed_priority_ns": 161852.0,
+          "fixture": "model.layers.16.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 161852.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 161852.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 161852.0,
+          "shipped_planner_ns": 161852.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 171771.0,
+          "fixed_priority_ns": 171771.0,
+          "fixture": "model.layers.18.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 171771.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 171771.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 171420.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 171420.0,
+          "shipped_planner_ns": 171771.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3921423.9999999995,
+          "fixed_priority_ns": 14230839.0,
+          "fixture": "model.layers.18.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3921423.9999999995,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3921423.9999999995,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14230839.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3921423.9999999995,
+          "shipped_planner_ns": 3921423.9999999995
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 146233.0,
+          "fixed_priority_ns": 146233.0,
+          "fixture": "model.layers.18.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 146233.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 146233.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 15067832.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 178654.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 146233.0,
+          "shipped_planner_ns": 146233.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 138789.0,
+          "fixed_priority_ns": 138789.0,
+          "fixture": "model.layers.18.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 138789.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 138789.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3797252.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 165109.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 138789.0,
+          "shipped_planner_ns": 3797252.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 215052.0,
+          "fixed_priority_ns": 215052.0,
+          "fixture": "model.layers.18.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 215052.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 215052.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 215052.0,
+          "shipped_planner_ns": 215052.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 136014.0,
+          "fixed_priority_ns": 136014.0,
+          "fixture": "model.layers.2.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 136014.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 136014.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160860.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 136014.0,
+          "shipped_planner_ns": 136014.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3880117.0,
+          "fixed_priority_ns": 14287294.0,
+          "fixture": "model.layers.2.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3880117.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3880117.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14287294.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3880117.0,
+          "shipped_planner_ns": 3880117.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 152745.0,
+          "fixed_priority_ns": 152745.0,
+          "fixture": "model.layers.2.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 152745.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 152745.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14319494.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 165459.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 152745.0,
+          "shipped_planner_ns": 152745.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 149980.0,
+          "fixed_priority_ns": 149980.0,
+          "fixture": "model.layers.2.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 149980.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 149980.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 4043421.9999999995,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 163426.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 149980.0,
+          "shipped_planner_ns": 4043421.9999999995
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 163595.0,
+          "fixed_priority_ns": 163595.0,
+          "fixture": "model.layers.2.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 163595.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 163595.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 163595.0,
+          "shipped_planner_ns": 163595.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 144280.0,
+          "fixed_priority_ns": 144280.0,
+          "fixture": "model.layers.21.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 144280.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 144280.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 164107.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 144280.0,
+          "shipped_planner_ns": 144280.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 4535862.0,
+          "fixed_priority_ns": 15671298.0,
+          "fixture": "model.layers.21.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 4535862.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 4535862.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 15671298.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 4535862.0,
+          "shipped_planner_ns": 4535862.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 188593.0,
+          "fixed_priority_ns": 188593.0,
+          "fixture": "model.layers.21.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 188593.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 188593.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14985237.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 240460.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 188593.0,
+          "shipped_planner_ns": 188593.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 154759.0,
+          "fixed_priority_ns": 154759.0,
+          "fixture": "model.layers.21.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 154759.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 154759.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 5012502.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 226012.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 154759.0,
+          "shipped_planner_ns": 5012502.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 209391.0,
+          "fixed_priority_ns": 209391.0,
+          "fixture": "model.layers.21.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 209391.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 209391.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 209391.0,
+          "shipped_planner_ns": 209391.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 139401.0,
+          "fixed_priority_ns": 139401.0,
+          "fixture": "model.layers.23.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 139401.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 139401.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 166982.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 139401.0,
+          "shipped_planner_ns": 139401.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3875278.0,
+          "fixed_priority_ns": 14039290.0,
+          "fixture": "model.layers.23.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3875278.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3875278.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14039290.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3875278.0,
+          "shipped_planner_ns": 3875278.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 145041.0,
+          "fixed_priority_ns": 145041.0,
+          "fixture": "model.layers.23.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 145041.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 145041.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14680378.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 169897.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 145041.0,
+          "shipped_planner_ns": 145041.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 137417.0,
+          "fixed_priority_ns": 137417.0,
+          "fixture": "model.layers.23.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 137417.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 137417.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3885106.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 166050.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 137417.0,
+          "shipped_planner_ns": 3885106.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 162404.0,
+          "fixed_priority_ns": 162404.0,
+          "fixture": "model.layers.23.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 162404.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 162404.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 162404.0,
+          "shipped_planner_ns": 162404.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 138980.0,
+          "fixed_priority_ns": 138980.0,
+          "fixture": "model.layers.4.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 138980.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 138980.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 161021.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 138980.0,
+          "shipped_planner_ns": 138980.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3741488.0,
+          "fixed_priority_ns": 14199389.0,
+          "fixture": "model.layers.4.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3741488.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3741488.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14199389.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3741488.0,
+          "shipped_planner_ns": 3741488.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 158716.0,
+          "fixed_priority_ns": 158716.0,
+          "fixture": "model.layers.4.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 158716.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 158716.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14572547.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 172142.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 158716.0,
+          "shipped_planner_ns": 158716.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 139390.0,
+          "fixed_priority_ns": 139390.0,
+          "fixture": "model.layers.4.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 139390.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 139390.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3778848.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 215813.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 139390.0,
+          "shipped_planner_ns": 3778848.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 171160.0,
+          "fixed_priority_ns": 171160.0,
+          "fixture": "model.layers.4.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 171160.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 171160.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 171160.0,
+          "shipped_planner_ns": 171160.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 143638.0,
+          "fixed_priority_ns": 143638.0,
+          "fixture": "model.layers.6.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 143638.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 143638.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 169587.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 143638.0,
+          "shipped_planner_ns": 143638.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3804405.0,
+          "fixed_priority_ns": 14295119.0,
+          "fixture": "model.layers.6.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3804405.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3804405.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14295119.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3804405.0,
+          "shipped_planner_ns": 3804405.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 139571.0,
+          "fixed_priority_ns": 139571.0,
+          "fixture": "model.layers.6.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 139571.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 139571.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14272326.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 171090.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 139571.0,
+          "shipped_planner_ns": 139571.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 135704.0,
+          "fixed_priority_ns": 135704.0,
+          "fixture": "model.layers.6.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 135704.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 135704.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3791431.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 179845.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 135704.0,
+          "shipped_planner_ns": 3791431.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 172913.0,
+          "fixed_priority_ns": 172913.0,
+          "fixture": "model.layers.6.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 172913.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 172913.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 172913.0,
+          "shipped_planner_ns": 172913.0
+        },
+        {
+          "available": [
+            0,
+            3
+          ],
+          "declared_cost_ns": 137467.0,
+          "fixed_priority_ns": 137467.0,
+          "fixture": "model.layers.8.self_attn.k_proj.weight",
+          "mask": 9,
+          "mean_utility_ns": 137467.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 137467.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 161411.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 137467.0,
+          "shipped_planner_ns": 137467.0
+        },
+        {
+          "available": [
+            1,
+            2
+          ],
+          "declared_cost_ns": 3770613.0,
+          "fixed_priority_ns": 14292263.0,
+          "fixture": "model.layers.8.self_attn.k_proj.weight",
+          "mask": 6,
+          "mean_utility_ns": 3770613.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3770613.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14292263.0,
+              "strategy": "reconstruct"
+            }
+          ],
+          "oracle_ns": 3770613.0,
+          "shipped_planner_ns": 3770613.0
+        },
+        {
+          "available": [
+            0,
+            2,
+            3
+          ],
+          "declared_cost_ns": 146393.0,
+          "fixed_priority_ns": 146393.0,
+          "fixture": "model.layers.8.self_attn.k_proj.weight",
+          "mask": 13,
+          "mean_utility_ns": 146393.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 146393.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 14128196.0,
+              "strategy": "reconstruct"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 169006.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 146393.0,
+          "shipped_planner_ns": 146393.0
+        },
+        {
+          "available": [
+            0,
+            1,
+            3
+          ],
+          "declared_cost_ns": 136224.0,
+          "fixed_priority_ns": 136224.0,
+          "fixture": "model.layers.8.self_attn.k_proj.weight",
+          "mask": 11,
+          "mean_utility_ns": 136224.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 136224.0,
+              "strategy": "fetch"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 3777295.0,
+              "strategy": "decode"
+            },
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 185686.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 136224.0,
+          "shipped_planner_ns": 3777295.0
+        },
+        {
+          "available": [
+            3
+          ],
+          "declared_cost_ns": 160379.0,
+          "fixed_priority_ns": 160379.0,
+          "fixture": "model.layers.8.self_attn.k_proj.weight",
+          "mask": 8,
+          "mean_utility_ns": 160379.0,
+          "observed_ns": [
+            {
+              "bytes": 229376,
+              "exact": true,
+              "ns": 160379.0,
+              "strategy": "recompute"
+            }
+          ],
+          "oracle_ns": 160379.0,
+          "shipped_planner_ns": 160379.0
+        }
+      ]
+    },
+    "revision": "b0638ef348cb6b416e42833aaa779435068e38f6",
+    "schema": "weftfs.recompute-planner/1",
+    "stored_bytes": [
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.0.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.10.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.12.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.14.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.16.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.18.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.2.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.21.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.23.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.4.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.6.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      },
+      {
+        "decode": 229376,
+        "fetch": 229376,
+        "logical": 229376,
+        "name": "model.layers.8.self_attn.k_proj.weight",
+        "recompute_inputs": 229376,
+        "reconstruct": 229376
+      }
+    ]
+  },
+  "result": "pass",
+  "revision": "b0638ef348cb6b416e42833aaa779435068e38f6",
+  "role": "T096 four-strategy decision planner with the shipped exactness gate",
+  "schema": "weftfs.recompute-planner.receipt/1",
+  "scope": {
+    "contract": "weftfs::provenance::choose_recovery (shipped, unmodified)",
+    "exact_only": "an approximate provenance record (determinism declared) is attached to every fixture and is never eligible or selected",
+    "not_claimed": [
+      "a shipped planner change (research only)",
+      "recompute of a real training step (the declared operation is a concatenation of verified inputs)",
+      "cold media, fleet, cloud or power-loss behaviour",
+      "that the held-out availability masks cover production outage patterns"
+    ]
+  }
+}

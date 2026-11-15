@@ -1,0 +1,104 @@
+{
+  "court": {
+    "cpus": "4",
+    "image": "weft/bench-court:1",
+    "image_id": "sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559",
+    "kernel": "7.3.3-1-cachyos",
+    "memory": "3g"
+  },
+  "fixture": {
+    "batch": 256,
+    "descriptor_bytes": 229,
+    "descriptor_per_page_percent": 5.295,
+    "page_bytes": 4096,
+    "page_rows": 8,
+    "pages_per_prefix": 2,
+    "prefixes": 1024,
+    "stream_pages": 128
+  },
+  "invalidation": {
+    "hit_ns": 43361,
+    "hit_over_miss": 0.45,
+    "hits_after": 256,
+    "hits_before": 255,
+    "initial_invalidations": 0,
+    "invalidations_after": 1,
+    "miss_after_commit_ns": 96270,
+    "misses_after": 2,
+    "misses_before": 1
+  },
+  "label": "KV page batching and verified-session grant cache; no engine, one host, synthetic pages",
+  "non_claims": [
+    "no inference engine ran",
+    "one host, warm page cache, synthetic pages; no fleet or production claim",
+    "the descriptor is a fixed per-page governance cost; batching publication does not remove it"
+  ],
+  "page_reads": {
+    "bytes_identical": true,
+    "grant_cache_off_control": {
+      "bytes": 524288,
+      "per_page": {
+        "max_us": 115.967,
+        "p50_us": 69.399,
+        "p95_us": 73.007,
+        "p99_us": 85.931,
+        "samples": 128
+      }
+    },
+    "grant_cache_on": {
+      "bytes": 524288,
+      "hits": 255,
+      "misses": 1,
+      "per_page": {
+        "max_us": 60.082,
+        "p50_us": 39.283,
+        "p95_us": 40.976,
+        "p99_us": 46.707,
+        "samples": 128
+      }
+    },
+    "hit_ns": 43361
+  },
+  "publication": {
+    "batched": {
+      "commits": 4,
+      "head": "d9b77fc8ad2fb860ce1b497917b9c044ac1d3ff295b53f16e1cd8801dbb0ae04",
+      "per_batch_ms": {
+        "max_us": 63433.965,
+        "p50_us": 62936.755,
+        "p95_us": 63433.965,
+        "p99_us": 63433.965,
+        "samples": 4
+      },
+      "record_set": "bf1c314f0036fc5a09ebfc1391f71688e57e4b5538e84ef1d73f8b713e2cde03",
+      "store_bytes": 7409001,
+      "wall_ms": 245.894
+    },
+    "heads_differ_by_construction": true,
+    "same_records": true,
+    "single": {
+      "commits": 1024,
+      "head": "0ed2a33734b7abe55ffc4602568e8a106bea4980fbc7dd362240e2e735a3ab0b",
+      "per_prefix_ms": {
+        "max_us": 1568.453,
+        "p50_us": 638.384,
+        "p95_us": 1004.298,
+        "p99_us": 1165.881,
+        "samples": 1024
+      },
+      "record_set": "bf1c314f0036fc5a09ebfc1391f71688e57e4b5538e84ef1d73f8b713e2cde03",
+      "store_bytes": 29353011,
+      "wall_ms": 684.458
+    },
+    "speedup": 2.784
+  },
+  "revisions": {
+    "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+    "WeftCodec-Go": "d45fcb4c92f3302b1dfcab66e98ef63394040fe0",
+    "WeftFS": "b0638ef348cb6b416e42833aaa779435068e38f6",
+    "WeftFS-Go": "21c41b1adb5ac1b206bfd626c35dfee285e73f41"
+  },
+  "schema": "weft.kv.grants.bench.v1",
+  "stamp": "20261115T205444Z",
+  "wall_ms": 1192.911
+}
