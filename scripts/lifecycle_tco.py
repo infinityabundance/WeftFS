@@ -577,6 +577,12 @@ def sensitivity() -> dict:
                     }
                 )
 
+    surface_summary = {
+        "cells": len(surface),
+        "c_cheaper_cells": sum(1 for cell in surface if cell["delta"]["cheaper_arm"] == "C"),
+        "a_cheaper_cells": sum(1 for cell in surface if cell["delta"]["cheaper_arm"] == "A"),
+    }
+
     plane_summary = {}
     for billing in ("cpu_seconds", "allocated_vcpu_seconds"):
         cells = [c for c in plane if c["billing"] == billing]
@@ -626,6 +632,7 @@ def sensitivity() -> dict:
         "prices": PRICES,
         "unpriced": UNPRICED,
         "surface": surface,
+        "surface_summary": surface_summary,
         "price_plane": plane,
         "plane_summary": plane_summary,
     }
