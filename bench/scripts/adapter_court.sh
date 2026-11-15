@@ -52,8 +52,8 @@ echo "adapter_court: revisions weftfs=${WEFT_REPO_WEFTFS:-unknown} weftcodec=${W
 echo "adapter_court: configuration adapters=$limit merge=$merge_limit merged_full=$merged_full merged_zstd=$merged_zstd dumps=$dumps"
 
 if [[ ! -f "$base" ]]; then
-  echo "adapter_court: missing base corpus $base" >&2
-  exit 1
+  echo "adapter_court: skip missing base corpus $base" >&2
+  exit 78
 fi
 if ! grep -q "$base_sha" "$corpus"; then
   echo "adapter_court: corpus manifest does not name the pinned base sha $base_sha" >&2
@@ -65,6 +65,27 @@ if [[ "$actual" != "$base_sha" ]]; then
   exit 1
 fi
 echo "adapter_court: verified base sha256=$actual"
+
+# The adapter files themselves are third-party data (see
+# `scripts/fetch-adapter-corpus.sh`); a missing one is an environment the court
+# cannot run in, not a product failure. Checked here as well as in the host
+# wrapper so a direct invocation says so instead of dying in the harness.
+missing_adapter="$(python3 - "$corpus" <<'PY'
+import json, os, sys
+
+for adapter in json.load(open(sys.argv[1]))["adapters"]:
+    directory = os.path.dirname(adapter["local_path"])
+    for entry in adapter["files"]:
+        path = os.path.join(directory, entry["path"])
+        if not os.path.isfile(path):
+            print(path)
+            raise SystemExit
+PY
+)"
+if [[ -n "$missing_adapter" ]]; then
+  echo "adapter_court: skip missing adapter corpus file $missing_adapter; run scripts/fetch-adapter-corpus.sh" >&2
+  exit 78
+fi
 
 # Every adapter file is re-hashed by the harness against the manifest; count
 # them here so the log records how many the corpus names.

@@ -47,5 +47,28 @@ if [[ "$kind" == "cross_model" ]]; then
     [[ -f ".docker-cache/real-corpus/$f.safetensors" ]] || skip "the pinned $f corpus is absent"
   done
 fi
+if [[ "$kind" == "adapter" ]]; then
+  # The adapter corpus is third-party data downloaded from Hugging Face at the
+  # revisions the manifest names; it is never committed. A checkout that has
+  # not fetched it, or one whose `.docker-cache` was cleaned, is an environment
+  # the court cannot run in -- the court itself would fail on a missing file
+  # (measured: the 20261115T193114Z run died with exit 2 in the Rust harness
+  # after `.docker-cache/t048` was removed). Say so before spawning a container.
+  adapter_manifest="bench/corpora/real-models/adapters-qwen2.5-0.5b.json"
+  [[ -f "$adapter_manifest" ]] || skip "the adapter corpus manifest $adapter_manifest is absent"
+  missing="$(python3 - "$adapter_manifest" <<'PY'
+import json, os, sys
+
+for adapter in json.load(open(sys.argv[1]))["adapters"]:
+    directory = os.path.dirname(adapter["local_path"])
+    for entry in adapter["files"]:
+        path = os.path.join(directory, entry["path"])
+        if not os.path.isfile(path):
+            print(path)
+            raise SystemExit
+PY
+)"
+  [[ -z "$missing" ]] || skip "the pinned adapter corpus is absent ($missing); run scripts/fetch-adapter-corpus.sh"
+fi
 
 exec scripts/docker-court.sh fuse "cd /work && $env_prefix bash $script"
