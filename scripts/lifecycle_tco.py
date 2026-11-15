@@ -740,6 +740,7 @@ def main() -> int:
     receipt = {
         "schema": "weft.lifecycle-tco.v1",
         "stamp": stamp,
+        "raw_log": out_path.removesuffix(".json") + ".log",
         "revision": {"weftfs": head, "weftcodec": weftcodec},
         "purpose": {
             "T082": "one controlled lifecycle stitched from existing receipts; no value here was re-measured by this generator",
@@ -768,12 +769,61 @@ def main() -> int:
         print(f"lifecycle_tco: {len(rows)} rows validated, sensitivity computed, nothing written")
         return 0
 
+    log_path = out_path.removesuffix(".json") + ".log"
     full = os.path.join(REPO_ROOT, out_path)
     os.makedirs(os.path.dirname(full), exist_ok=True)
     with open(full, "w", encoding="utf-8") as handle:
         json.dump(receipt, handle, indent=1)
         handle.write("\n")
-    print(f"lifecycle_tco: rows={len(rows)} surface={len(sensitivity_block['surface'])} receipt={out_path}")
+
+    # Raw log: every extraction and every computed cell, so a reader can check
+    # the receipt without re-deriving it.
+    log_full = os.path.join(REPO_ROOT, log_path)
+    with open(log_full, "w", encoding="utf-8") as handle:
+        handle.write(f"lifecycle_tco stamp={stamp} weftfs={head} weftcodec={weftcodec}\n")
+        handle.write("\n[T082] rows\n")
+        for index, row in enumerate(rows, start=1):
+            handle.write(
+                f"row{index:02d}\t{row['stage']}\t{row['quantity']}\t{row['value']}\t{row['unit']}")
+            handle.write(
+                f"\t{row['evidence']['receipt']}\t{row['evidence']['path']}\t{row['evidence']['stamp']}\n")
+        sensitivity_block = receipt["sensitivity"]
+        handle.write("\n[T089] base\n")
+        handle.write(f"base_receipt\t{sensitivity_block['base_receipt']}\n")
+        handle.write(f"repetitions\t{sensitivity_block['repetitions']}\n")
+        for arm in ("A", "C"):
+            values = sensitivity_block["arms"][arm]
+            handle.write(
+                f"arm\t{arm}\tfootprint_bytes\t{values['footprint_bytes']}"
+                f"\twrite_cpu_ms\t{values['write_cpu_ms']}\trestore_cpu_ms\t{values['restore_cpu_ms']}"
+                f"\twrite_wall_ms\t{values['write_wall_ms']}\trestore_wall_ms\t{values['cold_restore_wall_ms']}\n"
+            )
+        handle.write("\n[T089] prices\n")
+        for price in sensitivity_block["prices"]:
+            handle.write(
+                f"price\t{price['id']}\t{price['value']}\t{price['unit']}"
+                f"\t{price['verbatim']}\t{price['url']}\t{price['retrieved_utc']}\n"
+            )
+        handle.write("\n[T089] surface\n")
+        for cell in sensitivity_block["surface"]:
+            handle.write(
+                f"cell\t{cell['billing']}\t{cell['retention_days']}d\t{cell['restores_per_checkpoint']}r"
+                f"\tA_usd\t{cell['arm']['A']['total_usd']:.9f}\tC_usd\t{cell['arm']['C']['total_usd']:.9f}"
+                f"\tdelta_usd\t{cell['delta']['total_usd']:.9f}\tcheaper\t{cell['delta']['cheaper_arm']}"
+                f"\tbe_store\t{cell['break_even']['storage_usd_per_gib_month']:.12f}"
+                f"\tbe_compute\t{cell['break_even']['compute_usd_per_vcpu_hour']:.6f}\n"
+            )
+        handle.write("\n[T089] plane\n")
+        for cell in sensitivity_block["price_plane"]:
+            handle.write(
+                f"plane\t{cell['billing']}\tstorage_x\t{cell['storage_multiplier']}"
+                f"\tcompute_x\t{cell['compute_multiplier']}\tcheaper\t{cell['cheaper_arm']}\n"
+            )
+
+    print(
+        f"lifecycle_tco: rows={len(rows)} surface={len(sensitivity_block['surface'])} "
+        f"receipt={out_path} log={log_path}"
+    )
     return 0
 
 

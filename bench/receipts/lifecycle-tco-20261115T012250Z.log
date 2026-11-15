@@ -1,0 +1,111 @@
+lifecycle_tco stamp=20261115T012250Z weftfs=e15f4e7aa786a1a0d1dc7981150ed022e72797ee weftcodec=c5cae0d86cfc9c3c5ea4788b0506ffcaf9cf8297
+
+[T082] rows
+row01	checkpoint write (planned)	durable write pause (writer stall)	61056.057878	ms	bench/receipts/write-policy-20261114T104804Z.json	phases.base-planned-save.pause_ms	20261114T104804Z
+row02	checkpoint write (planned)	encode CPU	17320.0	ms	bench/receipts/write-policy-20261114T104804Z.json	phases.base-planned-save.cpu_user_ms	20261114T104804Z
+row03	checkpoint write (planned)	stored bytes	824052654	B	bench/receipts/write-policy-20261114T104804Z.json	phases.base-planned-save.store_bytes	20261114T104804Z
+row04	checkpoint write (fast, zstd-1)	durable write pause (writer stall)	57090.733842	ms	bench/receipts/write-policy-20261114T104804Z.json	phases.base-fast-zstd1-save.pause_ms	20261114T104804Z
+row05	checkpoint write (fast, zstd-1)	encode CPU	2080.0	ms	bench/receipts/write-policy-20261114T104804Z.json	phases.base-fast-zstd1-save.cpu_user_ms	20261114T104804Z
+row06	checkpoint write (fast, zstd-1)	stored bytes	775695846	B	bench/receipts/write-policy-20261114T104804Z.json	phases.base-fast-zstd1-save.store_bytes	20261114T104804Z
+row07	checkpoint write (fast, raw)	durable write pause (writer stall)	72609.028349	ms	bench/receipts/write-policy-20261114T104804Z.json	phases.crash-save.pause_ms	20261114T104804Z
+row08	checkpoint write (fast, raw)	stored bytes	992494850	B	bench/receipts/write-policy-20261114T104804Z.json	phases.crash-save.store_bytes	20261114T104804Z
+row09	async save overlap	training step p50 with no save in flight	10.013	ms	bench/receipts/async-save-20261114T114340Z.json	arms.none.step_p50_ms	20261114T114340Z
+row10	async save overlap	training step p50 with an async save budget	10.099	ms	bench/receipts/async-save-20261114T114340Z.json	arms.async.step_p50_ms	20261114T114340Z
+row11	async save overlap	step inflation versus no save	1.0086	ratio	bench/receipts/async-save-20261114T114340Z.json	arms.async.step_inflation_p50	20261114T114340Z
+row12	async save overlap	saves submitted	30	count	bench/receipts/async-save-20261114T114340Z.json	arms.async.submitted	20261114T114340Z
+row13	async save overlap	drain time after the last step	54337.828	ms	bench/receipts/async-save-20261114T114340Z.json	arms.async.drain_ms	20261114T114340Z
+row14	crash and resume	steps lost between the last visible checkpoint and the kill	8	count	bench/receipts/training-resume-20261114T115016Z.json	kills.0.steps_lost	20261114T115016Z
+row15	crash and resume	kill to first resumed training step	1400.021	ms	bench/receipts/training-resume-20261114T115016Z.json	kills.0.kill_to_first_step_ms	20261114T115016Z
+row16	crash and resume	resume wall (reopen + restore + 16 steps)	2741.015	ms	bench/receipts/training-resume-20261114T115016Z.json	kills.0.resume_wall_ms	20261114T115016Z
+row17	crash and resume (store-level)	reopen + verify after a process kill during publication	13069.12433	ms	bench/receipts/write-policy-20261114T104804Z.json	phases.crash-recover-verify.wall_ms	20261114T104804Z
+row18	crash and resume (store-level)	tensors verified after recovery	290	count	bench/receipts/write-policy-20261114T104804Z.json	phases.crash-recover-verify.tensors_verified	20261114T104804Z
+row19	partial restore	restore wall for the layers the next step needs	10.225	ms	bench/receipts/useful-step-20261114T115500Z.json	summary.partial_restore_ms	20261114T115500Z
+row20	partial restore	restore wall for the whole checkpoint	28.114	ms	bench/receipts/useful-step-20261114T115500Z.json	summary.full_restore_ms	20261114T115500Z
+row21	partial restore	time to first useful step (partial)	30.904	ms	bench/receipts/useful-step-20261114T115500Z.json	summary.partial_time_to_first_useful_step_ms	20261114T115500Z
+row22	partial restore	time to first useful step (full)	47.813	ms	bench/receipts/useful-step-20261114T115500Z.json	summary.full_time_to_first_useful_step_ms	20261114T115500Z
+row23	retention / GC	safe hit rate, fixed TTL + LRU	0.35305555555555557	ratio	bench/receipts/retention-20261109T220237Z.json	policies.0.safe_hit_rate	20261109T220237Z
+row24	retention / GC	safe hit rate, class-aware ordering	0.7494444444444445	ratio	bench/receipts/retention-20261109T220237Z.json	policies.2.safe_hit_rate	20261109T220237Z
+row25	retention / GC	physical bytes retained, fixed TTL + LRU	6457356	B	bench/receipts/retention-20261109T220237Z.json	policies.0.physical_bytes	20261109T220237Z
+row26	retention / GC	physical bytes retained, class-aware ordering	4340836	B	bench/receipts/retention-20261109T220237Z.json	policies.2.physical_bytes	20261109T220237Z
+
+[T089] base
+base_receipt	bench/receipts/augmentation-local-20261114T195000Z.json
+repetitions	7
+arm	A	footprint_bytes	424439296	write_cpu_ms	110.0	restore_cpu_ms	190.0	write_wall_ms	339.286193	restore_wall_ms	626.528513
+arm	C	footprint_bytes	282106049	write_cpu_ms	1080.0	restore_cpu_ms	1280.0	write_wall_ms	1171.727503	restore_wall_ms	1394.73574
+
+[T089] prices
+price	storage	0.02	USD per GiB-month	$0.000027397 / 1 gibibyte hour	https://cloud.google.com/storage/pricing	2026-11-15T01:20Z
+price	compute	0.0404784	USD per vCPU-hour	$0.000011244 per vCPU second	https://aws.amazon.com/fargate/pricing/	2026-11-15T01:20Z
+
+[T089] surface
+cell	cpu_seconds	1d	0r	A_usd	0.007907035	C_usd	0.005266778	delta_usd	-0.002640257	cheaper	C	be_store	0.000082278447	be_compute	9.839369
+cell	cpu_seconds	1d	1r	A_usd	0.007909171	C_usd	0.005281170	delta_usd	-0.002628001	cheaper	C	be_store	0.000174735670	be_compute	4.633101
+cell	cpu_seconds	1d	10r	A_usd	0.007928398	C_usd	0.005410701	delta_usd	-0.002517697	cheaper	C	be_store	0.001006850683	be_compute	0.804060
+cell	cpu_seconds	7d	0r	A_usd	0.055341823	C_usd	0.036794586	delta_usd	-0.018547237	cheaper	C	be_store	0.000011754064	be_compute	68.875583
+cell	cpu_seconds	7d	1r	A_usd	0.055343959	C_usd	0.036808978	delta_usd	-0.018534981	cheaper	C	be_store	0.000024962239	be_compute	32.431707
+cell	cpu_seconds	7d	10r	A_usd	0.055363186	C_usd	0.036938509	delta_usd	-0.018424677	cheaper	C	be_store	0.000143835812	be_compute	5.628417
+cell	cpu_seconds	30d	0r	A_usd	0.237175176	C_usd	0.157651183	delta_usd	-0.079523993	cheaper	C	be_store	0.000002742615	be_compute	295.181071
+cell	cpu_seconds	30d	1r	A_usd	0.237177312	C_usd	0.157665575	delta_usd	-0.079511737	cheaper	C	be_store	0.000005824522	be_compute	138.993028
+cell	cpu_seconds	30d	10r	A_usd	0.237196539	C_usd	0.157795106	delta_usd	-0.079401433	cheaper	C	be_store	0.000033561689	be_compute	24.121789
+cell	allocated_vcpu_seconds	1d	0r	A_usd	0.007909613	C_usd	0.005267810	delta_usd	-0.002641803	cheaper	C	be_store	0.000070610287	be_compute	11.465298
+cell	allocated_vcpu_seconds	1d	1r	A_usd	0.007916658	C_usd	0.005283492	delta_usd	-0.002633166	cheaper	C	be_store	0.000135772036	be_compute	5.962701
+cell	allocated_vcpu_seconds	1d	10r	A_usd	0.007980060	C_usd	0.005424634	delta_usd	-0.002555426	cheaper	C	be_store	0.000722227785	be_compute	1.120932
+cell	allocated_vcpu_seconds	7d	0r	A_usd	0.055344401	C_usd	0.036795617	delta_usd	-0.018548783	cheaper	C	be_store	0.000010087184	be_compute	80.257088
+cell	allocated_vcpu_seconds	7d	1r	A_usd	0.055351445	C_usd	0.036811300	delta_usd	-0.018540146	cheaper	C	be_store	0.000019396005	be_compute	41.738904
+cell	allocated_vcpu_seconds	7d	10r	A_usd	0.055414848	C_usd	0.036952441	delta_usd	-0.018462406	cheaper	C	be_store	0.000103175398	be_compute	7.846522
+cell	allocated_vcpu_seconds	30d	0r	A_usd	0.237177754	C_usd	0.157652214	delta_usd	-0.079525540	cheaper	C	be_store	0.000002353676	be_compute	343.958950
+cell	allocated_vcpu_seconds	30d	1r	A_usd	0.237184798	C_usd	0.157667896	delta_usd	-0.079516902	cheaper	C	be_store	0.000004525735	be_compute	178.881017
+cell	allocated_vcpu_seconds	30d	10r	A_usd	0.237248201	C_usd	0.157809038	delta_usd	-0.079439162	cheaper	C	be_store	0.000024074260	be_compute	33.627950
+
+[T089] plane
+plane	cpu_seconds	storage_x	0.5	compute_x	0.5	cheaper	C
+plane	cpu_seconds	storage_x	0.5	compute_x	1.0	cheaper	C
+plane	cpu_seconds	storage_x	0.5	compute_x	2.0	cheaper	C
+plane	cpu_seconds	storage_x	0.5	compute_x	5.0	cheaper	C
+plane	cpu_seconds	storage_x	0.5	compute_x	10.0	cheaper	C
+plane	cpu_seconds	storage_x	1.0	compute_x	0.5	cheaper	C
+plane	cpu_seconds	storage_x	1.0	compute_x	1.0	cheaper	C
+plane	cpu_seconds	storage_x	1.0	compute_x	2.0	cheaper	C
+plane	cpu_seconds	storage_x	1.0	compute_x	5.0	cheaper	C
+plane	cpu_seconds	storage_x	1.0	compute_x	10.0	cheaper	C
+plane	cpu_seconds	storage_x	2.0	compute_x	0.5	cheaper	C
+plane	cpu_seconds	storage_x	2.0	compute_x	1.0	cheaper	C
+plane	cpu_seconds	storage_x	2.0	compute_x	2.0	cheaper	C
+plane	cpu_seconds	storage_x	2.0	compute_x	5.0	cheaper	C
+plane	cpu_seconds	storage_x	2.0	compute_x	10.0	cheaper	C
+plane	cpu_seconds	storage_x	5.0	compute_x	0.5	cheaper	C
+plane	cpu_seconds	storage_x	5.0	compute_x	1.0	cheaper	C
+plane	cpu_seconds	storage_x	5.0	compute_x	2.0	cheaper	C
+plane	cpu_seconds	storage_x	5.0	compute_x	5.0	cheaper	C
+plane	cpu_seconds	storage_x	5.0	compute_x	10.0	cheaper	C
+plane	cpu_seconds	storage_x	10.0	compute_x	0.5	cheaper	C
+plane	cpu_seconds	storage_x	10.0	compute_x	1.0	cheaper	C
+plane	cpu_seconds	storage_x	10.0	compute_x	2.0	cheaper	C
+plane	cpu_seconds	storage_x	10.0	compute_x	5.0	cheaper	C
+plane	cpu_seconds	storage_x	10.0	compute_x	10.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	0.5	compute_x	0.5	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	0.5	compute_x	1.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	0.5	compute_x	2.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	0.5	compute_x	5.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	0.5	compute_x	10.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	1.0	compute_x	0.5	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	1.0	compute_x	1.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	1.0	compute_x	2.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	1.0	compute_x	5.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	1.0	compute_x	10.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	2.0	compute_x	0.5	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	2.0	compute_x	1.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	2.0	compute_x	2.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	2.0	compute_x	5.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	2.0	compute_x	10.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	5.0	compute_x	0.5	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	5.0	compute_x	1.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	5.0	compute_x	2.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	5.0	compute_x	5.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	5.0	compute_x	10.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	10.0	compute_x	0.5	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	10.0	compute_x	1.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	10.0	compute_x	2.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	10.0	compute_x	5.0	cheaper	C
+plane	allocated_vcpu_seconds	storage_x	10.0	compute_x	10.0	cheaper	C
