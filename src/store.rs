@@ -4190,6 +4190,7 @@ impl Store {
     /// exactly the shipped path. Callers that have authorized a read should use
     /// [`Store::read_object_authorized`].
     pub fn read_object(&self, id: Hash32) -> Result<Vec<u8>> {
+        self.quarantine_gate(id)?;
         let recording = self.history.is_some();
         let key = format!("object:{}", id.to_hex());
         let value = self.state.objects.get(&id).map(|record| {
@@ -4236,6 +4237,23 @@ impl Store {
         let bytes = self.read_object_inner(id, None, None)?;
         self.note_object_read(id);
         Ok(bytes)
+    }
+
+    /// Read an object's bytes **without** applying the quarantine gate. Only
+    /// quarantine records and pointers use this, so the gate itself stays
+    /// reachable.
+    pub(crate) fn read_object_exempt(&self, id: Hash32) -> Result<Vec<u8>> {
+        self.read_object_inner(id, None, None)
+    }
+
+    /// The quarantine gate for an object id. `Ok(())` when the object may be
+    /// served; a typed refusal otherwise.
+    pub(crate) fn quarantine_gate(&self, id: Hash32) -> Result<()> {
+        let record = self.object_meta(id)?;
+        match self.quarantine_denial(record.content)? {
+            Some(err) => Err(err),
+            None => Ok(()),
+        }
     }
 
     /// Authorize a read and return the evidence token.
@@ -4329,6 +4347,11 @@ impl Store {
         self.read_object_authorized_cancellable(authorized, None)
     }
 
+    /// Authorize a read against a quarantined artifact. The quarantine refusal
+    /// is evaluated before any byte is fetched and after the caller's
+    /// authorization, so a non-disclosing refusal is byte-identical to an
+    /// absent object.
+
     /// [`Store::read_object_authorized`] with cooperative cancellation.
     ///
     /// Cancellation only applies while the caller waits for an identical
@@ -4343,6 +4366,7 @@ impl Store {
         self.note_object_read(authorized.id);
         Ok(bytes)
     }
+
 
     /// Read without touching the advisory access counters. Internal store
     /// work (planning, rebase dry runs, verification) must not inflate them.
@@ -4387,6 +4411,7 @@ impl Store {
         match snapshot {
             None => self.read_object(id),
             Some(commit) => {
+                self.quarantine_gate(id)?;
                 let state = self.state_at(commit)?;
                 let record = state
                     .objects
@@ -4433,6 +4458,7 @@ impl Store {
         if authorized.kind != ObjectKind::File {
             return Err(Error::invalid_argument("read_range requires a file object"));
         }
+        self.quarantine_gate(authorized.id)?;
         let record = self.object_meta(authorized.id)?;
         if record.kind != ObjectKind::File {
             return Err(Error::invalid_argument("read_range requires a file object"));
@@ -4456,6 +4482,7 @@ impl Store {
 
     /// Read a byte range from a file object (internal path).
     pub fn read_range(&self, id: Hash32, offset: u64, length: u64) -> Result<Vec<u8>> {
+        self.quarantine_gate(id)?;
         let record = self.object_meta(id)?;
         if record.kind != ObjectKind::File {
             return Err(Error::invalid_argument("read_range requires a file object"));
@@ -4472,6 +4499,9 @@ impl Store {
     /// Read a byte range directly from a content root (manifest id). Safe for
     /// snapshot materialization because it does not consult live object state.
     pub fn read_content(&self, content_root: Hash32, offset: u64, length: u64) -> Result<Vec<u8>> {
+        if let Some(err) = self.quarantine_denial(content_root)? {
+            return Err(err);
+        }
         let manifest = self.read_manifest_keyed(content_root)?;
         let whole = offset == 0 && length >= manifest.size;
         self.read_manifest_bytes(&manifest, content_root, offset, length, whole)
@@ -4498,6 +4528,9 @@ impl Store {
                 Class::Unauthorized,
                 "authorization token does not cover this content root",
             ));
+        }
+        if let Some(err) = self.quarantine_denial(content_root)? {
+            return Err(err);
         }
         let manifest = self.read_manifest_keyed(content_root)?;
         let whole = offset == 0 && length >= manifest.size;

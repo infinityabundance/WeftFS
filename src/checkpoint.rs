@@ -2717,6 +2717,12 @@ impl Store {
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         let prologue = self.restore_prologue(state, snapshot, name, options)?;
+        // A quarantined shard cannot be materialized: the gate runs before any
+        // byte is read, and the refusal is the policy's (non-disclosing or
+        // explicit), never a partial restore.
+        for tensor in &prologue.order {
+            self.quarantine_gate_tensor(tensor)?;
+        }
         let limits = Limits::default();
         let before = self.backend_stats();
         let tiles = crate::parallel::TileDecodeOptions::default();
@@ -2884,6 +2890,12 @@ impl Store {
         writer: &mut W,
     ) -> Result<CheckpointRestoreReport> {
         let prologue = self.restore_prologue(state, snapshot, name, options)?;
+        // A quarantined shard cannot be materialized: the gate runs before any
+        // byte is read, and the refusal is the policy's (non-disclosing or
+        // explicit), never a partial restore.
+        for tensor in &prologue.order {
+            self.quarantine_gate_tensor(tensor)?;
+        }
         let limits = Limits::default();
         let before = self.backend_stats();
         let tiles = crate::parallel::TileDecodeOptions {
@@ -3502,6 +3514,15 @@ impl Store {
         loaded_checkpoint(name, manifest_id, manifest)
     }
 
+    fn quarantine_gate_tensor(&self, tensor: &CheckpointTensor) -> Result<()> {
+        for shard in &tensor.shards {
+            if let Some(err) = self.quarantine_denial(shard.content_root)? {
+                return Err(err);
+            }
+        }
+        Ok(())
+    }
+
     /// The per-tensor verification shared by both restore entry points.
     #[allow(clippy::too_many_arguments)]
     fn restore_manifest_tensor(
@@ -3515,6 +3536,7 @@ impl Store {
         snapshot: Option<Hash32>,
     ) -> Result<RestoredTensorBytes> {
         let tensor = manifest.tensor(tensor_name)?;
+        self.quarantine_gate_tensor(tensor)?;
         let limits = Limits::default();
         let restored = self.restore_tensor(
             checkpoint,

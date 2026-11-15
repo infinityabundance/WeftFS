@@ -1181,6 +1181,74 @@ enum Command {
         #[command(subcommand)]
         command: RangeProofCommand,
     },
+    /// Taint tracing and quarantine (`spec/WEFT-TAINT.md`).
+    Taint {
+        #[command(subcommand)]
+        command: TaintCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum TaintCommand {
+    /// Trace the downstream artifacts of one or more tainted content roots.
+    Trace {
+        /// Tainted content root (64 hex). Repeatable.
+        #[arg(long = "root")]
+        roots: Vec<String>,
+        /// Artifact object id to judge (64 hex). Repeatable.
+        #[arg(long = "artifact")]
+        artifacts: Vec<String>,
+        #[arg(long, default_value_t = 32)]
+        depth: u32,
+    },
+    /// Quarantine one content root. Requires a signed decision from an
+    /// authorized principal.
+    Quarantine {
+        #[arg(long)]
+        content: String,
+        /// non-disclosing | explicit.
+        #[arg(long, default_value = "non-disclosing")]
+        mode: String,
+        #[arg(long)]
+        reason: String,
+        #[arg(long = "policy-epoch")]
+        policy_epoch: u64,
+        /// Root of the trace this decision came from (64 hex).
+        #[arg(long)]
+        trace: Option<String>,
+        /// Trace status at decision time: closed | unproven.
+        #[arg(long = "trace-status", default_value = "closed")]
+        trace_status: String,
+        /// Signer 32-byte Ed25519 seed (64 hex). Required.
+        #[arg(long = "sign-seed-hex")]
+        sign_seed_hex: String,
+        /// Authorized signer keys (repeatable, 64 hex). Required.
+        #[arg(long = "authority-hex")]
+        authority_hex: Vec<String>,
+    },
+    /// Lift a quarantine with a signed, epoch-fenced release.
+    Release {
+        #[arg(long)]
+        content: String,
+        #[arg(long)]
+        reason: String,
+        #[arg(long = "policy-epoch")]
+        policy_epoch: u64,
+        /// The quarantine record being lifted (64 hex).
+        #[arg(long = "release-of")]
+        release_of: Option<String>,
+        #[arg(long = "sign-seed-hex")]
+        sign_seed_hex: String,
+        #[arg(long = "authority-hex")]
+        authority_hex: Vec<String>,
+    },
+    /// Show the current decision for one content root.
+    Show {
+        #[arg(long)]
+        content: String,
+    },
+    /// List every active quarantine.
+    List,
 }
 
 #[derive(Subcommand)]
@@ -3873,6 +3941,7 @@ fn run(cli: Cli) -> Result<()> {
         Command::Kv { command } => run_kv(&store, json, policy, command),
         Command::Retention { command } => run_retention(&store, json, policy, command),
         Command::RangeProof { command } => run_range_proof(&store, json, policy, command),
+        Command::Taint { command } => run_taint(&store, json, policy, command),
         Command::Causal { command } => run_causal(&store, json, policy, command),
         Command::Uri { command } => run_uri(&store, json, policy, command),
         Command::Provenance { command } => run_provenance(&store, json, policy, command),
@@ -8921,6 +8990,272 @@ fn cli_now_ns() -> i64 {
         .ok()
         .and_then(|duration| i64::try_from(duration.as_nanos()).ok())
         .unwrap_or(0)
+}
+
+fn decode_seed(text: &str) -> Result<[u8; 32]> {
+    let bytes = hex::decode(text)
+        .map_err(|_| Error::invalid_argument("--sign-seed-hex must be 64 hex characters"))?;
+    bytes
+        .try_into()
+        .map_err(|_| Error::invalid_argument("--sign-seed-hex must be 32 bytes"))
+}
+
+fn decode_authority(values: &[String]) -> Result<Vec<[u8; 32]>> {
+    let mut out = Vec::new();
+    for text in values {
+        let bytes = hex::decode(text)
+            .map_err(|_| Error::invalid_argument("--authority-hex must be 64 hex characters"))?;
+        out.push(
+            bytes
+                .try_into()
+                .map_err(|_| Error::invalid_argument("--authority-hex must be 32 bytes"))?,
+        );
+    }
+    Ok(out)
+}
+
+fn run_taint(
+    store_path: &PathBuf,
+    json: bool,
+    policy: OpenPolicy,
+    command: TaintCommand,
+) -> Result<()> {
+    use weftfs::taint::{QuarantineMode, QuarantineRequest};
+    match command {
+        TaintCommand::Trace {
+            roots,
+            artifacts,
+            depth,
+        } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let mut root_hashes = Vec::new();
+            for text in &roots {
+                root_hashes.push(Hash32::from_hex(text).map_err(|_| {
+                    Error::invalid_argument(format!("--root {text} is not 64 hex"))
+                })?);
+            }
+            let mut artifact_ids = Vec::new();
+            for text in &artifacts {
+                artifact_ids.push(Hash32::from_hex(text).map_err(|_| {
+                    Error::invalid_argument(format!("--artifact {text} is not 64 hex"))
+                })?);
+            }
+            let trace = store.taint_trace(&root_hashes, &artifact_ids, depth)?;
+            if json {
+                print_json(&serde_json::json!({
+                    "status": trace.status(),
+                    "trace_root": trace.root()?.to_hex(),
+                    "roots": trace.roots.iter().map(|r| r.to_hex()).collect::<Vec<_>>(),
+                    "iterations": trace.iterations,
+                    "records_scanned": trace.records_scanned,
+                    "tainted": trace.tainted.iter().map(|node| serde_json::json!({
+                        "content": node.content.to_hex(),
+                        "depth": node.depth,
+                        "via": node.via,
+                        "record": node.record.map(|id| id.to_hex()),
+                        "operation": node.operation,
+                        "role": node.role,
+                        "objects": node.objects.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                    })).collect::<Vec<_>>(),
+                    "artifacts": trace.artifacts.iter().map(|artifact| serde_json::json!({
+                        "object": artifact.object.to_hex(),
+                        "content": artifact.content.to_hex(),
+                        "verdict": artifact.verdict.as_str(),
+                        "witness": artifact.witness.iter().map(|id| id.to_hex()).collect::<Vec<_>>(),
+                        "gaps": artifact.gaps,
+                    })).collect::<Vec<_>>(),
+                    "gaps": trace.gaps,
+                }))
+            } else {
+                println!("status={}", trace.status());
+                println!("trace_root={}", trace.root()?);
+                println!("iterations={}", trace.iterations);
+                println!("records_scanned={}", trace.records_scanned);
+                for node in &trace.tainted {
+                    println!(
+                        "tainted content={} depth={} via={} operation={} role={}",
+                        node.content,
+                        node.depth,
+                        node.via,
+                        node.operation.as_deref().unwrap_or("-"),
+                        node.role.as_deref().unwrap_or("-")
+                    );
+                }
+                for artifact in &trace.artifacts {
+                    println!(
+                        "artifact object={} content={} verdict={}",
+                        artifact.object,
+                        artifact.content,
+                        artifact.verdict.as_str()
+                    );
+                    for gap in &artifact.gaps {
+                        println!("gap={gap}");
+                    }
+                }
+                for gap in &trace.gaps {
+                    println!("gap={gap}");
+                }
+                Ok(())
+            }
+        }
+        TaintCommand::Quarantine {
+            content,
+            mode,
+            reason,
+            policy_epoch,
+            trace,
+            trace_status,
+            sign_seed_hex,
+            authority_hex,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let content = Hash32::from_hex(&content)
+                .map_err(|_| Error::invalid_argument("--content must be 64 hex"))?;
+            let seed = decode_seed(&sign_seed_hex)?;
+            let authority = decode_authority(&authority_hex)?;
+            let trace = match trace {
+                Some(text) => Some(
+                    Hash32::from_hex(&text)
+                        .map_err(|_| Error::invalid_argument("--trace must be 64 hex"))?,
+                ),
+                None => None,
+            };
+            let request = QuarantineRequest {
+                content,
+                mode: QuarantineMode::parse(&mode)?,
+                reason,
+                trace,
+                trace_status,
+                policy_epoch,
+                issued_at_ns: None,
+                seed,
+                authority,
+                release_of: None,
+            };
+            let id = store.quarantine(request)?;
+            if json {
+                print_json(&serde_json::json!({
+                    "record": id.to_hex(),
+                    "content": content.to_hex(),
+                }))
+            } else {
+                println!("record={id}");
+                println!("content={content}");
+                Ok(())
+            }
+        }
+        TaintCommand::Release {
+            content,
+            reason,
+            policy_epoch,
+            release_of,
+            sign_seed_hex,
+            authority_hex,
+        } => {
+            let mut store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let content = Hash32::from_hex(&content)
+                .map_err(|_| Error::invalid_argument("--content must be 64 hex"))?;
+            let seed = decode_seed(&sign_seed_hex)?;
+            let authority = decode_authority(&authority_hex)?;
+            let release_of = match release_of {
+                Some(text) => Some(Hash32::from_hex(&text).map_err(|_| {
+                    Error::invalid_argument("--release-of must be 64 hex")
+                })?),
+                None => None,
+            };
+            let request = QuarantineRequest {
+                content,
+                mode: QuarantineMode::NonDisclosing,
+                reason,
+                trace: None,
+                trace_status: "closed".to_owned(),
+                policy_epoch,
+                issued_at_ns: None,
+                seed,
+                authority,
+                release_of,
+            };
+            let id = store.release_quarantine(request)?;
+            if json {
+                print_json(&serde_json::json!({
+                    "record": id.to_hex(),
+                    "content": content.to_hex(),
+                }))
+            } else {
+                println!("record={id}");
+                println!("content={content}");
+                Ok(())
+            }
+        }
+        TaintCommand::Show { content } => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let content = Hash32::from_hex(&content)
+                .map_err(|_| Error::invalid_argument("--content must be 64 hex"))?;
+            match store.quarantine_of(content)? {
+                Some((id, record)) => {
+                    if json {
+                        print_json(&serde_json::json!({
+                            "record": id.to_hex(),
+                            "content": content.to_hex(),
+                            "kind": record.kind,
+                            "mode": record.mode.as_str(),
+                            "reason": record.reason,
+                            "trace": record.trace.map(|h| h.to_hex()),
+                            "trace_status": record.trace_status,
+                            "policy_epoch": record.policy_epoch,
+                            "issued_at_ns": record.issued_at_ns,
+                            "supersedes": record.supersedes.map(|h| h.to_hex()),
+                            "holds": record.is_quarantine(),
+                        }))
+                    } else {
+                        println!("record={id}");
+                        println!("kind={}", record.kind);
+                        println!("mode={}", record.mode.as_str());
+                        println!("reason={}", record.reason);
+                        println!("trace_status={}", record.trace_status);
+                        println!("policy_epoch={}", record.policy_epoch);
+                        println!("holds={}", record.is_quarantine());
+                        Ok(())
+                    }
+                }
+                None => Err(Error::not_found(format!(
+                    "content {} has no quarantine decision",
+                    content
+                ))),
+            }
+        }
+        TaintCommand::List => {
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let entries = store.quarantine_entries()?;
+            if json {
+                print_json(&serde_json::json!({
+                    "count": entries.len(),
+                    "entries": entries.iter().map(|(content, id, record)| serde_json::json!({
+                        "content": content.to_hex(),
+                        "record": id.to_hex(),
+                        "mode": record.mode.as_str(),
+                        "reason": record.reason,
+                        "trace_status": record.trace_status,
+                        "policy_epoch": record.policy_epoch,
+                    })).collect::<Vec<_>>(),
+                }))
+            } else {
+                for (content, id, record) in &entries {
+                    println!(
+                        "content={} record={} mode={} epoch={} trace_status={} reason={}",
+                        content,
+                        id,
+                        record.mode.as_str(),
+                        record.policy_epoch,
+                        record.trace_status,
+                        record.reason
+                    );
+                }
+                println!("count={}", entries.len());
+                Ok(())
+            }
+        }
+    }
 }
 
 fn run_range_proof(

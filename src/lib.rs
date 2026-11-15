@@ -91,6 +91,7 @@ pub mod service_account;
 pub mod singleflight;
 pub mod stage_budget;
 pub mod state;
+pub mod taint;
 pub mod store;
 pub mod tensor_pipeline;
 pub mod tensor_store;

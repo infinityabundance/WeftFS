@@ -83,6 +83,11 @@ pub enum Class {
     StaleEpoch,
     /// Transport/read/write failure.
     Io,
+    /// The artifact is under an active quarantine: the store refuses to
+    /// resolve, materialize or serve it. Used only by an explicit-mode
+    /// quarantine; a non-disclosing quarantine reports [`Class::NotFound`]
+    /// byte-identically to an absent object.
+    Quarantined,
 }
 
 impl Class {
@@ -119,6 +124,7 @@ impl Class {
             Class::CapabilityRevoked => "CapabilityRevoked",
             Class::StaleEpoch => "StaleEpoch",
             Class::Io => "Io",
+            Class::Quarantined => "Quarantined",
         }
     }
 }
@@ -246,6 +252,9 @@ impl Error {
     }
     pub fn io(message: impl Into<String>) -> Self {
         Self::new(Class::Io, message)
+    }
+    pub fn quarantined(message: impl Into<String>) -> Self {
+        Self::new(Class::Quarantined, message)
     }
 }
 
