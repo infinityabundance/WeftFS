@@ -1,10 +1,11 @@
 # P03 — training-ready cost at scale, cached plans, no silent freshness loss
 
-**Date:** 2026-11-15. **Court:** `bench/scripts/training_ready_cost_court.sh`
-(fuse court, default limits). **Receipt:**
-`bench/receipts/training-ready-cost-20261115T140742Z.json` and `.log`.
-**Corpus:** Qwen/Qwen2.5-0.5B BF16, two raw shards, in a copy of the cached P3
-store (weights never committed).
+**Date:** 2026-11-15 (refreshed 2026-11-15T155500Z). **Court:**
+`bench/scripts/training_ready_cost_court.sh` (fuse court, default limits).
+**Receipt:** `bench/receipts/training-ready-cost-20261115T155500Z.json` and
+`.log`, at WeftFS `10fde89`, WeftFS-Go `21c41b1`, WeftCodec `98019d8`,
+WeftCodec-Go `d45fcb4`. **Corpus:** Qwen/Qwen2.5-0.5B BF16, two raw shards, in
+a copy of the cached P3 store (weights never committed).
 
 <!-- BEGIN GENERATED:trc-corpus (scripts/perf_numbers.py) -->
 Corpus: 290 tensors, 988,065,536 element bytes; materialized 988,649,840 bytes.
@@ -55,42 +56,51 @@ court.
 | Phase | ms |
 |---|---:|
 <!-- BEGIN GENERATED:trc-table (scripts/perf_numbers.py) -->
-| Cold ready-check (cache miss) | 42,612.6 |
-| Warm-first ready-check (cache hit) | 49.4 |
-| Warm ready-check p50 / min / max | 47.7 / 46.8 / 48.8 |
-| Check after a policy change | 42,789.3 |
-| Check after a grant edit | 43,090.6 |
-| Cold materialize | 54,945.7 |
-| Warm materialize | 54,467.9 |
-| Cold check validation+decode | 42,493.0 |
-| Materialize write after decode | 11,937.7 |
-| Time-to-ready cold | 97,558.3 |
-| Time-to-ready warm | 54,517.2 |
-| Warm plan time | 1.152 |
-| Savings from a warm check | 42,564.8 (892.8×) |
+| Cold ready-check (cache miss) | 42,530.2 |
+| Warm-first ready-check (cache hit) | 50.9 |
+| Warm ready-check p50 / min / max | 49.0 / 47.9 / 50.4 |
+| Check after a policy change | 42,711.2 |
+| Check after a grant edit | 43,068.7 |
+| Cold materialize | 54,576.2 |
+| Warm materialize | 63,355.9 |
+| Cold check validation+decode | 42,415.0 |
+| Materialize write after decode | 11,745.2 |
+| Time-to-ready cold | 97,106.3 |
+| Time-to-ready warm | 63,406.8 |
+| Warm plan time | 1.111 |
+| Savings from a warm check | 42,481.1 (867.3×) |
 <!-- END GENERATED:trc-table -->
 
-The cold check in the table is below the ~77 s of the earlier P7 court
-(receipt `bench/receipts/training-ready-20261105T171104Z.json`, revision
-recorded there); the shard layout and a warm cache differ. The cache removes
-that validation, and the warm/cold ratio is in the table. The dominant term of
-time-to-ready is now materialization: decode plus the output write, cold and
-warm, in the table. The cache does **not** skip materialization:
-`materialize --training-ready` always re-verifies and writes, so a warm load
-still pays the decode + write cost.
+The cold check in the table is below the 77,250.0 ms of the earlier P7 court
+(receipt `bench/receipts/training-ready-20261105T171104Z.json`, stamp
+`20261105T171104Z`, revision `807d2ee`); the shard layout and a warm cache
+differ. The cache removes that validation, and the warm/cold ratio is in the
+table.
 
-Both time-to-ready totals are in the table. The warm total is below the earlier
-check-only court because the check is gone; the cold total includes
-materialization. Neither is re-framed: the achieved numbers and the dominant
-term (materialization write/decode) are published as measured.
+The achieved **time-to-ready** is in the table: 97,106.3 ms cold and
+63,406.8 ms warm. That materially exceeds the earlier 77,250.0 ms P7 number,
+because time-to-ready now includes materialization and the P7 court measured
+the ready-check alone. The check alone is 42,530.2 ms cold — below the earlier
+number — and the dominant term of time-to-ready is materialization, not
+validation: decode plus the output write, cold and warm, in the table. The cache
+does **not** skip materialization: `materialize --training-ready` always
+re-verifies and writes, so a warm load still pays the decode + write cost.
+
+The time-to-ready numbers are published as measured and are not re-framed. In
+this run the **warm** materialize (63,355.9 ms) is 16.1 % **slower** than the
+cold one (54,576.2 ms) on the same host; that is a loss, not a cache effect —
+the second pass writes 988 MB again into a filesystem whose writeback state has
+changed, and the two runs are not interleaved. The earlier stamp showed the
+warm pass marginally faster. Treat the direction as host noise and the
+magnitude as real work.
 
 ## 3. What each cache actually saves
 
 * Saves: the entire cold validation pass (cold/warm ratio in the table),
   including re-hashing every member and re-decoding every tensor.
 * Does not save: materialization decode or the output write; warm and cold
-  materialize are close on this run (table), and the cache does not change that
-  path.
+  materialize differ by run-to-run writeback variance (table, and §2: warm was
+  16.1 % slower on this stamp), and the cache does not change that path.
 * Does not save: the plan/state digest, which is O(state); the warm plan time
   is in the table.
 
@@ -107,7 +117,12 @@ time is in the table; it grows with state, not with the requested closure.
   separate metric; it is bounded by the member count, not the tensor bytes.
 * **Warm materialize is not faster.** The cache is not wired into the
   materialization copy path; a production consumer that wants to skip the
-  second decode needs a different (and riskier) contract.
+  second decode needs a different (and riskier) contract. On this stamp the warm
+  pass was slower than the cold one (§2).
+* **No repeated-load measurement at a larger scale.** The gate asks for repeated
+  loads; the court measures one cold, five warm checks and one warm materialize
+  on one public checkpoint. A long training-load loop (hundreds of resumes) was
+  not run, so there is no steady-state number and no cold-page-cache arm.
 * **Unsigned local state.** The cache entry is evidence-digested, not signed.
   A process that can write the cache directory can forge an entry; the cache is
   derived state, like an index, and `--no-cache` / `weft verify --full` remain.

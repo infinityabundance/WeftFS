@@ -1,5 +1,5 @@
-== main graph ==
-+ exec docker run --rm --init --name weft-bench-court-2835515 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=463457e533ec970a1b7e8f0034622fb1ccee43f6 -e WEFT_REPO_WEFTFS_GO=82eb5c8f771d178f1997b4f2237dac916326adba -e WEFT_REPO_WEFTCODEC=6d7a98f8eb3eaf75b1285b08bc43cead821a0f21 -e WEFT_REPO_WEFTCODEC_GO=3909b6a4981835e94172bf244fea665a34956323 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T140739Z --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; WEFT_STAMP=20261115T140739Z WEFT_CLOSURE_BUNDLE=/work/.docker-cache/causal-closure-20261115T140739Z/bundle.json cargo run --release --quiet --example causal_closure_bench -- /work/bench/receipts/causal-closure-20261115T140739Z.json 64 50'
+== build Rust fixture, CLI and Go consumer ==
+== build Rust fixture, CLI and Go consumer ==
 warning: unused import: `Class`
   --> src/artifact_template.rs:37:20
    |
@@ -195,14 +195,11 @@ warning: field `gaps` is never read
     |     ^^^^
 
 warning: function `resolve_dir_path` is never used
-    --> src/training_artifact.rs:2082:15
+    --> src/training_artifact.rs:2135:15
      |
-2082 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
      |               ^^^^^^^^^^^^^^^^
 
-causal-closure: complete=3853 minimal=3841 index_build=3.228 ms p50 complete=1308112 ns minimal=1201252 ns naive complete=4637758 ns
-== small graph (index-build amortisation boundary) ==
-+ exec docker run --rm --init --name weft-bench-court-2835813 --memory=3g --memory-swap=3g --pids-limit=1024 --cpus=4 --ulimit nofile=65536:65536 --security-opt no-new-privileges --tmpfs /tmp:rw,size=1g,nosuid,nodev --cap-drop=ALL -e WEFT_IN_COURT=1 -e WEFT_COURT_IMAGE=weft/bench-court:1 -e WEFT_COURT_KERNEL=7.3.3-1-cachyos -e WEFT_COURT_IMAGE_ID=sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559 -e WEFT_COURT_MEMORY=3g -e WEFT_COURT_CPUS=4 -e WEFT_COURT_PIDS=1024 -e WEFT_COURT_NPROC=2048 -e WEFT_DOCKER_SERVER=29.9.3 -e WEFT_DOCKER_CLIENT=29.1.5 -e WEFT_REPO_WEFTFS=463457e533ec970a1b7e8f0034622fb1ccee43f6 -e WEFT_REPO_WEFTFS_GO=82eb5c8f771d178f1997b4f2237dac916326adba -e WEFT_REPO_WEFTCODEC=6d7a98f8eb3eaf75b1285b08bc43cead821a0f21 -e WEFT_REPO_WEFTCODEC_GO=3909b6a4981835e94172bf244fea665a34956323 -e RUST_BACKTRACE=1 -e CARGO_BUILD_JOBS=2 -e CARGO_INCREMENTAL=0 -e CARGO_HOME=/cargo -e CARGO_TARGET_DIR=/work/.docker-cache/target-rust -e CARGO_NET_RETRY=3 -e GOCACHE=/work/.docker-cache/go-build -e GOMODCACHE=/work/.docker-cache/go-mod -e 'GOFLAGS=-p=2 -buildvcs=false' -e GOTMPDIR=/work/.docker-cache/go-tmp -e GOMAXPROCS=4 -v /mnt/1tb_kingston/WeftFS:/work -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-registry:/cargo/registry -v /mnt/1tb_kingston/WeftFS/.docker-cache/cargo-git:/cargo/git -w /work -e WEFT_STAMP=20261115T140739Z --device /dev/fuse --cap-add SYS_ADMIN --tmpfs /mnt/weft-fuse:rw,size=512m,nosuid,nodev --tmpfs /mnt/weft-bench:rw,size=1g,nosuid,nodev weft/bench-court:1 bash -c 'set -Eeuo pipefail; ulimit -n 65536; ulimit -u 2048; export TMPDIR=/tmp; cd /work; WEFT_STAMP=20261115T140739Z WEFT_CLOSURE_BUNDLE=/work/.docker-cache/causal-closure-20261115T140739Z/bundle-small.json cargo run --release --quiet --example causal_closure_bench -- /work/bench/receipts/causal-closure-small-20261115T140739Z.json 4 50'
 warning: unused import: `Class`
   --> src/artifact_template.rs:37:20
    |
@@ -398,10 +395,136 @@ warning: field `gaps` is never read
     |     ^^^^
 
 warning: function `resolve_dir_path` is never used
-    --> src/training_artifact.rs:2082:15
+    --> src/training_artifact.rs:2135:15
      |
-2082 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
      |               ^^^^^^^^^^^^^^^^
 
-causal-closure: complete=253 minimal=241 index_build=0.417 ms p50 complete=42028 ns minimal=29435 ns naive complete=288118 ns
-== clean-room verifier ==
+warning: struct `MountSpec` is never constructed
+    --> src/main.rs:7237:8
+     |
+7237 | struct MountSpec {
+     |        ^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `MountSpecView` is never constructed
+    --> src/main.rs:7244:8
+     |
+7244 | struct MountSpecView {
+     |        ^^^^^^^^^^^^^
+
+warning: constant `MOUNT_SPEC_VERSION` is never used
+    --> src/main.rs:7261:7
+     |
+7261 | const MOUNT_SPEC_VERSION: u32 = 1;
+     |       ^^^^^^^^^^^^^^^^^^
+
+warning: function `read_mount_spec` is never used
+    --> src/main.rs:7263:4
+     |
+7263 | fn read_mount_spec(path: &Path) -> Result<MountSpec> {
+     |    ^^^^^^^^^^^^^^^
+
+warning: function `cached_state` is never used
+    --> src/main.rs:7296:4
+     |
+7296 | fn cached_state(
+     |    ^^^^^^^^^^^^
+
+warning: unused `Result` that must be used
+    --> src/main.rs:5557:25
+     |
+5557 | /                         print_json(&json!({
+5558 | |                             "checkpoint": plan.checkpoint,
+5559 | |                             "manifest_root": plan.manifest_root.to_hex(),
+5560 | |                             "axis": plan.axis,
+...    |
+5576 | |                             "elapsed_ms": started.elapsed().as_secs_f64() * 1000.0,
+5577 | |                         }));
+     | |___________________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+     = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+     |
+5557 |                         let _ = print_json(&json!({
+     |                         +++++++
+
+warning: unused `Result` that must be used
+    --> src/main.rs:5616:21
+     |
+5616 | /                     print_json(&json!({
+5617 | |                         "checkpoint": report.checkpoint,
+5618 | |                         "manifest_root": report.manifest_root.to_hex(),
+5619 | |                         "axis": report.axis,
+...    |
+5649 | |                         "peak_rss_kib": peak_rss_kib(),
+5650 | |                     }));
+     | |_______________________^
+     |
+     = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+     |
+5616 |                     let _ = print_json(&json!({
+     |                     +++++++
+
+== fixture (Rust writes) ==
+== fixture (Rust writes) ==
+{"artifact_root":"60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a","checkpoint":"tiny","element_bytes":64,"note1":"efc087ac01bfe9a1586d08ce11f6202c2fc2a4af9aa0a20a5a7aa350a1ebe2b2","note1_version":"e9c2278ce332e930d372c941f312e0a3299c867c8212e62c1af4293d1647c74e","note2":"ea99ae0bb5e638d1abfc8c8cbf9fb1fa1aa92a162da7885bb1791058ad49b5c9","note2_version":"28e55d236455a4884cc564552b198873d091e7c39e93fff9b3d239ca0f4b9498","ok":true,"provenance_id":"342d0d3e90670dbeed8bd7c1b4d94c5771ebe3483e64459bddf1dcaeb75cb775","shard_count":1,"shard_object":"cca3647263bba517d09c524b00621b10cbb30c2aaaaadab6c384b04237121416","snapshot":"4dca4eafdbb6e68e4fe1394bac9d765bfb9c07d7a12ca1013d261b2f414dec33","store":".docker-cache/training-artifact-20261115T152000Z/rust/store","tensor_count":1}
+{"artifact_root":"60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a","checkpoint":"tiny","element_bytes":64,"note1":"efc087ac01bfe9a1586d08ce11f6202c2fc2a4af9aa0a20a5a7aa350a1ebe2b2","note1_version":"e9c2278ce332e930d372c941f312e0a3299c867c8212e62c1af4293d1647c74e","note2":"ea99ae0bb5e638d1abfc8c8cbf9fb1fa1aa92a162da7885bb1791058ad49b5c9","note2_version":"28e55d236455a4884cc564552b198873d091e7c39e93fff9b3d239ca0f4b9498","ok":true,"provenance_id":"342d0d3e90670dbeed8bd7c1b4d94c5771ebe3483e64459bddf1dcaeb75cb775","shard_count":1,"shard_object":"cca3647263bba517d09c524b00621b10cbb30c2aaaaadab6c384b04237121416","snapshot":"4dca4eafdbb6e68e4fe1394bac9d765bfb9c07d7a12ca1013d261b2f414dec33","store":".docker-cache/training-artifact-20261115T152000Z/rust/store","tensor_count":1}
+== Rust resolves and validates ==
+== Rust resolves and validates ==
+== Go resolves and validates the same artifact ==
+== Go resolves and validates the same artifact ==
+== negative cases ==
+== negative cases ==
+policy rust_rc=1 go_rc=3
+policy rust_rc=1 go_rc=3
+lineage rust_rc=1 go_rc=3
+lineage rust_rc=1 go_rc=3
+missing rust_rc=1 go_rc=3
+missing rust_rc=1 go_rc=3
+value rust_rc=1 go_rc=3
+value rust_rc=1 go_rc=3
+== grant edits never change the artifact root ==
+== grant edits never change the artifact root ==
+== Go writes, Rust and Go resolve ==
+== Go writes, Rust and Go resolve ==
+generation=1
+snapshot_root=1c0ed7e47c623e565549cb46cbdcd7fa533e42b7f28a905b66805e6cab60ea9d
+generation=1
+snapshot_root=1c0ed7e47c623e565549cb46cbdcd7fa533e42b7f28a905b66805e6cab60ea9d
+go-written tampered rust_rc=1
+go-written tampered rust_rc=1
+== resolution refusal is verifiable from canonical records ==
+== resolution refusal is verifiable from canonical records ==
+== bounded closure bundles (complete and minimal) ==
+== bounded closure bundles (complete and minimal) ==
+== assemble receipt ==
+== assemble receipt ==
+PASS rust_validates: rust validation
+PASS go_validates_rust_artifact: ok
+PASS artifact_root_agrees: 60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a
+PASS go_checked_every_tensor: tensors_exact=1
+PASS go_checked_checkpoint_manifest: manifest
+PASS go_checked_context_root: context root
+PASS go_checked_lineage_closure: causal_nodes=2
+PASS go_checked_provenance: provenance_verified=1
+PASS negative_policy_refused_both: rust=Corrupt go=Corrupt want=Corrupt
+PASS negative_lineage_refused_both: rust=Malformed go=Malformed want=Malformed
+PASS negative_missing_refused_both: rust=DependencyMismatch go=DependencyMismatch want=DependencyMismatch
+PASS negative_value_refused_both: rust=Corrupt go=Corrupt
+PASS grant_epoch_moves: epochs=1,2
+PASS grant_root_unchanged: root unchanged
+PASS cross_language_grants_visible: go sees 1 then 2 grants
+PASS go_writes_rust_validates: ok
+PASS go_writes_go_validates: ok
+PASS go_written_root_agrees: 3f81f846ca50b69b8b0bff0cf069423e30bccd74c4c433ea8e3c133ee76f23f6
+PASS go_written_tamper_refused_by_rust: Corrupt
+PASS verifier_refusal_bundle: {'class': 'DependencyMismatch', 'identity': '5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a'}
+PASS verifier_go_closure: Go bundle: 3 records, 3 nodes
+FAIL verifier_go_refusal_bundle: the refusal does not name the missing identity
+PASS verifier_complete_closure: checked from canonical records
+PASS verifier_minimal_closure: checked from canonical records
+result=fail

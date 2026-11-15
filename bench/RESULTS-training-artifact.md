@@ -1,9 +1,13 @@
 # P01 — one composable Training Artifact, Rust and Go
 
-**Date:** 2026-11-15. **Court:** `scripts/training_artifact_court.sh` (one
-hard-limited fuse container, Rust and Go). **Receipt:**
-`bench/receipts/training-artifact-20261115T141554Z.json` and `.log`.
-**Normative:** `spec/WEFT-TRAINING-ARTIFACT.md`.
+**Date:** 2026-11-15 (refreshed 2026-11-15T153500Z). **Court:**
+`scripts/training_artifact_court.sh` (one hard-limited fuse container, Rust and
+Go). **Receipt:** `bench/receipts/training-artifact-20261115T153500Z.json` and
+`.log`, at WeftFS `10fde89`, WeftFS-Go `21c41b1`, WeftCodec `98019d8`,
+WeftCodec-Go `d45fcb4`. **Normative:** `spec/WEFT-TRAINING-ARTIFACT.md`.
+**Retained failures:** `training-artifact-20261115T132004Z.json` (empty
+`record_bytes`), `…144500Z.json` (Go refused the certifier's canonical-roots
+rule), `…152000Z.json` (Go refusal bundle carried no records).
 
 ## 1. What was proved
 
@@ -29,7 +33,7 @@ contains no snapshot, path, principal, grant, retention or quarantine field.
 | Exact tensors recomputed by Go | 1 |
 | Artifact record | 1,071 B |
 | Go wrote (tensor set), Rust validated | 2 tensors, 48 logical bytes |
-| Court checks | 23 / 23 pass |
+| Court checks | 24 / 24 pass |
 <!-- END GENERATED:ta-proof -->
 
 The negative cases are produced by the Rust fixture harness (a real store
@@ -47,6 +51,33 @@ mutation or a re-encoded artifact record), then validated by both consumers:
 The clean-room verifier also re-checks a *refusal* bundle: from canonical
 records alone it recomputes the walk, hits the same unresolvable identity and
 matches the class and the named identity. That is a P02 finding (below).
+
+### 2.1 Two defects the independent checker found
+
+Both were found by running `verifier/closure_check.py`, which knows nothing
+about either implementation, against bundles produced by the independent Go
+consumer. Both are now fixed and covered by the court.
+
+1. **The bundle echoed an unnormalised request set.** Both stores sort and
+   dedupe the root list internally, but the Go bundle printed the caller's list,
+   so its `roots` were not ascending and the verifier refused the entire bundle
+   (`NonCanonical: roots is not strictly ascending`) before recomputing
+   anything. The request set is now derived by one store function per language,
+   and `complete`/`minimal` also differ correctly there (`complete` includes the
+   artifact's declared transitive `closure` as roots, `minimal` does not).
+   Spec §5 now states the rule.
+2. **A refusal bundle could not be recomputed.** The verifier walks from the
+   bundle's `roots`; neither producer emitted a record for a root whose object
+   declares no causal attributes, so the verifier failed on the root rather than
+   on the identity the producer named. Both producers now emit a record for
+   every root that resolves (the canonical empty `weft.causal.v1` record when
+   the node declares no ancestry) and leave an unresolvable root absent so the
+   walk hits it. The Go bundle previously carried no records at all on a
+   refusal.
+
+`tests/training_artifact.rs::refusal_bundle_carries_a_record_for_every_request_root`
+and `WeftFS-Go/store/training_artifact_test.go::TestClosureRootsAreCanonicalAndModeSeparated`
+hold the two rules directly.
 
 ## 3. What Go cannot check, and why
 
@@ -89,6 +120,13 @@ These are reported rather than skipped:
   validation in this court.
 * **No signature.** `TrainingArtifactRoot` is an unsigned content address.
   Authenticity of the writer is a separate surface.
+* **Evidence schema is court-local.** `weft.closure.bundle.v1` is not a store
+  format; it is what this court and the clean-room verifier agree on. A second
+  independent producer must implement the same bundle shape to be checkable, and
+  two of the rules it needs were only learned by failing against it (§2.1).
+* **The Go refusal bundle is checked for consistency, not compared field by
+  field with Rust's.** The court asserts the verifier reaches the same class and
+  identity; it does not diff record bytes.
 
 ## 5. Non-claims
 

@@ -1,0 +1,345 @@
+{
+  "checks": [
+    {
+      "detail": "rust validation",
+      "name": "rust_validates",
+      "ok": true
+    },
+    {
+      "detail": "ok",
+      "name": "go_validates_rust_artifact",
+      "ok": true
+    },
+    {
+      "detail": "60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a",
+      "name": "artifact_root_agrees",
+      "ok": true
+    },
+    {
+      "detail": "tensors_exact=1",
+      "name": "go_checked_every_tensor",
+      "ok": true
+    },
+    {
+      "detail": "manifest",
+      "name": "go_checked_checkpoint_manifest",
+      "ok": true
+    },
+    {
+      "detail": "context root",
+      "name": "go_checked_context_root",
+      "ok": true
+    },
+    {
+      "detail": "causal_nodes=2",
+      "name": "go_checked_lineage_closure",
+      "ok": true
+    },
+    {
+      "detail": "provenance_verified=1",
+      "name": "go_checked_provenance",
+      "ok": true
+    },
+    {
+      "detail": "rust=Corrupt go=Corrupt want=Corrupt",
+      "name": "negative_policy_refused_both",
+      "ok": true
+    },
+    {
+      "detail": "rust=Malformed go=Malformed want=Malformed",
+      "name": "negative_lineage_refused_both",
+      "ok": true
+    },
+    {
+      "detail": "rust=DependencyMismatch go=DependencyMismatch want=DependencyMismatch",
+      "name": "negative_missing_refused_both",
+      "ok": true
+    },
+    {
+      "detail": "rust=Corrupt go=Corrupt",
+      "name": "negative_value_refused_both",
+      "ok": true
+    },
+    {
+      "detail": "epochs=1,2",
+      "name": "grant_epoch_moves",
+      "ok": true
+    },
+    {
+      "detail": "root unchanged",
+      "name": "grant_root_unchanged",
+      "ok": true
+    },
+    {
+      "detail": "go sees 1 then 2 grants",
+      "name": "cross_language_grants_visible",
+      "ok": true
+    },
+    {
+      "detail": "ok",
+      "name": "go_writes_rust_validates",
+      "ok": true
+    },
+    {
+      "detail": "ok",
+      "name": "go_writes_go_validates",
+      "ok": true
+    },
+    {
+      "detail": "3f81f846ca50b69b8b0bff0cf069423e30bccd74c4c433ea8e3c133ee76f23f6",
+      "name": "go_written_root_agrees",
+      "ok": true
+    },
+    {
+      "detail": "Corrupt",
+      "name": "go_written_tamper_refused_by_rust",
+      "ok": true
+    },
+    {
+      "detail": {
+        "class": "DependencyMismatch",
+        "identity": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+      },
+      "name": "verifier_refusal_bundle",
+      "ok": true
+    },
+    {
+      "detail": "Go bundle: 3 records, 3 nodes",
+      "name": "verifier_go_closure",
+      "ok": true
+    },
+    {
+      "detail": "the refusal does not name the missing identity",
+      "name": "verifier_go_refusal_bundle",
+      "ok": false
+    },
+    {
+      "detail": "checked from canonical records",
+      "name": "verifier_complete_closure",
+      "ok": true
+    },
+    {
+      "detail": "checked from canonical records",
+      "name": "verifier_minimal_closure",
+      "ok": true
+    }
+  ],
+  "closure": {
+    "complete": {
+      "verifier": {
+        "max_depth_seen": 0,
+        "mode": "complete",
+        "nodes": 3,
+        "ok": true,
+        "records": 3,
+        "refusal": null,
+        "roots": 3
+      },
+      "verifier_rc": 0
+    },
+    "minimal": {
+      "verifier": {
+        "max_depth_seen": 1,
+        "mode": "minimal",
+        "nodes": 3,
+        "ok": true,
+        "records": 3,
+        "refusal": null,
+        "roots": 2
+      },
+      "verifier_rc": 0
+    }
+  },
+  "court": "fuse (Rust + Go in one hard-limited container)",
+  "cross_language": {
+    "go_writes_go_validates": {
+      "artifact_bytes": 970,
+      "artifact_root": "3f81f846ca50b69b8b0bff0cf069423e30bccd74c4c433ea8e3c133ee76f23f6",
+      "causal_max_depth": 0,
+      "causal_nodes": 0,
+      "checkpoint_verified": false,
+      "context_root_verified": false,
+      "grant_epoch": 0,
+      "grants": 0,
+      "implementation": "go",
+      "lineage_mode": "none",
+      "name": "go-written",
+      "ok": true,
+      "policy_ok": true,
+      "provenance_verified": 0,
+      "shard_count": 2,
+      "snapshot": "83303731279ac4be1ce3e9fcd065a2fbfc7fc2e81e2e7bf897e186b724c55dd8",
+      "tensor_count": 2,
+      "tensors_exact": 2,
+      "total_element_bytes": 48
+    },
+    "go_writes_rust_validates": {
+      "artifact_bytes": 970,
+      "artifact_root": "3f81f846ca50b69b8b0bff0cf069423e30bccd74c4c433ea8e3c133ee76f23f6",
+      "causal_closure": [],
+      "causal_max_depth": 0,
+      "causal_nodes": 0,
+      "checkpoint_verified": false,
+      "context_root_verified": false,
+      "grant_epoch": 0,
+      "grants": 0,
+      "lineage_mode": "none",
+      "manifest_content": null,
+      "manifest_root": null,
+      "name": "go-written",
+      "ok": true,
+      "policy_ok": true,
+      "provenance_verified": 0,
+      "shard_count": 2,
+      "snapshot": "83303731279ac4be1ce3e9fcd065a2fbfc7fc2e81e2e7bf897e186b724c55dd8",
+      "tensor_count": 2,
+      "tensors_exact": 2,
+      "total_element_bytes": 48
+    },
+    "rust_writes_go_validates": {
+      "artifact_bytes": 1071,
+      "artifact_root": "60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a",
+      "causal_max_depth": 1,
+      "causal_nodes": 2,
+      "checkpoint_verified": true,
+      "context_root_verified": true,
+      "grant_epoch": 0,
+      "grants": 0,
+      "implementation": "go",
+      "lineage_mode": "complete",
+      "manifest_content": "e0f3a926b791e0b6c690bf54113a6d30da3795e5d305b57b10cd85f79656692f",
+      "manifest_root": "72e75026697d8c0e5efa6601ad54bf03d8f7782222255be966a653482d648ce9",
+      "name": "tiny-real",
+      "ok": true,
+      "policy_ok": true,
+      "provenance_verified": 1,
+      "shard_count": 1,
+      "snapshot": "4dca4eafdbb6e68e4fe1394bac9d765bfb9c07d7a12ca1013d261b2f414dec33",
+      "tensor_count": 1,
+      "tensors_exact": 1,
+      "total_element_bytes": 64
+    }
+  },
+  "environment": {
+    "image": "weft/fuse-court:1",
+    "image_id": "sha256:29cf60e7facd11b7427a5fa5742f1af92fdefbe30575de27f61b39cd24ea269e",
+    "kernel": "7.3.3-1-cachyos",
+    "limits": {
+      "cpus": "4",
+      "memory": "3g",
+      "pids": "1024"
+    },
+    "revisions": {
+      "WeftCodec": "98019d82c32365bc01d411aba93ea9f951ae6de6",
+      "WeftCodec-Go": "d45fcb4c92f3302b1dfcab66e98ef63394040fe0",
+      "WeftFS": "d621c8c6c9dbac7b84d438e3736b90643ecf1857",
+      "WeftFS-Go": "4db8b838fa8bb6a9091f7a73bb7ca78546db03b7"
+    }
+  },
+  "fixture": {
+    "artifact_root": "60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a",
+    "checkpoint": "tiny",
+    "element_bytes": 64,
+    "note1": "efc087ac01bfe9a1586d08ce11f6202c2fc2a4af9aa0a20a5a7aa350a1ebe2b2",
+    "note1_version": "e9c2278ce332e930d372c941f312e0a3299c867c8212e62c1af4293d1647c74e",
+    "note2": "ea99ae0bb5e638d1abfc8c8cbf9fb1fa1aa92a162da7885bb1791058ad49b5c9",
+    "note2_version": "28e55d236455a4884cc564552b198873d091e7c39e93fff9b3d239ca0f4b9498",
+    "ok": true,
+    "provenance_id": "342d0d3e90670dbeed8bd7c1b4d94c5771ebe3483e64459bddf1dcaeb75cb775",
+    "shard_count": 1,
+    "shard_object": "cca3647263bba517d09c524b00621b10cbb30c2aaaaadab6c384b04237121416",
+    "snapshot": "4dca4eafdbb6e68e4fe1394bac9d765bfb9c07d7a12ca1013d261b2f414dec33",
+    "store": ".docker-cache/training-artifact-20261115T152000Z/rust/store",
+    "tensor_count": 1
+  },
+  "grants": {
+    "go_epochs": [
+      1,
+      2
+    ],
+    "rust_validate": {
+      "artifact_bytes": 1071,
+      "artifact_root": "60daf78650abdcbe0aeb0680940f467630b511c3c442680c8c704c22309a7e7a",
+      "causal_closure": [
+        "28e55d236455a4884cc564552b198873d091e7c39e93fff9b3d239ca0f4b9498",
+        "e9c2278ce332e930d372c941f312e0a3299c867c8212e62c1af4293d1647c74e"
+      ],
+      "causal_max_depth": 1,
+      "causal_nodes": 2,
+      "checkpoint_verified": true,
+      "context_root_verified": true,
+      "grant_epoch": 2,
+      "grants": 2,
+      "lineage_mode": "complete",
+      "manifest_content": "e0f3a926b791e0b6c690bf54113a6d30da3795e5d305b57b10cd85f79656692f",
+      "manifest_root": "72e75026697d8c0e5efa6601ad54bf03d8f7782222255be966a653482d648ce9",
+      "name": "tiny-real",
+      "ok": true,
+      "policy_ok": true,
+      "provenance_verified": 1,
+      "shard_count": 1,
+      "snapshot": "e4a5ba12aaed5f47b7e70aa64060f429c441e47734bebc36eefb91ad9e987e6c",
+      "tensor_count": 1,
+      "tensors_exact": 1,
+      "total_element_bytes": 64
+    }
+  },
+  "kind": "training-artifact-court",
+  "negatives": {
+    "lineage": {
+      "go": {
+        "class": "Malformed",
+        "message": "Malformed: a lineage claim requires a causal record",
+        "ok": false
+      },
+      "rust": {
+        "class": "Malformed",
+        "message": "Malformed: a lineage claim requires a causal record",
+        "ok": false
+      }
+    },
+    "missing": {
+      "go": {
+        "class": "DependencyMismatch",
+        "message": "DependencyMismatch: causal ancestor 5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a is not resolvable at this snapshot",
+        "ok": false
+      },
+      "rust": {
+        "class": "DependencyMismatch",
+        "message": "DependencyMismatch: causal ancestor 5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a is not resolvable at this snapshot",
+        "ok": false
+      }
+    },
+    "policy": {
+      "go": {
+        "class": "Corrupt",
+        "message": "Corrupt: policy allowed_dtypes does not permit \"bf16\" for tensor \"weight\"",
+        "ok": false
+      },
+      "rust": {
+        "class": "Corrupt",
+        "message": "Corrupt: policy allowed_dtypes does not permit `bf16` for tensor `weight`",
+        "ok": false
+      }
+    },
+    "value": {
+      "go": {
+        "class": "Corrupt",
+        "message": "Corrupt: tensor \"weight\" shard 0 value hashes to 93a583dc418578d989e244bda224da7c4b7654cc3d81cd38dd80a126c07c5c86 not 1d2e039cd16df9c1384c7db681cd25f1cc135d622c590c9ff81648fb7af803d0",
+        "ok": false
+      },
+      "rust": {
+        "class": "Corrupt",
+        "message": "Corrupt: tensor `weight` shard 0 value hashes to 93a583dc418578d989e244bda224da7c4b7654cc3d81cd38dd80a126c07c5c86 not 1d2e039cd16df9c1384c7db681cd25f1cc135d622c590c9ff81648fb7af803d0",
+        "ok": false
+      }
+    }
+  },
+  "result": "fail",
+  "summary": {
+    "failed": 1,
+    "passed": 23,
+    "total": 24
+  },
+  "timestamp_utc": "20261115T152000Z"
+}

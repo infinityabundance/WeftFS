@@ -14658,7 +14658,7 @@
       "bench/RESULTS-training-artifact.md",
       "spec/WEFT-TRAINING-ARTIFACT.md"
     ],
-    "receipt": "bench/receipts/training-artifact-20261115T141554Z.json",
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
   },
   {
@@ -14668,7 +14668,7 @@
     "locations": [
       "bench/RESULTS-training-artifact.md"
     ],
-    "receipt": "bench/receipts/training-artifact-20261115T141554Z.json",
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
   },
   {
@@ -14678,7 +14678,7 @@
     "locations": [
       "bench/RESULTS-training-artifact.md"
     ],
-    "receipt": "bench/receipts/training-artifact-20261115T141554Z.json",
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
   },
   {
@@ -14688,7 +14688,7 @@
     "locations": [
       "bench/RESULTS-training-artifact.md"
     ],
-    "receipt": "bench/receipts/training-artifact-20261115T141554Z.json",
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
   },
   {
@@ -14698,7 +14698,7 @@
     "locations": [
       "bench/RESULTS-training-artifact.md"
     ],
-    "receipt": "bench/receipts/training-artifact-20261115T141554Z.json",
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
   },
   {
@@ -14708,7 +14708,7 @@
     "locations": [
       "bench/RESULTS-causal-closure.md"
     ],
-    "receipt": "bench/receipts/causal-closure-20261115T140739Z.json",
+    "receipt": "bench/receipts/causal-closure-20261115T154500Z.json",
     "kind": "present"
   },
   {
@@ -14719,17 +14719,17 @@
       "bench/RESULTS-causal-closure.md",
       "spec/WEFT-TRAINING-ARTIFACT.md"
     ],
-    "receipt": "bench/receipts/causal-closure-20261115T140739Z.json",
+    "receipt": "bench/receipts/causal-closure-20261115T154500Z.json",
     "kind": "present"
   },
   {
     "id": "p02_clean_room_verifier",
-    "claim": "A clean-room verifier recomputes the closure from canonical causal records alone.",
+    "claim": "A clean-room verifier recomputes the closure from canonical causal records alone, and rejects a producer's bundle that is not canonical.",
     "value": "closure_check.py",
     "locations": [
       "bench/RESULTS-causal-closure.md"
     ],
-    "receipt": "bench/receipts/causal-closure-20261115T140739Z.json",
+    "receipt": "bench/receipts/causal-closure-20261115T154500Z.json",
     "kind": "present"
   },
   {
@@ -14739,7 +14739,7 @@
     "locations": [
       "bench/RESULTS-causal-closure.md"
     ],
-    "receipt": "bench/receipts/causal-closure-20261115T140739Z.json",
+    "receipt": "bench/receipts/causal-closure-20261115T154500Z.json",
     "kind": "present"
   },
   {
@@ -14749,7 +14749,7 @@
     "locations": [
       "bench/RESULTS-training-ready-cost.md"
     ],
-    "receipt": "bench/receipts/training-ready-cost-20261115T140742Z.json",
+    "receipt": "bench/receipts/training-ready-cost-20261115T155500Z.json",
     "kind": "present"
   },
   {
@@ -14759,17 +14759,17 @@
     "locations": [
       "bench/RESULTS-training-ready-cost.md"
     ],
-    "receipt": "bench/receipts/training-ready-cost-20261115T140742Z.json",
+    "receipt": "bench/receipts/training-ready-cost-20261115T155500Z.json",
     "kind": "present"
   },
   {
     "id": "p03_time_to_ready_dominant",
-    "claim": "Time-to-ready is dominated by materialization, not by validation.",
+    "claim": "Time-to-ready is dominated by materialization (decode plus output write), not by ready-state validation: the cold ready-check alone is below the earlier P7 number, and every time-to-ready total includes a full materialize that the cache cannot skip.",
     "value": "dominant term",
     "locations": [
       "bench/RESULTS-training-ready-cost.md"
     ],
-    "receipt": "bench/receipts/training-ready-cost-20261115T140742Z.json",
+    "receipt": "bench/receipts/training-ready-cost-20261115T155500Z.json",
     "kind": "present"
   },
   {
@@ -14779,7 +14779,7 @@
     "locations": [
       "bench/RESULTS-training-ready-cost.md"
     ],
-    "receipt": "bench/receipts/training-ready-cost-20261115T140742Z.json",
+    "receipt": "bench/receipts/training-ready-cost-20261115T155500Z.json",
     "kind": "present"
   },
   {
@@ -14789,7 +14789,30 @@
     "locations": [
       "bench/RESULTS-training-artifact.md"
     ],
-    "receipt": "bench/receipts/training-artifact-20261115T141554Z.json",
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p02_bundle_roots_canonical",
+    "claim": "A closure bundle echoes the canonical request set it actually queried; complete includes the declared transitive closure as roots and minimal does not. Found by the independent verifier rejecting the Go bundle.",
+    "value": "strictly ascending",
+    "locations": [
+      "bench/RESULTS-causal-closure.md",
+      "docs/CAUSAL-CLOSURE-FINDINGS.md",
+      "spec/WEFT-TRAINING-ARTIFACT.md"
+    ],
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "p02_refusal_bundle_recomputable",
+    "claim": "A refusal bundle carries a record for every root that resolves and leaves an unresolvable root absent, so the clean-room verifier recomputes the same refusal class and the same missing identity in both languages.",
+    "value": "refusal bundle",
+    "locations": [
+      "bench/RESULTS-causal-closure.md",
+      "docs/CAUSAL-CLOSURE-FINDINGS.md"
+    ],
+    "receipt": "bench/receipts/training-artifact-20261115T153500Z.json",
     "kind": "present"
   }
 ]

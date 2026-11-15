@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **933** tests pass; FUSE **984** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,393** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,395** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -12135,3 +12135,56 @@ the aggregate was **not** re-run, so the cited verification receipt is still
     `check-spec-drift`, conformance manifest/coverage and the verifier/header
     courts. The three new courts are registered in `verify-all.sh` with
     explicit exit-78 skip paths; the aggregate was not re-run.
+
+- 2026-11-15 (P01/P02 hardening: the independent checker found two real defects;
+  receipts refreshed at the final revision): parent `staging` `10fde89`+;
+  WeftFS-Go `21c41b1`; WeftCodec `98019d8`; WeftCodec-Go `d45fcb4`; not pushed.
+  All three courts were re-run at this revision, so the generated numbers and
+  every claim now cite the new receipts
+  (`training-artifact-20261115T153500Z`, `causal-closure-20261115T154500Z`,
+  `training-ready-cost-20261115T155500Z`).
+  * Defect 1 (Go consumer, P02 evidence): the closure bundle echoed the caller's
+    unnormalised root list, so `roots` were not strictly ascending and
+    `verifier/closure_check.py` refused the whole bundle before recomputing
+    anything. The request set is now derived by one store function per language
+    (`TrainingArtifactClosureRoots` in Go, the root block in
+    `training_artifact_closure` in Rust): complete = declared parents + declared
+    transitive closure + member versions, minimal = declared parents + member
+    versions, both canonical. `spec/WEFT-TRAINING-ARTIFACT.md` §5 states the
+    rule; `docs/CAUSAL-CLOSURE-FINDINGS.md` records it as finding 11.
+  * Defect 2 (both producers, P02 evidence): a refusal bundle was not
+    recomputable. The verifier walks from `roots`, and neither producer emitted a
+    record for a root that declares no causal attributes, so the verifier failed
+    on the root (`4881da…`) instead of the identity the producer named
+    (`5a5a…`); the Go refusal bundle carried no records at all. Both now emit a
+    record for every root that resolves (canonical empty `weft.causal.v1` record
+    when the node declares no ancestry) and leave an unresolvable root absent.
+    The court now verifies the Go success **and** refusal bundles (24/24).
+  * Regression tests: `tests/training_artifact.rs::refusal_bundle_carries_a_record_for_every_request_root`
+    (13/13 in that suite) and `WeftFS-Go/store/training_artifact_test.go::
+    TestClosureRootsAreCanonicalAndModeSeparated`; the Go refusal path is also
+    covered end-to-end by the court.
+  * Retained failures: `training-artifact-20261115T144500Z.json` (defect 1),
+    `…152000Z.json` (defect 2), and the earlier `…132004Z.json` (empty
+    `record_bytes`). Two intermediate attempts (`…143000Z`, `…143100Z`) aborted
+    before the court assembled a receipt and are **not** cited; their logs were
+    deleted before they were committed, which is a process miss — the two
+    defects are evidenced by the retained receipts above and by the new tests.
+  * Documents: a real units defect in `bench/RESULTS-causal-closure.md` was
+    fixed — the generated fixture line printed the index build (`3,230,263`) as
+    "ms" when the receipt field is nanoseconds. `cc.build_ms` is now an
+    expression over a printed `cc.build_ns` (3.230 ms), so the reader sees both
+    and the manifest has no unconsumed number.
+  * P03 measured, unchanged conclusion, new numbers: cold ready-check below the
+    earlier P7 77,250.0 ms (receipt `training-ready-20261105T171104Z`, revision
+    `807d2ee`); time-to-ready is larger because it includes materialization
+    (97,106.3 ms cold / 63,406.8 ms warm at `10fde89`), and on this stamp the
+    **warm** materialize was 16.1 % slower than the cold one — published as a
+    loss, not a cache effect.
+  * Gates at the final tree: `check-claims` 1395 OK, `perf_numbers --check`
+    2037 numbers / 265 blocks OK, `check-spec-drift` (81 comparisons),
+    conformance manifest and coverage, `context-plane-verifier_court` and
+    `check-context-plane-header` — see the commit log. Full Rust
+    `cargo test --all-targets` and Go `go test -race ./...` were run after the
+    last code change. `verify-all` was **not** re-run (the four P0x courts are
+    registered with skip paths); the cited aggregate is unchanged.
