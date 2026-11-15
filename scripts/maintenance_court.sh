@@ -34,7 +34,8 @@ if ! scripts/docker-court.sh rust "
     --out .docker-cache/maintenance-court --json .docker-cache/maintenance-court/result.json
   cat .docker-cache/maintenance-court/result.json
 " >"$log" 2>&1; then
-  skip "court run failed (see $log)"
+  echo "$(basename "$0"): FAILED (see $log)" >&2
+  exit 1
 fi
 
 python3 - "$stamp" "$receipt" "$log" <<'PY'

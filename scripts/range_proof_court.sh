@@ -139,7 +139,7 @@ report['result'] = 'pass' if ok else 'fail'
 json.dump(report, open(os.path.join(work, 'python.json'), 'w'), indent=2)
 print('python checks:', sum(1 for c in report['checks'] if c['pass']), '/', len(report['checks']))
 PY
-" >>"$log" 2>&1 || skip "court run failed (see $log)"
+" >>"$log" 2>&1 || { echo "$(basename "$0"): FAILED (see $log)" >&2; exit 1; }
 
 # Assemble the receipt on the host (numbers only; no test logic here).
 python3 - "$stamp" "$root/$work" "$receipt" "$log" <<'PY'
