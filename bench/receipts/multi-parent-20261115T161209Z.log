@@ -1,0 +1,275 @@
+== T091 multi-parent court, measure stage ==
+kernel: Linux 827e6e850108 7.3.3-1-cachyos #1 SMP PREEMPT_DYNAMIC Sat, 07 Nov 2026 18:39:10 +0000 x86_64 GNU/Linux
+image: weft/bench-court:1 (sha256:4c6c41fb2b549f37ba846b5e51424d773cef9194bc3a6b3632ab208f66501559)
+limits: memory=3g cpus=4 pids=1024
+warning: unused import: `Class`
+  --> src/artifact_template.rs:37:20
+   |
+37 | use crate::error::{Class, Error, Result};
+   |                    ^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `self`
+  --> src/context.rs:37:23
+   |
+37 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:926:28
+    |
+926 |         let record = match ({
+    |                            ^
+...
+929 |         }) {
+    |          ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+926 ~         let record = match {
+927 |             let _state = phase_profile::scope(Phase::AuthState);
+928 |             self.object_meta(id)
+929 ~         } {
+    |
+
+warning: unnecessary parentheses around `match` scrutinee expression
+   --> src/kv_capability.rs:938:49
+    |
+938 |         let (descriptor, descriptor_id) = match ({
+    |                                                 ^
+...
+941 |         }) {
+    |          ^
+    |
+help: remove these parentheses
+    |
+938 ~         let (descriptor, descriptor_id) = match {
+939 |             let _descriptor = phase_profile::scope(Phase::AuthDescriptor);
+940 |             self.kv_descriptor_of(&record)
+941 ~         } {
+    |
+
+warning: unused import: `crate::recovery`
+  --> src/rebase.rs:32:5
+   |
+32 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/recovery_first.rs:33:5
+   |
+33 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::BTreeSet`
+  --> src/revocation_epoch.rs:31:5
+   |
+31 | use std::collections::BTreeSet;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::state::State`
+  --> src/revocation_epoch.rs:39:5
+   |
+39 | use crate::state::State;
+   |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ProvenanceRecord`
+  --> src/taint.rs:36:25
+   |
+36 | use crate::provenance::{ProvenanceRecord, PROVENANCE_PREDICATE};
+   |                         ^^^^^^^^^^^^^^^^
+
+warning: unused import: `self`
+  --> src/tensor_store.rs:43:23
+   |
+43 | use crate::recovery::{self, BlobKind};
+   |                       ^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/training_ready.rs:38:5
+   |
+38 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::recovery`
+  --> src/transcode.rs:46:5
+   |
+46 | use crate::recovery;
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused variable: `commit`
+    --> src/azure.rs:2309:9
+     |
+2309 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1722:9
+     |
+1722 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `commit_len`
+    --> src/backend.rs:1723:9
+     |
+1723 |         commit_len: u64,
+     |         ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit_len`
+
+warning: unused variable: `timestamp_ns`
+    --> src/backend.rs:1724:9
+     |
+1724 |         timestamp_ns: i64,
+     |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_timestamp_ns`
+
+warning: unused variable: `commit`
+    --> src/backend.rs:1798:9
+     |
+1798 |         commit: Hash32,
+     |         ^^^^^^ help: if this is intentional, prefix it with an underscore: `_commit`
+
+warning: unused variable: `slot`
+    --> src/s3.rs:1807:13
+     |
+1807 |         let slot = crate::format::SuperblockSlot {
+     |             ^^^^ help: if this is intentional, prefix it with an underscore: `_slot`
+
+warning: variable does not need to be mutable
+    --> src/store.rs:3352:13
+     |
+3352 |         let mut index: StateIndex;
+     |             ----^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `float_dtype`
+    --> src/tensor_store.rs:7683:18
+     |
+7683 |             Some(float_dtype) if !mode9_offered => {
+     |                  ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_float_dtype`
+
+warning: unused variable: `record`
+    --> src/training_artifact.rs:1089:21
+     |
+1089 |                 let record = state
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_record`
+
+warning: method `encode_file` is never used
+   --> src/index.rs:272:19
+    |
+ 93 | impl StateIndex {
+    | --------------- method in this implementation
+...
+272 |     pub(crate) fn encode_file(&self) -> Result<Vec<u8>> {
+    |                   ^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `is_empty` is never used
+  --> src/index_incremental.rs:51:19
+   |
+50 | impl IndexDelta {
+   | --------------- method in this implementation
+51 |     pub(crate) fn is_empty(&self) -> bool {
+   |                   ^^^^^^^^
+
+warning: method `head_key` is never used
+    --> src/store.rs:1821:8
+     |
+1288 | impl Store {
+     | ---------- method in this implementation
+...
+1821 |     fn head_key(&self) -> Key {
+     |        ^^^^^^^^
+
+warning: field `gaps` is never read
+   --> src/taint.rs:411:5
+    |
+405 | struct Consumer {
+    |        -------- field in this struct
+...
+411 |     gaps: Vec<String>,
+    |     ^^^^
+
+warning: function `resolve_dir_path` is never used
+    --> src/training_artifact.rs:2135:15
+     |
+2135 | pub(crate) fn resolve_dir_path(store: &Store, path: &str) -> Result<Hash32> {
+     |               ^^^^^^^^^^^^^^^^
+
+warning: unused import: `decode_with_base_frame as decode_sparse`
+  --> examples/multi_parent_court.rs:55:31
+   |
+55 | use weftcodec::sparse_delta::{decode_with_base_frame as decode_sparse, encode_sparse_delta};
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `per_parent_copies` and `per_parent_bytes` are never read
+   --> examples/multi_parent_court.rs:205:5
+    |
+200 | struct MultiEncoding {
+    |        ------------- fields in this struct
+...
+205 |     per_parent_copies: Vec<u64>,
+    |     ^^^^^^^^^^^^^^^^^
+206 |     per_parent_bytes: Vec<u64>,
+    |     ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `dtype` and `shape` are never read
+   --> examples/multi_parent_court.rs:342:5
+    |
+341 | struct Container {
+    |        --------- fields in this struct
+342 |     dtype: String,
+    |     ^^^^^
+343 |     shape: Vec<u64>,
+    |     ^^^^^
+
+95d03aa46afbd45570534b6f9cf2f78890d6334d7ae78d187b2ba7c7a0b3b557  .docker-cache/target-rust/debug/examples/multi_parent_court
+cb2697a8c441bad7b49f80167b9c96610f9a974fd0f436d44aa7ea4ac5148284  examples/multi_parent_court.rs
+T091: 12 tensors from target pythia-step1 (parents 0)
+T091: 12 tensors from target pythia-step8 (parents 4,0,2,1)
+T091: 12 tensors from target pythia-step16 (parents 8,0,4,2)
+T091: 12 tensors from target pythia-step64 (parents 16,0,8,4)
+T091: 12 tensors from target pythia-step512 (parents 64,0,16,8)
+T091: 12 tensors from target pythia-step1000 (parents 512,0,64,16)
+{"best_multiparent_body_bytes":42052505,"best_multiparent_bytes":42090550,"best_single_delta_body_bytes":42071901,"best_single_delta_bytes":42082557,"best_single_weight_delta_bytes":13360077,"out":"bench/receipts/multi-parent-20261115T161209Z-raw.json","tensors":72}
+	Command being timed: ".docker-cache/target-rust/debug/examples/multi_parent_court --corpus .docker-cache/real-corpus --targets 1,8,16,64,512,1000 --max-tensors 12 --max-tensor-bytes 67108864 --max-parents 4 --fanouts 1,2,3,4 --reps 3 --out bench/receipts/multi-parent-20261115T161209Z-raw.json"
+	User time (seconds): 445.59
+	System time (seconds): 0.47
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 7:27.25
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 140060
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 181269
+	Voluntary context switches: 1
+	Involuntary context switches: 13209
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 552
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+PASS every_multiparent_decode_exact: {'rows': 252, 'inexact': 0}
+PASS availability_typed_refusals: 72
+PASS baselines_present: 72
+PASS fanout1_body_calibration: {'samples': 72, 'min': -50, 'max': -48}
+PASS fanout1_measured_overhead_reported: {'samples': 72, 'min': -50, 'max': 3384, 'note': 'includes one parent-index byte per COPY, a real container cost'}
+PASS fanout1_body_identity: {'samples': 72, 'mismatches': 0}
+FAIL payload_wins_bounded: {'tensors_with_a_payload_win': 17, 'largest_win_bytes': 2738, 'largest_win_fraction_of_tensor': 0.017578125}
+PASS payload_aggregate_win_bounded: {'payload_multiparent': 42052505, 'payload_single': 42071901, 'payload_win_bytes': 19396, 'payload_win_fraction': 0.00038405122161394974, 'payload_ratio': 0.9995389797099969}
