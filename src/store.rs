@@ -233,6 +233,14 @@ pub struct Options {
     /// publishes through a conditional head compare-and-swap and is implemented
     /// for the explicit transaction API only. See `spec/WEFT-MULTIWRITER.md`.
     pub writer_mode: crate::mw2::WriterMode,
+    /// X09: a durable writer **session** lease with an absolute deadline, an
+    /// explicit renewal, a cooperating keeper thread and a FIFO acquisition
+    /// queue. `None` (the default) is every pre-X09 behaviour. Requires
+    /// `writer_mode: Optimistic`, because MW1's authority is the kernel lock a
+    /// live process holds and that lock cannot expire; refusing the combination
+    /// is the honest answer rather than silently ignoring the lease. See
+    /// `spec/WEFT-WRITER-LEASE.md`.
+    pub writer_lease: Option<crate::writer_lease::WriterLeaseOptions>,
     /// One group commit is one durability barrier: blob publications inside a
     /// group defer their per-blob `fsync` to the barrier the commit path
     /// performs before the commit record. Default on. Turning it off restores
@@ -271,6 +279,7 @@ impl Default for Options {
             incremental_index: true,
             incremental_index_maintenance: true,
             writer_mode: crate::mw2::WriterMode::Single,
+            writer_lease: None,
             history_path: None,
             defer_group_blob_sync: true,
         }
@@ -1053,6 +1062,9 @@ pub struct Store {
     history: Option<crate::history::HistorySink>,
     /// Identity of this handle in the history (stable for the handle's life).
     history_handle: String,
+    /// X09: the durable writer session lease, when the operator enabled one.
+    /// `None` is every pre-X09 behaviour (MW1's kernel lock, or unleased MW2).
+    writer_lease: Option<std::sync::Arc<crate::writer_lease::WriterLeaseSession>>,
 }
 
 /// One parsed commit kept for a bounded rebase cache.
@@ -1411,6 +1423,7 @@ impl Store {
             rebase_stats: Mutex::new(RebaseStats::default()),
             history: None,
             history_handle: format!("pid:{}:{}", std::process::id(), self_wall_ns()),
+            writer_lease: None,
         };
         let history_options = store.options.clone();
         store.attach_history(&history_options)?;
@@ -1683,6 +1696,7 @@ impl Store {
             rebase_stats: Mutex::new(RebaseStats::default()),
             history: None,
             history_handle: format!("pid:{}:{}", std::process::id(), self_wall_ns()),
+            writer_lease: None,
         };
         store.load_quota_record();
         if mode == OpenMode::ReadWrite {
@@ -1730,15 +1744,60 @@ impl Store {
         backend_kind: BackendKind,
     ) -> Result<Store> {
         validate_options(&options)?;
-        let mut store = Self::open_impl_mode(path, mode, false, backend_kind, options.writer_mode)?;
+        // X09: a leased session acquires **before** the optimistic open writes
+        // anything (the first optimistic open records the writer-mode policy, and
+        // a refusal must precede even that idempotent write). The session owns
+        // its own control-plane handle so the keeper can renew an idle session.
+        let lease = if mode == OpenMode::ReadWrite && options.writer_lease.is_some() {
+            let lease_options = options
+                .writer_lease
+                .clone()
+                .ok_or_else(|| Error::invalid_argument("writer lease options disappeared"))?;
+            let io = crate::writer_lease::LeaseIo::open(&backend_kind, path.as_ref())?;
+            let owner = crate::writer_lease::session_owner(
+                std::process::id(),
+                Self::next_lease_counter(),
+                crate::writer_lease::wall_now_ns(),
+            );
+            let session = crate::writer_lease::WriterLeaseSession::new(lease_options, owner, io)?;
+            match session.acquire(&crate::writer_lease::wall_now_ns) {
+                Ok(_) => Some(session),
+                Err(err) => return Err(err),
+            }
+        } else {
+            None
+        };
+        let mut store =
+            match Self::open_impl_mode(path, mode, false, backend_kind, options.writer_mode) {
+                Ok(store) => store,
+                Err(err) => {
+                    // Never leave a lease behind for a handle that failed to open.
+                    if let Some(session) = &lease {
+                        let _ = session.release(crate::writer_lease::wall_now_ns());
+                        session.stop_keeper();
+                    }
+                    return Err(err);
+                }
+            };
         if !options.quotas.is_empty() {
             store.install_quota_policy(options.quotas.clone())?;
         }
         store.options = options;
         store.apply_read_layer_options();
+        if let Some(session) = lease {
+            store.writer_lease = Some(std::sync::Arc::clone(&session));
+            store.start_lease_keeper(&session);
+        }
         let history_options = store.options.clone();
         store.attach_history(&history_options)?;
         Ok(store)
+    }
+
+    /// Monotone in-process counter used to make two handles in one process
+    /// distinct lease owners.
+    fn next_lease_counter() -> u64 {
+        static COUNTER: AtomicU64 = AtomicU64::new(1);
+        COUNTER.fetch_add(1, Ordering::Relaxed)
     }
 
     // ---- MW3 conflict domains -------------------------------------------
@@ -4408,7 +4467,6 @@ impl Store {
         self.note_object_read(authorized.id);
         Ok(bytes)
     }
-
 
     /// Read without touching the advisory access counters. Internal store
     /// work (planning, rebase dry runs, verification) must not inflate them.
@@ -10874,8 +10932,7 @@ impl Store {
             }
         }
         if !keys.is_empty() {
-            let reclaim =
-                self.with_backend_mut(|backend| backend.reclaim_unreferenced_packs())?;
+            let reclaim = self.with_backend_mut(|backend| backend.reclaim_unreferenced_packs())?;
             if reclaim.deleted_packs > 0 {
                 sweep.problems.push(format!(
                     "reclaimed {} unreferenced pack(s) and {} catalog segment(s)",
@@ -12208,7 +12265,126 @@ impl Store {
                 "store is opened read-only; mutation refused",
             ));
         }
+        // X09 local deadline check. A leased session that was suspended past its
+        // own deadline refuses **before** any work starts, and mutates nothing.
+        // The publication path re-checks the durable record inside its critical
+        // section; this is the cheap early refusal.
+        if let Some(session) = &self.writer_lease {
+            if let Some(lease) = session.installed() {
+                let now = self.wall_ns();
+                if lease.expired(now) {
+                    session.record(|stats| stats.refusals += 1);
+                    return Err(crate::writer_lease::lease_expired(format!(
+                        "this writer's lease expired {} ms ago (fence {}); the session must be
+                         reopened, and nothing was mutated",
+                        (now - lease.deadline_ns) / 1_000_000,
+                        lease.fence
+                    )));
+                }
+            }
+        }
         Ok(())
+    }
+
+    // ---- X09 writer session lease ---------------------------------------
+
+    /// The installed lease, when this handle holds one.
+    pub fn writer_lease_view(&self) -> Option<crate::writer_lease::InstalledLease> {
+        self.writer_lease
+            .as_ref()
+            .and_then(|session| session.installed())
+    }
+
+    /// Lease counters for receipts. `None` when no lease policy is in force.
+    pub fn writer_lease_stats(&self) -> Option<crate::writer_lease::LeaseStats> {
+        self.writer_lease.as_ref().map(|session| session.stats())
+    }
+
+    /// The durable lease record as stored, for diagnostics and courts.
+    pub fn writer_lease_record(&self) -> Result<Option<crate::writer_lease::LeaseRecord>> {
+        self.with_backend(|backend| match backend.read_all(&Key::writer_lease()) {
+            Ok(bytes) => Ok(Some(crate::writer_lease::decode_lease(&bytes)?)),
+            Err(err) if err.class() == Class::NotFound => Ok(None),
+            Err(err) => Err(err),
+        })
+    }
+
+    /// Renew the session's lease now, recording `head` as the attested head.
+    /// Returns whether a write happened (renewal is skipped while more than half
+    /// the TTL remains).
+    pub fn renew_writer_lease(&self, head: Option<(u64, Hash32, u64)>) -> Result<bool> {
+        let Some(session) = &self.writer_lease else {
+            return Ok(false);
+        };
+        session.renew(self.wall_ns(), true, head)
+    }
+
+    /// Renew only when due. Used after a publication so the ordinary write path
+    /// pays one read and (usually) no lease write at all.
+    fn renew_writer_lease_if_due(&self, head: Option<(u64, Hash32, u64)>) -> Result<bool> {
+        let Some(session) = &self.writer_lease else {
+            return Ok(false);
+        };
+        session.renew(self.wall_ns(), false, head)
+    }
+
+    /// Release the session's lease with a tombstone. A successor's record is
+    /// never touched.
+    pub fn release_writer_lease(&self) -> Result<bool> {
+        let Some(session) = &self.writer_lease else {
+            return Ok(false);
+        };
+        session.stop_keeper();
+        let released = session.release(self.wall_ns())?;
+        Ok(released)
+    }
+
+    fn start_lease_keeper(
+        &self,
+        session: &std::sync::Arc<crate::writer_lease::WriterLeaseSession>,
+    ) {
+        if !session.options().keeper {
+            return;
+        }
+        let session = std::sync::Arc::clone(session);
+        let stop = session.stop_flag();
+        let worker = std::sync::Arc::clone(&session);
+        let interval = session.options().renew_interval();
+        let handle = std::thread::Builder::new()
+            .name("weftfs-lease-keeper".to_owned())
+            .spawn(move || {
+                while !stop.load(Ordering::Relaxed) {
+                    std::thread::sleep(interval.min(std::time::Duration::from_millis(200)));
+                    if stop.load(Ordering::Relaxed) {
+                        break;
+                    }
+                    worker.bump_keeper_ticks();
+                    // `force: false` still renews when the remaining lifetime is
+                    // at most half the TTL, which is what keeps a live idle
+                    // session from ever being taken over.
+                    if worker
+                        .renew(crate::writer_lease::wall_now_ns(), false, None)
+                        .is_err()
+                    {
+                        // An expired or superseded session cannot renew; the
+                        // next mutating operation reports the typed refusal.
+                        break;
+                    }
+                }
+            });
+        if let Ok(handle) = handle {
+            session.store_keeper(handle);
+        }
+    }
+
+    /// The publication fence. Called **inside** the publication critical
+    /// section, immediately before the head compare-and-swap. Read-only, so it
+    /// cannot deadlock against the publication lock this process already holds.
+    fn fence_writer_lease(&self) -> Result<()> {
+        let Some(session) = &self.writer_lease else {
+            return Ok(());
+        };
+        session.verify_in_publication(self.wall_ns())
     }
 
     /// Ops that delete an object record and remove every relation whose subject
@@ -12768,6 +12944,11 @@ impl Store {
                 None => backend.begin_publication()?,
             }
             let attempt = (|| -> Result<bool> {
+                // X09 fence. The lease record is the session's authority: if it
+                // no longer names this handle at this fence, or its absolute
+                // deadline has passed, nothing is published. Read-only, so it is
+                // safe inside the publication critical section.
+                self.fence_writer_lease()?;
                 crash_point("mw2_before_head");
                 if backend.exists(&key)? {
                     return Err(Error::busy(format!(
@@ -12898,6 +13079,13 @@ impl Store {
             ));
         }
         self.with_backend_mut(|backend| backend.sync_dir(&Key::root()))?;
+        // The publication is done. Renew the session lease when it is due and
+        // record the head this session published. Deliberately *after* the
+        // critical section: the fence is read-only, renewal is a separate
+        // compare-and-swap on the lease record. A renewal failure never turns a
+        // published commit into a reported failure; the next mutating operation
+        // reports the typed refusal.
+        let _ = self.renew_writer_lease_if_due(Some((commit.generation, hash, wcb.len() as u64)));
         Ok(hash)
     }
 
@@ -14276,6 +14464,23 @@ fn validate_options(options: &Options) -> Result<()> {
             "cache_entries must be at least 1 when the decoded-object cache is enabled",
         ));
     }
+    if let Some(lease) = &options.writer_lease {
+        lease.validate()?;
+        if options.writer_mode == crate::mw2::WriterMode::Single {
+            return Err(Error::invalid_argument(
+                "a writer session lease requires --writer-mode optimistic: MW1's authority is the \
+                 kernel lock a live process holds for its whole session, and that lock cannot \
+                 expire. A lease that could not expire would be a false promise, so the \
+                 combination is refused rather than ignored",
+            ));
+        }
+        if options.writer_mode == crate::mw2::WriterMode::Sharded {
+            return Err(Error::invalid_argument(
+                "a writer session lease is defined for the global head; an MW3 sharded store \
+                 has per-domain heads and no single session to lease",
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -14807,6 +15012,14 @@ impl Drop for Store {
         // that became unavailable) must never turn into a panic.
         if self.mode == OpenMode::ReadWrite {
             let _ = self.flush_access_counts();
+        }
+        // X09: a graceful close releases the session lease immediately so a
+        // successor does not have to wait out the deadline. A killed process
+        // never reaches this, which is what the deadline is for. Every failure
+        // is ignored: a tombstone write must not panic during unwind.
+        if let Some(session) = &self.writer_lease {
+            session.stop_keeper();
+            let _ = session.release(crate::writer_lease::wall_now_ns());
         }
     }
 }

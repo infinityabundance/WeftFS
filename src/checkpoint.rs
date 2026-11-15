@@ -464,6 +464,68 @@ pub struct CheckpointRestoreOptions {
     pub topology: Option<RestoreTopology>,
 }
 
+/// Destination buffers for [`Store::restore_checkpoint_direct_into`]: tensor
+/// name -> caller-owned buffer, pre-sized to the restored tensor length.
+pub type DirectDestinations = BTreeMap<String, Vec<u8>>;
+
+/// How much of one destination buffer a direct restore filled.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DirectTensorFill {
+    pub name: String,
+    pub expected: u64,
+    pub filled: u64,
+}
+
+/// Result of [`Store::restore_checkpoint_direct_into`].
+#[derive(Clone, Debug)]
+pub struct DirectRestoreReport {
+    /// The ordinary restore report, whose verification fields are authoritative.
+    /// `file_sha256` is zero and `exact_source_file` is false because this path
+    /// computes no SHA-256 at all.
+    pub restore: CheckpointRestoreReport,
+    pub tensors: Vec<DirectTensorFill>,
+    /// Bytes of the container header that were recognised and skipped (the
+    /// destination buffers hold tensor payloads only).
+    pub header_bytes: u64,
+    /// SHA-256 of the container header as the restore derived it. It is **not**
+    /// a container digest; the payload was never hashed with SHA-256 at all.
+    pub header_sha256: [u8; 32],
+    /// Payload bytes written into the caller's buffers.
+    pub payload_bytes: u64,
+    /// SHA-256 passes performed. Always `0` on this path; the field exists so a
+    /// receipt cannot silently claim one.
+    pub sha256_passes: u32,
+    /// Whether the checkpoint's `source_sha256` was checked. Always `false`.
+    pub exact_source_verified: bool,
+}
+
+/// Result of [`Store::restore_row_slab_direct_at`].
+#[derive(Clone, Debug)]
+pub struct DirectSlabReport {
+    pub checkpoint: String,
+    pub tensor: String,
+    pub shape: Vec<u64>,
+    /// The `[start, end)` row slab that was materialised.
+    pub rows: (u64, u64),
+    pub bytes: u64,
+    pub shards_read: usize,
+    /// Decoded units (tiles) touched.
+    pub tiles: u64,
+    /// True when every shard that contributed bytes was tiled and each of its
+    /// tiles was checked against its own `tile_root`.
+    pub tile_roots_verified: bool,
+    /// Shards that had no per-unit root and were therefore read (and verified)
+    /// whole.
+    pub whole_object_shards: usize,
+    /// True only when the slab was the whole tensor, in which case the tensor's
+    /// content and logical roots were recomputed over the destination.
+    pub full_root_verified: bool,
+    pub content_root: Option<Hash32>,
+    pub logical_root: Option<Hash32>,
+    /// SHA-256 passes performed. Always `0` on this path.
+    pub sha256_passes: u32,
+}
+
 /// One tensor's restore report.
 #[derive(Clone, Debug)]
 pub struct RestoredTensor {
@@ -2536,6 +2598,68 @@ fn copy_box(
     )
 }
 
+/// A `Write` sink that routes a pipelined restore's output into caller-owned
+/// per-tensor buffers (X18).
+///
+/// The container header is recognised by its length and skipped; every payload
+/// byte is copied into the buffer of the tensor currently being written, in the
+/// order the pipeline produces them (container `source_offset` order). A write
+/// that crosses a tensor boundary is split, so the sink does not depend on the
+/// upstream never chunking across tensors.
+struct DirectSink<'a> {
+    order: Vec<(String, usize)>,
+    dest: &'a mut DirectDestinations,
+    header_left: usize,
+    index: usize,
+    written: Vec<u64>,
+    total: u64,
+}
+
+impl Write for DirectSink<'_> {
+    fn write(&mut self, mut buf: &[u8]) -> std::io::Result<usize> {
+        let len = buf.len();
+        if self.header_left > 0 {
+            let skip = self.header_left.min(buf.len());
+            self.header_left -= skip;
+            buf = &buf[skip..];
+        }
+        while !buf.is_empty() {
+            if self.index >= self.order.len() {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "direct restore produced more bytes than the destination plan holds",
+                ));
+            }
+            let (name, capacity) = &self.order[self.index];
+            let filled = self.written[self.index] as usize;
+            let remaining = capacity.saturating_sub(filled);
+            if remaining == 0 {
+                self.index += 1;
+                continue;
+            }
+            let take = remaining.min(buf.len());
+            let Some(target) = self.dest.get_mut(name) else {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "direct restore destination buffer vanished",
+                ));
+            };
+            target[filled..filled + take].copy_from_slice(&buf[..take]);
+            self.written[self.index] += take as u64;
+            self.total += take as u64;
+            buf = &buf[take..];
+            if filled + take == *capacity {
+                self.index += 1;
+            }
+        }
+        Ok(len)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 struct RestoredBytes {
     bytes: Vec<u8>,
     shape: Vec<u64>,
@@ -2830,6 +2954,302 @@ impl Store {
         self.restore_checkpoint_pipelined_inner(
             None, None, name, options, pipeline, false, false, true, writer,
         )
+    }
+
+    /// **X18 direct restore.** Decode every selected tensor straight into a
+    /// caller-owned buffer, with **no** container buffer and **no** SHA-256
+    /// pass anywhere.
+    ///
+    /// Verification is unchanged and is reported explicitly: every shard's
+    /// content root and shard logical root, the reassembled tensor's content
+    /// root and logical root, the optional topology proof, and (for a tiled
+    /// shard) each tile root. What is absent is the *convenience* serial
+    /// SHA-256 of the output that the historical report fields carry, so
+    /// `exact_source_file` is `false` and `file_sha256` is zero even for an
+    /// exact restore. The checkpoint's `source_sha256` is therefore not
+    /// checked by this call; call [`Store::restore_checkpoint_pipelined`] when
+    /// the container digest itself is the evidence a caller needs.
+    ///
+    /// `dest` must name exactly the tensors this restore produces, each buffer
+    /// pre-sized to the tensor's restored length (the full tensor, or the
+    /// requested region). A missing, extra or wrong-sized buffer is
+    /// `InvalidArgument` before a single byte is read.
+    ///
+    /// A failure part-way leaves earlier tensors filled and later tensors
+    /// untouched; the returned report states which ones were filled. No
+    /// unverified byte is written: each tensor's payload reaches its buffer
+    /// only after that tensor's roots were checked.
+    pub fn restore_checkpoint_direct_into(
+        &self,
+        name: &str,
+        options: &CheckpointRestoreOptions,
+        pipeline: &crate::restore_pipeline::RestorePipelineOptions,
+        dest: &mut DirectDestinations,
+    ) -> Result<DirectRestoreReport> {
+        let prologue = self.restore_prologue(None, None, name, options)?;
+        let mut expected: Vec<(String, usize)> = Vec::with_capacity(prologue.order.len());
+        for tensor in &prologue.order {
+            let len = prologue.restored_len(tensor)?;
+            let Some(buffer) = dest.get(&tensor.name) else {
+                return Err(Error::invalid_argument(format!(
+                    "direct restore has no destination buffer for tensor `{}`",
+                    tensor.name
+                )));
+            };
+            if buffer.len() != len {
+                return Err(Error::invalid_argument(format!(
+                    "direct restore buffer for tensor `{}` is {} bytes; the restore produces {}",
+                    tensor.name,
+                    buffer.len(),
+                    len
+                )));
+            }
+            expected.push((tensor.name.clone(), len));
+        }
+        if dest.len() != expected.len() {
+            return Err(Error::invalid_argument(format!(
+                "direct restore was given {} buffers for {} tensors",
+                dest.len(),
+                expected.len()
+            )));
+        }
+        let header_bytes = prologue.header.len() as u64;
+        let mut sink = DirectSink {
+            order: expected,
+            dest,
+            header_left: prologue.header.len(),
+            index: 0,
+            written: Vec::new(),
+            total: 0,
+        };
+        sink.written = vec![0u64; sink.order.len()];
+        let restore = self.restore_checkpoint_pipelined_inner(
+            None, None, name, options, pipeline, true, false, false, &mut sink,
+        )?;
+        let fills = sink
+            .order
+            .iter()
+            .zip(sink.written.iter())
+            .map(|((name, len), written)| DirectTensorFill {
+                name: name.clone(),
+                expected: *len as u64,
+                filled: *written,
+            })
+            .collect::<Vec<_>>();
+        let mut filled_short = Vec::new();
+        for fill in &fills {
+            if fill.filled != fill.expected {
+                filled_short.push(fill.name.clone());
+            }
+        }
+        if !filled_short.is_empty() {
+            return Err(Error::corrupt(format!(
+                "direct restore filled {} tensor(s) short: {}",
+                filled_short.len(),
+                filled_short.join(", ")
+            )));
+        }
+        Ok(DirectRestoreReport {
+            payload_bytes: sink.total,
+            header_bytes,
+            header_sha256: restore.file_sha256,
+            tensors: fills,
+            sha256_passes: 0,
+            exact_source_verified: false,
+            restore: CheckpointRestoreReport {
+                // The historical report's digest is the hash of the header plus
+                // every payload byte. This path hashed neither, so the field is
+                // zeroed rather than left holding a header-only digest that a
+                // reader could mistake for a container digest. The header digest
+                // is preserved separately, above.
+                file_sha256: [0u8; 32],
+                ..restore
+            },
+        })
+    }
+
+    /// **X18 direct row-slab restore.** Decode a row slab of one tensor (the
+    /// shape a training rank owns) straight into a caller-owned buffer, with no
+    /// SHA-256 pass and no whole-tensor decode when the stored shards are
+    /// tiled.
+    ///
+    /// `rows` must be `[start, end)` on axis 0 and the slab must cover every
+    /// trailing extent (a row slab). That is exactly the rank-coordinate shape
+    /// [`Store::restore_checkpoint_rank`] materialises, and it keeps every copy
+    /// contiguous. A tensor sharded on another axis, or a sub-box region, is
+    /// refused rather than silently materialised differently.
+    ///
+    /// Verification: every shard entry is resolved through the checkpoint (the
+    /// `object_id` binding), and each shard's bytes are authenticated — by its
+    /// own `tile_root` per tile when the shard is tiled, otherwise by the
+    /// whole-object verified read. The tensor's content and logical roots are
+    /// additionally checked when the slab is the whole tensor; a strict slab
+    /// cannot be checked against a whole-tensor root, and the report says so
+    /// (`full_root_verified = false`).
+    pub fn restore_row_slab_direct_at(
+        &self,
+        snapshot: Option<Hash32>,
+        checkpoint: &str,
+        tensor_name: &str,
+        rows: (u64, u64),
+        dst: &mut [u8],
+    ) -> Result<DirectSlabReport> {
+        let state = match snapshot {
+            Some(snapshot) => Some(self.state_at(snapshot)?),
+            None => None,
+        };
+        let manifest = match &state {
+            Some(state) => {
+                self.load_checkpoint_with_id_at(state, snapshot, checkpoint)?
+                    .1
+            }
+            None => self.load_checkpoint_with_id(checkpoint)?.1,
+        };
+        let tensor = manifest.tensor(tensor_name)?;
+        let dtype = TensorElementDtype::parse(&tensor.dtype)?;
+        let physical = dtype.physical_tensor_dtype().ok_or_else(|| {
+            Error::unsupported_version(format!(
+                "tensor `{tensor_name}` dtype `{}` has no physical layout",
+                tensor.dtype
+            ))
+        })?;
+        let axis = tensor
+            .shards
+            .first()
+            .map(|shard| shard.axis)
+            .ok_or_else(|| Error::corrupt("checkpoint tensor has no shards"))?;
+        if axis != 0 {
+            return Err(Error::invalid_argument(format!(
+                "direct row-slab restore requires a tensor sharded on axis 0; `{tensor_name}` is
+                 sharded on axis {axis}"
+            )));
+        }
+        let shape = &tensor.shape;
+        let (lo, hi) = rows;
+        if lo >= hi || hi > shape[0] {
+            return Err(Error::invalid_argument(format!(
+                "row slab [{lo}, {hi}) is outside the tensor's {} rows",
+                shape[0]
+            )));
+        }
+        let trailing: u64 = shape[1..]
+            .iter()
+            .try_fold(1u64, |acc, dim| acc.checked_mul(*dim))
+            .ok_or_else(|| Error::limit_exceeded("tensor trailing extent overflows"))?;
+        let element_bytes = u64::from(physical.element_size());
+        let stride = trailing
+            .checked_mul(element_bytes)
+            .ok_or_else(|| Error::limit_exceeded("tensor row stride overflows"))?;
+        let expected = (hi - lo)
+            .checked_mul(stride)
+            .ok_or_else(|| Error::limit_exceeded("row slab length overflows"))?;
+        if dst.len() as u64 != expected {
+            return Err(Error::invalid_argument(format!(
+                "destination is {} bytes; the row slab is {expected}",
+                dst.len()
+            )));
+        }
+        if expected != tensor.element_bytes && hi - lo == shape[0] {
+            return Err(Error::corrupt(format!(
+                "whole-tensor slab is {expected} bytes but the manifest records {}",
+                tensor.element_bytes
+            )));
+        }
+        let shard_count = u64::from(tensor.shards[0].shards);
+        if shard_count == 0 || shape[0] % shard_count != 0 {
+            return Err(Error::corrupt(
+                "shard count does not divide the tensor's first extent",
+            ));
+        }
+        let plane = shape[0] / shard_count;
+        let mut shards_read = 0usize;
+        let mut tiles = 0u64;
+        let mut tile_roots_verified = true;
+        let mut whole_object_shards = 0usize;
+        let mut stride_start = lo;
+        for shard in &tensor.shards {
+            let slab_start = u64::from(shard.index) * plane;
+            let slab_end = slab_start + plane;
+            let local_lo = lo.max(slab_start);
+            let local_hi = hi.min(slab_end);
+            if local_lo >= local_hi {
+                continue;
+            }
+            let id =
+                self.verify_shard_entry(checkpoint, tensor, shard, state.as_ref(), snapshot)?;
+            let object_tiled = self.tensor_representation_is_tiled(id)?;
+            let mut local_start = vec![0u64; shape.len()];
+            let mut local_end = shape.to_vec();
+            local_start[0] = local_lo - slab_start;
+            local_end[0] = local_hi - slab_start;
+            let local = Region::new(local_start, local_end);
+            let offset = ((local_lo - lo) * stride) as usize;
+            let len = ((local_hi - local_lo) * stride) as usize;
+            let slice = dst
+                .get_mut(offset..offset + len)
+                .ok_or_else(|| Error::corrupt("row slab destination range is outside dst"))?;
+            let read = self
+                .read_tensor_region(shard.object_id, &local)
+                .map_err(|err| context(&tensor.name, shard, err))?;
+            if read.bytes.len() != slice.len() {
+                return Err(Error::corrupt(format!(
+                    "shard {} returned {} bytes for a {} byte slab",
+                    shard.index,
+                    read.bytes.len(),
+                    slice.len()
+                )));
+            }
+            slice.copy_from_slice(&read.bytes);
+            shards_read += 1;
+            tiles += read.units_touched;
+            if !object_tiled {
+                tile_roots_verified = false;
+                whole_object_shards += 1;
+            }
+            stride_start = stride_start.max(local_hi);
+        }
+        let _ = stride_start;
+        let whole = lo == 0 && hi == shape[0];
+        let mut content_root = None;
+        let mut logical_root = None;
+        let mut full_root_verified = false;
+        if whole {
+            let content = identity::content_hash(dst);
+            if content != tensor.content_root {
+                return Err(Error::corrupt(format!(
+                    "direct slab restore of `{tensor_name}`: content root {content} does not match
+                     the manifest's {}",
+                    tensor.content_root
+                )));
+            }
+            let limits = Limits::default();
+            let root = tc::logical_root(physical, shape, dst, &limits)?;
+            if root != tensor.logical_root {
+                return Err(Error::corrupt(format!(
+                    "direct slab restore of `{tensor_name}`: logical root {root} does not match the
+                     manifest's {}",
+                    tensor.logical_root
+                )));
+            }
+            content_root = Some(content);
+            logical_root = Some(root);
+            full_root_verified = true;
+        }
+        Ok(DirectSlabReport {
+            checkpoint: checkpoint.to_owned(),
+            tensor: tensor_name.to_owned(),
+            shape: shape.clone(),
+            rows: (lo, hi),
+            bytes: dst.len() as u64,
+            shards_read,
+            tiles,
+            tile_roots_verified,
+            whole_object_shards,
+            full_root_verified,
+            content_root,
+            logical_root,
+            sha256_passes: 0,
+        })
     }
 
     /// The ordered restore with **no** whole-file or per-tensor SHA-256 pass.

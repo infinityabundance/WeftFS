@@ -122,6 +122,16 @@ pub enum KeyKind {
     /// `kv-index.root`: the mutable KV prefix index root control record
     /// (T063). Always on the commit plane and replaced atomically.
     KvIndexRoot,
+    /// `writer/lease`: the durable writer session lease (X09). Always on the
+    /// commit plane and replaced by compare-and-swap. Absent means "no lease
+    /// policy is in force", which is the MW1 default.
+    WriterLease,
+    /// `writer/tickets/<ticket>`: one fairness ticket in the acquisition queue
+    /// (X09). Always on the commit plane, created once and deleted on leave.
+    WriterTicket,
+    /// `semantic-index.root`: the X14 semantic candidate index record. Always on
+    /// the commit plane and replaced atomically.
+    SemanticIndex,
 }
 
 impl KeyKind {
@@ -157,6 +167,9 @@ impl KeyKind {
             KeyKind::GcRun => "gc-run",
             KeyKind::KvIndex => "kv-index",
             KeyKind::KvIndexRoot => "kv-index-root",
+            KeyKind::WriterLease => "writer-lease",
+            KeyKind::WriterTicket => "writer-ticket",
+            KeyKind::SemanticIndex => "semantic-index",
         }
     }
 }
@@ -245,6 +258,14 @@ pub enum Key {
     },
     /// The mutable KV prefix index root record (`kv-index.root`).
     KvIndexRoot,
+    /// The durable writer session lease (`writer/lease`, subphase X09).
+    WriterLease,
+    /// One fairness ticket (`writer/tickets/<ticket>`, subphase X09).
+    WriterTicket {
+        ticket: u64,
+    },
+    /// The X14 semantic candidate index record (`semantic-index.root`).
+    SemanticIndex,
     /// Prefix selector accepted by [`StorageBackend::list_prefix`].
     Prefix(KeyKind),
     /// An entry discovered by `list_prefix` that does not follow the naming
@@ -336,6 +357,21 @@ impl Key {
         Key::Writers
     }
 
+    /// The durable writer session lease record (X09).
+    pub fn writer_lease() -> Key {
+        Key::WriterLease
+    }
+
+    /// One writer-acquisition fairness ticket (X09).
+    pub fn writer_ticket(ticket: u64) -> Key {
+        Key::WriterTicket { ticket }
+    }
+
+    /// The X14 semantic candidate index record.
+    pub fn semantic_index() -> Key {
+        Key::SemanticIndex
+    }
+
     /// The MW3 per-domain head image.
     pub fn domain_superblock(domain: Hash32) -> Key {
         Key::DomainSuperblock { domain }
@@ -419,6 +455,9 @@ impl Key {
             Key::GcRun { .. } => KeyKind::GcRun,
             Key::KvIndex { .. } => KeyKind::KvIndex,
             Key::KvIndexRoot => KeyKind::KvIndexRoot,
+            Key::WriterLease => KeyKind::WriterLease,
+            Key::WriterTicket { .. } => KeyKind::WriterTicket,
+            Key::SemanticIndex => KeyKind::SemanticIndex,
             Key::Prefix(kind) => *kind,
             Key::Other { kind, .. } => *kind,
         }
@@ -520,6 +559,9 @@ impl Key {
                 format!("kv-index/{}/{hex}", &hex[0..2])
             }
             Key::KvIndexRoot => "kv-index.root".to_owned(),
+            Key::WriterLease => "writer/lease".to_owned(),
+            Key::WriterTicket { ticket } => format!("writer/tickets/{ticket:016x}"),
+            Key::SemanticIndex => "semantic-index.root".to_owned(),
             Key::Prefix(kind) => format!("{}/*", kind.as_str()),
             Key::Other { name, .. } => name.clone(),
         }
@@ -547,6 +589,7 @@ pub(crate) fn list_prefix_path(kind: KeyKind) -> Option<&'static str> {
         KeyKind::Reservation => Some("gc/reservations/"),
         KeyKind::GcRun => Some("gc/runs/"),
         KeyKind::KvIndex => Some("kv-index/"),
+        KeyKind::WriterTicket => Some("writer/tickets/"),
         _ => None,
     }
 }
@@ -579,6 +622,10 @@ pub(crate) fn classify_listed_key(kind: KeyKind, relative: &str) -> Option<Key> 
             Some(Key::index(commit))
         }
         KeyKind::Tx => Some(Key::tx(relative.to_owned())),
+        KeyKind::WriterTicket => {
+            let ticket = u64::from_str_radix(relative, 16).ok()?;
+            Some(Key::writer_ticket(ticket))
+        }
         KeyKind::Reservation => Some(Key::reservation(relative.to_owned())),
         KeyKind::GcRun => Some(Key::gc_run(relative.to_owned())),
         KeyKind::Commit => {
@@ -2034,6 +2081,13 @@ impl LocalBackend {
                 self.root.join("pack-catalog").join(&hex[0..2]).join(hex)
             }
             Key::PackCatalogRoot => self.root.join("pack-catalog.root"),
+            Key::WriterLease => self.root.join("writer").join("lease"),
+            Key::WriterTicket { ticket } => self
+                .root
+                .join("writer")
+                .join("tickets")
+                .join(format!("{ticket:016x}")),
+            Key::SemanticIndex => self.root.join("semantic-index.root"),
             Key::Tx { id } => self.root.join("txs").join(id),
             Key::Writers => self.root.join("writers"),
             Key::DomainSuperblock { domain } => self
@@ -2935,6 +2989,9 @@ impl ObjectBackend {
             Key::GcRun { run_id } => format!("gg-{run_id}"),
             Key::KvIndex { hash } => format!("kv-{}", hash.to_hex()),
             Key::KvIndexRoot => "kv-index.root".to_owned(),
+            Key::WriterLease => "w-lease".to_owned(),
+            Key::WriterTicket { ticket } => format!("wt-{ticket:016x}"),
+            Key::SemanticIndex => "semantic-index.root".to_owned(),
             Key::PackCatalogRoot | Key::Root | Key::Prefix(_) | Key::Other { .. } => String::new(),
         }
     }

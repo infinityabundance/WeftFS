@@ -84,6 +84,17 @@ pub struct TranscodeOptions {
     pub lambda_ns: u64,
     /// Read the republished version back and compare the logical bytes.
     pub verify_after: bool,
+    /// X09-adjacent, P06: skip any object whose logical size exceeds this bound.
+    /// `0` disables the per-object bound. Unlike `max_bytes` (a cumulative pass
+    /// budget) this keeps one worker step bounded regardless of what the store
+    /// holds, so a background pass cannot hold the writer for a whole 1 GiB
+    /// tensor.
+    pub max_object_bytes: u64,
+    /// P06: resume the ascending object walk strictly after this id. Used by the
+    /// online worker, which applies one object per step.
+    pub start_after: Option<Hash32>,
+    /// P06: stop after the first applied rewrite (one worker step).
+    pub stop_after_first: bool,
     /// Test hook: abort the process immediately after this many publications
     /// (integer `usize::MAX` disables it). Used by the crash proxy.
     pub crash_after_publishes: Option<usize>,
@@ -106,6 +117,9 @@ impl Default for TranscodeOptions {
             calibration: None,
             lambda_ns: 0,
             verify_after: true,
+            max_object_bytes: 0,
+            start_after: None,
+            stop_after_first: false,
             crash_after_publishes: None,
             crash_before_publish: None,
         }
@@ -164,6 +178,9 @@ pub struct TranscodeReport {
     pub elapsed_ms: f64,
     /// Why the pass stopped before exhausting the subtree, when it did.
     pub stopped_reason: Option<String>,
+    /// The last object id the walk touched, so an online worker can resume
+    /// strictly after it. `None` when the walk did not start.
+    pub last_object: Option<Hash32>,
 }
 
 impl Store {
@@ -198,6 +215,7 @@ impl Store {
             bytes_read: 0,
             elapsed_ms: 0.0,
             stopped_reason: None,
+            last_object: None,
         };
         let mut fast_objects_seen = 0usize;
         for (object, path) in objects {
@@ -205,6 +223,12 @@ impl Store {
                 report.stopped_reason = Some(reason);
                 break;
             }
+            if let Some(after) = options.start_after {
+                if object <= after {
+                    continue;
+                }
+            }
+            report.last_object = Some(object);
             report.scanned += 1;
             let record = match self.current_state().objects.get(&object) {
                 Some(record) => record.clone(),
@@ -225,8 +249,7 @@ impl Store {
                     continue;
                 }
             };
-            let manifest =
-                self.read_manifest_keyed(record.content)?;
+            let manifest = self.read_manifest_keyed(record.content)?;
             let from_strategy = manifest
                 .representation
                 .as_ref()
@@ -240,6 +263,17 @@ impl Store {
                 continue;
             }
             let old_physical = self.representation_physical_bytes(&manifest)?;
+            if options.max_object_bytes > 0 && record.size > options.max_object_bytes {
+                report.skipped.push(TranscodeSkip {
+                    object,
+                    path,
+                    reason: format!(
+                        "object is {} logical bytes, above the {}-byte per-step bound",
+                        record.size, options.max_object_bytes
+                    ),
+                });
+                continue;
+            }
             if report.bytes_read.saturating_add(record.size) > options.max_bytes {
                 report.stopped_reason = Some(format!(
                     "byte budget reached: {} + {} > {} logical bytes",
@@ -388,6 +422,10 @@ impl Store {
             if options.crash_after_publishes == Some(report.applied.len()) {
                 // Test hook: die immediately after a durable publication.
                 std::process::abort();
+            }
+            if options.stop_after_first {
+                report.stopped_reason = Some("one object per step (online worker)".to_owned());
+                break;
             }
         }
         if !options.dry_run && !report.applied.is_empty() {

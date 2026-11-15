@@ -88,6 +88,12 @@ pub enum Class {
     /// quarantine; a non-disclosing quarantine reports [`Class::NotFound`]
     /// byte-identically to an absent object.
     Quarantined,
+    /// A leased writer session's own lease has expired, or another session has
+    /// superseded it at a higher fencing token. The operation mutated nothing.
+    /// Distinct from `Busy`, which means another writer *currently* holds the
+    /// store and the caller may simply retry later: `LeaseExpired` means this
+    /// handle is no longer a writer and must reacquire.
+    LeaseExpired,
 }
 
 impl Class {
@@ -125,6 +131,7 @@ impl Class {
             Class::StaleEpoch => "StaleEpoch",
             Class::Io => "Io",
             Class::Quarantined => "Quarantined",
+            Class::LeaseExpired => "LeaseExpired",
         }
     }
 }
@@ -255,6 +262,9 @@ impl Error {
     }
     pub fn quarantined(message: impl Into<String>) -> Self {
         Self::new(Class::Quarantined, message)
+    }
+    pub fn lease_expired(message: impl Into<String>) -> Self {
+        Self::new(Class::LeaseExpired, message)
     }
 }
 

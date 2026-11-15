@@ -141,6 +141,38 @@ struct Cli {
         default_value = "single"
     )]
     writer_mode: String,
+    /// X09: writer session lease lifetime in seconds. Absent (the default) means
+    /// no lease: MW1's kernel lock, or unleased MW2. Requires
+    /// `--writer-mode optimistic`, because a lease that cannot expire on a
+    /// live-but-idle session would be a false promise. See
+    /// `spec/WEFT-WRITER-LEASE.md`.
+    #[arg(long = "writer-lease-secs", global = true, value_name = "SECS")]
+    writer_lease_secs: Option<u64>,
+    /// X09: lifetime of one acquisition-queue ticket. A waiter that dies stops
+    /// blocking after this.
+    #[arg(
+        long = "lease-ticket-secs",
+        global = true,
+        value_name = "SECS",
+        default_value_t = 10
+    )]
+    lease_ticket_secs: u64,
+    /// X09: how long an acquisition waits for a live lease to expire and for the
+    /// FIFO queue to reach it.
+    #[arg(
+        long = "lease-wait-ms",
+        global = true,
+        value_name = "MS",
+        default_value_t = 5000
+    )]
+    lease_wait_ms: u64,
+    /// X09: do not spawn the timer-driven renewal keeper. An idle session then
+    /// expires at its deadline (the court's expiry case).
+    #[arg(long = "no-lease-keeper", global = true)]
+    no_lease_keeper: bool,
+    /// X09: do not enforce the FIFO acquisition queue (the unfair control arm).
+    #[arg(long = "no-lease-fairness", global = true)]
+    no_lease_fairness: bool,
     /// MW3 conflict domain (64 hex characters, the derived `DomainId`). Only
     /// valid with `--writer-mode sharded`. Every command that opens the store
     /// reads and publishes that domain's head and commit chain. See
@@ -376,6 +408,23 @@ enum ModeCommand {
 }
 
 #[derive(Subcommand)]
+enum LeaseCommand {
+    /// Print the durable `writer/lease` record and this handle's view of it.
+    Show,
+    /// Acquire a session lease and hold it for a bounded time, renewing with the
+    /// keeper. Used by the court's kill case: a `SIGKILL` leaves the record live
+    /// until its deadline, a graceful exit writes a release tombstone.
+    Hold {
+        #[arg(long, default_value_t = 5000, value_name = "MS")]
+        millis: u64,
+    },
+    /// Release this handle's lease with a content-addressed tombstone. The
+    /// command acquires first (so it never removes a live holder's record) and
+    /// then releases, which is how an operator clears a stale lease.
+    Release,
+}
+
+#[derive(Subcommand)]
 enum Mw3Command {
     /// Register a conflict domain (one compare-and-swap on the discovery
     /// record; nothing is enabled silently).
@@ -431,6 +480,12 @@ enum Command {
     Mode {
         #[command(subcommand)]
         command: ModeCommand,
+    },
+    /// Writer session lease (X09): show, hold, renew or release the durable
+    /// `writer/lease` record. The lease requires `--writer-mode optimistic`.
+    Lease {
+        #[command(subcommand)]
+        command: LeaseCommand,
     },
     /// MW3 conflict domains: register, discover, and capture a read view.
     Mw3 {
@@ -2432,6 +2487,8 @@ struct OpenPolicy {
     cache_bytes: u64,
     cache_entries: usize,
     writer_mode: weftfs::mw2::WriterMode,
+    /// X09: writer session lease, when configured.
+    writer_lease: Option<weftfs::writer_lease::WriterLeaseOptions>,
     /// Write `weftfs.commit.v1` records (no index attestation).
     no_attest_indexes: bool,
     /// MW3: the conflict domain this handle is bound to, if any.
@@ -2472,6 +2529,7 @@ impl OpenPolicy {
             cache_bytes: self.cache_bytes,
             cache_entries: self.cache_entries,
             writer_mode: self.writer_mode,
+            writer_lease: self.writer_lease.clone(),
             attest_indexes: !self.no_attest_indexes,
             ..Options::default()
         }
@@ -2641,6 +2699,11 @@ fn run(cli: Cli) -> Result<()> {
         encryption_key_hex,
         encryption_mode,
         writer_mode,
+        writer_lease_secs,
+        lease_ticket_secs,
+        lease_wait_ms,
+        no_lease_keeper,
+        no_lease_fairness,
         domain,
         blob_backend,
         commit_backend,
@@ -2760,6 +2823,17 @@ fn run(cli: Cli) -> Result<()> {
         encryption,
         representation: parse_representation(&representation)?,
         writer_mode: weftfs::mw2::WriterMode::parse(&writer_mode)?,
+        writer_lease: writer_lease_secs
+            .map(|secs| {
+                Ok::<_, Error>(weftfs::writer_lease::WriterLeaseOptions {
+                    ttl: std::time::Duration::from_secs(secs),
+                    keeper: !no_lease_keeper,
+                    fairness: !no_lease_fairness,
+                    ticket_ttl: std::time::Duration::from_secs(lease_ticket_secs.max(1)),
+                    wait: std::time::Duration::from_millis(lease_wait_ms),
+                })
+            })
+            .transpose()?,
         no_attest_indexes,
         domain: match domain.as_deref() {
             Some(text) => Some(parse_domain_id(text)?),
@@ -2872,6 +2946,7 @@ fn run(cli: Cli) -> Result<()> {
     };
     match command {
         Command::Mode { command } => run_mode(&store, json, policy, command),
+        Command::Lease { command } => run_lease(&store, json, policy, command),
         Command::Mw3 { command } => run_mw3(&store, json, policy, command),
         Command::Init {
             uid,
@@ -4997,6 +5072,130 @@ fn open_store(path: &std::path::Path, mode: OpenMode, policy: OpenPolicy) -> Res
 /// refuses every mismatched open applies to the migration too), then performs
 /// one compare-and-swap on the record. A refused transition is a typed error,
 /// never a silent change.
+fn run_lease(
+    store_path: &PathBuf,
+    json: bool,
+    mut policy: OpenPolicy,
+    command: LeaseCommand,
+) -> Result<()> {
+    use weftfs::writer_lease::wall_now_ns;
+
+    let report = |record: Option<weftfs::writer_lease::LeaseRecord>,
+                  view: Option<weftfs::writer_lease::InstalledLease>,
+                  stats: Option<weftfs::writer_lease::LeaseStats>|
+     -> serde_json::Value {
+        let now = wall_now_ns();
+        serde_json::json!({
+            "ok": true,
+            "now_ns": now,
+            "record": record.as_ref().map(|record| serde_json::json!({
+                "owner": record.owner,
+                "fence": record.fence,
+                "sequence": record.sequence,
+                "state": record.state.as_str(),
+                "acquired_ns": record.acquired_ns,
+                "renewed_ns": record.renewed_ns,
+                "deadline_ns": record.deadline_ns,
+                "ttl_ns": record.ttl_ns,
+                "remaining_ms": record.remaining_ms(now),
+                "live": record.is_live(now),
+                "head_generation": record.head_generation,
+                "head_commit": record.head_commit.map(|hash| hash.to_hex()),
+                "head_commit_len": record.head_commit_len,
+                "released_from": record.released_from,
+            })),
+            "installed": view.as_ref().map(|lease| serde_json::json!({
+                "owner": lease.owner,
+                "fence": lease.fence,
+                "sequence": lease.sequence,
+                "deadline_ns": lease.deadline_ns,
+                "expired": lease.expired(now),
+            })),
+            "stats": stats.map(|stats| serde_json::json!({
+                "acquisitions": stats.acquisitions,
+                "takeovers": stats.takeovers,
+                "renewals": stats.renewals,
+                "refusals": stats.refusals,
+                "tickets_joined": stats.tickets_joined,
+                "queue_waits": stats.queue_waits,
+                "max_lower_tickets": stats.max_lower_tickets,
+            })),
+        })
+    };
+
+    match command {
+        LeaseCommand::Show => {
+            // Read-only: never acquires, never writes.
+            policy.writer_lease = None;
+            let store = open_store(store_path, OpenMode::ReadOnly, policy)?;
+            let record = store.writer_lease_record()?;
+            if json {
+                println!("{}", report(record, None, None));
+            } else {
+                match record {
+                    Some(record) => println!(
+                        "state={} fence={} owner={} remaining_ms={} live={}",
+                        record.state.as_str(),
+                        record.fence,
+                        record.owner,
+                        record.remaining_ms(wall_now_ns()),
+                        record.is_live(wall_now_ns())
+                    ),
+                    None => println!("no writer lease record"),
+                }
+            }
+            Ok(())
+        }
+        LeaseCommand::Hold { millis } => {
+            if policy.writer_lease.is_none() {
+                return Err(Error::invalid_argument(
+                    "lease hold requires --writer-lease-secs (a lease must be configured before it \
+                     can be held)",
+                ));
+            }
+            let store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let view = store.writer_lease_view();
+            let record = store.writer_lease_record()?;
+            if json {
+                println!(
+                    "{}",
+                    report(record.clone(), view.clone(), store.writer_lease_stats())
+                );
+            } else if let Some(lease) = &view {
+                println!("holding lease fence={} for {} ms", lease.fence, millis);
+            }
+            if millis > 0 {
+                std::thread::sleep(std::time::Duration::from_millis(millis));
+            }
+            // Dropping the store writes the release tombstone.
+            drop(store);
+            Ok(())
+        }
+        LeaseCommand::Release => {
+            if policy.writer_lease.is_none() {
+                return Err(Error::invalid_argument(
+                    "lease release acquires before it releases, so it requires \
+                     --writer-lease-secs",
+                ));
+            }
+            let store = open_store(store_path, OpenMode::ReadWrite, policy)?;
+            let view = store.writer_lease_view();
+            let released = store.release_writer_lease()?;
+            let record = store.writer_lease_record()?;
+            if json {
+                let mut value = report(record, view, store.writer_lease_stats());
+                value["released"] = serde_json::Value::Bool(released);
+                println!("{value}");
+            } else {
+                println!("released={released}");
+            }
+            // The session is already released; do not write a second tombstone.
+            std::mem::forget(store);
+            Ok(())
+        }
+    }
+}
+
 fn run_mode(
     store_path: &PathBuf,
     json: bool,

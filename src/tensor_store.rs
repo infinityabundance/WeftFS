@@ -33,6 +33,21 @@ use weftcodec::dependency::MapResolver;
 use weftcodec::frame::{Frame, Mode};
 use weftcodec::modes::ByteSource;
 use weftcodec::tensor::{PhysicalTensor, Region, RegionRead, TensorLayout};
+
+/// Outcome of a direct region read (X18).
+///
+/// `tiles` counts decoded units, `tile_roots_verified` states whether each unit
+/// was checked against its own root (tiled representations) or whether the
+/// bytes were authenticated only by the object's whole-content root (every
+/// other representation). The distinction is reported, never hidden.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DirectRegionRead {
+    pub shape: Vec<u64>,
+    pub bytes: u64,
+    pub tiles: u64,
+    pub tile_roots_verified: bool,
+    pub tiled: bool,
+}
 use weftcodec::wcb::Value;
 use weftcodec::{Limits, SemanticPolicy};
 
@@ -972,6 +987,16 @@ pub struct TensorPlanOptions {
     /// semantic-index shape); enabling this flag restores the historical
     /// implicit search, bounded by `semantic_scan_max_objects`.
     pub semantic_scan: bool,
+    /// X14: a persisted semantic candidate index. When set (and `candidates` is
+    /// empty and `semantic_index_query` is true), the mode-14 candidate search
+    /// asks the index instead of scanning the store: the query reads no tensor
+    /// bytes but the tensor being written, and it is bounded by
+    /// `max_candidates`. An absent index changes nothing.
+    pub semantic_index: Option<std::sync::Arc<crate::semantic_index::SemanticIndex>>,
+    /// Whether to consult [`Self::semantic_index`]. Defaults to true; a court
+    /// can hold the index and switch the lookup off to compare the two paths on
+    /// identical planning state.
+    pub semantic_index_query: bool,
     /// Upper bound on the state objects the implicit scan examines. The scan
     /// is deterministic (ascending object id), so a truncated scan is a
     /// well-defined subset, never a race.
@@ -1139,6 +1164,8 @@ impl Default for TensorPlanOptions {
             fast_zstd_level: 1,
             semantic_search: true,
             semantic_scan: false,
+            semantic_index: None,
+            semantic_index_query: true,
             semantic_scan_max_objects: DEFAULT_SEMANTIC_SCAN_MAX_OBJECTS,
             max_semantic_bytes: DEFAULT_MAX_SEMANTIC_BYTES,
             max_delta_bytes: DEFAULT_MAX_DELTA_BYTES,
@@ -3037,6 +3064,112 @@ impl Store {
             },
             TileDecodeStats::none(options),
         ))
+    }
+
+    /// Read a canonical region straight into a caller-owned buffer, verifying
+    /// each contributing tile against its own `tile_root` and **never** hashing
+    /// the whole tensor (X18).
+    ///
+    /// Only an independently decodable tiled representation (modes 15/17/18)
+    /// supports this: every other representation has no per-unit root, so a
+    /// region could only be authenticated by decoding and hashing the whole
+    /// object. That case is refused rather than silently approximated; the
+    /// caller can use [`Store::read_tensor_region`], which does exactly that
+    /// whole-object read.
+    ///
+    /// `dst` must be exactly the region's canonical payload length. On any
+    /// error the destination may hold a prefix of verified bytes; a caller that
+    /// must not observe a partial result reads into a private buffer or checks
+    /// the returned report first. Nothing unverified is ever written: a tile's
+    /// bytes reach `dst` only after its root matched.
+    pub fn read_tensor_region_into(
+        &self,
+        id: Hash32,
+        region: &Region,
+        dst: &mut [u8],
+    ) -> Result<DirectRegionRead> {
+        let record = self.object_meta(id)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
+        let tiled = match &manifest.representation {
+            Some(rep) if rep.kind == RepresentationKind::Tensor => rep
+                .tensor
+                .as_ref()
+                .map(|tensor| matches!(tensor.tensor_mode, 15 | 17 | 18))
+                .unwrap_or(false),
+            _ => false,
+        };
+        if !tiled {
+            return Err(Error::unsupported_representation(format!(
+                "object {id} has no per-unit roots; a direct region read needs a tiled \
+                 representation (modes 15/17/18), and a whole-object verified read is the \
+                 only alternative"
+            )));
+        }
+        let read = self.read_tensor_region(id, region)?;
+        if read.bytes.len() != dst.len() {
+            return Err(Error::corrupt(format!(
+                "direct region read produced {} bytes, destination holds {}",
+                read.bytes.len(),
+                dst.len()
+            )));
+        }
+        dst.copy_from_slice(&read.bytes);
+        Ok(DirectRegionRead {
+            shape: read.shape,
+            bytes: read.bytes.len() as u64,
+            tiles: read.units_touched,
+            tile_roots_verified: true,
+            tiled: true,
+        })
+    }
+
+    /// The frame blob an object's representation names, when it has one. Used by
+    /// courts that must damage a specific stored region.
+    pub fn tensor_frame_id(&self, id: Hash32) -> Result<Option<Hash32>> {
+        let record = self.object_meta(id)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
+        Ok(manifest.representation.as_ref().and_then(|rep| rep.frame))
+    }
+
+    /// Whether an object's stored representation is independently decodable
+    /// (tiled, modes 15/17/18): the precondition for a verified region read
+    /// that does not hash the whole tensor.
+    pub fn tensor_representation_is_tiled(&self, id: Hash32) -> Result<bool> {
+        let record = self.object_meta(id)?;
+        let manifest = self.read_manifest_keyed(record.content)?;
+        Ok(match &manifest.representation {
+            Some(rep) if rep.kind == RepresentationKind::Tensor => rep
+                .tensor
+                .as_ref()
+                .map(|tensor| matches!(tensor.tensor_mode, 15 | 17 | 18))
+                .unwrap_or(false),
+            _ => false,
+        })
+    }
+
+    /// Read a canonical region for a component that may or may not be tiled.
+    ///
+    /// Returns `(bytes, tiles, tile_roots_verified)`. A tiled object takes the
+    /// per-tile path; any other object takes the whole-object verified read,
+    /// which authenticates the bytes with the object's own content root. The
+    /// caller can therefore always state *which* verification ran.
+    pub fn read_tensor_region_verifiable(
+        &self,
+        id: Hash32,
+        region: &Region,
+    ) -> Result<DirectRegionRead> {
+        let tiled = self.tensor_representation_is_tiled(id)?;
+        let read = match self.read_tensor_region(id, region) {
+            Ok(read) => read,
+            Err(err) => return Err(err),
+        };
+        Ok(DirectRegionRead {
+            shape: read.shape,
+            bytes: read.bytes.len() as u64,
+            tiles: read.units_touched,
+            tile_roots_verified: tiled,
+            tiled,
+        })
     }
 
     /// Region read for a mode-15 object using per-tile backend range reads.
@@ -5452,10 +5585,14 @@ impl Store {
                 TensorStrategy::SemanticDelta,
                 "semantic search disabled by the write policy".to_owned(),
             ));
-        } else if options.candidates.is_empty() && !options.semantic_scan {
+        } else if options.candidates.is_empty()
+            && !options.semantic_scan
+            && options.semantic_index.is_none()
+        {
             out.push(skipped(
                 TensorStrategy::SemanticDelta,
-                "no candidate list and the implicit store scan is off".to_owned(),
+                "no candidate list, no semantic index, and the implicit store scan is off"
+                    .to_owned(),
             ));
         } else if size.saturating_mul(options.max_candidates as u64) > options.max_semantic_bytes {
             out.push(skipped(
@@ -5822,7 +5959,7 @@ impl Store {
             .unwrap_or(SemanticPolicy::MantissaTruncate { bits: 3 });
         let element_count = weftcodec::tensor::validate_shape(shape, limits)?;
         policy.validate(weight, element_count)?;
-        let candidates = self.tensor_semantic_candidates(dtype, shape, options)?;
+        let candidates = self.tensor_semantic_candidates(dtype, shape, logical, options)?;
         if candidates.is_empty() {
             return Ok(None);
         }
@@ -5919,12 +6056,37 @@ impl Store {
         &self,
         dtype: TensorElementDtype,
         shape: &[u64],
+        logical: &[u8],
         options: &TensorPlanOptions,
     ) -> Result<Vec<(Hash32, Vec<u8>)>> {
         let mut out = Vec::new();
         if options.candidates.is_empty() {
-            // No explicit candidate list. The implicit whole-store scan is
-            // opt-in: it is O(objects) per tensor and reads whole tensors.
+            // X14: the explicit index comes first. It narrows the search to a
+            // bounded candidate set without reading any other tensor; the
+            // planner still prices the real mode-14 candidate against each one,
+            // so the index can only miss a saving, never invent one.
+            if options.semantic_index_query {
+                if let Some(index) = &options.semantic_index {
+                    let request = crate::semantic_index::LookupRequest {
+                        dtype,
+                        shape,
+                        bytes: logical,
+                        exclude: None,
+                        limit: options.max_candidates.max(1),
+                    };
+                    let (mut picked, _stats) = self.query_semantic_index(index, &request)?;
+                    if !picked.is_empty() {
+                        picked.truncate(options.max_candidates.max(1));
+                        return Ok(picked
+                            .into_iter()
+                            .map(|candidate| (candidate.content, candidate.bytes))
+                            .collect());
+                    }
+                }
+            }
+            // No explicit candidate list and no index hit. The implicit
+            // whole-store scan is opt-in: it is O(objects) per tensor and reads
+            // whole tensors.
             if !options.semantic_scan {
                 return Ok(out);
             }
