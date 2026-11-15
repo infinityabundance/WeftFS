@@ -237,6 +237,22 @@ receipt = {
     "kind": "training-artifact-court",
     "timestamp_utc": stamp,
     "court": "fuse (Rust + Go in one hard-limited container)",
+    "environment": {
+        "revisions": {
+            "WeftFS": os.environ.get("WEFT_REPO_WEFTFS", "unknown"),
+            "WeftCodec": os.environ.get("WEFT_REPO_WEFTCODEC", "unknown"),
+            "WeftCodec-Go": os.environ.get("WEFT_REPO_WEFTCODEC_GO", "unknown"),
+            "WeftFS-Go": os.environ.get("WEFT_REPO_WEFTFS_GO", "unknown"),
+        },
+        "image": os.environ.get("WEFT_COURT_IMAGE", "unknown"),
+        "image_id": os.environ.get("WEFT_COURT_IMAGE_ID", "unknown"),
+        "kernel": os.environ.get("WEFT_COURT_KERNEL", "unknown"),
+        "limits": {
+            "memory": os.environ.get("WEFT_COURT_MEMORY", "unknown"),
+            "cpus": os.environ.get("WEFT_COURT_CPUS", "unknown"),
+            "pids": os.environ.get("WEFT_COURT_PIDS", "unknown"),
+        },
+    },
     "fixture": read("rust.json"),
     "cross_language": {
         "rust_writes_go_validates": go,
