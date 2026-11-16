@@ -279,22 +279,30 @@ fn main() {
     let index = Arc::new(reload);
 
     // ---- arms -----------------------------------------------------------
-    // The historical scan with the default candidate bound: it accepts the
-    // first `max_candidates` *compatible* objects in object-id order, with no
-    // similarity ranking at all. On a store with more compatible tensors than
-    // that bound it can miss the right base entirely — measured here, not
-    // assumed.
-    let scan_default = run_arm(&store, &queries, || plan_options(true, None, 8));
+    // The shipped planner's default candidate bound. The scan and the index are
+    // both measured at it, so "the index recovers the scan's saving" compares
+    // like with like; 8 is reported too because the earlier bounded scan used it.
+    let default_bound = weftfs::tensor_store::DEFAULT_TENSOR_MAX_CANDIDATES;
+    // Half the shipped default, the bound the earlier bounded scan used: it
+    // accepts the first `max_candidates` *compatible* objects in object-id
+    // order, with no similarity ranking at all, so on a store with more
+    // compatible tensors than that bound it can miss the right base entirely —
+    // measured here, not assumed.
+    let scan_bound8 = run_arm(&store, &queries, || plan_options(true, None, 8));
+    // The scan at the shipped default candidate bound.
+    let scan_default = run_arm(&store, &queries, || plan_options(true, None, default_bound));
     // The scan given a bound large enough to examine every compatible object:
     // the honest "what the scan can do when it is allowed to read everything".
     let scan_all = run_arm(&store, &queries, || {
         plan_options(true, None, VARIANTS + DISTRACTORS)
     });
-    // The index at the same small bound as the historical scan.
+    // The index at the shipped default bound.
     let indexed = run_arm(&store, &queries, || {
-        plan_options(false, Some(Arc::clone(&index)), 8)
+        plan_options(false, Some(Arc::clone(&index)), default_bound)
     });
-    let none = run_arm(&store, &queries, || plan_options(false, None, 8));
+    let none = run_arm(&store, &queries, || {
+        plan_options(false, None, default_bound)
+    });
     let lookup = query_report(&store, &index, &queries);
 
     // ---- stale index: delete the whole family --------------------------
@@ -306,7 +314,7 @@ fn main() {
     }
     let stale_lookup = query_report(&store, &index, &queries);
     let stale_index = run_arm(&store, &queries, || {
-        plan_options(false, Some(Arc::clone(&index)), 8)
+        plan_options(false, Some(Arc::clone(&index)), default_bound)
     });
 
     let mut checks: Vec<serde_json::Value> = Vec::new();
@@ -323,7 +331,7 @@ fn main() {
             "label": "the index recovers the exhaustive scan's saving exactly",
             "ok": scan_all.semantic_bytes == indexed.semantic_bytes,
             "detail": format!(
-                "scan(all) {} B vs index(8) {} B (delta {} B)",
+                "scan(all) {} B vs index({default_bound}) {} B (delta {} B)",
                 scan_all.semantic_bytes,
                 indexed.semantic_bytes,
                 indexed.semantic_bytes as i64 - scan_all.semantic_bytes as i64
@@ -379,7 +387,18 @@ fn main() {
         "lookup": lookup,
         "stale_lookup": stale_lookup,
         "arms": {
-            "scan_default_bound": {
+            "scan_bound8": {
+                "max_candidates": 8,
+                "semantic_detail": scan_bound8.semantic_detail,
+                "semantic_bytes": scan_bound8.semantic_bytes,
+                "chosen_physical_bytes": scan_bound8.chosen_physical,
+                "chosen": scan_bound8.chosen,
+                "plan_ms": stats(&scan_bound8.plan_ms),
+                "missed_vs_scan_all_bytes": scan_all.semantic_bytes as i64
+                    - scan_bound8.semantic_bytes as i64,
+            },
+            "scan_default": {
+                "max_candidates": default_bound,
                 "semantic_detail": scan_default.semantic_detail,
                 "semantic_bytes": scan_default.semantic_bytes,
                 "chosen_physical_bytes": scan_default.chosen_physical,
@@ -389,6 +408,7 @@ fn main() {
                     - scan_default.semantic_bytes as i64,
             },
             "scan_all": {
+                "max_candidates": VARIANTS + DISTRACTORS,
                 "semantic_detail": scan_all.semantic_detail,
                 "semantic_bytes": scan_all.semantic_bytes,
                 "chosen_physical_bytes": scan_all.chosen_physical,
@@ -396,6 +416,7 @@ fn main() {
                 "plan_ms": stats(&scan_all.plan_ms),
             },
             "index": {
+                "max_candidates": default_bound,
                 "semantic_detail": indexed.semantic_detail,
                 "semantic_bytes": indexed.semantic_bytes,
                 "chosen_physical_bytes": indexed.chosen_physical,
@@ -403,6 +424,7 @@ fn main() {
                 "plan_ms": stats(&indexed.plan_ms),
             },
             "none": {
+                "max_candidates": default_bound,
                 "semantic_detail": none.semantic_detail,
                 "semantic_bytes": none.semantic_bytes,
                 "chosen_physical_bytes": none.chosen_physical,
@@ -410,6 +432,7 @@ fn main() {
                 "plan_ms": stats(&none.plan_ms),
             },
             "stale_index": {
+                "max_candidates": default_bound,
                 "semantic_bytes": stale_index.semantic_bytes,
                 "chosen_physical_bytes": stale_index.chosen_physical,
                 "chosen": stale_index.chosen,
