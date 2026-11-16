@@ -9,7 +9,7 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **1,092** tests pass; FUSE **1,143** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,419** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,420** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
@@ -54,18 +54,21 @@ fairness versus 9,270 µs without; publication p50 11.50 ms leased versus
 `weft.semantic.index.v1` record at `semantic-index.root` holds per-tensor
 fingerprints (dtype, shape, quantised byte-plane histograms, bounded head/tail
 sketch). The planner queries it first and still prices the real mode-14
-candidate against every returned base. Receipt `semantic-index-20261115T235917Z`
-6/6 on 220 objects and five 1 MiB queries: index at `max_candidates = 8` and the
-exhaustive scan at 20 both chose **529,563 B** of semantic-delta payload and the
-same representations, while the historical default-bound scan chose 715,251 B
-and **missed 185,688 B (35.1 %)** because it takes candidates in object-id order.
-No discovery costs 2,624,550 B. Build: 21,022,720 B read, 56.6 ms, a 51,786 B
-record (257.3 µs/entry); lookup with candidate bytes 18.22 ms p50, ranking alone
-0.547 ms; index plan 99.3 ms p50 versus 157.1 ms exhaustive (57.7 ms faster) and
-5.3 ms **slower** than the default-bound scan. A stale index skips 40/40 entries,
-serves 0 B and misses 100 % of the saving (plan falls back to 2,624,550 B).
-Tests `tests/semantic_index.rs` 7/7. The fixture pins a finite BF16 exponent:
-the default policy preserves NaN/inf words bit-exactly, so a random exponent gave
+candidate against every returned base. Receipt `semantic-index-20261116T001334Z`
+8/8 on 220 objects and five 1 MiB queries, over **three fresh stores** (ObjectIds
+are random, so the implicit scan's id-sorted candidate order differs per store).
+The index and the exhaustive scan both chose **529,563 B** of semantic-delta
+payload in every store and the same representations. The implicit scan at half
+the shipped default bound missed **185,688 B (35.1 %)** on one of three stores;
+at the shipped default (16 candidates) it happened to find the best base in all
+three, which is not a guarantee — the order is still random. Without discovery
+the same five queries cost 2,624,550 B. Build: 21,022,720 B read, 57.6 ms, a
+51,786 B record (262.0 µs/entry); lookup with candidate bytes 18.60 ms p50,
+ranking alone 0.548 ms; plan p50 141.1 ms for the index versus 159.0 ms
+exhaustive, 138.3 ms default-bound and 95.5 ms at the 8-bound. A stale index
+skips 40/40 entries, serves 0 B and loses the whole 529,563 B saving. Tests
+`tests/semantic_index.rs` 7/7. The fixture pins a finite BF16 exponent: the
+default policy preserves NaN/inf words bit-exactly, so a random exponent gave
 tensors that differ only in low mantissa bits different semantic roots (found by
 a failing stale-entry test, fixed in the court and the test).
 

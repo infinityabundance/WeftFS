@@ -14947,22 +14947,22 @@
   },
   {
     "id": "x14_index_recovers_scan",
-    "claim": "The fingerprint index at the historical candidate bound recovers exactly the semantic-delta payload the exhaustive scan finds.",
-    "value": "529,563 B of semantic-delta payload",
+    "claim": "The fingerprint index recovered exactly the semantic saving of the exhaustive scan on all three measured stores.",
+    "value": "the index chose 529,563 B every time",
     "locations": [
       "bench/RESULTS-semantic-index.md"
     ],
-    "receipt": "bench/receipts/semantic-index-20261115T235917Z.json",
+    "receipt": "bench/receipts/semantic-index-20261116T001334Z.json",
     "kind": "present"
   },
   {
     "id": "x14_default_bound_misses",
-    "claim": "The historical bounded implicit scan misses savings that the index recovers at the same candidate bound.",
+    "claim": "The implicit scan at half the shipped default candidate bound missed 35.1% of the achievable saving on one of three stores, because its candidate order is random; the index never missed.",
     "value": "185,688 B",
     "locations": [
       "bench/RESULTS-semantic-index.md"
     ],
-    "receipt": "bench/receipts/semantic-index-20261115T235917Z.json",
+    "receipt": "bench/receipts/semantic-index-20261116T001334Z.json",
     "kind": "present"
   },
   {
@@ -14972,17 +14972,17 @@
     "locations": [
       "bench/RESULTS-semantic-index.md"
     ],
-    "receipt": "bench/receipts/semantic-index-20261115T235917Z.json",
+    "receipt": "bench/receipts/semantic-index-20261116T001334Z.json",
     "kind": "present"
   },
   {
     "id": "x14_build_cost",
     "claim": "Building the semantic index reads every live tensor once and produces a small record.",
-    "value": "56.6 ms",
+    "value": "57.6 ms",
     "locations": [
       "bench/RESULTS-semantic-index.md"
     ],
-    "receipt": "bench/receipts/semantic-index-20261115T235917Z.json",
+    "receipt": "bench/receipts/semantic-index-20261116T001334Z.json",
     "kind": "present"
   },
   {
@@ -15053,6 +15053,16 @@
       "bench/RESULTS-online-transcode.md"
     ],
     "receipt": "bench/receipts/online-transcode-20261115T235938Z.json",
+    "kind": "present"
+  },
+  {
+    "id": "x14_index_stable",
+    "claim": "The fingerprint index produced the identical semantic saving on three fresh stores built from the same fixture, while the id-ordered scan's saving varied.",
+    "value": "529,563 B every time",
+    "locations": [
+      "bench/RESULTS-semantic-index.md"
+    ],
+    "receipt": "bench/receipts/semantic-index-20261116T001334Z.json",
     "kind": "present"
   }
 ]

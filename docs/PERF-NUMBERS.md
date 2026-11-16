@@ -477,7 +477,7 @@ seven interleaved repetitions. Source:
 | `verify.revision` | b0638ef348cb6b416e42833aaa779435068e38f6 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261115T194936Z.json` | 20261115T194936Z | b0638ef348cb |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,419 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,420 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 1,092 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261115T194936Z.tests.json` | 7cfc2421e3118e75bfbcdcc6992159b2879b551fa3688fae343b8d3ba72cfcce | bench/receip |
@@ -1327,33 +1327,49 @@ time. They are not current claims.
 <!-- BEGIN GENERATED:perf-catalog-semantic-index (scripts/perf_numbers.py) -->
 | key | value | unit | what it measures | receipt | stamp | revision |
 |---|---:|---|---|---|---|---|
-| `semantic_index.build_objects` | 220 | — | index build: tensors scanned | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.build_bytes` | 21,022,720 | B | index build: bytes read | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.build_ms` | 56.6 | ms | index build: wall | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.build_record` | 51,786 | B | index record size | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.build_us` | 257.3 | us | index build: per entry | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.lookup_p50_ms` | 18.22 | ms | lookup p50 (reads candidate bytes) | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.stale_lookup_p50_ms` | 0.547 | ms | ranking only: p50 (no candidate bytes) | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.index_semantic_bytes` | 529,563 | B | index: semantic-delta payload | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.index_physical_bytes` | 529,563 | B | index: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.index_plan_ms` | 99.3 | ms | index: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.scan_all_plan_ms` | 157.1 | ms | exhaustive scan: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.scan_all_physical_bytes` | 529,563 | B | exhaustive scan: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.scan_default_plan_ms` | 94.1 | ms | default-bound scan: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.scan_default_physical_bytes` | 715,251 | B | default-bound scan: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.none_physical_bytes` | 2,624,550 | B | no discovery: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.none_plan_ms` | 45.4 | ms | no discovery: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.stale_entries` | 40 | — | stale index: entries skipped | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.stale_physical_bytes` | 2,624,550 | B | stale index: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.stale_plan_ms` | 45.6 | ms | stale index: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.stale_miss_rate` | 1.00 | ratio | stale index: miss rate | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.checks_passed` | 6 | — | court checks passed | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.checks_total` | 6 | — | court checks total | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.scan_all_minus_index_ms` | 57.7 | ms | exhaustive scan plan p50 minus index | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.index_minus_default_ms` | 5.3 | ms | index plan p50 minus default-bound scan | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.missed_bytes` | 185,688 | B | default-bound scan: saving missed | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.missed_pct` | 35.1 | % | default-bound scan: share of the achievable saving missed | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
-| `semantic_index.none_minus_index_bytes` | 2,094,987 | B | no discovery: extra physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.build_objects` | 220 | — | index build: tensors scanned | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.build_bytes` | 21,022,720 | B | index build: bytes read | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.build_ms` | 57.6 | ms | index build: wall | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.build_record` | 51,786 | B | index record size | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.build_us` | 262.0 | us | index build: per entry | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.lookup_p50_ms` | 18.60 | ms | lookup p50 (reads candidate bytes) | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.stale_lookup_p50_ms` | 0.548 | ms | ranking only: p50 (no candidate bytes) | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_semantic_bytes` | 529,563 | B | index: semantic-delta payload | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_physical_bytes` | 529,563 | B | index: chosen physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_plan_ms` | 141.1 | ms | index: plan p50 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_all_plan_ms` | 159.0 | ms | exhaustive scan: plan p50 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_all_physical_bytes` | 529,563 | B | exhaustive scan: chosen physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.none_physical_bytes` | 2,624,550 | B | no discovery: chosen physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.none_plan_ms` | 45.9 | ms | no discovery: plan p50 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.stale_entries` | 40 | — | stale index: entries skipped | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.stale_physical_bytes` | 2,624,550 | B | stale index: chosen physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.stale_plan_ms` | 65.2 | ms | stale index: plan p50 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.stale_miss_rate` | 1.00 | ratio | stale index: miss rate | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.checks_passed` | 8 | — | court checks passed | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.checks_total` | 8 | — | court checks total | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_all_minus_index_ms` | 17.9 | ms | exhaustive scan plan p50 minus index | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_minus_default_ms` | 2.8 | ms | index plan p50 minus default-bound scan | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.none_minus_index_bytes` | 2,094,987 | B | no discovery: extra physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.repetitions` | 3 | — | stores measured | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_bound8_plan_ms` | 95.5 | ms | 8-bound scan: plan p50 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_bound8_physical_bytes` | 529,563 | B | 8-bound scan: chosen physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_bound8_rep1` | 529,563 | B | 8-bound scan: saving, store 1 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_bound8_rep2` | 715,251 | B | 8-bound scan: saving, store 2 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_bound8_rep3` | 529,563 | B | 8-bound scan: saving, store 3 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_default_plan_ms` | 138.3 | ms | default-bound scan: plan p50 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_default_physical_bytes` | 529,563 | B | default-bound scan: chosen physical bytes | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_default_rep1` | 529,563 | B | default-bound scan: saving, store 1 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_default_rep2` | 529,563 | B | default-bound scan: saving, store 2 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_default_rep3` | 529,563 | B | default-bound scan: saving, store 3 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_rep1` | 529,563 | B | index: saving, store 1 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_rep2` | 529,563 | B | index: saving, store 2 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.index_rep3` | 529,563 | B | index: saving, store 3 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_all_rep1` | 529,563 | B | exhaustive scan: saving, store 1 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_all_rep2` | 529,563 | B | exhaustive scan: saving, store 2 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.scan_all_rep3` | 529,563 | B | exhaustive scan: saving, store 3 | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.stale_saving` | 529,563 | B | stale index: saving lost | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.bound8_worst_miss_bytes` | 185,688 | B | 8-bound scan: worst miss | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
+| `semantic_index.bound8_worst_miss_pct` | 35.1 | % | 8-bound scan: worst miss, share of achievable | `bench/receipts/semantic-index-20261116T001334Z.json` | 20261116T001334Z | 6795661b5d0f |
 <!-- END GENERATED:perf-catalog-semantic-index -->
 
 ## X18 direct-to-destination verified reconstruction
