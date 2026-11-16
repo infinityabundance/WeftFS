@@ -1,0 +1,266 @@
+{
+  "arms": {
+    "index": {
+      "chosen": [
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta"
+      ],
+      "chosen_physical_bytes": 529563,
+      "plan_ms": {
+        "max": 99.69546199999999,
+        "min": 98.11582100000001,
+        "n": 5,
+        "p50": 99.337093
+      },
+      "semantic_bytes": 529563,
+      "semantic_detail": [
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))"
+      ]
+    },
+    "none": {
+      "chosen": [
+        "float-tensor",
+        "float-tensor",
+        "float-tensor",
+        "float-tensor",
+        "float-tensor"
+      ],
+      "chosen_physical_bytes": 2624550,
+      "plan_ms": {
+        "max": 45.699558,
+        "min": 45.053470999999995,
+        "n": 5,
+        "p50": 45.375061
+      },
+      "semantic_bytes": 0,
+      "semantic_detail": [
+        "no candidate list, no semantic index, and the implicit store scan is off",
+        "no candidate list, no semantic index, and the implicit store scan is off",
+        "no candidate list, no semantic index, and the implicit store scan is off",
+        "no candidate list, no semantic index, and the implicit store scan is off",
+        "no candidate list, no semantic index, and the implicit store scan is off"
+      ]
+    },
+    "scan_all": {
+      "chosen": [
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta"
+      ],
+      "chosen_physical_bytes": 529563,
+      "plan_ms": {
+        "max": 159.33383800000001,
+        "min": 155.994439,
+        "n": 5,
+        "p50": 157.057475
+      },
+      "semantic_bytes": 529563,
+      "semantic_detail": [
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))"
+      ]
+    },
+    "scan_default_bound": {
+      "chosen": [
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta",
+        "semantic-delta"
+      ],
+      "chosen_physical_bytes": 715251,
+      "missed_vs_scan_all_bytes": -185688,
+      "plan_ms": {
+        "max": 94.250261,
+        "min": 93.19633200000001,
+        "n": 5,
+        "p50": 94.064604
+      },
+      "semantic_bytes": 715251,
+      "semantic_detail": [
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))",
+        "mode 14 against a same-semantic-root base (policy bf16: Map({\"bits\": U64(3), \"scheme\": Str(\"mantissa_truncate\")}))"
+      ]
+    },
+    "stale_index": {
+      "chosen": [
+        "float-tensor",
+        "float-tensor",
+        "float-tensor",
+        "float-tensor",
+        "float-tensor"
+      ],
+      "chosen_physical_bytes": 2624550,
+      "miss_rate": 1.0,
+      "missed_semantic_bytes": 529563,
+      "missed_semantic_fraction": 1.0,
+      "plan_ms": {
+        "max": 46.909206000000005,
+        "min": 45.372336,
+        "n": 5,
+        "p50": 45.570987
+      },
+      "semantic_bytes": 0
+    }
+  },
+  "build": {
+    "bytes_read": 21022720,
+    "entries": 220,
+    "objects_scanned": 220,
+    "record_bytes": 51786,
+    "skipped": 0,
+    "us_per_entry": 257.2937590909091,
+    "wall_ms": 56.604627
+  },
+  "checks": [
+    {
+      "detail": "529563 B of semantic-delta payload over 5 queries",
+      "label": "the exhaustive scan finds a real cross-version saving",
+      "ok": true
+    },
+    {
+      "detail": "scan(all) 529563 B vs index(8) 529563 B (delta 0 B)",
+      "label": "the index recovers the exhaustive scan's saving exactly",
+      "ok": true
+    },
+    {
+      "detail": "chosen [\"semantic-delta\", \"semantic-delta\", \"semantic-delta\", \"semantic-delta\", \"semantic-delta\"] vs [\"semantic-delta\", \"semantic-delta\", \"semantic-delta\", \"semantic-delta\", \"semantic-delta\"]; total physical 529563 vs 529563",
+      "label": "the index and the exhaustive scan choose the same representations",
+      "ok": true
+    },
+    {
+      "detail": "{\"best_distance\":[0,0,0,0,0],\"compatible_total\":100,\"examined_total\":1100,\"lookup_ms\":{\"max\":18.75251,\"min\":18.148532,\"n\":5,\"p50\":18.220726},\"queries\":5,\"returned_total\":40,\"stale_total\":0}",
+      "label": "the index finds a semantic candidate for every query",
+      "ok": true
+    },
+    {
+      "detail": "0 B",
+      "label": "without an index or a scan there is no semantic saving",
+      "ok": true
+    },
+    {
+      "detail": "{\"best_distance\":[0,0,0,0,0],\"compatible_total\":100,\"examined_total\":1100,\"lookup_ms\":{\"max\":0.555989,\"min\":0.544958,\"n\":5,\"p50\":0.546671},\"queries\":5,\"returned_total\":0,\"stale_total\":40}",
+      "label": "a stale index skips entries instead of serving them",
+      "ok": true
+    }
+  ],
+  "deltas": {
+    "index_vs_scan_all_physical_bytes": 0,
+    "index_vs_scan_all_plan_ms_p50": -57.720382000000015,
+    "index_vs_scan_all_semantic_bytes": 0,
+    "index_vs_scan_default_plan_ms_p50": 5.272488999999993,
+    "scan_default_missed_semantic_bytes": -185688,
+    "stale_missed_semantic_bytes": 529563
+  },
+  "environment": {
+    "clock": "Instant; the store is local and the page cache is warm",
+    "cpus": 4,
+    "target": "x86_64"
+  },
+  "fixture": {
+    "distractors": 8,
+    "dtype": "bf16",
+    "family_variants": 12,
+    "filler_other_shape": 200,
+    "queries": 5,
+    "shape": [
+      512,
+      1024
+    ],
+    "tensor_bytes": 1048576
+  },
+  "gate": "X14",
+  "lookup": {
+    "best_distance": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "compatible_total": 100,
+    "examined_total": 1100,
+    "lookup_ms": {
+      "max": 18.75251,
+      "min": 18.148532,
+      "n": 5,
+      "p50": 18.220726
+    },
+    "queries": 5,
+    "returned_total": 40,
+    "stale_total": 0
+  },
+  "method": {
+    "arms": [
+      "scan_default_bound: semantic_scan with max_candidates=8 (the historical default)",
+      "scan_all: semantic_scan with max_candidates=20 (every compatible object)",
+      "index: the persisted fingerprint index, max_candidates=8",
+      "none: no discovery",
+      "stale_index: the index after every family-A tensor was unlinked"
+    ],
+    "court": "rust",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "pids": 1024
+    },
+    "note": "lookup_ms includes reading the returned candidate tensors (8 MiB per query); the fingerprint comparison itself is reported separately by stale_lookup, where no candidate bytes are read",
+    "notes": [
+      "one host, warm page cache; no fleet, cloud or media claim",
+      "the fixture is synthetic and generated in-process; no real model weights",
+      "the index is a prefilter: every base is still priced by the real mode-14 encoder"
+    ],
+    "store": "local backend, one store per run, page cache warm"
+  },
+  "result": "pass",
+  "revision": {
+    "weftfs": "4ab9ed23f601958a46a11ac9718b8c854a2526f9"
+  },
+  "schema": "weft.receipt.semantic-index.v1",
+  "stale_lookup": {
+    "best_distance": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "compatible_total": 100,
+    "examined_total": 1100,
+    "lookup_ms": {
+      "max": 0.555989,
+      "min": 0.544958,
+      "n": 5,
+      "p50": 0.546671
+    },
+    "queries": 5,
+    "returned_total": 0,
+    "stale_total": 40
+  },
+  "stamp": "20261115T235917Z",
+  "summary": {
+    "checks": 6,
+    "failed": 0,
+    "passed": 6
+  },
+  "verification": {
+    "open_mode": "read-write",
+    "store_verify_ok": true
+  }
+}

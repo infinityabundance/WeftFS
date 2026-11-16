@@ -1,0 +1,182 @@
+{
+  "arms": [
+    {
+      "arm": "container_then_copy",
+      "cpu_ms": {
+        "max": 263.293,
+        "min": 259.232,
+        "n": 5,
+        "p50": 259.851,
+        "p95": 263.293
+      },
+      "rss_delta_kib": 76520,
+      "rss_end_kib": 276544,
+      "rss_start_kib": 200024,
+      "wall_ms": {
+        "max": 264.178488,
+        "min": 260.135216,
+        "n": 5,
+        "p50": 260.671127,
+        "p95": 264.178488
+      }
+    },
+    {
+      "arm": "container_unhashed",
+      "cpu_ms": {
+        "max": 206.718,
+        "min": 199.852,
+        "n": 5,
+        "p50": 202.054,
+        "p95": 206.718
+      },
+      "rss_delta_kib": 0,
+      "rss_end_kib": 276544,
+      "rss_start_kib": 276544,
+      "wall_ms": {
+        "max": 207.566276,
+        "min": 202.396298,
+        "n": 5,
+        "p50": 204.30169800000002,
+        "p95": 207.566276
+      }
+    },
+    {
+      "arm": "direct_into_destinations",
+      "cpu_ms": {
+        "max": 189.368,
+        "min": 180.123,
+        "n": 5,
+        "p50": 182.596,
+        "p95": 189.368
+      },
+      "rss_delta_kib": 10320,
+      "rss_end_kib": 286864,
+      "rss_start_kib": 276544,
+      "wall_ms": {
+        "max": 189.902751,
+        "min": 182.2689,
+        "n": 5,
+        "p50": 183.75988600000002,
+        "p95": 189.902751
+      }
+    },
+    {
+      "arm": "rank_ordinary",
+      "cpu_ms": {
+        "max": 49.296,
+        "min": 47.519,
+        "n": 5,
+        "p50": 48.283,
+        "p95": 49.296
+      },
+      "rss_delta_kib": 0,
+      "rss_end_kib": 286864,
+      "rss_start_kib": 286864,
+      "wall_ms": {
+        "max": 49.453610000000005,
+        "min": 47.629192,
+        "n": 5,
+        "p50": 48.44743,
+        "p95": 49.453610000000005
+      }
+    },
+    {
+      "arm": "rank_direct_slab",
+      "cpu_ms": {
+        "max": 41.713,
+        "min": 39.731,
+        "n": 5,
+        "p50": 41.358,
+        "p95": 41.713
+      },
+      "rss_delta_kib": 0,
+      "rss_end_kib": 286864,
+      "rss_start_kib": 286864,
+      "wall_ms": {
+        "max": 42.150668,
+        "min": 40.210464,
+        "n": 5,
+        "p50": 41.456922,
+        "p95": 42.150668
+      }
+    }
+  ],
+  "checks": [
+    {
+      "detail": "8 tensors, 67108864 bytes",
+      "label": "direct buffers equal the saved tensors byte for byte",
+      "ok": true
+    },
+    {
+      "detail": "rows [0, 512) of every tensor",
+      "label": "the direct row slab equals the ordinary rank restore and the saved rows",
+      "ok": true
+    },
+    {
+      "detail": "header 704 B",
+      "label": "the container restore and the direct restore agree on every byte",
+      "ok": true
+    }
+  ],
+  "deltas": {
+    "direct_vs_container_then_copy_p50": -76.91124099999999,
+    "direct_vs_container_unhashed_p50": -20.541811999999993,
+    "rank_direct_vs_rank_ordinary_p50": -6.990507999999998,
+    "sha256_pass_ms_at_p50": 56.369429
+  },
+  "environment": {
+    "clock": "Instant plus getrusage; RSS is VmHWM, monotone within one process",
+    "cpus": 4,
+    "target": "x86_64"
+  },
+  "fixture": {
+    "cols": 2048,
+    "container_bytes": 67109568,
+    "dtype": "bf16",
+    "logical_bytes": 67108864,
+    "rows": 2048,
+    "shards": 4,
+    "strategy": "tensor-tiled",
+    "tensors": 8,
+    "tile_shape": [
+      128,
+      512
+    ]
+  },
+  "gate": "X18",
+  "method": {
+    "arms": [
+      "container_then_copy: restore_checkpoint_pipelined + copy into per-tensor buffers",
+      "container_unhashed: restore_checkpoint_pipelined_unhashed (isolates the SHA-256 pass)",
+      "direct_into_destinations: restore_checkpoint_direct_into (no container buffer, no SHA-256)",
+      "rank_ordinary: restore_checkpoint_rank (one quarter of the rows, per-tensor SHA-256)",
+      "rank_direct_slab: restore_row_slab_direct_at (the same rows, per-tile roots, no SHA-256)"
+    ],
+    "court": "rust",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "pids": 1024
+    },
+    "notes": [
+      "one host, warm page cache; no fleet, cloud or media claim",
+      "the CPU column is getrusage user+sys, not wall",
+      "tile roots authenticate each decoded tile; the frame blob is authenticated by its manifest id"
+    ],
+    "rss": "VmHWM is monotone within one process, so rss_delta is reported per arm in run order and is not an isolated per-arm peak",
+    "store": "local backend, read-only handle over one tiled checkpoint"
+  },
+  "reps": 5,
+  "result": "pass",
+  "revision": {
+    "weftfs": "4ab9ed23f601958a46a11ac9718b8c854a2526f9"
+  },
+  "schema": "weft.receipt.direct-restore.v1",
+  "stamp": "20261115T235925Z",
+  "summary": {
+    "checks": 3,
+    "failed": 0,
+    "passed": 3
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "checks": [
+    {
+      "detail": "0 problems",
+      "label": "every foreground write landed and the store verifies",
+      "ok": true
+    },
+    {
+      "detail": "4 applied, 32942 foreground yields, 0 oversized skips",
+      "label": "the worker applied rewrites while foreground writes continued",
+      "ok": true
+    },
+    {
+      "detail": "StageBudgetStats { max_active_workers: 1, max_inflight_bytes: 1048577, observed_max_active_workers: 1, observed_max_inflight_bytes: 0, granted: [(\"encode\", 0), (\"codec\", 0), (\"io\", 0), (\"restore\", 0), (\"maintenance\", 5)], waited: [(\"encode\", 0), (\"codec\", 0), (\"io\", 0), (\"restore\", 0), (\"maintenance\", 0)], clamped_worker_requests: 0, oversized_admissions: 0, cancelled_waiters: 0, observed_max_waiters: 1, wait_ns: 0 }",
+      "label": "the declared budget was kept",
+      "ok": true
+    },
+    {
+      "detail": "24/24 exact, 2 rewritten",
+      "label": "a SIGKILL leaves every object exact",
+      "ok": true
+    },
+    {
+      "detail": "24/24 pinned",
+      "label": "the pre-run snapshot still names every old representation",
+      "ok": true
+    }
+  ],
+  "crash": {
+    "exact_objects": 24,
+    "objects": 24,
+    "pinned_old_objects": 24,
+    "rewritten_before_kill": 2,
+    "verify_ok": true,
+    "verify_problems": 0
+  },
+  "deltas": {
+    "foreground_p50_ratio": 1.0135727393420362,
+    "foreground_p99_ratio": 1.0101475125987402,
+    "worker_hold_share": 0.07322238642576254
+  },
+  "environment": {
+    "clock": "Instant; the crash arm is a real SIGKILL of a second process",
+    "cpus": 4,
+    "target": "x86_64"
+  },
+  "fixture": {
+    "cols": 1024,
+    "dtype": "bf16",
+    "fast_strategy": "zstd",
+    "foreground_ops": 60,
+    "object_bytes": 1048576,
+    "objects": 24,
+    "rows": 512
+  },
+  "gate": "P06",
+  "interference": {
+    "busy_ms": {
+      "max": 625.210834,
+      "n": 60,
+      "p50": 578.896389,
+      "p95": 618.776024,
+      "p99": 623.348987
+    },
+    "busy_p50": 578.896389,
+    "foreground_wall_s": 34.630981752,
+    "p50_ratio": 1.0135727393420362,
+    "p99_ratio": 1.0101475125987402,
+    "quiet_ms": {
+      "max": 619.249817,
+      "n": 60,
+      "p50": 571.144395,
+      "p95": 613.48563,
+      "p99": 617.087088
+    },
+    "quiet_p50": 571.144395,
+    "worker_hold_ms": 2682.2079009999998,
+    "worker_hold_share": 0.07322238642576254,
+    "worker_yielded_ms": 34628.91794700003
+  },
+  "method": {
+    "arms": [
+      "quiet: the same 60 foreground writes with no worker",
+      "busy: the same 60 foreground writes with the worker active"
+    ],
+    "budget": "StageBudget(max_active_workers=1, max_inflight_bytes=object bytes+1)",
+    "court": "rust",
+    "crash": "real SIGKILL of a second process running the worker",
+    "foreground_op": "write_tensor_range over one row of a 1 MiB bf16 tensor",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "pids": 1024
+    },
+    "notes": [
+      "one host, warm page cache; no fleet, cloud or media claim",
+      "the foreground operation dominates the measurement (a range write re-encodes the whole tensor), so interference is reported both as a ratio and as the worker's share of wall time held",
+      "the fixture is synthetic structured BF16, not real weights"
+    ],
+    "store": "local backend; worker and foreground share one Store behind one mutex"
+  },
+  "result": "pass",
+  "revision": {
+    "weftfs": "4ab9ed23f601958a46a11ac9718b8c854a2526f9"
+  },
+  "schema": "weft.receipt.online-transcode.v1",
+  "stamp": "20261115T235938Z",
+  "summary": {
+    "checks": 5,
+    "failed": 0,
+    "passed": 5
+  },
+  "throughput": {
+    "applied_in_window": 3,
+    "budget": {
+      "max_active_workers": 1,
+      "max_inflight_bytes": 1048577,
+      "observed_max_active_workers": 1,
+      "oversized_admissions": 0
+    },
+    "bytes_saved_in_window": 177677,
+    "final_stats": {
+      "applied": 4,
+      "budget_refusals": 0,
+      "bytes_read": 6291456,
+      "bytes_saved": 236901,
+      "empty_steps": 1,
+      "foreground_yields": 32942,
+      "held_ms": 2682.2079009999998,
+      "oversized_skips": 0,
+      "steps": 5,
+      "yielded_ms": 34628.91794700003
+    },
+    "mib_per_s": 0.08472053111072583,
+    "objects_per_s": 1.499956364019436,
+    "window_s": 2.000058183
+  }
+}

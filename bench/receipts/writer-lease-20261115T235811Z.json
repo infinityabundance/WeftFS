@@ -1,0 +1,247 @@
+{
+  "cases": [
+    {
+      "name": "acquire_cost",
+      "result": {
+        "rows": [
+          {
+            "acquire_and_open_us": {
+              "max": 37884.899,
+              "min": 11302.814,
+              "n": 120,
+              "p50": 11626.198,
+              "p95": 16018.213,
+              "p99": 19787.954999999998
+            },
+            "fairness": true
+          },
+          {
+            "acquire_and_open_us": {
+              "max": 17179.452,
+              "min": 9025.550000000001,
+              "n": 120,
+              "p50": 9270.297,
+              "p95": 12683.773000000001,
+              "p99": 16809.971
+            },
+            "fairness": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "idle_expiry",
+      "result": {
+        "fence_holder": 1,
+        "fence_incremented": true,
+        "fence_successor": 2,
+        "successor_published": true,
+        "successor_wait_ms": 2019.866549,
+        "takeovers": 1
+      }
+    },
+    {
+      "name": "live_renewing",
+      "result": {
+        "fence_after": 1,
+        "fence_holder": 1,
+        "refusals": 17,
+        "remaining_ms": 1944,
+        "renewals": 19,
+        "stolen": 0
+      }
+    },
+    {
+      "name": "publication_cost",
+      "result": {
+        "rows": [
+          {
+            "commit_ms": {
+              "max": 25.162294000000003,
+              "min": 10.248204000000001,
+              "n": 60,
+              "p50": 11.488521,
+              "p95": 14.051397999999999,
+              "p99": 15.31595
+            },
+            "generation": 61,
+            "lease": false,
+            "verify_ok": true
+          },
+          {
+            "commit_ms": {
+              "max": 26.463203,
+              "min": 10.393034,
+              "n": 60,
+              "p50": 11.497307,
+              "p95": 14.336801,
+              "p99": 14.921163
+            },
+            "generation": 61,
+            "lease": true,
+            "verify_ok": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "kill_child",
+      "result": {
+        "child_fence": 1,
+        "record_state_after_kill": "held",
+        "successor_acquired": true,
+        "successor_class": null,
+        "successor_fence": 2,
+        "ttl_ms": 2000,
+        "waited_ms": 2019.4326409999999
+      }
+    },
+    {
+      "name": "stop_child",
+      "result": {
+        "child_class": "LeaseExpired",
+        "child_exit_code": 4,
+        "child_fence": 1,
+        "child_publish_ok": false,
+        "fence_incremented": true,
+        "head_after_successor": "448e7dc05d50e5e5a59a96a7fcf77f4fa25965f83afa929db808e08d27e0749f",
+        "head_now": "448e7dc05d50e5e5a59a96a7fcf77f4fa25965f83afa929db808e08d27e0749f",
+        "head_unchanged_by_child": true,
+        "names": [
+          "successor"
+        ],
+        "successor_fence": 2,
+        "successor_published": true,
+        "verify_ok": true
+      }
+    },
+    {
+      "name": "fairness_on",
+      "result": {
+        "fairness": true,
+        "fence_holder": 1,
+        "fence_waiter": 2,
+        "first_newcomer_acquired_ms": null,
+        "newcomers": 150,
+        "newcomers_acquired_before_waiter": 0,
+        "newcomers_refused": 150,
+        "waiter_got_next_fence": true,
+        "waiter_wait_ms": 2369.62791
+      }
+    },
+    {
+      "name": "fairness_off",
+      "result": {
+        "fairness": false,
+        "fence_holder": 1,
+        "fence_waiter": 102,
+        "first_newcomer_acquired_ms": 2053.3982690000003,
+        "newcomers": 150,
+        "newcomers_acquired_before_waiter": 100,
+        "newcomers_refused": 50,
+        "waiter_got_next_fence": false,
+        "waiter_wait_ms": 3595.753626
+      }
+    }
+  ],
+  "checks": [
+    {
+      "detail": "holder 1 -> successor 2",
+      "label": "idle_expiry: a takeover increments the fence",
+      "ok": true
+    },
+    {
+      "detail": "2019.866549 ms",
+      "label": "idle_expiry: the takeover waited about one lifetime",
+      "ok": true
+    },
+    {
+      "detail": "transaction after takeover",
+      "label": "idle_expiry: the successor publishes",
+      "ok": true
+    },
+    {
+      "detail": "17 refusals, 0 steals, 19 renewals",
+      "label": "live_renewing: a live renewing holder is never stolen",
+      "ok": true
+    },
+    {
+      "detail": "state \"held\"",
+      "label": "kill_child: SIGKILL leaves no tombstone",
+      "ok": true
+    },
+    {
+      "detail": "waited 2019.4326409999999 ms of a 2000 ms lifetime",
+      "label": "kill_child: the successor acquires after the deadline",
+      "ok": true
+    },
+    {
+      "detail": "child fence 1 -> successor 2",
+      "label": "stop_child: the successor takes over a stopped holder",
+      "ok": true
+    },
+    {
+      "detail": "child class String(\"LeaseExpired\"), exit Number(4), head unchanged true",
+      "label": "stop_child: the resurrected stale writer is refused and mutates nothing",
+      "ok": true
+    },
+    {
+      "detail": "names [\"successor\"]",
+      "label": "stop_child: only the successor's name is committed and the store verifies",
+      "ok": true
+    },
+    {
+      "detail": "0 acquired before the waiter, 150 refused",
+      "label": "fairness_on: no newcomer overtakes the queued waiter",
+      "ok": true
+    },
+    {
+      "detail": "holder 1 -> waiter 2 after 2369.62791 ms",
+      "label": "fairness_on: the waiter takes the next fence",
+      "ok": true
+    },
+    {
+      "detail": "both arms",
+      "label": "publication_cost: the leased path still verifies",
+      "ok": true
+    },
+    {
+      "detail": "100 newcomer(s) acquired before the waiter, waiter waited 3595.753626 ms",
+      "label": "fairness_off: the control arm is reported, not asserted",
+      "ok": true
+    }
+  ],
+  "environment": {
+    "cpus": 4,
+    "target": "x86_64"
+  },
+  "gate": "X09",
+  "method": {
+    "clock": "host wall clock; no fixed timestamps (a lease deadline is a real duration)",
+    "court": "rust",
+    "faults": "real SIGKILL and SIGSTOP/SIGCONT of a second process (the same binary)",
+    "limits": {
+      "cpus": 4,
+      "memory": "3g",
+      "memory_swap": "3g",
+      "pids": 1024
+    },
+    "notes": [
+      "one host, warm page cache; no fleet, cloud or media claim",
+      "acquisition latency includes the whole optimistic open (state recovery, policy record)",
+      "the fairness control arm (--no-lease-fairness) is reported, not asserted"
+    ],
+    "store": "local backend, optimistic (MW2) writer mode, one store per case"
+  },
+  "result": "pass",
+  "revision": {
+    "weftfs": "4ab9ed23f601958a46a11ac9718b8c854a2526f9"
+  },
+  "schema": "weft.receipt.writer-lease.v1",
+  "stamp": "20261115T235811Z",
+  "summary": {
+    "checks": 13,
+    "failed": 0,
+    "passed": 13
+  }
+}
