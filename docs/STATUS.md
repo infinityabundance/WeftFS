@@ -9,12 +9,127 @@ The shipped planned write is **974.1 ms** least-contended /
 the native control, 2.98× its wall). Rust all-targets
 **1,092** tests pass; FUSE **1,143** passed /
 0 failed / 2 ignored; the conformance manifest holds
-**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,402** claims are
+**420** vectors (aggregate `6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8`); **1,419** claims are
 audited. Every number in this block is emitted by `scripts/perf_numbers.py` between
 `BEGIN GENERATED` sentinels and re-validated against its receipt by the `perf_numbers`
 court; the entries below this block are a chronological log of subphases, quoted with
 the receipt and revision they were written at.
 <!-- END GENERATED:status-head -->
+
+## 2026-11-16 — X09 / X14 / X18 / X21 / P06: writer leases, an indexed semantic path, direct restore, Go counters, online transcode
+
+**Scope.** Five gates, all opt-in or additive; no frozen frame byte, object
+byte, manifest byte, mode number or root changed, and MW1 stays the default.
+Code and courts at WeftFS `4ab9ed2` (submodules WeftCodec `556aeba`, WeftCodec-Go
+`74fd54a`, WeftFS-Go `ad293d2`), receipts at that revision. Five new courts are
+registered in `verify-all.sh`; the next aggregate holds **107** entries. The
+cited aggregate remains `verify-20261115T194936Z` (102/102) — `verify-all` was
+NOT rerun for this entry, and this session did not push.
+
+**X09 — writer session lease** (`src/writer_lease.rs`,
+`spec/WEFT-WRITER-LEASE.md`). `writer/lease` is a canonical
+`weft.writer.lease.v1` record with an absolute `deadline_ns`, replaced only by
+compare-and-swap; a contender may take over iff the record is `released` or the
+deadline has passed. Every takeover increments a monotone `fence`. Publication
+re-reads the record **inside** the publication critical section, before the
+commit record and the head CAS, and refuses `LeaseExpired` if the record no
+longer names this handle at this fence (so a refused publish writes nothing).
+A keeper thread renews an idle session at `ttl/3`; release is a tombstone
+conditional on the bytes it replaces. Fairness is a FIFO ticket queue
+(`writer/tickets/<n>`, allocated `highest+1`, created once), so a newcomer's
+number is strictly above every ticket present when it was allocated. Receipt
+`writer-lease-20261115T235811Z` 13/13: idle holder expires and a successor takes
+fence 1→2 after 2,019.9 ms of a 2,000 ms TTL; a live renewing holder wrote 19
+renewals and was never taken over (17 contender refusals, 0 steals); a real
+`SIGKILL` leaves a `held` record and the successor acquires at the deadline; a
+real `SIGSTOP`/`SIGCONT` child is refused `LeaseExpired` (exit 4) with the head
+unchanged and only the successor's name committed; fairness on, 0/150
+newcomers overtook the queued waiter (which took fence 2 in 2,369.6 ms),
+while the control arm (fairness off) had 100/150 overtake it and left the
+waiter at fence 102 after 3,595.8 ms. Cost: acquisition p50 11,626 µs with
+fairness versus 9,270 µs without; publication p50 11.50 ms leased versus
+11.49 ms unleased. Tests `tests/writer_lease.rs` 12/12.
+
+**X14 — indexed semantic candidate discovery** (`src/semantic_index.rs`). A
+`weft.semantic.index.v1` record at `semantic-index.root` holds per-tensor
+fingerprints (dtype, shape, quantised byte-plane histograms, bounded head/tail
+sketch). The planner queries it first and still prices the real mode-14
+candidate against every returned base. Receipt `semantic-index-20261115T235917Z`
+6/6 on 220 objects and five 1 MiB queries: index at `max_candidates = 8` and the
+exhaustive scan at 20 both chose **529,563 B** of semantic-delta payload and the
+same representations, while the historical default-bound scan chose 715,251 B
+and **missed 185,688 B (35.1 %)** because it takes candidates in object-id order.
+No discovery costs 2,624,550 B. Build: 21,022,720 B read, 56.6 ms, a 51,786 B
+record (257.3 µs/entry); lookup with candidate bytes 18.22 ms p50, ranking alone
+0.547 ms; index plan 99.3 ms p50 versus 157.1 ms exhaustive (57.7 ms faster) and
+5.3 ms **slower** than the default-bound scan. A stale index skips 40/40 entries,
+serves 0 B and misses 100 % of the saving (plan falls back to 2,624,550 B).
+Tests `tests/semantic_index.rs` 7/7. The fixture pins a finite BF16 exponent:
+the default policy preserves NaN/inf words bit-exactly, so a random exponent gave
+tensors that differ only in low mantissa bits different semantic roots (found by
+a failing stale-entry test, fixed in the court and the test).
+
+**X18 — direct-to-destination verified reconstruction**
+(`Store::restore_checkpoint_direct_into`, `restore_row_slab_direct_at`). Tiled
+shards decode straight into caller-owned rank buffers, verifying each tile
+against its `tile_root` and the frame against its manifest id; no container
+buffer and no whole-file SHA-256 pass. Receipt `direct-restore-20261115T235925Z`
+3/3 on 8×2048×2048 BF16 (67,108,864 B, tiles [128,512], 4 shards): container +
+copy 260.7 ms → the same restore without the hash 204.3 ms (the SHA-256 pass is
+56.4 ms) → **direct 183.8 ms**, i.e. 76.9 ms below the copying path and 20.5 ms
+below the unhashed one; CPU tracks wall; rank slab 48.4 → 41.5 ms. Peak-RSS
+delta: container 76,520 KiB, unhashed 0, direct 10,320 KiB (the caller's
+destinations are live; the delta is not the total). Every byte equals the saved
+tensors and the container path; a corrupted frame is refused `Corrupt` with the
+destination untouched; missing/mis-sized/duplicate destinations are refused
+before any read. Tests `tests/direct_restore.rs` 10/10.
+
+**X21 — Go counters and the Go/Rust read path** (WeftFS-Go `store/blob_counters.go`).
+`total_blob_reads`/`total_blob_bytes` count logical verified reads;
+`backend_reads`/`backend_bytes` count physical flat-plane reads. Receipt
+`go-pool-counters-20261116T000103Z` 11/11 on one Rust-written store read by both
+languages: flat 192 logical reads over 25,165,824 B and 6,336 backend reads over
+25,510,848 B in **both** languages; packed logical counters identical while Rust
+records 12,929 backend reads against Go's 6,336; the vanished arm refuses 47/64
+reads in both with the same `NotFound: no such object` and 561 backend reads.
+Go is **2.18×** Rust's wall on flat, 2.20× hot, 1.93× one object, 2.02× packed —
+published as a loss, not hidden. The vanished arm's logical totals differ by
+definition (Rust counts the harness's 64 calls, Go 17 completed reads). Tests
+`store/blob_counters_test.go` 1/1.
+
+**P06 — online background transcode** (`src/online_transcode.rs`). A
+`StageBudget`-admitted worker rewrites objects while foreground writes continue,
+yielding between steps; each rewrite publishes a new version under the same
+logical identity and leaves the previous representation reachable. Receipt
+`online-transcode-20261115T235938Z` 5/5 on 24 × 1 MiB objects and 60 foreground
+range writes: p50 571.1 → 578.9 ms (ratio 1.014), p99 617.1 → 623.3 ms
+(1.010); the worker held the store 2,682.2 ms of 34.63 s (7.32 % of foreground
+wall plus the 2 s window) and yielded 32,942 times; it applied 4 objects in 5
+steps, read 6,291,456 B and saved 236,901 B (1.50 objects/s, 0.085 MiB/s in the
+window) against a declared 1,048,577 B in-flight budget with 0 oversized
+admissions and 0 budget refusals. A real `SIGKILL` of the worker leaves 24/24
+objects exact, 2 rewritten, 24/24 pre-run snapshot entries still naming the old
+representation, and `verify --full` clean. Tests `tests/online_transcode.rs` 4/4.
+
+**Suites at `4ab9ed2`** (courts, unchanged limits): `cargo test --all-targets`
+**1,133 passed / 0 failed** across 239 suites; `cargo test --features fuse
+--all-targets` **1,184 passed / 0 failed / 2 ignored**; WeftFS-Go `go test -race
+./...` all packages pass with `gofmt` clean, `go vet` clean and a `CGO_ENABLED=0
+build` clean. Docs: `bench/RESULTS-writer-lease.md`,
+`RESULTS-semantic-index.md`, `RESULTS-direct-restore.md`,
+`RESULTS-go-pool-counters.md`, `RESULTS-online-transcode.md` (every loss listed).
+
+**Losses, stated rather than rounded.** Fairness costs 2,356 µs at acquisition
+p50. An idle or killed holder keeps the store for one full TTL. A paused holder
+is refused when it resumes and must reopen. The semantic index is `O(objects)`
+to build, reads whole candidates on lookup, plans 5.3 ms slower than the
+bounded scan, and a stale index loses the whole saving. Direct restore still
+holds the caller's destination memory and only modestly speeds the rank slab;
+tile roots are not a whole-file digest. Go is 1.93–2.20× Rust on this read path.
+Online transcode costs 1.4 % at p50 and 1.0 % at p99, and its throughput is
+bounded by the encoder, not the budget. No Go writer lease, semantic index,
+direct restore or online transcode; no Go parity for the lease or index; no
+physical power loss, fleet, cloud or multi-writer protocol claim.
 
 ## 2026-11-15 (N06/X11: the aggregate re-run, 102/102)
 

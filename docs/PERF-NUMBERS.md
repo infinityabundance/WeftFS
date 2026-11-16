@@ -477,7 +477,7 @@ seven interleaved repetitions. Source:
 | `verify.revision` | b0638ef348cb6b416e42833aaa779435068e38f6 | text | Aggregate WeftFS revision | `bench/receipts/verify-20261115T194936Z.json` | 20261115T194936Z | b0638ef348cb |
 | `conformance.vectors` | 420 | vectors | Conformance vectors in the manifest | `conformance/manifest.json` | — | — |
 | `conformance.aggregate` | 6287b817b94d2cc805abe23561d3d4270cd46b3c2e4f4e598fa673dfe48dfbe8 | text | Conformance manifest aggregate SHA-256 | `conformance/manifest.json` | — | — |
-| `claims.count` | 1,402 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
+| `claims.count` | 1,419 | claims | Entries in the claims manifest | `docs/claims.json` | — | — |
 | `crash.requested` | 100,000 | iterations | Crash-torture iterations requested | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `crash.bad` | 0 | states | Crash-torture bad states | `bench/receipts/crash-torture-20261104T104233Z.json` | 2026-11-04T10:42:33Z | 380ea4754483 |
 | `tests.rust_store_passed` | 1,092 | tests | Rust all-targets tests passed | `bench/receipts/verify-20261115T194936Z.tests.json` | 7cfc2421e3118e75bfbcdcc6992159b2879b551fa3688fae343b8d3ba72cfcce | bench/receip |
@@ -1286,6 +1286,170 @@ time. They are not current claims.
 | `t052.block32` | 32 | — | Smaller block size | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
 | `t052.block128` | 128 | — | Larger block size | `bench/receipts/view-identity-20261115T070334Z.json` | 20261115T070334Z | cad2f730bd16 |
 <!-- END GENERATED:perf-catalog-t052 -->
+
+## X09 writer session lease
+
+<!-- BEGIN GENERATED:perf-catalog-writer-lease (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `writer_lease.acquire_fair_p50_us` | 11,626 | us | open + acquire p50, fairness on | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.acquire_fair_p95_us` | 16,018 | us | open + acquire p95, fairness on | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.acquire_unfair_p50_us` | 9,270 | us | open + acquire p50, fairness off | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.commit_unleased_p50_ms` | 11.49 | ms | publication p50, no lease | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.commit_unleased_p99_ms` | 15.32 | ms | publication p99, no lease | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.commit_leased_p50_ms` | 11.50 | ms | publication p50, leased | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.commit_leased_p99_ms` | 14.92 | ms | publication p99, leased | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.idle_successor_wait_ms` | 2,019.9 | ms | idle holder: successor wait | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.idle_fence_holder` | 1 | — | idle holder: fence before takeover | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.idle_fence_successor` | 2 | — | idle holder: fence after takeover | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.renewals` | 19 | — | live holder: renewals written | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.renewal_refusals` | 17 | — | live holder: contender refusals | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.renewal_stolen` | 0 | — | live holder: takeovers | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.kill_successor_wait_ms` | 2,019.4 | ms | SIGKILL: successor wait | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.kill_ttl_ms` | 2,000 | ms | SIGKILL: configured TTL | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.stop_child_class` | LeaseExpired | — | SIGSTOP/SIGCONT: holder refusal class | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.stop_child_exit` | 4 | — | SIGSTOP/SIGCONT: holder exit code | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_on_overtakes` | 0 | — | fairness on: newcomers that overtook | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_on_newcomers` | 150 | — | fairness on: newcomers attempted | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_on_waiter_fence` | 2 | — | fairness on: waiter's fence | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_on_waiter_wait_ms` | 2,369.6 | ms | fairness on: waiter wait | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_off_overtakes` | 100 | — | fairness off (control): newcomers that overtook | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_off_newcomers` | 150 | — | fairness off (control): newcomers attempted | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_off_waiter_fence` | 102 | — | fairness off (control): waiter's fence | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.fair_off_waiter_wait_ms` | 3,595.8 | ms | fairness off (control): waiter wait | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.checks_passed` | 13 | — | court checks passed | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.checks_total` | 13 | — | court checks total | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+| `writer_lease.commit_delta_ms` | 0.009 | ms | publication p50 delta (leased - unleased) | `bench/receipts/writer-lease-20261115T235811Z.json` | 20261115T235811Z | 4ab9ed23f601 |
+<!-- END GENERATED:perf-catalog-writer-lease -->
+
+## X14 indexed semantic candidate discovery
+
+<!-- BEGIN GENERATED:perf-catalog-semantic-index (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `semantic_index.build_objects` | 220 | — | index build: tensors scanned | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.build_bytes` | 21,022,720 | B | index build: bytes read | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.build_ms` | 56.6 | ms | index build: wall | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.build_record` | 51,786 | B | index record size | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.build_us` | 257.3 | us | index build: per entry | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.lookup_p50_ms` | 18.22 | ms | lookup p50 (reads candidate bytes) | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.stale_lookup_p50_ms` | 0.547 | ms | ranking only: p50 (no candidate bytes) | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.index_semantic_bytes` | 529,563 | B | index: semantic-delta payload | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.index_physical_bytes` | 529,563 | B | index: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.index_plan_ms` | 99.3 | ms | index: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.scan_all_plan_ms` | 157.1 | ms | exhaustive scan: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.scan_all_physical_bytes` | 529,563 | B | exhaustive scan: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.scan_default_plan_ms` | 94.1 | ms | default-bound scan: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.scan_default_physical_bytes` | 715,251 | B | default-bound scan: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.none_physical_bytes` | 2,624,550 | B | no discovery: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.none_plan_ms` | 45.4 | ms | no discovery: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.stale_entries` | 40 | — | stale index: entries skipped | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.stale_physical_bytes` | 2,624,550 | B | stale index: chosen physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.stale_plan_ms` | 45.6 | ms | stale index: plan p50 | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.stale_miss_rate` | 1.00 | ratio | stale index: miss rate | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.checks_passed` | 6 | — | court checks passed | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.checks_total` | 6 | — | court checks total | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.scan_all_minus_index_ms` | 57.7 | ms | exhaustive scan plan p50 minus index | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.index_minus_default_ms` | 5.3 | ms | index plan p50 minus default-bound scan | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.missed_bytes` | 185,688 | B | default-bound scan: saving missed | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.missed_pct` | 35.1 | % | default-bound scan: share of the achievable saving missed | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+| `semantic_index.none_minus_index_bytes` | 2,094,987 | B | no discovery: extra physical bytes | `bench/receipts/semantic-index-20261115T235917Z.json` | 20261115T235917Z | 4ab9ed23f601 |
+<!-- END GENERATED:perf-catalog-semantic-index -->
+
+## X18 direct-to-destination verified reconstruction
+
+<!-- BEGIN GENERATED:perf-catalog-direct-restore (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `direct_restore.container_wall_ms` | 260.7 | ms | container: wall p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.container_cpu_ms` | 260 | ms | container: CPU p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.container_rss_kib` | 76,520 | KiB | container: VmHWM delta | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.unhashed_wall_ms` | 204.3 | ms | unhashed: wall p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.unhashed_cpu_ms` | 202 | ms | unhashed: CPU p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.unhashed_rss_kib` | 0 | KiB | unhashed: VmHWM delta | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.direct_wall_ms` | 183.8 | ms | direct: wall p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.direct_cpu_ms` | 183 | ms | direct: CPU p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.direct_rss_kib` | 10,320 | KiB | direct: VmHWM delta | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.rank_ordinary_wall_ms` | 48.4 | ms | rank_ordinary: wall p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.rank_ordinary_cpu_ms` | 48 | ms | rank_ordinary: CPU p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.rank_ordinary_rss_kib` | 0 | KiB | rank_ordinary: VmHWM delta | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.rank_slab_wall_ms` | 41.5 | ms | rank_slab: wall p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.rank_slab_cpu_ms` | 41 | ms | rank_slab: CPU p50 | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.rank_slab_rss_kib` | 0 | KiB | rank_slab: VmHWM delta | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.sha_ms` | 56.4 | ms | whole-file SHA-256 pass | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.checks_passed` | 3 | — | court checks passed | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.checks_total` | 3 | — | court checks total | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.saved_vs_container_ms` | 76.9 | ms | direct: wall saved vs container + copy | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.saved_vs_unhashed_ms` | 20.5 | ms | direct: wall saved vs unhashed container | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+| `direct_restore.slab_saved_ms` | 7.0 | ms | rank slab: wall saved | `bench/receipts/direct-restore-20261115T235925Z.json` | 20261115T235925Z | 4ab9ed23f601 |
+<!-- END GENERATED:perf-catalog-direct-restore -->
+
+## X21 Go pooling counters and the Go/Rust read path
+
+<!-- BEGIN GENERATED:perf-catalog-go-pool-counters (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `go_pool.flat_total_reads` | 192 | — | flat: logical reads (both languages) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.flat_total_bytes` | 25,165,824 | B | flat: logical bytes | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.flat_backend_reads` | 6,336 | — | flat: backend reads (both languages) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.flat_backend_bytes` | 25,510,848 | B | flat: backend bytes (both languages) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.ratio_flat` | 2.18 | x | flat: Go wall over Rust wall | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.ratio_hot` | 2.20 | x | hot: Go wall over Rust wall | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.ratio_hot1` | 1.93 | x | hot1: Go wall over Rust wall | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.ratio_packed` | 2.02 | x | packed: Go wall over Rust wall | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.hot1_reuses` | 6,567 | — | hot1: Go pool reuses | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.hot1_opens` | 97 | — | hot1: Go pool opens | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.hot1_backend_reads` | 6,600 | — | hot1: Go backend reads | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.packed_rust_backend_reads` | 12,929 | — | packed: Rust backend reads | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.packed_go_backend_reads` | 6,336 | — | packed: Go backend reads | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.vanished_failures` | 47 | — | vanished: refusals (both languages) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.vanished_backend_reads` | 561 | — | vanished: backend reads (both languages) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.vanished_rust_total` | 64 | — | vanished: Rust logical total (harness calls) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.vanished_go_total` | 17 | — | vanished: Go logical total (completed reads) | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.checks_passed` | 11 | — | court checks passed | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+| `go_pool.checks_total` | 11 | — | court checks total | `bench/receipts/go-pool-counters-20261116T000103Z.json` | 20261116T000103Z | 4ab9ed23f601 |
+<!-- END GENERATED:perf-catalog-go-pool-counters -->
+
+## P06 online background transcode
+
+<!-- BEGIN GENERATED:perf-catalog-online-transcode (scripts/perf_numbers.py) -->
+| key | value | unit | what it measures | receipt | stamp | revision |
+|---|---:|---|---|---|---|---|
+| `online_transcode.quiet_n` | 60 | — | quiet: foreground writes | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.quiet_p50_ms` | 571.1 | ms | quiet: foreground p50 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.quiet_p95_ms` | 613.5 | ms | quiet: foreground p95 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.quiet_p99_ms` | 617.1 | ms | quiet: foreground p99 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.busy_n` | 60 | — | busy: foreground writes | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.busy_p50_ms` | 578.9 | ms | busy: foreground p50 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.busy_p95_ms` | 618.8 | ms | busy: foreground p95 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.busy_p99_ms` | 623.3 | ms | busy: foreground p99 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.p50_ratio` | 1.014 | x | busy/quiet p50 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.p99_ratio` | 1.010 | x | busy/quiet p99 | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.hold_ms` | 2,682.2 | ms | worker held the store | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.wall_s` | 34.63 | s | foreground wall | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.yields` | 32,942 | — | worker times it yielded the store | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.applied` | 4 | — | objects rewritten | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.steps` | 5 | — | worker steps | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.empty_steps` | 1 | — | empty steps | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.bytes_read` | 6,291,456 | B | bytes read by the worker | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.bytes_saved` | 236,901 | B | bytes saved by the worker | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.window_applied` | 3 | — | objects rewritten inside the window | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.window_saved` | 177,677 | B | bytes saved inside the window | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.ops_per_s` | 1.50 | objects/s | worker throughput | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.mib_per_s` | 0.085 | MiB/s | worker throughput | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.budget_inflight` | 1,048,577 | B | declared in-flight budget | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.oversized` | 0 | — | oversized admissions | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.budget_refusals` | 0 | — | budget refusals | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.crash_exact` | 24 | — | crash: objects exact | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.crash_objects` | 24 | — | crash: objects | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.crash_rewritten` | 2 | — | crash: rewritten before the kill | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.crash_pinned` | 24 | — | crash: snapshot entries still naming the old representation | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.crash_problems` | 0 | — | crash: verify problems | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.checks_passed` | 5 | — | court checks passed | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.checks_total` | 5 | — | court checks total | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.hold_pct` | 7.32 | % | worker hold share of foreground wall plus the 2 s window | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+| `online_transcode.hold_share` | 0.0732 | ratio | worker hold share (foreground wall + 2 s window) | `bench/receipts/online-transcode-20261115T235938Z.json` | 20261115T235938Z | 4ab9ed23f601 |
+<!-- END GENERATED:perf-catalog-online-transcode -->
 
 ## Reproduce
 

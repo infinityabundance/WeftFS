@@ -190,6 +190,23 @@ run_orchestrated_court artifact_templates artifact_template_court \
   bash scripts/artifact_template_court.sh
 run_orchestrated_court maintenance maintenance_court bash scripts/maintenance_court.sh
 
+# X09/X14/X18/X21/P06: each wrapper runs its own rust or fuse court container and
+# prints exactly one `<name>: skip <reason>` line with exit 78 when it cannot run.
+# They run the same fixtures as their standalone receipts
+# (`bench/receipts/writer-lease-*.json`, `semantic-index-*.json`,
+# `direct-restore-*.json`, `go-pool-counters-*.json`, `online-transcode-*.json`);
+# each completes well inside the 10-minute court budget.
+run_orchestrated_court writer_lease writer_lease_court \
+  env WEFT_STAMP="$stamp" bash scripts/writer_lease_court.sh
+run_orchestrated_court semantic_index semantic_index_court \
+  env WEFT_STAMP="$stamp" bash scripts/semantic_index_court.sh
+run_orchestrated_court direct_restore direct_restore_court \
+  env WEFT_STAMP="$stamp" bash scripts/direct_restore_court.sh
+run_orchestrated_court go_pool go_pool_court \
+  env WEFT_STAMP="$stamp" bash scripts/go_pool_court.sh
+run_orchestrated_court online_transcode online_transcode_court \
+  env WEFT_STAMP="$stamp" bash scripts/online_transcode_court.sh
+
 # T049 training state: orchestrated because it builds a Rust harness, an
 # independent Go binary and then runs the Python court. The script itself
 # prints `training_state_court: skip <reason>` and exits 78 when unavailable.
